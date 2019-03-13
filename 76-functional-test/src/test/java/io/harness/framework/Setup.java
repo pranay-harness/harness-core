@@ -3,23 +3,19 @@ package io.harness.framework;
 import static io.restassured.RestAssured.given;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.restassured.specification.RequestSpecification;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
-import software.wings.helpers.ext.mail.SmtpConfig;
 
 import javax.ws.rs.core.GenericType;
 
 public class Setup {
   private static RequestSpecProvider rqProvider = new RequestSpecProvider();
 
-  private static ScmSecret instScmSecret = null;
+  private static ScmSecret instScmSecret = new ScmSecret();
 
   public static RequestSpecification portal() {
     return given().spec(rqProvider.useDefaultSpec());
@@ -30,7 +26,7 @@ public class Setup {
   }
 
   public static RequestSpecification mailinator() {
-    String secret = instScmSecret.decryptToString(new SecretName("mailinator_trial_api_key"));
+    String secret = instScmSecret.decryptToString(new SecretName("mailinator_paid_api_key"));
     return given().spec(rqProvider.useMailinatorSpec(secret));
   }
 
@@ -50,26 +46,5 @@ public class Setup {
         .header("Authorization", "Bearer " + bearerToken)
         .post("/users/" + userId + "/logout")
         .getStatusCode();
-  }
-
-  public static SettingAttribute getEmailConfig(ScmSecret scmSecret, String accountId) {
-    instScmSecret = scmSecret;
-    String secret = instScmSecret.decryptToString(new SecretName("smtp_paid_sendgrid_config_password"));
-    SmtpConfig smtpConfig = SmtpConfig.builder()
-                                .host("smtp.sendgrid.net")
-                                .port(465)
-                                .useSSL(true)
-                                .fromAddress("automation@harness.io")
-                                .username("apikey")
-                                .password(secret.toCharArray())
-                                .accountId(accountId)
-                                .build();
-
-    return aSettingAttribute()
-        .withCategory(Category.CONNECTOR)
-        .withName("EMAIL")
-        .withAccountId(accountId)
-        .withValue(smtpConfig)
-        .build();
   }
 }

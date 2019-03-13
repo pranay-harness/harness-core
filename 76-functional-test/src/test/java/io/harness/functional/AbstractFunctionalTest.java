@@ -6,13 +6,10 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.FunctionalTests;
-import io.harness.framework.Retry;
 import io.harness.framework.Setup;
-import io.harness.framework.matchers.SettingsAttributeMatcher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
-import io.harness.scm.ScmSecret;
 import io.restassured.RestAssured;
 import lombok.Getter;
 import org.junit.Before;
@@ -21,9 +18,7 @@ import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
-import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
 import javax.ws.rs.core.GenericType;
@@ -35,10 +30,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
 
-  protected static boolean failedAlready;
-
-  private static Exception previous = new Exception();
-
   @BeforeClass
   public static void setup() {
     Setup.portal();
@@ -49,22 +40,14 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
   @Inject private DelegateExecutor delegateExecutor;
   //  @Inject OwnerManager ownerManager;
   @Inject private AccountSetupService accountSetupService;
-  @Inject private ScmSecret scmSecret;
-  @Inject private SettingsService settingsService;
-
   @Getter static Account account;
 
   @Before
   public void testSetup() throws IOException {
-    final int MAX_RETRIES = 5;
-    final int DELAY_IN_MS = 3000;
-    final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
     account = accountSetupService.ensureAccount();
-
     delegateExecutor.ensureDelegate(account);
-
     bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
-    retry.executeWithRetry(() -> updateAndGetSettingAttribute(), new SettingsAttributeMatcher<>(), true);
+    logger.info("Basic setup completed");
   }
 
   protected void resetCache() {
@@ -75,17 +58,5 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
                                               .put("/users/reset-cache")
                                               .as(new GenericType<RestResponse<User>>() {}.getType());
     assertThat(userRestResponse).isNotNull();
-  }
-
-  private SettingAttribute updateAndGetSettingAttribute() {
-    SettingAttribute settingAttribute = Setup.getEmailConfig(scmSecret, account.getUuid());
-
-    if (settingsService.getByName(
-            settingAttribute.getAccountId(), settingAttribute.getAppId(), settingAttribute.getName())
-        == null) {
-      return settingsService.save(settingAttribute);
-    }
-    return settingsService.getByName(
-        settingAttribute.getAccountId(), settingAttribute.getAppId(), settingAttribute.getName());
   }
 }
