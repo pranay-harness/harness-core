@@ -8,4 +8,5 @@ import lombok.Data;
 public class TaskData {
   private Object[] parameters;
   private long timeout;
+  private int expressionFunctorToken;
 }

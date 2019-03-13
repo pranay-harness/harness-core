@@ -17,7 +17,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
       ConfigService configService, String appId, String envId, String serviceTemplateId,
       ArtifactCollectionUtil artifactCollectionUtil, String artifactStreamId,
       ManagerDecryptionService managerDecryptionService, SecretManager secretManager, String accountId,
-      String workflowExecutionId) {
+      String workflowExecutionId, int expressionFunctorToken) {
     addFunctor("configFile",
         ConfigFileFunctor.builder()
             .appId(appId)
@@ -40,6 +40,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
                                .accountId(accountId)
                                .appId(appId)
                                .workflowExecutionId(workflowExecutionId)
+                               .expressionFunctorToken(expressionFunctorToken)
                                .build();
     addFunctor("secretManager", secretManagerFunctor);
   }
