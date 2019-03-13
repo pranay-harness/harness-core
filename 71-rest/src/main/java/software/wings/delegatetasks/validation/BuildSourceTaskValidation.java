@@ -12,7 +12,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.delegatetasks.buildsource.BuildSourceRequest;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public class BuildSourceTaskValidation extends AbstractDelegateValidateTask {
   @Override
   public List<String> getCriteria() {
     Object[] parameters = getParameters();
-    BuildSourceRequest buildSourceRequest = (BuildSourceRequest) parameters[0];
+    BuildSourceParameters buildSourceRequest = (BuildSourceParameters) parameters[0];
 
     SettingValue settingValue = buildSourceRequest.getSettingValue();
     ArtifactStreamAttributes artifactStreamAttributes = buildSourceRequest.getArtifactStreamAttributes();

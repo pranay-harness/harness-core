@@ -16,10 +16,9 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
-import software.wings.delegatetasks.buildsource.BuildSourceRequest;
-import software.wings.delegatetasks.buildsource.BuildSourceRequest.BuildSourceRequestType;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
-import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ServiceClassLocator;
@@ -49,8 +48,12 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
 
   @Override
   public ResponseData run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
+  }
+
+  public BuildSourceExecutionResponse run(TaskParameters parameters) {
     try {
-      BuildSourceRequest buildSourceRequest = (BuildSourceRequest) parameters[0];
+      BuildSourceParameters buildSourceRequest = (BuildSourceParameters) parameters;
       int limit = buildSourceRequest.getLimit();
       String artifactStreamType = buildSourceRequest.getArtifactStreamType();
       SettingValue settingValue = buildSourceRequest.getSettingValue();
@@ -89,10 +92,6 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-  }
-
-  public HelmCommandExecutionResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
   }
 
   private BuildService getBuildService(String artifactStreamType) {
