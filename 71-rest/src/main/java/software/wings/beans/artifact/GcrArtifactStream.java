@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import static java.lang.String.format;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -50,7 +49,7 @@ public class GcrArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .imageName(dockerImageName)
         .registryHostName(registryHostName)

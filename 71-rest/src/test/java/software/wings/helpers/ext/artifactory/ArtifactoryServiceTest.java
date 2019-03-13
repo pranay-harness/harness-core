@@ -2,7 +2,6 @@ package software.wings.helpers.ext.artifactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.utils.ArtifactType.RPM;
@@ -20,6 +19,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;
@@ -95,7 +95,7 @@ public class ArtifactoryServiceTest {
   @Test
   public void shouldGetDockerTags() {
     List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig, null,
-        anArtifactStreamAttributes()
+        ArtifactStreamAttributes.builder()
             .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
             .metadataOnly(true)
             .jobName("docker")

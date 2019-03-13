@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import static java.lang.String.format;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -45,7 +44,7 @@ public class DockerArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes().artifactStreamType(getArtifactStreamType()).imageName(imageName).build();
+    return ArtifactStreamAttributes.builder().artifactStreamType(getArtifactStreamType()).imageName(imageName).build();
   }
 
   @Override

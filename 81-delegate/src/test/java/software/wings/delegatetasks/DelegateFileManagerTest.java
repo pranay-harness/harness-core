@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -77,7 +76,7 @@ public class DelegateFileManagerTest extends CategoryTest {
           .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
           .build();
   private ArtifactStreamAttributes artifactStreamAttributesForS3 =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
@@ -95,7 +94,7 @@ public class DelegateFileManagerTest extends CategoryTest {
                                                                    .build())
                                                     .build();
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))

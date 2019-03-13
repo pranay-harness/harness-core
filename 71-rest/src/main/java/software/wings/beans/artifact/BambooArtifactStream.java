@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import static java.lang.String.format;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -56,7 +55,7 @@ public class BambooArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes().artifactStreamType(getArtifactStreamType()).jobName(jobname).build();
+    return ArtifactStreamAttributes.builder().artifactStreamType(getArtifactStreamType()).jobName(jobname).build();
   }
 
   @Data

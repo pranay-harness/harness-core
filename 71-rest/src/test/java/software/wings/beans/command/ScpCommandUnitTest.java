@@ -5,7 +5,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILE_NAME;
@@ -54,7 +53,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                                                    .build())
                                                     .build();
   private ArtifactStreamAttributes artifactStreamAttributesForS3 =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
@@ -62,7 +61,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
@@ -73,7 +72,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactoryRpmType =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
@@ -84,7 +83,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactoryFeatureFlagDisabled =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))

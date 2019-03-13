@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import static java.lang.String.format;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -48,7 +47,7 @@ public class AcrArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .subscriptionId(subscriptionId)
         .registryName(registryName)

@@ -7,7 +7,6 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -71,7 +70,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                                                          .build())
                                                           .build();
   private ArtifactStreamAttributes artifactStreamAttributesForAmazonS3 =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
@@ -89,7 +88,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                                                    .build())
                                                     .build();
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
-      anArtifactStreamAttributes()
+      ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
           .metadataOnly(true)
           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
@@ -102,7 +101,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .withUuid(SETTING_ID)
           .withValue(ArtifactoryConfig.builder().artifactoryUrl(WingsTestConstants.ARTIFACTORY_URL).build())
           .build();
-  ArtifactStreamAttributes streamAttributesAnon = anArtifactStreamAttributes()
+  ArtifactStreamAttributes streamAttributesAnon = ArtifactStreamAttributes.builder()
                                                       .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
                                                       .metadataOnly(true)
                                                       .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))

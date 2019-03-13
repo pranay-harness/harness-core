@@ -2,7 +2,6 @@ package software.wings.beans.artifact;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -84,7 +83,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .jobName(jobname)
         .imageName(imageName)

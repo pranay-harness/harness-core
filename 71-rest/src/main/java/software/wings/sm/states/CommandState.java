@@ -350,7 +350,7 @@ public class CommandState extends State {
               (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
               context.getWorkflowExecutionId()));
         }
-        artifactStreamAttributes.setMedatadataOnly(artifactStream.isMetadataOnly());
+        artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
         artifactStreamAttributes.setMetadata(artifact.getMetadata());
 
         if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
