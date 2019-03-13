@@ -42,7 +42,7 @@ public class AcrValidationTest extends WingsBaseTest {
           .taskType(TaskType.ACR_GET_BUILDS.name())
           .waitId("")
           .data(TaskData.builder()
-                    .parameters(new Object[] {ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
+                    .parameters(new Object[] {ArtifactStreamAttributes.builder()
                                                   .registryName(registryName)
                                                   .repositoryName(repositoryName)
                                                   .build(),

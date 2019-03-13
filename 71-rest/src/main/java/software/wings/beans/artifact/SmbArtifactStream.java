@@ -3,7 +3,6 @@ package software.wings.beans.artifact;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -47,7 +46,7 @@ public class SmbArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .build();

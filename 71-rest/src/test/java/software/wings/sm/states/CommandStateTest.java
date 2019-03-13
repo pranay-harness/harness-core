@@ -33,7 +33,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
@@ -443,7 +442,7 @@ public class CommandStateTest extends WingsBaseTest {
                             .withServiceIds(asList(SERVICE_ID))
                             .build();
 
-    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().metadataOnly(false).build();
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
     Command command =
         aCommand()
             .addCommandUnits(
@@ -571,7 +570,7 @@ public class CommandStateTest extends WingsBaseTest {
                             .withServiceIds(asList(SERVICE_ID))
                             .build();
 
-    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().metadataOnly(false).build();
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
 
     Command command =
         aCommand()

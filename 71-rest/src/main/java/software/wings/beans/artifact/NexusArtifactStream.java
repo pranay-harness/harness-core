@@ -2,7 +2,6 @@ package software.wings.beans.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -82,7 +81,7 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .jobName(jobname)
         .groupId(groupId)

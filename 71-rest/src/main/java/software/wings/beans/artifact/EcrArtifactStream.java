@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import static java.lang.String.format;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -44,7 +43,7 @@ public class EcrArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .region(region)
         .imageName(imageName)

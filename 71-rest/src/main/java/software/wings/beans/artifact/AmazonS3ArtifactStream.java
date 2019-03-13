@@ -3,7 +3,6 @@ package software.wings.beans.artifact;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -49,7 +48,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .jobName(jobname)
         .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))

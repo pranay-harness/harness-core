@@ -64,9 +64,8 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
     ShellExecutionResponse shellExecutionResponse =
         ShellExecutionResponse.builder().exitValue(0).shellExecutionData(map).build();
     when(shellExecutionService.execute(any(ShellExecutionRequest.class))).thenReturn(shellExecutionResponse);
-    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                                            .customArtifactStreamScript("echo \"hello\"")
-                                                            .build();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        ArtifactStreamAttributes.builder().customArtifactStreamScript("echo \"hello\"").build();
     List<BuildDetails> buildDetails = customRepositoryService.getBuilds(artifactStreamAttributes);
     assertThat(buildDetails).isNotNull();
     assertThat(buildDetails.size()).isEqualTo(2);
@@ -95,7 +94,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
     attributeMapping.put("assets[0].downloadUrl", "metadata.downloadUrl");
     attributeMapping.put("assets[0].repository", null);
     attributeMapping.put("assets[0].checksum", "checksum");
-    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .customArtifactStreamScript("echo \"hello\"")
                                                             .artifactRoot("$.items")
                                                             .buildNoPath("version")
@@ -118,7 +117,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
     Map<String, String> attributeMapping = new HashMap<>();
     attributeMapping.put("assets[0].downloadUrl", "metadata.downloadUrl");
 
-    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .customArtifactStreamScript("echo \"hello\"")
                                                             .artifactAttributes(attributeMapping)
                                                             .buildNoPath("version")
@@ -131,7 +130,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   public void testGetBuildsWithInvalidCustomMappingWithoutBuildNo() {
     Map<String, String> attributeMapping = new HashMap<>();
     attributeMapping.put("assets[0].downloadUrl", "metadata.downloadUrl");
-    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .customArtifactStreamScript("echo \"hello\"")
                                                             .artifactRoot("$.items[*]")
                                                             .artifactAttributes(attributeMapping)

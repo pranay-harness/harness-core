@@ -3,7 +3,6 @@ package software.wings.beans.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 
 import com.google.common.base.Joiner;
@@ -93,7 +92,7 @@ public class AmiArtifactStream extends ArtifactStream {
       filterMap = filters.stream().collect(Collectors.toMap(FilterClass::getKey, FilterClass::getValue, (a, b) -> b));
     }
 
-    return anArtifactStreamAttributes()
+    return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .region(region)
         .tags(tagMap)
