@@ -1,8 +1,11 @@
 package io.harness.functional.users;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+
+import com.google.inject.Inject;
 
 import io.harness.RestUtils.GuerillaMailUtil;
 import io.harness.RestUtils.HTMLUtils;
@@ -21,15 +24,22 @@ import io.harness.framework.email.mailinator.MailinatorMessageDetails;
 import io.harness.framework.email.mailinator.MailinatorMetaMessage;
 import io.harness.framework.matchers.EmailMatcher;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.generator.OwnerManager;
+import io.harness.generator.OwnerManager.Owners;
+import io.harness.generator.Randomizer.Seed;
+import io.harness.generator.SettingGenerator;
+import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 
@@ -38,6 +48,9 @@ import java.util.List;
 import javax.mail.MessagingException;
 
 public class UserTest extends AbstractFunctionalTest {
+  @Inject private SettingGenerator settingGenerator;
+  @Inject private OwnerManager ownerManager;
+
   private static final Logger logger = LoggerFactory.getLogger(UserTest.class);
   final int MAX_RETRIES = 20;
   final int DELAY_IN_MS = 6000;
@@ -48,6 +61,17 @@ public class UserTest extends AbstractFunctionalTest {
   MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
   HTMLUtils htmlUtils = new HTMLUtils();
   TestUtils testUtils = new TestUtils();
+  final Seed seed = new Seed(0);
+  Owners owners;
+
+  @Before
+  public void userTestSetup() {
+    owners = ownerManager.create();
+    SettingAttribute emailSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, Settings.PAID_EMAIL_SMTP_CONNECTOR);
+    assertThat(emailSettingAttribute).isNotNull();
+    logger.info("Setup completed successfully");
+  }
 
   @Test()
   @Category(FunctionalTests.class)

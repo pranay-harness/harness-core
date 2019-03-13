@@ -46,6 +46,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -89,7 +90,8 @@ public class SettingGenerator {
     HARNESS_EXPLORATION_GCS,
     HARNESS_JIRA,
     PHYSICAL_DATA_CENTER,
-    WINRM_TEST_CONNECTOR
+    WINRM_TEST_CONNECTOR,
+    PAID_EMAIL_SMTP_CONNECTOR
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -132,6 +134,8 @@ public class SettingGenerator {
         return ensureWinRmTestConnector(seed, owners);
       case TERRAFORM_MAIN_GIT_REPO:
         return ensureTerraformMainGitRepo(seed, owners);
+      case PAID_EMAIL_SMTP_CONNECTOR:
+        return ensurePaidSMTPSettings(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -465,6 +469,28 @@ public class SettingGenerator {
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, gcpSettingAttribute);
+  }
+
+  private SettingAttribute ensurePaidSMTPSettings(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    String secret = scmSecret.decryptToString(new SecretName("smtp_paid_sendgrid_config_password"));
+    SmtpConfig smtpConfig = SmtpConfig.builder()
+                                .host("smtp.sendgrid.net")
+                                .port(465)
+                                .useSSL(true)
+                                .fromAddress("automation@harness.io")
+                                .username("apikey")
+                                .password(secret.toCharArray())
+                                .accountId(account.getUuid())
+                                .build();
+
+    SettingAttribute emailSettingAttribute = aSettingAttribute()
+                                                 .withCategory(Category.CONNECTOR)
+                                                 .withName("EMAIL")
+                                                 .withAccountId(account.getUuid())
+                                                 .withValue(smtpConfig)
+                                                 .build();
+    return ensureSettingAttribute(seed, emailSettingAttribute);
   }
 
   public SettingAttribute exists(SettingAttribute settingAttribute) {
