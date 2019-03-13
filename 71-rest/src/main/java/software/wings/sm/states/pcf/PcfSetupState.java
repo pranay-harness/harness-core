@@ -16,6 +16,7 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -240,6 +241,11 @@ public class PcfSetupState extends State {
 
     PcfServiceSpecification pcfServiceSpecification =
         serviceResourceService.getPcfServiceSpecification(context.getAppId(), serviceElement.getUuid());
+
+    if (pcfServiceSpecification == null) {
+      String errorMsg = "PCF Manifest config Doesn't Exist for Service. Please create PCF Manifest";
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, errorMsg, USER).addParam("message", errorMsg);
+    }
 
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
     validateSpecification(pcfServiceSpecification);
