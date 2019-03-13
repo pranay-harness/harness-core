@@ -443,7 +443,7 @@ public class CommandStateTest extends WingsBaseTest {
                             .withServiceIds(asList(SERVICE_ID))
                             .build();
 
-    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().withMetadataOnly(false).build();
+    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().metadataOnly(false).build();
     Command command =
         aCommand()
             .addCommandUnits(
@@ -571,7 +571,7 @@ public class CommandStateTest extends WingsBaseTest {
                             .withServiceIds(asList(SERVICE_ID))
                             .build();
 
-    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().withMetadataOnly(false).build();
+    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().metadataOnly(false).build();
 
     Command command =
         aCommand()

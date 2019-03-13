@@ -53,9 +53,9 @@ public class GcsArtifactStream extends ArtifactStream {
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withJobName(jobname)
-        .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
+        .artifactStreamType(getArtifactStreamType())
+        .jobName(jobname)
+        .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .build();
   }
 

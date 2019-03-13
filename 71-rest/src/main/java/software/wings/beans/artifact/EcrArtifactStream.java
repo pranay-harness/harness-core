@@ -45,9 +45,9 @@ public class EcrArtifactStream extends ArtifactStream {
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withRegion(region)
-        .withImageName(imageName)
+        .artifactStreamType(getArtifactStreamType())
+        .region(region)
+        .imageName(imageName)
         .build();
   }
 

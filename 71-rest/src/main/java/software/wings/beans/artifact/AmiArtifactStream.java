@@ -94,11 +94,11 @@ public class AmiArtifactStream extends ArtifactStream {
     }
 
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withRegion(region)
-        .withTags(tagMap)
-        .withFilters(filterMap)
-        .withPlatform(platform)
+        .artifactStreamType(getArtifactStreamType())
+        .region(region)
+        .tags(tagMap)
+        .filters(filterMap)
+        .platform(platform)
         .build();
   }
 

@@ -78,12 +78,12 @@ public class DelegateFileManagerTest extends CategoryTest {
           .build();
   private ArtifactStreamAttributes artifactStreamAttributesForS3 =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.AMAZON_S3.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
-          .withServerSetting(awsSetting)
-          .withArtifactStreamId(ARTIFACT_STREAM_ID_S3)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
+          .serverSetting(awsSetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID_S3)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
   private SettingAttribute artifactorySetting = aSettingAttribute()
@@ -96,12 +96,12 @@ public class DelegateFileManagerTest extends CategoryTest {
                                                     .build();
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-          .withServerSetting(artifactorySetting)
-          .withArtifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+          .serverSetting(artifactorySetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
   @Test

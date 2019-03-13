@@ -50,7 +50,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
+    return anArtifactStreamAttributes().artifactStreamType(getArtifactStreamType()).jobName(jobname).build();
   }
 
   @Data

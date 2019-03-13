@@ -62,7 +62,7 @@ public class CustomArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).build();
+    return anArtifactStreamAttributes().artifactStreamType(getArtifactStreamType()).build();
   }
 
   @Override

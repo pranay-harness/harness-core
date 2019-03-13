@@ -96,12 +96,12 @@ public class ArtifactoryServiceTest {
   public void shouldGetDockerTags() {
     List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig, null,
         anArtifactStreamAttributes()
-            .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-            .withMetadataOnly(true)
-            .withJobName("docker")
-            .withImageName("wingsplugins/todolist")
-            .withArtifactoryDockerRepositoryServer("harness.jfrog.com")
-            .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+            .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+            .metadataOnly(true)
+            .jobName("docker")
+            .imageName("wingsplugins/todolist")
+            .artifactoryDockerRepositoryServer("harness.jfrog.com")
+            .artifactServerEncryptedDataDetails(Collections.emptyList())
             .build(),
         50);
     assertThat(builds).isNotNull();

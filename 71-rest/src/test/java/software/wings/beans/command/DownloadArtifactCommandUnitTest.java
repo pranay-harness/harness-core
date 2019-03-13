@@ -72,11 +72,11 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                                           .build();
   private ArtifactStreamAttributes artifactStreamAttributesForAmazonS3 =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.AMAZON_S3.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
-          .withServerSetting(awsSetting)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
+          .serverSetting(awsSetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
   private Host host = Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build();
 
@@ -90,12 +90,12 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                                     .build();
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-          .withServerSetting(artifactorySetting)
-          .withArtifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+          .serverSetting(artifactorySetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
   SettingAttribute artifactoryAnonSetting =
       aSettingAttribute()
@@ -103,12 +103,12 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .withValue(ArtifactoryConfig.builder().artifactoryUrl(WingsTestConstants.ARTIFACTORY_URL).build())
           .build();
   ArtifactStreamAttributes streamAttributesAnon = anArtifactStreamAttributes()
-                                                      .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-                                                      .withMetadataOnly(true)
-                                                      .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-                                                      .withServerSetting(artifactoryAnonSetting)
-                                                      .withArtifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
-                                                      .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+                                                      .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+                                                      .metadataOnly(true)
+                                                      .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+                                                      .serverSetting(artifactoryAnonSetting)
+                                                      .artifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
+                                                      .artifactServerEncryptedDataDetails(Collections.emptyList())
                                                       .build();
 
   @InjectMocks

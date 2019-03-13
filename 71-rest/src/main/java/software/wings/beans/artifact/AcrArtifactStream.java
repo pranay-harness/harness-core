@@ -49,10 +49,10 @@ public class AcrArtifactStream extends ArtifactStream {
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withSubscriptionId(subscriptionId)
-        .withRegistryName(registryName)
-        .withRepositoryName(repositoryName)
+        .artifactStreamType(getArtifactStreamType())
+        .subscriptionId(subscriptionId)
+        .registryName(registryName)
+        .repositoryName(repositoryName)
         .build();
   }
 
