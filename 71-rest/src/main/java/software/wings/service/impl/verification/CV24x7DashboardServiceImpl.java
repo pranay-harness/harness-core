@@ -23,6 +23,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -36,9 +37,11 @@ import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -330,5 +333,22 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     }
 
     return unexpectedFrequency;
+  }
+
+  public Set<String> getMetricTags(String accountId, String appId, String cvConfigId) {
+    Set<String> tags = new HashSet<>();
+    TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
+                                             .filter("appId", appId)
+                                             .filter("cvConfigId", cvConfigId)
+                                             .get();
+
+    if (template != null) {
+      template.getMetricTemplates().forEach((key, value) -> {
+        if (isNotEmpty(value.getTags())) {
+          tags.addAll(value.getTags());
+        }
+      });
+    }
+    return tags;
   }
 }
