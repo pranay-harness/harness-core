@@ -21,7 +21,6 @@ import static io.harness.eraro.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
-import static java.net.URLEncoder.encode;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -139,7 +138,6 @@ import software.wings.utils.CacheHelper;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1676,11 +1674,7 @@ public class UserServiceImpl implements UserService {
         + "harnesssupport.zendesk.com/access/jwt?jwt=" + jwtString;
 
     if (returnToUrl != null) {
-      try {
-        redirectUrl += "&return_to=" + encode(redirectUrl, Charset.defaultCharset().name());
-      } catch (UnsupportedEncodingException e) {
-        throw new WingsException(e);
-      }
+      redirectUrl += "&return_to=" + returnToUrl;
     }
     return ZendeskSsoLoginResponse.builder().redirectUrl(redirectUrl).userId(user.getUuid()).build();
   }
