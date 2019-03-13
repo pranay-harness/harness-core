@@ -17,7 +17,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -37,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
-import software.wings.api.ShellElement;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -66,7 +64,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
-import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -235,9 +232,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         ? null
         : workflowStandardParams.getEnv().getUuid();
 
-    ShellElement shellElement =
-        ShellElement.builder().scriptType(scriptType).uuid(UUIDGenerator.generateUuid()).build();
-
     String appId = workflowStandardParams == null ? null : workflowStandardParams.getAppId();
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
     String serviceTemplateId = infrastructureMapping == null ? null : infrastructureMapping.getServiceTemplateId();
@@ -381,14 +375,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .build();
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask, scriptStateExecutionData);
-    List<ContextElement> contextElementList = executionContext.getStateExecutionInstance().getContextElements();
-    contextElementList.add(shellElement);
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(scriptStateExecutionData)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
-        .withContextElements(contextElementList)
         .build();
   }
 
