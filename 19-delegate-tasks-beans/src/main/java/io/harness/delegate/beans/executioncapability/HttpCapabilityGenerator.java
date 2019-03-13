@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.expression.DummySubstitutor;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,7 +21,7 @@ public class HttpCapabilityGenerator implements CapabilityGenerator {
     HttpTaskParameters httpTaskParameters = (HttpTaskParameters) parameters[0];
 
     try {
-      URI uri = new URI(httpTaskParameters.getUrl());
+      URI uri = new URI(DummySubstitutor.substitute(httpTaskParameters.getUrl()));
 
       return Arrays.asList(HttpConnectionExecutionCapability.builder()
                                .scheme(uri.getScheme())
