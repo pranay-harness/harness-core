@@ -42,6 +42,6 @@ public class LogMLAnalysisSummary {
   private long baselineEndTime;
 
   public boolean isEmptyResult() {
-    return isEmpty(testClusters) && isEmpty(unknownClusters);
+    return isEmpty(testClusters) && isEmpty(unknownClusters) && isEmpty(controlClusters);
   }
 }
