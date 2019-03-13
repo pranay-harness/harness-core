@@ -8,11 +8,19 @@ import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
+import static software.wings.beans.alert.AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.DelegateProfileError;
 import static software.wings.beans.alert.AlertType.DelegatesDown;
+import static software.wings.beans.alert.AlertType.GitConnectionError;
+import static software.wings.beans.alert.AlertType.GitSyncError;
+import static software.wings.beans.alert.AlertType.INSTANCE_USAGE_APPROACHING_LIMIT;
+import static software.wings.beans.alert.AlertType.InvalidKMS;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
+import static software.wings.beans.alert.AlertType.RESOURCE_USAGE_APPROACHING_LIMIT;
+import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
+import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -57,7 +65,9 @@ import java.util.concurrent.Future;
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
   public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(
-      Arrays.asList(NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError));
+      Arrays.asList(NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError,
+          DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED,
+          USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError, InvalidKMS));
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
