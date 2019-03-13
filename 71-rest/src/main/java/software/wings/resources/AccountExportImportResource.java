@@ -34,6 +34,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.Schema;
 import software.wings.beans.User;
 import software.wings.beans.sso.LdapSettings;
@@ -126,8 +127,8 @@ public class AccountExportImportResource {
   private JsonParser jsonParser = new JsonParser();
 
   // Entity classes that need special export handling (e.g. with a special entity filter)
-  private static Set<Class<? extends PersistentEntity>> includedEntities =
-      new HashSet<>(Arrays.asList(Account.class, User.class, Application.class, Schema.class, EncryptedData.class));
+  private static Set<Class<? extends PersistentEntity>> includedEntities = new HashSet<>(
+      Arrays.asList(Account.class, User.class, Application.class, Schema.class, EncryptedData.class, KmsConfig.class));
 
   private static Set<String> includedMongoCollections = new HashSet<>();
 
@@ -189,7 +190,7 @@ public class AccountExportImportResource {
       if (schemas.size() == 0) {
         log.warn("Schema collection data doesn't exist, schema version data won't be exported.");
       } else {
-        exportToStream(zipOutputStream, schemas, schemaCollectionName);
+        exportToStream(zipOutputStream, fileOutputStream, schemas, schemaCollectionName);
       }
     }
 
@@ -202,7 +203,7 @@ public class AccountExportImportResource {
         throw new IllegalArgumentException(
             "Account '" + accountId + "' doesn't exist, can't proceed with this export operation.");
       } else {
-        exportToStream(zipOutputStream, accounts, accountCollectionName);
+        exportToStream(zipOutputStream, fileOutputStream, accounts, accountCollectionName);
       }
     }
 
@@ -211,7 +212,7 @@ public class AccountExportImportResource {
     if (isExportable(toBeExported, userCollectionName)) {
       DBObject accountsFilter = new BasicDBObject("accounts", new BasicDBObject("$in", new String[] {accountId}));
       List<String> users = mongoExportImport.exportRecords(accountsFilter, userCollectionName);
-      exportToStream(zipOutputStream, users, userCollectionName);
+      exportToStream(zipOutputStream, fileOutputStream, users, userCollectionName);
     }
 
     DBObject accountIdFilter = new BasicDBObject("accountId", accountId);
@@ -221,7 +222,7 @@ public class AccountExportImportResource {
     String applicationsCollectionName = getCollectionName(Application.class);
     if (isExportable(toBeExported, applicationsCollectionName)) {
       List<String> applications = mongoExportImport.exportRecords(accountIdFilter, applicationsCollectionName);
-      exportToStream(zipOutputStream, applications, applicationsCollectionName);
+      exportToStream(zipOutputStream, fileOutputStream, applications, applicationsCollectionName);
     }
 
     DBObject accountOrAppIdsFilter = new BasicDBObject();
@@ -230,7 +231,7 @@ public class AccountExportImportResource {
     // 5. Export config file content that are persisted in the Mongo GridFs. "configs.files" and "configs.chunks"
     // are not managed by Morphia, need to handle it separately and only export those entries associated with
     // CONFIG_FILE type of secrets for now,
-    exportConfigFilesContent(zipOutputStream, accountOrAppIdsFilter);
+    exportConfigFilesContent(zipOutputStream, fileOutputStream, accountOrAppIdsFilter);
 
     // 6. Export all other Harness entities that has @Entity annotation excluding what's in the blacklist.
     for (Entry<String, Class<? extends Base>> entry : genericExportableEntityTypes.entrySet()) {
@@ -248,13 +249,21 @@ public class AccountExportImportResource {
           }
           String collectionName = getCollectionName(entityClazz);
           List<String> records = mongoExportImport.exportRecords(exportFilter, collectionName);
-          log.info("{} '{}' records have been exported.", records.size(), collectionName);
-          exportToStream(zipOutputStream, records, collectionName);
+          exportToStream(zipOutputStream, fileOutputStream, records, collectionName);
         }
       }
     }
 
     // 7. No need to export Quartz jobs. They can be recreated based on accountId/appId/triggerId etc.
+    // Export 'kmsConfig' including the global KMS secret manager if configured (e.g. QA and PROD, but not in fremium
+    // yet).
+    String kmsConfigCollectionName = getCollectionName(KmsConfig.class);
+    if (isExportable(toBeExported, kmsConfigCollectionName)) {
+      List<String> accountIdList = Arrays.asList(accountId, Base.GLOBAL_ACCOUNT_ID);
+      DBObject exportFilter = new BasicDBObject("accountId", new BasicDBObject("$in", accountIdList));
+      List<String> records = mongoExportImport.exportRecords(exportFilter, kmsConfigCollectionName);
+      exportToStream(zipOutputStream, fileOutputStream, records, kmsConfigCollectionName);
+    }
 
     log.info("Flushing exported data into a zip file {}.", zipFileName);
     zipOutputStream.flush();
@@ -273,8 +282,8 @@ public class AccountExportImportResource {
     return exportable != null && exportable;
   }
 
-  private void exportToStream(ZipOutputStream zipOutputStream, List<String> records, String collectionName)
-      throws IOException {
+  private void exportToStream(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, List<String> records,
+      String collectionName) throws IOException {
     String zipEntryName = collectionName + JSON_FILE_SUFFIX;
     ZipEntry zipEntry = new ZipEntry(zipEntryName);
     log.info("Zipping entry: {}", zipEntryName);
@@ -284,6 +293,8 @@ public class AccountExportImportResource {
     zipOutputStream.write(jsonString.getBytes(Charset.defaultCharset()));
     // Flush when each collection finished exporting into the stream to reduce memory footprint.
     zipOutputStream.flush();
+    fileOutputStream.flush();
+    log.info("{} '{}' records have been exported.", records.size(), collectionName);
   }
 
   private DBObject getGitCommitExportFilter(DBObject accountIdFilter) {
@@ -299,13 +310,13 @@ public class AccountExportImportResource {
     return new BasicDBObject("$and", Arrays.asList(accountIdFilter, statusQueuedFilter));
   }
 
-  private void exportConfigFilesContent(ZipOutputStream zipOutputStream, DBObject accountOrAppIdsFilter)
-      throws IOException {
+  private void exportConfigFilesContent(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream,
+      DBObject accountOrAppIdsFilter) throws IOException {
     // 1. Export EncryptedData records
     String encryptedDataCollectionName = getCollectionName(EncryptedData.class);
     List<String> encryptedDataRecords =
         mongoExportImport.exportRecords(accountOrAppIdsFilter, encryptedDataCollectionName);
-    exportToStream(zipOutputStream, encryptedDataRecords, encryptedDataCollectionName);
+    exportToStream(zipOutputStream, fileOutputStream, encryptedDataRecords, encryptedDataCollectionName);
 
     // 2. Find out all file IDs referred by KMS/CONFIG_FILE encrypted records.
     List<ObjectId> configFileIds = new ArrayList<>();
@@ -330,12 +341,12 @@ public class AccountExportImportResource {
     // 3. Export all 'configs.files' records in the configFileIds list.
     DBObject inIdsFilter = new BasicDBObject("_id", new BasicDBObject("$in", configFileIds));
     List<String> configFilesRecords = mongoExportImport.exportRecords(inIdsFilter, COLLECTION_CONFIG_FILES);
-    exportToStream(zipOutputStream, configFilesRecords, COLLECTION_CONFIG_FILES);
+    exportToStream(zipOutputStream, fileOutputStream, configFilesRecords, COLLECTION_CONFIG_FILES);
 
     // 4. Export all 'configs.files' records in the configFileIds list.
     DBObject inFilesIdFilter = new BasicDBObject("files_id", new BasicDBObject("$in", configFileIds));
     List<String> configChunkRecords = mongoExportImport.exportRecords(inFilesIdFilter, COLLECTION_CONFIG_CHUNKS);
-    exportToStream(zipOutputStream, configChunkRecords, COLLECTION_CONFIG_CHUNKS);
+    exportToStream(zipOutputStream, fileOutputStream, configChunkRecords, COLLECTION_CONFIG_CHUNKS);
   }
 
   @POST
@@ -431,6 +442,17 @@ public class AccountExportImportResource {
         if (importStatus != null) {
           importStatuses.add(importStatus);
         }
+      }
+    }
+
+    // And import kmsConfig as a special handling.
+    String kmsConfigCollectionName = getCollectionName(KmsConfig.class);
+    JsonArray kmsConfigs = getJsonArray(zipEntryDataMap, kmsConfigCollectionName, clashedUserIdMapping);
+    if (kmsConfigs != null) {
+      ImportStatus importStatus = mongoExportImport.importRecords(
+          kmsConfigCollectionName, convertJsonArrayToStringList(kmsConfigs), importMode);
+      if (importStatus != null) {
+        importStatuses.add(importStatus);
       }
     }
 
