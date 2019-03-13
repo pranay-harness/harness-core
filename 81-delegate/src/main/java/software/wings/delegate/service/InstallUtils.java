@@ -35,17 +35,17 @@ public class InstallUtils {
     return goTemplateToolPath;
   }
 
-  static void installKubectl(DelegateConfiguration configuration) {
+  static boolean installKubectl(DelegateConfiguration configuration) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
         kubectlPath = configuration.getKubectlPath();
         logger.info("Found user configured kubectl at {}. Skipping Install.", kubectlPath);
-        return;
+        return true;
       }
 
       if (isWindows()) {
         logger.info("Skipping kubectl install on Windows");
-        return;
+        return true;
       }
 
       String version = System.getenv().get("KUBECTL_VERSION");
@@ -60,7 +60,7 @@ public class InstallUtils {
       if (validateKubectlExists(kubectlDirectory)) {
         kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
         logger.info("kubectl version {} already installed", version);
-        return;
+        return true;
       }
 
       logger.info("Installing kubectl");
@@ -85,13 +85,21 @@ public class InstallUtils {
       if (result.getExitValue() == 0) {
         kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
         logger.info(result.outputString());
-        logger.info("kubectl path: {}", kubectlPath);
+        if (validateKubectlExists(kubectlDirectory)) {
+          logger.info("kubectl path: {}", kubectlPath);
+          return true;
+        } else {
+          logger.error("kubectl not validated after download: {}", kubectlPath);
+          return false;
+        }
       } else {
         logger.error("kubectl install failed");
         logger.error(result.outputString());
+        return false;
       }
     } catch (Exception e) {
       logger.error("Error installing kubectl", e);
+      return false;
     }
   }
 
@@ -127,11 +135,11 @@ public class InstallUtils {
         + "/amd64/kubectl";
   }
 
-  static void installGoTemplateTool(DelegateConfiguration configuration) {
+  static boolean installGoTemplateTool(DelegateConfiguration configuration) {
     try {
       if (isWindows()) {
         logger.info("Skipping go-template install on Windows");
-        return;
+        return true;
       }
 
       String goTemplateClientDirectory = goTemplateClientBaseDir + goTemplateClientVersion;
@@ -140,7 +148,7 @@ public class InstallUtils {
         goTemplateToolPath =
             Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
         logger.info("go-template version {} already installed", goTemplateClientVersion);
-        return;
+        return true;
       }
 
       logger.info("Installing go-template");
@@ -167,13 +175,21 @@ public class InstallUtils {
         goTemplateToolPath =
             Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
         logger.info(result.outputString());
-        logger.info("go-template path: {}", goTemplateToolPath);
+        if (validateGoTemplateClientExists(goTemplateClientDirectory)) {
+          logger.info("go-template path: {}", goTemplateToolPath);
+          return true;
+        } else {
+          logger.error("go-template not validated after download: {}", goTemplateToolPath);
+          return false;
+        }
       } else {
         logger.error("go-template install failed");
         logger.error(result.outputString());
+        return false;
       }
     } catch (Exception e) {
       logger.error("Error installing go-template", e);
+      return false;
     }
   }
 

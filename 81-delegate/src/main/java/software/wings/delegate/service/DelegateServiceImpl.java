@@ -177,8 +177,9 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
-  public static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
-  public static final int KEEP_ALIVE_INTERVAL = 23000;
+  private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
+  private static final int KEEP_ALIVE_INTERVAL = 23000;
+  private static final int CLIENT_TOOL_RETRIES = 10;
 
   private static String hostName;
 
@@ -282,8 +283,8 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Delegate process started");
       }
 
-      installKubectl(delegateConfiguration);
-      installGoTemplateTool(delegateConfiguration);
+      boolean kubectlInstalled = installKubectl(delegateConfiguration);
+      boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -418,6 +419,31 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Delegate started");
 
       startProfileCheck();
+
+      if (!kubectlInstalled || !goTemplateInstalled) {
+        systemExecutorService.submit(() -> {
+          boolean kubectl = kubectlInstalled;
+          boolean goTemplate = goTemplateInstalled;
+          int retries = CLIENT_TOOL_RETRIES;
+          while ((!kubectl || !goTemplate) && retries > 0) {
+            sleep(ofSeconds(15L));
+            if (!kubectl) {
+              kubectl = installKubectl(delegateConfiguration);
+            }
+            if (!goTemplate) {
+              goTemplate = installGoTemplateTool(delegateConfiguration);
+            }
+            retries--;
+          }
+
+          if (!kubectl) {
+            logger.error("Failed to install kubectl after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!goTemplate) {
+            logger.error("Failed to install go-template after {} retries", CLIENT_TOOL_RETRIES);
+          }
+        });
+      }
 
       synchronized (waiter) {
         waiter.wait();
