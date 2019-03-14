@@ -116,7 +116,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     }
 
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (pipelineStageExecutions == null) {
+    if (isEmpty(pipelineStageExecutions)) {
       return;
     }
 
@@ -141,7 +141,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     }
 
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (pipelineStageExecutions == null) {
+    if (isEmpty(pipelineStageExecutions)) {
       return;
     }
 
