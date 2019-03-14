@@ -33,6 +33,8 @@ import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.DelegateTask;
@@ -64,6 +66,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class ContinuousVerificationServiceTest extends VerificationBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceTest.class);
   private String accountId, appId, envId, serviceId, connectorId, query, cvConfigId, workflowId, workflowExecutionId,
       stateExecutionId;
 
@@ -169,10 +172,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   public void testLogsCollectionBaselineInFuture() {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    logger.info("currentMin: {}", currentMinute);
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
-    logsCVConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) + 1);
-    logsCVConfiguration.setBaselineEndMinute(logsCVConfiguration.getBaselineStartMinute() + 15);
+    logsCVConfiguration.setBaselineStartMinute(currentMinute + CRON_POLL_INTERVAL_IN_MINUTES);
+    logsCVConfiguration.setBaselineEndMinute(
+        logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES * 3);
     wingsPersistence.save(logsCVConfiguration);
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -180,12 +186,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
     assertEquals(0, delegateTasks.size());
 
-    logsCVConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - 10);
+    logsCVConfiguration.setBaselineStartMinute(currentMinute - 5);
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
     assertEquals(0, delegateTasks.size());
 
-    logsCVConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - 20);
+    logsCVConfiguration.setBaselineStartMinute(currentMinute - 20);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();

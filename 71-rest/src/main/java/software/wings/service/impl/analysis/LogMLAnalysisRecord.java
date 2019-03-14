@@ -76,7 +76,6 @@ public class LogMLAnalysisRecord extends Base {
   private int timesLabeled;
 
   @Transient
-
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
@@ -84,7 +83,7 @@ public class LogMLAnalysisRecord extends Base {
 
   @Builder
   private LogMLAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String stateExecutionId,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String stateExecutionId, String cvConfigId,
       StateType stateType, int logCollectionMinute, boolean isBaseLineCreated, String baseLineExecutionId, String query,
       String analysisSummaryMessage, double score, List<List<SplunkAnalysisCluster>> unknown_events,
       Map<String, List<SplunkAnalysisCluster>> test_events, Map<String, List<SplunkAnalysisCluster>> control_events,
@@ -95,6 +94,7 @@ public class LogMLAnalysisRecord extends Base {
       byte[] analysisDetailsCompressedJson) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
+    this.cvConfigId = cvConfigId;
     this.stateType = stateType;
     this.logCollectionMinute = logCollectionMinute;
     this.isBaseLineCreated = isBaseLineCreated;

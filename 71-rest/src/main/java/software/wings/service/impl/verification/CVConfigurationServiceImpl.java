@@ -2,7 +2,10 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import com.google.inject.Inject;
@@ -23,7 +26,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.CloudWatchServiceImpl;
+import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
@@ -57,6 +63,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Inject WingsPersistence wingsPersistence;
 
+  @Override
   public String saveConfiguration(String accountId, String appId, StateType stateType, Object params) {
     CVConfiguration cvConfiguration;
     switch (stateType) {
@@ -104,6 +111,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return cvConfiguration.getUuid();
   }
 
+  @Override
   public <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId) {
     CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, serviceConfigurationId);
     if (cvConfiguration == null) {
@@ -113,6 +121,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return (T) cvConfiguration;
   }
 
+  @Override
   public <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId) {
     CVConfiguration cvConfiguration = wingsPersistence.createQuery(CVConfiguration.class)
                                           .filter("name", name)
@@ -165,6 +174,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return cvConfigurations24x7;
   }
 
+  @Override
   public String updateConfiguration(
       String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId) {
     logger.info("Updating CV service configuration id " + serviceConfigurationId);
@@ -210,6 +220,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return savedConfiguration.getUuid();
   }
 
+  @Override
   public boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId) {
     Object savedConfig;
     savedConfig = wingsPersistence.get(CVConfiguration.class, serviceConfigurationId);
@@ -218,6 +229,41 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
     wingsPersistence.delete(CVConfiguration.class, serviceConfigurationId);
     deleteTemplate(accountId, serviceConfigurationId, ((CVConfiguration) savedConfig).getStateType());
+    return true;
+  }
+
+  @Override
+  public boolean resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration) {
+    final LogsCVConfiguration cvConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    if (cvConfiguration == null) {
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "No configuration found with id " + cvConfigId);
+    }
+
+    if (logsCVConfiguration == null) {
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "No log configuration provided in the payload");
+    }
+
+    if (logsCVConfiguration.getBaselineStartMinute() <= 0 || logsCVConfiguration.getBaselineEndMinute() <= 0
+        || logsCVConfiguration.getBaselineEndMinute()
+            < logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message",
+              "Invalid baseline start and end time provided. They both should be positive and the difference should at least be "
+                  + (CRON_POLL_INTERVAL_IN_MINUTES - 1) + " provided config: " + logsCVConfiguration);
+    }
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(LogDataRecord.class).filter("appId", appId).filter("cvConfigId", cvConfigId));
+    wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                .filter("appId", appId)
+                                .filter("cvConfigId", cvConfigId)
+                                .field("logCollectionMinute")
+                                .greaterThanOrEq(logsCVConfiguration.getBaselineStartMinute()));
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                .filter("appId", appId)
+                                .filter("cvConfigId", cvConfigId));
+    cvConfiguration.setBaselineStartMinute(logsCVConfiguration.getBaselineStartMinute());
+    cvConfiguration.setBaselineEndMinute(logsCVConfiguration.getBaselineEndMinute());
+    wingsPersistence.save(cvConfiguration);
     return true;
   }
 

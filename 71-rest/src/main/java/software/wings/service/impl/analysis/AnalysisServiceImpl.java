@@ -23,7 +23,6 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
@@ -865,15 +864,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
   }
 
-  private void purgeLogs(StateType stateType, PageResponse<WorkflowExecution> workflowExecutions) {
-    for (WorkflowExecution workflowExecution : workflowExecutions) {
-      if (logExist(stateType, workflowExecution)) {
-        deleteNotRequiredLogs(stateType, workflowExecution);
-        return;
-      }
-    }
-  }
-
   private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {
     return wingsPersistence.createQuery(LogDataRecord.class)
                .filter("appId", workflowExecution.getAppId())
@@ -882,18 +872,6 @@ public class AnalysisServiceImpl implements AnalysisService {
                .filter("workflowExecutionId", workflowExecution.getUuid())
                .count(new CountOptions().limit(1))
         > 0;
-  }
-
-  private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {
-    wingsPersistence.createQuery(LogDataRecord.class)
-        .filter("appId", workflowExecution.getAppId())
-        .filter("stateType", stateType)
-        .filter("workflowId", workflowExecution.getWorkflowId())
-        .field("workflowExecutionId")
-        .notEqual(workflowExecution.getUuid());
-    logger.info("deleting " + stateType + " logs for workflow:" + workflowExecution.getWorkflowId()
-        + " last successful execution: " + workflowExecution.getUuid());
-    // wingsPersistence.delete(deleteQuery);
   }
 
   @Override

@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.List;
 
@@ -28,4 +29,5 @@ public interface CVConfigurationService extends OwnedByAccount {
 
   void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration);
   void deleteStaleConfigs();
+  boolean resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration);
 }
