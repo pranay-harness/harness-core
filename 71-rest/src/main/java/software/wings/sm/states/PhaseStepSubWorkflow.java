@@ -313,8 +313,18 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                                      .filter(s -> s instanceof K8sExecutionSummary)
                                                      .findFirst();
           if (!first.isPresent()) {
+            Optional<StepExecutionSummary> firstScriptStateExecutionSummary =
+                phaseStepExecutionSummary.getStepExecutionSummaryList()
+                    .stream()
+                    .filter(s -> s instanceof ScriptStateExecutionSummary)
+                    .findFirst();
+            if (firstScriptStateExecutionSummary.isPresent()) {
+              return singletonList(K8sContextElement.builder().build());
+            }
+
             return null;
           }
+
           K8sExecutionSummary k8sExecutionSummary = (K8sExecutionSummary) first.get();
 
           K8sContextElement k8SContextElement = K8sContextElement.builder()
