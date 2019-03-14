@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -41,5 +42,10 @@ public class KubernetesSwapServiceSelectorsExecutionData extends StateExecutionD
         executionDetails, "service2", ExecutionDataValue.builder().value(service2).displayName("Service Two").build());
 
     return executionDetails;
+  }
+
+  @Override
+  public K8sExecutionSummary getStepExecutionSummary() {
+    return K8sExecutionSummary.builder().build();
   }
 }
