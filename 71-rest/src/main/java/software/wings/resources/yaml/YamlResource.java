@@ -224,8 +224,7 @@ public class YamlResource {
   @Path("/application-manifests/{applicationManifestId}")
   @Timed
   @ExceptionMetered
-  // ToDo anshul Fix auth permission. need to specify multiple permissions//
-  @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.READ)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getApplicationManifestId(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("applicationManifestId") String applicationManifestId) {
     return yamlResourceService.getApplicationManifest(appId, applicationManifestId);
@@ -235,8 +234,7 @@ public class YamlResource {
   @Path("/application-manifests/{applicationManifestId}")
   @Timed
   @ExceptionMetered
-  // ToDo anshul Fix auth permission. need to specify multiple permissions
-  @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<YamlPayload> updateApplicationManifest(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
       @PathParam("applicationManifestId") String applicationManifestId, YamlPayload yamlPayload) {
@@ -247,8 +245,7 @@ public class YamlResource {
   @Path("/manifest-files/{manifestFileId}")
   @Timed
   @ExceptionMetered
-  // ToDo anshul Fix auth permission. need to specify multiple permissions//
-  @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.READ)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getApplicationManifestFile(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("manifestFileId") String manifestFileId) {
     return yamlResourceService.getManifestFile(appId, manifestFileId);
@@ -258,8 +255,7 @@ public class YamlResource {
   @Path("/manifest-files/{manifestFileId}")
   @Timed
   @ExceptionMetered
-  // ToDo anshul Fix auth permission. need to specify multiple permissions//
-  @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<ManifestFile> updateManifestFile(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
