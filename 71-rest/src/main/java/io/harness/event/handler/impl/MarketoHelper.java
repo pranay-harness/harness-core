@@ -39,8 +39,8 @@ public class MarketoHelper {
 
   @Inject private UserService userService;
 
-  public long createOrUpdateLead(Account account, String userName, String email, String accessToken, Retrofit retrofit)
-      throws IOException, URISyntaxException {
+  public long createOrUpdateLead(Account account, String userName, String email, String accessToken,
+      String oauthProvider, Retrofit retrofit) throws IOException, URISyntaxException {
     Validator.notNullCheck("Email is null while registering the lead", email);
 
     int existingLeadId = 0;
@@ -66,59 +66,83 @@ public class MarketoHelper {
     String userInviteUrl = getUserInviteUrl(email, account);
     retrofit2.Response<Response> createOrUpdateResponse;
     if (existingLeadId > 0) {
-      LeadBuilder leadBuilderWithId = Lead.builder();
-      leadBuilderWithId.id(existingLeadId);
-      leadBuilderWithId.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
-
-      if (account != null) {
-        leadBuilderWithId.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
-
-        LicenseInfo licenseInfo = account.getLicenseInfo();
-        if (licenseInfo != null) {
-          leadBuilderWithId.Free_Trial_Status__c(licenseInfo.getAccountStatus())
-              .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
-        }
+      try {
+        createOrUpdateResponse =
+            updateLead(retrofit, existingLeadId, email, userName, account, userInviteUrl, accessToken, oauthProvider);
+      } catch (Exception ex) {
+        // Retrying with email if id was invalid, we have cases where the lead was manually deleted from marketo
+        createOrUpdateResponse =
+            createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider);
       }
-
-      if (isNotEmpty(userInviteUrl)) {
-        leadBuilderWithId.Freemium_Invite_URL__c(userInviteUrl);
-      }
-
-      LeadRequestWithId leadRequestWithId = LeadRequestWithId.builder()
-                                                .action("createOrUpdate")
-                                                .lookupField("id")
-                                                .input(Arrays.asList(leadBuilderWithId.build()))
-                                                .build();
-      createOrUpdateResponse =
-          retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
     } else {
-      LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
-      leadBuilderWithEmail.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
-
-      if (account != null) {
-        leadBuilderWithEmail.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
-        LicenseInfo licenseInfo = account.getLicenseInfo();
-        if (licenseInfo != null) {
-          leadBuilderWithEmail.Free_Trial_Status__c(licenseInfo.getAccountStatus())
-              .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
-        }
-      }
-
-      if (isNotEmpty(userInviteUrl)) {
-        leadBuilderWithEmail.Freemium_Invite_URL__c(userInviteUrl);
-      }
-
-      LeadRequestWithEmail leadRequestWithEmail = LeadRequestWithEmail.builder()
-                                                      .action("createOrUpdate")
-                                                      .lookupField("email")
-                                                      .input(Arrays.asList(leadBuilderWithEmail.build()))
-                                                      .build();
-
       createOrUpdateResponse =
-          retrofit.create(MarketoRestClient.class).createLead(accessToken, leadRequestWithEmail).execute();
+          createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider);
     }
 
     return processLeadResponse(createOrUpdateResponse);
+  }
+
+  private retrofit2.Response<Response> createLead(Retrofit retrofit, String email, String userName, Account account,
+      String userInviteUrl, String accessToken, String oauthProvider) throws IOException {
+    LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
+    leadBuilderWithEmail.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
+
+    if (account != null) {
+      leadBuilderWithEmail.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+      if (licenseInfo != null) {
+        leadBuilderWithEmail.Free_Trial_Status__c(licenseInfo.getAccountStatus())
+            .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
+      }
+    }
+
+    if (isNotEmpty(userInviteUrl)) {
+      leadBuilderWithEmail.Freemium_Invite_URL__c(userInviteUrl);
+    }
+
+    if (isNotEmpty(oauthProvider)) {
+      leadBuilderWithEmail.SSO_Freemium_Type__c(oauthProvider);
+    }
+
+    LeadRequestWithEmail leadRequestWithEmail = LeadRequestWithEmail.builder()
+                                                    .action("createOrUpdate")
+                                                    .lookupField("email")
+                                                    .input(Arrays.asList(leadBuilderWithEmail.build()))
+                                                    .build();
+
+    return retrofit.create(MarketoRestClient.class).createLead(accessToken, leadRequestWithEmail).execute();
+  }
+
+  private retrofit2.Response<Response> updateLead(Retrofit retrofit, int existingLeadId, String email, String userName,
+      Account account, String userInviteUrl, String accessToken, String oauthProvider) throws IOException {
+    LeadBuilder leadBuilderWithId = Lead.builder();
+    leadBuilderWithId.id(existingLeadId);
+    leadBuilderWithId.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
+
+    if (account != null) {
+      leadBuilderWithId.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+      if (licenseInfo != null) {
+        leadBuilderWithId.Free_Trial_Status__c(licenseInfo.getAccountStatus())
+            .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
+      }
+    }
+
+    if (isNotEmpty(userInviteUrl)) {
+      leadBuilderWithId.Freemium_Invite_URL__c(userInviteUrl);
+    }
+
+    if (isNotEmpty(oauthProvider)) {
+      leadBuilderWithId.SSO_Freemium_Type__c(oauthProvider);
+    }
+
+    LeadRequestWithId leadRequestWithId = LeadRequestWithId.builder()
+                                              .action("createOrUpdate")
+                                              .lookupField("id")
+                                              .input(Arrays.asList(leadBuilderWithId.build()))
+                                              .build();
+    return retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
   }
 
   private long processLeadResponse(retrofit2.Response<Response> response) {

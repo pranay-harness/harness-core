@@ -44,5 +44,6 @@ public class LeadRequestWithEmail {
     private String Free_Trial_Status__c;
     private String Freemium_Invite_URL__c;
     private String Days_Left_in_Trial__c;
+    private String SSO_Freemium_Type__c;
   }
 }

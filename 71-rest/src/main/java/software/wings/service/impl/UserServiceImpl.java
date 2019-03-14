@@ -1006,7 +1006,7 @@ public class UserServiceImpl implements UserService {
   public User completeOauthSignup(OauthUserInfo userInfo, OauthClient oauthClient) {
     logger.info(String.format("User not found in db. Creating an account for: [%s]", userInfo.getEmail()));
     checkForFreemiumCluster();
-    final User user = createUser(userInfo);
+    final User user = createUser(userInfo, oauthClient.getName());
     notNullOrEmptyCheck(user.getAccountName(), "Account/Company name");
     notNullOrEmptyCheck(user.getName(), "User's name");
 
@@ -1032,7 +1032,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private User createUser(OauthUserInfo userInfo) {
+  private User createUser(OauthUserInfo userInfo, String oauthProvider) {
     String email = userInfo.getEmail();
     final String companyName = accountService.suggestAccountName(userInfo.getName());
     return Builder.anUser()
@@ -1041,6 +1041,7 @@ public class UserServiceImpl implements UserService {
         .withAccountName(companyName)
         .withCompanyName(companyName)
         .withEmailVerified(true)
+        .withOauthProvider(oauthProvider)
         .build();
   }
 
