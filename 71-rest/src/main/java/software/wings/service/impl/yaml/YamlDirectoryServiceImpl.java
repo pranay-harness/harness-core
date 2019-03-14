@@ -1153,6 +1153,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         PageRequest<CVConfiguration> cvConfigPageRequest = aPageRequest()
                                                                .addFilter("appId", Operator.EQ, environment.getAppId())
                                                                .addFilter("envId", Operator.EQ, environment.getUuid())
+                                                               .addFilter("isWorkflowConfig", Operator.EQ, false)
                                                                .build();
         List<CVConfiguration> cvConfigList = cvConfigurationService.listConfigurations(accountId, cvConfigPageRequest);
 

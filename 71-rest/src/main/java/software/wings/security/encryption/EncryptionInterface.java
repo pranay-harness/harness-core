@@ -8,8 +8,6 @@ import javax.crypto.SecretKey;
 public interface EncryptionInterface {
   SecretKey getSecretKey();
 
-  byte[] getSalt();
-  void setSalt(byte[] salt);
   byte[] encrypt(byte[] content);
 
   byte[] decrypt(byte[] encrypted);

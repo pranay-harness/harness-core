@@ -186,7 +186,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
     assertEquals(0, delegateTasks.size());
 
-    logsCVConfiguration.setBaselineStartMinute(currentMinute - 5);
+    logsCVConfiguration.setBaselineStartMinute(currentMinute - 2);
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
     assertEquals(0, delegateTasks.size());

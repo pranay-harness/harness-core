@@ -3,9 +3,11 @@ package software.wings.verification.log;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
@@ -31,5 +33,15 @@ public class LogsCVConfiguration extends CVConfiguration {
 
   public void setBaselineEndMinute(long baselineEndMinute) {
     this.baselineEndMinute = baselineEndMinute - Math.floorMod(baselineEndMinute, CRON_POLL_INTERVAL_IN_MINUTES);
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  @JsonPropertyOrder({"type", "harnessApiVersion"})
+  public static class LogsCVConfigurationYaml extends CVConfigurationYaml {
+    private String query;
+    private long baselineStartMinute;
+    private long baselineEndMinute;
   }
 }
