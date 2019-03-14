@@ -942,7 +942,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                               .appId(appId)
                                               .workflowId(pipelineId)
                                               .workflowType(WorkflowType.PIPELINE)
-                                              .stateMachine(stateMachine)
+                                              // TODO: Temporary disable setting the state machine
+                                              // .stateMachine(stateMachine)
                                               .stateMachineId(stateMachine.getUuid())
                                               .name(pipeline.getName())
                                               .build();
@@ -1043,7 +1044,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowType(ORCHESTRATION);
     workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-    workflowExecution.setStateMachine(stateMachine);
+    // TODO: Temporary disable setting the state machine
+    // workflowExecution.setStateMachine(stateMachine);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
