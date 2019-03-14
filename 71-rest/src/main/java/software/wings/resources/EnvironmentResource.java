@@ -333,7 +333,7 @@ public class EnvironmentResource {
   @Path("{envId}/values")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ManifestFile> createValues(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, ManifestFile manifestFile) {
     return new RestResponse<>(environmentService.createValues(appId, envId, null, manifestFile));
@@ -364,7 +364,7 @@ public class EnvironmentResource {
   @Path("{envId}/values/{manifestFileId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ManifestFile> deleteValues(@QueryParam("appId") String appId, @PathParam("envId") String envId,
       @PathParam("manifestFileId") String manifestFileId) {
     applicationManifestService.deleteManifestFileById(appId, manifestFileId);
@@ -375,7 +375,7 @@ public class EnvironmentResource {
   @Path("{envId}/service/{serviceId}/values")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ManifestFile> createValuesForService(@QueryParam("appId") String appId,
       @PathParam("envId") String envId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
     return new RestResponse<>(environmentService.createValues(appId, envId, serviceId, manifestFile));
@@ -408,7 +408,7 @@ public class EnvironmentResource {
   @Path("{envId}/service/{serviceId}/values/{manifestFileId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ManifestFile> deleteValuesForService(@QueryParam("appId") String appId,
       @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
       @PathParam("manifestFileId") String manifestFileId) {
@@ -420,7 +420,7 @@ public class EnvironmentResource {
   @Path("{envId}/values/app-manifest")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ApplicationManifest> createValuesAppManifest(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, ApplicationManifest applicationManifest) {
     applicationManifest.setAppId(appId);
@@ -457,7 +457,7 @@ public class EnvironmentResource {
   @Path("{envId}/values/app-manifest/{appManifestId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ApplicationManifest> deleteValuesAppManifest(@QueryParam("appId") String appId,
       @PathParam("envId") String envId, @PathParam("appManifestId") String appManifestId) {
     applicationManifestService.deleteAppManifest(appId, appManifestId);
@@ -468,7 +468,7 @@ public class EnvironmentResource {
   @Path("{envId}/service/{serviceId}/values/app-manifest")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ApplicationManifest> createValuesAppManifestForService(@QueryParam("appId") String appId,
       @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
       ApplicationManifest applicationManifest) {
@@ -509,7 +509,7 @@ public class EnvironmentResource {
   @Path("{envId}/service/{serviceId}/values/app-manifest/{appManifestId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ApplicationManifest> deleteValuesAppManifestForService(@QueryParam("appId") String appId,
       @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
       @PathParam("appManifestId") String appManifestId) {
