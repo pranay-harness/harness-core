@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.time.EpochUtils.PST_ZONE_ID;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
@@ -163,7 +164,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                                  .mapToInt(i -> i)
                                  .sum();
           } else if (workflowExecution.getWorkflowType() == PIPELINE && workflowExecution.getPipelineExecution() != null
-              && workflowExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
+              && isNotEmpty(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
             for (PipelineStageExecution pipelineStageExecution :
                 workflowExecution.getPipelineExecution().getPipelineStageExecutions()) {
               if (pipelineStageExecution == null || pipelineStageExecution.getWorkflowExecutions() == null) {
@@ -202,7 +203,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       }
       final List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
       if (execution.getWorkflowType() == PIPELINE && execution.getPipelineExecution() != null
-          && execution.getPipelineExecution().getPipelineStageExecutions() != null) {
+          && isNotEmpty(execution.getPipelineExecution().getPipelineStageExecutions())) {
         execution.getPipelineExecution()
             .getPipelineStageExecutions()
             .stream()
