@@ -11,8 +11,12 @@ import java.util.Map;
 @Builder
 public class SecretDelegateFunctor implements ExpressionFunctor {
   private Map<String, char[]> secrets;
+  private int expressionFunctorToken;
 
-  public Object obtain(String secretDetailsUuid) {
+  public Object obtain(String secretDetailsUuid, int token) {
+    if (token != expressionFunctorToken) {
+      throw new FunctorException("Inappropriate usage of internal functor");
+    }
     if (secrets.containsKey(secretDetailsUuid)) {
       return new String(secrets.get(secretDetailsUuid));
     }
