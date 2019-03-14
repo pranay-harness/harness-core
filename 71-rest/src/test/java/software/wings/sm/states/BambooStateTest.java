@@ -30,8 +30,11 @@ import org.mockito.junit.MockitoRule;
 import software.wings.api.BambooExecutionData;
 import software.wings.api.JenkinsExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
+import software.wings.beans.ActivityAttributes;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -54,7 +57,8 @@ public class BambooStateTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
-
+  @Mock private ActivityHelperService activityHelperService;
+  @Mock private ActivityBuilder activityBuilder;
   @InjectMocks private BambooState bambooState = new BambooState("bamboo");
 
   @Before
@@ -77,6 +81,13 @@ public class BambooStateTest {
     WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
     workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    ActivityAttributes activityAttributes = ActivityAttributes.builder()
+                                                .type(Activity.Type.Verification)
+                                                .commandType(any())
+                                                .commandName(any())
+                                                .commandUnits(Collections.emptyList())
+                                                .build();
+    when(activityHelperService.getActivityBuilder(executionContext, activityAttributes)).thenReturn(activityBuilder);
   }
 
   @Test
