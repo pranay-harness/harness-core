@@ -81,16 +81,6 @@ public class SimpleEncryption implements EncryptionInterface {
     return this.secretKey;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP")
-  public byte[] getSalt() {
-    return this.salt;
-  }
-
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public void setSalt(byte[] salt) {
-    this.salt = salt;
-  }
-
   public byte[] encrypt(byte[] content) {
     try {
       Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");

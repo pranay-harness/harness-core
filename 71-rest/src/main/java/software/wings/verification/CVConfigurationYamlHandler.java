@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -28,7 +27,7 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
   @Inject ServiceResourceService serviceResourceService;
 
   @Override
-  public void delete(ChangeContext<Y> changeContext) throws HarnessException {}
+  public void delete(ChangeContext<Y> changeContext) {}
 
   public void toYaml(CVConfigurationYaml yaml, CVConfiguration bean) {
     yaml.setAccountId(bean.getAccountId());

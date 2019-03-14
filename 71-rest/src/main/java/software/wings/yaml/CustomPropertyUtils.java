@@ -6,12 +6,12 @@ import static software.wings.beans.yaml.YamlConstants.FIELD_TYPE;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.BeanAccess;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Set;
@@ -35,8 +35,7 @@ class CustomPropertyUtils extends PropertyUtils {
     return null;
   }
 
-  @SuppressFBWarnings("SE_COMPARATOR_SHOULD_BE_SERIALIZABLE")
-  private static class CustomComparator implements Comparator<Property> {
+  private static class CustomComparator implements Comparator<Property>, Serializable {
     @Override
     public int compare(Property lhs, Property rhs) {
       if (FIELD_HARNESS_API_VERSION.equals(lhs.getName())) {

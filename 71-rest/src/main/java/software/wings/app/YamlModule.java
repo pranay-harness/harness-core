@@ -171,6 +171,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateType;
 import software.wings.verification.AppDynamicsCVConfigurationYamlHandler;
 import software.wings.verification.CVConfigurationYamlHandler;
+import software.wings.verification.ElkCVConfigurationYamlHandler;
+import software.wings.verification.LogsCVConfigurationYamlHandler;
 import software.wings.verification.NewRelicCVConfigurationYamlHandler;
 
 /**
@@ -282,6 +284,8 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.APP_DYNAMICS.name())
         .to(AppDynamicsCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.NEW_RELIC.name()).to(NewRelicCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.SUMO.name()).to(LogsCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.ELK.name()).to(ElkCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);
