@@ -143,7 +143,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(appId)
                                               .envId(envId)
-                                              .stateMachine(stateMachine)
+                                              // TODO: Temporary disable setting the state machine
+                                              // .stateMachine(stateMachine)
                                               .stateMachineId(stateMachineId)
                                               .workflowId(workflowId)
                                               .status(ExecutionStatus.SUCCESS)
