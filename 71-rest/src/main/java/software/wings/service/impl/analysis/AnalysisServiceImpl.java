@@ -71,6 +71,7 @@ import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
+import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
@@ -113,6 +114,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private AccountResource accountResource;
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private UsageMetricsHelper usageMetricsHelper;
+  @Inject private CV24x7DashboardService cv24x7DashboardService;
 
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
@@ -200,6 +202,13 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
+  public List<LogMLFeedbackRecord> get24x7MLFeedback(String cvConfigId) {
+    Query<LogMLFeedbackRecord> query =
+        wingsPersistence.createQuery(LogMLFeedbackRecord.class, excludeAuthority).filter("cvConfigId", cvConfigId);
+    return query.asList();
+  }
+
+  @Override
   public List<LogMLFeedbackRecord> getMLFeedback(String accountId, String workflowId) {
     List<LogMLFeedbackRecord> feedbackRecords = null;
     if (accountResource.isFeatureEnabled(FeatureName.GLOBAL_CV_DASH.name(), accountId).getResource()) {
@@ -226,35 +235,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     LogMLAnalysisSummary analysisSummary =
         getAnalysisSummary(feedback.getStateExecutionId(), feedback.getAppId(), stateType);
 
-    if (analysisSummary == null) {
-      throw new WingsException("Unable to find analysisSummary for feedback " + feedback);
-    }
-
-    String logText = "";
-    List<LogMLClusterSummary> logMLClusterSummaryList;
-    switch (feedback.getClusterType()) {
-      case CONTROL:
-        logMLClusterSummaryList = analysisSummary.getControlClusters();
-        break;
-      case TEST:
-        logMLClusterSummaryList = analysisSummary.getTestClusters();
-        break;
-      case UNKNOWN:
-        logMLClusterSummaryList = analysisSummary.getUnknownClusters();
-        break;
-      default:
-        throw new WingsException("unsupported cluster type " + feedback.getClusterType() + " in feedback");
-    }
-
-    for (LogMLClusterSummary clusterSummary : logMLClusterSummaryList) {
-      if (clusterSummary.getClusterLabel() == feedback.getClusterLabel()) {
-        logText = clusterSummary.getLogText();
-      }
-    }
-
-    if (isEmpty(logText)) {
-      throw new WingsException("Unable to find logText for feedback " + feedback);
-    }
+    String logText = getLogTextFromAnalysisSummary(analysisSummary, feedback);
 
     String logmd5Hash = DigestUtils.md5Hex(logText);
 
@@ -290,6 +271,66 @@ public class AnalysisServiceImpl implements AnalysisService {
             stateExecutionInstance.getWorkflowId()});
 
     return true;
+  }
+
+  @Override
+  public boolean save24x7Feedback(LogMLFeedback feedback, String cvConfigId) {
+    if (!isEmpty(feedback.getLogMLFeedbackId())) {
+      deleteFeedbackHelper(feedback.getLogMLFeedbackId());
+    }
+    LogMLAnalysisSummary analysisSummary =
+        cv24x7DashboardService.getAnalysisSummary(cvConfigId, null, null, feedback.getAppId());
+
+    String logText = getLogTextFromAnalysisSummary(analysisSummary, feedback);
+
+    String logmd5Hash = DigestUtils.md5Hex(logText);
+
+    LogMLFeedbackRecord mlFeedbackRecord = LogMLFeedbackRecord.builder()
+                                               .appId(feedback.getAppId())
+                                               .logMessage(logText)
+                                               .logMLFeedbackType(feedback.getLogMLFeedbackType())
+                                               .clusterLabel(feedback.getClusterLabel())
+                                               .clusterType(feedback.getClusterType())
+                                               .logMD5Hash(logmd5Hash)
+                                               .comment(feedback.getComment())
+                                               .cvConfigId(cvConfigId)
+                                               .build();
+
+    wingsPersistence.save(mlFeedbackRecord);
+    return true;
+  }
+
+  private String getLogTextFromAnalysisSummary(LogMLAnalysisSummary analysisSummary, LogMLFeedback feedback) {
+    if (analysisSummary == null) {
+      throw new WingsException("Unable to find analysisSummary for feedback " + feedback);
+    }
+
+    String logText = "";
+    List<LogMLClusterSummary> logMLClusterSummaryList;
+    switch (feedback.getClusterType()) {
+      case CONTROL:
+        logMLClusterSummaryList = analysisSummary.getControlClusters();
+        break;
+      case TEST:
+        logMLClusterSummaryList = analysisSummary.getTestClusters();
+        break;
+      case UNKNOWN:
+        logMLClusterSummaryList = analysisSummary.getUnknownClusters();
+        break;
+      default:
+        throw new WingsException("unsupported cluster type " + feedback.getClusterType() + " in feedback");
+    }
+
+    for (LogMLClusterSummary clusterSummary : logMLClusterSummaryList) {
+      if (clusterSummary.getClusterLabel() == feedback.getClusterLabel()) {
+        logText = clusterSummary.getLogText();
+      }
+    }
+
+    if (isEmpty(logText)) {
+      throw new WingsException("Unable to find logText for feedback " + feedback);
+    }
+    return logText;
   }
 
   @Override
@@ -348,6 +389,30 @@ public class AnalysisServiceImpl implements AnalysisService {
         throw new WingsException(e);
       }
     }
+  }
+
+  private Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> get24x7MLUserFeedbacks(String cvConfigId, String appId) {
+    Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> userFeedbackMap = new HashMap<>();
+    userFeedbackMap.put(CLUSTER_TYPE.CONTROL, new HashMap<>());
+    userFeedbackMap.put(CLUSTER_TYPE.TEST, new HashMap<>());
+    userFeedbackMap.put(CLUSTER_TYPE.UNKNOWN, new HashMap<>());
+
+    List<LogMLFeedbackRecord> logMLFeedbackRecords =
+        wingsPersistence.createQuery(LogMLFeedbackRecord.class, excludeCount)
+            .filter("cvConfigId", cvConfigId)
+            .filter("appId", appId)
+            .asList();
+
+    if (logMLFeedbackRecords == null) {
+      return userFeedbackMap;
+    }
+
+    for (LogMLFeedbackRecord logMLFeedbackRecord : logMLFeedbackRecords) {
+      userFeedbackMap.get(logMLFeedbackRecord.getClusterType())
+          .put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
+    }
+
+    return userFeedbackMap;
   }
 
   private Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> getMLUserFeedbacks(

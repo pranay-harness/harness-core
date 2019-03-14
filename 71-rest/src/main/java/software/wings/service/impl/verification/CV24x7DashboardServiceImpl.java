@@ -36,6 +36,7 @@ import software.wings.verification.dashboard.HeatMapUnit;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -96,6 +97,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
     long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
     Preconditions.checkState((endTime - startTime) >= cronPollIntervalMs);
+
     List<LogMLAnalysisRecord> records =
         getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, false, cvConfiguration);
 
@@ -230,14 +232,27 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     return analysisRecordQuery.asList();
   }
 
-  public LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, long startTime, long endTime, String appId) {
+  private LogMLAnalysisRecord getLastAnalysisRecord(String appId, String cvConfigId) {
+    return wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+        .filter("cvConfigId", cvConfigId)
+        .filter("appId", appId)
+        .order("-logCollectionMinute")
+        .get();
+  }
+
+  public LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, Long startTime, Long endTime, String appId) {
     CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
     if (!VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())) {
       logger.error("Incorrect CVConfigID to fetch logAnalysisSummary {}", cvConfigId);
       return null;
     }
-    List<LogMLAnalysisRecord> analysisRecords =
-        getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, true, cvConfiguration);
+
+    List<LogMLAnalysisRecord> analysisRecords;
+    if (startTime != null && endTime != null) {
+      analysisRecords = getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, true, cvConfiguration);
+    } else {
+      analysisRecords = Arrays.asList(getLastAnalysisRecord(appId, cvConfigId));
+    }
 
     if (analysisRecords == null) {
       return null;

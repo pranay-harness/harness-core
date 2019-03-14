@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
@@ -107,5 +108,28 @@ public class LogMLResource {
   public RestResponse<Map<String, InstanceElement>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_24x7_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> create24x7UserFeedback(
+      @QueryParam("accountId") String accountId, @QueryParam("cvConfigId") String cvConfigId, LogMLFeedback feedback) {
+    if (!isEmpty(feedback.getLogMLFeedbackId())) {
+      throw new WingsException("Feedback id should not be set in POST call. to update feedback use PUT", USER);
+    }
+    return new RestResponse<>(analysisService.save24x7Feedback(feedback, cvConfigId));
+  }
+
+  @GET
+  @Produces({"application/json", "application/v1+json"})
+  @Path(LogAnalysisResource.ANALYSIS_24x7_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<List<LogMLFeedbackRecord>> get24x7Feedback(
+      @QueryParam("accountId") String accountId, @QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(analysisService.get24x7MLFeedback(cvConfigId));
   }
 }

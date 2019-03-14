@@ -51,6 +51,8 @@ public interface AnalysisService {
   List<LogMLFeedbackRecord> getMLFeedback(
       String appId, String serviceId, String workflowId, String workflowExecutionId);
 
+  List<LogMLFeedbackRecord> get24x7MLFeedback(String cvConfigId);
+
   List<LogMLFeedbackRecord> getMLFeedback(String accountId, String workflowId);
 
   void cleanUpForLogRetry(String stateExecutionId);
@@ -69,4 +71,6 @@ public interface AnalysisService {
       String stateExecutionId, String appId, StateType stateType, String expName);
   List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
       Map<String, LogMLScore> clusterScores, CLUSTER_TYPE cluster_type);
+
+  boolean save24x7Feedback(LogMLFeedback feedback, String cvConfigId);
 }

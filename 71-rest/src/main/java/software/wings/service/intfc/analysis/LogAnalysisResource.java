@@ -48,6 +48,8 @@ public interface LogAnalysisResource {
    */
   String ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL = "/get-analysis-summary";
 
+  String ANALYSIS_STATE_GET_24x7_ANALYSIS_SUMMARY_URL = "/get-24x7-analysis-summary";
+
   /**
    * url for UI to get lits of indices
    */
@@ -67,6 +69,8 @@ public interface LogAnalysisResource {
    * Ignore feedback from the user
    */
   String ANALYSIS_USER_FEEDBACK = "/user-feedback";
+
+  String ANALYSIS_24x7_USER_FEEDBACK = "/24x7-user-feedback";
 
   /**
    * Url for UI to fetch User Feedbacks by workflow id

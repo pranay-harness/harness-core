@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -37,8 +36,7 @@ public class BugsnagConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.BUG_SNAG.name());
   }
 
-  @SuppressFBWarnings({"EI_EXPOSE_REP2", "EI_EXPOSE_REP2"})
-  public BugsnagConfig(String url, char[] authToken, String accountId, String encryptedAuthToken) {
+  private BugsnagConfig(String url, char[] authToken, String accountId, String encryptedAuthToken) {
     this();
     this.url = url;
     this.authToken = authToken;
