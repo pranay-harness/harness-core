@@ -31,8 +31,6 @@ import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
-import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import retrofit2.Response;
@@ -427,15 +425,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   int getVaultSecretEngineVersion(VaultConfig vaultConfig) throws IOException {
-    // http logging interceptor for dumping retrofit request/response content.
-    HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    // set your desired log level, NONE by default. BODY while performing local testing.
-    logging.setLevel(Level.NONE);
-
-    OkHttpClient httpClient = Http.getOkHttpClientWithNoProxyValueSet(vaultConfig.getVaultUrl())
-                                  .readTimeout(10, TimeUnit.SECONDS)
-                                  .addInterceptor(logging)
-                                  .build();
+    OkHttpClient httpClient = Http.getUnsafeOkHttpClient(vaultConfig.getVaultUrl(), 10, 10);
 
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(vaultConfig.getVaultUrl())

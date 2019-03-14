@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -23,7 +21,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A Factory class that's capable of constructing a REST client to talked to V1 or V2 secret engine backed
@@ -44,15 +41,7 @@ public class VaultRestClientFactory {
   }
 
   public static VaultRestClient create(final VaultConfig vaultConfig) {
-    // http logging interceptor for dumping retrofit request/response content.
-    HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    // set your desired log level, NONE by default. BODY while performing local testing
-    logging.setLevel(Level.NONE);
-
-    OkHttpClient httpClient = Http.getOkHttpClientWithNoProxyValueSet(vaultConfig.getVaultUrl())
-                                  .readTimeout(10, TimeUnit.SECONDS)
-                                  .addInterceptor(logging)
-                                  .build();
+    OkHttpClient httpClient = Http.getUnsafeOkHttpClient(vaultConfig.getVaultUrl(), 10, 10);
 
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
