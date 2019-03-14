@@ -1689,8 +1689,8 @@ public class DelegateServiceImpl implements DelegateService {
     secretDetails.forEach(
         (key, value) -> secretUuidToValues.put(key, decryptedRecords.get(value.getEncryptedRecord().getUuid())));
 
-    //@TODO: Should we catch the Expression expression
-    final DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(secretUuidToValues);
+    final DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
+        secretUuidToValues, delegatePackage.getDelegateTask().getData().getExpressionFunctorToken());
     final DelegateTask delegateTask = delegatePackage.getDelegateTask();
     if (delegateTask.getData().getParameters() != null && delegateTask.getData().getParameters().length == 1
         && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
