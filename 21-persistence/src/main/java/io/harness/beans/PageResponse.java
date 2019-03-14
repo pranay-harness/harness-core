@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.data.structure.CollectionUtils;
 import org.eclipse.jetty.util.LazyList;
 
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
    * @return the response
    */
   public List<T> getResponse() {
-    return response;
+    return CollectionUtils.emptyIfNull(response);
   }
 
   /**

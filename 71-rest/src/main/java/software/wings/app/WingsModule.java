@@ -20,6 +20,8 @@ import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
+import io.harness.notifications.AlertVisibilityChecker;
+import io.harness.notifications.AlertVisibilityCheckerImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
@@ -648,6 +650,7 @@ public class WingsModule extends DependencyModule {
     bind(PermitService.class).to(PermitServiceImpl.class);
 
     bind(GovernanceConfigService.class).to(GovernanceConfigServiceImpl.class);
+    bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
 
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
