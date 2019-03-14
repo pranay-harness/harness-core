@@ -83,6 +83,7 @@ public class User extends Base implements Principal {
   private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
   @JsonIgnore private String totpSecretKey;
   @JsonIgnore private long marketoLeadId;
+  @JsonIgnore private String oauthProvider;
   @JsonIgnore private Set<String> reportedMarketoCampaigns = new HashSet<>();
 
   /**
@@ -438,6 +439,16 @@ public class User extends Base implements Principal {
     this.reportedMarketoCampaigns = reportedMarketoCampaigns;
   }
 
+  @JsonIgnore
+  public String getOauthProvider() {
+    return oauthProvider;
+  }
+
+  @JsonIgnore
+  public void setOauthProvider(String oauthProvider) {
+    this.oauthProvider = oauthProvider;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -556,6 +567,7 @@ public class User extends Base implements Principal {
     private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
     private String totpSecretKey;
     private String twoFactorJwtToken;
+    private String oauthProvider;
 
     private Builder() {}
 
@@ -690,6 +702,11 @@ public class User extends Base implements Principal {
       return this;
     }
 
+    public Builder withOauthProvider(String oauthProvider) {
+      this.oauthProvider = oauthProvider;
+      return this;
+    }
+
     public Builder but() {
       return anUser()
           .withName(name)
@@ -716,7 +733,8 @@ public class User extends Base implements Principal {
           .withTwoFactorAuthenticationEnabled(twoFactorAuthenticationEnabled)
           .withTwoFactorAuthenticationMechanism(twoFactorAuthenticationMechanism)
           .withTotpSecretKey(totpSecretKey)
-          .withTwoFactorJwtToken(twoFactorJwtToken);
+          .withTwoFactorJwtToken(twoFactorJwtToken)
+          .withOauthProvider(oauthProvider);
     }
 
     public User build() {
@@ -746,6 +764,7 @@ public class User extends Base implements Principal {
       user.setTwoFactorAuthenticationMechanism(twoFactorAuthenticationMechanism);
       user.setTotpSecretKey(totpSecretKey);
       user.setTwoFactorJwtToken(twoFactorJwtToken);
+      user.setOauthProvider(oauthProvider);
       return user;
     }
   }

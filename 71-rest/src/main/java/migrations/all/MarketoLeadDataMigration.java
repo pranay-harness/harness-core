@@ -97,7 +97,8 @@ public class MarketoLeadDataMigration implements Migration {
           List<User> usersOfAccount = userService.getUsersOfAccount(accountId);
           usersOfAccount.stream().filter(user -> user.getMarketoLeadId() == 0L).forEach(user -> {
             try {
-              marketoHelper.createOrUpdateLead(finalAccount, user.getName(), user.getEmail(), accessToken, retrofit);
+              marketoHelper.createOrUpdateLead(
+                  finalAccount, user.getName(), user.getEmail(), accessToken, null, retrofit);
             } catch (IOException e) {
               logger.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
                   accountId, e);

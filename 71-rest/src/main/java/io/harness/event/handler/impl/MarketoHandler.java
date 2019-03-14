@@ -18,6 +18,7 @@ import static io.harness.event.model.EventType.SETUP_SSO;
 import static io.harness.event.model.EventType.TRIAL_TO_FREE;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.common.Constants.ACCOUNT_ID;
 import static software.wings.common.Constants.EMAIL_ID;
 
@@ -37,6 +38,7 @@ import io.harness.event.model.marketo.Campaign;
 import io.harness.event.model.marketo.Id;
 import io.harness.event.model.marketo.LoginResponse;
 import io.harness.event.model.marketo.Response;
+import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.network.Http;
@@ -54,10 +56,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -290,10 +290,12 @@ public class MarketoHandler implements EventHandler {
 
   public long reportLead(Account account, User user, String accessToken, boolean wait)
       throws IOException, URISyntaxException {
-    long marketoLeadId =
-        marketoHelper.createOrUpdateLead(account, user.getName(), user.getEmail(), accessToken, retrofit);
+    long marketoLeadId = marketoHelper.createOrUpdateLead(
+        account, user.getName(), user.getEmail(), accessToken, user.getOauthProvider(), retrofit);
     if (marketoLeadId > 0) {
-      updateUser(user, marketoLeadId);
+      if (marketoLeadId != user.getMarketoLeadId()) {
+        updateUser(user, marketoLeadId);
+      }
 
       if (wait) {
         // Sleeping for 10 secs as a work around for marketo issue.
@@ -309,7 +311,7 @@ public class MarketoHandler implements EventHandler {
   }
 
   public long reportLead(String email, String accessToken, boolean wait) throws IOException, URISyntaxException {
-    long marketoLeadId = marketoHelper.createOrUpdateLead(null, null, email, accessToken, retrofit);
+    long marketoLeadId = marketoHelper.createOrUpdateLead(null, null, email, accessToken, null, retrofit);
 
     // Sleeping for 10 secs as a work around for marketo issue.
     // Marketo can't process trigger campaign with a lead just created.
@@ -323,20 +325,6 @@ public class MarketoHandler implements EventHandler {
     return marketoLeadId;
   }
 
-  private User updateUser(User user, EventType eventType) {
-    try (AcquiredLock lock =
-             persistentLocker.waitToAcquireLock(user.getEmail(), Duration.ofMinutes(2), Duration.ofMinutes(4))) {
-      User latestUser = userService.getUserFromCacheOrDB(user.getUuid());
-      Set<String> reportedMarketoCampaigns = latestUser.getReportedMarketoCampaigns();
-      if (reportedMarketoCampaigns == null) {
-        reportedMarketoCampaigns = new HashSet<>();
-      }
-      reportedMarketoCampaigns.add(eventType.name());
-      latestUser.setReportedMarketoCampaigns(reportedMarketoCampaigns);
-      return userService.update(latestUser);
-    }
-  }
-
   private User updateUser(User user, long marketoLeadId) {
     if (marketoLeadId == 0L) {
       return user;
@@ -345,8 +333,12 @@ public class MarketoHandler implements EventHandler {
     try (AcquiredLock lock =
              persistentLocker.waitToAcquireLock(user.getEmail(), Duration.ofMinutes(2), Duration.ofMinutes(4))) {
       User latestUser = userService.getUserFromCacheOrDB(user.getUuid());
-      latestUser.setMarketoLeadId(marketoLeadId);
-      return userService.update(latestUser);
+      if (latestUser != null) {
+        latestUser.setMarketoLeadId(marketoLeadId);
+        return userService.update(latestUser);
+      } else {
+        throw new WingsException("Invalid user for the given id:" + user.getUuid(), USER);
+      }
     }
   }
 
@@ -400,16 +392,9 @@ public class MarketoHandler implements EventHandler {
         logger.error("Invalid lead id reported for user {}", userId);
         return;
       }
-
-      // Getting the latest copy since we had a sleep of 10 seconds.
-      user = userService.getUserFromCacheOrDB(userId);
     }
 
-    boolean reported =
-        reportCampaignEvent(eventType, accessToken, Arrays.asList(Id.builder().id(marketoLeadId).build()));
-    if (reported) {
-      updateUser(user, eventType);
-    }
+    reportCampaignEvent(eventType, accessToken, Arrays.asList(Id.builder().id(marketoLeadId).build()));
   }
 
   public String getAccessToken(String clientId, String clientSecret) throws IOException {
