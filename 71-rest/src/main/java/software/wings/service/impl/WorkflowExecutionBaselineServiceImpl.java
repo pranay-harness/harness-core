@@ -126,7 +126,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
             pipelineWorkflowExecution.setBaseline(isBaseline);
           }
         }));
-    wingsPersistence.save(workflowExecution);
+    wingsPersistence.merge(workflowExecution);
   }
 
   private void updatePipleLineIfNecessary(String executionId) {
