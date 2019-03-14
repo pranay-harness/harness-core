@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -45,8 +44,7 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.DATA_DOG.name());
   }
 
-  @SuppressFBWarnings({"EI_EXPOSE_REP2"})
-  public DatadogConfig(String url, char[] apiKey, char[] applicationKey, String accountId, String encryptedApiKey,
+  private DatadogConfig(String url, char[] apiKey, char[] applicationKey, String accountId, String encryptedApiKey,
       String encryptedApplicationKey) {
     this();
     this.url = url;

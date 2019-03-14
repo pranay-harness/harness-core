@@ -27,13 +27,13 @@ import software.wings.sm.StateType;
 public class LogMLFeedbackRecord extends Base {
   @NotEmpty @Indexed private String serviceId;
 
-  @NotEmpty private String workflowId;
+  private String workflowId;
 
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @Indexed private String workflowExecutionId;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @Indexed private String stateExecutionId;
 
-  @NotEmpty private StateType stateType;
+  private StateType stateType;
 
   @NotEmpty private int clusterLabel;
 
@@ -45,6 +45,8 @@ public class LogMLFeedbackRecord extends Base {
 
   @NotEmpty private String logMD5Hash;
 
+  private String cvConfigId;
+
   private String comment;
 
   @Builder
@@ -52,7 +54,7 @@ public class LogMLFeedbackRecord extends Base {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String serviceId, String workflowId,
       String workflowExecutionId, String stateExecutionId, StateType stateType, int clusterLabel,
       CLUSTER_TYPE clusterType, LogMLFeedbackType logMLFeedbackType, String logMessage, String logMD5Hash,
-      String comment) {
+      String comment, String cvConfigId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.serviceId = serviceId;
     this.workflowId = workflowId;
@@ -65,5 +67,6 @@ public class LogMLFeedbackRecord extends Base {
     this.logMessage = logMessage;
     this.logMD5Hash = logMD5Hash;
     this.comment = comment;
+    this.cvConfigId = cvConfigId;
   }
 }

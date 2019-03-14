@@ -10,6 +10,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
+import static software.wings.sm.StateType.ELK;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -40,6 +42,8 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -53,12 +57,17 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
+import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CV24x7DashboardService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ElkAnalysisState;
+import software.wings.verification.log.LogsCVConfiguration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,12 +100,15 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   private String serviceId;
   private String delegateTaskId;
   private Random r;
+  private LogsCVConfiguration logsCVConfiguration;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private HarnessMetricRegistry metricRegistry;
   @Inject private LogAnalysisService analysisService;
   @Inject private WingsPersistence wingsPersistence;
+  private CV24x7DashboardService cv24x7DashboardService;
   private AnalysisService managerAnalysisService;
+  private CVConfigurationService cvConfigurationService;
   @Mock VerificationManagerClient verificationManagerClient;
 
   @Before
@@ -119,11 +131,21 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     setInternalState(analysisService, "managerClient", verificationManagerClient);
 
     managerAnalysisService = new AnalysisServiceImpl();
-    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
+    cv24x7DashboardService = new CV24x7DashboardServiceImpl();
+    cvConfigurationService = new CVConfigurationServiceImpl();
     WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
     setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
+
+    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
     setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
     setInternalState(managerAnalysisService, "metricRegistry", metricRegistry);
+    setInternalState(managerAnalysisService, "cv24x7DashboardService", cv24x7DashboardService);
+
+    setInternalState(cv24x7DashboardService, "wingsPersistence", wingsPersistence);
+    setInternalState(cv24x7DashboardService, "analysisService", managerAnalysisService);
+    setInternalState(cv24x7DashboardService, "cvConfigurationService", cvConfigurationService);
+
+    setInternalState(cvConfigurationService, "wingsPersistence", wingsPersistence);
   }
 
   @Test
@@ -907,7 +929,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
-    records.setStateType(StateType.ELK);
+    records.setStateType(ELK);
     records.setAppId(appId);
     String stateExecutionId = UUID.randomUUID().toString();
     records.setStateExecutionId(stateExecutionId);
@@ -937,11 +959,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     wingsPersistence.save(stateExecutionInstance);
 
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
-    records.setStateType(StateType.ELK);
+    records.setStateType(ELK);
     records.setAppId(appId);
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
-    analysisService.saveLogAnalysisRecords(records, StateType.ELK, Optional.empty());
+    analysisService.saveLogAnalysisRecords(records, ELK, Optional.empty());
 
     LogMLFeedback logMLFeedback = LogMLFeedback.builder()
                                       .appId(appId)
@@ -952,10 +974,80 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                       .stateExecutionId(stateExecutionId)
                                       .build();
 
-    managerAnalysisService.saveFeedback(logMLFeedback, StateType.ELK);
+    managerAnalysisService.saveFeedback(logMLFeedback, ELK);
     List<LogMLFeedbackRecord> mlFeedback =
         managerAnalysisService.getMLFeedback(appId, serviceId, workflowId, workflowExecutionId);
     assertFalse(mlFeedback.isEmpty());
+  }
+
+  @Test
+  public void test24x7UserFeedback() throws Exception {
+    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
+    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
+
+    createLogsCVConfig(false);
+    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
+    LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
+    records.setStateType(ELK);
+    records.setAppId(appId);
+    records.setStateExecutionId(stateExecutionId);
+    records.setAnalysisSummaryMessage("10");
+    analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty());
+
+    LogMLFeedback logMLFeedback = LogMLFeedback.builder()
+                                      .appId(appId)
+                                      .clusterLabel(0)
+                                      .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
+                                      .comment("excellent!!")
+                                      .logMLFeedbackType(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS)
+                                      .stateExecutionId(stateExecutionId)
+                                      .build();
+
+    managerAnalysisService.save24x7Feedback(logMLFeedback, cvConfigId);
+    List<LogMLFeedbackRecord> mlFeedback = managerAnalysisService.get24x7MLFeedback(cvConfigId);
+    assertFalse(mlFeedback.isEmpty());
+  }
+
+  @Test
+  public void test24x7UserFeedbackUpdateExistingFeedback() throws Exception {
+    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
+    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
+
+    createLogsCVConfig(false);
+    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
+    LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
+    records.setStateType(ELK);
+    records.setAppId(appId);
+    records.setStateExecutionId(stateExecutionId);
+    records.setAnalysisSummaryMessage("10");
+    analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty());
+
+    LogMLFeedback logMLFeedback = LogMLFeedback.builder()
+                                      .appId(appId)
+                                      .clusterLabel(0)
+                                      .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
+                                      .comment("excellent!!")
+                                      .logMLFeedbackType(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS)
+                                      .stateExecutionId(stateExecutionId)
+                                      .build();
+
+    managerAnalysisService.save24x7Feedback(logMLFeedback, cvConfigId);
+    List<LogMLFeedbackRecord> mlFeedback = managerAnalysisService.get24x7MLFeedback(cvConfigId);
+    assertFalse(mlFeedback.isEmpty());
+
+    LogMLFeedback feedback = LogMLFeedback.builder()
+                                 .appId(appId)
+                                 .logMLFeedbackId(mlFeedback.iterator().next().getUuid())
+                                 .clusterLabel(0)
+                                 .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
+                                 .comment("excellent!!")
+                                 .logMLFeedbackType(LogMLFeedbackType.DISMISS)
+                                 .stateExecutionId(stateExecutionId)
+                                 .build();
+    managerAnalysisService.save24x7Feedback(feedback, cvConfigId);
+    mlFeedback = managerAnalysisService.get24x7MLFeedback(cvConfigId);
+    assertFalse(mlFeedback.isEmpty());
+    assertTrue(mlFeedback.iterator().next().getLogMLFeedbackType().equals(LogMLFeedbackType.DISMISS));
   }
 
   @Test
@@ -1083,5 +1175,22 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
           Lists.newArrayList(getRandomClusterEvent(), getRandomClusterEvent(), getRandomClusterEvent()));
     }
     return rv;
+  }
+
+  private void createLogsCVConfig(boolean enabled24x7) {
+    logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setName("Config 1");
+    logsCVConfiguration.setAppId(appId);
+    logsCVConfiguration.setEnvId(UUID.randomUUID().toString());
+    logsCVConfiguration.setStateType(ELK);
+    logsCVConfiguration.setServiceId(serviceId);
+    logsCVConfiguration.setEnabled24x7(enabled24x7);
+    logsCVConfiguration.setConnectorId(UUID.randomUUID().toString());
+    logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    logsCVConfiguration.setBaselineStartMinute(100);
+    logsCVConfiguration.setBaselineEndMinute(200);
+
+    logsCVConfiguration.setQuery("query1");
+    logsCVConfiguration.setFormattedQuery(true);
   }
 }
