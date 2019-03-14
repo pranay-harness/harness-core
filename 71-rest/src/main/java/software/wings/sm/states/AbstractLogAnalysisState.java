@@ -264,8 +264,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
             context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
 
-        if (analysisSummary == null
-            || (analysisSummary.isEmptyResult() && analysisSummary.getAnalysisMinute() >= analysisMinute)) {
+        if (analysisSummary == null) {
           getLogger().info("for {} No analysis summary. This can happen if there is no data with the given queries",
               context.getStateExecutionId());
           continuousVerificationService.setMetaDataExecutionStatus(

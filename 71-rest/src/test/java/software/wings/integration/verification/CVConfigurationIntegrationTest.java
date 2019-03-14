@@ -7,6 +7,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
@@ -39,9 +40,12 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.AppService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
@@ -576,8 +580,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
     assertEquals("someSettingAttributeName", elkCVServiceConfiguration.getConnectorName());
     assertEquals("someServiceName", elkCVServiceConfiguration.getServiceName());
-    assertEquals(100, fetchedObject.getBaselineStartMinute());
-    assertEquals(200, fetchedObject.getBaselineEndMinute());
+    assertEquals(91, fetchedObject.getBaselineStartMinute());
+    assertEquals(195, fetchedObject.getBaselineEndMinute());
 
     assertEquals("query1", fetchedObject.getQuery());
     assertEquals(true, fetchedObject.isFormattedQuery());
@@ -613,8 +617,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     elkCVServiceConfiguration.setName("Config 2");
     elkCVServiceConfiguration.setEnabled24x7(false);
-    elkCVServiceConfiguration.setBaselineStartMinute(101);
-    elkCVServiceConfiguration.setBaselineEndMinute(202);
+    elkCVServiceConfiguration.setBaselineStartMinute(135);
+    elkCVServiceConfiguration.setBaselineEndMinute(330);
 
     elkCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     elkCVServiceConfiguration.setFormattedQuery(false);
@@ -633,8 +637,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     fetchedObject = getRequestResponse.getResource();
     assertFalse(fetchedObject.isEnabled24x7());
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
-    assertEquals(101, fetchedObject.getBaselineStartMinute());
-    assertEquals(202, fetchedObject.getBaselineEndMinute());
+    assertEquals(121, fetchedObject.getBaselineStartMinute());
+    assertEquals(330, fetchedObject.getBaselineEndMinute());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
     assertEquals(false, fetchedObject.isFormattedQuery());
@@ -690,8 +694,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     assertEquals("query1", fetchedObject.getQuery());
     assertEquals(true, fetchedObject.isFormattedQuery());
-    assertEquals(100, fetchedObject.getBaselineStartMinute());
-    assertEquals(200, fetchedObject.getBaselineEndMinute());
+    assertEquals(91, fetchedObject.getBaselineStartMinute());
+    assertEquals(195, fetchedObject.getBaselineEndMinute());
 
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
     target = client.target(url);
@@ -714,8 +718,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals("Config 1", obj.getName());
     assertEquals("query1", obj.getQuery());
     assertEquals(true, obj.isFormattedQuery());
-    assertEquals(100, obj.getBaselineStartMinute());
-    assertEquals(200, obj.getBaselineEndMinute());
+    assertEquals(91, obj.getBaselineStartMinute());
+    assertEquals(195, obj.getBaselineEndMinute());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + SUMO + "&serviceConfigurationId=" + savedObjectUuid;
@@ -726,8 +730,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     logsCVConfiguration.setFormattedQuery(false);
     logsCVConfiguration.setQuery("query2");
-    logsCVConfiguration.setBaselineStartMinute(101);
-    logsCVConfiguration.setBaselineEndMinute(202);
+    logsCVConfiguration.setBaselineStartMinute(106);
+    logsCVConfiguration.setBaselineEndMinute(210);
 
     getRequestBuilderWithAuthHeader(target).put(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -739,8 +743,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
     assertEquals(false, fetchedObject.isFormattedQuery());
-    assertEquals(101, fetchedObject.getBaselineStartMinute());
-    assertEquals(202, fetchedObject.getBaselineEndMinute());
+    assertEquals(106, fetchedObject.getBaselineStartMinute());
+    assertEquals(210, fetchedObject.getBaselineEndMinute());
 
     String delete_url =
         API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
@@ -791,7 +795,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     Date validUntil = Date.from(OffsetDateTime.now().plusSeconds(1).toInstant());
 
     List<CVConfiguration> cvConfigurationList =
-        wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).asList();
+        wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).filter("_id", fetchedObject).asList();
 
     cvConfigurationList.forEach(configRecords -> {
       if (configRecords.getValidUntil() != null) {
@@ -921,5 +925,146 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(appId, appDObject.getAppId());
     assertEquals(envId, appDObject.getEnvId());
     assertEquals(APP_DYNAMICS, appDObject.getStateType());
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    LogsCVConfiguration updateBaseline = null;
+
+    url = API_BASE + "/cv-configuration/reset-baseline?cvConfigId=" + generateUuid() + "&accountId=" + accountId
+        + "&appId=" + appId;
+    target = client.target(url);
+    try {
+      getRequestBuilderWithAuthHeader(target).post(
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+      fail("Did not fail for invalid cvConfig");
+    } catch (Exception e) {
+      // exepected
+    }
+
+    url = API_BASE + "/cv-configuration/reset-baseline?cvConfigId=" + savedObjectUuid + "&accountId=" + accountId
+        + "&appId=" + appId;
+    target = client.target(url);
+    try {
+      getRequestBuilderWithAuthHeader(target).post(
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+      fail("Did not fail for null payload");
+    } catch (Exception e) {
+      // exepected
+    }
+
+    updateBaseline = new LogsCVConfiguration();
+    target = client.target(url);
+    try {
+      getRequestBuilderWithAuthHeader(target).post(
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+      fail("Did not fail for zero baseline");
+    } catch (Exception e) {
+      // exepected
+    }
+
+    updateBaseline.setBaselineStartMinute(16);
+    target = client.target(url);
+    try {
+      getRequestBuilderWithAuthHeader(target).post(
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+      fail("Did not fail for  zero baseline end minute");
+    } catch (Exception e) {
+      // exepected
+    }
+
+    updateBaseline.setBaselineEndMinute(20);
+    target = client.target(url);
+    try {
+      getRequestBuilderWithAuthHeader(target).post(
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+      fail("Did not fail for invalid baseline");
+    } catch (Exception e) {
+      // exepected
+    }
+
+    for (int i = 0; i < 100; i++) {
+      final LearningEngineAnalysisTask learningEngineAnalysisTask =
+          LearningEngineAnalysisTask.builder().cvConfigId(savedObjectUuid).state_execution_id(generateUuid()).build();
+      learningEngineAnalysisTask.setAppId(appId);
+      wingsPersistence.save(learningEngineAnalysisTask);
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setCvConfigId(savedObjectUuid);
+      logDataRecord.setAppId(appId);
+      logDataRecord.setStateExecutionId(generateUuid());
+      wingsPersistence.save(logDataRecord);
+      wingsPersistence.save(LogMLAnalysisRecord.builder()
+                                .cvConfigId(savedObjectUuid)
+                                .appId(appId)
+                                .stateExecutionId(generateUuid())
+                                .logCollectionMinute(i)
+                                .build());
+    }
+
+    assertEquals(100,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter("cvConfigId", savedObjectUuid)
+            .filter("appId", appId)
+            .asList()
+            .size());
+
+    assertEquals(100,
+        wingsPersistence.createQuery(LogDataRecord.class)
+            .filter("cvConfigId", savedObjectUuid)
+            .filter("appId", appId)
+            .asList()
+            .size());
+
+    assertEquals(100,
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+            .filter("cvConfigId", savedObjectUuid)
+            .filter("appId", appId)
+            .asList()
+            .size());
+
+    updateBaseline.setBaselineEndMinute(38);
+    target = client.target(url);
+    final RestResponse<Boolean> updateResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertTrue(updateResponse.getResource());
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<LogsCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    assertEquals(updateBaseline.getBaselineStartMinute(), getRequestResponse.getResource().getBaselineStartMinute());
+    assertEquals(updateBaseline.getBaselineEndMinute(), getRequestResponse.getResource().getBaselineEndMinute());
+
+    assertEquals(0,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter("cvConfigId", savedObjectUuid)
+            .filter("appId", appId)
+            .asList()
+            .size());
+
+    assertEquals(0,
+        wingsPersistence.createQuery(LogDataRecord.class)
+            .filter("cvConfigId", savedObjectUuid)
+            .filter("appId", appId)
+            .asList()
+            .size());
+
+    assertEquals(16,
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+            .filter("cvConfigId", savedObjectUuid)
+            .filter("appId", appId)
+            .asList()
+            .size());
   }
 }
