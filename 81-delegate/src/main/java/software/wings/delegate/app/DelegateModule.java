@@ -233,7 +233,6 @@ import software.wings.utils.HostValidationServiceImpl;
 import java.time.Clock;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -283,7 +282,7 @@ public class DelegateModule extends DependencyModule {
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))
-        .toInstance(Executors.newFixedThreadPool(10,
+        .toInstance(ThreadPool.create(4, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
                 .setNameFormat("Verification-Data-Collector-%d")
                 .setPriority(Thread.MIN_PRIORITY)
