@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class MailinatorRestUtils {
-  final int MAX_RETRIES = 40;
+  final int MAX_RETRIES = 60;
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   private static final Logger logger = LoggerFactory.getLogger(MailinatorRestUtils.class);
