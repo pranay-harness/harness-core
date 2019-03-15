@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
+import io.harness.Utils.FileUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
@@ -12,6 +13,7 @@ import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
 import io.restassured.RestAssured;
 import lombok.Getter;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -58,5 +60,11 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
                                               .put("/users/reset-cache")
                                               .as(new GenericType<RestResponse<User>>() {}.getType());
     assertThat(userRestResponse).isNotNull();
+  }
+
+  @AfterClass
+  public static void cleanup() {
+    FileUtils.deleteModifiedConfig();
+    logger.info("All tests exit");
   }
 }

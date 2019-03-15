@@ -9,6 +9,8 @@ import static java.util.Arrays.asList;
 import com.google.inject.Singleton;
 
 import io.fabric8.utils.Strings;
+import io.harness.Utils.FileUtils;
+import io.harness.Utils.TestUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.framework.Setup;
 import io.harness.resource.Project;
@@ -36,6 +38,8 @@ public class ManagerExecutor {
 
   public static void ensureManager() throws IOException {
     if (!isHealthy()) {
+      final Path config = Paths.get(Project.rootDirectory(AbstractFunctionalTest.class), "71-rest", "config.yml");
+      FileUtils.modifySMTPInConfigFile(new File(config.toString()), TestUtils.getDefaultSmtpConfig());
       executeLocalManager();
     }
   }
@@ -56,7 +60,7 @@ public class ManagerExecutor {
         }
         logger.info("Execute the manager from {}", directory);
         final Path jar = Paths.get(directory.getPath(), "71-rest", "target", "rest-capsule.jar");
-        final Path config = Paths.get(directory.getPath(), "71-rest", "config.yml");
+        final Path config = Paths.get(directory.getPath(), "71-rest", "modified_config.yml");
         String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJar;
 
         if (!new File(alpn).exists()) {

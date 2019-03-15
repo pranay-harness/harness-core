@@ -80,7 +80,7 @@ public class UserTest extends AbstractFunctionalTest {
     logger.info("Starting the list users test");
     Account account = this.getAccount();
     UserRestUtil urUtil = new UserRestUtil();
-    List<User> userList = urUtil.getUserList(account);
+    List<User> userList = urUtil.getUserList(account.getUuid());
     assertNotNull(userList);
     assertTrue(userList.size() > 0);
   }
@@ -109,8 +109,8 @@ public class UserTest extends AbstractFunctionalTest {
     });
     GuerillaIndividualEmail email =
         gmailUtil.fetchEmail(emailInfo.getSidToken(), String.valueOf(emailToBeFetched[0].getMailId()));
-    String inviteUrl = htmlUtils.retrieveInviteUrlFromEmail(email.getMailBody());
-    assertTrue(StringUtils.isNotBlank(inviteUrl));
+    // String inviteUrl = htmlUtils.retrieveInviteUrlFromEmail(email.getMailBody());
+    assertTrue(StringUtils.isNotBlank(""));
     logger.info("Successfully completed signup email delivery test");
     assertTrue(gmailUtil.forgetEmailId(emailInfo.getSidToken()));
     // Complete registration using the API
@@ -151,7 +151,8 @@ public class UserTest extends AbstractFunctionalTest {
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = mailinatorRestUtils.readEmail(emailId, emailFetchId);
     assertNotNull(messageDetails);
-    String inviteUrl = htmlUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody());
+    String inviteUrl =
+        htmlUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "SIGN UP");
     assertNotNull(inviteUrl);
     assertTrue(StringUtils.isNotBlank(inviteUrl));
     logger.info("Email read and Signup URL is available for user signup");
