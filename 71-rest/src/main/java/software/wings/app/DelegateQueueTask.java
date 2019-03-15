@@ -23,6 +23,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.mongodb.morphia.query.WhereCriteria;
@@ -89,8 +90,8 @@ public class DelegateQueueTask implements Runnable {
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter("status", STARTED)
-            .where("this.lastUpdatedAt + this.timeout < " + clock.millis())
-            .asKeyList();
+            .where("this.lastUpdatedAt + this." + DelegateTask.DATA_TIMEOUT_KEY + " < " + clock.millis())
+            .asKeyList(new FindOptions().limit(100));
 
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
       List<String> keyList = longRunningTimedOutTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
@@ -102,10 +103,11 @@ public class DelegateQueueTask implements Runnable {
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long and update their status to ERROR.
 
-    List<Key<DelegateTask>> longQueuedTaskKeys = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                                     .filter("status", QUEUED)
-                                                     .where("this.createdAt + this.timeout < " + clock.millis())
-                                                     .asKeyList();
+    List<Key<DelegateTask>> longQueuedTaskKeys =
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+            .filter("status", QUEUED)
+            .where("this.createdAt + this." + DelegateTask.DATA_TIMEOUT_KEY + " < " + clock.millis())
+            .asKeyList(new FindOptions().limit(100));
 
     if (!longQueuedTaskKeys.isEmpty()) {
       List<String> keyList = longQueuedTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
