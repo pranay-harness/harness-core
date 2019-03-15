@@ -60,8 +60,6 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.ActivityBuilder;
-import software.wings.beans.ActivityAttributes;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
@@ -86,7 +84,6 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.service.ServiceHelper;
-import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -129,8 +126,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
-  @Mock private ActivityHelperService activityHelperService;
-  @Mock private ActivityBuilder activityBuilder;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
@@ -255,13 +250,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
                         .serviceId(service.getUuid())
                         .build());
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
-    ActivityAttributes activityAttributes = ActivityAttributes.builder()
-                                                .type(Activity.Type.Command)
-                                                .commandType(any())
-                                                .commandName(any())
-                                                .commandUnits(Collections.emptyList())
-                                                .build();
-    when(activityHelperService.getActivityBuilder(context, activityAttributes)).thenReturn(activityBuilder);
   }
 
   @Test

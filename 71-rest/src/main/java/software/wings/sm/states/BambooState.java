@@ -1,10 +1,16 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.BAMBOO;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -12,6 +18,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -26,15 +33,16 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.BambooExecutionData;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
-import software.wings.beans.ActivityAttributes;
+import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
-import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -70,7 +78,6 @@ public class BambooState extends State {
 
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
-  @Inject private transient ActivityHelperService activityHelperService;
 
   public BambooState(String name) {
     super(name, BAMBOO.name());
@@ -252,15 +259,50 @@ public class BambooState extends State {
   }
 
   protected String createActivity(ExecutionContext executionContext) {
-    ActivityAttributes activityAttributes = ActivityAttributes.builder()
-                                                .type(Activity.Type.Verification)
-                                                .commandType(getStateType())
-                                                .commandName(getName())
-                                                .commandUnits(Collections.emptyList())
-                                                .build();
+    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
-    ActivityBuilder activityBuilder = activityHelperService.getActivityBuilder(executionContext, activityAttributes);
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .commandName(getName())
+                                          .type(Activity.Type.Verification)
+                                          .workflowType(executionContext.getWorkflowType())
+                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                                          .commandType(getStateType())
+                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                                          .workflowId(executionContext.getWorkflowId())
+                                          .commandUnits(Collections.emptyList())
+                                          .status(RUNNING)
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
+
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
+    } else {
+      activityBuilder.environmentId(env.getUuid())
+          .environmentName(env.getName())
+          .environmentType(env.getEnvironmentType());
+    }
+    if (instanceElement != null) {
+      activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+          .serviceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
+          .serviceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
+          .serviceInstanceId(instanceElement.getUuid())
+          .hostName(instanceElement.getHost().getHostName());
+    }
+
     Activity activity = activityBuilder.build();
+    activity.setAppId(app.getUuid());
     return activityService.save(activity).getUuid();
   }
 

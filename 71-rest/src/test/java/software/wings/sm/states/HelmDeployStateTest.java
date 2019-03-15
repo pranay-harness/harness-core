@@ -63,9 +63,6 @@ import software.wings.api.ServiceElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.ActivityBuilder;
-import software.wings.beans.Activity.Type;
-import software.wings.beans.ActivityAttributes;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
@@ -86,7 +83,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandTyp
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
-import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
@@ -135,8 +131,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private GitConfigHelperService gitConfigHelperService;
   @Mock private ArtifactCollectionUtil artifactCollectionUtil;
-  @Mock private ActivityHelperService activityHelperService;
-  @Mock private ActivityBuilder activityBuilder;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -232,13 +226,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(context).set("artifactService", artifactService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    ActivityAttributes activityAttributes = ActivityAttributes.builder()
-                                                .type(Type.Command)
-                                                .commandType(any())
-                                                .commandName(any())
-                                                .commandUnits(Collections.emptyList())
-                                                .build();
-    when(activityHelperService.getActivityBuilder(context, activityAttributes)).thenReturn(activityBuilder);
   }
 
   @Test

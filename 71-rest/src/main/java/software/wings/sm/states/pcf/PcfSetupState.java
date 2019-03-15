@@ -33,7 +33,6 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
-import software.wings.beans.ActivityAttributes;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
@@ -67,6 +66,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -76,7 +76,6 @@ import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -479,16 +478,16 @@ public class PcfSetupState extends State {
 
   protected Activity createActivity(
       ExecutionContext executionContext, Artifact artifact, ArtifactStream artifactStream) {
-    ActivityAttributes activityAttributes = ActivityAttributes.builder()
-                                                .type(Type.Command)
-                                                .commandType(getStateType())
-                                                .commandName(PCF_SETUP_COMMAND)
-                                                .commandUnitType(CommandUnitType.PCF_SETUP.name())
-                                                .commandUnits(Collections.emptyList())
-                                                .artifact(artifact)
-                                                .build();
+    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_SETUP_COMMAND,
+        Type.Command, executionContext, getStateType(), CommandUnitType.PCF_SETUP, env);
 
-    ActivityBuilder activityBuilder = activityHelperService.getActivityBuilder(executionContext, activityAttributes);
+    activityBuilder.artifactStreamId(artifactStream.getUuid())
+        .artifactStreamName(artifactStream.getSourceName())
+        .artifactName(artifact.getDisplayName())
+        .artifactId(artifact.getUuid());
+
     return activityService.save(activityBuilder.build());
   }
 
