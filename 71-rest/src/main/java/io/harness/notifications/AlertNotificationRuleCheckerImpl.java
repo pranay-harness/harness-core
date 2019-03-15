@@ -20,7 +20,7 @@ public class AlertNotificationRuleCheckerImpl implements AlertNotificationRuleCh
     }
 
     if (null == rule.getAlertFilter()) {
-      log.error(
+      log.debug(
           "[Missing Alert Filter] Alert matched the rule because rule category and alert category are same and no additional filters are present. Rule: {}, Alert: {}",
           alert, rule);
       return rule.getAlertCategory() == alert.getCategory();
