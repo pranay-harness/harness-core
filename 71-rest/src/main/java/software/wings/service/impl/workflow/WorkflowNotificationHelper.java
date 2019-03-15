@@ -245,7 +245,11 @@ public class WorkflowNotificationHelper {
       return;
     }
 
-    List<String> userGroupIds = new ArrayList<>();
+    String accountId = context.getApp().getAccountId();
+    if (StringUtils.isEmpty(accountId)) {
+      logger.error("Could not find accountId in context. User Groups can't be rendered. Context: {}", context.asMap());
+    }
+
     String expr = notificationRule.getUserGroupExpression();
     String renderedExpression = context.renderExpression(expr);
 
@@ -258,17 +262,23 @@ public class WorkflowNotificationHelper {
     List<String> userGroupNames =
         Arrays.stream(renderedExpression.split(",")).map(String::trim).collect(Collectors.toList());
 
+    List<UserGroup> userGroups = userGroupService.listByName(accountId, userGroupNames);
+    List<String> userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList());
+    notificationRule.setUserGroupIds(userGroupIds);
+  }
+
+  private void logMissingNames(String accountId, List<String> userGroupNames, List<UserGroup> userGroups) {
+    Map<String, UserGroup> groupsByName =
+        userGroups.stream().collect(Collectors.toMap(UserGroup::getName, (UserGroup ug) -> ug));
+
     for (String userGroupName : userGroupNames) {
-      UserGroup userGroup = userGroupService.getByName(context.getApp().getAccountId(), userGroupName);
-      if (null == userGroup) {
+      UserGroup group = groupsByName.get(userGroupName);
+      if (null == group) {
         logger.info(
-            "[LIKELY_USER_ERROR] No user group by name: {}. This can happen if the expression resolves to a user group name that does not exist. Expression: {}, Context: {}",
-            userGroupName, expr, context.asMap());
-      } else {
-        userGroupIds.add(userGroup.getUuid());
+            "[LIKELY_USER_ERROR] No user group by name: {}. This can happen if the expression resolves to a user group name that does not exist. accountId={}",
+            userGroupName, accountId);
       }
     }
-    notificationRule.setUserGroupIds(userGroupIds);
   }
 
   private Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,

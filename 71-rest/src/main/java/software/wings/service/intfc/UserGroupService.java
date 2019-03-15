@@ -57,6 +57,11 @@ public interface UserGroupService extends OwnedByAccount {
   @Nullable UserGroup getByName(@NotEmpty String accountId, @NotEmpty String name);
 
   /**
+   * list user groups by name.
+   */
+  @Nullable List<UserGroup> listByName(@NotEmpty String accountId, @NotEmpty List<String> names);
+
+  /**
    * Find by uuid with optional loadUsers flag.
    *
    * @param accountId the accountId
