@@ -14,6 +14,7 @@ public class ActivityAttributes {
   private Type type;
   private String commandName;
   private String commandType;
+  private String commandUnitType;
   private List<CommandUnit> commandUnits;
   private Artifact artifact;
 }

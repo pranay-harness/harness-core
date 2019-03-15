@@ -19,8 +19,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.ExecutionStatus;
-import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -36,6 +34,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.ActivityAttributes;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -50,11 +49,11 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest.AwsLambdaExecuteWfRequestBuilder;
@@ -83,6 +82,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.utils.LambdaConvention;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -127,6 +127,7 @@ public class AwsLambdaState extends State {
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
   @Inject @Transient private transient EncryptionService encryptionService;
+  @Inject private transient ActivityHelperService activityHelperService;
 
   @Attributes(title = "Command")
   @DefaultValue(Constants.AWS_LAMBDA_COMMAND_NAME)
@@ -232,45 +233,23 @@ public class AwsLambdaState extends State {
 
     List<CommandUnit> commandUnitList =
         serviceResourceService.getFlattenCommandUnitList(app.getUuid(), serviceId, envId, command.getName());
-    ActivityBuilder activityBuilder = Activity.builder()
-                                          .applicationName(app.getName())
-                                          .environmentId(envId)
-                                          .environmentName(env.getName())
-                                          .environmentType(env.getEnvironmentType())
-                                          .serviceId(service.getUuid())
-                                          .serviceName(service.getName())
-                                          .commandName(command.getName())
-                                          .type(Type.Command)
-                                          .workflowExecutionId(context.getWorkflowExecutionId())
-                                          .workflowId(context.getWorkflowId())
-                                          .workflowType(context.getWorkflowType())
-                                          .workflowExecutionName(context.getWorkflowExecutionName())
-                                          .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                          .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                          .commandUnits(commandUnitList)
-                                          .commandType(command.getCommandUnitType().name())
-                                          .status(ExecutionStatus.RUNNING)
-                                          .triggeredBy(TriggeredBy.builder()
-                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
-                                                           .name(workflowStandardParams.getCurrentUser().getName())
-                                                           .build());
 
     Artifact artifact =
         getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), (DeploymentExecutionContext) context);
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
-    activityBuilder.artifactStreamId(artifactStream.getUuid())
-        .artifactStreamName(artifactStream.getSourceName())
-        .artifactName(artifact.getDisplayName())
-        .artifactId(artifact.getUuid());
-    activityBuilder.artifactId(artifact.getUuid()).artifactName(artifact.getDisplayName());
+    ActivityAttributes activityAttributes = ActivityAttributes.builder()
+                                                .type(Type.Command)
+                                                .commandName(command.getName())
+                                                .commandType(command.getCommandUnitType().name())
+                                                .commandUnits(Collections.emptyList())
+                                                .artifact(artifact)
+                                                .build();
 
-    Activity build = activityBuilder.build();
-    build.setAppId(app.getUuid());
-    Activity activity = activityService.save(build);
+    ActivityBuilder activityBuilder = activityHelperService.getActivityBuilder(context, activityAttributes);
+    Activity activity = activityService.save(activityBuilder.build());
 
     Builder logBuilder = aLog()
                              .withAppId(activity.getAppId())
