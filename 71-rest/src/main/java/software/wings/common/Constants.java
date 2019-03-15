@@ -128,7 +128,7 @@ public interface Constants {
   /**
    * The constant SETUP_CONTAINER.
    */
-  String SETUP_CONTAINER = "Setup Container";
+  String SETUP_CONTAINER = "Set up Container";
   /**
    * The constant SETUP_CLUSTER.
    */
@@ -433,9 +433,9 @@ public interface Constants {
    */
   String NOT_REGISTERED = "<Not registered yet>";
 
-  String PROVISION_CLOUD_FORMATION = "Cloud Formation Create Stack";
-  String DE_PROVISION_CLOUD_FORMATION = "Cloud Formation Delete Stack";
-  String ROLLBACK_CLOUD_FORMATION = "Cloud Formation Rollback Stack";
+  String PROVISION_CLOUD_FORMATION = "CloudFormation Create Stack";
+  String DE_PROVISION_CLOUD_FORMATION = "CloudFormation Delete Stack";
+  String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
 
   /**
    * The constant DELEGATE_DIR.
