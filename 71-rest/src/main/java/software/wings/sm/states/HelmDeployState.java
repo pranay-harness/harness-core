@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -7,15 +8,19 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.StateType.HELM_DEPLOY;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -38,7 +43,6 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
-import software.wings.beans.ActivityAttributes;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
@@ -67,7 +71,6 @@ import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
@@ -82,6 +85,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.Builder;
 import software.wings.sm.InstanceStatusSummary;
@@ -118,7 +122,6 @@ public class HelmDeployState extends State {
   @Inject private transient ArtifactCollectionUtil artifactCollectionUtil;
   @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private transient GitConfigHelperService gitConfigHelperService;
-  @Inject private transient ActivityHelperService activityHelperService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -464,15 +467,50 @@ public class HelmDeployState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   protected Activity createActivity(ExecutionContext executionContext) {
-    ActivityAttributes activityAttributes = ActivityAttributes.builder()
-                                                .type(Type.Command)
-                                                .commandType(getStateType())
-                                                .commandName(HELM_COMMAND_NAME)
-                                                .commandUnitType(CommandUnitType.HELM.name())
-                                                .commandUnits(Collections.emptyList())
-                                                .build();
+    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
-    ActivityBuilder activityBuilder = activityHelperService.getActivityBuilder(executionContext, activityAttributes);
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .appId(app.getUuid())
+                                          .commandName(HELM_COMMAND_NAME)
+                                          .type(Type.Command)
+                                          .workflowType(executionContext.getWorkflowType())
+                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                                          .commandType(getStateType())
+                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                                          .workflowId(executionContext.getWorkflowId())
+                                          .commandUnits(Collections.emptyList())
+                                          .status(ExecutionStatus.RUNNING)
+                                          .commandUnitType(CommandUnitType.HELM)
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
+
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
+    } else {
+      activityBuilder.environmentId(env.getUuid())
+          .environmentName(env.getName())
+          .environmentType(env.getEnvironmentType());
+    }
+    if (instanceElement != null) {
+      activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+          .serviceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
+          .serviceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
+          .serviceInstanceId(instanceElement.getUuid())
+          .hostName(instanceElement.getHost().getHostName());
+    }
+
     Activity activity = activityBuilder.build();
     return activityService.save(activity);
   }
