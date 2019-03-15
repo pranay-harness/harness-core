@@ -137,6 +137,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -825,14 +826,12 @@ public class UserServiceImpl implements UserService {
   private Map<String, Object> getAddedRoleTemplateModel(User user, Account account) throws URISyntaxException {
     String loginUrl = buildAbsoluteUrl(format(
         "/login?company=%s&account=%s&email=%s", account.getCompanyName(), account.getAccountName(), user.getEmail()));
-    boolean includeAccessUrl = true;
     Map<String, Object> model = new HashMap<>();
     model.put("name", user.getName());
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
-    model.put("includeAccessUrl", true);
 
     // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
     if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
@@ -842,15 +841,6 @@ public class UserServiceImpl implements UserService {
     SSOSettings ssoSettings;
     if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
       ssoSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
-      switch (samlClientService.getHostType(ssoSettings.getUrl())) {
-        case GOOGLE:
-          includeAccessUrl = false;
-          break;
-        case AZURE:
-          includeAccessUrl = false;
-          break;
-        default:
-      }
     } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.LDAP)) {
       ssoSettings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
     } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.OAUTH)) {
@@ -859,9 +849,13 @@ public class UserServiceImpl implements UserService {
       logger.warn("New authentication mechanism detected. Needs to handle the added role email template flow.");
       throw new WingsException("New authentication mechanism detected.");
     }
-    model.put("includeAccessUrl", includeAccessUrl);
-    model.put("ssoUrl", ssoSettings.getUrl());
+    model.put("ssoUrl", getDomainName(ssoSettings.getUrl()));
     return model;
+  }
+
+  public static String getDomainName(String url) throws URISyntaxException {
+    URI uri = new URIBuilder(url).build();
+    return uri.getHost();
   }
 
   @Override
