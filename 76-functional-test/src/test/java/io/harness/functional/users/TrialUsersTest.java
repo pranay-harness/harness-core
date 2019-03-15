@@ -25,6 +25,7 @@ import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -65,7 +66,8 @@ public class TrialUsersTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = "swamy@harness.io", intermittent = true)
+  @Ignore
   public void verifyTrialUserSignup() throws IOException, MessagingException {
     String domainName = "@harness.mailinator.com";
     String emailId = testUtils.generateUniqueInboxId();

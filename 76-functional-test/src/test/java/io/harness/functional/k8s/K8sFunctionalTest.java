@@ -27,6 +27,7 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,18 +70,21 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
   @Test
   @Category(FunctionalTests.class)
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
   @Test
   @Category(FunctionalTests.class)
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);
   }
