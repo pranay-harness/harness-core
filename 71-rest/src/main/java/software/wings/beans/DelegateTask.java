@@ -35,6 +35,7 @@ import javax.validation.constraints.NotNull;
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String APP_ID_KEY = "appId";
   public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
+  public static final String DATA_TIMEOUT_KEY = "data.timeout";
   public static final String DATA_PARAMETERS_KEY = "data.parameters";
 
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
