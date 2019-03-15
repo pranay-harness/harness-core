@@ -66,7 +66,6 @@ import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class WingsTestModule extends AbstractModule {
@@ -106,13 +105,6 @@ public class WingsTestModule extends AbstractModule {
     bind(PcfDeploymentManagerImpl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
 
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("verificationDataCollector"))
-        .toInstance(Executors.newFixedThreadPool(10,
-            new ThreadFactoryBuilder()
-                .setNameFormat("Verification-Data-Collector-%d")
-                .setPriority(Thread.MIN_PRIORITY)
-                .build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))
         .toInstance(ThreadPool.create(4, 8, 1, TimeUnit.SECONDS,

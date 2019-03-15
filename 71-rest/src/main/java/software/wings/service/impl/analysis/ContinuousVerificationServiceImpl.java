@@ -70,6 +70,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
+import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
@@ -146,6 +147,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -167,6 +169,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private DelegateService delegateService;
   @Inject private CloudWatchService cloudWatchService;
   @Inject private CV24x7DashboardService cv24x7DashboardService;
+  @Inject private DataCollectionExecutorService dataCollectionService;
 
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
@@ -573,19 +576,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return new ArrayList<>();
     }
 
-    cvConfigurations.parallelStream().forEach(cvConfig -> {
-      if (!VerificationConstants.getLogAnalysisStates().contains(cvConfig.getStateType())) {
-        cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
-        String envName = cvConfig.getEnvName();
-        logger.info("Environment name = " + envName);
-        final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
-        rv.add(heatMap);
+    List<Callable<Void>> callables = new ArrayList<>();
+    cvConfigurations.stream()
+        .filter(cvConfig -> !VerificationConstants.getLogAnalysisStates().contains(cvConfig.getStateType()))
+        .forEach(cvConfig -> callables.add(() -> {
+          cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
+          String envName = cvConfig.getEnvName();
+          logger.info("Environment name = " + envName);
+          final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
+          rv.add(heatMap);
 
-        List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
-        List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
-        heatMap.getRiskLevelSummary().addAll(resolvedUnits);
-      }
-    });
+          List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
+          List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
+          heatMap.getRiskLevelSummary().addAll(resolvedUnits);
+          return null;
+        }));
+    dataCollectionService.executeParrallel(callables);
 
     rv.addAll(cv24x7DashboardService.getHeatMapForLogs(accountId, appId, serviceId, startTime, endTime, detailed));
 
@@ -980,17 +986,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       startEndMap.put(movingStart, endMinute);
     }
 
-    startEndMap.entrySet().parallelStream().forEach(entry -> {
+    List<Callable<Void>> callables = new ArrayList<>();
+    startEndMap.forEach((start, end) -> callables.add(() -> {
       PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
           PageRequestBuilder.aPageRequest()
               .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
-              .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
+              .addFilter("dataCollectionMinute", Operator.GE, start)
               .build();
 
-      if (entry.getValue() == endMinute) {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
+      if (end == endMinute) {
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, end);
       } else {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, end);
       }
 
       if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
@@ -1040,7 +1047,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
         }
       }
-    });
+      return null;
+    }));
+
+    dataCollectionService.executeParrallel(callables);
 
     logger.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {

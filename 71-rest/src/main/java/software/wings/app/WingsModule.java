@@ -1,6 +1,7 @@
 package software.wings.app;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -26,6 +27,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import software.wings.DataStorageMode;
@@ -398,6 +400,8 @@ import software.wings.utils.HostValidationServiceImpl;
 import java.time.Clock;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Guice Module for initializing all beans.
@@ -676,6 +680,14 @@ public class WingsModule extends DependencyModule {
     bind(new TypeLiteral<NotificationDispatcher<NotificationGroup>>() {})
         .annotatedWith(UseNotificationGroup.class)
         .to(NotificationGroupBasedDispatcher.class);
+
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("verificationDataCollector"))
+        .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Verification-Data-Collector-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
 
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
