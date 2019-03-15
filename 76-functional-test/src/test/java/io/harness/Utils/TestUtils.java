@@ -4,9 +4,16 @@ import io.harness.RestUtils.MailinatorRestUtils;
 import io.harness.framework.Retry;
 import io.harness.framework.email.mailinator.MailinatorInbox;
 import io.harness.framework.matchers.MailinatorEmailMatcher;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.helpers.ext.mail.SmtpConfig;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.UUID;
 
 public class TestUtils {
@@ -37,5 +44,37 @@ public class TestUtils {
 
   public static String generateRandomUUID() {
     return UUID.randomUUID().toString();
+  }
+
+  public static SmtpConfig getDefaultSmtpConfig() {
+    String secret = new ScmSecret().decryptToString(new SecretName("smtp_paid_sendgrid_config_password"));
+    // TODO: Use encrypted secrets
+    // String encryptedSecret = new ScmSecret().getSecrets().getProperty("smtp_paid_sendgrid_config_password");
+    return SmtpConfig.builder()
+        .host("smtp.sendgrid.net")
+        .port(465)
+        .useSSL(true)
+        .fromAddress("automation@harness.io")
+        .username("apikey")
+        .password(secret.toCharArray())
+        .build();
+  }
+
+  public static String getInviteIdFromUrl(String url) {
+    URLConnection con = null;
+    String referredUrl = "";
+    try {
+      con = new URL(url).openConnection();
+      InputStream inputStream = con.getInputStream();
+    } catch (IOException e) {
+      if (con.getURL().toString().contains("inviteId")) {
+        referredUrl = con.getURL().toString();
+      }
+    }
+    if (con.getURL().toString().contains("inviteId")) {
+      referredUrl = con.getURL().toString();
+    }
+
+    return referredUrl;
   }
 }

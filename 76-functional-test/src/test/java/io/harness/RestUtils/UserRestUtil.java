@@ -19,12 +19,12 @@ import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 public class UserRestUtil extends AbstractFunctionalTest {
-  public List<User> getUserList(Account account) {
+  public List<User> getUserList(String accountId) {
     RestResponse<PageResponse<User>> userRestResponse =
         Setup.portal()
             .auth()
             .oauth2(bearerToken)
-            .queryParam("accountId", account.getUuid())
+            .queryParam("accountId", accountId)
             .get("/users")
             .as(new GenericType<RestResponse<PageResponse<User>>>() {}.getType());
     return userRestResponse.getResource().getResponse();
@@ -36,7 +36,7 @@ public class UserRestUtil extends AbstractFunctionalTest {
     List<String> emailList = new ArrayList<>();
     emailList.add(email);
     invite.setEmails(emailList);
-    invite.setName(email.replace("@guerrillamailblock.com", ""));
+    invite.setName(email.replace("@harness.mailinator.com", ""));
     invite.setAppId(account.getAppId());
 
     RestResponse<List<UserInvite>> inviteListResponse =
@@ -72,5 +72,57 @@ public class UserRestUtil extends AbstractFunctionalTest {
                                              .as(new GenericType<RestResponse<UserInvite>>() {}.getType());
 
     return completed.getResource();
+  }
+
+  public UserInvite completeTrialUserSignup(String accountName, String companyName, UserInvite invite) {
+    Registration registration = new Registration();
+    registration.setAgreement(true);
+    registration.setEmail(invite.getEmail());
+    registration.setName(invite.getName());
+    registration.setPassword(UserConstants.DEFAULT_PASSWORD);
+    registration.setUuid(invite.getUuid());
+
+    RestResponse<UserInvite> completed = Setup.portal()
+                                             .auth()
+                                             .oauth2(bearerToken)
+                                             .queryParam("account", accountName)
+                                             .queryParam("company", companyName)
+                                             .body(registration, ObjectMapperType.GSON)
+                                             .contentType(ContentType.JSON)
+                                             .put("/users/invites/trial/" + invite.getUuid())
+                                             .as(new GenericType<RestResponse<UserInvite>>() {}.getType());
+
+    return completed.getResource();
+  }
+
+  public User completeTrialUserSignupAndSignin(String accountName, String companyName, UserInvite invite) {
+    Registration registration = new Registration();
+    registration.setAgreement(true);
+    registration.setEmail(invite.getEmail());
+    registration.setName(invite.getName());
+    registration.setPassword(UserConstants.DEFAULT_PASSWORD);
+    registration.setUuid(invite.getUuid());
+
+    RestResponse<User> completed = Setup.portal()
+                                       .auth()
+                                       .oauth2(bearerToken)
+                                       .queryParam("account", accountName)
+                                       .queryParam("company", companyName)
+                                       .body(registration, ObjectMapperType.GSON)
+                                       .contentType(ContentType.JSON)
+                                       .put("/users/invites/trial/" + invite.getUuid() + "/signin")
+                                       .as(new GenericType<RestResponse<User>>() {}.getType());
+
+    return completed.getResource();
+  }
+
+  public Boolean createTrialInvite(String emailId) {
+    RestResponse<Boolean> trialInviteResponse = Setup.portal()
+                                                    .body(emailId)
+                                                    .contentType(ContentType.TEXT)
+                                                    .post("/users/trial")
+                                                    .as(new GenericType<RestResponse<Boolean>>() {}.getType());
+
+    return trialInviteResponse.getResource();
   }
 }

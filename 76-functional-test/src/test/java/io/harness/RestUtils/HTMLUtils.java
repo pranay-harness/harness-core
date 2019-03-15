@@ -8,11 +8,12 @@ import java.io.IOException;
 import javax.mail.MessagingException;
 
 public class HTMLUtils {
-  public String retrieveInviteUrlFromEmail(String emailBody) throws IOException, MessagingException {
-    return getUrlFromTable(Jsoup.parse(emailBody).select("table"));
+  public String retrieveInviteUrlFromEmail(String emailBody, String verificationElement)
+      throws IOException, MessagingException {
+    return getUrlFromTable(Jsoup.parse(emailBody).select("table"), verificationElement);
   }
 
-  private static String getUrlFromTable(Elements table) {
+  private static String getUrlFromTable(Elements table, String verificationElement) {
     if (table.isEmpty()) {
       return null;
     }
@@ -27,7 +28,7 @@ public class HTMLUtils {
       for (int j = 0; j < rows.size(); j++) {
         Elements aElements = rows.get(j).select("a");
         for (int k = 0; k < aElements.size(); k++) {
-          String url = aElements.get(k).getElementsContainingOwnText("SIGN UP").attr("abs:href");
+          String url = aElements.get(k).getElementsContainingOwnText(verificationElement).attr("abs:href");
           if (StringUtils.isNotBlank(url)) {
             return url;
           }
