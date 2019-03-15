@@ -211,6 +211,25 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userGroupList).hasSize(2);
     assertThat(userGroupList).containsExactlyInAnyOrder(savedUserGroup1, savedUserGroup2);
   }
+
+  @Test
+  public void testListByName() {
+    UserGroup userGroup1 = UserGroup.builder()
+                               .uuid(userGroupId)
+                               .name(name)
+                               .accountId(accountId)
+                               .description(description)
+                               .memberIds(asList(user1Id))
+                               .members(asList(user))
+                               .build();
+    UserGroup savedUserGroup1 = userGroupService.save(userGroup1);
+
+    List<UserGroup> userGroups = userGroupService.listByName(accountId, Collections.singletonList(name));
+    assertThat(userGroups).isNotNull();
+    assertThat(userGroups).hasSize(1);
+    assertThat(userGroups).containsExactlyInAnyOrder(savedUserGroup1);
+  }
+
   @Test
   public void testCloneUserGroup() {
     final UserGroup storedGroupToClone = UserGroup.builder()

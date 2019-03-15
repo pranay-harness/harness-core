@@ -25,6 +25,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -183,6 +185,26 @@ public class UserGroupServiceImpl implements UserGroupService {
         .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
         .filter(UserGroup.NAME_KEY, name)
         .get();
+  }
+
+  @Nullable
+  @Override
+  public List<UserGroup> listByName(String accountId, List<String> names) {
+    names = names.stream().filter(StringUtils::isNotEmpty).collect(toList());
+
+    Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
+                                 .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+                                 .field(UserGroup.NAME_KEY)
+                                 .in(names);
+
+    List<UserGroup> userGroups = new LinkedList<>();
+    try (HIterator<UserGroup> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        userGroups.add(iterator.next());
+      }
+    }
+
+    return userGroups;
   }
 
   @Override
