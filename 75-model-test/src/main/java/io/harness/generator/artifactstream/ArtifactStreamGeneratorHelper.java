@@ -21,7 +21,7 @@ public class ArtifactStreamGeneratorHelper {
         .get();
   }
 
-  public ArtifactStream saveArtifactSTream(ArtifactStream artifactStream) {
+  public ArtifactStream saveArtifactStream(ArtifactStream artifactStream) {
     try {
       return artifactStreamService.create(artifactStream, false);
     } catch (DuplicateKeyException de) {

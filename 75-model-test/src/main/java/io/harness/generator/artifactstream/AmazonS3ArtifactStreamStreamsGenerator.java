@@ -93,6 +93,6 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
     } else {
       throw new UnsupportedOperationException();
     }
-    return artifactStreamGeneratorHelper.saveArtifactSTream(s3ArtifactStreamBuilder.build());
+    return artifactStreamGeneratorHelper.saveArtifactStream(s3ArtifactStreamBuilder.build());
   }
 }

@@ -83,6 +83,6 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
       throw new UnsupportedOperationException();
     }
 
-    return artifactStreamGeneratorHelper.saveArtifactSTream(builder.build());
+    return artifactStreamGeneratorHelper.saveArtifactStream(builder.build());
   }
 }

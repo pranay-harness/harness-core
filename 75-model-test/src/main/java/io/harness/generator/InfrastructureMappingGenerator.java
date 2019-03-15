@@ -3,15 +3,18 @@ package io.harness.generator;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
+import static io.harness.generator.SettingGenerator.Settings.HARNESS_GCP_EXPLORATION;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
+import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
+import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 
 import com.google.inject.Inject;
@@ -41,6 +44,7 @@ import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -74,7 +78,10 @@ public class InfrastructureMappingGenerator {
     PHYSICAL_WINRM_TEST,
     AZURE_WINRM_TEST,
     ECS_EC2_TEST,
-    ECS_FARGATE_TEST
+    ECS_FARGATE_TEST,
+    K8S_ROLLING_TEST,
+    K8S_CANARY_TEST,
+    K8S_BLUE_GREEN_TEST
   }
 
   public InfrastructureMapping ensurePredefined(
@@ -92,6 +99,12 @@ public class InfrastructureMappingGenerator {
         return ensureAzureWinRMTest(seed, owners);
       case ECS_EC2_TEST:
         return ensureEcsEc2Test(seed, owners);
+      case K8S_ROLLING_TEST:
+        return ensureK8sTest(seed, owners, "functional-test-rolling");
+      case K8S_BLUE_GREEN_TEST:
+        return ensureK8sTest(seed, owners, "functional-test-bg");
+      case K8S_CANARY_TEST:
+        return ensureK8sTest(seed, owners, "functional-test-canary");
       default:
         unhandled(predefined);
     }
@@ -159,6 +172,52 @@ public class InfrastructureMappingGenerator {
             .withRegion("us-east-1")
             .withServiceId(service.getUuid())
             .withAssignPublicIp(false)
+            .withEnvId(environment.getUuid())
+            .withAccountId(owners.obtainAccount().getUuid())
+            .withAppId(owners.obtainApplication().getUuid())
+            .withServiceTemplateId(owners.obtainServiceTemplate().getUuid())
+            .build();
+    try {
+      return infrastructureMappingService.save(newInfrastructureMapping, true);
+    } catch (WingsException de) {
+      if (de.getCause() instanceof DuplicateKeyException) {
+        InfrastructureMapping exists = exists(newInfrastructureMapping);
+        if (exists != null) {
+          return exists;
+        }
+      }
+      throw de;
+    }
+  }
+
+  private InfrastructureMapping ensureK8sTest(Randomizer.Seed seed, Owners owners, String namespace) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
+      environmentService.createValues(environment.getAppId(), environment.getUuid(), service.getUuid(),
+          ManifestFile.builder().fileName("values.yaml").fileContent("serviceType: ClusterIP\n").build());
+      owners.add(service);
+    }
+
+    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, HARNESS_GCP_EXPLORATION);
+
+    InfrastructureMapping newInfrastructureMapping =
+        aGcpKubernetesInfrastructureMapping()
+            .withName("exploration-harness-test-" + namespace + System.currentTimeMillis())
+            .withAutoPopulate(false)
+            .withInfraMappingType(GCP_KUBERNETES.name())
+            .withDeploymentType(DeploymentType.KUBERNETES.name())
+            .withComputeProviderType(SettingVariableTypes.GCP.name())
+            .withComputeProviderSettingId(gcpCloudProvider.getUuid())
+            .withClusterName("us-west1-a/harness-test")
+            .withNamespace(namespace)
+            .withServiceId(service.getUuid())
             .withEnvId(environment.getUuid())
             .withAccountId(owners.obtainAccount().getUuid())
             .withAppId(owners.obtainApplication().getUuid())

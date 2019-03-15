@@ -17,6 +17,7 @@ import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
@@ -32,7 +33,7 @@ public class ServiceGenerator {
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST, WINDOWS_TEST, ECS_TEST }
+  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST, WINDOWS_TEST, ECS_TEST, K8S_V2_TEST }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
@@ -44,6 +45,8 @@ public class ServiceGenerator {
         return ensureKubernetesGenericTest(seed, owners);
       case WINDOWS_TEST:
         return ensureWindowsTest(seed, owners, "Test IIS APP Service");
+      case K8S_V2_TEST:
+        return ensureK8sTest(seed, owners, "Test K8sV2 Service");
       default:
         unhandled(predefined);
     }
@@ -55,6 +58,19 @@ public class ServiceGenerator {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.IIS_APP).build()));
     artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP);
+    return owners.obtainService();
+  }
+
+  public Service ensureK8sTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder()
+            .name(name)
+            .artifactType(ArtifactType.DOCKER)
+            .deploymentType(DeploymentType.KUBERNETES)
+            .isK8sV2(true)
+            .build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     return owners.obtainService();
   }
 
@@ -125,6 +141,11 @@ public class ServiceGenerator {
       builder.artifactType(service.getArtifactType());
     } else {
       builder.artifactType(random.nextObject(ArtifactType.class));
+    }
+
+    if (service != null) {
+      builder.deploymentType(service.getDeploymentType());
+      builder.isK8sV2(service.isK8sV2());
     }
 
     try {
