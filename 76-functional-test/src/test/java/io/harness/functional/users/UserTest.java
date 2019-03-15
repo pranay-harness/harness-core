@@ -173,6 +173,7 @@ public class UserTest extends AbstractFunctionalTest {
     assertFalse("Error : Completion is true before signup", incomplete.isCompleted());
     assertTrue("Error: Completion is false after signup", completed.isCompleted());
     // Assert.assertTrue("Error : Agreement is false after signup",completed.isAgreement());
+    logger.info(incomplete.getAccountId() + ":" + incomplete.getEmail());
     assertTrue(incomplete.getEmail().equals(completed.getEmail()));
     assertTrue(incomplete.getName().equals(completed.getName()));
     assertTrue(incomplete.getAccountId().equals(completed.getAccountId()));

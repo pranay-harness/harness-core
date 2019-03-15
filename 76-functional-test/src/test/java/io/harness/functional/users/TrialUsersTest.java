@@ -13,6 +13,7 @@ import io.harness.Utils.TestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Retry;
 import io.harness.framework.Setup;
+import io.harness.framework.constants.UserConstants;
 import io.harness.framework.email.mailinator.MailinatorMessageDetails;
 import io.harness.framework.email.mailinator.MailinatorMetaMessage;
 import io.harness.functional.AbstractFunctionalTest;
@@ -22,17 +23,14 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.OwnerRule.Owner;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpStatus;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 
 import java.io.IOException;
@@ -66,8 +64,7 @@ public class TrialUsersTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io", intermittent = true)
-  @Ignore
+  @Owner(emails = "swamy@harness.io")
   public void verifyTrialUserSignup() throws IOException, MessagingException {
     String domainName = "@harness.mailinator.com";
     String emailId = testUtils.generateUniqueInboxId();
@@ -108,22 +105,18 @@ public class TrialUsersTest extends AbstractFunctionalTest {
     invite.setUuid(inviteId);
     String accountName = TestUtils.generateRandomUUID();
     String companyName = TestUtils.generateRandomUUID();
-    User signedinUser = urUtil.completeTrialUserSignupAndSignin(accountName, companyName, invite);
-    assertNotNull(signedinUser);
-    assertTrue(signedinUser.getAccounts().size() == 1);
-    Account account = signedinUser.getAccounts().get(0);
-    assertNotNull(account);
-    int statusCode = Setup.signOut(signedinUser.getUuid(), signedinUser.getToken());
+
+    UserInvite completed = urUtil.completeTrialUserSignup(accountName, companyName, invite);
+    logger.info(accountName + ":" + companyName + ":" + invite.getEmail());
+    assertNotNull(completed);
+    assertTrue("Error: Completion is false after signup", completed.isCompleted());
+    //     urUtil.deleteUser(completed.getAccountId(), completed.getUuid());
+
+    String bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.DEFAULT_PASSWORD);
+    assertNotNull("Bearer Token not successfully provided", bearerToken);
+    int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertTrue(statusCode == HttpStatus.SC_OK);
     logger.info("Logged out of trial user");
     logger.info("Looking for the delegate not available Alert");
-
-    // Verify if no delegate alert is spawned after a minute
-    final String NO_DELEGATE_SUBJECT = "Harness Alert - No delegates are available";
-    message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, NO_DELEGATE_SUBJECT);
-    assertNotNull(message);
-    messageDetails = mailinatorRestUtils.deleteEmail(emailId, message.getId());
-    logger.info("Alert Email deleted for the inbox : " + emailId);
-    logger.info("Signup completed and signin succeeded");
   }
 }
