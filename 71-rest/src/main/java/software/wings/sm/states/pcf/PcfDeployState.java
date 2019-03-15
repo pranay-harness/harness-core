@@ -26,6 +26,7 @@ import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.ActivityAttributes;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
@@ -42,6 +43,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -51,7 +53,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -59,6 +60,7 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +75,7 @@ public class PcfDeployState extends State {
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
+  @Inject private transient ActivityHelperService activityHelperService;
 
   @Attributes(title = "Desired Instances(cumulative)", required = true) private Integer instanceCount;
   @Attributes(title = "Instance Unit Type", required = true)
@@ -327,12 +330,15 @@ public class PcfDeployState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private Activity createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    ActivityAttributes activityAttributes = ActivityAttributes.builder()
+                                                .type(Type.Command)
+                                                .commandType(getStateType())
+                                                .commandName(PCF_RESIZE_COMMAND)
+                                                .commandUnitType(CommandUnitType.PCF_RESIZE.name())
+                                                .commandUnits(Collections.emptyList())
+                                                .build();
 
-    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(),
-        PCF_RESIZE_COMMAND, Type.Command, executionContext, getStateType(), CommandUnitType.PCF_RESIZE, env);
-
+    ActivityBuilder activityBuilder = activityHelperService.getActivityBuilder(executionContext, activityAttributes);
     return activityService.save(activityBuilder.build());
   }
 

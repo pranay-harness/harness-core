@@ -54,6 +54,8 @@ import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
+import software.wings.beans.ActivityAttributes;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
@@ -67,6 +69,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -102,6 +105,8 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private EncryptionService encryptionService;
+  @Mock private ActivityHelperService activityHelperService;
+  @Mock private ActivityBuilder activityBuilder;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
@@ -175,6 +180,13 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
     doReturn(null).when(encryptionService).decrypt(any(), any());
+    ActivityAttributes activityAttributes = ActivityAttributes.builder()
+                                                .type(Activity.Type.Command)
+                                                .commandType(any())
+                                                .commandName(any())
+                                                .commandUnits(Collections.emptyList())
+                                                .build();
+    when(activityHelperService.getActivityBuilder(context, activityAttributes)).thenReturn(activityBuilder);
   }
 
   @Test
