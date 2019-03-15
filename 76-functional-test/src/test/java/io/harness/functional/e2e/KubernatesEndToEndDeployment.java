@@ -29,10 +29,8 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -143,17 +141,15 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   public void t5_testDeployWorkflow() {
-    String artifactStreamId = artifactStreamRestUtil.getArtifactStreamId(
+    String artifactId = artifactStreamRestUtil.getArtifactStreamId(
         sampleApp.getAppId(), sampleEnvironment.getUuid(), sampleService.getUuid());
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(sampleWF.getWorkflowType());
     List<Artifact> artifacts = new ArrayList<>();
     Artifact artifact = new Artifact();
-    artifact.setUuid(artifactStreamId);
+    artifact.setUuid(artifactId);
     artifacts.add(artifact);
     executionArgs.setArtifacts(artifacts);
-    executionArgs.setExecutionCredential(
-        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(sampleWF.getUuid());
 
     WorkflowExecution workflowExecution =

@@ -28,7 +28,8 @@ public class ArtifactStreamManager {
     HARNESS_SAMPLE_ECHO_WAR,
     ARTIFACTORY_ECHO_WAR,
     HARNESS_SAMPLE_IIS_APP,
-    HARNESS_SAMPLE_ECR
+    HARNESS_SAMPLE_ECR,
+    HARNESS_SAMPLE_DOCKER
   }
 
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined) {

@@ -47,7 +47,7 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
     if (existing != null) {
       return existing;
     }
-    return artifactStreamGeneratorHelper.saveArtifactSTream(EcrArtifactStream.builder()
+    return artifactStreamGeneratorHelper.saveArtifactStream(EcrArtifactStream.builder()
                                                                 .appId(ecrArtifactStream.getAppId())
                                                                 .serviceId(ecrArtifactStream.getServiceId())
                                                                 .name(ecrArtifactStream.getName())

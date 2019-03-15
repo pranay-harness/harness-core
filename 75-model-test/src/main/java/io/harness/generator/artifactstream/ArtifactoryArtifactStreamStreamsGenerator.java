@@ -87,6 +87,6 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
     artifactoryArtifactStreamBuilder.autoPopulate(artifactoryArtifactStream.isAutoPopulate());
     artifactoryArtifactStreamBuilder.metadataOnly(artifactStream.isMetadataOnly());
 
-    return artifactStreamGeneratorHelper.saveArtifactSTream(artifactoryArtifactStreamBuilder.build());
+    return artifactStreamGeneratorHelper.saveArtifactStream(artifactoryArtifactStreamBuilder.build());
   }
 }
