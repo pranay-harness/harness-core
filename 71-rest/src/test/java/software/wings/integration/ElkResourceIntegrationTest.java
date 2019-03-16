@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -31,10 +30,7 @@ import software.wings.service.impl.elk.ElkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.List;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -45,6 +41,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
+
   @Before
   public void setUp() throws Exception {
     super.setUp();
@@ -73,42 +70,6 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void validateQuery() {
-    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-        + LogAnalysisResource.VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*)");
-
-    RestResponse<Boolean> restResponse =
-        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
-    assertTrue(restResponse.getResource());
-  }
-
-  @Test
-  public void validateJSONQuery() throws UnsupportedEncodingException {
-    String query = "{\"regexp\":{\"log\":{\"value\":\"info\"}}}";
-    String encodeQuery = URLEncoder.encode(query, "utf-8");
-    WebTarget getTarget =
-        client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL + LogAnalysisResource.VALIDATE_QUERY
-            + "?accountId=" + accountId + "&query=" + encodeQuery + "&formattedQuery=true");
-
-    RestResponse<Boolean> restResponse =
-        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
-    assertTrue(restResponse.getResource());
-  }
-
-  @Test
-  public void validateQueryFail() {
-    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-        + LogAnalysisResource.VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*))");
-
-    try {
-      getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
-      fail();
-    } catch (BadRequestException e) {
-      // do nothing
-    }
-  }
-
-  @Test
   @Ignore
   public void queryHostData() {
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
@@ -125,7 +86,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testGetLogRecordsWithNormalQuery() {
-    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata("error", false);
+    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata("error");
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
         + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
     Response restResponse =
@@ -139,11 +100,11 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void testGetLogRecordsWithFormattedQuery() {
+  public void testGetLogRecordsWithValidJSONQuery() {
     String query = "{\"bool\":{\"must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"
         + "\"default_field\":\"*\"}},{\"range\":{\"@timestamp\":{\"gte\":1535049542943,\"lte\":1535050442943,"
         + "\"format\":\"epoch_millis\"}}}],\"filter\":[],\"should\":[],\"must_not\":[]}}";
-    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata(query, true);
+    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata(query);
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
         + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
     Response restResponse =
@@ -157,12 +118,12 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void testGetLogRecordsWithInvalidFormattedQuery() {
+  public void testGetLogRecordsWithInvalidJSONQuery() {
     // doesnt start with '{' its an invalid query String
     String query = "must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"
         + "\"default_field\":\"*\"}},{\"range\":{\"@timestamp\":{\"gte\":1535049542943,\"lte\":1535050442943,"
         + "\"format\":\"epoch_millis\"}}}],\"filter\":[],\"should\":[],\"must_not\":[]}";
-    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata(query, true);
+    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata(query);
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
         + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
     Response restResponse =
@@ -171,7 +132,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
     assertEquals(restResponse.getStatus(), HttpStatus.SC_BAD_REQUEST);
   }
 
-  private ElkSetupTestNodeData getElkSetupTestNodedata(String query, Boolean formattedQuery) {
+  private ElkSetupTestNodeData getElkSetupTestNodedata(String query) {
     return ElkSetupTestNodeData.builder()
         .query(query)
         .indices("logstash-*")
@@ -183,7 +144,6 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
         .appId(appId)
         .settingId(elkSettingId)
         .instanceName("testHost")
-        .formattedQuery(formattedQuery)
         .instanceElement(
             anInstanceElement()
                 .withUuid("8cec1e1b0d16")

@@ -33,7 +33,6 @@ public class ElkLogFetchRequest {
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
-  @Builder.Default private final boolean formattedQuery = false;
   @Builder.Default private ElkQueryType queryType = ElkQueryType.TERM;
   private static final Logger logger = LoggerFactory.getLogger(ElkLogFetchRequest.class);
 
@@ -54,8 +53,7 @@ public class ElkLogFetchRequest {
 
     Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
     mustArrayObjects.put("filter",
-        asList(new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects)), rangeObject,
-            formattedQuery ? getJSONQuery() : eval()));
+        asList(new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects)), rangeObject, eval()));
 
     JSONObject queryObject =
         new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).put("size", 10000);
@@ -93,58 +91,62 @@ public class ElkLogFetchRequest {
   }
 
   protected JSONObject eval() {
-    try {
-      String[] tokens = insertSpaces(query.toLowerCase()).split(" ");
-      Stack<JSONObject> operandStack = new Stack<>();
-      Stack<String> operatorStack = new Stack<>();
-      JSONObject rval, lval;
-      String operator;
-      for (String token : tokens) {
-        if (")".equals(token)) {
-          Stack<JSONObject> result = new Stack<>();
-          while (!(rval = operandStack.pop())
-                      .toString()
-                      .equals("{\"" + queryType.name().toLowerCase() + "\":{\"(\":\"(\"}}")) {
-            if (operatorStack.isEmpty()) {
-              result.push(rval);
+    if (query.charAt(0) == '{' && query.charAt(query.length() - 1) == '}') {
+      return getJSONQuery();
+    } else {
+      try {
+        String[] tokens = insertSpaces(query.toLowerCase()).split(" ");
+        Stack<JSONObject> operandStack = new Stack<>();
+        Stack<String> operatorStack = new Stack<>();
+        JSONObject rval, lval;
+        String operator;
+        for (String token : tokens) {
+          if (")".equals(token)) {
+            Stack<JSONObject> result = new Stack<>();
+            while (!(rval = operandStack.pop())
+                        .toString()
+                        .equals("{\"" + queryType.name().toLowerCase() + "\":{\"(\":\"(\"}}")) {
+              if (operatorStack.isEmpty()) {
+                result.push(rval);
+              } else {
+                lval = operandStack.pop();
+                operator = operatorStack.pop();
+                result.push(eval(lval, rval, operator));
+              }
+            }
+            result.forEach(op -> operandStack.push(op));
+          } else {
+            if ("or".equals(token.toLowerCase()) || "and".equals(token.toLowerCase())) {
+              operatorStack.push(token);
             } else {
-              lval = operandStack.pop();
-              operator = operatorStack.pop();
-              result.push(eval(lval, rval, operator));
+              operandStack.push(stringToJson(token));
             }
           }
-          result.forEach(op -> operandStack.push(op));
-        } else {
-          if ("or".equals(token.toLowerCase()) || "and".equals(token.toLowerCase())) {
-            operatorStack.push(token);
-          } else {
-            operandStack.push(stringToJson(token));
-          }
         }
-      }
 
-      while (!operatorStack.empty()) {
-        rval = operandStack.pop();
-        lval = operandStack.pop();
-        operator = operatorStack.pop();
-        operandStack.push(eval(lval, rval, operator));
-      }
-
-      if (operandStack.size() > 1) {
-        List<JSONObject> mustObjectList = new ArrayList<>();
-        while (!operandStack.isEmpty()) {
-          if (operandStack.peek().toString().equals("{\"" + queryType.name().toLowerCase() + "\":{\"(\":\"(\"}}")) {
-            throw new WingsException("Unmatched open braces `(`");
-          }
-          mustObjectList.add(operandStack.pop());
+        while (!operatorStack.empty()) {
+          rval = operandStack.pop();
+          lval = operandStack.pop();
+          operator = operatorStack.pop();
+          operandStack.push(eval(lval, rval, operator));
         }
-        return new JSONObject().put("bool", new JSONObject().put("must", mustObjectList));
-      }
-      return operandStack.pop();
 
-    } catch (RuntimeException ex) {
-      throw new WingsException(
-          "Malformed Query. Braces should be matching. Only supported operators are 'or' and 'and' ");
+        if (operandStack.size() > 1) {
+          List<JSONObject> mustObjectList = new ArrayList<>();
+          while (!operandStack.isEmpty()) {
+            if (operandStack.peek().toString().equals("{\"" + queryType.name().toLowerCase() + "\":{\"(\":\"(\"}}")) {
+              throw new WingsException("Unmatched open braces `(`");
+            }
+            mustObjectList.add(operandStack.pop());
+          }
+          return new JSONObject().put("bool", new JSONObject().put("must", mustObjectList));
+        }
+        return operandStack.pop();
+
+      } catch (RuntimeException ex) {
+        throw new WingsException(
+            "Malformed Query. Braces should be matching. Only supported operators are 'or' and 'and' ");
+      }
     }
   }
 
@@ -152,8 +154,7 @@ public class ElkLogFetchRequest {
     try {
       return new JSONObject(query);
     } catch (JSONException ex) {
-      logger.error("Given query is not json formatted");
-      throw new WingsException("Invalid JSON Query Passed : " + query);
+      throw new WingsException("Invalid JSON Query Passed : " + ex.getMessage());
     }
   }
 

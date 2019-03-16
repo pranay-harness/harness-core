@@ -27,4 +27,6 @@ public interface ElkAnalysisService extends AnalysisService {
    * @return
    */
   VerificationNodeDataSetupResponse getLogDataByHost(String accountId, ElkSetupTestNodeData elkSetupTestNodeData);
+
+  Boolean validateQuery(String accountId, String appId, String settingId, String query, String index, String guid);
 }

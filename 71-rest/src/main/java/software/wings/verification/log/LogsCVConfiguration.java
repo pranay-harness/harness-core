@@ -14,7 +14,6 @@ import software.wings.verification.CVConfiguration;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class LogsCVConfiguration extends CVConfiguration {
-  @Attributes(required = true, title = "Is Formatted Query") @DefaultValue("false") private boolean formattedQuery;
   @Attributes(title = "Search Keywords", required = true) @DefaultValue("*exception*") protected String query;
 
   private long baselineStartMinute = -1;

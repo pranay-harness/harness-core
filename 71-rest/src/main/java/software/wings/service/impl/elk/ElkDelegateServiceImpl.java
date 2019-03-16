@@ -134,10 +134,11 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
       return response.body();
     }
+    String errorMessage = response.errorBody().string();
 
-    apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
+    apiCallLog.addFieldToResponse(response.code(), errorMessage, FieldType.TEXT);
     delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
-    throw new WingsException("Unable to get search response - " + response.errorBody().string());
+    throw new WingsException("Unable to get search response - " + errorMessage);
   }
 
   @Override

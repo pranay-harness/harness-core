@@ -34,12 +34,15 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeries;
@@ -225,21 +228,30 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   private void createElkCVConfig(boolean enabled24x7) {
+    String elkSettingId =
+        wingsPersistence.save(Builder.aSettingAttribute()
+                                  .withName(generateUuid())
+                                  .withAccountId(accountId)
+                                  .withValue(ElkConfig.builder()
+                                                 .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)
+                                                 .elkUrl("http://ec2-34-227-84-170.compute-1.amazonaws.com:9200/")
+                                                 .accountId(accountId)
+                                                 .build())
+                                  .build());
     elkCVConfiguration = new ElkCVConfiguration();
     elkCVConfiguration.setName("Config 1");
     elkCVConfiguration.setAppId(appId);
     elkCVConfiguration.setEnvId(envId);
     elkCVConfiguration.setServiceId(serviceId);
     elkCVConfiguration.setEnabled24x7(enabled24x7);
-    elkCVConfiguration.setConnectorId(settingAttributeId);
+    elkCVConfiguration.setConnectorId(elkSettingId);
     elkCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     elkCVConfiguration.setBaselineStartMinute(100);
     elkCVConfiguration.setBaselineEndMinute(200);
 
     elkCVConfiguration.setQuery("query1");
-    elkCVConfiguration.setFormattedQuery(true);
     elkCVConfiguration.setQueryType(ElkQueryType.TERM);
-    elkCVConfiguration.setIndex("index1");
+    elkCVConfiguration.setIndex("filebeat-*");
     elkCVConfiguration.setHostnameField("host1");
     elkCVConfiguration.setMessageField("message1");
     elkCVConfiguration.setTimestampField("timestamp1");
@@ -259,7 +271,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setBaselineEndMinute(200);
 
     logsCVConfiguration.setQuery("query1");
-    logsCVConfiguration.setFormattedQuery(true);
   }
 
   @Test
@@ -579,15 +590,13 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(ELK, fetchedObject.getStateType());
     assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
-    assertEquals("someSettingAttributeName", elkCVServiceConfiguration.getConnectorName());
     assertEquals("someServiceName", elkCVServiceConfiguration.getServiceName());
     assertEquals(91, fetchedObject.getBaselineStartMinute());
     assertEquals(195, fetchedObject.getBaselineEndMinute());
 
     assertEquals("query1", fetchedObject.getQuery());
-    assertEquals(true, fetchedObject.isFormattedQuery());
     assertEquals(ElkQueryType.TERM, fetchedObject.getQueryType());
-    assertEquals("index1", fetchedObject.getIndex());
+    assertEquals("filebeat-*", fetchedObject.getIndex());
     assertEquals("host1", fetchedObject.getHostnameField());
     assertEquals("message1", fetchedObject.getMessageField());
     assertEquals("timestamp1", fetchedObject.getTimestampField());
@@ -622,10 +631,9 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     elkCVServiceConfiguration.setBaselineEndMinute(330);
 
     elkCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
-    elkCVServiceConfiguration.setFormattedQuery(false);
     elkCVServiceConfiguration.setQuery("query2");
     elkCVServiceConfiguration.setQueryType(ElkQueryType.MATCH);
-    elkCVServiceConfiguration.setIndex("index2");
+    elkCVServiceConfiguration.setIndex("filebeat-*");
     elkCVServiceConfiguration.setHostnameField("host2");
     elkCVServiceConfiguration.setMessageField("message2");
     elkCVServiceConfiguration.setTimestampField("timestamp2");
@@ -642,9 +650,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(330, fetchedObject.getBaselineEndMinute());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
-    assertEquals(false, fetchedObject.isFormattedQuery());
     assertEquals(ElkQueryType.MATCH, fetchedObject.getQueryType());
-    assertEquals("index2", fetchedObject.getIndex());
+    assertEquals("filebeat-*", fetchedObject.getIndex());
     assertEquals("host2", fetchedObject.getHostnameField());
     assertEquals("message2", fetchedObject.getMessageField());
     assertEquals("timestamp2", fetchedObject.getTimestampField());
@@ -694,7 +701,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals("someServiceName", logsCVConfiguration.getServiceName());
 
     assertEquals("query1", fetchedObject.getQuery());
-    assertEquals(true, fetchedObject.isFormattedQuery());
     assertEquals(91, fetchedObject.getBaselineStartMinute());
     assertEquals(195, fetchedObject.getBaselineEndMinute());
 
@@ -718,7 +724,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
     assertEquals("Config 1", obj.getName());
     assertEquals("query1", obj.getQuery());
-    assertEquals(true, obj.isFormattedQuery());
     assertEquals(91, obj.getBaselineStartMinute());
     assertEquals(195, obj.getBaselineEndMinute());
 
@@ -729,7 +734,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setEnabled24x7(false);
 
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
-    logsCVConfiguration.setFormattedQuery(false);
     logsCVConfiguration.setQuery("query2");
     logsCVConfiguration.setBaselineStartMinute(106);
     logsCVConfiguration.setBaselineEndMinute(210);
@@ -743,7 +747,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
-    assertEquals(false, fetchedObject.isFormattedQuery());
     assertEquals(106, fetchedObject.getBaselineStartMinute());
     assertEquals(210, fetchedObject.getBaselineEndMinute());
 

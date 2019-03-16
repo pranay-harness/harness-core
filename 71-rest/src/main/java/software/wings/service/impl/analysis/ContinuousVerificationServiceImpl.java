@@ -1524,7 +1524,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .cvConfigId(config.getUuid())
             .serviceId(config.getServiceId())
             .query(config.getQuery())
-            .formattedQuery(config.isFormattedQuery())
             .indices(config.getIndex())
             .hostnameField(config.getHostnameField())
             .messageField(config.getMessageField())

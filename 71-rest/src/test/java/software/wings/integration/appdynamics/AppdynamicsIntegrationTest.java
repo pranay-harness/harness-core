@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -207,7 +206,6 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());

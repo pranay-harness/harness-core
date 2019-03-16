@@ -4,6 +4,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -81,6 +82,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     setInternalState(elkAnalysisState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
     setInternalState(elkAnalysisState, "featureFlagService", featureFlagService);
     setInternalState(elkAnalysisState, "versionInfoManager", versionInfoManager);
+    setInternalState(elkAnalysisState, "elkAnalysisService", elkAnalysisService);
   }
 
   @Test
@@ -207,6 +209,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     when(workflowStandardParams.getEnv())
         .thenReturn(Environment.Builder.anEnvironment().withUuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(elkAnalysisService.validateQuery(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(true);
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());

@@ -5,12 +5,14 @@ import com.google.common.base.MoreObjects;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.queue.Queuable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.Date;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "notifyQueue", noClassnameStored = true)
 public class NotifyEvent extends Queuable {
   private String waitInstanceId;

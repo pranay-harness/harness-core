@@ -12,6 +12,7 @@ import io.harness.security.NoOpSecretManagerImpl;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
+import io.harness.service.NoOpCvValidationServiceImpl;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
 import io.harness.service.VerificationMigrationServiceImpl;
 import io.harness.service.intfc.ContinuousVerificationService;
@@ -26,6 +27,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
+import software.wings.service.impl.verification.CvValidationService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.security.SecretManager;
@@ -71,6 +73,7 @@ public class VerificationServiceModule extends AbstractModule {
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
+    bind(CvValidationService.class).to(NoOpCvValidationServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationServiceExecutor"))

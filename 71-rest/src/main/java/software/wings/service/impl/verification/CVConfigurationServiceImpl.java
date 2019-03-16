@@ -62,6 +62,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   private static final Logger logger = LoggerFactory.getLogger(CVConfigurationServiceImpl.class);
 
   @Inject WingsPersistence wingsPersistence;
+  @Inject CvValidationService cvValidationService;
 
   @Override
   public String saveConfiguration(String accountId, String appId, StateType stateType, Object params) {
@@ -97,6 +98,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case ELK:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
+        ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
+        cvValidationService.validateELKQuery(accountId, appId, elkCVConfiguration.getConnectorId(),
+            elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex());
         break;
 
       default:
@@ -204,6 +208,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case ELK:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
+        ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) updatedConfig;
+        cvValidationService.validateELKQuery(accountId, appId, elkCVConfiguration.getConnectorId(),
+            elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex());
         break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
@@ -355,14 +362,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case SUMO:
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
         updateOperations.set("query", logsCVConfiguration.getQuery())
-            .set("formattedQuery", logsCVConfiguration.isFormattedQuery())
             .set("baselineStartMinute", logsCVConfiguration.getBaselineStartMinute())
             .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute());
         break;
       case ELK:
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
         updateOperations.set("query", elkCVConfiguration.getQuery())
-            .set("formattedQuery", elkCVConfiguration.isFormattedQuery())
             .set("baselineStartMinute", elkCVConfiguration.getBaselineStartMinute())
             .set("baselineEndMinute", elkCVConfiguration.getBaselineEndMinute())
             .set("queryType", elkCVConfiguration.getQueryType())

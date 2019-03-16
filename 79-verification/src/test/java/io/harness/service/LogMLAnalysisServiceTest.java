@@ -1191,6 +1191,5 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logsCVConfiguration.setBaselineEndMinute(200);
 
     logsCVConfiguration.setQuery("query1");
-    logsCVConfiguration.setFormattedQuery(true);
   }
 }

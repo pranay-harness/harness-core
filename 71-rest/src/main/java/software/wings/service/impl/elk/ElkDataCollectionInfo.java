@@ -25,14 +25,13 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   private String timestampField;
   private String timestampFieldFormat;
   private ElkQueryType queryType;
-  private boolean formattedQuery;
 
   @Builder
   public ElkDataCollectionInfo(String accountId, String applicationId, String stateExecutionId, String cvConfigId,
       String workflowId, String workflowExecutionId, String serviceId, String query, long startTime, long endTime,
       int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
       List<EncryptedDataDetail> encryptedDataDetails, ElkConfig elkConfig, String indices, String messageField,
-      String timestampField, String timestampFieldFormat, ElkQueryType queryType, boolean formattedQuery) {
+      String timestampField, String timestampFieldFormat, ElkQueryType queryType) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId, query,
         startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.ELK, encryptedDataDetails);
     this.elkConfig = elkConfig;
@@ -41,6 +40,5 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
     this.timestampField = timestampField;
     this.timestampFieldFormat = timestampFieldFormat;
     this.queryType = queryType;
-    this.formattedQuery = formattedQuery;
   }
 }
