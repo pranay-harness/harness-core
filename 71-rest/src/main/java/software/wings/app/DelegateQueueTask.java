@@ -124,7 +124,7 @@ public class DelegateQueueTask implements Runnable {
                                      .field(ID_KEY)
                                      .in(taskIds)
                                      .project(ID_KEY, true)
-                                     .project("delegateId", true)
+                                     .project(DelegateTask.DELEGATE_ID_KEY, true)
                                      .project("waitId", true)
                                      .project("tags", true)
                                      .project("accountId", true)
@@ -142,7 +142,7 @@ public class DelegateQueueTask implements Runnable {
           DelegateTask task = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                   .filter(ID_KEY, taskId)
                                   .project(ID_KEY, true)
-                                  .project("delegateId", true)
+                                  .project(DelegateTask.DELEGATE_ID_KEY, true)
                                   .project("waitId", true)
                                   .project("tags", true)
                                   .project("accountId", true)
@@ -195,7 +195,7 @@ public class DelegateQueueTask implements Runnable {
     Query<DelegateTask> unassignedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                                    .filter("status", QUEUED)
                                                    .filter("version", versionInfoManager.getVersionInfo().getVersion())
-                                                   .field("delegateId")
+                                                   .field(DelegateTask.DELEGATE_ID_KEY)
                                                    .doesNotExist();
 
     long now = clock.millis();

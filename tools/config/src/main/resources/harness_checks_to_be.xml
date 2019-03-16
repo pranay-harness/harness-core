@@ -11,6 +11,6 @@
     <property name="fileExtensions" value="java, properties, xml"/>
 
     <module name="TreeWalker">
-        <module name="MultipleStringLiteralsCheck"/>
+        <module name="MultipleStringLiterals"/>
     </module>
 </module>

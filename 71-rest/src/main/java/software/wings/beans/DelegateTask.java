@@ -34,9 +34,11 @@ import javax.validation.constraints.NotNull;
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String APP_ID_KEY = "appId";
-  public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
-  public static final String DATA_TIMEOUT_KEY = "data.timeout";
+  public static final String ASYNC_KEY = "async";
   public static final String DATA_PARAMETERS_KEY = "data.parameters";
+  public static final String DATA_TIMEOUT_KEY = "data.timeout";
+  public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
+  public static final String DELEGATE_ID_KEY = "delegateId";
 
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
   public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes

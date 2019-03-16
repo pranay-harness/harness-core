@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static software.wings.api.AwsCodeDeployRequestElement.AWS_CODE_DEPLOY_REQUEST_PARAM;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
 import software.wings.api.AwsCodeDeployRequestElement;
@@ -7,7 +9,6 @@ import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CodeDeployParams;
-import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -27,7 +28,7 @@ public class AwsCodeDeployRollback extends AwsCodeDeployState {
       CodeDeployInfrastructureMapping infrastructureMapping, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, Builder executionDataBuilder) {
     AwsCodeDeployRequestElement codeDeployRequestElement =
-        context.getContextElement(ContextElementType.PARAM, Constants.AWS_CODE_DEPLOY_REQUEST_PARAM);
+        context.getContextElement(ContextElementType.PARAM, AWS_CODE_DEPLOY_REQUEST_PARAM);
     executionDataBuilder.withCodeDeployParams(codeDeployRequestElement.getOldCodeDeployParams());
     return codeDeployRequestElement.getOldCodeDeployParams();
   }

@@ -2,7 +2,6 @@ package software.wings.api;
 
 import io.harness.context.ContextElementType;
 import software.wings.beans.command.CodeDeployParams;
-import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
@@ -12,6 +11,8 @@ import java.util.Map;
  * Created by rishi on 6/26/17.
  */
 public class AwsCodeDeployRequestElement implements ContextElement {
+  public static final String AWS_CODE_DEPLOY_REQUEST_PARAM = "AWS_CODE_DEPLOY_REQUEST_PARAM";
+
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
 
@@ -43,7 +44,7 @@ public class AwsCodeDeployRequestElement implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.AWS_CODE_DEPLOY_REQUEST_PARAM;
+    return AWS_CODE_DEPLOY_REQUEST_PARAM;
   }
 
   @Override

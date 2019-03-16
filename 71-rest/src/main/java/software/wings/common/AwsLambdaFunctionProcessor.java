@@ -1,6 +1,7 @@
 package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
 import static software.wings.api.AwsLambdaFunctionElement.Builder.anAwsLambdaFunctionElement;
 
 import io.harness.context.ContextElementType;
@@ -75,7 +76,7 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
    */
   public List<AwsLambdaFunctionElement> list() {
     AwsLambdaContextElement awsLambdaContextElement =
-        context.getContextElement(ContextElementType.PARAM, Constants.AWS_LAMBDA_REQUEST_PARAM);
+        context.getContextElement(ContextElementType.PARAM, AWS_LAMBDA_REQUEST_PARAM);
     if (awsLambdaContextElement == null) {
       logger.error("AwsLambdaContextElement is null in the context");
       return null;
