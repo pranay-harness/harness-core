@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
   @Index(fields = {
     @Field("workflow_execution_id")
     , @Field("state_execution_id"), @Field("executionStatus"), @Field("analysis_minute"), @Field("cluster_level"),
-        @Field("ml_analysis_type"), @Field("control_nodes"), @Field("group_name")
+        @Field("ml_analysis_type"), @Field("control_nodes"), @Field("group_name"), @Field("tag")
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
@@ -83,6 +83,7 @@ public class LearningEngineAnalysisTask extends Base {
   @Indexed private ExecutionStatus executionStatus;
   private String cvConfigId;
   private boolean is24x7Task;
+  private String tag = "default";
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];

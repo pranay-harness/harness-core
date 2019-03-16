@@ -34,7 +34,7 @@ public interface TimeSeriesAnalysisService {
   boolean saveAnalysisRecordsML(String accountId, @NotNull StateType stateType, @NotNull String appId,
       @NotNull String stateExecutionId, @NotNull String workflowExecutionId, String groupName,
       @NotNull Integer analysisMinute, @NotNull String taskId, String baseLineExecutionId, String cvConfigId,
-      @Valid MetricAnalysisRecord mlAnalysisResponse);
+      @Valid MetricAnalysisRecord mlAnalysisResponse, String tag);
 
   @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);
 
@@ -90,15 +90,16 @@ public interface TimeSeriesAnalysisService {
   long getLastCVAnalysisMinute(String appId, String cvConfigId);
 
   List<NewRelicMetricDataRecord> getMetricRecords(StateType stateType, String appId, String serviceId,
-      String cvConfigId, int analysisStartMinute, int analysisEndMinute);
+      String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag);
 
-  TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin);
+  TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin, String tag);
 
   List<TimeSeriesMLAnalysisRecord> getHistoricalAnalysis(
-      String accountId, String appId, String serviceId, String cvConfigId, long analysisMin);
+      String accountId, String appId, String serviceId, String cvConfigId, long analysisMin, String tag);
 
-  TimeSeriesAnomaliesRecord getPreviousAnomalies(String appId, String cvConfigId, Map<String, List<String>> metrics);
+  TimeSeriesAnomaliesRecord getPreviousAnomalies(
+      String appId, String cvConfigId, Map<String, List<String>> metrics, String tag);
 
   List<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
-      String appId, String cvConfigId, int startMinute, int endMinute);
+      String appId, String cvConfigId, int startMinute, int endMinute, String tag);
 }

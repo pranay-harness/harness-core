@@ -176,6 +176,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
+  private static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
+  private static final String DUMMY_METRIC_NAME = "DummyMetricName";
 
   @Override
   public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
@@ -566,6 +568,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public List<HeatMap> getHeatMap(
       String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed) {
     List<HeatMap> rv = Collections.synchronizedList(new ArrayList<>());
+
     List<CVConfiguration> cvConfigurations = wingsPersistence.createQuery(CVConfiguration.class)
                                                  .filter("appId", appId)
                                                  .filter("serviceId", serviceId)
@@ -653,13 +656,51 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return mergedUnit;
   }
 
+  private List<TimeSeriesMLAnalysisRecord> mergeRecordsOfDifferentTagsIfNecessary(
+      List<TimeSeriesMLAnalysisRecord> records) {
+    List<TimeSeriesMLAnalysisRecord> retList = new ArrayList<>();
+    Map<String, List<TimeSeriesMLAnalysisRecord>> minuteConfigMap = new LinkedHashMap<>();
+    if (isNotEmpty(records)) {
+      records.forEach(record -> {
+        String key = record.getCvConfigId() + "::" + record.getAnalysisMinute();
+        if (!minuteConfigMap.containsKey(key)) {
+          minuteConfigMap.put(key, new ArrayList<>());
+        }
+        minuteConfigMap.get(key).add(record);
+      });
+
+      minuteConfigMap.forEach((key, recordList) -> {
+        // aggregate the records/overallscores.
+        if (recordList.size() == 1) {
+          retList.add(recordList.get(0));
+        } else {
+          List<Double> scoreList = new ArrayList<>();
+          recordList.forEach(record -> {
+            if (record.getOverallMetricScores() == null) {
+              scoreList.add(-1.0);
+            } else {
+              scoreList.add(Collections.max(record.getOverallMetricScores().values()));
+            }
+          });
+          TimeSeriesMLAnalysisRecord aggregatedRecord = minuteConfigMap.get(key).get(0);
+          Double aggregatedScore = scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
+          Map<String, Double> aggrOverallScores = new HashMap<>();
+          aggrOverallScores.put(DUMMY_METRIC_NAME, aggregatedScore);
+          aggregatedRecord.setOverallMetricScores(aggrOverallScores);
+          retList.add(aggregatedRecord);
+        }
+      });
+    }
+    return retList;
+  }
+
   private List<HeatMapUnit> createAllHeatMapUnits(
       String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
     long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
     Preconditions.checkState((endTime - startTime) >= cronPollIntervalMs);
     List<TimeSeriesMLAnalysisRecord> records =
         getAnalysisRecordsInTimeRange(appId, startTime, endTime, cvConfiguration);
-
+    records = mergeRecordsOfDifferentTagsIfNecessary(records);
     long startMinute = TimeUnit.MILLISECONDS.toMinutes(startTime);
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(endTime);
 
@@ -750,7 +791,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       historyStartTime = startTime - TimeUnit.HOURS.toMillis(2) + 1;
     }
     return getTimeSeriesForTimeRangeFromDataRecords(cvConfiguration,
-        TimeSeriesFilter.builder().startTime(startTime).endTime(endTime).historyStartTime(historyStartTime).build());
+        TimeSeriesFilter.builder().startTime(startTime).endTime(endTime).historyStartTime(historyStartTime).build())
+        .get(HARNESS_DEFAULT_TAG);
   }
 
   private SettingValue getConnectorConfig(CVConfiguration cvConfiguration) {
@@ -835,63 +877,71 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private void updateRisksFromSummary(long startTime, long endTime, long riskCutOff, CVConfiguration cvConfiguration,
-      Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries) {
-    List<TimeSeriesRiskSummary> riskSummaries = wingsPersistence.createQuery(TimeSeriesRiskSummary.class)
-                                                    .filter("appId", cvConfiguration.getAppId())
-                                                    .filter("cvConfigId", cvConfiguration.getUuid())
-                                                    .field("analysisMinute")
-                                                    .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
-                                                    .field("analysisMinute")
-                                                    .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-                                                    .order("analysisMinute")
-                                                    .asList();
+      Map<String, Map<String, Map<String, TimeSeriesOfMetric>>> observedTimeSeriesWithTag) {
+    observedTimeSeriesWithTag.forEach((tag, observedTimeSeries) -> {
+      Query<TimeSeriesRiskSummary> timeSeriesRiskSummaryQuery =
+          wingsPersistence.createQuery(TimeSeriesRiskSummary.class)
+              .filter("appId", cvConfiguration.getAppId())
+              .filter("cvConfigId", cvConfiguration.getUuid())
+              .field("analysisMinute")
+              .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
+              .field("analysisMinute")
+              .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+              .order("analysisMinute");
+      if (!tag.equals(HARNESS_DEFAULT_TAG)) {
+        timeSeriesRiskSummaryQuery.filter("tag", tag);
+      }
+      List<TimeSeriesRiskSummary> riskSummaries = timeSeriesRiskSummaryQuery.asList();
 
-    riskSummaries.forEach(summary -> summary.decompressMaps());
+      riskSummaries.forEach(summary -> summary.decompressMaps());
 
-    for (TimeSeriesRiskSummary summary : riskSummaries) {
-      observedTimeSeries.forEach((transaction, metricMap) -> {
-        // TODO: Remove these two loops.
-        metricMap.entrySet()
-            .stream()
-            .filter(e
-                -> isNotEmpty(summary.getTxnMetricRisk()) && summary.getTxnMetricRisk().containsKey(transaction)
-                    && summary.getTxnMetricRisk().get(transaction).containsKey(e.getKey()))
-            .forEach(entry -> {
-              Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
-              if (TimeUnit.MINUTES.toMillis(summary.getAnalysisMinute()) > riskCutOff) {
-                observedTimeSeries.get(transaction).get(entry.getKey()).updateRisk(risk);
-              }
-              observedTimeSeries.get(transaction)
-                  .get(entry.getKey())
-                  .addToRiskMap(TimeUnit.MINUTES.toMillis(summary.getAnalysisMinute()), risk);
-            });
+      for (TimeSeriesRiskSummary summary : riskSummaries) {
+        observedTimeSeries.forEach((transaction, metricMap) -> {
+          // TODO: Remove these two loops.
+          metricMap.entrySet()
+              .stream()
+              .filter(e
+                  -> isNotEmpty(summary.getTxnMetricRisk()) && summary.getTxnMetricRisk().containsKey(transaction)
+                      && summary.getTxnMetricRisk().get(transaction).containsKey(e.getKey()))
+              .forEach(entry -> {
+                Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
+                if (TimeUnit.MINUTES.toMillis(summary.getAnalysisMinute()) > riskCutOff) {
+                  observedTimeSeries.get(transaction).get(entry.getKey()).updateRisk(risk);
+                }
+                observedTimeSeries.get(transaction)
+                    .get(entry.getKey())
+                    .addToRiskMap(TimeUnit.MINUTES.toMillis(summary.getAnalysisMinute()), risk);
+              });
 
-        metricMap.entrySet()
-            .stream()
-            .filter(e
-                -> isNotEmpty(summary.getTxnMetricLongTermPattern())
-                    && summary.getTxnMetricLongTermPattern().containsKey(transaction)
-                    && summary.getTxnMetricLongTermPattern().get(transaction).containsKey(e.getKey()))
-            .forEach(entry -> {
-              Integer pattern = summary.getTxnMetricLongTermPattern().get(transaction).get(entry.getKey());
-              observedTimeSeries.get(transaction).get(entry.getKey()).setLongTermPattern(pattern);
-            });
+          metricMap.entrySet()
+              .stream()
+              .filter(e
+                  -> isNotEmpty(summary.getTxnMetricLongTermPattern())
+                      && summary.getTxnMetricLongTermPattern().containsKey(transaction)
+                      && summary.getTxnMetricLongTermPattern().get(transaction).containsKey(e.getKey()))
+              .forEach(entry -> {
+                Integer pattern = summary.getTxnMetricLongTermPattern().get(transaction).get(entry.getKey());
+                observedTimeSeries.get(transaction).get(entry.getKey()).setLongTermPattern(pattern);
+              });
 
-        // TODO: Keep just this loop going forward and move risk and longtermPattern to this.
-        metricMap.entrySet()
-            .stream()
-            .filter(e
-                -> isNotEmpty(summary.getTxnMetricRiskData()) && summary.getTxnMetricRiskData().containsKey(transaction)
-                    && summary.getTxnMetricRiskData().get(transaction).containsKey(e.getKey()))
-            .forEach(entry -> {
-              Integer pattern =
-                  summary.getTxnMetricRiskData().get(transaction).get(entry.getKey()).getLongTermPattern();
-              long lastSeenTime = summary.getTxnMetricRiskData().get(transaction).get(entry.getKey()).getLastSeenTime();
-              Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
-              observedTimeSeries.get(transaction).get(entry.getKey()).setLastSeenTime(lastSeenTime);
-            });
-      });
-    }
+          // TODO: Keep just this loop going forward and move risk and longtermPattern to this.
+          metricMap.entrySet()
+              .stream()
+              .filter(e
+                  -> isNotEmpty(summary.getTxnMetricRiskData())
+                      && summary.getTxnMetricRiskData().containsKey(transaction)
+                      && summary.getTxnMetricRiskData().get(transaction).containsKey(e.getKey()))
+              .forEach(entry -> {
+                Integer pattern =
+                    summary.getTxnMetricRiskData().get(transaction).get(entry.getKey()).getLongTermPattern();
+                long lastSeenTime =
+                    summary.getTxnMetricRiskData().get(transaction).get(entry.getKey()).getLastSeenTime();
+                Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
+                observedTimeSeries.get(transaction).get(entry.getKey()).setLastSeenTime(lastSeenTime);
+              });
+        });
+      }
+    });
   }
 
   @Override
@@ -945,30 +995,39 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private SortedSet<TransactionTimeSeries> convertTimeSeriesResponse(
-      Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries) {
+      Map<String, Map<String, Map<String, TimeSeriesOfMetric>>> observedTimeSeriesTags) {
     SortedSet<TransactionTimeSeries> resp = new TreeSet<>();
-    for (Map.Entry<String, Map<String, TimeSeriesOfMetric>> txnEntry : observedTimeSeries.entrySet()) {
-      TransactionTimeSeries txnTimeSeries = new TransactionTimeSeries();
-      txnTimeSeries.setTransactionName(txnEntry.getKey());
-      txnTimeSeries.setMetricTimeSeries(new TreeSet<>());
-      for (Map.Entry<String, TimeSeriesOfMetric> metricEntry : txnEntry.getValue().entrySet()) {
-        txnTimeSeries.getMetricTimeSeries().add(metricEntry.getValue());
+    for (Map.Entry<String, Map<String, Map<String, TimeSeriesOfMetric>>> observedTimeSeries :
+        observedTimeSeriesTags.entrySet()) {
+      String tag = observedTimeSeries.getKey();
+      for (Map.Entry<String, Map<String, TimeSeriesOfMetric>> txnEntry : observedTimeSeries.getValue().entrySet()) {
+        TransactionTimeSeries txnTimeSeries = new TransactionTimeSeries();
+        txnTimeSeries.setTag(tag);
+        txnTimeSeries.setTransactionName(txnEntry.getKey());
+        txnTimeSeries.setMetricTimeSeries(new TreeSet<>());
+        for (Map.Entry<String, TimeSeriesOfMetric> metricEntry : txnEntry.getValue().entrySet()) {
+          txnTimeSeries.getMetricTimeSeries().add(metricEntry.getValue());
+        }
+        resp.add(txnTimeSeries);
       }
-      resp.add(txnTimeSeries);
     }
+
+    String tagWithMaxRisk = resp.first().getTag();
+    resp.removeIf(timeseries -> !timeseries.getTag().equals(tagWithMaxRisk));
     // logger.info("Timeseries response = {}", resp);
     logger.info("TimeSeries response size is : {}", resp.size());
     return resp;
   }
 
-  private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRangeFromDataRecords(
+  private Map<String, Map<String, Map<String, TimeSeriesOfMetric>>> getTimeSeriesForTimeRangeFromDataRecords(
       CVConfiguration cvConfiguration, TimeSeriesFilter filter) {
-    // The object to be returned which contains the map txn => metrics => timeseries per metric
-    Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new ConcurrentHashMap<>();
+    // The object to be returned which contains the map tag => txn => metrics => timeseries per metric
+    Map<String, Map<String, Map<String, TimeSeriesOfMetric>>> observedTimeSeries = new ConcurrentHashMap<>();
 
     long startTime = filter.getHistoryStartTime();
     long endTime = filter.getEndTime();
     long riskCutOffTime = filter.getStartTime();
+    boolean isMultiTagMaxRisk = isNotEmpty(filter.getTags()) && filter.getTags().size() > 1;
 
     SettingValue connectorConfig = getConnectorConfig(cvConfiguration);
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
@@ -1000,6 +1059,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, end);
       }
 
+      if (isNotEmpty(filter.getTags()) && filter.getTags().size() == 1) {
+        dataRecordPageRequest.addFilter("tag", Operator.EQ, filter.getTags().iterator().next());
+      }
+
       if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
         dataRecordPageRequest.setLimit(UNLIMITED);
         final List<NewRelicMetricDataRecord> records = new ArrayList<>();
@@ -1022,7 +1085,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         dataRecordPageRequest.addFilter("appId", Operator.EQ, cvConfiguration.getAppId());
         dataRecordPageRequest.addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME);
         dataRecordPageRequest.setFieldsIncluded(
-            Lists.newArrayList("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata"));
+            Lists.newArrayList("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata", "tag"));
         dataRecordPageRequest.setOffset("0");
         dataRecordPageRequest.setLimit("5000");
         int previousOffSet = 0;
@@ -1054,10 +1117,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     logger.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {
-      if (!observedTimeSeries.containsKey(metricRecord.getName())) {
-        observedTimeSeries.put(metricRecord.getName(), new HashMap<>());
+      String tag = metricRecord.getTag();
+      if (isEmpty(tag)) {
+        tag = HARNESS_DEFAULT_TAG;
       }
-      Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(metricRecord.getName());
+      if (!observedTimeSeries.containsKey(tag)) {
+        observedTimeSeries.put(tag, new HashMap<>());
+      }
+      Map<String, Map<String, TimeSeriesOfMetric>> txnMetricTimeSeries = observedTimeSeries.get(tag);
+      if (!txnMetricTimeSeries.containsKey(metricRecord.getName())) {
+        txnMetricTimeSeries.put(metricRecord.getName(), new HashMap<>());
+      }
+      Map<String, TimeSeriesOfMetric> metricMap = txnMetricTimeSeries.get(metricRecord.getName());
       for (Entry<String, Double> metricData : metricRecord.getValues().entrySet()) {
         final String metricName = metricData.getKey();
         if (!metricMap.containsKey(metricName)) {

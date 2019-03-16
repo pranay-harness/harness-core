@@ -27,7 +27,7 @@ import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.nio.charset.Charset;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Created by Praveen
@@ -85,26 +85,27 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testGetTagsForCvConfig() {
+  public void testGetTagsForCvConfig() throws Exception {
     String cvConfigId = createDDCVConfig();
 
     // test behavior
-    Set<String> tags = cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId);
+
+    Map<String, Double> result = cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId, 0l, 0l);
 
     // assert
-    assertEquals("There are 2 tags", 2, tags.size());
-    assertTrue("Docker is one of the tags", tags.contains("Docker"));
-    assertTrue("Kubernetes is one of the tags", tags.contains("Kubernetes"));
+    assertEquals("There are 2 tags", 2, result.size());
+    assertTrue("Docker is one of the tags", result.containsKey("Docker"));
+    assertTrue("Kubernetes is one of the tags", result.containsKey("Kubernetes"));
   }
 
   @Test
-  public void testGetTagsForCvConfigNoTags() {
+  public void testGetTagsForCvConfigNoTags() throws Exception {
     String cvConfigId = createNRConfig();
 
     // test behavior
-    Set<String> tags = cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId);
+    Map<String, Double> result = cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId, 0l, 0l);
 
     // assert
-    assertEquals("There are 0 tags", 0, tags.size());
+    assertEquals("There are 0 tags", 0, result.size());
   }
 }

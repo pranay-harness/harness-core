@@ -35,7 +35,7 @@ import java.util.Map;
 
 @Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("appId")
-                           , @Field("cvConfigId"), @Field("analysisMinute") },
+                           , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
     options = @IndexOptions(name = "minuteIndex")))
 @Data
 @Builder
@@ -52,6 +52,8 @@ public class TimeSeriesRiskSummary extends Base {
   @JsonIgnore private byte[] compressedMetricRisk;
   @JsonIgnore private byte[] compressedLongTermPattern;
   @JsonIgnore private byte[] compressedRiskData;
+
+  private String tag;
 
   public void compressMaps() {
     if (isEmpty(txnMetricRisk) && isEmpty(txnMetricLongTermPattern) && isEmpty(txnMetricRiskData)) {

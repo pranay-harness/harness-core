@@ -1,6 +1,7 @@
 package io.harness.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
@@ -98,7 +99,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .filter("group_name", analysisTask.getGroup_name())
             .order("-createdAt");
     if (!analysisTask.is24x7Task()) {
-      query.filter("control_nodes", analysisTask.getControl_nodes());
+      query = query.filter("control_nodes", analysisTask.getControl_nodes());
+    }
+    if (isNotEmpty(analysisTask.getTag())) {
+      query = query.filter("tag", analysisTask.getTag());
     }
     LearningEngineAnalysisTask learningEngineAnalysisTask = query.get();
 

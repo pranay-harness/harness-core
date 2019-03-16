@@ -16,4 +16,5 @@ public class TimeSeriesFilter {
   private long historyStartTime;
   private Set<String> txnNames;
   private Set<String> metricNames;
+  private Set<String> tags;
 }

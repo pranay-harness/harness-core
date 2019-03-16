@@ -113,7 +113,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
           }
         });
         metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.DYNA_TRACE, appId, stateExecutionId,
-            workflowExecutionId, groupName + i, j, delegateTaskId, "-1", cvConfigId, mlAnalysisResponse);
+            workflowExecutionId, groupName + i, j, delegateTaskId, "-1", cvConfigId, mlAnalysisResponse, null);
       }
     }
 
@@ -152,7 +152,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
     // test behavior
     List<TimeSeriesMLAnalysisRecord> historicalRecords =
-        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000000);
+        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000000, null);
 
     // verify
     assertNotNull(historicalRecords);
@@ -180,7 +180,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
     // test behavior
     List<TimeSeriesMLAnalysisRecord> historicalRecords =
-        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000);
+        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000, null);
 
     // verify
     assertNotNull(historicalRecords);
@@ -207,11 +207,11 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     }
 
     // test behavior
-    List<TimeSeriesMLAnalysisRecord> historicalRecordsBadAppId =
-        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId + "-bad", serviceId, cvConfigId, 1000000);
+    List<TimeSeriesMLAnalysisRecord> historicalRecordsBadAppId = metricDataAnalysisService.getHistoricalAnalysis(
+        accountId, appId + "-bad", serviceId, cvConfigId, 1000000, null);
 
-    List<TimeSeriesMLAnalysisRecord> historicalRecordsBadCvConfigId =
-        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId + "-bad", 1000000);
+    List<TimeSeriesMLAnalysisRecord> historicalRecordsBadCvConfigId = metricDataAnalysisService.getHistoricalAnalysis(
+        accountId, appId, serviceId, cvConfigId + "-bad", 1000000, null);
 
     // verify
     assertNotNull(historicalRecordsBadAppId);
@@ -244,7 +244,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertNull(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson());
     metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.APP_DYNAMICS, appId, stateExecutionId,
         workflowExecutionId, generateUuid(), (int) analysisMinute, generateUuid(), generateUuid(), cvConfigId,
-        timeSeriesMLAnalysisRecord);
+        timeSeriesMLAnalysisRecord, null);
 
     final TimeSeriesMLAnalysisRecord savedRecord = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
                                                        .filter("appId", appId)
@@ -253,7 +253,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertNull(savedRecord.getTransactions());
     assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()));
     TimeSeriesMLAnalysisRecord readRecord =
-        metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute);
+        metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute, null);
     assertFalse(isEmpty(readRecord.getTransactions()));
     assertNull(readRecord.getTransactionsCompressedJson());
   }
