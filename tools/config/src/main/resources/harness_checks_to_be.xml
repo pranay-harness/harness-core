@@ -13,4 +13,25 @@
     <module name="TreeWalker">
         <module name="MultipleStringLiterals"/>
     </module>
+
+
+    <module name="RegexpSingleline">
+        <property name="format" value="[Hh]eartBeat"/>
+        <property name="message" value="Heartbeat is a single word"/>
+    </module>
+
+    <module name="RegexpSingleline">
+        <property name="format" value="[Pp]assWord"/>
+        <property name="message" value="Password is a single word"/>
+    </module>
+
+    <module name="RegexpSingleline">
+        <property name="format" value="[Hh]ostName"/>
+        <property name="message" value="Hostname is a single word"/>
+    </module>
+
+    <module name="RegexpOnFilename">
+        <property name="fileNamePattern" value="Util\."/>
+    </module>
+
 </module>
