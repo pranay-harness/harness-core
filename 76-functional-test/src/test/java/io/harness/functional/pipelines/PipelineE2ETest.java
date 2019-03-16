@@ -158,7 +158,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = "swamy@harness.io", resent = false, intermittent = true)
   public void pipelineTest() throws Exception {
     pipelineName = "Pipeline Test - " + System.currentTimeMillis();
     logger.info("Generated unique pipeline name : " + pipelineName);
