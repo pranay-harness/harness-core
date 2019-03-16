@@ -23,6 +23,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -38,6 +39,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -350,8 +352,10 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     return unexpectedFrequency;
   }
 
-  public Set<String> getMetricTags(String accountId, String appId, String cvConfigId) {
+  public Map<String, Double> getMetricTags(
+      String accountId, String appId, String cvConfigId, long startTime, long endTIme) {
     Set<String> tags = new HashSet<>();
+    Map<String, Double> tagScoreMap = new HashMap<>();
     TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
                                              .filter("appId", appId)
                                              .filter("cvConfigId", cvConfigId)
@@ -364,6 +368,36 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         }
       });
     }
-    return tags;
+    if (tags.size() > 1) {
+      tags.forEach(tag -> tagScoreMap.put(tag, computeOverallScoreForTag(appId, startTime, endTIme, cvConfigId, tag)));
+    }
+    return tagScoreMap;
+  }
+
+  private Double computeOverallScoreForTag(String appId, long startTime, long endTime, String cvConfigId, String tag) {
+    final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeCount)
+            .filter("appId", appId)
+            .filter("cvConfigId", cvConfigId)
+            .field("analysisMinute")
+            .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
+            .field("analysisMinute")
+            .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+            .filter("tag", tag)
+            .order("analysisMinute")
+            .project("transactions", false)
+            .project("transactionsCompressedJson", false)
+            .asList();
+
+    List<Double> scoreList = new ArrayList<>();
+    timeSeriesMLAnalysisRecords.forEach(record -> {
+      if (isEmpty(record.getOverallMetricScores())) {
+        scoreList.add(-1.0);
+      } else {
+        scoreList.add(Collections.max(record.getOverallMetricScores().values()));
+      }
+    });
+
+    return scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
   }
 }

@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionTimeSeries implements Comparable<TransactionTimeSeries> {
+  private String tag;
   private String transactionName;
   private SortedSet<TimeSeriesOfMetric> metricTimeSeries;
 

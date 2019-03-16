@@ -32,11 +32,11 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -153,7 +153,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public boolean saveAnalysisRecordsML(String accountId, StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String groupName, Integer analysisMinute, String taskId, String baseLineExecutionId,
-      String cvConfigId, MetricAnalysisRecord mlAnalysisResponse) {
+      String cvConfigId, MetricAnalysisRecord mlAnalysisResponse, String tag) {
     logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
         stateExecutionId, analysisMinute);
     mlAnalysisResponse.setStateType(stateType);
@@ -232,7 +232,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       }
       ++txnId;
     }
-
+    if (isNotEmpty(tag)) {
+      mlAnalysisResponse.setTag(tag);
+      riskSummary.setTag(tag);
+    }
     riskSummary.setTxnMetricRisk(risks.rowMap());
     riskSummary.setTxnMetricLongTermPattern(longTermPatterns.rowMap());
     riskSummary.setTxnMetricRiskData(riskData.rowMap());
@@ -288,7 +291,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .transactionMetricSums(mlAnalysisResponse.getTransactionMetricSums())
               .build();
       cumulativeSums.setAppId(appId);
-
+      if (isNotEmpty(tag)) {
+        cumulativeSums.setTag(tag);
+      }
       cumulativeSums.compressMetricSums();
       wingsPersistence.save(cumulativeSums);
     }
@@ -296,9 +301,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     wingsPersistence.save(riskSummary);
 
     Map<String, Double> overAllScoreByMetricName = mlAnalysisResponse.getOverallMetricScores();
-    if (!isEmpty(overAllScoreByMetricName) && !isEmpty(cvConfigId)
-        && !managerClientHelper.callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.CV_DEMO, accountId))
-                .getResource()) {
+    if (!isEmpty(overAllScoreByMetricName) && !isEmpty(cvConfigId)) {
       String metricName = Collections.max(overAllScoreByMetricName.entrySet(), Map.Entry.comparingByValue()).getKey();
       Double finalOverallScore = overAllScoreByMetricName.get(metricName);
       if (finalOverallScore >= MEDIUM_RISK_CUTOFF) {
@@ -923,7 +926,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public List<NewRelicMetricDataRecord> getMetricRecords(StateType stateType, String appId, String serviceId,
-      String cvConfigId, int analysisStartMinute, int analysisEndMinute) {
+      String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag) {
     PageRequest<NewRelicMetricDataRecord> pageRequest =
         aPageRequest()
             .withLimit(UNLIMITED)
@@ -931,6 +934,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addFilter("dataCollectionMinute", Operator.GE, analysisStartMinute)
             .addFilter("dataCollectionMinute", Operator.LT_EQ, analysisEndMinute)
             .build();
+
+    if (isNotEmpty(tag)) {
+      pageRequest.addFilter("tag", Operator.EQ, tag);
+    }
     addAppIdInRequestIfNecessary(pageRequest, appId);
 
     final PageResponse<NewRelicMetricDataRecord> results =
@@ -941,13 +948,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin) {
-    final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter("cvConfigId", cvConfigId)
-            .filter("analysisMinute", dataCollectionMin)
-            .get();
+  public TimeSeriesMLAnalysisRecord getPreviousAnalysis(
+      String appId, String cvConfigId, long dataCollectionMin, String tag) {
+    Query<TimeSeriesMLAnalysisRecord> analysisQuery = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                                          .filter("appId", appId)
+                                                          .filter("cvConfigId", cvConfigId)
+                                                          .filter("analysisMinute", dataCollectionMin);
+
+    if (isNotEmpty(tag)) {
+      analysisQuery = analysisQuery.filter("tag", tag);
+    }
+    final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = analysisQuery.get();
     if (timeSeriesMLAnalysisRecord != null) {
       timeSeriesMLAnalysisRecord.decompressTransactions();
     }
@@ -956,7 +967,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public List<TimeSeriesMLAnalysisRecord> getHistoricalAnalysis(
-      String accountId, String appId, String serviceId, String cvConfigId, long analysisMin) {
+      String accountId, String appId, String serviceId, String cvConfigId, long analysisMin, String tag) {
     List<Long> historicalAnalysisTimes = new ArrayList<>();
 
     for (int i = 1; i <= VerificationConstants.CANARY_DAYS_TO_COLLECT; i++) {
@@ -967,13 +978,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return new ArrayList<>();
     }
 
-    final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter("cvConfigId", cvConfigId)
-            .field("analysisMinute")
-            .in(historicalAnalysisTimes)
-            .asList();
+    Query<TimeSeriesMLAnalysisRecord> analysisQuery = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                                          .filter("appId", appId)
+                                                          .filter("cvConfigId", cvConfigId)
+                                                          .field("analysisMinute")
+                                                          .in(historicalAnalysisTimes);
+
+    if (isNotEmpty(tag)) {
+      analysisQuery = analysisQuery.filter("tag", tag);
+    }
+
+    final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = analysisQuery.asList();
     if (timeSeriesMLAnalysisRecords != null) {
       timeSeriesMLAnalysisRecords.forEach(
           timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
@@ -983,11 +998,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public TimeSeriesAnomaliesRecord getPreviousAnomalies(
-      String appId, String cvConfigId, Map<String, List<String>> metrics) {
-    TimeSeriesAnomaliesRecord timeSeriesAnomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
-                                                              .filter("appId", appId)
-                                                              .filter("cvConfigId", cvConfigId)
-                                                              .get();
+      String appId, String cvConfigId, Map<String, List<String>> metrics, String tag) {
+    Query<TimeSeriesAnomaliesRecord> timeSeriesAnomaliesRecordQuery =
+        wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
+            .filter("appId", appId)
+            .filter("cvConfigId", cvConfigId);
+    if (isNotEmpty(tag)) {
+      timeSeriesAnomaliesRecordQuery = timeSeriesAnomaliesRecordQuery.filter("tag", tag);
+    }
+    TimeSeriesAnomaliesRecord timeSeriesAnomaliesRecord = timeSeriesAnomaliesRecordQuery.get();
 
     if (timeSeriesAnomaliesRecord == null) {
       return null;
@@ -1021,16 +1040,20 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public List<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
-      String appId, String cvConfigId, int startMinute, int endMinute) {
+      String appId, String cvConfigId, int startMinute, int endMinute, String tag) {
     if (isNotEmpty(appId) && isNotEmpty(cvConfigId) && startMinute <= endMinute) {
-      List<TimeSeriesCumulativeSums> cumulativeSums = wingsPersistence.createQuery(TimeSeriesCumulativeSums.class)
-                                                          .filter("appId", appId)
-                                                          .filter("cvConfigId", cvConfigId)
-                                                          .field("analysisMinute")
-                                                          .greaterThanOrEq(startMinute)
-                                                          .field("analysisMinute")
-                                                          .lessThanOrEq(endMinute)
-                                                          .asList();
+      Query<TimeSeriesCumulativeSums> timeSeriesCumulativeSumsQuery =
+          wingsPersistence.createQuery(TimeSeriesCumulativeSums.class)
+              .filter("appId", appId)
+              .filter("cvConfigId", cvConfigId)
+              .field("analysisMinute")
+              .greaterThanOrEq(startMinute)
+              .field("analysisMinute")
+              .lessThanOrEq(endMinute);
+      if (isNotEmpty(tag)) {
+        timeSeriesCumulativeSumsQuery = timeSeriesCumulativeSumsQuery.filter("tag", tag);
+      }
+      List<TimeSeriesCumulativeSums> cumulativeSums = timeSeriesCumulativeSumsQuery.asList();
 
       logger.info(
           "Returning a list of size {} from getCumulativeSumsForRange for appId {}, cvConfigId {} and start {} and end {}",

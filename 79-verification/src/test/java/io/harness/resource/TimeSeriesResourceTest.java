@@ -132,10 +132,10 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   public void testSaveMLAnalysisRecords() throws IOException {
     when(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, applicationId, stateExecutionId,
              workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
-             timeSeriesMLAnalysisRecord))
+             timeSeriesMLAnalysisRecord, null))
         .thenReturn(true);
     RestResponse<Boolean> resp = timeSeriesResource.saveMLAnalysisRecords(accountId, applicationId, stateType,
-        stateExecutionId, workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
+        stateExecutionId, workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId, null,
         timeSeriesMLAnalysisRecord);
     assertTrue(resp.getResource());
   }

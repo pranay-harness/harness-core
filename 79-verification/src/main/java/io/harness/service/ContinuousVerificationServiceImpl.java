@@ -53,6 +53,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -66,6 +67,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -165,14 +167,28 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               // since analysis startMin is inclusive in LE, we  need to add 1.
               analysisStartMinute += 1;
 
-              LearningEngineAnalysisTask learningEngineAnalysisTask =
-                  createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute);
+              Set<String> tags = getTags(cvConfiguration.getUuid(), cvConfiguration.getAppId());
+              if (isEmpty(tags)) {
+                LearningEngineAnalysisTask learningEngineAnalysisTask =
+                    createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute, null);
 
-              learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+                learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
-              logger.info("Triggering Data Analysis for account {} ", accountId);
-              logger.info("Queuing analysis task for state {} config {} with startTime {}",
-                  cvConfiguration.getStateType(), cvConfiguration.getUuid(), analysisStartMinute);
+                logger.info("Triggering Data Analysis for account {} ", accountId);
+                logger.info("Queuing analysis task for state {} config {} and tag {} with startTime {}",
+                    cvConfiguration.getStateType(), cvConfiguration.getUuid(), null, analysisStartMinute);
+              }
+
+              for (String tag : tags) {
+                LearningEngineAnalysisTask learningEngineAnalysisTask =
+                    createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute, tag);
+
+                learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+
+                logger.info("Triggering Data Analysis for account {} ", accountId);
+                logger.info("Queuing analysis task for state {} config {} and tag {} with startTime {}",
+                    cvConfiguration.getStateType(), cvConfiguration.getUuid(), tag, analysisStartMinute);
+              }
             }
           } catch (Exception ex) {
             logger.error("Exception occurred while triggering metric data collection for cvConfig {}",
@@ -181,13 +197,30 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         });
   }
 
+  private Set<String> getTags(String cvConfigId, String appId) {
+    Set<String> tags = new HashSet<>();
+    TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
+                                             .filter("appId", appId)
+                                             .filter("cvConfigId", cvConfigId)
+                                             .get();
+
+    if (template != null) {
+      template.getMetricTemplates().forEach((key, value) -> {
+        if (isNotEmpty(value.getTags())) {
+          tags.addAll(value.getTags());
+        }
+      });
+    }
+    return tags;
+  }
+
   private LearningEngineAnalysisTask createLearningEngineAnalysisTask(
-      String accountId, CVConfiguration cvConfiguration, long startMin, long endMin) {
+      String accountId, CVConfiguration cvConfiguration, long startMin, long endMin, String tag) {
     String learningTaskId = generateUuid();
 
-    String testInputUrl = getDataFetchUrl(cvConfiguration, startMin - PREDECTIVE_HISTORY_MINUTES, endMin);
-    String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(cvConfiguration, endMin, learningTaskId);
-    String historicalAnalysisUrl = getHistoricalAnalysisUrl(cvConfiguration, endMin);
+    String testInputUrl = getDataFetchUrl(cvConfiguration, startMin - PREDECTIVE_HISTORY_MINUTES, endMin, tag);
+    String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(cvConfiguration, endMin, learningTaskId, tag);
+    String historicalAnalysisUrl = getHistoricalAnalysisUrl(cvConfiguration, endMin, tag);
 
     String metricTemplateUrl = getMetricTemplateUrl(accountId, cvConfiguration.getAppId(),
         cvConfiguration.getStateType(), cvConfiguration.getServiceId(), cvConfiguration.getUuid());
@@ -211,13 +244,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .comparison_unit_window(0)
             .parallel_processes(0)
             .test_input_url(testInputUrl)
-            .previous_analysis_url(getPreviousAnalysisUrl(cvConfiguration))
+            .previous_analysis_url(getPreviousAnalysisUrl(cvConfiguration, tag))
             .historical_analysis_url(historicalAnalysisUrl)
             .control_input_url("")
             .analysis_save_url(metricAnalysisSaveUrl)
             .metric_template_url(metricTemplateUrl)
-            .previous_anomalies_url(getPreviousAnomaliesUrl(cvConfiguration))
-            .cumulative_sums_url(getCumulativeSumsUrl(cvConfiguration, (int) endMin))
+            .previous_anomalies_url(getPreviousAnomaliesUrl(cvConfiguration, tag))
+            .cumulative_sums_url(getCumulativeSumsUrl(cvConfiguration, (int) endMin, tag))
             .control_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
             .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
             .stateType(cvConfiguration.getStateType())
@@ -229,6 +262,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .comparison_unit_window(COMPARISON_WINDOW)
             .parallel_processes(PARALLEL_PROCESSES)
             .is24x7Task(true)
+            .tag(tag)
             .build();
     learningEngineAnalysisTask.setAppId(cvConfiguration.getAppId());
     learningEngineAnalysisTask.setUuid(learningTaskId);
@@ -244,46 +278,48 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + "&serviceId=" + serviceId + "&cvConfigId=" + cvConfigId + "&stateExecutionId=" + stateExecutionIdForLETask;
   }
 
-  private String getMetricAnalysisSaveUrl(CVConfiguration cvConfiguration, long endMinute, String taskId) {
+  private String getMetricAnalysisSaveUrl(CVConfiguration cvConfiguration, long endMinute, String taskId, String tag) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/save-analysis"
         + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
         + "&stateType=" + cvConfiguration.getStateType() + "&serviceId=" + cvConfiguration.getServiceId()
-        + "&analysisMinute=" + endMinute + "&cvConfigId=" + cvConfiguration.getUuid() + "&taskId=" + taskId;
+        + "&analysisMinute=" + endMinute + "&cvConfigId=" + cvConfiguration.getUuid() + "&taskId=" + taskId
+        + (tag != null ? ("&tag=" + tag) : "");
   }
 
-  private String getDataFetchUrl(CVConfiguration cvConfiguration, long startMinute, long endMinute) {
+  private String getDataFetchUrl(CVConfiguration cvConfiguration, long startMinute, long endMinute, String tag) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
         + "/get-metric-data-247?accountId=" + cvConfiguration.getAccountId() + "&appId=" + cvConfiguration.getAppId()
-        + "&stateType=" + cvConfiguration.getStateType() + "&cvConfigId=" + cvConfiguration.getUuid() + "&serviceId="
-        + cvConfiguration.getServiceId() + "&analysisStartMin=" + startMinute + "&analysisEndMin=" + endMinute;
+        + "&stateType=" + cvConfiguration.getStateType() + "&cvConfigId=" + cvConfiguration.getUuid()
+        + "&serviceId=" + cvConfiguration.getServiceId() + "&analysisStartMin=" + startMinute
+        + "&analysisEndMin=" + endMinute + (tag != null ? ("&tag=" + tag) : "");
   }
 
-  private String getPreviousAnalysisUrl(CVConfiguration cvConfiguration) {
+  private String getPreviousAnalysisUrl(CVConfiguration cvConfiguration, String tag) {
     long min = timeSeriesAnalysisService.getLastCVAnalysisMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
         + "/previous-analysis-247?appId=" + cvConfiguration.getAppId() + "&cvConfigId=" + cvConfiguration.getUuid()
-        + "&dataCollectionMin=" + min;
+        + "&dataCollectionMin=" + min + (tag != null ? ("&tag=" + tag) : "");
   }
 
-  private String getHistoricalAnalysisUrl(CVConfiguration cvConfiguration, long minute) {
+  private String getHistoricalAnalysisUrl(CVConfiguration cvConfiguration, long minute, String tag) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/historical-analysis-24x7?accountId=" + cvConfiguration.getAccountId()
-        + "&applicationId=" + cvConfiguration.getAppId() + "&serviceId=" + cvConfiguration.getServiceId()
-        + "&analysisMinute=" + minute + "&cvConfigId=" + cvConfiguration.getUuid();
+        + "/historical-analysis-24x7?accountId=" + cvConfiguration.getAccountId() + "&applicationId="
+        + cvConfiguration.getAppId() + "&serviceId=" + cvConfiguration.getServiceId() + "&analysisMinute=" + minute
+        + "&cvConfigId=" + cvConfiguration.getUuid() + (tag != null ? ("&tag=" + tag) : "");
   }
 
-  private String getPreviousAnomaliesUrl(CVConfiguration cvConfiguration) {
+  private String getPreviousAnomaliesUrl(CVConfiguration cvConfiguration, String tag) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/previous-anomalies-247"
         + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
-        + "&cvConfigId=" + cvConfiguration.getUuid();
+        + "&cvConfigId=" + cvConfiguration.getUuid() + (tag != null ? ("&tag=" + tag) : "");
   }
 
-  private String getCumulativeSumsUrl(CVConfiguration cvConfiguration, int analysisMinute) {
+  private String getCumulativeSumsUrl(CVConfiguration cvConfiguration, int analysisMinute, String tag) {
     int startMin = analysisMinute - (int) TimeUnit.DAYS.toMinutes(1);
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/cumulative-sums-247"
         + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
         + "&cvConfigId=" + cvConfiguration.getUuid() + "&analysisMinStart=" + startMin
-        + "&analysisMinEnd=" + analysisMinute;
+        + "&analysisMinEnd=" + analysisMinute + (tag != null ? ("&tag=" + tag) : "");
   }
 
   @Override

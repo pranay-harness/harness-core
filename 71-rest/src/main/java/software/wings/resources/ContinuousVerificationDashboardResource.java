@@ -28,7 +28,7 @@ import software.wings.verification.TransactionTimeSeries;
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.SortedSet;
 import javax.validation.Valid;
 import javax.ws.rs.BeanParam;
@@ -186,8 +186,9 @@ public class ContinuousVerificationDashboardResource {
   @Path(VerificationConstants.LIST_METRIC_TAGS)
   @Timed
   @ExceptionMetered
-  public RestResponse<Set<String>> getListOfMetricTags(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("appId") @Valid final String appId, @QueryParam("cvConfigId") String cvConfigId) {
-    return new RestResponse<>(cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId));
+  public RestResponse<Map<String, Double>> getListOfMetricTags(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("appId") @Valid final String appId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
+    return new RestResponse<>(cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId, startTime, endTime));
   }
 }

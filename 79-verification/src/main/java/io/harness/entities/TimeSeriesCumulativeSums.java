@@ -34,7 +34,7 @@ import java.util.Map;
 
 @Entity(value = "timeSeriesCumulativeSums", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("appId")
-                           , @Field("cvConfigId"), @Field("analysisMinute") },
+                           , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
     options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @Data
 @Builder
@@ -47,6 +47,8 @@ public class TimeSeriesCumulativeSums extends Base {
   @NotEmpty @Indexed private int analysisMinute;
   @Transient private Map<String, Map<String, Map<String, Double>>> transactionMetricSums;
   @JsonIgnore private byte[] compressedMetricSums;
+
+  private String tag;
 
   public void compressMetricSums() {
     if (isEmpty(transactionMetricSums)) {

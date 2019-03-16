@@ -44,6 +44,7 @@ public class TimeSeriesAnomaliesRecord extends Base {
   @NotEmpty @Indexed private String cvConfigId;
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
   @JsonIgnore private byte[] compressedAnomalies;
+  private String tag;
 
   @Builder
   public TimeSeriesAnomaliesRecord(

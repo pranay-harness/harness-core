@@ -64,6 +64,8 @@ public class MetricAnalysisRecord extends Base {
 
   private int aggregatedRisk = -1;
 
+  private String tag;
+
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

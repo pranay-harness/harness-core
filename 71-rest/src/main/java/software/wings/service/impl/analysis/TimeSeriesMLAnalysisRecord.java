@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @Indexes(@Index(fields =
     {
       @Field("workflowExecutionId")
-      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName"), @Field("cvConfigId")
+      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName"), @Field("cvConfigId"), @Field("tag")
     },
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data

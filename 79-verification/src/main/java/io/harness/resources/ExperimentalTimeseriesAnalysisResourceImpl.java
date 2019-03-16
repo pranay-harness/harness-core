@@ -78,6 +78,6 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
     }
     return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, applicationId,
         stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,
-        mlAnalysisResponse));
+        mlAnalysisResponse, null));
   }
 }

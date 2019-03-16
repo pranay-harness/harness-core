@@ -93,10 +93,11 @@ public class TimeSeriesResource {
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("groupName") final String groupName, @QueryParam("analysisMinute") Integer analysisMinute,
       @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
-      @QueryParam("cvConfigId") String cvConfigId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("tag") String tag,
+      TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
     return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, appId,
         stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,
-        mlAnalysisResponse));
+        mlAnalysisResponse, tag));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -153,9 +154,9 @@ public class TimeSeriesResource {
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("serviceId") String serviceId,
       @QueryParam("analysisStartMin") int analysisStartMin, @QueryParam("analysisEndMin") int analysisEndMin,
-      TSRequest request) {
+      @QueryParam("tag") String tag, TSRequest request) {
     return new RestResponse<>(timeSeriesAnalysisService.getMetricRecords(
-        stateType, appId, serviceId, cvConfigId, analysisStartMin, analysisEndMin));
+        stateType, appId, serviceId, cvConfigId, analysisStartMin, analysisEndMin, tag));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -165,8 +166,9 @@ public class TimeSeriesResource {
   @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<TimeSeriesMLAnalysisRecord> getPreviousAnalysis(@QueryParam("appId") String appId,
-      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("dataCollectionMin") long dataCollectionMin) {
-    return new RestResponse<>(timeSeriesAnalysisService.getPreviousAnalysis(appId, cvConfigId, dataCollectionMin));
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("dataCollectionMin") long dataCollectionMin,
+      @QueryParam("tag") String tag) {
+    return new RestResponse<>(timeSeriesAnalysisService.getPreviousAnalysis(appId, cvConfigId, dataCollectionMin, tag));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -177,9 +179,10 @@ public class TimeSeriesResource {
   @ExceptionMetered
   public RestResponse<List<TimeSeriesMLAnalysisRecord>> getHistoricalAnalysis(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String appId, @QueryParam("analysisMinute") Integer analysisMinute,
-      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId) {
+      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("tag") String tag) {
     return new RestResponse<>(
-        timeSeriesAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, analysisMinute));
+        timeSeriesAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, analysisMinute, tag));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -190,8 +193,8 @@ public class TimeSeriesResource {
   @ExceptionMetered
   public RestResponse<TimeSeriesAnomaliesRecord> getPreviousAnomalies(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String appId, @QueryParam("cvConfigId") String cvConfigId,
-      Map<String, List<String>> metrics) {
-    return new RestResponse<>(timeSeriesAnalysisService.getPreviousAnomalies(appId, cvConfigId, metrics));
+      @QueryParam("tag") String tag, Map<String, List<String>> metrics) {
+    return new RestResponse<>(timeSeriesAnalysisService.getPreviousAnomalies(appId, cvConfigId, metrics, tag));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -202,8 +205,9 @@ public class TimeSeriesResource {
   @ExceptionMetered
   public RestResponse<List<TimeSeriesCumulativeSums>> getCumulativeSums(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String appId, @QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("analysisMinStart") Integer startMinute, @QueryParam("analysisMinEnd") Integer endMinute) {
+      @QueryParam("analysisMinStart") Integer startMinute, @QueryParam("analysisMinEnd") Integer endMinute,
+      @QueryParam("tag") String tag) {
     return new RestResponse<>(
-        timeSeriesAnalysisService.getCumulativeSumsForRange(appId, cvConfigId, startMinute, endMinute));
+        timeSeriesAnalysisService.getCumulativeSumsForRange(appId, cvConfigId, startMinute, endMinute, tag));
   }
 }
