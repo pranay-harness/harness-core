@@ -41,6 +41,7 @@
         <build.minorVersion>0</build.minorVersion>
         <build.number>27000</build.number>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
+        <checkStyleFile>harness_checks.xml</checkStyleFile>
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
         <dropwizard.version>1.0.2</dropwizard.version>
@@ -1282,7 +1283,7 @@
                         <logViolationsToConsole>true</logViolationsToConsole>
                         <failOnViolation>true</failOnViolation>
                         <failsOnError>true</failsOnError>
-                        <configLocation>harness_checks.xml</configLocation>
+                        <configLocation>${checkStyleFile}</configLocation>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     </configuration>
                     <dependencies>
