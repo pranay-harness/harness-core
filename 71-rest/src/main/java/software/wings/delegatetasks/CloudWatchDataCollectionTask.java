@@ -130,7 +130,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                   .serviceId(dataCollectionInfo.getServiceId())
                   .cvConfigId(dataCollectionInfo.getCvConfigId())
                   .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                  .dataCollectionMinute(dataCollectionMinute)
+                  .dataCollectionMinute(getDataCollectionMinuteForHeartbeat(is247Task))
                   .timeStamp(collectionStartTime)
                   .level(ClusterLevel.H0)
                   .groupName(DEFAULT_GROUP_NAME)
@@ -144,11 +144,11 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
             throw new RuntimeException("Cannot save new cloud watch metric records to Harness. Server returned error");
           }
           logger.info("Sent {} cloud watch metric records to the server for minute {}", recordsToSave.size(),
-              dataCollectionMinute);
+              getDataCollectionMinuteForHeartbeat(is247Task));
 
           dataCollectionMinute++;
           collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-          if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+          if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
             // We are done with all data collection, so setting task status to success and quitting.
             logger.info(
                 "Completed CloudWatch collection task. So setting task status to success and quitting. StateExecutionId {}",
@@ -186,6 +186,15 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
         shutDownCollection();
         return;
       }
+    }
+
+    private int getDataCollectionMinuteForHeartbeat(boolean is247Task) {
+      int collectionMin = dataCollectionMinute;
+      if (is247Task) {
+        collectionMin = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
+            + dataCollectionInfo.getCollectionTime();
+      }
+      return collectionMin;
     }
 
     public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() throws IOException {
