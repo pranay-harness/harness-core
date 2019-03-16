@@ -238,6 +238,8 @@ import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
+import software.wings.service.impl.verification.CvValidationService;
+import software.wings.service.impl.verification.CvValidationServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
@@ -644,6 +646,7 @@ public class WingsModule extends DependencyModule {
 
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
+    bind(CvValidationService.class).to(CvValidationServiceImpl.class);
 
     bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);

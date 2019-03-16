@@ -1,5 +1,8 @@
 package software.wings.service.impl.elk;
 
+import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
@@ -8,6 +11,8 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +91,6 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     final ElkLogFetchRequest elkFetchRequestWithoutHost =
         ElkLogFetchRequest.builder()
             .query(elkSetupTestNodeData.getQuery())
-            .formattedQuery(elkSetupTestNodeData.isFormattedQuery())
             .indices(elkSetupTestNodeData.getIndices())
             .hosts(Collections.EMPTY_SET)
             .hostnameField(elkSetupTestNodeData.getHostNameField())
@@ -142,7 +146,6 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     final ElkLogFetchRequest elkFetchRequestWithHost =
         ElkLogFetchRequest.builder()
             .query(elkSetupTestNodeData.getQuery())
-            .formattedQuery(elkSetupTestNodeData.isFormattedQuery())
             .indices(elkSetupTestNodeData.getIndices())
             .hostnameField(hostName)
             .hosts(Collections.singleton(elkSetupTestNodeData.getInstanceElement().getHostName()))
@@ -175,5 +178,52 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
         .loadResponse(VerificationLoadResponse.builder().loadResponse(responseWithoutHost).isLoadPresent(true).build())
         .dataForNode(responseWithHost)
         .build();
+  }
+
+  @Override
+  public Boolean validateQuery(
+      String accountId, String appId, String settingId, String query, String index, String guid) {
+    try {
+      // create a sample test node data for elk. And use it to validate Query from ELK server
+      ElkSetupTestNodeData elkSetupTestNodeData =
+          ElkSetupTestNodeData.builder()
+              .settingId(settingId)
+              .query(query)
+              .indices(index)
+              .appId(appId)
+              .messageField("@timestamp")
+              .hostNameField("beat.hostname")
+              .timeStampField(query)
+              .timeStampFieldFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+              .query(query)
+              .queryType(ElkQueryType.MATCH)
+              .instanceName("testHost")
+              .guid(guid)
+              .instanceElement(anInstanceElement()
+                                   .withUuid("8cec1e1b0d16")
+                                   .withDisplayName("8cec1e1b0d16")
+                                   .withHostName("testHost")
+                                   .withDockerId("8cec1e1b0d16")
+                                   .withHost(aHostElement()
+                                                 .withUuid("8cec1e1b0d16")
+                                                 .withHostName("testHost")
+                                                 .withIp("1.1.1.1")
+                                                 .withInstanceId(null)
+                                                 .withPublicDns(null)
+                                                 .withEc2Instance(null)
+                                                 .build())
+                                   .withServiceTemplateElement(
+                                       aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
+                                   .withPodName("testHost")
+                                   .withWorkloadName("testHost")
+                                   .build())
+              .isServiceLevel(true)
+              .build();
+      getLogDataByHost(accountId, elkSetupTestNodeData);
+      logger.info("Valid query passed with query {} and index {}", query, index);
+      return true;
+    } catch (Exception ex) {
+      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", ExceptionUtils.getMessage(ex));
+    }
   }
 }

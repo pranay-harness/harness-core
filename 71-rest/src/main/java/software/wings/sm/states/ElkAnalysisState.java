@@ -11,13 +11,10 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,23 +79,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private String queryType;
 
-  @Attributes(required = true, title = "Is Formatted Query") @DefaultValue("false") private boolean formattedQuery;
-
   @Override
   public void setQuery(String query) {
-    try {
-      new JSONObject(query);
-      if (!getFormattedQuery()) {
-        logger.error("Given query is a json formatted : " + query);
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "JSON Query passed. Please select Formatted option");
-      }
-    } catch (JSONException ex) {
-      if (getFormattedQuery()) {
-        logger.error("Given query is not json formatted");
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Invalid JSON Query Passed");
-      }
-    }
     this.query = query.trim();
   }
 
@@ -153,14 +135,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   public void setMessageField(String messageField) {
     this.messageField = messageField;
-  }
-
-  public boolean getFormattedQuery() {
-    return formattedQuery;
-  }
-
-  public void setFormattedQuery(boolean formattedQuery) {
-    this.formattedQuery = formattedQuery;
   }
 
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
@@ -237,6 +211,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
+    elkAnalysisService.validateQuery(context.getAccountId(), context.getAppId(), analysisServerConfigId, query, indices,
+        context.getStateExecutionInstanceId());
     final String timestampField = getTimestampField();
     final String accountId = appService.get(context.getAppId()).getAccountId();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -285,7 +261,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
               .query(getRenderedQuery())
-              .formattedQuery(Boolean.valueOf(context.renderExpression(Boolean.toString(getFormattedQuery()))))
               .indices(finalIndices)
               .hostnameField(context.renderExpression(hostnameField))
               .messageField(context.renderExpression(messageField))
@@ -340,15 +315,14 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     try {
       ElkLogFetchRequest.builder()
           .query(query)
-          .formattedQuery(formattedQuery)
-          .indices("logstash-*")
-          .hostnameField("beat.hostname")
-          .messageField("message")
-          .timestampField("@timestamp")
+          .indices(indices)
+          .hostnameField(hostnameField)
+          .messageField(messageField)
+          .timestampField(timestampField)
           .hosts(Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"))
           .startTime(1518724315175L - TimeUnit.MINUTES.toMillis(1))
           .endTime(1518724315175L)
-          .queryType(ElkQueryType.TERM)
+          .queryType(ElkQueryType.valueOf(queryType))
           .build()
           .toElasticSearchJsonObject();
     } catch (Exception ex) {

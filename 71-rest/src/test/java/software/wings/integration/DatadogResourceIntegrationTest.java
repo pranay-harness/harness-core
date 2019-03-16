@@ -11,7 +11,6 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
@@ -70,7 +69,6 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetLogRecordsWithNormalQuery() {
     long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
     DataDogFetchConfig fetchConfig =

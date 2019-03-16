@@ -1,13 +1,9 @@
 package software.wings.resources;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
@@ -17,7 +13,6 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.elk.ElkIndexTemplate;
-import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.elk.ElkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -27,9 +22,7 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -77,11 +70,10 @@ public class ElkResource implements LogAnalysisResource {
       @QueryParam("hostNameField") String hostNameField, @QueryParam("hostName") String hostName,
       @QueryParam("queryType") ElkQueryType queryType, @QueryParam("query") String query,
       @QueryParam("timeStampField") String timeStampField,
-      @QueryParam("timeStampFieldFormat") String timeStampFieldFormat, @QueryParam("messageField") String messageField,
-      @QueryParam("isFormatedQuery") boolean isFormatedQuery) {
-    return new RestResponse<>(
-        analysisService.getHostLogRecords(accountId, analysisServerConfigId, index, queryType, query, timeStampField,
-            timeStampFieldFormat, messageField, hostNameField, hostName, StateType.ELK, isFormatedQuery));
+      @QueryParam("timeStampFieldFormat") String timeStampFieldFormat,
+      @QueryParam("messageField") String messageField) {
+    return new RestResponse<>(analysisService.getHostLogRecords(accountId, analysisServerConfigId, index, queryType,
+        query, timeStampField, timeStampFieldFormat, messageField, hostNameField, hostName, StateType.ELK));
   }
 
   @GET
@@ -96,32 +88,6 @@ public class ElkResource implements LogAnalysisResource {
       logger.warn("Unable to get indices", ex);
     }
     return new RestResponse<>(null);
-  }
-
-  @GET
-  @Path(LogAnalysisResource.VALIDATE_QUERY)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> validateQuery(@QueryParam("accountId") String accountId,
-      @QueryParam("query") String query, @DefaultValue("false") @QueryParam("formattedQuery") boolean formattedQuery) {
-    try {
-      ElkLogFetchRequest.builder()
-          .query(query)
-          .formattedQuery(formattedQuery)
-          .indices("logstash-*")
-          .hostnameField("beat.hostname")
-          .messageField("message")
-          .timestampField("@timestamp")
-          .hosts(Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"))
-          .startTime(1518724315175L - TimeUnit.MINUTES.toMillis(1))
-          .endTime(1518724315175L)
-          .queryType(ElkQueryType.TERM)
-          .build()
-          .toElasticSearchJsonObject();
-      return new RestResponse<>(true);
-    } catch (Exception ex) {
-      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", ExceptionUtils.getMessage(ex));
-    }
   }
 
   /**

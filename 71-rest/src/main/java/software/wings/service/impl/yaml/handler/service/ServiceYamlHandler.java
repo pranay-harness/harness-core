@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -102,8 +101,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   }
 
   @Override
-  public Service upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public Service upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -164,8 +162,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   }
 
   private void saveOrUpdateServiceVariables(Yaml previousYaml, Yaml updatedYaml,
-      List<ServiceVariable> previousServiceVariables, String appId, String serviceId, boolean syncFromGit)
-      throws HarnessException {
+      List<ServiceVariable> previousServiceVariables, String appId, String serviceId, boolean syncFromGit) {
     // what are the config variable changes? Which are additions and which are deletions?
     List<NameValuePair.Yaml> configVarsToAdd = new ArrayList<>();
     List<NameValuePair.Yaml> configVarsToDelete = new ArrayList<>();
@@ -227,27 +224,23 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       serviceVariableService.save(createNewServiceVariable(appId, serviceId, yaml), syncFromGit);
     }
 
-    try {
-      // update the existing variables
-      for (NameValuePair.Yaml configVar : configVarsToUpdate) {
-        ServiceVariable serviceVar = serviceVariableMap.get(configVar.getName());
-        if (serviceVar != null) {
-          String value = configVar.getValue();
-          if (serviceVar.getType() == Type.ENCRYPTED_TEXT) {
-            serviceVar.setValue(value != null ? value.toCharArray() : null);
-            serviceVar.setEncryptedValue(value);
-          } else if (serviceVar.getType() == Type.TEXT) {
-            serviceVar.setValue(value != null ? value.toCharArray() : null);
-          } else {
-            logger.warn("Yaml doesn't support {} type service variables", serviceVar.getType());
-            continue;
-          }
-
-          serviceVariableService.update(serviceVar, syncFromGit);
+    // update the existing variables
+    for (NameValuePair.Yaml configVar : configVarsToUpdate) {
+      ServiceVariable serviceVar = serviceVariableMap.get(configVar.getName());
+      if (serviceVar != null) {
+        String value = configVar.getValue();
+        if (serviceVar.getType() == Type.ENCRYPTED_TEXT) {
+          serviceVar.setValue(value != null ? value.toCharArray() : null);
+          serviceVar.setEncryptedValue(value);
+        } else if (serviceVar.getType() == Type.TEXT) {
+          serviceVar.setValue(value != null ? value.toCharArray() : null);
+        } else {
+          logger.warn("Yaml doesn't support {} type service variables", serviceVar.getType());
+          continue;
         }
+
+        serviceVariableService.update(serviceVar, syncFromGit);
       }
-    } catch (WingsException ex) {
-      throw new HarnessException(ex);
     }
   }
 
@@ -279,7 +272,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);

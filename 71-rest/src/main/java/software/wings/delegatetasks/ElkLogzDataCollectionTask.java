@@ -124,7 +124,6 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   final ElkLogFetchRequest elkFetchRequest =
                       ElkLogFetchRequest.builder()
                           .query(dataCollectionInfo.getQuery())
-                          .formattedQuery(elkDataCollectionInfo.isFormattedQuery())
                           .indices(elkDataCollectionInfo.getIndices())
                           .hostnameField(elkDataCollectionInfo.getHostnameField())
                           .messageField(elkDataCollectionInfo.getMessageField())

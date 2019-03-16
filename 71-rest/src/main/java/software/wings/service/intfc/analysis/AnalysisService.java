@@ -63,7 +63,7 @@ public interface AnalysisService {
 
   Object getHostLogRecords(String accountId, String analysisServerConfigId, String index, ElkQueryType queryType,
       String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
-      String hostName, StateType stateType, boolean formattedQuery);
+      String hostName, StateType stateType);
 
   Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
