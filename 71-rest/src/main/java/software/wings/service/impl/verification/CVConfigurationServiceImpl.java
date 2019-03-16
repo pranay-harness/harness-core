@@ -322,7 +322,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case DATA_DOG:
         updateOperations
             .set("datadogServiceName", ((DatadogCVServiceConfiguration) cvConfiguration).getDatadogServiceName())
-            .set("metrics", ((DatadogCVServiceConfiguration) cvConfiguration).getMetrics());
+            .set("metrics", ((DatadogCVServiceConfiguration) cvConfiguration).getMetrics())
+            .set("applicationFilter", ((DatadogCVServiceConfiguration) cvConfiguration).getApplicationFilter());
         break;
       case CLOUD_WATCH:
         CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =

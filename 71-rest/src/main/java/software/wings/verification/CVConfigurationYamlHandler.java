@@ -69,7 +69,11 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     bean.setEnabled24x7(yaml.isEnabled24x7());
     bean.setAnalysisTolerance(yaml.getAnalysisTolerance());
     bean.setServiceId(service.getUuid());
-    bean.setConnectorId(getConnector(yaml).getUuid());
+    SettingAttribute connector = getConnector(yaml);
+    if (connector == null) {
+      throw new WingsException("Invalid connector name specified in yaml: " + yaml.getConnectorName());
+    }
+    bean.setConnectorId(connector.getUuid());
   }
 
   SettingAttribute getConnector(CVConfigurationYaml yaml) {
