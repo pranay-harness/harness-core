@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.common.Constants.AWS_LAMBDA_REQUEST_PARAM;
-
 import io.harness.context.ContextElementType;
 import software.wings.beans.AwsConfig;
 import software.wings.sm.ContextElement;
@@ -15,6 +13,8 @@ import java.util.Map;
  * The type Aws lambda context element.
  */
 public class AwsLambdaContextElement implements ContextElement {
+  public static final String AWS_LAMBDA_REQUEST_PARAM = "AWS_LAMBDA_REQUEST_PARAM";
+
   private AwsConfig awsConfig;
   private String region;
   private List<FunctionMeta> functionArns = new ArrayList<>();

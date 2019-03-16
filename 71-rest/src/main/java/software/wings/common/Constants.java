@@ -22,16 +22,6 @@ public interface Constants {
   String DEFAULT_WORKFLOW_NAME = "MAIN";
 
   /**
-   * The constant AWS_CODE_DEPLOY_REQUEST_PARAM.
-   */
-  String AWS_CODE_DEPLOY_REQUEST_PARAM = "AWS_CODE_DEPLOY_REQUEST_PARAM";
-
-  /**
-   * The constant AWS_LAMBDA_REQUEST_PARAM.
-   */
-  String AWS_LAMBDA_REQUEST_PARAM = "AWS_LAMBDA_REQUEST_PARAM";
-
-  /**
    * The constant AWS_LAMBDA_REQUEST_PARAM.
    */
   String AWS_LAMBDA_FUNCTION_PARAM = "AWS_LAMBDA_FUNCTION_PARAM";

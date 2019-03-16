@@ -85,7 +85,7 @@ public class WorkflowExecutionMonitorJob implements Job {
         boolean hasActiveStates = false;
         try (HIterator<StateExecutionInstance> stateExecutionInstances =
                  new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                     .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
+                                     .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
                                      .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
                                      .field(StateExecutionInstance.STATUS_KEY)
                                      .in(asList(RUNNING, NEW, STARTING, PAUSED, WAITING))

@@ -19,6 +19,9 @@ import java.util.Date;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DelegateConnection extends Base {
+  public static final String DELEGATE_ID_KEY = "delegateId";
+  public static final String LAST_HEARTBEAT_KEY = "lastHeartbeat";
+
   public static final int defaultExpiryTimeInMinutes = 5;
 
   @NotEmpty private String accountId;

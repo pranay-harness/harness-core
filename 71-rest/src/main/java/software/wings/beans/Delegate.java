@@ -25,8 +25,10 @@ import java.util.List;
 @HarnessExportableEntity
 public class Delegate extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
+  public static final String DELEGATE_NAME_KEY = "delegateName";
   public static final String DELEGATE_GROUP_NAME_KEY = "delegateGroupName";
   public static final String DELEGATE_TYPE_KEY = "delegateType";
+  public static final String LAST_HEARTBEAT_KEY = "lastHeartBeat";
   public static final String HOST_NAME_KEY = "hostName";
   public static final String KEYWORDS_KEY = "keywords";
   public static final String VERSION_KEY = "version";
