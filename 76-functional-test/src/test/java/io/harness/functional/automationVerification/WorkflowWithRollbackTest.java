@@ -106,7 +106,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Owner(emails = "pooja@harness.io")
+  @Owner(emails = "pooja@harness.io", intermittent = true)
   public void testWFWithRollback() throws Exception {
     Workflow savedWorkflow = addWorkflow();
     assertThat(savedWorkflow).isNotNull();

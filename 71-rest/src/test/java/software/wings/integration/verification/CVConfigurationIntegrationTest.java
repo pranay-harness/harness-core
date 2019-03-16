@@ -409,6 +409,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     datadogCVServiceConfiguration.setName("Datadog Config");
     datadogCVServiceConfiguration.setEnabled24x7(false);
     datadogCVServiceConfiguration.setMetrics("system.mem.used, system.cpu.iowait");
+    datadogCVServiceConfiguration.setApplicationFilter("cluster:harness-test");
     datadogCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
 
     // Call PUT
