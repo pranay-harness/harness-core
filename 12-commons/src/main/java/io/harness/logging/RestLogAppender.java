@@ -33,15 +33,11 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   private static final Logger logger = LoggerFactory.getLogger(RestLogAppender.class);
 
   private static final int MAX_BATCH_SIZE = 1000;
-  public static final String LOGDNA_HOST = "https://app.harness.io/storage/applogs/";
-
-  private static final Retrofit retrofit = new Retrofit.Builder()
-                                               .baseUrl(LOGDNA_HOST)
-                                               .addConverterFactory(JacksonConverterFactory.create())
-                                               .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST))
-                                               .build();
+  private static final String LOGDNA_HOST_DIRECT = "https://logs.logdna.com";
+  private static final String LOGDNA_HOST_PROXY = "https://app.harness.io/storage/applogs/";
   private static final String DUMMY_KEY = "9a3e6eac4dcdbdc41a93ca99100537df";
 
+  private Retrofit retrofit;
   private String programName;
   private String key;
   private String localhostName = "localhost";
@@ -82,10 +78,35 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         return;
       }
 
+      synchronized (this) {
+        if (retrofit == null) {
+          retrofit = new Retrofit.Builder()
+                         .baseUrl(LOGDNA_HOST_DIRECT)
+                         .addConverterFactory(JacksonConverterFactory.create())
+                         .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_DIRECT))
+                         .build();
+          try {
+            Flow.retry(3, ofSeconds(1),
+                ()
+                    -> retrofit.create(LogdnaRestClient.class)
+                           .postLogs(getAuthHeader(), localhostName, logLines)
+                           .execute());
+            return;
+          } catch (Exception e) {
+            logger.info("Failed to connect directly to logdna. Using proxy instead.", e);
+            retrofit = new Retrofit.Builder()
+                           .baseUrl(LOGDNA_HOST_PROXY)
+                           .addConverterFactory(JacksonConverterFactory.create())
+                           .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_PROXY))
+                           .build();
+          }
+        }
+      }
+
       Flow.retry(10, ofSeconds(3),
           () -> retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute());
     } catch (Exception ex) {
-      logger.error("", ex);
+      logger.error("Failed to submit logs after 10 tries to {}", retrofit == null ? "null" : retrofit.baseUrl(), ex);
     }
   }
 
