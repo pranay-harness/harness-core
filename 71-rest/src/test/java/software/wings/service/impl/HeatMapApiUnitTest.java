@@ -456,7 +456,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
+  @Ignore
   public void testSortingFromDB() throws IOException {
     String cvConfigId = readAndSaveAnalysisRecords();
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
@@ -475,7 +475,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
+  @Ignore
   public void testDeeplinkUrlAppDynamicsFromDB() throws IOException {
     String cvConfigId = readAndSaveAnalysisRecords();
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
