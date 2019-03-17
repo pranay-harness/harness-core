@@ -69,22 +69,22 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Category(FunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Category(FunctionalTests.class)
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Category(FunctionalTests.class)
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);
   }

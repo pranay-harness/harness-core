@@ -36,6 +36,11 @@ public class AnnotationOrderCheck extends AbstractCheck {
                                              .put("AllArgsConstructor", 13)
                                              .put("ToString", 21)
                                              .put("EqualsAndHashCode", 22)
+                                             .put("Test", 31)
+                                             .put("Owner", 32)
+                                             .put("Repeat", 33)
+                                             .put("Category", 34)
+                                             .put("Ignore", 35)
                                              .build();
 
   @Override

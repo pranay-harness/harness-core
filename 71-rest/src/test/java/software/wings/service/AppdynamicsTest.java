@@ -86,8 +86,8 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void validateConfig() {
     ((AppDynamicsConfig) settingAttribute.getValue())
         .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
@@ -95,16 +95,16 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getAllApplications() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertFalse(applications.isEmpty());
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertFalse(applications.isEmpty());
@@ -115,8 +115,8 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getDependentTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertFalse(applications.isEmpty());

@@ -74,8 +74,8 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Category(FunctionalTests.class)
   @Owner(emails = "swamy@harness.io")
+  @Category(FunctionalTests.class)
   public void listUsers() {
     logger.info("Starting the list users test");
     Account account = this.getAccount();
@@ -86,8 +86,8 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Category(FunctionalTests.class)
   @Owner(emails = "swamy@harness.io")
+  @Category(FunctionalTests.class)
   @Ignore("Ignoring User Invite test until Rishi confirms whether we should use guerilla email or not")
   public void verifyUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
@@ -133,8 +133,8 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Category(FunctionalTests.class)
   @Owner(emails = "swamy@harness.io", resent = false)
+  @Category(FunctionalTests.class)
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
     String domainName = "@harness.mailinator.com";

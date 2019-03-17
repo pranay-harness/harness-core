@@ -132,8 +132,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void testGetAllTierBTMetrics() throws Exception {
     SettingAttribute appdSettingAttribute = settingsService.get(appdynamicsSettingId);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdSettingAttribute.getValue();

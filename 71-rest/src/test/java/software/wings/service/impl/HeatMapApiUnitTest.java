@@ -557,8 +557,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     return cvConfigId;
   }
 
-  @Ignore
   @Test
+  @Ignore
   public void testSorting() throws IOException {
     long currentTime = System.currentTimeMillis();
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()

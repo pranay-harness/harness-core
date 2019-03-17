@@ -110,8 +110,8 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "vaibhav.si@harness.io", intermittent = true)
+  @Category(FunctionalTests.class)
   public void shouldRunTerraformWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution = runWorkflow(application.getAppId(), environment.getUuid(), executionArgs);

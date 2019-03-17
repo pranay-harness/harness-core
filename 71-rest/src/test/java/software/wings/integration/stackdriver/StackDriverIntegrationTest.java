@@ -70,8 +70,8 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   public void testGetMetricsWithDataForNode() throws Exception {
     StackDriverSetupTestNodeData setupTestNodedata = getStackDriverSetupTestNodedata();
     WebTarget target = client.target(API_BASE + "/stackdriver/node-data?accountId=" + accountId);

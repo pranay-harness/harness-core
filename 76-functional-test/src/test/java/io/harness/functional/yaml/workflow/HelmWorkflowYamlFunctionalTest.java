@@ -67,8 +67,8 @@ public class HelmWorkflowYamlFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "anshul@harness.io", intermittent = true)
+  @Category(FunctionalTests.class)
   public void testHelmWorkflow() {
     uploadYamlZipFile(ACCOUNT_ID, OLD_APP_NAME, SETUP_FOLDER_PATH + APPLICATIONS_FOLDER);
     // TODO: we cannot have such sleeps in the test code

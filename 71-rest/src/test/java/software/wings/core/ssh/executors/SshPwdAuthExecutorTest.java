@@ -194,8 +194,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   /**
    * Should throw exception for session timeout.
    */
-  @Ignore
   @Test
+  @Ignore
   public void shouldThrowExceptionForSessionTimeout() {
     executor.init(configBuilder.but().withSshSessionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("sleep 10"))
@@ -248,8 +248,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Ignore
   @Repeat(times = 3, successes = 1)
+  @Ignore
   public void shouldTransferGridFSFileWithDifferentName() throws IOException, ExecutionException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
@@ -276,8 +276,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Ignore
   @Repeat(times = 3, successes = 1)
+  @Ignore
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();

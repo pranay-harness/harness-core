@@ -113,8 +113,8 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore("Will be enabled once AWS Access Key in Datagen has access to lambda functions")
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Ignore("Will be enabled once AWS Access Key in Datagen has access to lambda functions")
   public void testGetLambdaFunctionNames() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
