@@ -66,8 +66,8 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 10, successes = 10)
+  @Ignore
   public void testLimitsEnforcement() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
 
@@ -110,8 +110,8 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 10, successes = 10)
+  @Ignore
   public void testLimitsEnforcementConcurrent() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
 

@@ -57,8 +57,8 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 3, successes = 1)
+  @Ignore
   public void testSMTPConnectivity() {
     SmtpConfig smtpConfig =
         SmtpConfig.builder()

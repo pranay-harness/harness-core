@@ -295,8 +295,8 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getJobs() {
     switch (type) {
       case JENKINS:
@@ -311,8 +311,8 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getPlans() {
     switch (type) {
       case AMAZON_S3:
@@ -325,9 +325,9 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getPlansWithService() {
     switch (type) {
       case DOCKER:
@@ -342,9 +342,9 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getArtifactPaths() {
     switch (type) {
       case DOCKER:
@@ -358,9 +358,9 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getBuilds() {
     switch (type) {
       case DOCKER:
@@ -373,9 +373,9 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getLastSuccessfulBuild() {
     switch (type) {
       case DOCKER:
@@ -407,9 +407,9 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void getGroupIds() {
     Set<String> groupIds;
     switch (type) {
@@ -446,9 +446,9 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     assertFalse(groupIds.isEmpty());
   }
 
-  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void validateArtifactSource() {
     switch (type) {
       case JENKINS:

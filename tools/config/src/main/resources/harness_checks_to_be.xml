@@ -25,11 +25,6 @@
         <property name="message" value="Password is a single word"/>
     </module>
 
-    <module name="RegexpSingleline">
-        <property name="format" value="[Hh]ostName"/>
-        <property name="message" value="Hostname is a single word"/>
-    </module>
-
     <module name="RegexpOnFilename">
         <property name="fileNamePattern" value="Util\."/>
     </module>

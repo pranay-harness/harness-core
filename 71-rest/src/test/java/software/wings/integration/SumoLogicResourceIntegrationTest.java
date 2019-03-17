@@ -73,9 +73,9 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
                               .build());
   }
 
-  @Ignore
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Ignore
   public void testGetSampleLogRecordVerifyCall() {
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
         + LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL + "?accountId=" + accountId
@@ -86,9 +86,9 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
   }
 
-  @Ignore
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Ignore
   public void testGetLogRecords() {
     SumoLogicSetupTestNodedata testNodedata = getSumoLogicSampledata();
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL

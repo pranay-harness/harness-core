@@ -33,8 +33,8 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
         wingsPersistence.createQuery(Counter.class).field("key").endsWith(ActionType.CREATE_WORKFLOW.toString()));
   }
 
-  @Owner(emails = "jatin@harness.io", intermittent = true)
   @Test
+  @Owner(emails = "jatin@harness.io", intermittent = true)
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();
     if (totalWorkflows == 0) {

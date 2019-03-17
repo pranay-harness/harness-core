@@ -310,8 +310,8 @@ public class CommandStateTest extends WingsBaseTest {
    *
    * @throws Exception the exception
    */
-  @Owner(emails = "rathnakara.malatesha@harness.io")
   @Test
+  @Owner(emails = "rathnakara.malatesha@harness.io")
   public void execute() {
     when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
 

@@ -65,8 +65,8 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   public void testGetMetricsWithDataForNode() {
     PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();
     WebTarget target = client.target(API_BASE + "/"

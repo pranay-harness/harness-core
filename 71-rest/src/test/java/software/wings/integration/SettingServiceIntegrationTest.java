@@ -57,8 +57,8 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   // TODO: Jenkins test need to be looked into later. Test is passing locally, however failing in Jenkins K8s after PR
   // push.
   @Test
-  @Ignore
   @Repeat(times = 5)
+  @Ignore
   public void shouldSaveJenkinsConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))

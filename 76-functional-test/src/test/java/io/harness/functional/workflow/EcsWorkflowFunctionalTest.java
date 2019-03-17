@@ -148,8 +148,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "adwait.bhandare@harness.io")
+  @Category(FunctionalTests.class)
   @Ignore
   public void shouldCreateBasicEcsWorkflow() throws Exception {
     Workflow workflow = getBasicEcsEc2TypeWorkflow();
@@ -161,8 +161,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "adwait.bhandare@harness.io")
+  @Category(FunctionalTests.class)
   @Ignore
   public void shouldCreateDaemonEcsWorkflow() throws Exception {
     Workflow workflow = getEcsEc2TypeDaemonWorkflow();
@@ -172,8 +172,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
   @Owner(emails = "adwait.bhandare@harness.io")
+  @Category(FunctionalTests.class)
   @Ignore
   public void shouldCreateCanaryEcsWorkflow() throws Exception {
     Workflow workflow = getEcsEc2TypeCanaryWorkflow();

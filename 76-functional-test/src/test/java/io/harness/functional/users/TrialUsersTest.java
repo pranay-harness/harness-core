@@ -63,8 +63,8 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Category(FunctionalTests.class)
   @Owner(emails = "swamy@harness.io")
+  @Category(FunctionalTests.class)
   public void verifyTrialUserSignup() throws IOException, MessagingException {
     String domainName = "@harness.mailinator.com";
     String emailId = testUtils.generateUniqueInboxId();
