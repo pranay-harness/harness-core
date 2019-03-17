@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
@@ -59,7 +59,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testLimitEnforcement() {
     // configure limits
     StaticLimit limit = new StaticLimit(0);
@@ -76,7 +76,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits
     RateLimit limit = new RateLimit(1, 4, TimeUnit.SECONDS);

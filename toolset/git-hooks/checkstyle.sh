@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 
-BUILD=`mvn install -pl tools -pl tools/checkstyle -pl tools/config`
+BUILD=`pushd tools; mvn install; popd`
 if [ $? -ne 0 ]
 then
     echo "$BUILD"

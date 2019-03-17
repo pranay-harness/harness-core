@@ -17,7 +17,7 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.persistence.ReadPref;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
@@ -181,7 +181,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void shouldApplyServiceConfigFilesIT() throws IOException {
     attacheConfigFileToEntity(template.getServiceId(), EntityType.SERVICE);
 

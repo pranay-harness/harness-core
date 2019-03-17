@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.IntegrationTests;
-import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
@@ -237,7 +236,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(emails = "mark.lu@harness.io", intermittent = true)
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testUserInviteSignupAndSignInSuccess() {
     final String name = "Mark Lu";
     final String email = "abc" + System.currentTimeMillis() + "@harness.io";

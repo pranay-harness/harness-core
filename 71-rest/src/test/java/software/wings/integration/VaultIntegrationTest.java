@@ -16,7 +16,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptionConfig;
@@ -210,7 +209,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testCreateUpdateDeleteVaultConfig_shouldSucceed() {
     // 1. Create a new Vault config.
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -233,7 +232,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_createDuplicateVaultSecretManager_shouldFail() {
     // 1. Create a new Vault config.
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -251,7 +250,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_updateVaultBasePath_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -271,7 +270,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_createNewDefaultVault_shouldUnsetPreviousDefaultVaultConfig() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -306,7 +305,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_UpdateSecretTextWithValue_VaultWithBasePath_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfigWithBasePath);
@@ -317,7 +316,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_UpdateSecretTextWithValue_VaultWithBasePath2_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfigWithBasePath2);
@@ -328,7 +327,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_UpdateSecretTextWithValue_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -396,7 +395,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_CreateSecretText_WithInvalidPath_shouldFail() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -415,7 +414,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_UpdateSecretText_WithInvalidPath_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -446,7 +445,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_CreateSecretText_withInvalidPathReference_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -466,13 +465,13 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_CreateSecretText_WithValidPath_shouldSucceed() {
     testCreateSecretText(vaultConfig);
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_importSecrets_fromCSV_shouldSucceed() {
     importSecretTextsFromCsv("./encryption/secrets.csv");
     verifySecretTextExists("secret1");
@@ -480,7 +479,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_listSettingAttributes_shoudlSucceed() throws IllegalAccessException {
     List<SettingAttribute> settingAttributes = listSettingAttributes();
     for (SettingAttribute settingAttribute : settingAttributes) {
@@ -499,19 +498,19 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_CreateSecretText_vaultWithBasePath_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath);
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_CreateSecretText_vaultWithBasePath2_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath2);
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_CreateSecretText_vaultWithBasePath3_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath3);
   }

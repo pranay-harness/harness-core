@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -16,7 +16,7 @@ public class AppIntegrationTest extends BaseIntegrationTest {
   @Inject private AppResourceRestClient appResourceRestClient;
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   @Ignore // TODO: It looks like that it is starting to early before Portal starts
   public void shouldReturnSeedApplication() {
     Application seedApplication = appResourceRestClient.getSeedApplication(client);

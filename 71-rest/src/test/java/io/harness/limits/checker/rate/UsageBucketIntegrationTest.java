@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.persistence.ReadPref;
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +39,7 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testSerialization() {
     UsageBucket bucket = new UsageBucket(KEY, Arrays.asList(10L, 11L, 101L, 102L));
 
