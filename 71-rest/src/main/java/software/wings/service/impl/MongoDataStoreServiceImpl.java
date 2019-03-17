@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
@@ -16,6 +17,7 @@ import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DataStoreService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
@@ -55,7 +57,20 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest) {
-    return wingsPersistence.query(clazz, pageRequest, excludeAuthority);
+    PageResponse<T> response = wingsPersistence.query(clazz, pageRequest, excludeAuthority);
+    if (pageRequest.getLimit().equals(UNLIMITED)) {
+      int previousOffset = 0;
+      List<T> responseList = new ArrayList<>();
+      while (!response.isEmpty()) {
+        responseList.addAll(response.getResponse());
+        previousOffset += response.size();
+        pageRequest.setOffset(String.valueOf(previousOffset));
+        response = wingsPersistence.query(clazz, pageRequest, excludeAuthority);
+      }
+      response.setResponse(responseList);
+      response.setOffset(String.valueOf(responseList.size()));
+    }
+    return response;
   }
 
   @Override
