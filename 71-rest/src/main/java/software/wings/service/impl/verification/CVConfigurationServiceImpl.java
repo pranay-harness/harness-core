@@ -141,7 +141,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     CVConfiguration savedConfiguration =
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, cvConfiguration.getUuid());
     UpdateOperations<CVConfiguration> updateOperations =
-        getUpdateOperations(cvConfiguration.getStateType(), cvConfiguration);
+        getUpdateOperations(cvConfiguration.getStateType(), cvConfiguration, savedConfiguration);
     wingsPersistence.update(savedConfiguration, updateOperations);
     return savedConfiguration.getUuid();
   }
@@ -221,7 +221,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
     CVConfiguration savedConfiguration =
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, serviceConfigurationId);
-    UpdateOperations<CVConfiguration> updateOperations = getUpdateOperations(stateType, updatedConfig);
+    UpdateOperations<CVConfiguration> updateOperations =
+        getUpdateOperations(stateType, updatedConfig, savedConfiguration);
     wingsPersistence.update(savedConfiguration, updateOperations);
     // TODO update metric template if it makes sense
     return savedConfiguration.getUuid();
@@ -298,7 +299,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return wingsPersistence.query(CVConfiguration.class, pageRequest).getResponse();
   }
 
-  private UpdateOperations<CVConfiguration> getUpdateOperations(StateType stateType, CVConfiguration cvConfiguration) {
+  private UpdateOperations<CVConfiguration> getUpdateOperations(
+      StateType stateType, CVConfiguration cvConfiguration, CVConfiguration savedConfiguration) {
     logger.info("Updating CV Service Configuration {}", cvConfiguration);
     UpdateOperations<CVConfiguration> updateOperations =
         wingsPersistence.createUpdateOperations(CVConfiguration.class)
@@ -364,6 +366,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updateOperations.set("query", logsCVConfiguration.getQuery())
             .set("baselineStartMinute", logsCVConfiguration.getBaselineStartMinute())
             .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute());
+
+        resetBaselineIfNecessary(logsCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       case ELK:
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
@@ -376,12 +380,24 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("messageField", elkCVConfiguration.getMessageField())
             .set("timestampField", elkCVConfiguration.getTimestampField())
             .set("timestampFormat", elkCVConfiguration.getTimestampFormat());
+
+        resetBaselineIfNecessary(elkCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
     }
 
     return updateOperations;
+  }
+
+  private void resetBaselineIfNecessary(
+      LogsCVConfiguration updatedLogsCVConfiguration, LogsCVConfiguration savedLogsCVConfiguration) {
+    if (savedLogsCVConfiguration.getBaselineStartMinute() != updatedLogsCVConfiguration.getBaselineStartMinute()
+        || savedLogsCVConfiguration.getBaselineEndMinute() != updatedLogsCVConfiguration.getBaselineEndMinute()) {
+      logger.info("recalibrating baseline from {}, to {}", savedLogsCVConfiguration, updatedLogsCVConfiguration);
+      resetBaseline(
+          savedLogsCVConfiguration.getAppId(), savedLogsCVConfiguration.getUuid(), updatedLogsCVConfiguration);
+    }
   }
 
   public void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration) {
