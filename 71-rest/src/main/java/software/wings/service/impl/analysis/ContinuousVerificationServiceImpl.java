@@ -676,14 +676,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         } else {
           List<Double> scoreList = new ArrayList<>();
           recordList.forEach(record -> {
-            if (record.getOverallMetricScores() == null) {
-              scoreList.add(-1.0);
-            } else {
+            if (isNotEmpty(record.getOverallMetricScores())) {
               scoreList.add(Collections.max(record.getOverallMetricScores().values()));
             }
           });
           TimeSeriesMLAnalysisRecord aggregatedRecord = minuteConfigMap.get(key).get(0);
-          Double aggregatedScore = scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
+          Double aggregatedScore = -1.0;
+          if (scoreList.size() > 0) {
+            aggregatedScore = scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
+          }
+
           Map<String, Double> aggrOverallScores = new HashMap<>();
           aggrOverallScores.put(DUMMY_METRIC_NAME, aggregatedScore);
           aggregatedRecord.setOverallMetricScores(aggrOverallScores);
