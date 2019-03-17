@@ -12,8 +12,10 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.HttpMethod;
@@ -70,6 +72,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreate() throws Exception {
     createAuditHeader();
   }
@@ -80,6 +83,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldList() throws Exception {
     createAuditHeader();
     createAuditHeader();
@@ -104,6 +108,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateUser() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();
@@ -116,6 +121,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteAuditRecords() throws Exception {
     createAuditHeader();
     createAuditHeader();
@@ -127,6 +133,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotDeleteAuditRecordsWithInRetentionTime() throws Exception {
     createAuditHeader();
     createAuditHeader();

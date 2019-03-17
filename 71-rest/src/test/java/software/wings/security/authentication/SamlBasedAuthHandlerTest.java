@@ -16,10 +16,12 @@ import com.google.inject.Inject;
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -66,6 +68,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSamlBasedValidationAssertionFails() throws IOException {
     try {
       User user = new User();
@@ -85,6 +88,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSamlBasedValidationValidAssertionForOkta() throws IOException, SamlException {
     User user = new User();
     Account account = new Account();
@@ -111,6 +115,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSamlBasedValidationValidAssertionForGoogle() throws IOException, SamlException {
     User user = new User();
     Account account = new Account();
@@ -158,6 +163,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAzureSaml() throws IOException, SamlException {
     User user = new User();
     Account account = new Account();
@@ -206,6 +212,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSamlAuthenticationAndGroupExtractionForOktaShouldSucceed() throws IOException, SamlException {
     User user = new User();
     Account account = new Account();
@@ -234,6 +241,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateUser() {
     User user = new User();
     user.setEmail("test@test.com");

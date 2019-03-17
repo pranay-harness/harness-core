@@ -17,10 +17,12 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -85,6 +87,7 @@ public class HelmReleaseNameSuffixMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfWorkflowsWithHelmReleaseName() {
     Map<String, Object> properties = new HashMap<>();
     properties.put(HELM_RELEASE_NAME_PREFIX_KEY, "abc");
@@ -100,6 +103,7 @@ public class HelmReleaseNameSuffixMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfWorkflowsWithExpressionBasedHelmReleaseName() {
     Map<String, Object> properties = new HashMap<>();
     properties.put(HELM_RELEASE_NAME_PREFIX_KEY, HELM_RELEASE_NAME_PREFIX_DEFAULT_VALUE);
@@ -115,6 +119,7 @@ public class HelmReleaseNameSuffixMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfWorkflowsWithNonHelmDeployState() {
     Workflow workflow = workflowService.createWorkflow(constructEcsWorkflow());
     assertThat(workflow).isNotNull();
@@ -125,6 +130,7 @@ public class HelmReleaseNameSuffixMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfWorkflowsWithExistingSuffixHelmReleaseName() {
     Map<String, Object> properties = new HashMap<>();
     String releaseName = "abc-" + HELM_RELEASE_NAME_SUFFIX_VALUE;
@@ -140,6 +146,7 @@ public class HelmReleaseNameSuffixMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfWorkflowsWithNoHelmReleaseName() {
     Map<String, Object> properties = new HashMap<>();
 

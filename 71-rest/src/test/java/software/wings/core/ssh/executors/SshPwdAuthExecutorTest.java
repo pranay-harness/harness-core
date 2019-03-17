@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 
 import com.google.common.io.CharStreams;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
@@ -32,6 +33,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -116,6 +118,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should connect to remote host.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldConnectToRemoteHost() {
     executor.init(configBuilder.build());
   }
@@ -124,6 +127,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw unknown host exception for invalid host.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowUnknownHostExceptionForInvalidHost() {
     executor.init(configBuilder.but().withHost("INVALID_HOST").build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
@@ -135,6 +139,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw unknown host exception for invalid port.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowUnknownHostExceptionForInvalidPort() {
     executor.init(configBuilder.but().withPort(3333).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
@@ -147,6 +152,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForInvalidCredential() {
     executor.init(configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
@@ -158,6 +164,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should return success for successful command execution.
    */
   @Test
+  @Category(UnitTests.class)
   // Too unstable to keep even with repeats
   public void shouldReturnSuccessForSuccessfulCommandExecution() {
     SshSessionConfig sshSessionConfig = configBuilder.but().build();
@@ -173,6 +180,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   public void shouldReturnFailureForFailedCommandExecution() {
     executor.init(configBuilder.build());
     CommandExecutionStatus execute = executor.executeCommandString(format("rm %s", "FILE_DOES_NOT_EXIST"));
@@ -184,6 +192,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectionTimeout() {
     executor.init(configBuilder.but().withSshConnectionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
@@ -195,6 +204,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for session timeout.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldThrowExceptionForSessionTimeout() {
     executor.init(configBuilder.but().withSshSessionTimeout(1).build());
@@ -207,6 +217,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for connect timeout.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectTimeout() {
     executor.init(configBuilder.but().withHost("host1.app.com").withPort(22).withSocketConnectTimeout(2000).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
@@ -221,6 +232,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void shouldTransferGridFSFile() throws IOException, ExecutionException {
     File file = testFolder.newFile();
@@ -249,6 +261,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void shouldTransferGridFSFileWithDifferentName() throws IOException, ExecutionException {
     File file = testFolder.newFile();
@@ -277,6 +290,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();

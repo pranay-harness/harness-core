@@ -10,9 +10,11 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -55,6 +57,7 @@ public class AcrValidationTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Category(UnitTests.class)
   public void getCriteriaTest() {
     List<String> criteria = acrValidation.getCriteria();
     assertThat(criteria).hasSize(1);
@@ -62,6 +65,7 @@ public class AcrValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateSuccessTest() {
     when(acrService.validateCredentials(any(), anyList(), any())).thenReturn(true);
     List<DelegateConnectionResult> result = acrValidation.validate();
@@ -70,6 +74,7 @@ public class AcrValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateFailureTest() {
     when(acrService.validateCredentials(any(), anyList(), any())).thenReturn(false);
     List<DelegateConnectionResult> result = acrValidation.validate();

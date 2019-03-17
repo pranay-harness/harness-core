@@ -7,8 +7,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 
@@ -17,6 +19,7 @@ public class StateInspectionServiceTest extends OrchestrationTest {
   @Inject private StateInspectionService stateInspectionService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldMerge() throws IOException {
     final String uuid = generateUuid();
     stateInspectionService.append(uuid, asList(DummyStateInspectionData.builder().value("dummy value").build()));

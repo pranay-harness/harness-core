@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.threading.Concurrent;
 import lombok.Getter;
 import lombok.Setter;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ public class MongoDBTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Test
+  @Category(UnitTests.class)
   // this test was used to validate mongo setting for dirty reads
   // there is no need it to be run again and again
   @Bypass

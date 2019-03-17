@@ -9,11 +9,13 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -36,10 +38,12 @@ public class BambooServiceTest extends WingsBaseTest {
                                           .build();
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetJobKeys() {}
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetPlanKeys() {
     wireMockRule.stubFor(
@@ -56,6 +60,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetPlanKeysException() {
     wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/plan.json?authType=basic"))
@@ -69,10 +74,12 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetLastSuccessfulBuild() {}
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetBuildsForJob() {
     wireMockRule.stubFor(
@@ -91,6 +98,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetBuildsForJobError() {
     wireMockRule.stubFor(get(
@@ -103,10 +111,12 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetArtifactPath() {}
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldDownloadArtifact() {}
 }

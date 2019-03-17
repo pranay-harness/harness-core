@@ -10,8 +10,10 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -85,6 +87,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetTagsForCvConfig() throws Exception {
     String cvConfigId = createDDCVConfig();
 
@@ -99,6 +102,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetTagsForCvConfigNoTags() throws Exception {
     String cvConfigId = createNRConfig();
 

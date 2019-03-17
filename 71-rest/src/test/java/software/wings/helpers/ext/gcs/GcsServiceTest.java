@@ -10,8 +10,10 @@ import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.Buckets;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
@@ -41,11 +43,13 @@ public class GcsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetProject() {
     assertThat(gcsService.getProject(gcpConfig, null)).isNotNull().isEqualTo(TEST_PROJECT_ID);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListBuckets() throws IOException {
     HashMap<String, String> bucketList = Maps.newHashMap();
     bucketList.put("bucket", "bucketId");

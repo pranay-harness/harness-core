@@ -15,12 +15,14 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -67,6 +69,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
       ManifestFile.builder().fileName("deploy.yaml").fileContent("deployment spec").build();
 
   @Test
+  @Category(UnitTests.class)
   public void createShouldFailIfServiceDoesNotExist() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(false);
 
@@ -78,6 +81,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void createTest() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
@@ -95,6 +99,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateTest() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
@@ -112,6 +117,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getTest() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
@@ -122,6 +128,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void deleteTest() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     applicationManifestService.create(applicationManifest);
@@ -139,6 +146,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   @RealMongo
   public void testDuplicateManifestFileNames() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
@@ -157,6 +165,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateAppManifestForService() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -172,6 +181,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateAppManifestForService() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -197,6 +207,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testCreateInvalidRemoteAppManifest() {
     GitFileConfig gitFileConfig = GitFileConfig.builder().useBranch(true).branch(BRANCH).filePath(FILE_PATH).build();
 
@@ -211,6 +222,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testCreateInvalidLocalAppManifest() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .storeType(Local)
@@ -223,6 +235,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testCreateInvalidAppManifest() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).build();
 
@@ -237,6 +250,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateAppManifestKind() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -249,6 +263,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpsertApplicationManifestFileForCreate() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -265,6 +280,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpsertApplicationManifestFileForUpdate() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -287,51 +303,61 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName() {
     validateManifestFileName("  ");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName1() {
     validateManifestFileName(" / ");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName2() {
     validateManifestFileName("a//c");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName3() {
     validateManifestFileName("a/ /c");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName4() {
     validateManifestFileName("a/b /c");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName5() {
     validateManifestFileName("a/b/ c");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName6() {
     validateManifestFileName("a/b/c ");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName7() {
     validateManifestFileName("a/ b/c");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName8() {
     validateManifestFileName(" a/b/c");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidManifestFileName9() {
     validateManifestFileName("a /b/c");
   }
@@ -344,6 +370,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidateFileNamePrefixForDirectory() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -365,6 +392,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeleteAppManifest() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -387,6 +415,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeleteAppManifestMultipleTimes() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -410,6 +439,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeleteManifestFileForService() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -429,6 +459,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeleteManifestFileForEnvironment() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(VALUES).envId(ENV_ID).build();
@@ -448,6 +479,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeleteManifestFileForEnvironmentMultipleTimes() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(VALUES).envId(ENV_ID).build();
@@ -468,6 +500,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPruneByService() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
@@ -490,6 +523,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPruneByEnvironment() {
     ApplicationManifest envAppManifest =
         ApplicationManifest.builder().storeType(Local).kind(VALUES).envId(ENV_ID).build();
@@ -518,41 +552,49 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateManifestFileName() {
     upsertManifestFile("abc/def", "abc/pqr");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidateManifestFileName1() {
     upsertManifestFile("abc/def", "abc");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidateManifestFileName2() {
     upsertManifestFile("abc/def/ghi", "abc");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidateManifestFileName3() {
     upsertManifestFile("abc/def/ghi", "abc/def");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidateManifestFileName4() {
     upsertManifestFile("abc", "abc/def");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidateManifestFileName5() {
     upsertManifestFile("abc/def", "abc/def/ghi");
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testValidateManifestFileName6() {
     upsertManifestFile("abc/def", "abc/def/ghi/klm");
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   @RealMongo
   public void testDuplicateManifestFileName() {
     wingsPersistence.ensureIndex(ManifestFile.class);
@@ -560,12 +602,14 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateManifestFileName8() {
     upsertManifestFile("abc/def", "abc/ghi");
     upsertManifestFile("abc/jkl", "abc/mno");
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEditManifestFileContent() {
     ApplicationManifest appManifest = createAppManifest();
 
@@ -583,6 +627,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEditManifestFileName() {
     ApplicationManifest appManifest = createAppManifest();
 
@@ -600,6 +645,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testMoveManifestFileToExistingDirectory() {
     ApplicationManifest appManifest = createAppManifest();
 

@@ -4,14 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Maps;
 
+import io.harness.category.element.UnitTests;
 import lombok.Data;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class MapperUtilsTest {
   @Test
+  @Category(UnitTests.class)
   public void mapObject() throws Exception {
     Map<String, Object> map = Maps.newLinkedHashMap();
     map.put("toAddress", "a@b.com");
@@ -26,6 +29,7 @@ public class MapperUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void mapSomeFields() throws Exception {
     EmailState emailState = new EmailState("name1");
     emailState.setBody("body1");

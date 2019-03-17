@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
@@ -24,6 +25,7 @@ import lombok.Builder;
 import lombok.Value;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ public class IdempotentTest {
       IdempotentRegistry.Response.<BooleanIdempotentResult>builder().state(State.DONE).result(TRUE).build();
 
   @Test
+  @Category(UnitTests.class)
   public void testNewIdempotentFailed() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
@@ -58,6 +61,7 @@ public class IdempotentTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNewIdempotentSucceeded() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
@@ -72,6 +76,7 @@ public class IdempotentTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFinishedIdempotent() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
@@ -85,6 +90,7 @@ public class IdempotentTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore // TODO: find more reliable way to test this
   public void testIdempotentAfterTtl() {
     final IdempotentRegistry<BooleanIdempotentResult> idempotentRegistry = new InprocIdempotentRegistry<>();
@@ -134,6 +140,7 @@ public class IdempotentTest {
 
   @Test
   @Repeat(times = 10, successes = 10)
+  @Category(UnitTests.class)
   public void testInprocRegistryConcurrency() throws InterruptedException {
     final IdempotentRegistry idempotentRegistry = new InprocIdempotentRegistry();
     concurrencyTest(idempotentRegistry);

@@ -20,10 +20,12 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -60,6 +62,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAssignDelegateWithNoScope() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -79,6 +82,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAssignDelegateWithMatchingIncludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -99,6 +103,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotAssignDelegateWithoutMatchingIncludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -119,6 +124,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAssignDelegateWithoutMatchingExcludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -139,6 +145,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotAssignDelegateWithMatchingExcludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -159,6 +166,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAssignTaskWithAllMatchingTags() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -180,6 +188,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotAssignTaskWithPartialMatchingTags() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -201,6 +210,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotAssignTaskWithNoMatchingTags() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -222,6 +232,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAssignTaskWithEmptyDelegateTaskTags() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -243,6 +254,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotAssignTaskWithEmptyDelegateTags() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -264,6 +276,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveConnectionResults() {
     List<DelegateConnectionResult> results = singletonList(DelegateConnectionResult.builder()
                                                                .accountId(ACCOUNT_ID)
@@ -281,6 +294,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateConnectionResults() {
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
@@ -307,6 +321,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeWhitelisted() {
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
@@ -329,6 +344,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotBeWhitelistedDiffCriteria() {
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
@@ -350,6 +366,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotBeWhitelistedWhenNotValidated() {
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
@@ -371,6 +388,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetConnectedWhitelistedDelegates() {
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
@@ -404,6 +422,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() {
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
@@ -436,6 +455,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOldHeartbeat() {
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
@@ -468,6 +488,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOtherCriteria() {
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
@@ -500,6 +521,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNullFirstAttemptDelegate() {
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
     DelegateTask delegateTask =
@@ -516,6 +538,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetFirstAttemptDelegate() {
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)

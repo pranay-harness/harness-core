@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Injector;
 
 import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
@@ -17,6 +18,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -55,6 +57,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotApplyFunctorIfNoSecrets() throws Exception {
     final String delegateTaskId = UUIDGenerator.generateUuid();
 
@@ -72,6 +75,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldApplyFunctorForSecrets() throws Exception {
     final String delegateTaskId = UUIDGenerator.generateUuid();
 

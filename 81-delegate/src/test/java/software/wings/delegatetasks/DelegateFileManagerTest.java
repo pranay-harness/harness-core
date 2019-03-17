@@ -9,12 +9,14 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -105,6 +107,7 @@ public class DelegateFileManagerTest extends CategoryTest {
 
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
@@ -121,6 +124,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDownloadArtifactAtRuntimeForArtifactory() throws IOException, ExecutionException {
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
@@ -138,6 +142,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetArtifactFileSize() {
     when(artifactCollectionTaskHelper.getArtifactFileSize(any(ArtifactStreamAttributes.class))).thenReturn(1234L);
     Long size = delegateFileManager.getArtifactFileSize(artifactStreamAttributesForS3);

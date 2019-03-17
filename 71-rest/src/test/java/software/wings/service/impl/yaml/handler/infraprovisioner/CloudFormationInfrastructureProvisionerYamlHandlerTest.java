@@ -14,8 +14,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -59,6 +61,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
       + "templateBody: Body\n";
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext();
     Yaml yaml = (Yaml) getYaml(validYamlContent, Yaml.class);

@@ -12,12 +12,14 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.VerificationBaseTest;
+import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.quartz.JobDataMap;
@@ -107,6 +109,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAnalysisJobQueuePreviousWithPredictive() throws Exception {
     Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
     metricGroups.put("tier3",

@@ -19,9 +19,11 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
@@ -58,6 +60,7 @@ public class ServiceResourceTest {
    * Should list services.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListServices() {
     PageResponse<Service> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(aSERVICE));
@@ -80,6 +83,7 @@ public class ServiceResourceTest {
    * Should get service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetService() {
     when(RESOURCE_SERVICE.get(APP_ID, SERVICE_ID, SetupStatus.COMPLETE)).thenReturn(aSERVICE);
     RestResponse<Service> restResponse = RESOURCES.client()
@@ -94,6 +98,7 @@ public class ServiceResourceTest {
    * Should save service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveService() {
     when(RESOURCE_SERVICE.save(any(Service.class))).thenReturn(aSERVICE);
     RestResponse<Service> restResponse =
@@ -109,6 +114,7 @@ public class ServiceResourceTest {
    * Should update service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateService() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
     when(RESOURCE_SERVICE.update(any(Service.class))).thenReturn(service);
@@ -125,6 +131,7 @@ public class ServiceResourceTest {
    * Should delete service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteService() {
     Response restResponse =
         RESOURCES.client().target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID)).request().delete();
@@ -136,6 +143,7 @@ public class ServiceResourceTest {
    * Should add command.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAddCommand() {
     when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), eq(true)))
         .thenReturn(aSERVICE);
@@ -153,6 +161,7 @@ public class ServiceResourceTest {
    * Should delete command.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteCommand() {
     when(RESOURCE_SERVICE.deleteCommand(APP_ID, SERVICE_ID, "START")).thenReturn(aSERVICE);
 
@@ -169,6 +178,7 @@ public class ServiceResourceTest {
    * Should update command.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommand() {
     when(RESOURCE_SERVICE.updateCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class))).thenReturn(aSERVICE);
 

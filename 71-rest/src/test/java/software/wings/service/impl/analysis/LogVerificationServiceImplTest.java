@@ -5,9 +5,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -39,6 +41,7 @@ public class LogVerificationServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBugsnagOrgs() {
     BugsnagConfig config = new BugsnagConfig();
     config.setUrl("testBugsnagURL");
@@ -63,6 +66,7 @@ public class LogVerificationServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBugsnagApplications() {
     BugsnagConfig config = new BugsnagConfig();
     config.setUrl("testBugsnagURL");
@@ -87,6 +91,7 @@ public class LogVerificationServiceImplTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testGetBugsnagApplicationsBadState() {
     BugsnagConfig config = new BugsnagConfig();
     config.setUrl("testBugsnagURL");

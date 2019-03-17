@@ -54,6 +54,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
@@ -64,6 +65,7 @@ import io.harness.resource.Loader;
 import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
@@ -163,6 +165,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreatePipelineFromJson() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
@@ -190,6 +193,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(stateMachine.getStates().size()).isGreaterThan(60);
   }
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateLargePipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
@@ -238,6 +242,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreatePipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
@@ -274,6 +279,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdatePipeline() {
     PipelineStage pipelineStage = prepareStage1();
 
@@ -321,6 +327,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPipeline() {
     mockPipeline();
 
@@ -330,6 +337,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPipelineWithServices() {
     mockPipeline();
 
@@ -354,6 +362,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldReadPipelineWithDetails() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);
@@ -429,6 +438,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPipelineWithServicesAndEnvs() {
     mockPipeline();
 
@@ -455,6 +465,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotIncludeDisableStepServices() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
@@ -512,6 +523,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPipelineWithTemplatizedServices() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
@@ -551,6 +563,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldReadPipelineWithNoPipelineVariables() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
@@ -595,6 +608,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldReadPipelineWithResolvedPipelineVariables() {
     Pipeline pipelineWithVariables =
         Pipeline.builder()
@@ -651,6 +665,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeletePipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
@@ -662,6 +677,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void deletePipelineExecutionInProgress() {
     mockPipeline();
     PipelineExecution pipelineExecution = aPipelineExecution().withStatus(ExecutionStatus.RUNNING).build();
@@ -673,6 +689,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     pipelineService.pruneDescendingEntities(APP_ID, PIPELINE_ID);
     InOrder inOrder = inOrder(wingsPersistence, workflowService, triggerService);
@@ -680,6 +697,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCheckIfEnvReferenced() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);
@@ -726,6 +744,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCheckTemplatedEntityReferenced() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);
@@ -765,6 +784,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListPipelines() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);
@@ -808,6 +828,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListPipelinesWithDetails() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);
@@ -875,6 +896,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListPipelinesWithVariables() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);
@@ -960,6 +982,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListPipelinesWithDetailsWithSshInfraMapping() {
     PipelineStage pipelineStage = prepareStage1();
 
@@ -1001,6 +1024,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetRequiredEntities() {
     mockPipeline();
 
@@ -1027,6 +1051,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetRequiredEntitiesForBuildPipeline() {
     mockPipeline();
 
@@ -1046,6 +1071,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void shouldNotCreatePipelineWhenLimitExceeds() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(false, ActionType.CREATE_PIPELINE));
@@ -1076,6 +1102,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotIncludeRequiredEntitiesForDisabledStep() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(Pipeline.builder()

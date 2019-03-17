@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.DataGenApplication;
 import io.harness.OrchestrationMorphiaClasses;
+import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.slf4j.Logger;
@@ -18,6 +20,7 @@ public class MorphiaClassesTest {
   private static final Logger logger = LoggerFactory.getLogger(MorphiaClassesTest.class);
 
   @Test
+  @Category(UnitTests.class)
   public void testSearchAndList() {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());

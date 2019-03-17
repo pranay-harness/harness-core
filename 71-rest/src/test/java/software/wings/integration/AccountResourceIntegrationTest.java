@@ -7,12 +7,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -46,6 +48,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testAccountMigration() {
     startAccountMigration(accountId);
 
@@ -58,6 +61,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shallCreateAndDeleteAccount() {
     Account account = new Account();
     account.setLicenseInfo(getLicenseInfo());

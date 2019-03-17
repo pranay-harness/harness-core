@@ -14,11 +14,13 @@ import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -85,6 +87,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject PcfApplicationDetailsCommandTaskHandler pcfApplicationDetailsCommandTaskHandler;
 
   @Test
+  @Category(UnitTests.class)
   public void testPerformSetup() throws Exception {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     PcfCommandRequest pcfCommandRequest = PcfCommandSetupRequest.builder()
@@ -198,6 +201,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPerformDeploy_nonBlueGreen() throws Exception {
     PcfCommandRequest pcfCommandRequest = PcfCommandDeployRequest.builder()
                                               .pcfCommandType(PcfCommandType.RESIZE)
@@ -320,6 +324,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPerformRollback() throws Exception {
     PcfCommandRequest pcfCommandRequest =
         PcfCommandRollbackRequest.builder()
@@ -445,6 +450,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testperformDataFetch() throws Exception {
     PcfInfraMappingDataRequest pcfCommandRequest = PcfInfraMappingDataRequest.builder()
                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
@@ -495,6 +501,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testperformAppDetails() throws Exception {
     PcfInstanceSyncRequest pcfInstanceSyncRequest = PcfInstanceSyncRequest.builder()
                                                         .pcfCommandType(PcfCommandType.APP_DETAILS)

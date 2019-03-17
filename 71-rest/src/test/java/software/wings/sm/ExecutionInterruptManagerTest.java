@@ -8,10 +8,12 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -39,6 +41,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw invalid argument for null state execution instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForNullStateExecutionInstance() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -69,6 +72,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw invalid argument for invalid state execution instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForInvalidStateExecutionInstance() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -98,6 +102,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for resume.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowStateNotForResume() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -127,6 +132,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for retry.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowStateNotForRetry() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -156,6 +162,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for pause.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowStateNotForPause() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -186,6 +193,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for abort.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowStateNotForAbort() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -216,6 +224,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw abort all already.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldThrowAbortAllAlready() {
     Application app =
@@ -250,6 +259,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw pause all already.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowPauseAllAlready() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -284,6 +294,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should pause all clear previous resume all.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPauseAllClearPreviousResumeAll() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -324,6 +335,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw resume all already.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowResumeAllAlready() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -349,6 +361,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should resume all clear prev pause all.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldResumeAllClearPrevPauseAll() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
@@ -382,6 +395,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw resume all already 2.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowResumeAllAlready2() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());

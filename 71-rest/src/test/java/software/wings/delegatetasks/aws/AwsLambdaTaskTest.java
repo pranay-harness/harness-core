@@ -5,9 +5,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -35,6 +37,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteWf() {
     AwsLambdaRequest request = AwsLambdaExecuteWfRequest.builder().build();
     task.run(new Object[] {request});
@@ -42,6 +45,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteFunction() {
     AwsLambdaRequest request = AwsLambdaExecuteFunctionRequest.builder().build();
     task.run(new Object[] {request});

@@ -6,8 +6,10 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
@@ -23,6 +25,7 @@ public class GlobalApiKeyServiceTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUD() {
     String generatedApiKey = globalApiKeyService.generate(ProviderType.PROMETHEUS);
     assertNotNull(generatedApiKey);

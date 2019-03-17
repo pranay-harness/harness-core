@@ -12,8 +12,10 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -78,18 +80,21 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAnalysisType() {
     nrState.setComparisonStrategy("COMPARE_WITH_CURRENT");
     assertEquals(TimeSeriesMlAnalysisType.COMPARATIVE, nrState.getAnalysisType());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetAnalysisTypePredictive() {
     nrState.setComparisonStrategy("PREDICTIVE");
     assertEquals(TimeSeriesMlAnalysisType.PREDICTIVE, nrState.getAnalysisType());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateGroup() {
     // setup
     Map<String, String> hosts = new HashMap<>();
@@ -114,6 +119,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMetricsCorrespondingToMetricNames() {
     /*
     Case 1: metricNames is an empty list
@@ -164,6 +170,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricNames() {
     List<NewRelicState.Metric> actualMetrics = newRelicService.getListOfMetrics();
     assertEquals(expectedMetrics, actualMetrics);
@@ -178,6 +185,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricDefinitions() {
     Map<String, TimeSeriesMetricDefinition> expectedMetricDefinitions = new HashMap<>();
     expectedMetricDefinitions.put(
@@ -200,6 +208,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetMetricType() {
     String errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
     assertNotNull(errType);

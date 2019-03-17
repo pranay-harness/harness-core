@@ -15,9 +15,11 @@ import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -123,6 +125,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDownloadArtifactFromAmazonS3IfMetadataOnly() {
     when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
              anyString(), anyString()))
@@ -132,6 +135,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDownloadArtifactFromArtifactoryIfMetadataOnly() {
     when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
              anyString(), anyString()))
@@ -141,6 +145,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotDownloadArtifactFromArtifactoryForRpmType() {
     when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
              anyString(), anyString()))
@@ -150,6 +155,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shoudlNotDownloadArtifactFromArtifactoryIfFeatureFlagDisabled() {
     when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
              anyString(), anyString()))

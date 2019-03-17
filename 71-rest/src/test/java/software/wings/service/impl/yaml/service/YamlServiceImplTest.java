@@ -9,8 +9,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -39,6 +41,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void processYamlFilesAsTar() throws IOException {
     InputStream zipfile = getClass().getResourceAsStream("yaml_zip_test.zip");
 
@@ -53,6 +56,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFilterInvalidFilePaths() throws Exception {
     List<GitFileChange> gitFileChange = new ArrayList<>();
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath("temp.yaml").build());

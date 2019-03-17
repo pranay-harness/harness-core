@@ -11,10 +11,12 @@ import static software.wings.beans.Application.Builder.anApplication;
 import com.google.common.collect.Lists;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -44,6 +46,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testSaveApiCallLogs() throws Exception {
     int numOfApiCallLogs = 12;
     List<ThirdPartyApiCallLog> apiCallLogs = new ArrayList<>();

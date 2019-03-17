@@ -2,10 +2,13 @@ package software.wings.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class EcsConventionTest {
   @Test
+  @Category(UnitTests.class)
   public void testGetTaskFamily() {
     String asgNamePrefix = EcsConvention.getTaskFamily("appName", "serviceName", "envName");
     assertEquals("appName__serviceName__envName", asgNamePrefix);
@@ -27,6 +30,7 @@ public class EcsConventionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetServiceNamePrefixFromServiceName() {
     String serviceNamePrefix = EcsConvention.getServiceNamePrefixFromServiceName("abc__test__123");
     assertEquals("abc__test__", serviceNamePrefix);
@@ -39,6 +43,7 @@ public class EcsConventionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetContainerName() {
     String containerName = EcsConvention.getContainerName("container");
     assertEquals("container", containerName);
@@ -78,6 +83,7 @@ public class EcsConventionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetVolumeName() {
     String volumePath = EcsConvention.getVolumeName("path");
     assertEquals("vol_path_vol", volumePath);
@@ -117,6 +123,7 @@ public class EcsConventionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetRevisionFromServiceName() {
     int revision = EcsConvention.getRevisionFromServiceName("aaa__123");
     assertEquals(123, revision);

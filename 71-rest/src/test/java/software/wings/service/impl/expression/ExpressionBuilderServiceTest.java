@@ -50,8 +50,10 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -158,6 +160,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetServiceExpressions() {
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
@@ -168,6 +171,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetApplDefaultsExpressions() {
     Set<String> expressions = builderService.listExpressions(APP_ID, APP_ID, APPLICATION);
     assertThat(expressions).isNotNull();
@@ -182,6 +186,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetServiceExpressionsCommand() {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
         .thenReturn(aPageResponse().build());
@@ -197,6 +202,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetServiceVariableExpressions() {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
         .thenReturn(aPageResponse().build());
@@ -209,6 +215,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAllServiceVariableExpressions() {
     when(serviceResourceService.list(
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
@@ -227,6 +234,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetServiceTemplateVariableExpressions() {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE)).thenReturn(serviceTemplates);
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
@@ -243,6 +251,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetEnvironmentExpressions() {
     when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), any())).thenReturn(aPageResponse().build());
 
@@ -252,6 +261,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetEnvironmentServiceVariableExpressions() {
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), any())).thenReturn(serviceTemplates);
@@ -263,6 +273,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetEnvironmentServiceVariableOverridesExpressions() {
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                   .withLimit(PageRequest.UNLIMITED)
@@ -288,6 +299,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetWorkflowExpressions() {
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                   .withLimit(PageRequest.UNLIMITED)
@@ -307,6 +319,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetWorkflowVariablesExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
     Workflow workflow = buildCanaryWorkflow(userVariables);
@@ -331,6 +344,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetWorkflowStateExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build(),
         aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
@@ -373,6 +387,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetWorkflowNotificationGroupExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build(),
         aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
@@ -415,6 +430,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetWorkflowStateExpressionsAllService() {
     when(serviceResourceService.list(
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
@@ -454,6 +470,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetWorkflowCodeDeployStateExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
     Workflow workflow = buildCanaryWorkflow(userVariables);
@@ -482,6 +499,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetWorkflowCommandStateExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
     Workflow workflow = buildCanaryWorkflow(userVariables);

@@ -83,7 +83,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.Workflow;
@@ -290,7 +290,7 @@ public class DataGenService {
 
     SettingAttribute smtpSettingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withName("SMTP")
             .withAccountId(account.getUuid())
             .withValue(SmtpConfig.builder()
@@ -308,7 +308,7 @@ public class DataGenService {
 
     SettingAttribute splunkSettingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withName("Splunk")
             .withAccountId(accountId)
             .withValue(SplunkConfig.builder()
@@ -323,7 +323,7 @@ public class DataGenService {
 
     SettingAttribute appdSettingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withName("AppDynamics")
             .withAccountId(accountId)
             .withValue(AppDynamicsConfig.builder()
@@ -339,7 +339,7 @@ public class DataGenService {
 
     SettingAttribute newRelicSettingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withName(NEW_RELIC_CONNECTOR_NAME)
             .withAccountId(accountId)
             .withValue(NewRelicConfig.builder()
@@ -354,7 +354,7 @@ public class DataGenService {
 
     SettingAttribute awsNonProdAttribute =
         aSettingAttribute()
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withName(AWS_PLAY_GROUND)
             .withAppId(GLOBAL_APP_ID)
             .withEnvId(GLOBAL_ENV_ID)

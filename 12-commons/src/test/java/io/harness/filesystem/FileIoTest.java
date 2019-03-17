@@ -10,7 +10,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,6 +29,7 @@ public class FileIoTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void createDirectoryTest() throws IOException {
     final String directoryPath = getRandomTempDirectory();
     try {
@@ -44,6 +47,7 @@ public class FileIoTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void waitForDirectoryToBeAccessibleOutOfProcessPositiveTest() throws IOException {
     final String directoryPath = getRandomTempDirectory();
     try {
@@ -56,11 +60,13 @@ public class FileIoTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void waitForDirectoryToBeAccessibleOutOfProcessNegativeTest() {
     assertFalse(waitForDirectoryToBeAccessibleOutOfProcess(getRandomTempDirectory(), 3));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void deleteFileIfExistsTest() throws IOException {
     final String fileName = tempDirectory + "/testfile.txt";
     deleteFileIfExists(fileName);
@@ -75,6 +81,7 @@ public class FileIoTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void deleteDirectoryAndItsContentTest() throws IOException {
     final String directoryName = getRandomTempDirectory();
     final String fileName = "/testfile.txt";
@@ -91,6 +98,7 @@ public class FileIoTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void writeFileTest() throws IOException {
     final String directoryName = getRandomTempDirectory();
     final String fileName = "/testfile.txt";

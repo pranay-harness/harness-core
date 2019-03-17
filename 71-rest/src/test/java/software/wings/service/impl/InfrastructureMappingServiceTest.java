@@ -63,11 +63,13 @@ import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -189,6 +191,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldList() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
                                                                       .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -208,6 +211,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSave() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
@@ -262,6 +266,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGet() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
                                                                       .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -282,6 +287,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdate() {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
                                                    .withName("Name1")
@@ -333,6 +339,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateInfraComputerProviderId() {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
                                                    .withName("Name3")
@@ -411,6 +418,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateWinRmConnectionAttribute() {
     final String winrmConnectionAttributeId1 = "winrm-id-1";
     final String winrmConnectionAttributeId2 = "winrm-id-2";
@@ -500,6 +508,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDelete() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
@@ -525,6 +534,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     infrastructureMappingService.pruneDescendingEntities(APP_ID, INFRA_MAPPING_ID);
     InOrder inOrder = inOrder(wingsPersistence, serviceInstanceService);
@@ -532,6 +542,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
     mockPhysicalInfra();
     when(workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(APP_ID, INFRA_MAPPING_ID))
@@ -561,6 +572,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
     mockPhysicalInfra();
     when(workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(APP_ID, INFRA_MAPPING_ID))
@@ -573,6 +585,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
     mockPhysicalInfra();
     when(workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(APP_ID, INFRA_MAPPING_ID))
@@ -587,6 +600,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSelectServiceInstancesForPhysicalInfrastructure() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
@@ -619,6 +633,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSelectServiceInstancesForAwsInfrastructure() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
                                                             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -668,6 +683,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListHostsForAzureSSHDeployment() {
     AzureInfrastructureMapping azureInfrastructureMapping = anAzureInfrastructureMapping()
                                                                 .withHostConnectionAttributes(HOST_CONN_ATTR_ID)
@@ -699,6 +715,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListPhysicalComputeProviderHosts() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
@@ -724,6 +741,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListAwsComputeProviderHosts() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
                                                             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -775,6 +793,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldProvisionNodes() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
                                                             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -830,6 +849,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetContainerRunningInstancesDirectKubernetes() {
     DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
         aDirectKubernetesInfrastructureMapping()
@@ -866,6 +886,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetContainerRunningInstancesGcp() {
     GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
         aGcpKubernetesInfrastructureMapping()
@@ -900,6 +921,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetContainerRunningInstancesEcs() {
     EcsInfrastructureMapping ecsInfrastructureMapping = anEcsInfrastructureMapping()
                                                             .withRegion("us-east-1")
@@ -933,6 +955,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsInfraMapping() throws Exception {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
 
@@ -967,6 +990,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHandlePcdInfraMapping() throws Exception {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
 
@@ -991,6 +1015,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListInfraMappings() {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
 
@@ -1002,6 +1027,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAzureInfraMappingTypes() {
     AzureInfrastructureMapping azureSSHInfrastructureMapping =
         AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping()

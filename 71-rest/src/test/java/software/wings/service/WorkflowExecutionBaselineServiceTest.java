@@ -20,11 +20,13 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +83,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test()
+  @Category(UnitTests.class)
   public void testNoWorkflowExecution() {
     String workflowExecutionId = UUID.randomUUID().toString();
     try {
@@ -93,6 +96,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoPipelineExecutionsForPipeline() {
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder().workflowId(workflowId).workflowType(WorkflowType.PIPELINE).build();
@@ -107,6 +111,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoWorkflowExecutionsForPipeline() {
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder().workflowId(workflowId).workflowType(WorkflowType.PIPELINE).build();
@@ -123,6 +128,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoVerificationSteps() {
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder().workflowId(workflowId).workflowType(WorkflowType.PIPELINE).build();
@@ -144,6 +150,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForPipeline() {
     int numOfWorkflowExecutions = 10;
     List<String> envIds = new ArrayList<>();
@@ -277,6 +284,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMarkBaselinesUpdateForPipeline() {
     int numOfWorkflowExecutions = 10;
     int numOfPipelines = 5;
@@ -431,6 +439,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForWorkflow() {
     int numOfWorkflowExecutions = 10;
     List<String> workflowExecutionIds = new ArrayList<>();
@@ -515,6 +524,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForPipelineAndWorkflow() {
     int numOfWorkflowExecutions = 10;
     List<String> envIds = new ArrayList<>();
@@ -648,6 +658,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBaselineDetails() {
     StateMachineExecutor stateMachineExecutor = Mockito.mock(StateMachineExecutor.class);
     int numOfWorkflowExecutions = 10;

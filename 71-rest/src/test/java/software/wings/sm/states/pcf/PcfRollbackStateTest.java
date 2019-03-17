@@ -29,9 +29,11 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -102,6 +104,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute() throws Exception {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);

@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Workflow;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.setup.rest.WorkflowResourceRestClient;
@@ -17,6 +19,7 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
   //  @Inject private OwnerManager ownerManager;
 
   @Test
+  @Category(IntegrationTests.class)
   @Ignore
   public void shouldReturnSeedBasicWorkflow() {
     Workflow seedBasicWorkflow = workflowResourceRestClient.getSeedBasicWorkflow(client);
@@ -24,6 +27,7 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldReturnSeedBuildWorkflow() {
     //    final Seed seed = new Seed(0);
 
@@ -34,6 +38,7 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   @Ignore
   public void shouldReturnSeedRollingWorkflow() {
     Workflow seedRollingWorkflow = workflowResourceRestClient.getSeedRollingWorkflow(client);

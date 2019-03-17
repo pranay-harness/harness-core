@@ -11,9 +11,11 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.exception.WingsExceptionMapper;
@@ -35,6 +37,7 @@ public class VersionResourceTest {
                                                        .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListVersions() throws Exception {
     PageResponse<EntityVersion> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(anEntityVersion().build()));

@@ -11,9 +11,11 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsAmiInfrastructureMapping.Yaml;
@@ -52,6 +54,7 @@ public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandl
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 

@@ -3,8 +3,10 @@ package software.wings.delegatetasks.terraform;
 import static org.junit.Assert.assertEquals;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
@@ -21,6 +23,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
       delegateTaskResponse -> {}, () -> true);
 
   @Test
+  @Category(UnitTests.class)
   public void getTargetsArgsTest() {
     assertEquals("", terraformProvisionTask.getTargetArgs(null));
     assertEquals("", terraformProvisionTask.getTargetArgs(Collections.EMPTY_LIST));

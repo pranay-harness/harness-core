@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -16,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 @RunWith(MockitoJUnitRunner.class)
 public class ElkLogFetchRequestTest {
   @Test
+  @Category(UnitTests.class)
   public void simpleQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("*exception*");
     assertEquals(
@@ -24,6 +27,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void simpleOrQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* or error");
     JSONObject jsonObject = elkLogFetchRequest.eval();
@@ -33,6 +37,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void simpleAndQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* and error");
     JSONObject jsonObject = elkLogFetchRequest.eval();
@@ -42,6 +47,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void simpleAndOrQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* and error or warn");
     JSONObject jsonObject = elkLogFetchRequest.eval();
@@ -51,6 +57,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void simpleAndOrBracketedQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("((.*exception.* and error) or warn)");
     JSONObject jsonObject = elkLogFetchRequest.eval();
@@ -60,6 +67,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void simpleAndOrBracketedQueryWithTerm() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
         "((.*exception.* and error) or warn) and source:/home/ubuntu/Harness/Manager/Manager/runtime/portal.log");
@@ -70,6 +78,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void invalidBracket() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
         "((.*exception.* and error) or warn) and source:/home/ubuntu/Harness/Manager/Manager/runtime/portal.log)");
@@ -80,6 +89,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void simpleQueryUpperCase() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* OR .*error.*");
     JSONObject jsonObject = elkLogFetchRequest.eval();
@@ -89,6 +99,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void simpleQueryCaseInsensitive() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*Exception.* OR .*ERROR.*");
     JSONObject jsonObject = elkLogFetchRequest.eval();
@@ -98,6 +109,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void multimessageterms() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
         "((.*exception.* or error) or warn) ors source:/home/ubuntu/Harness/Manager/Manager/runtime/portal.log");
@@ -108,6 +120,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void extraOpenbraces() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
         "(((.*exception.* or error) or warn) ors source:/home/ubuntu/Harness/Manager/Manager/runtime/portal.log");
@@ -115,6 +128,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void nonMessage() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("level:Error OR level:Warn");
     assertEquals(

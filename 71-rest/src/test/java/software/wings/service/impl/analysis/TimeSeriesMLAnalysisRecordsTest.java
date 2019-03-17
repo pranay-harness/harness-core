@@ -1,8 +1,10 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
@@ -17,6 +19,7 @@ import java.nio.charset.Charset;
 @RunWith(MockitoJUnitRunner.class)
 public class TimeSeriesMLAnalysisRecordsTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void testJsonParsing() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());

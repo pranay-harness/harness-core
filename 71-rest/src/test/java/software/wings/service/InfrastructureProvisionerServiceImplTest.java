@@ -17,9 +17,11 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -57,6 +59,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Test
+  @Category(UnitTests.class)
   public void testRegenerateInfrastructureMappings() throws Exception {
     InfrastructureProvisioner infrastructureProvisioner =
         CloudFormationInfrastructureProvisioner.builder()

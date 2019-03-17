@@ -13,8 +13,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -52,6 +54,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuilds() {
     List<BuildDetails> buildDetails = Lists.newArrayList(
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
@@ -63,6 +66,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(amazonS3Service.getBuckets(awsConfig, null))
         .thenReturn(ImmutableMap.of("bucket1", "bucket1", "bucket2", "bucket2"));
@@ -71,6 +75,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(amazonS3Service.getArtifactPaths(any(), any(), any())).thenReturn(Lists.newArrayList("path1"));
 

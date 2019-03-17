@@ -12,11 +12,13 @@ import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.binary.Base64;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -54,6 +56,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Inject @InjectMocks private AuthenticationManager authenticationManager;
 
   @Test
+  @Category(UnitTests.class)
   public void getAuthenticationMechanism() {
     User mockUser = mock(User.class);
     Account account1 = mock(Account.class);
@@ -75,6 +78,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getLoginTypeResponse() {
     User mockUser = mock(User.class);
     Account account1 = mock(Account.class);
@@ -117,6 +121,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLoginType_emailUnverified_shouldFail() {
     User mockUser = mock(User.class);
     Account account1 = mock(Account.class);
@@ -134,6 +139,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void authenticate() {
     User mockUser = spy(new User());
     mockUser.setUuid("TestUUID");
@@ -155,6 +161,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFakeTokens() {
     try {
       authenticationManager.defaultLogin("FakeToken");
@@ -172,6 +179,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void extractToken() {
     try {
       authenticationManager.extractToken("fakeData", "Basic");

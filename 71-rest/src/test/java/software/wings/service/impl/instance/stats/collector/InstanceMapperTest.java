@@ -5,10 +5,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Suppliers;
 
+import io.harness.category.element.UnitTests;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -35,6 +37,7 @@ public class InstanceMapperTest extends WingsBaseTest {
               new App(RandomStringUtils.randomAlphabetic(5), RandomStringUtils.randomAlphabetic(5))));
 
   @Test
+  @Category(UnitTests.class)
   public void testMapping() {
     Instant ts = Instant.now();
     String accountId = "some-account-id";
@@ -62,6 +65,7 @@ public class InstanceMapperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMappingWithEmptySet() {
     Instant ts = Instant.now();
     String accountId = "some-account-id";

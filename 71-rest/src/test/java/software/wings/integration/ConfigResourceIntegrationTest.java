@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -14,6 +15,7 @@ import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
@@ -61,6 +63,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testServiceLevelConfigFileCrud() {
     // 1. Create a new service level config file
     String relativePath = "configFile1";
@@ -95,6 +98,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testMultipleConfigFileUpdate_shouldNot_OverwriteEachOther() {
     // 1. Create 2 new service level config files
     String relativePath1 = "configFile1";
@@ -136,6 +140,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testEnvironmentLevelConfigFileOverrideCrud() {
     // 1. Create a new service level config file
     String relativePath = "configFile1";

@@ -4,12 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
 public class VariableResolverTrackerTest {
   @Test
+  @Category(UnitTests.class)
   public void testTrackVariables() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 

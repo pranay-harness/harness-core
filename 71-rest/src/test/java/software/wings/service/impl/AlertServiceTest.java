@@ -27,11 +27,13 @@ import com.google.inject.Inject;
 import com.mongodb.DBCollection;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -136,6 +138,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListAlerts() {
     PageRequest<Alert> pageRequest = new PageRequest<>();
     PageResponse pageResponse = aPageResponse().withResponse(singletonList(approval)).build();
@@ -148,6 +151,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldOpenAlert() {
     when(query.asList()).thenReturn(emptyList());
     ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
@@ -169,6 +173,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotOpenMatchingAlert() {
     when(query.asList()).thenReturn(singletonList(noEligible));
 
@@ -178,6 +183,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCloseAlert() {
     when(query.asList()).thenReturn(singletonList(noEligible));
 
@@ -187,6 +193,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCloseAlertNoneFound() {
     when(query.asList()).thenReturn(emptyList());
 
@@ -196,6 +203,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCloseAlertsWhenDelegateUpdated() {
     when(query.asList()).thenReturn(singletonList(noActive)).thenReturn(singletonList(noEligible));
     when(assignDelegateService.canAssign(eq(DELEGATE_ID), any(), any(), any(), any(), any(), any())).thenReturn(true);
@@ -206,6 +214,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCloseAlertsWhenDeploymentAborted() {
     when(query.asList()).thenReturn(asList(approval, manualIntervention));
     alertService.deploymentCompleted(APP_ID, "executionId");
@@ -214,6 +223,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBuildAlertTitle() {
     AlertData alertData = aNoEligibleDelegatesAlert()
                               .withAppId(GLOBAL_APP_ID)

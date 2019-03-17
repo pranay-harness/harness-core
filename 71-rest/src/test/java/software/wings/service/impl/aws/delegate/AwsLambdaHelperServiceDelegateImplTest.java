@@ -24,7 +24,9 @@ import com.amazonaws.services.lambda.model.ListAliasesResult;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -44,6 +46,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteFunction() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient)
@@ -66,6 +69,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteWf_FxDoesNotExist() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient)
@@ -101,6 +105,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteWf_FxExists() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient)

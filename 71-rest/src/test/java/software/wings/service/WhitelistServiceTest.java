@@ -13,10 +13,12 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -72,6 +74,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
    *
    */
   @Test
+  @Category(UnitTests.class)
   public void testSaveAndRead() {
     Whitelist whitelist =
         Whitelist.builder().accountId(accountId).uuid(whitelistId).description(description).filter(cidrFilter).build();
@@ -91,6 +94,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testList() {
     Whitelist whitelist1 = Whitelist.builder().accountId(accountId).description(description).filter(cidrFilter).build();
     Whitelist savedWhitelist1 = whitelistService.save(whitelist1);
@@ -107,6 +111,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIsValidIpAddress() {
     Whitelist whitelist1 = Whitelist.builder()
                                .accountId(accountId)
@@ -158,6 +163,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testInputValidation() {
     // Negative cases
     Whitelist whitelist = Whitelist.builder()
@@ -236,6 +242,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateAndRead() {
     Whitelist whitelist =
         Whitelist.builder().accountId(accountId).uuid(whitelistId).description(description).filter(cidrFilter).build();
@@ -255,6 +262,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateWithInvalidInputs() {
     Whitelist whitelist =
         Whitelist.builder().accountId(accountId).uuid(whitelistId).description(description).filter(cidrFilter).build();
@@ -311,6 +319,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDelete() {
     Whitelist whitelist =
         Whitelist.builder().accountId(accountId).uuid(whitelistId).description(description).filter(cidrFilter).build();

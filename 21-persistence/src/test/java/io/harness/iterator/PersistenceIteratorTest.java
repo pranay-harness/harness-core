@@ -9,6 +9,7 @@ import static org.joor.Reflect.on;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
+import io.harness.category.element.UnitTests;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
@@ -18,6 +19,7 @@ import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,11 +63,13 @@ public class PersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPumpWithEmptyCollection() {
     iterator.process(PUMP);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLoopWithEmptyCollection() throws IOException {
     final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
     Morpheus.sleep(ofMillis(300));
@@ -73,6 +77,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Bypass
   public void testNextReturnsJustAdded() {
     for (int i = 0; i < 10; i++) {

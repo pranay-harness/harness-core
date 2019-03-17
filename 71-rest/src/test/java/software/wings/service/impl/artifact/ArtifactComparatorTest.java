@@ -11,7 +11,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 
@@ -28,6 +30,7 @@ public class ArtifactComparatorTest {
                                                  .withServiceIds(asList(SERVICE_ID));
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSortArtifactDescendingOrder() {
     List<Artifact> artifacts = asList(
         artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build(),

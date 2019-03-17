@@ -2,9 +2,11 @@ package software.wings.security.encryption;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ public class SimpleEncryptionTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEncryptAndDecrypt() {
     String testInput = "abc";
     SimpleEncryption encryption = new SimpleEncryption();
@@ -35,6 +38,7 @@ public class SimpleEncryptionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEncryptAndDecryptWithCustomKey() {
     char[] KEY = "abcdefghijklmnopabcdefghijklmnop".toCharArray();
     String testInput = "abc";
@@ -48,6 +52,7 @@ public class SimpleEncryptionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEncryptDecryptCharsWithCustomKey() {
     String testInput = "test";
     SimpleEncryption encryption = new SimpleEncryption("kmpySmUISimoRrJL6NL73w");
@@ -62,6 +67,7 @@ public class SimpleEncryptionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailWithIncorrectKeyLength() {
     thrown.expect(WingsException.class);
     thrown.expectMessage(EncryptionUtils.DEFAULT_SALT_SIZE + " characters");
@@ -72,6 +78,7 @@ public class SimpleEncryptionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHaveJCEEnabled() {
     try {
       int maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");

@@ -3,6 +3,8 @@ package software.wings.integration.network;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -15,6 +17,7 @@ import org.apache.http.client.fluent.Executor;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,6 +66,7 @@ public class ProxyTest {
    * @throws IOException
    */
   @Test
+  @Category(IntegrationTests.class)
   public void testWithNoProxyConfigured_OkHttpClient() throws IOException {
     OkHttpClient.Builder builder = new Builder();
     Request request1 = new Request.Builder().url(targetUrl).build();
@@ -86,6 +90,7 @@ public class ProxyTest {
    */
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testWithProxyAuthSuccess_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
@@ -123,6 +128,7 @@ public class ProxyTest {
    * @throws IOException
    */
   @Test
+  @Category(IntegrationTests.class)
   public void testWithProxyAuthFailWithInvalidCreds_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
@@ -177,6 +183,7 @@ public class ProxyTest {
   //  }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testGetResponseFromUrlProxyAuth() throws IOException {
     Executor executor = Executor.newInstance();
@@ -193,6 +200,7 @@ public class ProxyTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testGetResponseFromUrlProxyAuth_Fail() throws IOException {
     Executor executor = Executor.newInstance();
@@ -221,6 +229,7 @@ public class ProxyTest {
   //  }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testGetResponseFromUrlNoProxy() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request request =

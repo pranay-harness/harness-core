@@ -15,7 +15,9 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -31,6 +33,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private EcsSwapRoutesCommandTaskHelper taskHelper;
 
   @Test
+  @Category(UnitTests.class)
   public void testUpsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -45,6 +48,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDownsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -54,6 +58,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateServiceTags() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());

@@ -16,10 +16,12 @@ import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.PersistenceTest;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -37,6 +39,7 @@ public class PersistentLockerTest extends PersistenceTest {
   @Inject @InjectMocks private PersistentLocker persistentLocker;
 
   @Test
+  @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     Duration timeout = ofMillis(1000);
 
@@ -59,6 +62,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAcquireLockDoNotRunTheBody() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
@@ -79,6 +83,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTryAcquireLockDoNotThrowException() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
@@ -98,6 +103,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAcquireLockNonLockedAtRelease() {
     Duration timeout = ofMillis(1000);
 
@@ -122,6 +128,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAcquireLockLogging() throws IllegalAccessException {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
@@ -139,6 +146,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore // TODO: enable when we can have timeout logic
   public void testAcquireTimeout() throws InterruptedException {
     Duration timeout = ofMillis(1);

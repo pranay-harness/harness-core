@@ -2,12 +2,15 @@ package software.wings.core.ssh.executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 
 public class SshSessionFactoryTest {
   @Test
+  @Category(UnitTests.class)
   public void getKeyPath() {
     SshSessionConfig config = SshSessionConfig.Builder.aSshSessionConfig().build();
     String homeDir = System.getProperty("user.home");

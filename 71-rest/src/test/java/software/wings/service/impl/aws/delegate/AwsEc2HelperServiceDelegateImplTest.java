@@ -27,7 +27,9 @@ import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.ec2.model.TagDescription;
 import com.amazonaws.services.ec2.model.Vpc;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -43,6 +45,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEc2HelperServiceDelegateImpl awsEc2HelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateAwsAccountCredential() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -55,6 +58,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListRegions() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -73,6 +77,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListVPCs() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -90,6 +95,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListSubnets() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -108,6 +114,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListSGs() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -127,6 +134,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListTags() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -145,6 +153,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListEc2Instances_1() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -164,6 +173,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListEc2Instances_2() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)
@@ -183,6 +193,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListBlockDeviceNamesOfAmi() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient)

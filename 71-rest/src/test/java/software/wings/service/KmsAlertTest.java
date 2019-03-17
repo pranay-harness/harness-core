@@ -15,9 +15,11 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.KmsOperationException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,6 +86,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAlertFiredForVault() throws IOException, InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultConfig.setAuthToken(UUID.randomUUID().toString());
@@ -118,6 +121,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAlertFiredForVaultRenewal() throws IOException, InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultConfig.setRenewIntervalHours(1);
@@ -159,6 +163,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAlertFiredForKms() throws IOException, InterruptedException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);

@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -14,6 +15,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -71,6 +73,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateStats() throws URISyntaxException {
     Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
 

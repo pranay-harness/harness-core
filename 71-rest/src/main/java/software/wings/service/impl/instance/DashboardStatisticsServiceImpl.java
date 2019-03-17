@@ -55,7 +55,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -148,7 +148,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       } else if (EntityType.ENVIRONMENT.name().equals(groupByEntityType)) {
         // TODO: Make UI pass ENVIRONMENT_TYPE instead of ENVIRONMENT since that's what are we are really displaying
         entitySummaryStatsList = getEnvironmentTypeSummaryStats(query);
-      } else if (Category.CLOUD_PROVIDER.name().equals(groupByEntityType)) {
+      } else if (SettingCategory.CLOUD_PROVIDER.name().equals(groupByEntityType)) {
         entityIdColumn = "computeProviderId";
         entityNameColumn = "computeProviderName";
         entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);

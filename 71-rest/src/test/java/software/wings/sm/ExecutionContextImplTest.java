@@ -22,11 +22,13 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.limits.LimitCheckerFactory;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -85,6 +87,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchContextElement() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
 
@@ -147,6 +150,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderExpression() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -186,6 +190,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderExpressionList() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -197,6 +202,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderExpressionListNoSeparator() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -208,6 +214,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderExpressionListNull() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -216,6 +223,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderExpressionListWithCustomSeparator() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -261,6 +269,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateIndirectExpression() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -295,6 +304,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
    * Should evaluate indirect references
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderTemplateVariableExpression() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -335,6 +345,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForPipelineScope() {
     String appId = generateUuid();
     String pipelineExecutionId = generateUuid();
@@ -350,6 +361,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForPipelineScopeJustAWorkflow() {
     String appId = generateUuid();
     String workflowExecutionId = generateUuid();
@@ -365,6 +377,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForWorkflowScope() {
     String appId = generateUuid();
     String pipelineExecutionId = generateUuid();
@@ -379,6 +392,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForPhaseScope() {
     String appId = generateUuid();
     String pipelineExecutionId = generateUuid();

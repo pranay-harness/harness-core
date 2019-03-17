@@ -8,11 +8,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.FunctorException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.net.URL;
@@ -44,6 +46,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   };
 
   @Test
+  @Category(UnitTests.class)
   public void testNormalizeExpression() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -58,6 +61,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSubstituteWithNull() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -66,6 +70,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateRecursively() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     Map<String, Object> context = ImmutableMap.<String, Object>builder().put("name", "bob").put("bob", bob).build();
@@ -73,6 +78,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateVar() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -84,6 +90,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateWithNull() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -92,6 +99,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateWithNameValue() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -115,6 +123,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateWithMap() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -126,6 +135,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateWithDefaultPrefix() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -137,6 +147,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateWithSubexpression() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -148,6 +159,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSubstituteWithDefaultPrefix() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("regex", new RegexFunctor());
@@ -162,6 +174,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNormalizeExpressionDoNotExpandRegex() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("regex", new RegexFunctor());
@@ -171,6 +184,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSubstituteReExtract() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("regex", new RegexFunctor());
@@ -188,6 +202,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotHangForCircle() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("regex", new RegexFunctor());
@@ -198,6 +213,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSubstituteDoNotExpandRe() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("regex", new RegexFunctor());
@@ -207,6 +223,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSubstituteReReplace() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("regex", new RegexFunctor());
@@ -223,6 +240,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSubstituteReMatch() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("regex", new RegexFunctor());
@@ -243,6 +261,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAccessJson() throws IOException {
     URL url = getClass().getResource("/store.json");
     String json = Resources.toString(url, Charsets.UTF_8);
@@ -256,6 +275,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSelectJsonPath() throws IOException {
     URL url = getClass().getResource("/store.json");
     String json = Resources.toString(url, Charsets.UTF_8);
@@ -272,6 +292,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListJsonPath() throws IOException {
     URL url = getClass().getResource("/store.json");
     String json = Resources.toString(url, Charsets.UTF_8);
@@ -286,6 +307,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSelectXPath() throws IOException {
     URL url = getClass().getResource("/store.xml");
     String json = Resources.toString(url, Charsets.UTF_8);
@@ -300,6 +322,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCollideVars() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -313,6 +336,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeOkWithSameVarsFromDifferentIterations() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -322,6 +346,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDetectExponentialGrowth() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -334,6 +359,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderLateBoundValue() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -350,6 +376,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEscapeSpecialCharacters() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -362,6 +389,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test(expected = FunctorException.class)
+  @Category(UnitTests.class)
   public void testThrowExceptionFunctor() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("thrower", new ExceptionThrowFunctor());

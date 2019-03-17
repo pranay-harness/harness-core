@@ -35,8 +35,10 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
@@ -58,6 +60,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   @Inject private TemplateVersionService templateVersionService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveTemplate() {
     Template template = getSshCommandTemplate();
 
@@ -79,6 +82,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Category(UnitTests.class)
   public void shouldNotSaveInvalidNameTemplate() {
     Template template = getSshCommandTemplate();
     template.setName(WingsTestConstants.INVALID_NAME);
@@ -86,6 +90,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplate() {
     Template savedTemplate = saveTemplate();
     Template template;
@@ -122,6 +127,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplateByVersion() {
     Template savedTemplate = saveTemplate();
 
@@ -155,6 +161,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldList() {
     saveTemplate();
 
@@ -171,6 +178,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateTemplateSame() {
     Template template = getSshCommandTemplate();
 
@@ -207,6 +215,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Category(UnitTests.class)
   public void shouldNotUpdateInvalidNameTemplate() {
     Template template = getSshCommandTemplate();
 
@@ -220,6 +229,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateHttpTemplate() {
     Template httpTemplate =
         Template.builder()
@@ -269,6 +279,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteTemplate() {
     Template template = getSshCommandTemplate();
 
@@ -311,6 +322,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteByFolder() {
     TemplateFolder templateFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, "Harness/Tomcat Commands");
 
@@ -329,6 +341,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchTemplateUri() {
     Template template = getSshCommandTemplate();
 
@@ -345,11 +358,13 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchTemplateUriWhenTemplateDeleted() {
     assertThat(templateService.fetchTemplateUri(TEMPLATE_ID)).isNull();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchTemplateIdfromUri() {
     Template template = getSshCommandTemplate();
 
@@ -363,6 +378,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldConstructCommandFromSshTemplate() {
     Template template = getSshCommandTemplate();
 
@@ -399,6 +415,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldConstructHttpFromHttpTemplate() {
     Template httpTemplate =
         Template.builder()
@@ -422,6 +439,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCommandCategories() {
     Template template = getSshCommandTemplate();
 
@@ -523,6 +541,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchTemplateByKeyword() {
     Template template = getSshCommandTemplate();
     Template savedTemplate = templateService.save(template);
@@ -532,6 +551,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldConvertYamlToTemplate() throws IOException {
     Template template = templateService.convertYamlToTemplate(POWER_SHELL_IIS_V2_INSTALL_PATH);
     assertThat(template).isNotNull();
@@ -541,6 +561,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldConvertYamlToTemplateIISV3() throws IOException {
     Template template = templateService.convertYamlToTemplate(POWER_SHELL_IIS_V3_INSTALL_PATH);
     assertThat(template).isNotNull();

@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
@@ -21,6 +22,7 @@ import io.harness.threading.Concurrent;
 import io.harness.threading.Puller;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -57,6 +59,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -85,6 +88,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void stressWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(true)) {
@@ -120,6 +124,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation ids.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldWaitForCorrelationIds() throws IOException {
     String uuid1 = generateUuid();
     String uuid2 = generateUuid();
@@ -179,6 +184,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id for multiple wait instances.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldWaitForCorrelationIdForMultipleWaitInstances() throws IOException {
     String uuid = generateUuid();
 
@@ -215,6 +221,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCleanZombieNotifyResponse() {
     final NotifyResponse notifyResponse = NotifyResponse.builder()
                                               .uuid(generateUuid())

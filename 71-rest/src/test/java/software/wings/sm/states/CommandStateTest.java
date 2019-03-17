@@ -67,6 +67,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -77,6 +78,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -312,6 +314,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Test
   @Owner(emails = "rathnakara.malatesha@harness.io")
+  @Category(UnitTests.class)
   public void execute() {
     when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
 
@@ -398,6 +401,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAsyncResponseWithNoResponse() {
     ExecutionResponse executionResponse = commandState.handleAsyncResponse(context, new HashMap<>());
     assertThat(executionResponse).isNotNull();
@@ -405,6 +409,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailCommandStateOnErrorResponse() {
     ExecutionResponse executionResponse = commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, ErrorNotifyResponseData.builder().errorMessage("Failed").build()));
@@ -413,6 +418,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleCommandException() {
     when(context.getStateExecutionData())
         .thenReturn(CommandStateExecutionData.Builder.aCommandStateExecutionData().build());
@@ -434,6 +440,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Test
   @Owner(emails = "rathnakara.malatesha@harness.io")
+  @Category(UnitTests.class)
   public void executeWithArtifact() throws Exception {
     Artifact artifact = anArtifact()
                             .withUuid(ARTIFACT_ID)
@@ -562,6 +569,7 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void executeFailWhenNoArtifactStreamOrSettingAttribute() throws Exception {
     Artifact artifact = anArtifact()
                             .withUuid(ARTIFACT_ID)
@@ -625,6 +633,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Test
   @Owner(emails = "anubhaw@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void shouldFailWhenNestedCommandNotFound() {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand()
@@ -670,6 +679,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderCommandString() {
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
@@ -685,6 +695,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderTailFilesPatterns() {
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
@@ -701,6 +712,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderCommandStringWithVariables() {
     Map<String, Object> stateVariables = new HashMap<>();
     if (isNotEmpty(command.getTemplateVariables())) {
@@ -721,6 +733,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderReferencedCommandStringWithVariables() {
     Map<String, Object> stateVariables = new HashMap<>();
     if (isNotEmpty(command.getTemplateVariables())) {

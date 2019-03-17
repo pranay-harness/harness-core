@@ -12,10 +12,12 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -58,6 +60,7 @@ public class ArtifactoryCollectionTaskTest {
           "delid1", collectionTask, notifyResponseData -> {}, () -> true);
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNoMavenStyleFiles() {
     ListNotifyResponseData res = ListNotifyResponseData.Builder.aListNotifyResponseData().build();
     when(artifactoryService.downloadArtifacts(

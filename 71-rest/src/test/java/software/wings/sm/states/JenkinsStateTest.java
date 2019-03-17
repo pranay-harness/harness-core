@@ -19,10 +19,12 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -81,6 +83,7 @@ public class JenkinsStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecute() {
     ExecutionResponse executionResponse = jenkinsState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -92,6 +95,7 @@ public class JenkinsStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsStartTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
     jenkinsState.handleAsyncResponse(executionContext,
@@ -110,6 +114,7 @@ public class JenkinsStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsPollTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
     jenkinsState.handleAsyncResponse(executionContext,
@@ -128,6 +133,7 @@ public class JenkinsStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldStartJenkinsPollTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
 
@@ -161,12 +167,14 @@ public class JenkinsStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = jenkinsState.getTimeoutMillis();
     assertThat(timeoutMillis).isEqualTo(Math.toIntExact(DEFAULT_ASYNC_CALL_TIMEOUT));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     jenkinsState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
     Integer timeoutMillis = jenkinsState.getTimeoutMillis();
@@ -174,6 +182,7 @@ public class JenkinsStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAbort() {
     when(executionContext.getStateExecutionData())
         .thenReturn(JenkinsExecutionData.builder().activityId(ACTIVITY_ID).build());

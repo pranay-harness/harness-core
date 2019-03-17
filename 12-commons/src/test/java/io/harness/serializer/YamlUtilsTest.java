@@ -6,7 +6,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.net.URL;
@@ -28,6 +30,7 @@ public class YamlUtilsTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReadCatalogs() throws IOException {
     URL url = this.getClass().getResource("/sample-catalogs.yml");
     String yaml = Resources.toString(url, Charsets.UTF_8);

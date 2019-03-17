@@ -9,7 +9,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.trigger.TriggerExecution;
@@ -21,6 +23,7 @@ public class TriggerExecutionServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private TriggerExecutionService triggerExecutionService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchLastSuccessTriggerExecution() {
     String webhookToken = generateUuid();
     TriggerExecution triggerExecution =

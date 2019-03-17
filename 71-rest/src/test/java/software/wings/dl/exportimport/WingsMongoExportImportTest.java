@@ -7,10 +7,12 @@ import static org.junit.Assert.assertNotNull;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
+import io.harness.category.element.UnitTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
@@ -45,6 +47,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCollectionExportImport() {
     String collectionName = Application.class.getAnnotation(Entity.class).value();
 

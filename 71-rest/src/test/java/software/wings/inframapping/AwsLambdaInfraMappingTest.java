@@ -2,9 +2,11 @@ package software.wings.inframapping;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
@@ -21,6 +23,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
 
@@ -36,6 +39,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testInvalidKey() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
 
@@ -45,6 +49,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testMandatoryFields() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
     awsLambdaInfraStructureMapping.applyProvisionerVariables(

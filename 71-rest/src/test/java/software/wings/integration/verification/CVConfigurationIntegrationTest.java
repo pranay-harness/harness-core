@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
@@ -30,6 +31,7 @@ import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -38,7 +40,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -107,7 +109,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                            .withAccountId(accountId)
                            .withName("someSettingAttributeName")
-                           .withCategory(Category.CONNECTOR)
+                           .withCategory(SettingCategory.CONNECTOR)
                            .withEnvId(envId)
                            .withAppId(appId)
                            .build();
@@ -274,6 +276,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testSaveConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -283,6 +286,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testNewRelicConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -363,6 +367,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testAppDynamicsConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -393,6 +398,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testDatadogConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -447,6 +453,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testPrometheusConfiguration() {
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + PROMETHEUS;
     logger.info("POST " + url);
@@ -472,6 +479,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testDynaTraceConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -500,6 +508,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testCloudWatchConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -528,6 +537,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testCloudWatchConfigurationWithoutAnyMetric() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -564,6 +574,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testElkConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -671,6 +682,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -765,6 +777,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationValidUntil() throws InterruptedException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -809,6 +822,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testListConfig() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -932,6 +946,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 

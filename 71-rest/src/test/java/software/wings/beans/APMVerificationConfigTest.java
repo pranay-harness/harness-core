@@ -5,7 +5,9 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -23,6 +25,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Mock EncryptionService encryptionService;
 
   @Test
+  @Category(UnitTests.class)
   public void encryptFields() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
@@ -40,6 +43,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void encryptFieldsMasked() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
@@ -58,6 +62,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void encryptDataDetails() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
@@ -77,6 +82,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void encryptFieldsParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> params = new ArrayList<>();
@@ -95,6 +101,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void encryptDataDetailsParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> params = new ArrayList<>();
@@ -114,6 +121,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void createAPMValidateCollectorConfig() throws IOException {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
@@ -144,6 +152,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void collectionHeaders() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
@@ -160,6 +169,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void collectionParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<APMVerificationConfig.KeyValues> params = new ArrayList<>();
@@ -176,6 +186,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetValidationUrlEncoded() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     apmVerificationConfig.setValidationUrl("`requestwithbacktick`");

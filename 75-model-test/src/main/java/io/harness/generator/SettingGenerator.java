@@ -13,9 +13,9 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.Category.CLOUD_PROVIDER;
-import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
-import static software.wings.beans.SettingAttribute.Category.SETTING;
+import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
+import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 
 import com.google.inject.Inject;
@@ -39,7 +39,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -352,7 +352,7 @@ public class SettingGenerator {
     SettingAttribute bambooSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_BAMBOO)
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(BambooConfig.builder()
                            .accountId(account.getUuid())
@@ -370,7 +370,7 @@ public class SettingGenerator {
     SettingAttribute nexusSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_NEXUS)
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
@@ -388,7 +388,7 @@ public class SettingGenerator {
     SettingAttribute nexus3SettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_NEXUS_THREE)
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
@@ -406,7 +406,7 @@ public class SettingGenerator {
     SettingAttribute artifactorySettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_ARTIFACTORY)
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(ArtifactoryConfig.builder()
                            .accountId(account.getUuid())
@@ -424,7 +424,7 @@ public class SettingGenerator {
     SettingAttribute dockerSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_DOCKER_REGISTRY)
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(DockerConfig.builder()
                            .accountId(account.getUuid())
@@ -442,7 +442,7 @@ public class SettingGenerator {
     SettingAttribute gcpSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_GCP_EXPLORATION)
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withAccountId(account.getUuid())
             .withValue(GcpConfig.builder()
                            .serviceAccountKeyFileContent(
@@ -459,7 +459,7 @@ public class SettingGenerator {
     SettingAttribute gcpSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_EXPLORATION_GCS)
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withAccountId(account.getUuid())
             .withValue(
                 GcpConfig.builder()
@@ -485,7 +485,7 @@ public class SettingGenerator {
                                 .build();
 
     SettingAttribute emailSettingAttribute = aSettingAttribute()
-                                                 .withCategory(Category.CONNECTOR)
+                                                 .withCategory(SettingCategory.CONNECTOR)
                                                  .withName("EMAIL")
                                                  .withAccountId(account.getUuid())
                                                  .withValue(smtpConfig)

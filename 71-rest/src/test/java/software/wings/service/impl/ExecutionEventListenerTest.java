@@ -13,7 +13,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -30,6 +32,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Mock private StateMachineExecutor stateMachineExecutor;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
 
@@ -39,6 +42,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNoQueueIfNotQueued() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
 
@@ -48,6 +52,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldQueueBuildWorkflow() throws Exception {
     WorkflowExecution queuedExecution =
         WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(QUEUED).build();
@@ -61,6 +66,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldQueueWorkflow() throws Exception {
     WorkflowExecution queuedExecution = WorkflowExecution.builder()
                                             .infraMappingIds(asList(INFRA_MAPPING_ID))

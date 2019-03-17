@@ -11,15 +11,17 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 
@@ -52,6 +54,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String name = "ELB" + System.currentTimeMillis();
 
@@ -63,6 +66,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String name = "ELB" + System.currentTimeMillis();
 
@@ -76,7 +80,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(aSettingAttribute()
-                                    .withCategory(Category.CONNECTOR)
+                                    .withCategory(SettingCategory.CONNECTOR)
                                     .withName(name)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(ElasticLoadBalancerConfig.builder()

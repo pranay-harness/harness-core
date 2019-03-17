@@ -27,9 +27,11 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -71,6 +73,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @InjectMocks private CloudFormationRollbackStackState state = new CloudFormationRollbackStackState("stateName");
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
@@ -118,6 +121,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHandleAsync() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     doReturn(APP_ID).when(mockContext).getAppId();

@@ -5,10 +5,12 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.IntegrationTestUtil;
@@ -37,6 +39,7 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSerialization() {
     UsageBucket bucket = new UsageBucket(KEY, Arrays.asList(10L, 11L, 101L, 102L));
 

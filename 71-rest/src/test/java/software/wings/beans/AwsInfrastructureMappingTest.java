@@ -11,8 +11,10 @@ import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringT
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 import java.util.HashMap;
@@ -20,6 +22,7 @@ import java.util.Map;
 
 public class AwsInfrastructureMappingTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void testInfrastructureMapping() {
     Map<String, Object> map = new HashMap<>();
 
@@ -44,6 +47,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testASGNameAndLBName() {
     Map<String, Object> map = new HashMap<>();
     map.put("region", "dummy-region");
@@ -61,6 +65,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testChangeOfFilterType() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping().build();
     Map<String, Object> map = new HashMap<>();
@@ -75,6 +80,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEcs() {
     Map<String, Object> map = new HashMap<>();
     map.put("region", "dummy-region");

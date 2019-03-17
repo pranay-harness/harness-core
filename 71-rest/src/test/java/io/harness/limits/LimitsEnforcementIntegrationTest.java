@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
@@ -17,6 +18,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
@@ -57,6 +59,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLimitEnforcement() {
     // configure limits
     StaticLimit limit = new StaticLimit(0);
@@ -73,6 +76,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits
     RateLimit limit = new RateLimit(1, 4, TimeUnit.SECONDS);

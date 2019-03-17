@@ -6,12 +6,14 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.commons.text.StrSubstitutor;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -69,6 +71,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateCluster() {
     Map<String, Object> params = new HashMap<>();
     params.put("CLUSTER_NAME", "demo");
@@ -86,15 +89,18 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(),
         "demo_v1", "Account_v1", 0, 3, 10, null);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteCluster() {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldProvisionNode() {
     Map<String, Object> params1 = new HashMap<>();
     params1.put("CLUSTER_NAME", "demo");
@@ -117,6 +123,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateClusterFromCFTemplate() throws InterruptedException {
     ((EcsContainerServiceImpl) ecsContainerService).createCluster();
   }

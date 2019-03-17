@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.harness.category.element.UnitTests;
 import io.harness.network.Http;
 import org.apache.commons.io.FileUtils;
 import org.awaitility.Duration;
@@ -14,6 +15,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Delegate;
 
@@ -36,6 +38,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldDownloadDelegateZipWithWatcher()
       throws IOException, JSONException, TimeoutException, InterruptedException {
@@ -81,6 +84,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {
     String url = "https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId;

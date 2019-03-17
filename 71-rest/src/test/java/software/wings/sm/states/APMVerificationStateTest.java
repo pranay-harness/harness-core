@@ -20,10 +20,12 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.YamlUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment.EnvironmentType;
@@ -64,6 +66,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricCollectionInfos() throws IOException {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     YamlUtils yamlUtils = new YamlUtils();

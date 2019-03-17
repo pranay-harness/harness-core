@@ -13,7 +13,9 @@ import static org.mockito.Mockito.verify;
 import com.amazonaws.services.route53.AmazonRoute53;
 import com.amazonaws.services.route53.model.HostedZone;
 import com.amazonaws.services.route53.model.ListHostedZonesResult;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -29,6 +31,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsRoute53HelperServiceDelegateImpl awsRoute53HelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testListHostedZones() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);
     doReturn(mockClient)
@@ -47,6 +50,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpsertRoute53ParentRecord() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);
     doReturn(mockClient)

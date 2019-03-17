@@ -2,11 +2,13 @@ package software.wings.resources;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -55,6 +57,7 @@ public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   /**
    * Integration test for getAllMetricNames
    * This API should return the names of all the metrics listed in the YAML

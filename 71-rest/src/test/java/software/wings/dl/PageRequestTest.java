@@ -9,14 +9,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
 public class PageRequestTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void testElemMatchPageRequest() {
     MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
     map.put("search[0][field]", asList("foo"));
@@ -34,6 +37,7 @@ public class PageRequestTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMissingIndexPageRequest() {
     MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
     map.put("search[1][field]", asList("foo"));

@@ -6,7 +6,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -59,6 +61,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper;
 
   @Test
+  @Category(UnitTests.class)
   public void testGetRevisionFromReleaseName() throws Exception {
     Integer revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
     assertTrue(1 == revision);
@@ -68,6 +71,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateManifestYamlFileLocally() throws Exception {
     File file = new File("./" + RELEASE_NAME + ".yml");
     doReturn(file).when(pcfCommandTaskHelper).getManifestFile(any(), any());
@@ -94,6 +98,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetPrefix() {
     Set<String> names = new HashSet<>();
     names.add("App__Account__dev__");

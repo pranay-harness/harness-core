@@ -9,8 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
@@ -95,6 +97,7 @@ public class LogDataCollectionTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchElkLogs() throws IOException {
     // setup
 
@@ -136,6 +139,7 @@ public class LogDataCollectionTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchElkLogsRetry() throws IOException {
     // setup
 

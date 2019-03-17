@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
@@ -35,6 +36,7 @@ import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
@@ -59,7 +61,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
@@ -187,6 +189,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void invalidConfig() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setAuthToken("invalidKey");
@@ -201,6 +204,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveConfig() {
     if (isKmsEnabled) {
       kmsService.deleteKmsConfig(accountId, kmsId);
@@ -307,6 +311,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveAndEditConfig() {
     String renameAccountId = UUID.randomUUID().toString();
     String name = UUID.randomUUID().toString();
@@ -344,6 +349,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveConfigDefaultWithDefaultKms() {
     if (isKmsEnabled) {
       wingsPersistence.delete(KmsConfig.class, kmsId);
@@ -375,6 +381,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveConfigDefault() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -432,6 +439,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getConfigDefault() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -465,6 +473,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultNullEncryption() throws Exception {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -492,7 +501,7 @@ public class VaultTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -514,6 +523,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultEncryptionWhileSaving() throws IOException, IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -531,7 +541,7 @@ public class VaultTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -570,6 +580,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultEncryptionSaveMultiple() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -590,7 +601,7 @@ public class VaultTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -622,6 +633,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultEncryptionUpdateObject() throws IOException, IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -638,7 +650,7 @@ public class VaultTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -712,6 +724,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -728,7 +741,7 @@ public class VaultTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -862,6 +875,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void vaultEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -924,6 +938,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultEncryptionSaveServiceVariableTemplate() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -960,6 +975,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultEncryptionDeleteSettingAttribute() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -979,7 +995,7 @@ public class VaultTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -999,6 +1015,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void vaultEncryptionDeleteSettingAttributeQueryUuid() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -1018,7 +1035,7 @@ public class VaultTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -1051,6 +1068,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void transitionVault() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
@@ -1073,7 +1091,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .withAccountId(accountId)
                                                 .withValue(appDynamicsConfig)
                                                 .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(Category.CONNECTOR)
+                                                .withCategory(SettingCategory.CONNECTOR)
                                                 .withEnvId(UUID.randomUUID().toString())
                                                 .withName(UUID.randomUUID().toString())
                                                 .build();
@@ -1130,6 +1148,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void transitionAndDeleteVault() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
@@ -1152,7 +1171,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .withAccountId(accountId)
                                                 .withValue(appDynamicsConfig)
                                                 .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(Category.CONNECTOR)
+                                                .withCategory(SettingCategory.CONNECTOR)
                                                 .withEnvId(UUID.randomUUID().toString())
                                                 .withName(UUID.randomUUID().toString())
                                                 .build();
@@ -1201,6 +1220,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void transitionFromKmsToVault() throws IOException, InterruptedException {
     if (isKmsEnabled) {
       return;
@@ -1227,7 +1247,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .withAccountId(accountId)
                                                 .withValue(appDynamicsConfig)
                                                 .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(Category.CONNECTOR)
+                                                .withCategory(SettingCategory.CONNECTOR)
                                                 .withEnvId(UUID.randomUUID().toString())
                                                 .withName(UUID.randomUUID().toString())
                                                 .build();
@@ -1286,6 +1306,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
@@ -1386,6 +1407,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void reuseYamlPasswordVaultEncryption() throws IOException, IllegalAccessException {
     VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, fromConfig);
@@ -1405,7 +1427,7 @@ public class VaultTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -1426,7 +1448,7 @@ public class VaultTest extends WingsBaseTest {
                              .withAccountId(accountId)
                              .withValue(appDynamicsConfig)
                              .withAppId(UUID.randomUUID().toString())
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withEnvId(UUID.randomUUID().toString())
                              .withName(UUID.randomUUID().toString())
                              .build();

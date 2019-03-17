@@ -16,10 +16,12 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.DelegateTask;
@@ -86,12 +88,14 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     ElkAnalysisState elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
     assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, elkAnalysisState.getComparisonStrategy());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void noTestNodes() {
     ElkAnalysisState spyState = spy(elkAnalysisState);
     doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
@@ -113,6 +117,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void noControlNodesCompareWithCurrent() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
@@ -138,6 +143,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void compareWithCurrentSameTestAndControlNodes() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
@@ -165,6 +171,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
     assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     ElkConfig elkConfig = ElkConfig.builder()

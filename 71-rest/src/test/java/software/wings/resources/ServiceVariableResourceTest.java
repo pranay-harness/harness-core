@@ -19,9 +19,11 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.AdditionalAnswers;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -83,6 +85,7 @@ public class ServiceVariableResourceTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListVariables() throws Exception {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
@@ -106,6 +109,7 @@ public class ServiceVariableResourceTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.save(any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
     RestResponse<ServiceVariable> restResponse =
@@ -123,6 +127,7 @@ public class ServiceVariableResourceTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetVariable() throws Exception {
     when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, MASKED)).thenReturn(SERVICE_VARIABLE);
     RestResponse<Service> restResponse =
@@ -140,6 +145,7 @@ public class ServiceVariableResourceTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.update(any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
     RestResponse<ServiceVariable> restResponse =
@@ -157,6 +163,7 @@ public class ServiceVariableResourceTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.get("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID, MASKED)).thenReturn(SERVICE_VARIABLE);
     Response restResponse =
@@ -174,6 +181,7 @@ public class ServiceVariableResourceTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shoudlDeleteByEntity() throws Exception {
     Response restResponse = RESOURCES.client()
                                 .target(format("/service-variables/entity/%s?appId=%s", TEMPLATE_ID, APP_ID))

@@ -20,8 +20,10 @@ import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -49,6 +51,7 @@ public class JiraHelperServiceTest extends WingsBaseTest {
   private String token;
 
   @Test
+  @Category(UnitTests.class)
   public void checkApprovalFromWebhookCallback() throws UnsupportedEncodingException {
     Map<String, String> claimsMap = getClaimsMap();
     token = generateMockJWTToken(claimsMap);
@@ -98,5 +101,6 @@ public class JiraHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getApprovalStatusTest() {}
 }

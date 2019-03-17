@@ -27,11 +27,13 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
@@ -117,6 +119,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldList() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
@@ -141,6 +144,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should save.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSave() {
     serviceVariableService.save(SERVICE_VARIABLE);
     verify(wingsPersistence).saveAndGet(ServiceVariable.class, SERVICE_VARIABLE);
@@ -150,6 +154,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should throw exception for unsupported entity types.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .envId(ENV_ID)
@@ -171,6 +176,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGet() {
     ServiceVariable variable = ServiceVariable.builder().build();
     variable.setAppId(APP_ID);
@@ -185,6 +191,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get by template.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetByTemplate() {
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
@@ -210,6 +217,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateNone() {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(SERVICE_VARIABLE_NAME)
@@ -230,6 +238,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should override service variable.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(SERVICE_VARIABLE_NAME)
@@ -252,6 +261,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should override service variable (Name null).
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAllowUpdateServiceVariableWhenNameNull() {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(null)
@@ -274,6 +284,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should Allow service variable override (Saved name = current name).
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAllowUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(SERVICE_VARIABLE_NAME)
@@ -300,6 +311,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should Throw exception for service variable override.
    */
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void shouldThrowExceptionUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(SERVICE_VARIABLE_NAME)
@@ -331,6 +343,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateValueAndType() {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(SERVICE_VARIABLE_NAME)
@@ -352,6 +365,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDelete() {
     ServiceVariable variable = ServiceVariable.builder().entityType(EntityType.SERVICE_TEMPLATE).build();
     variable.setAppId(APP_ID);
@@ -370,6 +384,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get for entity.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetForEntity() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
@@ -388,6 +403,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should delete by entity id.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteByEntityId() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
@@ -408,6 +424,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should mask encrypted fields.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldMaskEncryptedFields() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(ENCRYPTED_SERVICE_VARIABLE));

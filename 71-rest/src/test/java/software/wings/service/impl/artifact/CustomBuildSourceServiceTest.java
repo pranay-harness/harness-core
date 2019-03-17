@@ -13,8 +13,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.expression.ExpressionEvaluator;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -42,6 +44,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
   @Mock private CustomBuildService customBuildService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuilds() {
     ArtifactStream customArtifactStream =
         CustomArtifactStream.builder()

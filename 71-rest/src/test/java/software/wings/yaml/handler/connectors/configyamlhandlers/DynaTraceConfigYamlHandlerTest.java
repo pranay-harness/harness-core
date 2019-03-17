@@ -8,13 +8,15 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 
 import java.io.IOException;
@@ -37,6 +39,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
   public void setUp() throws HarnessException, IOException {}
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String dynatraceProviderName = "dynaTrace" + System.currentTimeMillis();
 
@@ -48,6 +51,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String dynatraceProviderName = "dynaTrace" + System.currentTimeMillis();
 
@@ -61,7 +65,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(aSettingAttribute()
-                                    .withCategory(Category.CONNECTOR)
+                                    .withCategory(SettingCategory.CONNECTOR)
                                     .withName(dynaTraceProviderName)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(DynaTraceConfig.builder()

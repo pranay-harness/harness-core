@@ -20,10 +20,12 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -136,6 +138,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
@@ -167,6 +170,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);

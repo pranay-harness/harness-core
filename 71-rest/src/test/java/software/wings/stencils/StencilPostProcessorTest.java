@@ -17,10 +17,12 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -58,6 +60,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExpandStencilOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
         Collections.singletonList(new StencilType(ExpandStencilObject.class)), APP_ID, Maps.newHashMap());
@@ -82,6 +85,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
         Collections.singletonList(new StencilType(EnumStencilObject.class)), APP_ID, Maps.newHashMap());
@@ -96,6 +100,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
         Collections.singletonList(new StencilType(DefaultStencilObject.class)), APP_ID, Maps.newHashMap());
@@ -109,6 +114,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
   @Test
+  @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheAccessorMethod() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
         Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID, Maps.newHashMap());

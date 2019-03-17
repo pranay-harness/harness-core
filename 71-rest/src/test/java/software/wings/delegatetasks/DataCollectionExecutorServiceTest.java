@@ -4,8 +4,10 @@ import static junit.framework.TestCase.fail;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.sm.states.APMStateVerificationTestBase;
 
 import java.io.IOException;
@@ -17,6 +19,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   @Inject private DataCollectionExecutorService executorService;
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void executeParallelWithException() throws IOException {
     List<Callable<Boolean>> callables = new ArrayList<>();
     callables.add(() -> true);
@@ -25,6 +28,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   }
 
   @Test
+  @Category(UnitTests.class)
   public void executeParallel() throws WingsException {
     List<Callable<Boolean>> callables = new ArrayList<>();
     callables.add(() -> true);

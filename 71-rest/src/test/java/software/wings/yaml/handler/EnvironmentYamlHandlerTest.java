@@ -12,10 +12,12 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Environment;
@@ -70,6 +72,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
@@ -106,6 +109,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     // Invalid yaml path
     GitFileChange gitFileChange = new GitFileChange();

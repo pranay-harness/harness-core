@@ -30,9 +30,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.HIterator;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -73,6 +75,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetServiceInstanceStatistics() {
     when(appService.list(any(PageRequest.class)))
         .thenReturn(
@@ -112,6 +115,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void setWingsPersistence() {
     when(appService.list(any(PageRequest.class)))
         .thenReturn(
@@ -151,6 +155,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDeploymentStatistics() {
     List<ElementExecutionSummary> serviceExecutionSummaries =
         asList(anElementExecutionSummary()
@@ -180,6 +185,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPipelineDeploymentStatistics() {
     long startEpoch = getStartEpoch();
 

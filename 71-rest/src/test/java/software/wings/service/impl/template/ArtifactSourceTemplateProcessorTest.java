@@ -20,7 +20,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -50,6 +52,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTest {
   @Inject private ArtifactSourceTemplateProcessor artifactSourceTemplateProcessor;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateArtifactStreamLinked() {
     Template template = constructCustomArtifactTemplateEntity();
     Template savedTemplate = templateService.save(template);

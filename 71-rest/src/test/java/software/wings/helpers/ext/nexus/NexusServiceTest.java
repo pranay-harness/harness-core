@@ -12,11 +12,13 @@ import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -50,6 +52,7 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetRepositories() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories"))
@@ -79,6 +82,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/content/"))
@@ -111,6 +115,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPathsByRepo() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
@@ -137,6 +142,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPathsByRepoStartsWithUrl() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
@@ -163,6 +169,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetRepositoriesError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))
                              .willReturn(aResponse()
@@ -175,6 +182,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPathsByRepoError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/"))
                              .willReturn(aResponse()
@@ -188,6 +196,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetArtifactPathsByRepoStartsWithUrlError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
@@ -202,6 +211,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetGroupIdPaths() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/"))
                              .willReturn(aResponse()
@@ -261,6 +271,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactNames() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/"))
@@ -347,6 +358,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetVersions() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/"))
@@ -473,6 +485,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldDownloadArtifact() {
     setPomModelWireMock();
@@ -555,6 +568,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLatestVersion() {
     setPomModelWireMock();
     BuildDetails buildDetails =
@@ -563,6 +577,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
     assertThat(nexusService.getRepositories(nexusThreeConfig, null, DOCKER))
         .hasSize(3)
@@ -570,6 +585,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDockerImages() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group"))
         .hasSize(1)
@@ -577,6 +593,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDockerTags() {
     assertThat(nexusService.getBuilds(nexusThreeConfig, null,
                    ArtifactStreamAttributes.builder()

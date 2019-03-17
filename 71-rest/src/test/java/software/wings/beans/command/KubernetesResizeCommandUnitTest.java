@@ -16,9 +16,11 @@ import static software.wings.beans.command.KubernetesResizeParams.KubernetesResi
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -90,6 +92,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteFail() {
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
         .thenReturn(Optional.empty());
@@ -107,6 +110,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUseMaxInstancesWithPercentage() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
 
@@ -123,6 +127,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUsePercentageOfMaxInstances() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
 
@@ -139,6 +144,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldResizeAndDownsize() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name-0", 1);
@@ -158,6 +164,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDownsizeMultiple() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name-0", 1);
@@ -183,6 +190,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUseFixedInstancesWithCount() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name-0", 2);
@@ -208,6 +216,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCapCountAtFixed() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name-0", 3);
@@ -228,6 +237,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUseFixedInstancesWithPercentage() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name-0", 2);

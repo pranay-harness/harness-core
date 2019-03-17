@@ -18,10 +18,12 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -80,6 +82,7 @@ public class BambooStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecute() {
     ExecutionResponse executionResponse = bambooState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -91,6 +94,7 @@ public class BambooStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAsyncResponse() {
     when(executionContext.getStateExecutionData()).thenReturn(BambooExecutionData.builder().build());
     bambooState.handleAsyncResponse(executionContext,
@@ -107,12 +111,14 @@ public class BambooStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = bambooState.getTimeoutMillis();
     assertThat(timeoutMillis).isEqualTo(Math.toIntExact(DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     bambooState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
     Integer timeoutMillis = bambooState.getTimeoutMillis();
@@ -120,6 +126,7 @@ public class BambooStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAbort() {
     when(executionContext.getStateExecutionData())
         .thenReturn(JenkinsExecutionData.builder().activityId(ACTIVITY_ID).build());

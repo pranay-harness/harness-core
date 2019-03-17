@@ -14,6 +14,7 @@ import static software.wings.beans.CatalogNames.EXECUTION_TYPE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -23,6 +24,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.Verifier;
 import org.junit.runner.RunWith;
 import software.wings.WingsBaseTest;
@@ -89,6 +91,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    * Should list catalogs.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListCatalogs() {
     when(catalogService.getCatalogItems(anyString())).thenReturn(new ArrayList<>());
 
@@ -116,6 +119,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    * @param settingAttribute      the setting attribute
    */
   @Test
+  @Category(UnitTests.class)
   @TestCaseName("{method}{0}")
   @Parameters(method = "catalogNames")
   public void shouldListCatalogsFor(String catalogNameForDisplay, SettingAttribute settingAttribute) {

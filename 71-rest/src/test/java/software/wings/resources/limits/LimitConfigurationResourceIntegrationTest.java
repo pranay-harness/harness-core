@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.limits.impl.model.RateLimit;
@@ -16,6 +17,7 @@ import io.harness.limits.lib.Limit;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.IntegrationTestUtil;
 import software.wings.utils.WingsTestConstants;
@@ -34,6 +36,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testConfigure() throws Exception {
     StaticLimit limit = new StaticLimit(10);
     String url = IntegrationTestUtil.buildAbsoluteUrl("/api/limits/configure/static-limit",
@@ -50,6 +53,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testConfigureRateLimit() throws Exception {
     RateLimit limit = new RateLimit(10, 24, TimeUnit.HOURS);
     String url = IntegrationTestUtil.buildAbsoluteUrl("/api/limits/configure/rate-limit",

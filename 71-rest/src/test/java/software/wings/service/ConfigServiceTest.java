@@ -24,12 +24,14 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -92,6 +94,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldList() {
     ConfigFile configFile = ConfigFile.builder()
                                 .entityType(EntityType.SERVICE)
@@ -125,6 +128,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should save.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSave() {
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
         .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
@@ -154,6 +158,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should throw exception for unsupported entity types.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
     ConfigFile configFile =
         ConfigFile.builder().entityType(EntityType.ENVIRONMENT).entityId(ENV_ID).templateId(TEMPLATE_ID).build();
@@ -169,6 +174,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGet() {
     ConfigFile configFile = ConfigFile.builder().build();
     configFile.setAppId(APP_ID);
@@ -184,6 +190,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should get config file by template.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetConfigFileByTemplate() {
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
@@ -210,6 +217,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should download.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDownload() {
     ConfigFile configFile = ConfigFile.builder()
                                 .envId(ENV_ID)
@@ -237,6 +245,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdate() {
     ConfigFile configFile = ConfigFile.builder()
                                 .envId(ENV_ID)
@@ -275,6 +284,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDelete() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
@@ -287,6 +297,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should get config files for entity.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetConfigFilesForEntity() {
     ConfigFile configFile = ConfigFile.builder()
                                 .entityType(EntityType.SERVICE_TEMPLATE)
@@ -317,6 +328,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should delete by entity id.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteByEntityId() {
     ConfigFile configFile = ConfigFile.builder()
                                 .envId(ENV_ID)
@@ -359,6 +371,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateAndResolveFilePath() throws Exception {
     assertThat(configService.validateAndResolveFilePath("config/abc.txt")).isEqualTo("config/abc.txt");
     assertThat(configService.validateAndResolveFilePath("./config/abc.txt")).isEqualTo("config/abc.txt");

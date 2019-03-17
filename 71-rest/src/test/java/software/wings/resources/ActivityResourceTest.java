@@ -22,11 +22,13 @@ import com.google.common.collect.Lists;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Verifier;
 import software.wings.beans.Activity;
@@ -121,6 +123,7 @@ public class ActivityResourceTest {
    * Should list activities.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListActivities() {
     RestResponse<PageResponse<Activity>> restResponse =
         RESOURCES.client()
@@ -141,6 +144,7 @@ public class ActivityResourceTest {
    * Should get activity.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetActivity() {
     RestResponse<Activity> restResponse = RESOURCES.client()
                                               .target("/activities/" + ACTIVITY_ID + "?appId=" + APP_ID)
@@ -156,6 +160,7 @@ public class ActivityResourceTest {
    * Should list command units.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListCommandUnits() {
     when(ACTIVITY_SERVICE.getCommandUnits(APP_ID, ACTIVITY_ID))
         .thenReturn(asList(
@@ -174,6 +179,7 @@ public class ActivityResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListCommandUnitLogs() {
     PageResponse<Log> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(Log.Builder.aLog()
@@ -205,6 +211,7 @@ public class ActivityResourceTest {
    * @throws IOException the io exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDownloadActivityLogFile() throws IOException {
     when(LOG_SERVICE.exportLogs(APP_ID, ACTIVITY_ID)).thenReturn(testFolder.newFile("FILE_NAME"));
     Response response =

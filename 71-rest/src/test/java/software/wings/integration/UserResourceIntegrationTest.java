@@ -3,9 +3,11 @@ package software.wings.integration;
 import static org.junit.Assert.assertEquals;
 import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.FeatureFlag;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
@@ -25,6 +27,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testLoginTypeResponseForNewAdminUserShouldReturnUserPassWord() {
     String argument = "userName=admin@harness.io";
     String url = getLoginTypeResponseUri(getLoginTypeURI, argument);
@@ -35,6 +38,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testLoginTypeResponseForNonExistentUserShouldReturnUserPassWord() {
     String nonExistingUserArgument = "userName=random@xyz";
     String url = getLoginTypeResponseUri(getLoginTypeURI, nonExistingUserArgument);

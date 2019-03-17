@@ -25,7 +25,9 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -42,6 +44,7 @@ import java.util.Set;
  */
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void shouldGetInstanceId() {
     AwsHelperService awsHelperService = new AwsHelperService();
     assertThat(awsHelperService.getHostnameFromPrivateDnsName("ip-172-31-18-241.ec2.internal"))
@@ -51,6 +54,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateStack() {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
@@ -65,6 +69,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteStack() {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
@@ -79,6 +84,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDescribeStack() {
     String accessKey = "qwer";
     char[] secretKey = "pqrs".toCharArray();
@@ -97,6 +103,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAllEvents() {
     String accessKey = "qwer";
     char[] secretKey = "pqrs".toCharArray();
@@ -117,6 +124,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateStack() {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
@@ -131,6 +139,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListStacks() {
     String accessKey = "qwer";
     char[] secretKey = "pqrs".toCharArray();
@@ -149,6 +158,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDescribeAutoScalingGroupActivities() {
     Activity incompleteActivity = new Activity()
                                       .withActivityId("TestID1")

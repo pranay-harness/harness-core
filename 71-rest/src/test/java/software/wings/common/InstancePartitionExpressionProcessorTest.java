@@ -29,8 +29,10 @@ import com.google.inject.Injector;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.PartitionElement;
@@ -98,6 +100,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
    * Should partition.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionInstances() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());

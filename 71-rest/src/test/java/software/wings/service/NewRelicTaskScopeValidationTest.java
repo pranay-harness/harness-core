@@ -10,10 +10,12 @@ import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.Lists;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.network.Http;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -60,6 +62,7 @@ public class NewRelicTaskScopeValidationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validationVaultReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
     PowerMockito.when(Http.connectableHttpUrl(vaultConfig.getVaultUrl())).thenReturn(true);
@@ -69,6 +72,7 @@ public class NewRelicTaskScopeValidationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validationVaultUnReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
     Call<Void> restCall = Mockito.mock(Call.class);
@@ -78,6 +82,7 @@ public class NewRelicTaskScopeValidationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validationNewRelicUnReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(false);
     Call<Void> restCall = Mockito.mock(Call.class);

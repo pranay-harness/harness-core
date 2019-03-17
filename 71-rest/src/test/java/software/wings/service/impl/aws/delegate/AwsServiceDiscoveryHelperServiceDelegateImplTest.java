@@ -15,7 +15,9 @@ import com.amazonaws.services.servicediscovery.model.GetNamespaceResult;
 import com.amazonaws.services.servicediscovery.model.GetServiceResult;
 import com.amazonaws.services.servicediscovery.model.Namespace;
 import com.amazonaws.services.servicediscovery.model.Service;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -28,6 +30,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImplTest extends WingsBaseT
   @Spy @InjectMocks private AwsServiceDiscoveryHelperServiceDelegateImpl awsServiceDiscoveryHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testGetRecordValueForService() {
     AWSServiceDiscovery mockClient = mock(AWSServiceDiscovery.class);
     doReturn(mockClient)

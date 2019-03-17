@@ -25,11 +25,13 @@ import com.google.inject.Inject;
 
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -99,6 +101,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore // TODO:: remove ignore
   public void shouldFailValidationWhenJobDoesNotExists() throws IOException {
     jenkinsArtifactStream.setJobname("job2");
@@ -114,6 +117,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnListOfBuilds() throws IOException {
     assertThat(jenkinsBuildService.getBuilds(
                    APP_ID, jenkinsArtifactStream.fetchArtifactStreamAttributes(), jenkinsConfig, null))
@@ -129,6 +133,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchJobNames() throws IOException {
     when(jenkins.getJobs(anyString())).thenReturn(ImmutableList.of(new JobDetails("jobName", false)));
     List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, null, Optional.empty());
@@ -142,6 +147,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchArtifactPaths() throws IOException {
     JobWithDetails jobWithDetails = Mockito.mock(JobWithDetails.class, RETURNS_DEEP_STUBS);
     Artifact artifact = new Artifact();
@@ -153,6 +159,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     JenkinsConfig badJenkinsConfig = JenkinsConfig.builder()
                                          .jenkinsUrl("BAD_URL")
@@ -171,6 +178,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestGetJobParameters() {
     JobWithExtendedDetails jobWithDetails = Mockito.mock(JobWithExtendedDetails.class, RETURNS_DEEP_STUBS);
     when(jenkins.getJob(BUILD_JOB_NAME)).thenReturn(jobWithDetails);

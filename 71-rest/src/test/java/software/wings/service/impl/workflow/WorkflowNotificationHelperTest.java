@@ -38,10 +38,12 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -147,6 +149,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotification() {
     NotificationRule notificationRule = aNotificationRule()
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
@@ -162,6 +165,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationForTemplatedNotificationGroup() {
     List<NotificationGroup> notificationGroupList = new ArrayList<>();
     notificationGroupList.add(aNotificationGroup().withName("${workflow.variables.MyNotificationGroups}").build());
@@ -214,6 +218,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationPipeline() {
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
         .thenReturn(WorkflowExecution.builder()
@@ -256,6 +261,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowPhaseStatusChangeNotification() {
     NotificationRule notificationRule = aNotificationRule()
                                             .withExecutionScope(ExecutionScope.WORKFLOW_PHASE)
@@ -294,6 +300,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationNoArtifacts() {
     when(executionContext.getArtifacts()).thenReturn(null);
     NotificationRule notificationRule = aNotificationRule()
@@ -330,6 +337,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationSomeArtifacts() {
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
@@ -371,6 +379,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationNoServices() {
     when(executionContext.getArtifacts()).thenReturn(null);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
@@ -409,6 +418,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationBuildWorkflow() {
     when(executionContext.getEnv()).thenReturn(null);
     when(executionContext.getArtifacts()).thenReturn(null);

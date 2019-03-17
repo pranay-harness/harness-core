@@ -4,10 +4,12 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 /**
@@ -31,6 +33,7 @@ public class StateTypeTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   @Parameters(method = "getData")
   @TestCaseName("{method}{0}")
   public void shouldCreateNewInstanceFor(String stateTypeName) throws Exception {

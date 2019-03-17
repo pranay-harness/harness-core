@@ -19,9 +19,11 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -70,6 +72,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.APPROVED, DOWNLOADED, "");

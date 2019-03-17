@@ -21,9 +21,11 @@ import static software.wings.utils.WingsTestConstants.RUNTIME_PATH;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -75,6 +77,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
    * Should execute command for service instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteCommandForServiceInstance() {
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
     when(sshCommandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context)))
@@ -87,6 +90,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
    * Should execute nested command for service instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").addCommandUnits(command).build();
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);

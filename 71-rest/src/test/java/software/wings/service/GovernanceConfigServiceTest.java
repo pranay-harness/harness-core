@@ -6,9 +6,11 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -42,6 +44,7 @@ public class GovernanceConfigServiceTest extends WingsBaseTest {
    *
    */
   @Test
+  @Category(UnitTests.class)
   public void testUpdateAndRead() {
     GovernanceConfig defaultConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(false).build();
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);

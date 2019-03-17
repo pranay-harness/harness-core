@@ -31,8 +31,10 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -59,12 +61,14 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
     assertTemplateGallery(savedTemplateGallery);
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Category(UnitTests.class)
   public void shouldNotSaveInvalidNameTemplateGallery() {
     TemplateGallery templateGallery = prepareTemplateGallery();
     templateGallery.setName(INVALID_NAME);
@@ -72,6 +76,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
 
@@ -89,6 +94,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
     assertTemplateGallery(savedTemplateGallery);
@@ -100,6 +106,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void shouldUpdateTemplateGalleryNotExists() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
 
@@ -111,6 +118,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Category(UnitTests.class)
   public void shouldNotUpdateInvalidTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
 
@@ -122,6 +130,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
     assertThat(savedTemplateGallery).isNotNull();
@@ -132,6 +141,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplateGalleryByAccount() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
     assertThat(savedTemplateGallery).isNotNull();
@@ -142,6 +152,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplateGalleryByName() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
     assertThat(savedTemplateGallery).isNotNull();
@@ -154,6 +165,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListTemplateGalleries() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
     assertThat(savedTemplateGallery).isNotNull();
@@ -169,6 +181,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadHarnessGallery() {
     templateGalleryService.loadHarnessGallery();
 
@@ -188,6 +201,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveHarnessGallery() {
     TemplateGallery harnessGallery = templateGalleryService.saveHarnessGallery();
     assertThat(harnessGallery).isNotNull();
@@ -196,6 +210,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyHarnessTemplates() {
     templateGalleryService.loadHarnessGallery();
 
@@ -208,6 +223,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteByAccountId() {
     templateGalleryService.loadHarnessGallery();
 
@@ -222,6 +238,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyHarnessTemplatesToAccount() {
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplatesToAccount(ACCOUNT_ID, ACCOUNT_NAME);
@@ -277,6 +294,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFromGalleryToAccounts() {
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplatesToAccount(ACCOUNT_ID, ACCOUNT_NAME);
@@ -292,6 +310,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFromGalleryToAccountsV2() {
     // Yaml V2 of IIS Website
     templateGalleryService.loadHarnessGallery();
@@ -318,6 +337,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyNewVersionFromGlobalToAllAccounts() {
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplatesToAccount(ACCOUNT_ID, ACCOUNT_NAME);

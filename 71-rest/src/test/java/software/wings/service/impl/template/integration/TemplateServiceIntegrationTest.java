@@ -21,10 +21,12 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.category.element.UnitTests;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.seedata.GlobalAccountMigration;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
@@ -62,16 +64,19 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Inject private GlobalAccountMigration globalAccountMigration;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldMigrateGallery() {
     migration.migrate();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldMigrateIISTemplateGallery() {
     globalAccountMigration.migrate();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadTemplateFolders() {
     wingsPersistence.delete(
         wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, GLOBAL_ACCOUNT_ID));
@@ -79,11 +84,13 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdate() throws IOException {
     globalAccountMigration.updateExistingInstallCommand();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplateTree() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
@@ -93,6 +100,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplateTreeByKeyword() {
     TemplateFolder templateFolder =
         templateFolderService.getTemplateTree(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, "Install", null);
@@ -103,6 +111,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     assertThat(templateGallery).isNotNull();
@@ -116,6 +125,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountTemplateTree() {
     List<Account> accounts = accountService.list(aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build());
     accounts.forEach(account -> {
@@ -128,11 +138,13 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplatesForAccount() {
     List<Account> accounts = accountService.list(aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build());
     accounts.forEach(account -> {
@@ -142,23 +154,27 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadTomcatStandardInstallCommand() {
     templateService.loadYaml(SSH, TOMCAT_WAR_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateLinkedEntities() {
     Template template = templateService.get("EtnnNloDR5i3cZoQ1LUW0Q");
     templateService.update(template);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateLinkedServiceCommandEntities() {
     Template template = templateService.get("EtnnNloDR5i3cZoQ1LUW0Q");
     templateService.update(template);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestExpression() {
     String content = "${F5_URL}/abdcc/";
     Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(content);
@@ -169,6 +185,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     HttpTemplate httpTemplate = HttpTemplate.builder()
@@ -201,6 +218,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadDefaultsOnAccountCreation() {
     Account account = accountService.getByAccountName(TEMPLATE_ACCOUNT);
     if (account != null) {
@@ -237,6 +255,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteGalleryOnAccountDeletion() {
     String accountId;
     Account account = accountService.getByAccountName(TEMPLATE_ACCOUNT);

@@ -4,12 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.category.element.UnitTests;
 import io.harness.threading.Concurrent;
 import okhttp3.OkHttpClient;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class HttpTest {
   @Test
+  @Category(UnitTests.class)
   public void testValidUrl() {
     assertTrue(Http.validUrl("http://localhost"));
     assertTrue(Http.validUrl("https://localhost"));
@@ -32,6 +35,7 @@ public class HttpTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testShouldUseNonProxy() {
     assertTrue(Http.shouldUseNonProxy("http://wings.jenkins.com", "*.jenkins.com|*.localhost|*.sumologic.com"));
     assertTrue(
@@ -41,6 +45,7 @@ public class HttpTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetDomain() {
     assertEquals("localhost.com", Http.getDomain("http://localhost.com/temp"));
     assertEquals("localhost.com", Http.getDomain("https://localhost.com/temp"));
@@ -49,6 +54,7 @@ public class HttpTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetDomainWithPort() {
     assertEquals("localhost.com", Http.getDomainWithPort("http://localhost.com/temp"));
     assertEquals("localhost.com", Http.getDomainWithPort("http://localhost.com/"));
@@ -59,6 +65,7 @@ public class HttpTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBaseUrl() {
     assertEquals("http://localhost.com/", Http.getBaseUrl("http://localhost.com/temp"));
     assertEquals("http://localhost.com/", Http.getBaseUrl("http://localhost.com/"));
@@ -69,6 +76,7 @@ public class HttpTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJoinHostPort() {
     assertEquals("localhost:443", Http.joinHostPort("localhost", "443"));
     assertEquals("127.0.0.1:443", Http.joinHostPort("127.0.0.1", "443"));
@@ -77,6 +85,7 @@ public class HttpTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void concurrencyTest() {
     Concurrent.test(5, i -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
   }

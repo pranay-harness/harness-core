@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.WingsException;
@@ -26,6 +27,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -144,6 +146,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @Test
+  @Category(UnitTests.class)
   @Parameters(method = "getData")
   @TestCaseName("{method}-{0}")
   public void testShouldDownloadArtifactThroughPowerShell(ArtifactStreamType artifactStreamType) {
@@ -174,6 +177,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Parameters(method = "getData")
   @TestCaseName("{method}-{0}")
   public void testShouldDownloadThroughBash(ArtifactStreamType artifactStreamType) {
@@ -194,6 +198,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Parameters(method = "getScriptType")
   @TestCaseName("{method}-{0}")
   public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
@@ -207,6 +212,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void shouldFailWithInvalidArtifactDownloadDir() {
     downloadArtifactCommandUnit.setScriptType(ScriptType.BASH);
     CommandExecutionStatus status = downloadArtifactCommandUnit.executeInternal(artifactoryContextAnon);

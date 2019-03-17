@@ -14,6 +14,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -22,6 +23,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.WorkflowExecution;
@@ -75,6 +77,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   @Ignore
   public void testGetSampleLogRecordVerifyCall() {
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
@@ -88,6 +91,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   @Ignore
   public void testGetLogRecords() {
     SumoLogicSetupTestNodedata testNodedata = getSumoLogicSampledata();

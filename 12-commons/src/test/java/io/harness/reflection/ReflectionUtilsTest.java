@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -86,6 +88,7 @@ public class ReflectionUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getFieldByNameTest() {
     assertThat(ReflectionUtils.getFieldByName(Field.class, "dummy")).isNull();
     assertThat(ReflectionUtils.getFieldByName(Field.class, "inheritField").getName()).isEqualTo("inheritField");
@@ -96,6 +99,7 @@ public class ReflectionUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getAllDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getAllDeclaredAndInheritedFields(Field.class)
                    .stream()
@@ -105,12 +109,14 @@ public class ReflectionUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getDeclaredAndInheritedFields(Field.class, f -> f.getName().endsWith("Field")))
         .hasSize(4);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateField() {
     Field dummy = new Field();
     dummy.annotatedField = "test";
@@ -120,6 +126,7 @@ public class ReflectionUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateListField() {
     Field dummy = new Field();
     List<String> a = new ArrayList<>();
@@ -132,6 +139,7 @@ public class ReflectionUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetAccessorMethods() {
     final List<String> accessorMethods = ReflectionUtils.getAccessorMethods(Accessors.class)
                                              .stream()

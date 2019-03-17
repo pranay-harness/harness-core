@@ -42,7 +42,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.Builder;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
@@ -122,7 +122,7 @@ public class YamlIntegrationTestHelper {
     SettingAttribute gitConnector =
         aSettingAttribute()
             .withName("GitConnector" + System.currentTimeMillis())
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(yamlGitConfig.getAccountId())
             .withValue(GitConfig.builder()
                            .accountId(yamlGitConfig.getAccountId())

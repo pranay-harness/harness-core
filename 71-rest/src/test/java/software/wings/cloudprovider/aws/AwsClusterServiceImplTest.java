@@ -17,7 +17,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -47,6 +49,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
                                                              .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateCluster() {
     awsClusterService.createCluster(
         Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), clusterConfiguration, null);
@@ -61,6 +64,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(),
         CLUSTER_NAME, SERVICE_NAME, 0, 5, 10, new ExecutionLogCallback());
@@ -70,6 +74,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteService() {
     awsClusterService.deleteService(
         Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);

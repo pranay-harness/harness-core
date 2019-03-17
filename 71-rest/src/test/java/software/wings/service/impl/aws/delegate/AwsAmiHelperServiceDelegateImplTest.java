@@ -28,8 +28,10 @@ import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.InstanceMonitoring;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.TagDescription;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -60,6 +62,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   @InjectMocks private AwsAmiHelperServiceDelegateImpl awsAmiHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testSwitchAmiRoutes() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -100,6 +103,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRollbackSwitchAmiRoutes() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -147,6 +151,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testResizeAsgs() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -163,6 +168,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateNewAutoScalingGroupRequest() {
     AutoScalingGroup baseAutoScalingGroup =
         new AutoScalingGroup()
@@ -202,6 +208,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBlockDeviceMappings() {
     LaunchConfiguration baseLC = new LaunchConfiguration().withBlockDeviceMappings(
         new BlockDeviceMapping().withDeviceName("name0"), new BlockDeviceMapping().withDeviceName("name1"));
@@ -216,6 +223,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateNewLaunchConfigurationRequest() {
     LaunchConfiguration cloneBaseLaunchConfiguration =
         new LaunchConfiguration()
@@ -254,6 +262,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetNewHarnessVersion() {
     List<AutoScalingGroup> groups = asList(
         new AutoScalingGroup().withTags(new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("id__1")),
@@ -265,6 +274,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLastDeployedAsgNameWithNonZeroCapacity() {
     List<AutoScalingGroup> groups =
         asList(new AutoScalingGroup().withDesiredCapacity(1).withAutoScalingGroupName("name1"),
@@ -275,6 +285,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListAllHarnessManagedAsgs() {
     List<AutoScalingGroup> groups = asList(new AutoScalingGroup(),
         new AutoScalingGroup()
@@ -295,6 +306,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEnsureAndGetBaseLaunchConfiguration() {
     ExecutionLogCallback mockLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockLogCallback).saveExecutionLog(anyString(), any());
@@ -313,6 +325,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEnsureAndGetBaseAutoScalingGroup() {
     ExecutionLogCallback mockLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockLogCallback).saveExecutionLog(anyString(), any());
@@ -331,6 +344,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPopulatePreDeploymentData() {
     List<AutoScalingGroup> scalingGroups =
         asList(new AutoScalingGroup().withAutoScalingGroupName("name_2").withDesiredCapacity(3).withMinSize(2),

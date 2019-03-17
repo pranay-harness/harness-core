@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
+import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
@@ -22,6 +23,7 @@ import io.harness.queue.Queue.Filter;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
 
@@ -57,6 +59,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldProcessWhenReceivedMessageFromQueue() throws IOException {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       TestQueuableObject message = new TestQueuableObject(1);
@@ -69,6 +72,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 1000)
+  @Category(UnitTests.class)
   public void shouldStopOnInterruptedException() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       listener.setRunOnce(false);
@@ -87,6 +91,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 5000)
+  @Category(UnitTests.class)
   public void shouldExtendResetDuration() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       TestQueuableObject message = new TestQueuableObject(1);
@@ -116,6 +121,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 5000)
+  @Category(UnitTests.class)
   public void shouldContinueProcessingOnAnyOtherException() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       listener.setRunOnce(false);
@@ -143,6 +149,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRequeueMessageWhenRetriesAreSet() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       TestQueuableObject message = new TestQueuableObject(1);
@@ -161,6 +168,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotRequeueMessageWhenRetriesAreZero() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       TestQueuableObject message = new TestQueuableObject(1);

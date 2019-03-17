@@ -7,8 +7,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
@@ -20,6 +22,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   @Inject private HelmCommandHelper helmCommandHelper;
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYaml() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
         + "    helm:\n"
@@ -36,6 +39,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlNull() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
         + "    helm:\n"
@@ -49,6 +53,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlInvalid() throws Exception {
     try {
       Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
@@ -63,6 +68,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlMultiple() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("name: ABC\n"
         + "url: http://url.com\n"

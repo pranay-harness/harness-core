@@ -10,6 +10,7 @@ import static org.joor.Reflect.on;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
+import io.harness.category.element.UnitTests;
 import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
@@ -18,6 +19,7 @@ import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -48,6 +50,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should not get message once acquired.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldNotGetMessageOnceAcquired() {
     queue.send(new TestQueuableObject(1));
 
@@ -61,6 +64,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should return message based on priority.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnMessageBasedOnPriority() {
     TestQueuableObject messageTwo = new TestQueuableObject(2);
     messageTwo.setPriority(0.4);
@@ -84,6 +88,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should return message in time order.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnMessageInTimeOrder() {
     TestQueuableObject messageOne = new TestQueuableObject(1);
     TestQueuableObject messageTwo = new TestQueuableObject(2);
@@ -102,6 +107,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should wait for specified time period for get when no messages.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
     Date start = new Date();
     queue.get(ofSeconds(1), DEFAULT_POLL);
@@ -115,6 +121,7 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   public void shouldGetMessageWhenAvailableWithinWaitPeriod() {
     Date start = new Date();
 
@@ -132,6 +139,7 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
     TestQueuableObject message = new TestQueuableObject(1);
     message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
@@ -148,6 +156,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should reset stuck message when reset duration has expired.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldResetStuckMessageWhenResetDurationHasExpired() {
     queue.send(new TestQueuableObject(1));
 
@@ -161,6 +170,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should throw npe when try to update reset duration for null message.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNpeWhenTryToUpdateResetDurationForNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateResetDuration(null));
   }
@@ -169,6 +179,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should not extend reset timestamp of already expired message.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldNotExtendResetTimestampOfAlreadyExpiredMessage() {
     queue.send(new TestQueuableObject(1));
     // sets resetTimestamp on messageOne
@@ -185,6 +196,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should not extend reset timestamp of message which is not running.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldNotExtendResetTimestampOfMessageWhichIsNotRunning() {
     TestQueuableObject message = new TestQueuableObject(1);
 
@@ -201,6 +213,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should extend reset timestamp of message which is running and not expired.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExtendResetTimestampOfMessageWhichIsRunningAndNotExpired() {
     queue.resetDuration(10);
     queue.send(new TestQueuableObject(1));
@@ -226,6 +239,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should return count of objects in the queue.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnCountOfObjectsInTheQueue() {
     assertThat(queue.count(Filter.RUNNING)).isEqualTo(0);
     assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(0);
@@ -248,6 +262,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should ack message.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAckMessage() {
     queue.send(new TestQueuableObject(0));
     queue.send(new TestQueuableObject(1));
@@ -268,6 +283,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should throw npe when acking null message.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNpeWhenAckingNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ack(null));
   }
@@ -276,6 +292,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should requeue message.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldRequeueMessage() {
     TestQueuableObject message = new TestQueuableObject(0);
 
@@ -303,6 +320,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should throw npe when requeuing with null earliest get.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue("id", 0, null));
   }
@@ -311,6 +329,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should throw npe when send is called with null message.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNpeWhenSendIsCalledWithNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.send(null));
   }
@@ -319,6 +338,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should send message.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore // this test is intermittently failing
   public void shouldSendMessage() {
     TestQueuableObject message = new TestQueuableObject(1);
@@ -350,6 +370,7 @@ public class MongoQueueTest extends PersistenceTest {
    * Should send and get message with entity reference.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
     entityQueue = new MongoQueue<>(TestQueuableWithEntity.class);
@@ -371,6 +392,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFilterWithVersion() {
     Queue<TestQueuableObject> versionQueue;
     versionQueue = new MongoQueue<>(TestQueuableObject.class, 5, true);
@@ -383,6 +405,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotFilterWithVersion() {
     Queue<TestQueuableObject> versionQueue;
     versionQueue = new MongoQueue<>(TestQueuableObject.class, 5, false);

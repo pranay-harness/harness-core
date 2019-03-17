@@ -14,8 +14,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -79,6 +81,7 @@ public class HelmValuesYamlToManifestFileMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfEnvironmentOverride() {
     wingsPersistence.save(environment);
     helmValuesYamlToManifestFileMigration.migrate();
@@ -100,6 +103,7 @@ public class HelmValuesYamlToManifestFileMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfEnvironmentServiceOverride() {
     Map<String, String> helmServiceTemplateValueOverride = new HashMap<>();
     helmServiceTemplateValueOverride.put(SERVICE_ID, ENV_SERVICE_HELM_VALUE);

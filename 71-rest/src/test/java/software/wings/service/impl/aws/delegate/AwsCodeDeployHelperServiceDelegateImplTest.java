@@ -21,7 +21,9 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -41,6 +43,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsCodeDeployHelperServiceDelegateImpl awsCodeDeployHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testListApplications() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
     doReturn(mockClient)
@@ -57,6 +60,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListDeploymentConfiguration() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
     doReturn(mockClient)
@@ -75,6 +79,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListDeploymentGroups() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
     doReturn(mockClient)
@@ -93,6 +98,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testlListDeploymentInstances() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
     doReturn(mockClient)
@@ -113,6 +119,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListAppRevision() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
     doReturn(mockClient)

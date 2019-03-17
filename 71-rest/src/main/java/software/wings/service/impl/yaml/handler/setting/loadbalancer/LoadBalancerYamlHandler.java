@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.loadbalancer;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.LoadBalancerProviderYaml;
@@ -17,6 +17,6 @@ public abstract class LoadBalancerYamlHandler<Y extends LoadBalancerProviderYaml
   }
 
   protected SettingAttribute buildSettingAttribute(String accountId, String yamlFilePath, String uuid, B config) {
-    return buildSettingAttribute(accountId, yamlFilePath, uuid, config, Category.CONNECTOR);
+    return buildSettingAttribute(accountId, yamlFilePath, uuid, config, SettingCategory.CONNECTOR);
   }
 }

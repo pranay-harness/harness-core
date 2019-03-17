@@ -2,7 +2,9 @@ package software.wings.resources.stats.service;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.resources.stats.model.TimeRange;
 
 import java.time.LocalDateTime;
@@ -11,6 +13,7 @@ import java.util.List;
 
 public class TimeRangeProviderTest {
   @Test
+  @Category(UnitTests.class)
   public void monthlyRanges() {
     LocalDateTime from = LocalDateTime.parse("2018-10-03T10:15:30");
     LocalDateTime to = LocalDateTime.parse("2019-01-03T10:15:30");

@@ -9,12 +9,14 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.ConsumerId;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.quartz.JobExecutionContext;
@@ -41,6 +43,7 @@ public class ResourceConstraintBackupJobTest extends WingsBaseTest {
   @Inject ResourceConstraintBackupJob job;
 
   @Test
+  @Category(UnitTests.class)
   public void jobExecute() throws Exception {
     final String accountId = generateUuid();
 

@@ -13,7 +13,9 @@ import com.openpojo.validation.rule.impl.SerializableMustHaveSerialVersionUIDRul
 import com.openpojo.validation.rule.impl.TestClassMustBeProperlyNamedRule;
 import com.openpojo.validation.test.impl.GetterTester;
 import com.openpojo.validation.test.impl.SetterTester;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.utils.NoFieldShadowingRule;
 import software.wings.utils.ToStringTester;
 
@@ -52,6 +54,7 @@ public class MiscellaneousTest {
    * Should provide coverage to getter setter and to string.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldProvideCoverageToGetterSetterAndToString() {
     Validator validator =
         ValidatorBuilder.create().with(new SetterTester()).with(new GetterTester()).with(new ToStringTester()).build();
@@ -63,6 +66,7 @@ public class MiscellaneousTest {
    * Should validate code governance rules.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateCodeGovernanceRules() {
     Validator validator = ValidatorBuilder.create()
                               .with(new NoPublicFieldsExceptStaticFinalRule())
@@ -78,6 +82,7 @@ public class MiscellaneousTest {
    * Should validate test governance rules.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateTestGovernanceRules() {
     Validator validator = ValidatorBuilder.create().with(new TestClassMustBeProperlyNamedRule()).build();
 

@@ -81,6 +81,7 @@ import de.danielbechler.diff.ObjectDifferBuilder;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -90,6 +91,7 @@ import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -273,6 +275,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
     request.addFilter("appId", EQ, APP_ID);
@@ -299,6 +302,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveService() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -333,6 +337,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetService() {
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(new ArrayList<>());
@@ -342,6 +347,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateService() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
       Service service = serviceBuilder.name("UPDATED_SERVICE_NAME")
@@ -369,6 +375,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteService() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -388,6 +395,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -403,6 +411,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByInfraProvisioner() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -423,6 +432,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -443,6 +453,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -465,6 +476,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     srs.pruneDescendingEntities(APP_ID, SERVICE_ID);
     InOrder inOrder = inOrder(mockWingsPersistence, workflowService, notificationService, serviceTemplateService,
@@ -476,6 +488,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCloneService() throws IOException {
     PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
@@ -596,6 +609,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddCommand() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
@@ -646,6 +660,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should add command state.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAddCommandWithCommandUnits() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
@@ -699,6 +714,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandChanged() {
     Command oldCommand =
         aCommand()
@@ -764,6 +780,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should update command when command graph changed.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandWhenNameChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
@@ -834,6 +851,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandUnitsChanged() {
     Command oldCommand = commandBuilder.build();
     oldCommand.setVersion(1L);
@@ -882,6 +900,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandUnitsOrderChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
@@ -978,6 +997,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldNotUpdateCommandNothingChanged() {
     Graph oldCommandGraph = getGraph();
 
@@ -1027,6 +1047,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldNotUpdateCommandWhenCommandUnitsOrderNotChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
@@ -1099,6 +1120,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldNotUpdateVersionWhenNothingChanged() {
     Graph oldCommandGraph = getGraph();
 
@@ -1164,6 +1186,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandNameAndTypeChanged() {
     Graph oldCommandGraph = getGraph();
 
@@ -1234,6 +1257,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandsOrder() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
@@ -1349,6 +1373,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should delete command state.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteCommand() {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList()).build());
@@ -1366,6 +1391,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
     when(workflowService.listWorkflows(any(PageRequest.class))).thenReturn(listWorkflows(serviceCommand, "START"));
@@ -1378,6 +1404,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
     when(workflowService.listWorkflows(any(PageRequest.class))).thenReturn(listWorkflows(serviceCommand, "Stop"));
@@ -1425,6 +1452,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command stencils.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCommandStencils() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder
@@ -1479,6 +1507,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command stencils.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetScriptCommandStencilsOnly() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder
@@ -1519,6 +1548,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command categories
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCommandCategories() {
     when(mockWingsPersistence.createQuery(ServiceCommand.class)).thenReturn(serviceCommandQuery);
     when(serviceCommandQuery.project("name", true)).thenReturn(serviceCommandQuery);
@@ -1547,6 +1577,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command by name.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCommandByName() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder
@@ -1564,6 +1595,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCommandByNameAndEnv() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder
@@ -1581,6 +1613,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCommandByNameAndEnvForSpecificEnv() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder
@@ -1599,6 +1632,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCommandByNameAndEnvForSpecificEnvNotTargetted() {
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
@@ -1616,6 +1650,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLambdaValidation() {
     FunctionSpecification functionSpecification = FunctionSpecification.builder()
                                                       .runtime("TestRunTime")
@@ -1655,6 +1690,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateContainerTaskAdvanced() {
     wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
     KubernetesContainerTask containerTask = new KubernetesContainerTask();
@@ -1696,6 +1732,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCompareCommandUnits() {
     ObjectDifferBuilder.buildDefault().compare(anExecCommandUnit().build(), anExecCommandUnit().build());
     ObjectDifferBuilder.buildDefault().compare(aScpCommandUnit().build(), aScpCommandUnit().build());
@@ -1706,6 +1743,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddCommandFromTemplate() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
@@ -1734,6 +1772,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandLinkedToTemplate() {
     Command oldCommand = commandBuilder.build();
     oldCommand.setVersion(1L);
@@ -1788,6 +1827,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateLinkedCommandVariables() {
     Command oldCommand = commandBuilder.build();
     oldCommand.setVersion(1L);

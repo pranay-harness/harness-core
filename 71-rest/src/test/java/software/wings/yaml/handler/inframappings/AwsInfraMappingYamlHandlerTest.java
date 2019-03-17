@@ -11,9 +11,11 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.Yaml;
@@ -99,11 +101,13 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet1() throws HarnessException, IOException {
     testCRUDAndGet(validYamlContent1);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet2() throws HarnessException, IOException {
     testCRUDAndGet(validYamlContent2);
   }

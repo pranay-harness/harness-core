@@ -10,11 +10,13 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
+import io.harness.category.element.UnitTests;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -50,6 +52,7 @@ public class EventEmitterTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, event);
@@ -64,6 +67,7 @@ public class EventEmitterTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendToGeneralChannelWhenIdisNull() throws Exception {
     Event event = anEvent().withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, event);
@@ -72,6 +76,7 @@ public class EventEmitterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountIdToBroadcast() throws Exception {
     when(appService.get(APP_ID)).thenReturn(anApplication().withAccountId("ACCOUNT_ID").withAppId(APP_ID).build());
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).withAppId(APP_ID).build();

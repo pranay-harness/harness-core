@@ -8,13 +8,15 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.JiraConfigYamlHandler;
 
 import java.io.IOException;
@@ -34,6 +36,7 @@ public class JiraConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   public void setUp() throws HarnessException, IOException {}
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String name = "JIRA" + System.currentTimeMillis();
 
@@ -49,7 +52,7 @@ public class JiraConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(aSettingAttribute()
-                                    .withCategory(Category.CONNECTOR)
+                                    .withCategory(SettingCategory.CONNECTOR)
                                     .withName(name)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(JiraConfig.builder()

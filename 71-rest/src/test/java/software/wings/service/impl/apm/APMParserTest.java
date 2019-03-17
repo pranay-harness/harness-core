@@ -8,9 +8,11 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.YamlUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -26,6 +28,7 @@ import java.util.Map;
 
 public class APMParserTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void testJsonParser() throws IOException {
     String textLoad =
         Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_load.json"), Charsets.UTF_8);
@@ -57,6 +60,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonParserStringValue() throws IOException {
     String textLoad =
         Resources.toString(APMParserTest.class.getResource("/apm/sample_response_string_value.json"), Charsets.UTF_8);
@@ -88,6 +92,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonParserGraphana() throws IOException {
     String text500 =
         Resources.toString(APMParserTest.class.getResource("/apm/graphana_sample_response_500.json"), Charsets.UTF_8);
@@ -125,6 +130,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonParserGraphanaMapping2() throws IOException {
     String text500 =
         Resources.toString(APMParserTest.class.getResource("/apm/graphana_sample_response_500.json"), Charsets.UTF_8);
@@ -162,6 +168,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonParserGraphanaMappingArray() throws IOException {
     String text500 = Resources.toString(
         APMParserTest.class.getResource("/apm/graphana_sample_response_500_multiple.json"), Charsets.UTF_8);
@@ -199,6 +206,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonParserInsightsResponse() throws IOException {
     String text500 =
         Resources.toString(APMParserTest.class.getResource("/apm/insights_sample_response.json"), Charsets.UTF_8);
@@ -242,6 +250,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonParserArrayInsideArray() throws IOException {
     String text500 =
         Resources.toString(APMParserTest.class.getResource("/apm/insights-variation-1.json"), Charsets.UTF_8);
@@ -285,6 +294,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void apmVerificationstateYaml() throws IOException {
     String yaml =
         "- collectionUrl: query?from=${start_time}&to=${end_time}&query=trace.servlet.request.duration{service:todolist, host:${host}}by{resource_name, host}.rollup(avg,60)\n"

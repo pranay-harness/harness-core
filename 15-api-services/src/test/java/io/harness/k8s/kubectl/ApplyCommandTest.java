@@ -4,10 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ApplyCommandTest {
   @Test
+  @Category(UnitTests.class)
   public void smokeTest() {
     Kubectl client = Kubectl.client(null, null);
 
@@ -17,6 +20,7 @@ public class ApplyCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kubectlPathTest() {
     Kubectl client = Kubectl.client("/usr/bin/kubectl", null);
 
@@ -33,6 +37,7 @@ public class ApplyCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kubeconfigPathTest() {
     Kubectl client = Kubectl.client("", "config");
 
@@ -49,6 +54,7 @@ public class ApplyCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDryRun() {
     Kubectl client = Kubectl.client(null, null);
 
@@ -61,6 +67,7 @@ public class ApplyCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRecord() {
     Kubectl client = Kubectl.client(null, null);
 

@@ -12,12 +12,14 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.Verifier;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -133,6 +135,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendEmailWithTemplate() {
     emailDataNotificationService.send(nonSystemEmailTemplateData);
     verify(delegateService).queueTask(any(DelegateTask.class));
@@ -146,6 +149,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendEmailWithBody() {
     emailDataNotificationService.send(nonSystemEmailBodyData);
     verify(delegateService).queueTask(any(DelegateTask.class));
@@ -160,6 +164,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendSystemEmailWithTemplate() {
     emailDataNotificationService.send(systemEmailTemplateData);
     verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailTemplateData);
@@ -174,6 +179,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendSystemEmailWithBody() {
     emailDataNotificationService.send(systemEmailBodyData);
     verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailBodyData);
@@ -187,6 +193,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendAsyncEmailWithTemplate() {
     emailDataNotificationService.sendAsync(nonSystemEmailTemplateData);
     verify(queue).send(nonSystemEmailTemplateData);
@@ -198,12 +205,14 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void sendAsyncWithBody() {
     emailDataNotificationService.sendAsync(nonSystemEmailBodyData);
     verify(queue).send(nonSystemEmailBodyData);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEmailAlerts() {
     doThrow(new WingsException(ErrorCode.EMAIL_FAILED))
         .when(mailer)
@@ -217,6 +226,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDefaultToMainConfiguration() {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name()))
         .thenReturn(newArrayList());
@@ -227,6 +237,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testInvalidSmtpConfiguration() {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name()))
         .thenReturn(newArrayList());

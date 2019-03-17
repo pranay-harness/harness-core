@@ -10,7 +10,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -22,7 +22,7 @@ public class ConnectorSampleDataProvider {
     SettingAttribute dockerSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_DOCKER_HUB_CONNECTOR)
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(accountId)
             .withValue(
                 DockerConfig.builder().accountId(accountId).dockerRegistryUrl(HARNESS_DOCKER_HUB_CONNECTOR_URL).build())

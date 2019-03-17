@@ -13,7 +13,9 @@ import static software.wings.beans.Account.Builder.anAccount;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -41,6 +43,7 @@ public class SampleDataProviderServiceTest extends WingsBaseTest {
   @Inject private AppService appService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateSampleApp() {
     Account savedAccount = wingsPersistence.saveAndGet(Account.class,
         anAccount().withAccountName(WingsTestConstants.ACCOUNT_NAME).withUuid(WingsTestConstants.ACCOUNT_ID).build());

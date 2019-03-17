@@ -12,9 +12,11 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -49,6 +51,7 @@ public class PruneEntityListenerTest extends WingsBaseTest {
   private static final String ENTITY_ID = "entityId";
 
   @Test
+  @Category(UnitTests.class)
   public void unhandledClass() throws Exception {
     when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
 
@@ -62,11 +65,13 @@ public class PruneEntityListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void wrongClass() throws Exception {
     listener.onMessage(new PruneEvent("foo", APP_ID, ENTITY_ID));
     verify(environmentService, times(0)).pruneDescendingEntities(APP_ID, ENTITY_ID);
   }
   @Test
+  @Category(UnitTests.class)
   public void retryIfServiceThrew() throws Exception {
     when(wingsPersistence.get(Environment.class, ENTITY_ID)).thenReturn(null);
 
@@ -77,6 +82,7 @@ public class PruneEntityListenerTest extends WingsBaseTest {
         .hasMessage("The prune failed this time");
   }
   @Test
+  @Category(UnitTests.class)
   public void verifyThrowFromDescendingEntity() throws Exception {
     when(wingsPersistence.get(Activity.class, ENTITY_ID)).thenReturn(null);
 
@@ -94,6 +100,7 @@ public class PruneEntityListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void differentAppIdAndObjectIdForApplication() throws Exception {
     when(wingsPersistence.get(Application.class, ENTITY_ID)).thenReturn(null);
 

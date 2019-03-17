@@ -4,9 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
@@ -34,6 +36,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateAlertNotificationRules() {
     List<AlertNotificationRule> rules =
         Arrays.asList(new AlertNotificationRule(ACCOUNT_1_ID, AlertCategory.Setup, null, Collections.emptySet()),
@@ -47,6 +50,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void shouldNotCreateMoreThanOneDefaultAlertNotificationRulesInSameAccount() {
     List<AlertNotificationRule> rules = Arrays.asList(
         createDefaultAlertNotificationRule(ACCOUNT_1_ID), createDefaultAlertNotificationRule(ACCOUNT_1_ID));
@@ -59,6 +63,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteAllAlertNotificationRulesOfAnAccount() {
     List<AlertNotificationRule> rulesOfAccount1 = Arrays.asList(createDefaultAlertNotificationRule(ACCOUNT_1_ID),
         new AlertNotificationRule(ACCOUNT_1_ID, AlertCategory.Setup, null, Collections.emptySet()));
@@ -75,6 +80,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteNonDefaultAlertNotificationRuleGivenRuleIdAndAccountId() {
     AlertNotificationRule ruleInAccount1 =
         new AlertNotificationRule(ACCOUNT_1_ID, AlertCategory.Setup, null, Collections.emptySet());
@@ -92,6 +98,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void shouldNotDeleteDefaultAlertNotificationRuleOfAnAccount() {
     alertNotificationRuleService.create(createDefaultAlertNotificationRule(ACCOUNT_1_ID));
     AlertNotificationRule savedDefaultRule = alertNotificationRuleService.getAll(ACCOUNT_1_ID).get(0);
@@ -100,11 +107,13 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void shouldNotUpdateNonExistingAlertNotificationRule() {
     alertNotificationRuleService.update(createDefaultAlertNotificationRule(ACCOUNT_1_ID));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateExistingDefaultAlertNotificationRule() {
     AlertNotificationRule savedRule =
         alertNotificationRuleService.create(createDefaultAlertNotificationRule(ACCOUNT_1_ID));
@@ -120,6 +129,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateExistingNonDefaultAlertNotificationRule() {
     AlertNotificationRule savedRule = alertNotificationRuleService.create(
         new AlertNotificationRule(ACCOUNT_1_ID, AlertCategory.Setup, null, Collections.emptySet()));

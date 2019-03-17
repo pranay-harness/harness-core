@@ -2,7 +2,9 @@ package software.wings.service.impl.instance.stats.collector;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +14,7 @@ import java.util.stream.IntStream;
 
 public class SimplePercentileTest {
   @Test
+  @Category(UnitTests.class)
   public void testPercentile() {
     List<Integer> numbers = new ArrayList<>(100);
     IntStream.range(1, 101).forEach(numbers::add);

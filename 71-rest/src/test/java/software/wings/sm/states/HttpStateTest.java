@@ -45,10 +45,12 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.HttpStateExecutionData;
@@ -156,6 +158,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPatternsForRequiredContextElementType() {
     List<String> patternsForRequiredContextElementType =
         getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
@@ -166,6 +169,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplatedHttpPatternsForRequiredContextElementType() {
     HttpState.Builder jsonHttpStateBuilder =
         aHttpState()
@@ -189,6 +193,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate JSON response.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateJsonResponse() {
     wireMockRule.stubFor(
         get(urlEqualTo("/health/status"))
@@ -236,6 +241,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateJsonResponseWithVariables() {
     wireMockRule.stubFor(
         get(urlEqualTo("/health/status"))
@@ -288,6 +294,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -321,6 +328,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponseWithVariables() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -355,6 +363,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponseWithInstance() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -401,6 +410,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and get summary/details.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetExecutionDataSummaryDetails() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -428,6 +438,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on socket timeout.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFailOnSocketTimeout() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -461,6 +472,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on empty response.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFailOnEmptyResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -489,6 +501,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on malformed response.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFailOnMalformedResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -516,6 +529,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on random data.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFailOnRandomData() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
@@ -543,6 +557,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on connect timeout.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFailOnConnectTimeout() {
     context.pushContextElement(aHostElement().withHostName("www.google.com").build());
 

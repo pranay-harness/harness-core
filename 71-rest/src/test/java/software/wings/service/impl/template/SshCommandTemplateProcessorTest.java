@@ -27,7 +27,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -53,21 +55,25 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadTomcatStandardCommands() {
     templateService.loadYaml(SSH, TOMCAT_WAR_STOP_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadIISCommands() {
     templateService.loadYaml(SSH, POWER_SHELL_IIS_APP_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddCommandTemplate() {
     Template template = getSshCommandTemplate();
     Template savedTemplate = templateService.save(template);
@@ -114,6 +120,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandTemplate() {
     Template template = getSshCommandTemplate();
     Template savedTemplate = templateService.save(template);
@@ -154,6 +161,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCommandsLinked() {
     Template template = getSshCommandTemplate();
 

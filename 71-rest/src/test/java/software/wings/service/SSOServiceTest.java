@@ -14,11 +14,13 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import com.coveo.saml.SamlException;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.ldaptive.ResultCode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -94,6 +96,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void uploadSamlConfiguration() throws IOException, SamlException {
     Account account = new Account();
     String xml = IOUtils.toString(getClass().getResourceAsStream("/okta-IDP-metadata.xml"), Charset.defaultCharset());
@@ -126,6 +129,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void setAuthenticationMechanism() {
     Account account = new Account();
     when(ACCOUNT_SERVICE.get(anyString())).thenReturn(account);
@@ -141,6 +145,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateLdapConnectionSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
     when(LDAP_DELEGATE_SERVICE.validateLdapConnectionSettings(any(), any()))
@@ -150,6 +155,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateLdapUserSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
     when(LDAP_DELEGATE_SERVICE.validateLdapUserSettings(any(), any()))
@@ -159,6 +165,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateLdapGroupSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
     when(LDAP_DELEGATE_SERVICE.validateLdapGroupSettings(any(), any()))
@@ -168,6 +175,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateLdapAuthentication() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
     when(LDAP_DELEGATE_SERVICE.authenticate(any(), any(), any(), any()))
@@ -185,6 +193,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void searchGroupsByName() {
     EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);
     LdapSettings spyLdapSettings = spy(ldapSettings);

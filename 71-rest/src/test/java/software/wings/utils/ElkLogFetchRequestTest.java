@@ -5,8 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.category.element.UnitTests;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ElkLogFetchRequestTest {
   @Test
+  @Category(UnitTests.class)
   public void testJsonFormat() {
     Set<String> hosts = new HashSet<>();
     hosts.add("cdcd");
@@ -75,6 +78,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonFormatWithIndices() {
     Set<String> hosts = new HashSet<>();
     hosts.add("cdcd");
@@ -131,6 +135,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testParse() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     LinkedHashMap map = mapper.readValue(
@@ -142,6 +147,7 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJsonParsing() {
     String jsonString =
         "{\"a\" : \"this is a test\", \"b\":[\"test1\", \"test2\", \"test3\"], \"c\":{ \"d\": \"another test\"}}";

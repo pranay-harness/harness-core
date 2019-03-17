@@ -210,6 +210,10 @@
 
         <module name="io.harness.checks.ForEachCheck"/>
 
+        <!-- Best practices -->
+
+        <module name="io.harness.checks.TestAnnotationsCheck"/>
+
         <!-- *** -->
 
         <module name="EmptyStatement"/>

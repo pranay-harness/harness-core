@@ -8,6 +8,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
@@ -16,6 +17,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
@@ -54,6 +56,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void testElkConfigNoPassword() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
@@ -72,6 +75,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void testElkConfigNoUserName() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
@@ -89,6 +93,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testInvalidUrl() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
@@ -105,6 +110,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testValidConfig() {
     final ElkConfig elkConfig = new ElkConfig();

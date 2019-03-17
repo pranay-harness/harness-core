@@ -13,8 +13,10 @@ import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -72,6 +74,7 @@ public class PluginServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
         .hasSize(30)
@@ -318,6 +321,7 @@ public class PluginServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
         .hasSize(30)

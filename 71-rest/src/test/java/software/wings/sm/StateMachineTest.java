@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
@@ -18,6 +19,7 @@ import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -44,6 +46,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should validate.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldValidate() {
     StateMachine sm = new StateMachine();
     State state = new StateSync("StateA");
@@ -60,6 +63,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw dup error code.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowDupErrorCode() {
     try {
       StateMachine sm = new StateMachine();
@@ -83,6 +87,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw null transition.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNullTransition() {
     try {
       StateMachine sm = new StateMachine();
@@ -104,6 +109,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw transition not linked.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowTransitionNotLinked() {
     try {
       StateMachine sm = new StateMachine();
@@ -134,6 +140,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw transition to incorrect state.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowTransitionToIncorrectState() {
     try {
       StateMachine sm = new StateMachine();
@@ -169,6 +176,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw states with Dup transitions.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowStatesWithDupTransitions() {
     try {
       StateMachine sm = new StateMachine();
@@ -217,6 +225,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-fork state transition.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNonForkStateTransitions() {
     try {
       StateMachine sm = new StateMachine();
@@ -266,6 +275,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-repeat state transition.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNonRepeatStateTransitions() {
     try {
       StateMachine sm = new StateMachine();
@@ -315,6 +325,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-repeat state transition.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExpandRepeatState() {
     StateMachine sm = new StateMachine();
     State starting = new StateSync("starting");
@@ -373,6 +384,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should expand repeat state in a complex scenario.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExpandRepeatStateInMultiplePaths() {
     StateMachine sm = new StateMachine();
     State starting = new StateSync("starting");
@@ -457,6 +469,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should expand repeat state for each node that needs it.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExpandRepeatStateForEachNodeThatNeedsIt() {
     StateMachine sm = new StateMachine();
     State starting = new StateSync("starting");
@@ -535,6 +548,7 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBreakRepeatTransitionsWhenNoNeeded() {
     StateMachine sm = new StateMachine();
     State starting = new StateSync("starting");

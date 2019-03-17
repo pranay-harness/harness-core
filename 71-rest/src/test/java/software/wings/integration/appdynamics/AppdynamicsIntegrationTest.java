@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
@@ -28,13 +29,14 @@ import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HostElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -73,7 +75,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
     SettingAttribute appdSettingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withName("AppDynamics" + System.currentTimeMillis())
             .withAccountId(accountId)
             .withValue(AppDynamicsConfig.builder()
@@ -89,6 +91,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   public void testGetAllApplications() throws Exception {
     // get all applications
     WebTarget target = client.target(
@@ -107,6 +110,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   public void testGetAllTiers() throws Exception {
     // get all applications
     WebTarget target = client.target(
@@ -133,6 +137,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void testGetAllTierBTMetrics() throws Exception {
     SettingAttribute appdSettingAttribute = settingsService.get(appdynamicsSettingId);
@@ -174,6 +179,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   public void testGetDependentTiers() throws IOException {
     WebTarget target = client.target(
         API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + accountId);
@@ -206,6 +212,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());

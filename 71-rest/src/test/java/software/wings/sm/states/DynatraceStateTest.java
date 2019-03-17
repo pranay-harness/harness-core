@@ -13,10 +13,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.DelegateTask;
@@ -77,12 +79,14 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
     assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, dynatraceState.getComparisonStrategy());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void compareTestAndControl() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
     for (int i = 1; i <= 7; i++) {
@@ -95,6 +99,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
     assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     DynaTraceConfig dynaTraceConfig = DynaTraceConfig.builder()

@@ -4,11 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.category.element.UnitTests;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class KryoUtilsTest {
   @Test
+  @Category(UnitTests.class)
   public void shouldInitConcurrently() {
     Concurrent.test(3, i -> { KryoUtils.clone(1); });
     Concurrent.test(10, i -> { KryoUtils.clone(1); });
@@ -16,6 +19,7 @@ public class KryoUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetXpath() {
     String test = "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...";
     final byte[] deflatedBytes = KryoUtils.asDeflatedBytes(test);
@@ -25,6 +29,7 @@ public class KryoUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegistrarIssues() {
     final ClassResolver classResolver = new ClassResolver();
     Kryo kryo = new HKryo(classResolver);

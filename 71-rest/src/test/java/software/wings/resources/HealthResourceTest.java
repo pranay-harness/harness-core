@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.category.element.UnitTests;
 import io.harness.configuration.ConfigurationType;
 import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.app.MainConfiguration;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.utils.ResourceTestRule;
@@ -28,6 +30,7 @@ public class HealthResourceTest {
           .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetMongoUri() throws Exception {
     when(CONFIGURATION.getMongoConnectionFactory())
         .thenReturn(MongoConfig.builder()

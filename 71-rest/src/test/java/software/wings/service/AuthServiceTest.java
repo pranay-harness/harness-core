@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.TokenGenerator;
@@ -33,6 +34,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -116,6 +118,7 @@ public class AuthServiceTest extends WingsBaseTest {
    * Should validate valid token.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateValidToken() {
     AuthToken authToken = authService.validateToken(VALID_TOKEN);
     assertThat(authToken).isNotNull().isInstanceOf(AuthToken.class);
@@ -125,6 +128,7 @@ public class AuthServiceTest extends WingsBaseTest {
    * Should throw invalid token exception for invalid token.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowInvalidTokenExceptionForInvalidToken() {
     assertThatThrownBy(() -> authService.validateToken(INVALID_TOKEN))
         .isInstanceOf(WingsException.class)
@@ -135,6 +139,7 @@ public class AuthServiceTest extends WingsBaseTest {
    * Should throw expired token exception for expired token.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExpiredTokenExceptionForExpiredToken() {
     assertThatThrownBy(() -> authService.validateToken(EXPIRED_TOKEN))
         .isInstanceOf(WingsException.class)
@@ -142,6 +147,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAuthorizeWithAccountAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build();
     User user = userBuilder.but().withRoles(asList(role)).build();
@@ -151,6 +157,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDenyWithoutAccountAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).build();
     role.onLoad();
@@ -164,6 +171,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAuthorizeWithAppAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(APP_ID).build();
     role.onLoad();
@@ -173,6 +181,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAuthorizeReadWithEnvAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
     role.onLoad();
@@ -182,6 +191,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDenyWithDiffAppAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId("APP_ID2").build();
     role.onLoad();
@@ -194,6 +204,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDenyWriteWithEnvAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
     role.onLoad();
@@ -206,12 +217,14 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateDelegateToken() {
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
     authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname"));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
     assertThatThrownBy(()
@@ -222,6 +235,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowThrowInavlidTokenForDelegate() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, "Dummy"))
         .isInstanceOf(WingsException.class)
@@ -229,6 +243,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionWhenUnableToDecryptToken() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
         .isInstanceOf(WingsException.class)
@@ -250,6 +265,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
@@ -277,6 +293,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
@@ -290,6 +307,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRefreshTokenWithFeatureFlagEnabled() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
@@ -322,6 +340,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRefreshTokenWithFeatureFlagDisabled() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();

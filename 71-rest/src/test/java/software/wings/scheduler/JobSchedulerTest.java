@@ -2,9 +2,11 @@ package software.wings.scheduler;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -53,6 +55,7 @@ public class JobSchedulerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldCreateScheduler() throws SchedulerException, InterruptedException {
     // define the job and tie it to our HelloJob class
@@ -79,6 +82,7 @@ public class JobSchedulerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {
     jobScheduler.getScheduler().resumeAll();

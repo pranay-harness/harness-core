@@ -2,10 +2,13 @@ package software.wings.beans.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ArtifactoryConfigTest {
   @Test
+  @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {
     ArtifactoryConfig artifactoryConfig = new ArtifactoryConfig();
     assertThat(artifactoryConfig.getUsername()).isNotNull().isEqualTo("");
@@ -16,6 +19,7 @@ public class ArtifactoryConfigTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldArtifactoryHasCredentials() {
     ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder()
                                               .artifactoryUrl("some registry url")
@@ -26,6 +30,7 @@ public class ArtifactoryConfigTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldArtifactoryHasNoCredentials() {
     ArtifactoryConfig artifactoryConfig = new ArtifactoryConfig();
     assertThat(artifactoryConfig.getUsername()).isNotNull().isEqualTo("");

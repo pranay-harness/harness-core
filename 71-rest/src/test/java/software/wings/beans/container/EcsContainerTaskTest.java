@@ -6,7 +6,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class EcsContainerTaskTest {
   public static final String CONTAINER_NAME = "containerName";
@@ -15,6 +17,7 @@ public class EcsContainerTaskTest {
   public static final String DOMAIN_NAME = "domain.name.co";
 
   @Test
+  @Category(UnitTests.class)
   public void testcreateTaskDefinition() {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
     ecsContainerTask.setAdvancedConfig(null);
@@ -78,6 +81,7 @@ public class EcsContainerTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateTaskDefinitionWithWhenNoMemoryProvided() {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
     ecsContainerTask.setAdvancedConfig(null);
@@ -138,6 +142,7 @@ public class EcsContainerTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRemoveEmptySecretsContainerDefinitionString() throws Exception {
     String str = "{\n"
         + "  \"containerDefinitions\" : [ {\n"

@@ -9,6 +9,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.MarketoHandler;
 import io.harness.event.handler.impl.MarketoHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -19,6 +20,7 @@ import io.harness.event.model.EventType;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -62,6 +64,7 @@ public class MarketoHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   //  @Repeat(times = 5, successes = 1)
   public void testCreateLeadAndTriggerCampaign() {

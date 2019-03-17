@@ -8,13 +8,15 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
 
 import java.io.IOException;
@@ -34,6 +36,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   public void setUp() throws HarnessException, IOException {}
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();
 
@@ -45,6 +48,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();
 
@@ -59,7 +63,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
 
     return settingsService.save(
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withName(newRelicProviderName)
             .withAccountId(ACCOUNT_ID)
             .withValue(

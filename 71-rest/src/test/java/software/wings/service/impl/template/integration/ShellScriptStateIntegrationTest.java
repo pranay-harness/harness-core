@@ -9,9 +9,11 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -32,6 +34,7 @@ public class ShellScriptStateIntegrationTest extends WingsBaseTest {
   @Inject private TemplateService templateService;
 
   @Test(expected = WingsException.class)
+  @Category(IntegrationTests.class)
   public void shouldCreateUpdateDeleteShellScriptTemplate() {
     // Create template
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);

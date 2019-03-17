@@ -7,10 +7,12 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BaseFile;
@@ -49,6 +51,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldSaveFileWithMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder()
                                     .fileName("dummy.txt")
@@ -65,6 +68,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithFileMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder().mimeType("text/plain").build();
     assertThatExceptionOfType(IllegalArgumentException.class)
@@ -77,6 +81,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldSaveBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
     baseFile.setName("dummy.txt");
@@ -91,6 +96,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldUpdateEntityId() throws Exception {
     final BaseFile baseFile = new BaseFile();
     baseFile.setName("dummy.txt");
@@ -108,6 +114,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
     assertThatExceptionOfType(IllegalArgumentException.class)

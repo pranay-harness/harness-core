@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
 import software.wings.rules.SetupScheduler;
@@ -20,6 +22,7 @@ public class InstanceSyncJobTest extends WingsBaseTest {
   private static final String appId = "Dummy App Id";
 
   @Test
+  @Category(UnitTests.class)
   public void selfPrune() throws SchedulerException, InterruptedException, TimeoutException {
     TestJobListener listener = new TestJobListener(InstanceSyncJob.GROUP + "." + appId);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);

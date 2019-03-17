@@ -16,10 +16,12 @@ import static org.mockito.Mockito.when;
 import static software.wings.security.AuthenticationFilter.EXTERNAL_FACING_API_HEADER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
@@ -72,6 +74,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAuthenticationFilterTestOptions() throws IOException {
     when(context.getMethod()).thenReturn(HttpMethod.OPTIONS);
     authenticationFilter.filter(context);
@@ -84,6 +87,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoAuthorizationToken() throws IOException {
     try {
       doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
@@ -97,6 +101,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDelegateRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Delegate token");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
@@ -112,6 +117,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLearningEngineRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("LearningEngine token");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
@@ -124,6 +130,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExternalApiAuthentication() throws IOException {
     String apiKey = "ApiKey";
     when(context.getHeaderString(EXTERNAL_FACING_API_HEADER)).thenReturn(apiKey);
@@ -142,6 +149,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExternalApiRateLimiting() throws IOException {
     String apiKey = "ApiKey";
     when(context.getHeaderString(EXTERNAL_FACING_API_HEADER)).thenReturn(apiKey);
@@ -152,6 +160,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testInvalidBearerTokenPresent() throws IOException {
     try {
       when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer bearerToken");
@@ -169,6 +178,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidBearerTokenPresent() throws IOException {
     try {
       when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer bearerToken");
@@ -187,6 +197,7 @@ public class AuthenticationFilterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIncorrectToken() throws IOException {
     try {
       when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("fakeToken");

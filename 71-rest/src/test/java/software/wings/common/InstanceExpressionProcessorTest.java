@@ -30,11 +30,13 @@ import com.google.inject.Injector;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -131,6 +133,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return instances.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore // Ignoring as instance without any filter is disabled
   public void shouldReturnInstances() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
@@ -200,6 +203,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return instances from param.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     String appId = app.getUuid();
@@ -249,6 +253,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return common instances from param.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     String appId = app.getUuid();
@@ -301,6 +306,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return common instances from param 2.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam2() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     String appId = app.getUuid();
@@ -351,6 +357,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderExpressionFromInstanceElement() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setDisplayName("abc");
@@ -431,6 +438,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldFetchInstanceElements() {
     Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
@@ -488,6 +496,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return from partition.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnInstancesFromPartition() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     String appId = app.getUuid();

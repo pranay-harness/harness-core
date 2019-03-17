@@ -13,10 +13,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -52,6 +54,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuilds() {
     when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, 50))
         .thenReturn(
@@ -62,6 +65,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(bambooService.getPlanKeys(bambooConfig, null))
         .thenReturn(ImmutableMap.of("PlanAKey", "PlanAName", "PlanBKey", "PlanBName"));
@@ -71,12 +75,14 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, null, bambooConfig, null);
     assertThat(artifactPaths.size()).isEqualTo(0);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuild() {
     when(bambooService.getLastSuccessfulBuild(bambooConfig, null, BUILD_JOB_NAME))
         .thenReturn(aBuildDetails().withNumber("10").build());
@@ -86,6 +92,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     BambooConfig bambooConfig =
         BambooConfig.builder().bambooUrl("BAD_URL").username("username").password("password".toCharArray()).build();

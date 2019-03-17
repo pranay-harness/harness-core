@@ -2,10 +2,13 @@ package software.wings.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AsgConventionTest {
   @Test
+  @Category(UnitTests.class)
   public void testGetRevisionFromTag() {
     int revision = AsgConvention.getRevisionFromTag("aaa__123");
     assertEquals(123, revision);
@@ -24,6 +27,7 @@ public class AsgConventionTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetAsgNamePrefix() {
     String asgNamePrefix = AsgConvention.getAsgNamePrefix("appName", "serviceName", "envName");
     assertEquals("appName__serviceName__envName", asgNamePrefix);

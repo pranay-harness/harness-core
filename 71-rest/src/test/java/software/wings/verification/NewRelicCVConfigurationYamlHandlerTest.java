@@ -6,9 +6,11 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
@@ -114,6 +116,7 @@ public class NewRelicCVConfigurationYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
     NewRelicCVServiceConfiguration cvServiceConfiguration =
@@ -130,6 +133,7 @@ public class NewRelicCVConfigurationYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
@@ -148,6 +152,7 @@ public class NewRelicCVConfigurationYamlHandlerTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testUpsertBadAppName() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
@@ -163,6 +168,7 @@ public class NewRelicCVConfigurationYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);

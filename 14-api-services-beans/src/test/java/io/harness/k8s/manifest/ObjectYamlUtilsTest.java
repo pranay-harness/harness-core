@@ -17,7 +17,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.URL;
 import java.util.List;
@@ -25,12 +27,14 @@ import java.util.function.UnaryOperator;
 
 public class ObjectYamlUtilsTest {
   @Test
+  @Category(UnitTests.class)
   public void encodeDotTest() {
     assertThat(encodeDot("harness.io")).isEqualTo("harness[dot]io");
     assertThat(encodeDot("harness-io")).isEqualTo("harness-io");
   }
 
   @Test
+  @Category(UnitTests.class)
   public void tryReadYamlTest() {
     Object object = tryReadYaml("Hello: World");
 
@@ -42,6 +46,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void sanityGetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -57,6 +62,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void sanityGetFieldTrowsForArrayTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -71,6 +77,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void sanityGetFieldsTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -90,6 +97,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void basicYamlGetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -122,6 +130,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void arraysYamlGetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/array-sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -150,6 +159,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void sanitySetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -173,6 +183,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void arraysYamlSetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/array-sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -187,6 +198,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void sanityTranformFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -221,6 +233,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void arraySetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -257,6 +270,7 @@ public class ObjectYamlUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void splitYamlFileSanityTest() throws Exception {
     URL url = this.getClass().getResource("/mongo.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);

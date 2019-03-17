@@ -39,7 +39,9 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -78,6 +80,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should list activities.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListActivities() {
     Activity activity = Activity.builder()
                             .environmentId(ENV_ID)
@@ -116,6 +119,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should get activity.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetActivity() {
     Activity activity = Activity.builder()
                             .environmentId(ENV_ID)
@@ -152,6 +156,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should save activity.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveActivity() {
     Activity activity = Activity.builder()
                             .environmentId(ENV_ID)
@@ -199,6 +204,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should get activity command units.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetActivityCommandUnits() {
     List<CommandUnit> commandUnitList = asList(new InitSshCommandUnit(),
         anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build(),
@@ -245,6 +251,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Shouldget last activity for service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLastActivityForService() {
     Activity activity = Activity.builder()
                             .environmentId(ENV_ID)
@@ -282,6 +289,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Shouldget last production activity for service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLastProductionActivityForService() {
     Activity activity = Activity.builder()
                             .environmentId(ENV_ID)
@@ -320,6 +328,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should update activity status.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateActivityStatus() {
     Activity activity = Activity.builder()
                             .environmentId(ENV_ID)
@@ -376,6 +385,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     activityService.pruneDescendingEntities(APP_ID, ACTIVITY_ID);
     InOrder inOrder = inOrder(logService);

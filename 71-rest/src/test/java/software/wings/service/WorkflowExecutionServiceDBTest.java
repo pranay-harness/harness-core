@@ -28,9 +28,11 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.waiter.NotifyEventListener;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -80,6 +82,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListExecutions() {
     CountsByStatuses countsByStatuses = aCountsByStatuses().build();
 
@@ -109,6 +112,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListDeployedNodes() {
     String appId = generateUuid();
     String envId = generateUuid();

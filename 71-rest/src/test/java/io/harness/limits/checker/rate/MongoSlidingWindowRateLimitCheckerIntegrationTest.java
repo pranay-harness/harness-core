@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.impl.model.RateLimit;
@@ -17,6 +18,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
@@ -77,6 +79,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCheckAndConsume() throws Exception {
     int maxReq = 10;
     int durationInMillis = 5000;
@@ -95,6 +98,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testVicinity() throws Exception {
     int maxReq = 10;
     int durationInMillis = 5000;
@@ -114,6 +118,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCheckAndConsumeConcurrent() throws Exception {
     int maxAllowedReq = 40;
     int durationInMillis = 5000;

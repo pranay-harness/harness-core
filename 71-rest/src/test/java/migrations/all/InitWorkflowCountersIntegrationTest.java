@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
@@ -13,6 +14,7 @@ import io.harness.limits.counter.service.CounterService;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Workflow;
 import software.wings.integration.BaseIntegrationTest;
@@ -35,6 +37,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(emails = "jatin@harness.io", intermittent = true)
+  @Category(IntegrationTests.class)
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();
     if (totalWorkflows == 0) {

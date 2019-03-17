@@ -17,9 +17,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -61,6 +63,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
           .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(nexusService.getRepositories(nexusConfig, null))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
@@ -69,6 +72,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetJobs() {
     when(nexusService.getRepositories(nexusConfig, null))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
@@ -78,6 +82,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(Lists.newArrayList("/fakepath"));
     List<String> jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig, null);
@@ -85,6 +90,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuilds() {
     when(nexusService.getVersions(nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME))
         .thenReturn(
@@ -95,6 +101,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     NexusConfig nexusConfig = NexusConfig.builder()
                                   .nexusUrl("BAD_URL")

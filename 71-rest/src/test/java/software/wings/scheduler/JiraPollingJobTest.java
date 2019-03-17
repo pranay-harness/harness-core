@@ -14,11 +14,13 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.InjectorJobFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -52,6 +54,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteJobOnSuccessfullApproval() throws TimeoutException, InterruptedException {
     when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
              APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
@@ -72,6 +75,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteJobOnRejection() throws TimeoutException, InterruptedException {
     when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
              APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
@@ -92,6 +96,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteJobOnError() throws TimeoutException, InterruptedException {
     when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
              APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
@@ -112,6 +117,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotDeleteJobOnAwitingApproval() throws TimeoutException, InterruptedException {
     when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
              APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))

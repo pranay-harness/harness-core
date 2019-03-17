@@ -26,8 +26,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -53,6 +55,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   @Test
+  @Category(UnitTests.class)
   public void testGetHPAYamlStringWithCustomMetric() throws Exception {
     WorkflowServiceHelper workflowServiceHelper = new WorkflowServiceHelper();
     String hpaString = workflowServiceHelper.getHPAYamlStringWithCustomMetric(2, 4, 80);
@@ -78,6 +81,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIsDaemonSchedulingStrategy() throws Exception {
     EcsServiceSpecification serviceSpecification = EcsServiceSpecification.builder().build();
     serviceSpecification.setServiceSpecJson(null);
@@ -115,6 +119,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForECS_ReplicaStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -154,6 +159,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForECS_BG() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -173,6 +179,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForECS_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -198,6 +205,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateRollbackWorkflowPhaseForEcs_ReplicaStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -234,6 +242,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateRollbackWorkflowPhaseForEcs_BG() {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -253,6 +262,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateRollbackWorkflowPhaseForEcs_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -279,6 +289,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestWorkflowOverrideVariables() {
     List<Variable> variables =
         asList(aVariable().withName("Environment").build(), aVariable().withName("OverrideVariable").build(),

@@ -31,10 +31,12 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -188,6 +190,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteWithLastService() {
     ReplicationController kubernetesReplicationController =
         new ReplicationControllerBuilder()
@@ -209,6 +212,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateCustomMetricHorizontalPodAutoscalar() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -263,6 +267,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBasicHorizontalPodAutoscalar() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -330,6 +335,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBlueGreenValidationServiceNotAllowedWithBlueGreen() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -348,6 +354,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBlueGreenValidationEmptyBlueGreenConfig() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -367,6 +374,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBlueGreenValidationServiceNonePrimaryService() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -390,6 +398,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBlueGreenValidationSmokeTest() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -408,6 +417,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteWithDownsize() {
     String controllerName0 = KubernetesConvention.getControllerName(
         KubernetesConvention.getControllerNamePrefix("app-name", "service-name", "env-name"), 0);

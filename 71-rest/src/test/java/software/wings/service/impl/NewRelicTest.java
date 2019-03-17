@@ -9,6 +9,7 @@ import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.ME
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -16,6 +17,7 @@ import io.harness.time.Timestamp;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
@@ -55,6 +57,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void cvdemo() throws IOException {
     // DO NOT REMOVE CV_DEMO FEATURE FLAG
     FeatureName.valueOf("CV_DEMO");
@@ -62,6 +65,7 @@ public class NewRelicTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void getAllApplications() throws IOException, CloneNotSupportedException {
     List<NewRelicApplication> allApplications =
@@ -71,6 +75,7 @@ public class NewRelicTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void getApplicationInstances() throws IOException, CloneNotSupportedException {
     NewRelicApplication demoApp = getDemoApp();
@@ -81,6 +86,7 @@ public class NewRelicTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void getMetricsNameToCollect() throws IOException, CloneNotSupportedException {
     NewRelicApplication demoApp = getDemoApp();
@@ -102,12 +108,14 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTimeStampCreations() {
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     dateFormatter.format(new Date(Timestamp.minuteBoundary(1513463100000L))).equals("2017-12-16T14:25:00-0800");
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMetricsBatching() {
     Set<NewRelicMetric> metricNames =
         Sets.newHashSet(NewRelicMetric.builder().name("WebTransaction/456/load+test-some/with_under_score1").build(),

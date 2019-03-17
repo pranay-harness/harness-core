@@ -10,8 +10,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SmbConfig;
@@ -45,6 +47,7 @@ public class SmbServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPaths() throws IOException {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt", "dir1/b.txt"));
     when(smbService.getArtifactPaths(smbConfig, null)).thenReturn(artifactPaths);
@@ -52,6 +55,7 @@ public class SmbServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuildDetails() throws IOException {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt"));
     List<BuildDetails> buildDetailsList = Lists.newArrayList();

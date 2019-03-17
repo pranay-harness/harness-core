@@ -7,8 +7,10 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
@@ -58,6 +60,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSavingCustomThresholds() {
     int numOfTransactions = 5;
     int numOfMetricsPerTxns = 10;

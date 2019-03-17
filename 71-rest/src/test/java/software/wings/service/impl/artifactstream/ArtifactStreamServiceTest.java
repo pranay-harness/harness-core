@@ -35,9 +35,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -93,6 +95,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSupportedBuildSourceTypes() {
     // For DOCKER Service Artifact Type
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
@@ -115,6 +118,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
@@ -154,6 +158,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
@@ -202,6 +207,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddBambooArtifactStream() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
                                                     .appId(APP_ID)
@@ -220,6 +226,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateBambooArtifactStream() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
                                                     .appId(APP_ID)
@@ -278,6 +285,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream();
 
@@ -315,6 +323,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream();
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
@@ -351,6 +360,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddNexusDockerArtifactStream() {
     NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
                                                         .appId(APP_ID)
@@ -383,6 +393,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateNexusDockerArtifactStream() {
     NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
                                                         .appId(APP_ID)
@@ -446,6 +457,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddArtifactoryArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -482,6 +494,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateArtifactoryArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -542,6 +555,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddArtifactoryMavenArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream =
         ArtifactoryArtifactStream.builder()
@@ -578,6 +592,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateArtifactoryMavenArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream =
         ArtifactoryArtifactStream.builder()
@@ -649,6 +664,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddArtifactoryDockerArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -683,6 +699,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateArtifactoryDockerArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -751,6 +768,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddAmiArtifactStream() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
     tag.setKey("name");
@@ -778,6 +796,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateAmiArtifactStream() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
     tag.setKey("name");
@@ -839,6 +858,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddS3ArtifactStream() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
                                                         .appId(APP_ID)
@@ -864,6 +884,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateS3ArtifactStream() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
                                                         .appId(APP_ID)
@@ -908,6 +929,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddDockerArtifactStream() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
                                                     .appId(APP_ID)
@@ -933,6 +955,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateDockerArtifactStream() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
                                                     .appId(APP_ID)
@@ -975,6 +998,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddEcrArtifactStream() {
     EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
                                                  .appId(APP_ID)
@@ -1002,6 +1026,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateEcrArtifactStream() {
     EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
                                                  .appId(APP_ID)
@@ -1047,6 +1072,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddGcrArtifactStream() {
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
                                               .appId(APP_ID)
@@ -1076,6 +1102,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateGcrArtifactStream() {
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
                                               .appId(APP_ID)
@@ -1125,6 +1152,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddAcrArtifactStream() {
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
                                               .appId(APP_ID)
@@ -1158,6 +1186,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateAcrArtifactStream() {
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
                                               .appId(APP_ID)
@@ -1216,6 +1245,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListArtifactStreams() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedJenkinsArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
@@ -1245,6 +1275,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -1265,6 +1296,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -1282,6 +1314,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void shouldNotDeleteArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -1303,6 +1336,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDockerArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(DockerConfig.builder()
@@ -1332,6 +1366,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDockerArtifactSourcePropertiesWhenArtifactStreamDeleted() {
     Map<String, String> artifactSourceProperties =
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID);
@@ -1339,6 +1374,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetGcrArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(GcpConfig.builder().accountId(ACCOUNT_ID).build());
@@ -1362,6 +1398,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAcrArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(AzureConfig.builder().accountId(ACCOUNT_ID).build());
@@ -1387,6 +1424,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetEcrArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(AzureConfig.builder().accountId(ACCOUNT_ID).build());
@@ -1410,6 +1448,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetJenkinsArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(JenkinsConfig.builder()
@@ -1432,6 +1471,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBabmooArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(JenkinsConfig.builder()
@@ -1461,6 +1501,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNexusArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -1491,6 +1532,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNexusDockerArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -1520,6 +1562,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactoryArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -1550,6 +1593,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactoryDockerArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -1584,6 +1628,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListArtifactStreamIdsofService() {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(buildArtifactoryStream());
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -1593,6 +1638,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListArtifactStreamsofService() {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(buildArtifactoryStream());
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -1604,6 +1650,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCRUDCustomArtifactStream() {
     ArtifactStream customArtifactStream =
         CustomArtifactStream.builder()
@@ -1655,6 +1702,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
     List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
     attributeMapping.add(builder().relativePath("assets.downloadUrl").mappedAttribute("metadata.downloadUrl").build());

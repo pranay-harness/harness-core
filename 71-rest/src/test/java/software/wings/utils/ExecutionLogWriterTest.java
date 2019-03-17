@@ -8,8 +8,10 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -24,6 +26,7 @@ public class ExecutionLogWriterTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void smokeTest() throws java.io.IOException {
     ExecutionLogWriter testWriter = ExecutionLogWriter.builder()
                                         .accountId(ACCOUNT_ID)

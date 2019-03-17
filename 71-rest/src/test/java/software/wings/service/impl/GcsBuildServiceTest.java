@@ -14,8 +14,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -50,6 +52,7 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuilds() {
     List<BuildDetails> buildDetails = Lists.newArrayList(
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
@@ -62,6 +65,7 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuckets() {
     when(gcsService.listBuckets(gcpConfig, null, null))
         .thenReturn(ImmutableMap.of("bucket1", "bucket1", "bucket2", "bucket2"));
@@ -70,6 +74,7 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(gcsService.getArtifactPaths(any(), any(), any())).thenReturn(Lists.newArrayList("path1"));
     List<String> artifactPaths = gcsBuildService.getArtifactPaths(BUILD_JOB_NAME, null, gcpConfig, null);

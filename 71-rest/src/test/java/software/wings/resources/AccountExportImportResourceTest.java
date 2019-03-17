@@ -10,11 +10,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Account;
@@ -74,6 +76,7 @@ public class AccountExportImportResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFindClashedUserIdMapping() {
     Map<String, String> userIdMapping = accountExportImportResource.findClashedUserIdMapping(accountId, users);
     assertEquals(1, userIdMapping.size());

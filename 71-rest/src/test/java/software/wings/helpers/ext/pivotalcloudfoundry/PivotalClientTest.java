@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.pivotalcloudfoundry;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
@@ -11,6 +13,7 @@ public class PivotalClientTest extends WingsBaseTest {
   PcfClient pcfClient = new PcfClientImpl();
 
   @Test
+  @Category(UnitTests.class)
   public void testGet() throws Exception {
     /*  PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
                                               .userName("adwait.bhandare@harness.io")

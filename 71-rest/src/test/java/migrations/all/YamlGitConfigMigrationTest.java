@@ -8,7 +8,9 @@ import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
@@ -26,6 +28,7 @@ public class YamlGitConfigMigrationTest extends WingsBaseTest {
   @InjectMocks @Inject private YamlGitConfigMigration yamlGitConfigMigration;
 
   @Test
+  @Category(UnitTests.class)
   public void testMigration() {
     YamlGitConfig yamlGitConfig = YamlGitConfig.builder()
                                       .accountId(ACCOUNT_ID)

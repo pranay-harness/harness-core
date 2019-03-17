@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
@@ -38,6 +39,7 @@ import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
@@ -216,6 +218,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveSecret() throws IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -226,6 +229,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveAndUpdateSecret() throws IllegalAccessException {
     UsageRestrictions usageRestrictions =
         UsageRestrictionsServiceImplTest.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
@@ -330,6 +334,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveSecretUsingLocalMode() throws IllegalAccessException {
     if (encryptionType != EncryptionType.LOCAL) {
       return;
@@ -457,6 +462,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void updateSecretRef() {
     String secretName1 = "s1" + generateUuid();
@@ -610,6 +616,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void multipleVariableReference() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -713,6 +720,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void deleteSecret() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -800,6 +808,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listSecrets() throws IOException, IllegalAccessException {
     int numOfSecrets = 3;
     int numOfVariable = 4;
@@ -878,6 +887,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listSecretsWithSummary() throws IOException, IllegalAccessException {
     int numOfSecrets = 3;
     int numOfVariable = 4;
@@ -958,6 +968,7 @@ public class SecretTextTest extends WingsBaseTest {
     }
   }
   @Test
+  @Category(UnitTests.class)
   public void secretTextUsage() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -1018,6 +1029,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void saveAndUpdateFile() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
@@ -1156,6 +1168,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void multipleFileRefrence() throws IOException {
     final long seed = System.currentTimeMillis();
@@ -1274,6 +1287,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void deleteSecretFile() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
@@ -1379,6 +1393,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void deleteEncryptedConfigFile() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
@@ -1463,6 +1478,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateLocalToKms() {
     if (encryptionType != EncryptionType.LOCAL) {
       return;
@@ -1554,6 +1570,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableSearchTags() throws InterruptedException {
     String secretName = "name1";
@@ -1715,6 +1732,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableTemplateSearchTags() {
     String secretName = "name1";
@@ -1899,6 +1917,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableEnvironmentSearchTags() {
     String secretName = "name1";
@@ -2042,6 +2061,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void serviceVariableSyncSearchTags() {
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -2120,6 +2140,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void filterSecretSearchTags() {
     int numOfServiceVariables = 6;
     int numOfSecrets = numOfServiceVariables * 5;

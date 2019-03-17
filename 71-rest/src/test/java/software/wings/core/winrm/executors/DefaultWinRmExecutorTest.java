@@ -2,9 +2,11 @@ package software.wings.core.winrm.executors;
 
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.ConfigFile;
@@ -28,6 +30,7 @@ public class DefaultWinRmExecutorTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyConfigFile() {
     doReturn(CommandExecutionStatus.SUCCESS).when(defaultWinRmExecutor).copyConfigFiles(configFileMetaData);
   }

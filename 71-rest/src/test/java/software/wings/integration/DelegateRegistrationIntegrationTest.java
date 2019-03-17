@@ -3,10 +3,12 @@ package software.wings.integration;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.awaitility.Awaitility.await;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.rule.RepeatRule.Repeat;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   public void shouldWaitForADelegateToRegister() {
     await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
       List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class, excludeAuthority).asList();
@@ -29,6 +32,7 @@ public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldWaitForADelegateConnectionsToAppear() {
     await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
       List<DelegateConnection> delegateConnections =

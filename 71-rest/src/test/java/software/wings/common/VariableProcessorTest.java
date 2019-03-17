@@ -15,8 +15,10 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -47,6 +49,7 @@ public class VariableProcessorTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNoVariables() throws Exception {
     assertThat(variableProcessor.getVariables(new ArrayDeque<>(), null)).isEmpty();
   }
@@ -57,6 +60,7 @@ public class VariableProcessorTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetVariablesForInstanceElement() throws Exception {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
         .thenReturn(asList(ServiceVariable.builder().name("PORT").value("8080".toCharArray()).build()));

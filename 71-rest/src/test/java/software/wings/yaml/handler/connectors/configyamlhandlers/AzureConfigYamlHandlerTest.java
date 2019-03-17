@@ -8,12 +8,14 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 
 import java.io.IOException;
@@ -33,6 +35,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   private Class yamlClass = AzureConfig.Yaml.class;
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String azureConfigName = "Azure" + System.currentTimeMillis();
 
@@ -43,6 +46,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String azureConfigName = "Azure" + System.currentTimeMillis();
 
@@ -54,7 +58,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(aSettingAttribute()
-                                    .withCategory(Category.CLOUD_PROVIDER)
+                                    .withCategory(SettingCategory.CLOUD_PROVIDER)
                                     .withName(azureConfigName)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(AzureConfig.builder()

@@ -15,11 +15,13 @@ import static software.wings.beans.Account.Builder.anAccount;
 import com.google.inject.Inject;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import org.joda.time.DateTimeUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -44,6 +46,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   public void shouldTwoFactorAuthenticationUsingTOTP() throws InterruptedException {
     try {
       TwoFactorAuthHandler handler =
@@ -131,6 +134,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateTwoFactorAuthenticationSettingsTotp() {
     User user = spy(new User());
     Account account = mock(Account.class);
@@ -146,6 +150,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldOverrideTwoFactorAuthentication() {
     Account account = getAccount(true);
     User user = spy(new User());
@@ -161,6 +166,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAdminEnforce() {
     Account account = getAccount(false);
 
@@ -178,6 +184,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForAdminEnforce() {
     Account account = getAccount(true);
 
@@ -190,6 +197,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForMultiAccounts() {
     Account account1 = getAccount(false);
     Account account2 = getAccount(false);
@@ -203,6 +211,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAccounts() {
     User user = getUser(true);
     user.setAccounts(null);

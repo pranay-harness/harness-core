@@ -18,9 +18,11 @@ import static software.wings.beans.Account.Builder.anAccount;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.seeddata.SampleDataProviderConstants;
 import io.harness.seeddata.SampleDataProviderService;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
@@ -35,7 +37,7 @@ import software.wings.beans.SampleAppEntityStatus.Health;
 import software.wings.beans.SampleAppStatus;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -147,6 +149,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void ensureSampleAppHealthIsBad() {
     // Create a sample app v1
     Application sampleAppV1 = createHarnessSampleApp();
@@ -195,10 +198,10 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
       if (type.equals(EntityType.APPLICATION.name())) {
         assertThat(name).isEqualTo(HARNESS_SAMPLE_APP);
       }
-      if (type.equals(Category.CLOUD_PROVIDER.name())) {
+      if (type.equals(SettingCategory.CLOUD_PROVIDER.name())) {
         assertThat(name).isEqualTo(K8S_CLOUD_PROVIDER_NAME);
       }
-      if (type.equals(Category.CONNECTOR.name())) {
+      if (type.equals(SettingCategory.CONNECTOR.name())) {
         assertThat(name).isEqualTo(HARNESS_DOCKER_HUB_CONNECTOR);
       }
       if (type.equals(EntityType.SERVICE.name())) {
@@ -223,6 +226,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void ensureSampleAppHealthIsGood() {
     // Create a sample app v1
     Application sampleAppV1 = createHarnessSampleApp();
@@ -235,6 +239,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void ensureSampleAppRestore() {
     // Create a sample app
     Application sampleApp = createHarnessSampleApp();

@@ -9,10 +9,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -37,6 +39,7 @@ public class GitCommandCallbackTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCallbackForGitConnectionFailure() throws Exception {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
                                           .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
@@ -54,6 +57,7 @@ public class GitCommandCallbackTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCallbackForGitConnectionSuccess() throws Exception {
     ResponseData notifyResponseData =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();

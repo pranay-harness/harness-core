@@ -23,8 +23,7 @@ public class YamlPayloadIntegrationTest extends BaseIntegrationTest {
   }
 
   /* TODO - update these tests using new endpoints
-  @Test
-  public void testSaveFromYamlAndUpdateFromYaml() throws IOException {
+  @Test @Category(UnitTests.class) public void testSaveFromYamlAndUpdateFromYaml() throws IOException {
 
     //-------------- POST (Save) ------------------
 

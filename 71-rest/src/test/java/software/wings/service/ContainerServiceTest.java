@@ -24,8 +24,10 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -171,18 +173,21 @@ public class ContainerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetContainerInfos_Gcp() {
     List<ContainerInfo> result = containerService.getContainerInfos(gcpParams);
 
     assertThat(result.size()).isEqualTo(1);
   }
   @Test
+  @Category(UnitTests.class)
   public void shouldGetContainerInfos_Aws() {
     List<ContainerInfo> result = containerService.getContainerInfos(awsParams);
 
     assertThat(result.size()).isEqualTo(0);
   }
   @Test
+  @Category(UnitTests.class)
   public void shouldGetContainerInfos_DirectKube() {
     List<ContainerInfo> result = containerService.getContainerInfos(kubernetesConfigParams);
 

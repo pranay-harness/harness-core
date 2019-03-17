@@ -6,11 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.CommonsMethodRule;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,7 @@ public class ScmSecretTest {
   @Inject ScmSecret scmSecret;
 
   @Test
+  @Category(UnitTests.class)
   public void testEncoding() {
     if (!scmSecret.isInitialized()) {
       return;
@@ -55,6 +58,7 @@ public class ScmSecretTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void rebuildSecretProperties() throws URISyntaxException, IOException {
     if (!scmSecret.isInitialized()) {
       return;

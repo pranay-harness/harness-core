@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
 import io.harness.shell.ShellExecutionServiceImpl;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 
@@ -15,6 +17,7 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private ShellExecutionServiceImpl shellExecutionService;
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteShellScript() {
     ShellExecutionRequest shellExecutionRequest = ShellExecutionRequest.builder()
                                                       .scriptString("echo \"foo\" > $ARTIFACT_RESULT_PATH")
@@ -28,6 +31,7 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteScriptTimeout() {
     ShellExecutionRequest shellExecutionRequest =
         ShellExecutionRequest.builder().scriptString("sleep 10").workingDirectory("/tmp").timeoutSeconds(1).build();

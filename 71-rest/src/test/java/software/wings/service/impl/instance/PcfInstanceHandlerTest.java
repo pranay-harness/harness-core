@@ -37,8 +37,10 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.SPA
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -127,6 +129,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
   // 2 existing PCF instances,
   // expected 1 Delete, 1 Update
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(
@@ -212,6 +215,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances_2() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList());
@@ -285,6 +289,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances_rollback() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList());

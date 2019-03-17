@@ -12,9 +12,11 @@ import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -48,6 +50,7 @@ public class YamlGitServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCheckForValidNameSyntax() throws Exception {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Defaults.yaml").build());
@@ -79,6 +82,7 @@ public class YamlGitServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getAllYamlErrorsForAccount() {
     yamlGitService.getAllYamlErrorsForAccount(ACCOUNT_ID);
     verify(mockYamlDirectoryService)
@@ -86,6 +90,7 @@ public class YamlGitServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getAllYamlErrorsForAllAccounts() {
     List<Account> accounts = Arrays.asList(anAccount().withAccountName("Name1").withUuid("AccId1").build(),
         anAccount().withAccountName("Name2").withUuid("AccId2").build());

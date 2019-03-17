@@ -8,7 +8,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -29,6 +31,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   @InjectMocks @Inject private InstanceUsageLimitExcessHandler usageLimitExcessHandler;
 
   @Test
+  @Category(UnitTests.class)
   public void testAlertRaised() {
     String accountId = "some-account-id";
     long percentLimit = 90L;
@@ -54,6 +57,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAlertNotRaisedIfExisting() {
     String accountId = "some-account-id";
     long percentLimit = 90L;
@@ -71,6 +75,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAlertIsClosedWhenWithinLimit() {
     String accountId = "some-account-id";
     long percentLimit = 90L;

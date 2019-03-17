@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -13,6 +14,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -49,12 +51,14 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
           notifyResponseData -> {}, () -> true);
 
   @Test
+  @Category(UnitTests.class)
   public void testEmailNotification() {
     EmailRequest emailRequest = new EmailRequest();
     collaborationProviderTask.run(new Object[] {emailRequest});
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailure() {
     doThrow(new WingsException(ErrorCode.EMAIL_FAILED))
         .when(mailer)
@@ -66,6 +70,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllSupportedCommunicationTypes() {
     CollaborationProviderRequest request = Mockito.mock(CollaborationProviderRequest.class);
     for (CommunicationType type : CommunicationType.values()) {

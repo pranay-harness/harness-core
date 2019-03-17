@@ -14,10 +14,12 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Status;
@@ -78,12 +80,14 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     SplunkV2State splunkState = new SplunkV2State("SplunkState");
     assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, splunkState.getComparisonStrategy());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void noTestNodes() {
     SplunkV2State spyState = spy(splunkState);
     doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
@@ -106,6 +110,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void noControlNodesCompareWithCurrent() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
@@ -132,6 +137,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void compareWithCurrentSameTestAndControlNodes() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
@@ -160,6 +166,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
     assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     SplunkConfig splunkConfig = SplunkConfig.builder()
@@ -264,6 +271,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void handleAsyncSummaryFail() {
     LogAnalysisExecutionData logAnalysisExecutionData =
         LogAnalysisExecutionData.builder()
@@ -293,6 +301,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void handleAsyncSummaryPassNoData() {
     LogAnalysisExecutionData logAnalysisExecutionData =
         LogAnalysisExecutionData.builder()
@@ -340,6 +349,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTimestampFormat() {
     SimpleDateFormat sdf = new SimpleDateFormat(ElkAnalysisState.DEFAULT_TIME_FORMAT);
     assertNotNull(sdf.parse("2013-10-07T12:13:27.001Z", new ParsePosition(0)));

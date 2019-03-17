@@ -5,7 +5,9 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -40,24 +42,28 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   @Inject private MethodLicensedObject methodLicensedObject;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldInterceptMethodCallExtendedWithLicensing() throws Exception {
     methodLicensedObject.licensedMethod("ACCOUNT_ID");
     verify(licenseManager).validateLicense("ACCOUNT_ID", "licensedMethod");
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotInterceptMethodCallNotExtendedWithLicensing() throws Exception {
     methodLicensedObject.anotherMethod();
     verifyZeroInteractions(licenseManager);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotInterceptMethodCallMissingLicenseKeyWithLicensing() throws Exception {
     methodLicensedObject.licensedMethodWithoutKey("ACCOUNT_ID");
     verifyZeroInteractions(licenseManager);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldInterceptAllCallsFromClassAnnotatedWithLicenseAnnotation() throws Exception {
     classLicensedObject.method("ACCOUNT_ID");
     verify(licenseManager).validateLicense("ACCOUNT_ID", "method");

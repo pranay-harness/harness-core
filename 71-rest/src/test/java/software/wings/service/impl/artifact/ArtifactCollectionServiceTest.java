@@ -18,8 +18,10 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -75,6 +77,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectJenkinsArtifact() {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsArtifactStream();
@@ -90,6 +93,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectS3Artifact() {
     BuildDetails s3BuildDetails = getS3BuildDetails();
 
@@ -122,6 +126,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsDocker() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -145,6 +150,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsEcr() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     EcrArtifactStream ecrArtifactStream = EcrArtifactStream.builder()
@@ -168,6 +174,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsGcr() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
@@ -190,6 +197,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsAcr() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
@@ -212,6 +220,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsAmi() {
     String buildNumber = "AMI-Image";
     BuildDetails amiBuildDetails = aBuildDetails().withNumber(buildNumber).withRevision("ImageId").build();
@@ -235,6 +244,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsNexusDocker() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
@@ -257,6 +267,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsNexus() {
     String buildNUmber = "1.1";
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(buildNUmber).withRevision(buildNUmber).build();
@@ -281,6 +292,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsArtifactoryDocker() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     ArtifactoryArtifactStream artifactoryArtifactStream = getArtifactoryArtifactStream();
@@ -300,6 +312,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsArtifactoryGeneric() {
     String buildNumber = "todolist.rpm";
     BuildDetails artifactoryBuilds =
@@ -322,6 +335,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsS3() {
     BuildDetails s3BuildDetails = getS3BuildDetails();
     String buildNumber = s3BuildDetails.getNumber();
@@ -338,6 +352,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsJenkins() {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
     String buildNUmber = jenkinsBuildDetails.getNumber();
@@ -358,6 +373,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectNewArtifactsBamboo() {
     String buildNumber = "20";
     BuildDetails bambooBuildDetails = aBuildDetails().withNumber(buildNumber).build();

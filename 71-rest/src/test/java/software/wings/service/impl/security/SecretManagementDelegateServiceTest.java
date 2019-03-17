@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -12,6 +13,7 @@ import io.harness.security.encryption.EncryptedRecord;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 
@@ -42,6 +44,7 @@ public class SecretManagementDelegateServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {
     String secret = "TopSecret";

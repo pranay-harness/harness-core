@@ -10,11 +10,13 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
@@ -43,6 +45,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Category(UnitTests.class)
   public void testElkValidate() throws IOException {
     final String url = "https://ec2-34-207-78-53.compute-1.amazonaws.com:9200/";
     final String userName = "username";
@@ -66,6 +69,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHostConnectionValidationForPrivateKeyField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =
         HostConnectionAttributes.Builder.aHostConnectionAttributes()
@@ -90,6 +94,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHostConnectionValidationForUsernameField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =
         HostConnectionAttributes.Builder.aHostConnectionAttributes()

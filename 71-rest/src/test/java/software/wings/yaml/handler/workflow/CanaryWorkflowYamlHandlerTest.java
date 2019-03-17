@@ -14,12 +14,14 @@ import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.CANARY_V
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -46,6 +48,7 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
@@ -82,6 +85,7 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     testFailures(CANARY_VALID_YAML_CONTENT, CANARY_VALID_YAML_FILE_PATH, CANARY_INVALID_YAML_CONTENT,
         CANARY_INVALID_YAML_FILE_PATH, yamlHandler, CanaryWorkflowYaml.class);

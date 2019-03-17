@@ -4,6 +4,7 @@ import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.TreeWalker;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class UseIsEmptyCheckTest extends AbstractModuleTestSupport {
   @Override
@@ -22,6 +23,7 @@ public class UseIsEmptyCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
+  @Category(AbstractModuleTestSupport.class)
   public void testNullOrIsEmptyDetectIssues() throws Exception {
     final String[] expected = {"7:22: Use isEmpty utility method instead.", "9:22: Use isEmpty utility method instead.",
         "12:22: Use isNotEmpty utility method instead.", "14:22: Use isNotEmpty utility method instead.",
@@ -34,6 +36,7 @@ public class UseIsEmptyCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
+  @Category(AbstractModuleTestSupport.class)
   public void testFalsePositive() throws Exception {
     final String[] expected = {};
     verify(config(), getPath("UseIsEmptyCheckNonIssues.jv"), expected);

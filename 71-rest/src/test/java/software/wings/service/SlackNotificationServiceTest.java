@@ -15,8 +15,10 @@ import com.google.inject.Inject;
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
 import io.harness.beans.PageRequest;
+import io.harness.category.element.UnitTests;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -48,6 +50,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   @Inject private AppService appService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendMessage() {
     doReturn(slackWebhookClient).when(slackNotificationService).getWebhookClient(anyString());
     SlackConfig slackConfig = new SlackConfig();
@@ -62,6 +65,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldAddNotificationRulesForAllApplication() {
     List<Application> applications = appService.list(new PageRequest<>()).getResponse();

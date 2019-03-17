@@ -17,8 +17,10 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -49,6 +51,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCRUDArtifactConditionTrigger() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(JenkinsArtifactStream.builder()

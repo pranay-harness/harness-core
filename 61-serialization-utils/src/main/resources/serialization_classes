@@ -100,7 +100,7 @@ software.wings.beans.AppContainer, 5064
 software.wings.beans.ChecksumType, 5065
 software.wings.beans.artifact.ArtifactFile, 5066
 software.wings.beans.infrastructure.Host, 5067
-software.wings.beans.SettingAttribute$Category, 5069
+software.wings.beans.SettingAttribute$SettingCategory, 5069
 software.wings.beans.HostConnectionAttributes, 5070
 software.wings.beans.HostConnectionAttributes$ConnectionType, 5071
 software.wings.beans.HostConnectionAttributes$AccessType, 5072

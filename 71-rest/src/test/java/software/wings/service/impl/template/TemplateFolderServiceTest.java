@@ -18,8 +18,10 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.utils.WingsTestConstants;
@@ -29,12 +31,14 @@ import javax.validation.ConstraintViolationException;
 
 public class TemplateFolderServiceTest extends TemplateBaseTest {
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void shouldNotDeleteRootFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateFolderService.delete(parentFolder.getUuid());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
@@ -48,6 +52,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Category(UnitTests.class)
   public void shouldNotSaveInvalidNameTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder = constructTemplateBuilder(parentFolder.getUuid());
@@ -56,6 +61,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
@@ -77,6 +83,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
@@ -92,6 +99,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
@@ -113,6 +121,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Category(UnitTests.class)
   public void shouldNotUpdateWithInvalidNameTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
@@ -127,6 +136,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadTemplateFolders() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
@@ -135,6 +145,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTree() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
@@ -148,6 +159,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetGlobalTemplateRootTree() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, null);
     assertThat(templateFolder).isNotNull();
@@ -164,6 +176,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTreeByKeyword() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, TOMCAT_COMMANDS, null);
     assertThat(templateFolder).isNotNull();
@@ -180,6 +193,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder =
@@ -198,6 +212,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTreeByKeywordAndTypes() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder =
@@ -217,6 +232,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTreeByKeywordAndTypesNotMatching() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder =
@@ -225,6 +241,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -244,6 +261,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountTemplateTree() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -262,6 +280,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadTomcatStandardInstallCommand() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateGalleryService.save(TemplateGallery.builder()
@@ -292,6 +311,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetRootFolder() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -308,6 +328,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetFolderByPath() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);

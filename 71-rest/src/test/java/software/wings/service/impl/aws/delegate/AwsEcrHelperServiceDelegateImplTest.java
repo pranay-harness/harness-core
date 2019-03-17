@@ -12,7 +12,9 @@ import com.amazonaws.services.ecr.model.AuthorizationData;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenResult;
 import com.amazonaws.services.ecr.model.Repository;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -27,6 +29,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEcrHelperServiceDelegateImpl awsEcrHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testGetEcrImageUrl() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
     doReturn(mockClient).when(awsEcrHelperServiceDelegate).getAmazonEcrClient(any(), anyString());
@@ -40,6 +43,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetAmazonEcrAuthToken() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
     doReturn(mockClient).when(awsEcrHelperServiceDelegate).getAmazonEcrClient(any(), anyString());

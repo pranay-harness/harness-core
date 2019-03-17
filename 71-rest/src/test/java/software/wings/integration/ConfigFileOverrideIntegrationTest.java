@@ -17,12 +17,14 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
@@ -33,7 +35,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -139,7 +141,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
 
     settingsService.save(aSettingAttribute()
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withName("AppDynamics")
                              .withAccountId(accountId)
                              .withValue(AppDynamicsConfig.builder()
@@ -179,6 +181,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldApplyServiceConfigFilesIT() throws IOException {
     attacheConfigFileToEntity(template.getServiceId(), EntityType.SERVICE);
 

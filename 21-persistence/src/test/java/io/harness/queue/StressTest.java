@@ -7,6 +7,7 @@ import static org.joor.Reflect.on;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
+import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
@@ -16,6 +17,7 @@ import io.harness.threading.Puller;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +41,7 @@ public class StressTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   @Bypass
   public void shouldGetWithNegativeWait() throws IOException {

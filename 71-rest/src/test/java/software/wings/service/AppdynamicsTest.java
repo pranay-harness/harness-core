@@ -12,17 +12,19 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -78,7 +80,7 @@ public class AppdynamicsTest extends WingsBaseTest {
             .build();
     settingAttribute = aSettingAttribute()
                            .withName("AppD")
-                           .withCategory(Category.CONNECTOR)
+                           .withCategory(SettingCategory.CONNECTOR)
                            .withAccountId(accountId)
                            .withValue(appDynamicsConfig)
                            .build();
@@ -87,6 +89,7 @@ public class AppdynamicsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void validateConfig() {
     ((AppDynamicsConfig) settingAttribute.getValue())
@@ -96,6 +99,7 @@ public class AppdynamicsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void getAllApplications() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
@@ -104,6 +108,7 @@ public class AppdynamicsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void getTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
@@ -116,6 +121,7 @@ public class AppdynamicsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void getDependentTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());

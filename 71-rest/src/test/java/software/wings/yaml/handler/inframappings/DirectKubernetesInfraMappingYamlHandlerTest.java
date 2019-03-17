@@ -18,10 +18,12 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -139,6 +141,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(validYamlContentWithKubernetesClusterCloudProvider, validYamlFilePath, yamlHandler);
@@ -172,6 +175,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);

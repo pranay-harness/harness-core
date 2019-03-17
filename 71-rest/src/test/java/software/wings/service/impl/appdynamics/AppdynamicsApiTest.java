@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -34,6 +35,7 @@ import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +44,7 @@ import retrofit2.Response;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -100,6 +102,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void testUnreachableAppdynamicsServer() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     RuntimeException runtimeException = new RuntimeException(UUID.randomUUID().toString());
@@ -123,6 +126,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void testInvalidCredential() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     when(restCall.execute()).thenReturn(Response.error(HttpStatus.SC_UNAUTHORIZED, new RealResponseBody(null, null)));
@@ -143,6 +147,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidConfig() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     when(restCall.execute()).thenReturn(Response.success(Collections.emptyList()));
@@ -155,6 +160,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetApplications() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     List<NewRelicApplication> applications = Lists.newArrayList(
@@ -178,6 +184,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetTiers() throws IOException {
     Call<Set<AppdynamicsTier>> restCall = mock(Call.class);
     Set<AppdynamicsTier> tiers =
@@ -195,6 +202,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testGetTierDependencies() throws IOException {
     int numOfTiers = 5;
@@ -242,6 +250,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBTs() throws IOException, CloneNotSupportedException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
     AppdynamicsTier tier =
@@ -271,6 +280,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBTData() throws IOException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
     AppdynamicsTier tier =
@@ -374,7 +384,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                             .withAccountId(appDynamicsConfig.getAccountId())
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
