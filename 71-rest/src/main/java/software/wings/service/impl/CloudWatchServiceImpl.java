@@ -175,7 +175,6 @@ public class CloudWatchServiceImpl implements CloudWatchService {
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(CloudWatchSetupTestNodeData setupTestNodeData) {
-    String hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
     try {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
@@ -185,6 +184,10 @@ public class CloudWatchServiceImpl implements CloudWatchService {
                                             .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
+      String hostName = null;
+      if (!setupTestNodeData.isServiceLevel()) {
+        hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+      }
       return delegateProxyFactory.get(CloudWatchDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AwsConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
               createApiCallLog(

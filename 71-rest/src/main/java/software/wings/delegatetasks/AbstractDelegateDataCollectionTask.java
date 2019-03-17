@@ -42,7 +42,7 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegateRunnableTask {
   public static final String HARNESS_HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
-  public static final int PREDECTIVE_HISTORY_MINUTES = 30;
+  public static final int PREDECTIVE_HISTORY_MINUTES = 120;
   public static final int RETRIES = 3;
   private static final int COLLECTION_PERIOD_MINS = 1;
   protected final AtomicBoolean completed = new AtomicBoolean(false);

@@ -101,11 +101,11 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
 
     List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> lBMetricsResults =
         dataCollectionService.executeParrallel(callables);
-    List<NewRelicMetricDataRecord> metricDataRecordsForLBMetrics = new ArrayList<>();
+    List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
 
     lBMetricsResults.forEach(metricDataRecordsOptional -> {
       if (metricDataRecordsOptional.isPresent()) {
-        metricDataRecordsForLBMetrics.addAll(metricDataRecordsOptional.get().values());
+        metricDataRecords.addAll(metricDataRecordsOptional.get().values());
       }
     });
 
@@ -131,11 +131,35 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
       }
     });
 
+    if (!isEmpty(setupTestNodeData.getEcsMetrics())) {
+      setupTestNodeData.getEcsMetrics().forEach(
+          (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+            callables.add(()
+                              -> getMetricDataRecords(AwsNameSpace.ECS, cloudWatchClient, cloudWatchMetric, clusterName,
+                                  DEFAULT_GROUP_NAME,
+                                  CloudWatchDataCollectionInfo.builder()
+                                      .awsConfig(config)
+                                      .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                                      .build(),
+                                  setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
+                                  setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
+          }));
+    }
+
+    List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> ecsMetricsResults =
+        dataCollectionService.executeParrallel(callables);
+
+    ecsMetricsResults.forEach(metricDataRecordsOptional -> {
+      if (metricDataRecordsOptional.isPresent()) {
+        metricDataRecords.addAll(metricDataRecordsOptional.get().values());
+      }
+    });
+
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
         .loadResponse(VerificationLoadResponse.builder()
-                          .loadResponse(metricDataRecordsForLBMetrics)
-                          .isLoadPresent(!metricDataRecordsForLBMetrics.isEmpty())
+                          .loadResponse(metricDataRecords)
+                          .isLoadPresent(!metricDataRecords.isEmpty())
                           .build())
         .dataForNode(metricDataRecordsForHostMetrics)
         .build();
