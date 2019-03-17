@@ -72,7 +72,7 @@ public class LogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
-  private double overallScore;
+  private double overallScore = -1.0;
   private int timesLabeled;
 
   @Transient
