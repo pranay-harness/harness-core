@@ -1014,8 +1014,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
 
-    String tagWithMaxRisk = resp.first().getTag();
-    resp.removeIf(timeseries -> !timeseries.getTag().equals(tagWithMaxRisk));
+    if (resp.size() > 0) {
+      String tagWithMaxRisk = resp.first().getTag();
+      resp.removeIf(timeseries -> !timeseries.getTag().equals(tagWithMaxRisk));
+    }
     // logger.info("Timeseries response = {}", resp);
     logger.info("TimeSeries response size is : {}", resp.size());
     return resp;

@@ -284,7 +284,9 @@ public class IndexManagement {
         "quartz_verification_calendars", "quartz_verification_jobs", "quartz_verification_locks",
         "quartz_verification_schedulers", "quartz_verification_triggers",
         // Persistent locks
-        "locks");
+        "locks",
+        // verification service
+        "timeSeriesAnomaliesRecords", "timeSeriesCumulativeSums");
 
     final List<String> obsoleteCollections = primaryDatastore.getDB()
                                                  .getCollectionNames()
