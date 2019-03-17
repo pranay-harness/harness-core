@@ -158,6 +158,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
         .appId(appId)
         .settingId(awsConfigId)
         .loadBalancerMetricsByLBName(getMockMetricsByLBName())
+        .ecsMetrics(getMockMetricsByECSName())
         .ec2Metrics(getMockEC2Metrics())
         .guid("test_guid")
         .instanceName("testHost")
@@ -223,6 +224,22 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
     List<CloudWatchMetric> metrics = new ArrayList<>();
     metrics.add(metric1);
     metricsByLBName.put("int-test", metrics);
+    return metricsByLBName;
+  }
+
+  private Map<String, List<CloudWatchMetric>> getMockMetricsByECSName() {
+    Map<String, List<CloudWatchMetric>> metricsByLBName = new HashMap<>();
+    CloudWatchMetric metric1 = CloudWatchMetric.builder()
+                                   .metricName("CPUUtilization")
+                                   .displayName("CPU Utilization")
+                                   .dimension("ClusterName")
+                                   .dimensionDisplay("Cluster Name")
+                                   .metricType("VALUE")
+                                   .enabledDefault(true)
+                                   .build();
+    List<CloudWatchMetric> metrics = new ArrayList<>();
+    metrics.add(metric1);
+    metricsByLBName.put("CV-ECS-QA-Test", metrics);
     return metricsByLBName;
   }
 }
