@@ -32,8 +32,10 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -133,6 +135,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
   // expected 1 Delete
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstancesDelete_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
         .when(infraMappingService)
@@ -176,6 +179,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
   // expected  1 add
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstancesAdd_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
         .when(infraMappingService)
@@ -233,6 +237,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNewDeployment_DeleteOlderInstance_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
         .when(infraMappingService)
@@ -285,6 +290,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNewDeployment_AddNewInstance_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
         .when(infraMappingService)
@@ -355,6 +361,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances_DeleteInstance_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
         .when(infraMappingService)
@@ -399,6 +406,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances_AddInstance_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
         .when(infraMappingService)
@@ -452,6 +460,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNewDeployment_DeleteOldInstances_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
         .when(infraMappingService)
@@ -506,6 +515,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNewDeployment_AddNewInstance_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
         .when(infraMappingService)
@@ -545,6 +555,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNewDeployment_Kubernetes_Rollback() throws Exception {
     doReturn(Optional.of(
                  DeploymentSummary.builder()

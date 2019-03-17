@@ -5,10 +5,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.Counter;
 import io.harness.limits.impl.model.StaticLimit;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
@@ -25,6 +27,7 @@ public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseInte
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCrossed() {
     String key = "some-key-" + NAMESPACE;
     Counter counter = new Counter(key, 10);

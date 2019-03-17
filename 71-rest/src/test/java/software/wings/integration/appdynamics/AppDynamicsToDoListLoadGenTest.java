@@ -1,7 +1,9 @@
 package software.wings.integration.appdynamics;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
 
 import javax.ws.rs.client.WebTarget;
@@ -14,6 +16,7 @@ public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
   //  private final String baseUrl = "https://appd.cfapps.io";
   //  private final String baseUrl = "http://localhost:8080";
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void generateLoadTest() throws InterruptedException {
     while (true) {

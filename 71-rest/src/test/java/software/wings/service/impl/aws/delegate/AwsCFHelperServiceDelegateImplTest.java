@@ -13,7 +13,9 @@ import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.GetTemplateResult;
 import com.amazonaws.services.cloudformation.model.GetTemplateSummaryResult;
 import com.amazonaws.services.cloudformation.model.ParameterDeclaration;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -29,6 +31,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsCFHelperServiceDelegateImpl awsCFHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testGetParamsData() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
@@ -56,6 +59,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetStackBody() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     doReturn(mockClient)
@@ -67,6 +71,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCapabilities() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     doReturn(mockClient)

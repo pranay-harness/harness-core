@@ -27,8 +27,10 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -69,6 +71,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendJenkinsTask() {
     SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
                                              .withValue(JenkinsConfig.builder()
@@ -105,6 +108,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendBambooTask() {
     SettingAttribute SETTING_ATTRIBUTE =
         aSettingAttribute()
@@ -138,6 +142,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
     artifactCollectEventListener.onMessage(
         aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build()).build());

@@ -6,9 +6,11 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -20,6 +22,7 @@ import java.util.Map;
 
 public class DatadogStateTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void metrics() {
     Map<String, DatadogState.Metric> metrics =
         DatadogState.metrics(Lists.newArrayList("trace.servlet.request.duration"));
@@ -32,6 +35,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricDefinitions() {
     Map<String, DatadogState.Metric> metrics =
         DatadogState.metrics(Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"));
@@ -46,6 +50,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricEndpointsInfo() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
         "todolist", Lists.newArrayList("system.cpu.iowait", "trace.servlet.request.duration"), null);
@@ -62,6 +67,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricEndpointsInfoTransformation() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
         DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("kubernetes.cpu.usage.total"), null);
@@ -76,6 +82,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricEndpointsInfoDocker() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
         DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("docker.cpu.usage"), null);
@@ -90,6 +97,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void metricEndpointsInfoDocker24x7() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
         DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("docker.cpu.usage"), "cluster:harness-test");
@@ -104,12 +112,14 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testBadMetric() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
         DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("dummyMetricName"), null);
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testBadServiceName() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
         null, Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"), null);

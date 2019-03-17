@@ -14,6 +14,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.IntegrationTests;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -22,6 +23,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.WorkflowExecution;
@@ -77,6 +79,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
    */
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Category(IntegrationTests.class)
   @Ignore
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");

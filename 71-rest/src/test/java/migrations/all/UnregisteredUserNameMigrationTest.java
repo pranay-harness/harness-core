@@ -3,10 +3,12 @@ package migrations.all;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
@@ -30,6 +32,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfAllUnregisteredUsers() {
     long initialCount = 10;
     prepareTest(initialCount, Constants.NOT_REGISTERED);
@@ -45,6 +48,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoMigrationOfRegisteredUsers() {
     long initialCount = 10;
     prepareTest(initialCount, "TestUser");
@@ -60,6 +64,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationOfSomeRegisteredUsers() {
     long initialCount = 10;
     prepareTest(initialCount, "TestUser");

@@ -22,9 +22,11 @@ import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Stack;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -67,6 +69,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateStack() {
     String templateBody = "Template Body";
     String accessKey = "abcd";
@@ -130,6 +133,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateStack() {
     String templateBody = "Template Body";
     String accessKey = "abcd";
@@ -175,6 +179,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeleteStack() {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
@@ -211,6 +216,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListStacks() {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();

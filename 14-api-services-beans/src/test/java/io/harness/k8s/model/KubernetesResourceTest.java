@@ -6,8 +6,10 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
+import io.harness.category.element.UnitTests;
 import io.harness.k8s.manifest.ManifestHelper;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.URL;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.function.UnaryOperator;
 
 public class KubernetesResourceTest {
   @Test
+  @Category(UnitTests.class)
   public void setAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -45,6 +48,7 @@ public class KubernetesResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void arrayFieldsSetAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/two-containers.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -68,6 +72,7 @@ public class KubernetesResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void addAnnotationTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -83,6 +88,7 @@ public class KubernetesResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void addLabelsTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -99,6 +105,7 @@ public class KubernetesResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void nameUpdateTests() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);

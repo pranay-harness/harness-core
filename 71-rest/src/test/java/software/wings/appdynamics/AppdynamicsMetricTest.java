@@ -3,8 +3,10 @@ package software.wings.appdynamics;
 import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
 
@@ -15,6 +17,7 @@ import java.util.List;
  */
 public class AppdynamicsMetricTest {
   @Test
+  @Category(UnitTests.class)
   public void testAppdynamicsMetricParse() throws Exception {
     final String metricResponse = "[{\"name\": \"Average Response Time (ms)\", \"type\": \"leaf\"},"
         + "{\"name\": \"Calls per Minute\",\"type\": \"folder\"},"

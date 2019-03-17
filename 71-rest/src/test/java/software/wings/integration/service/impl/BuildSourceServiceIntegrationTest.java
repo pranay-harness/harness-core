@@ -11,8 +11,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.Category.CLOUD_PROVIDER;
-import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
+import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.category.element.IntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
@@ -32,6 +33,7 @@ import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
@@ -296,6 +298,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void getJobs() {
     switch (type) {
@@ -312,6 +315,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void getPlans() {
     switch (type) {
@@ -327,6 +331,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void getPlansWithService() {
     switch (type) {
@@ -344,6 +349,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void getArtifactPaths() {
     switch (type) {
@@ -360,6 +366,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void getBuilds() {
     switch (type) {
@@ -375,6 +382,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void getLastSuccessfulBuild() {
     switch (type) {
@@ -409,6 +417,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void getGroupIds() {
     Set<String> groupIds;
@@ -448,6 +457,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   @Ignore
   public void validateArtifactSource() {
     switch (type) {

@@ -6,15 +6,18 @@ import static org.assertj.core.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ReleaseHistoryTest {
   @Test
+  @Category(UnitTests.class)
   public void smokeTest() throws Exception {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.createNewRelease(
@@ -27,6 +30,7 @@ public class ReleaseHistoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void noReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
 
@@ -46,6 +50,7 @@ public class ReleaseHistoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void createReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.createNewRelease(
@@ -76,6 +81,7 @@ public class ReleaseHistoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getLastSuccessfulReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
 

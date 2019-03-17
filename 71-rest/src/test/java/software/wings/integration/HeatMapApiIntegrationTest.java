@@ -14,7 +14,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -75,7 +75,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                            .withAccountId(accountId)
                            .withName("someSettingAttributeName")
-                           .withCategory(Category.CONNECTOR)
+                           .withCategory(SettingCategory.CONNECTOR)
                            .withEnvId(savedEnv.getUuid())
                            .withAppId(savedApp.getUuid())
                            .build();
@@ -188,7 +188,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  //  @Test
+  //  @Test @Category(IntegrationTests.class)
   public void testHeatMapSummary() {
     String url = API_BASE + "/cvdash" + VerificationConstants.HEATMAP_SUMMARY + "?accountId=" + accountId
         + "&appId=" + savedApp.getUuid() + "&serviceId=" + savedService.getUuid() + "&startTime=" + start1DayAgo
@@ -210,7 +210,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, heatMapUnits.get(heatMapUnits.size() - 1).getNa());
   }
 
-  //  @Test
+  //  @Test @Category(IntegrationTests.class)
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   public void testTimeSeries() {
     String url = API_BASE + "/cvdash" + VerificationConstants.TIMESERIES + "?accountId=" + accountId

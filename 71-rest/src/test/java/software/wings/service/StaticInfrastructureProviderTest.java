@@ -21,7 +21,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -44,6 +46,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   @Inject @InjectMocks private StaticInfrastructureProvider infrastructureProvider = new StaticInfrastructureProvider();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListHosts() {
     Host host = aHost().withHostName(HOST_NAME).build();
     when(hostService.list(any(PageRequest.class))).thenReturn(aPageResponse().withResponse(asList(host)).build());
@@ -56,6 +59,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveHost() {
     Host reqHost = aHost().withHostName(HOST_NAME).build();
     Host savedHost = aHost().withUuid(HOST_ID).withHostName(HOST_NAME).build();
@@ -68,12 +72,14 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
     verify(hostService).deleteByDnsName(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateHostConnAttrs() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()

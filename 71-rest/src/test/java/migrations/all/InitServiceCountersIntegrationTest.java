@@ -5,10 +5,12 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Service;
 import software.wings.integration.BaseIntegrationTest;
 
@@ -22,6 +24,7 @@ public class InitServiceCountersIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrate() {
     long serviceCount = wingsPersistence.createQuery(Service.class).count();
     if (serviceCount == 0) {

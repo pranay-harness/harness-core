@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
 import io.harness.rule.CommonsMethodRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,7 @@ public class AsymmetricTest extends CategoryTest {
   @Inject AsymmetricDecryptor asymmetricDecryptor;
 
   @Test
+  @Category(UnitTests.class)
   public void testEncoding()
       throws NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException,
              InvalidKeyException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException {

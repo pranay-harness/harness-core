@@ -9,9 +9,11 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -61,6 +63,7 @@ public class YamlChangeSetHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRenameYamlChangeForInfraMapping() throws Exception {
     GitFileChange gitFileChangeForDelete = GitFileChange.Builder.aGitFileChange()
                                                .withChangeType(ChangeType.DELETE)
@@ -108,6 +111,7 @@ public class YamlChangeSetHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateYamlChangeForInfraMapping() throws Exception {
     GitFileChange gitFileChangeForModify = GitFileChange.Builder.aGitFileChange()
                                                .withChangeType(ChangeType.MODIFY)
@@ -141,6 +145,7 @@ public class YamlChangeSetHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRenameYamlChangeForArtifactStream() throws Exception {
     GitFileChange gitFileChangeForDelete = GitFileChange.Builder.aGitFileChange()
                                                .withChangeType(ChangeType.DELETE)
@@ -189,6 +194,7 @@ public class YamlChangeSetHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateYamlChangeForArtifactStream() throws Exception {
     GitFileChange gitFileChangeForModify = GitFileChange.Builder.aGitFileChange()
                                                .withChangeType(ChangeType.MODIFY)

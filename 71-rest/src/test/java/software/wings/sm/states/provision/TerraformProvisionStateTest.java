@@ -3,9 +3,11 @@ package software.wings.sm.states.provision;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.NameValuePair;
 
@@ -18,6 +20,7 @@ import java.util.Map;
 
 public class TerraformProvisionStateTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void shouldParseOutputs() throws IOException {
     assertThat(TerraformProvisionState.parseOutputs(null).size()).isEqualTo(0);
     assertThat(TerraformProvisionState.parseOutputs("").size()).isEqualTo(0);
@@ -32,6 +35,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateAndFilterVariables() {
     List<NameValuePair> variables = new ArrayList<>();
     List<NameValuePair> provisionerVariables = new ArrayList<>();

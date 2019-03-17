@@ -13,9 +13,11 @@ import de.bwaldvogel.mongo.wire.MongoWireProtocolHandler;
 import io.harness.cache.Distributable;
 import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
+import io.harness.category.element.UnitTests;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -93,6 +95,7 @@ public class MongoStoreTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNominalUpdateGet() {
     TestNominalEntity foo =
         mongoStore.<TestNominalEntity>get(0, TestNominalEntity.algorithmId, TestNominalEntity.STRUCTURE_HASH, "key");
@@ -106,6 +109,7 @@ public class MongoStoreTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testOrdinalUpdateGet() {
     Logger log = LoggerFactory.getLogger(MongoWireProtocolHandler.class);
     final LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) log).getLoggerContext();

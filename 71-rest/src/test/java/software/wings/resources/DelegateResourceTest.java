@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -24,6 +25,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
@@ -101,6 +103,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListDelegates() throws Exception {
     PageResponse<Delegate> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(aDelegate().build()));
@@ -119,6 +122,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDelegateStatus() throws Exception {
     when(DELEGATE_SERVICE.getDelegateStatus(any()))
         .thenReturn(DelegateStatus.builder().publishedVersions(asList("1.0.0")).build());
@@ -131,6 +135,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRegisterDelegate() throws Exception {
     when(DELEGATE_SERVICE.register(any(Delegate.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
@@ -152,6 +157,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddDelegate() throws Exception {
     Delegate delegate = aDelegate().build();
 
@@ -172,6 +178,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateDelegate() throws Exception {
     Delegate delegate = aDelegate().withUuid(ID_KEY).build();
 
@@ -194,6 +201,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateDelegateDescription() throws Exception {
     final String newDesc = "newDescription";
     Delegate delegate = aDelegate().withUuid(ID_KEY).withAccountId(ACCOUNT_ID).withDescription(newDesc).build();
@@ -213,6 +221,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDelete() throws Exception {
     Response restResponse =
         RESOURCES.client().target("/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID).request().delete();
@@ -221,6 +230,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGet() throws Exception {
     Delegate delegate = aDelegate().withUuid(ID_KEY).build();
 
@@ -235,6 +245,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDownloadUrl() throws Exception {
     when(httpServletRequest.getRequestURI()).thenReturn("/delegates/downloadUrl");
     when(DOWNLOAD_TOKEN_SERVICE.createDownloadToken("delegate." + ACCOUNT_ID)).thenReturn("token");
@@ -250,6 +261,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDownloadDelegate() throws Exception {
     File file = File.createTempFile("test", ".txt");
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
@@ -271,6 +283,7 @@ public class DelegateResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldAcceptDelegateResponse() {
     DelegateTaskResponse response = DelegateTaskResponse.builder().build();

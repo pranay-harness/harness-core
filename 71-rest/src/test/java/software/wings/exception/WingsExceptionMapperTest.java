@@ -12,9 +12,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
@@ -22,6 +24,7 @@ import software.wings.WingsBaseTest;
 
 public class WingsExceptionMapperTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void sanity() {
     final WingsException exception = WingsException.builder().code(DEFAULT_ERROR_CODE).build();
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
@@ -39,6 +42,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void missingParameter() throws IllegalAccessException {
     final WingsException exception = new WingsException(INVALID_ARTIFACT_SOURCE, USER);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
@@ -52,6 +56,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void overrideMessage() throws IllegalAccessException {
     final WingsException exception =
         WingsException.builder().message("Override message").code(DEFAULT_ERROR_CODE).build();
@@ -71,6 +76,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotLogHarmless() {
     final WingsException exception = new WingsException(DEFAULT_ERROR_CODE, USER);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
@@ -87,6 +93,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void recursiveParamTest() {
     WingsException exception = new WingsException(VAULT_OPERATION_ERROR, USER);
     exception.addParam("reason", "recursive call to ${reason}");

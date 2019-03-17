@@ -17,11 +17,13 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
+import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -63,6 +65,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListApplication() {
     awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
         .forEach(application -> { logger.info(application.toString()); });
@@ -92,6 +95,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListApplicationRevisions() {
     logger.info(awsCodeDeployService
                     .getApplicationRevisionList(Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG",
@@ -100,6 +104,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListDeploymentInstances() {
     doReturn(AwsConfig.builder().build()).when(awsHelperService).validateAndGetAwsConfig(any(), any());
 

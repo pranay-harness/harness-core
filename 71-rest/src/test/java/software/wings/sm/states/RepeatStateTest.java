@@ -9,8 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ServiceElement;
@@ -37,6 +39,7 @@ public class RepeatStateTest {
    * Should execute serial.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteSerial() {
     String stateName = "test";
 
@@ -68,6 +71,7 @@ public class RepeatStateTest {
    * Should execute parallel.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteParallel() {
     List<ContextElement> repeatElements = getTestRepeatElements();
     String stateName = "test";

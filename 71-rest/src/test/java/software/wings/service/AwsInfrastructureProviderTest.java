@@ -32,8 +32,10 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -88,6 +90,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListHostsPublicDns() {
     Filter filter = new Filter("instance-state-name", asList("running"));
     List<Instance> resultList =
@@ -118,6 +121,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListHostsPrivateDns() {
     Filter filter = new Filter("instance-state-name", asList("running"));
     List<Instance> resultList =
@@ -147,6 +151,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListHostsEmpty() {
     Filter filter = new Filter("instance-state-name", asList("running"));
     doReturn(emptyList())
@@ -170,6 +175,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveHost() {
     Host reqHost = aHost().withHostName(HOST_NAME).build();
     Host savedHost = aHost().withUuid(HOST_ID).withHostName(HOST_NAME).build();
@@ -182,12 +188,14 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
     verify(hostService).deleteByDnsName(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateHostConnAttrs() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
                                                             .withAppId(APP_ID)
@@ -200,6 +208,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldProvisionHosts() {
     String region = Regions.US_EAST_1.getName();
     AwsInfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()

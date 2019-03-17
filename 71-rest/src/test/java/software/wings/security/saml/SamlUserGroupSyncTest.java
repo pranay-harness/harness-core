@@ -11,8 +11,10 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -51,6 +53,7 @@ public class SamlUserGroupSyncTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSamlGroupSyncShouldPass() {
     SamlUserAuthorization samlUserAuthorization = SamlUserAuthorization.builder()
                                                       .email("test@harenss.io")

@@ -4,7 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.container.PcfServiceSpecification;
@@ -13,6 +15,7 @@ public class ServiceHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private ServiceHelper serviceHelper;
 
   @Test
+  @Category(UnitTests.class)
   public void testAddPlaceholderTexts() {
     PcfServiceSpecification pcfServiceSpecification =
         PcfServiceSpecification.builder()

@@ -40,9 +40,11 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -178,6 +180,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
@@ -209,6 +212,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetDownsizeUpdateCount() throws Exception {
     // PERCENT
     pcfDeployState.setDownsizeInstanceUnitType(InstanceUnitType.PERCENTAGE);

@@ -7,12 +7,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
+import io.harness.category.element.UnitTests;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
 
@@ -32,6 +34,7 @@ public class HPersistenceTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSave() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
     String id = persistence.save(entity);
@@ -39,6 +42,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveList() {
     List<TestEntity> list = Lists.newArrayList();
     IntStream.range(0, 5).forEach(i -> {
@@ -50,6 +54,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveIgnoringDuplicateKeysList() {
     List<TestEntity> list = Lists.newArrayList();
     IntStream.range(0, 5).forEach(i -> {
@@ -68,6 +73,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGet() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldGet").build();
     persistence.save(entity);
@@ -77,6 +83,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteUuid() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteUuid").build();
 
@@ -95,6 +102,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteQuery() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteQuery").build();
 
@@ -113,6 +121,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteEntity() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteEntity").build();
 

@@ -7,7 +7,9 @@ import static software.wings.utils.Util.getNameWithNextRevision;
 
 import com.google.common.collect.ImmutableList;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.NameValuePair;
 
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import java.util.Map;
 
 public class UtilTest {
   @Test
+  @Category(UnitTests.class)
   public void testToProperties() {
     List<NameValuePair> nameValuePairList = new ArrayList<>();
     nameValuePairList.add(NameValuePair.builder().name("n1").value("v1").build());
@@ -28,6 +31,7 @@ public class UtilTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEscapifyString() {
     assertThat(escapifyString("ab\\")).isEqualTo("ab\\\\");
     assertThat(escapifyString("ab\\cd")).isEqualTo("ab\\cd");
@@ -44,6 +48,7 @@ public class UtilTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetNameWithNextRevision() {
     assertThat(getNameWithNextRevision(ImmutableList.of("abc-def"), "abc-def")).isEqualTo("abc-def-1");
     assertThat(getNameWithNextRevision(ImmutableList.of("abc-def-1", "abc-def"), "abc-def")).isEqualTo("abc-def-2");

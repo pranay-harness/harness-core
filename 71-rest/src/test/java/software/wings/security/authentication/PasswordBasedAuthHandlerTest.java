@@ -11,10 +11,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
@@ -39,6 +41,7 @@ public class PasswordBasedAuthHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testInvalidArgument() {
     try {
       assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
@@ -64,6 +67,7 @@ public class PasswordBasedAuthHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBasicTokenValidationNoUserFound() {
     try {
       doReturn(null).when(authHandler).getUser(anyString());
@@ -75,6 +79,7 @@ public class PasswordBasedAuthHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBasicTokenValidationEmailNotVerified() {
     try {
       User user = new User();
@@ -87,6 +92,7 @@ public class PasswordBasedAuthHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBasicTokenValidationInvalidCredentials() {
     try {
       User mockUser = mock(User.class);
@@ -101,6 +107,7 @@ public class PasswordBasedAuthHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBasicTokenValidationValidCredentials() {
     User mockUser = new User();
     mockUser.setEmailVerified(true);

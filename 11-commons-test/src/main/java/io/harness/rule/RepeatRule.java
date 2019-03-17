@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import io.harness.rule.RepeatRule.RepeatStatement.RepeatStatementBuilder;
 import lombok.Getter;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -89,11 +88,6 @@ public class RepeatRule implements TestRule {
       final int times = repeat.times();
       final int successes = repeat.successes();
       return builder.times(times).successes(successes == -1 ? times : successes).build();
-    }
-
-    Category category = description.getAnnotation(Category.class);
-    if (category != null) {
-      return builder.times(3).successes(1).timeoutOnly(true).build();
     }
 
     return statement;

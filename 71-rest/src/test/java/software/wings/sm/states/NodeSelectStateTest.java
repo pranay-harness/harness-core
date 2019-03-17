@@ -30,9 +30,11 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -135,6 +137,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
@@ -160,6 +163,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifactForRolling() {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
@@ -186,6 +190,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestExcludeHostsForPhysicalSshInfra() {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
@@ -215,6 +220,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
@@ -235,6 +241,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSucceedForPartialPercentageInstances() {
     nodeSelectState.setInstanceCount(1);
     nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
@@ -263,6 +270,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailForZeroTotalInstances() {
     nodeSelectState.setInstanceCount(100);
     nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);

@@ -2,7 +2,9 @@ package io.harness.k8s.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.stream.Collectors;
 
 public class KubernetesResourceComparerTest {
   @Test
+  @Category(UnitTests.class)
   public void OrderTest1() {
     List<KubernetesResource> resources = new ArrayList<>();
     resources.add(KubernetesResource.builder()
@@ -26,6 +29,7 @@ public class KubernetesResourceComparerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void OrderTest2() {
     List<KubernetesResource> resources = new ArrayList<>();
     resources.add(KubernetesResource.builder()
@@ -46,6 +50,7 @@ public class KubernetesResourceComparerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void OrderTest3() {
     List<KubernetesResource> resources = new ArrayList<>();
     resources.add(KubernetesResource.builder()
@@ -62,6 +67,7 @@ public class KubernetesResourceComparerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void OrderTest4() {
     List<KubernetesResource> resources = new ArrayList<>();
     resources.add(KubernetesResource.builder()

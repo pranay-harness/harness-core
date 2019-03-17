@@ -8,8 +8,10 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
@@ -22,6 +24,7 @@ import java.util.List;
 
 public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
     Template savedTemplate = templateService.save(template);
@@ -37,6 +40,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
     Template savedTemplate = templateService.save(template);
@@ -92,6 +96,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void shouldDeleteTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
     Template savedTemplate = templateService.save(template);

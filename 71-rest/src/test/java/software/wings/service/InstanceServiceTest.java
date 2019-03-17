@@ -16,9 +16,11 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -68,6 +70,7 @@ public class InstanceServiceTest extends WingsBaseTest {
    *
    */
   @Test
+  @Category(UnitTests.class)
   public void testSaveAndRead() {
     Instance instance = buildInstance();
     Instance savedInstance = instanceService.save(instance);
@@ -96,6 +99,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testList() {
     Instance instance1 = buildInstance();
 
@@ -127,6 +131,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateAndRead() {
     Instance instance = buildInstance();
     Instance savedInstance = instanceService.save(instance);
@@ -145,6 +150,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDelete() {
     Instance instance = buildInstance();
     instanceService.save(instance);

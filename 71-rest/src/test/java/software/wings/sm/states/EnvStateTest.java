@@ -22,11 +22,13 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -68,6 +70,7 @@ public class EnvStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecute() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     ExecutionResponse executionResponse = envState.execute(context);
@@ -84,6 +87,7 @@ public class EnvStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSkipDisabledStep() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     envState.setDisable(true);
@@ -95,6 +99,7 @@ public class EnvStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteWhenNoWorkflow() {
     ExecutionResponse executionResponse = envState.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
@@ -103,6 +108,7 @@ public class EnvStateTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "srinivas@harness.io")
+  @Category(UnitTests.class)
   public void shouldExecuteOnError() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID),
@@ -118,12 +124,14 @@ public class EnvStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = envState.getTimeoutMillis();
     assertThat(timeoutMillis).isEqualTo(ENV_STATE_TIMEOUT_MILLIS);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     envState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
     Integer timeoutMillis = envState.getTimeoutMillis();
@@ -131,6 +139,7 @@ public class EnvStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAbort() {
     envState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
     when(context.getStateExecutionData())

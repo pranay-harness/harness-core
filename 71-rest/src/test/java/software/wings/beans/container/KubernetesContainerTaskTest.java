@@ -2,7 +2,9 @@ package software.wings.beans.container;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,6 +14,7 @@ public class KubernetesContainerTaskTest {
   static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCheckDaemonSet() {
     KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
     kubernetesContainerTask.setAdvancedConfig("a: b\n kind: DaemonSet\nfoo: bar");
@@ -29,6 +32,7 @@ public class KubernetesContainerTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSetAdvancedConfig() {
     KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
 
@@ -49,6 +53,7 @@ public class KubernetesContainerTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateDomainNameReplacement() {
     String domainName = "abc.xyz.com";
     Pattern pattern = ContainerTask.compileRegexPattern(domainName);

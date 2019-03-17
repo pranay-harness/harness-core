@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
@@ -24,6 +26,7 @@ public class ScheduledTriggerJobTest extends WingsBaseTest {
   private static final String triggerId = "Dummy Trigger Id";
 
   @Test
+  @Category(UnitTests.class)
   public void selfPrune() throws SchedulerException, InterruptedException, TimeoutException {
     TestJobListener listener = new TestJobListener(ScheduledTriggerJob.GROUP + "." + triggerId);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);

@@ -41,6 +41,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -48,6 +49,7 @@ import io.harness.waiter.NotifyEventListener;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
@@ -149,6 +151,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListExecutions() {
     PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
     PageResponse<WorkflowExecution> pageResponse = aPageResponse().build();
@@ -163,6 +166,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Required execution args for orchestrated workflow.
    */
   @Test
+  @Category(UnitTests.class)
   public void requiredExecutionArgsForOrchestratedWorkflow() {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.readStateMachine(APP_ID, WORKFLOW_ID, DEFAULT_VERSION)).thenReturn(aStateMachine().build());
@@ -184,6 +188,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw workflowType is null
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowWorkflowNull() {
     try {
       ExecutionArgs executionArgs = new ExecutionArgs();
@@ -199,6 +204,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw orchestrationId is null for an orchestrated execution.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNullOrchestrationId() {
     try {
       ExecutionArgs executionArgs = new ExecutionArgs();
@@ -216,6 +222,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw invalid orchestration
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowInvalidOrchestration() {
     try {
       ExecutionArgs executionArgs = new ExecutionArgs();
@@ -234,6 +241,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw Associated state machine not found
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowNoStateMachine() {
     try {
       when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
@@ -251,6 +259,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchWorkflowExecution() {
     when(query.order(Sort.descending(anyString()))).thenReturn(query);
     when(query.get(any(FindOptions.class))).thenReturn(WorkflowExecution.builder().appId(APP_ID).build());
@@ -260,6 +269,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRejectWithUserGroup() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -280,6 +290,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testApproveWithUserGroup() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -300,6 +311,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testRejectWithUserGroupException() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -320,6 +332,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testApproveWithUserGroupException() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -340,6 +353,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForPipeline() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -369,6 +383,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForPipelineWithException() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -387,6 +402,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForPipelineWithNoApprovalDataException() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -407,6 +423,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForWorkflow() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();
@@ -437,6 +454,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForWorkflowWithNoApprovalDataException() {
     String approvalId = generateUuid();
     ApprovalDetails approvalDetails = new ApprovalDetails();

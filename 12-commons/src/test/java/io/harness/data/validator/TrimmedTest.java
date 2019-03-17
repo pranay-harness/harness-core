@@ -2,8 +2,10 @@ package io.harness.data.validator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import lombok.Builder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -16,6 +18,7 @@ public class TrimmedTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTrimmed() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     final Validator validator = factory.getValidator();

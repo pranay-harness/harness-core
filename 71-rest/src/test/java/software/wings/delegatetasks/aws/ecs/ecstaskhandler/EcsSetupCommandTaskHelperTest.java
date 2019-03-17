@@ -39,9 +39,11 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceRegistry;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -200,6 +202,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCreateServiceRequest_Fargate() throws Exception {
     EcsSetupParams setupParams = anEcsSetupParams()
                                      .withClusterName(CLUSTER_NAME)
@@ -277,6 +280,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCreateServiceRequest_EC2() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
     TaskDefinition taskDefinition = getTaskDefinition();
@@ -298,6 +302,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCreateServiceRequest_serviceSpec() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
     setupParams.setUseLoadBalancer(false);
@@ -328,6 +333,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateServiceRegistries() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -364,6 +370,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCreateServiceRequest_EC2_awsvpc() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
     setupParams.setSubnetIds(new String[] {"subnet1"});
@@ -397,6 +404,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIsServiceWithSamePrefix() {
     assertTrue(
         ecsSetupCommandTaskHelper.isServiceWithSamePrefix("Beacons__Conversions__177", "Beacons__Conversions__"));
@@ -456,6 +464,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateTaskDefinition_ECS() throws Exception {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
     ecsContainerTask.setAdvancedConfig(taskDefJson);
@@ -499,6 +508,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateTaskDefinition_Fargate() throws Exception {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
     ecsContainerTask.setAdvancedConfig(fargateConfigYaml);
@@ -540,6 +550,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIsValidateSetupParamasForECS() throws Exception {
     TaskDefinition taskDefinition = new TaskDefinition().withExecutionRoleArn("executionRole");
 
@@ -599,6 +610,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateEcsContainerTaskIfNull() throws Exception {
     EcsContainerTask ecsContainerTask = ecsSetupCommandTaskHelper.createEcsContainerTaskIfNull(null);
     assertNotNull(ecsContainerTask);
@@ -612,6 +624,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIsFargateTaskLauchType() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
     setupParams.setLaunchType(LaunchType.FARGATE.name());
@@ -622,12 +635,14 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetRevisionFromServiceName() throws Exception {
     assertEquals(2, ecsSetupCommandTaskHelper.getRevisionFromServiceName("App_Service_Env__2"));
     assertEquals(21, ecsSetupCommandTaskHelper.getRevisionFromServiceName("App_Service_Env__21"));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetServicePrefixByRemovingNumber() throws Exception {
     assertEquals("App_Service_Env__", ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App_Service_Env__2"));
     assertEquals(
@@ -639,6 +654,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMatchWithRegex() throws Exception {
     assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__1"));
     assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__21"));
@@ -646,6 +662,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSetServiceRegistryForDNSSwap() {
     EcsSetupParams mockParams = mock(EcsSetupParams.class);
     doReturn(ImageDetails.builder().name("imageName").tag("imageTag").build()).when(mockParams).getImageDetails();

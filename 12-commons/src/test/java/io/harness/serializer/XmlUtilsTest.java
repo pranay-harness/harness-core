@@ -6,7 +6,9 @@ package io.harness.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -28,6 +30,7 @@ public class XmlUtilsTest {
    * @throws IOException                  Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetXpath()
       throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
     String content = "<widgets><widget><manufacturer>abc</manufacturer><dimensions/></widget></widgets>";

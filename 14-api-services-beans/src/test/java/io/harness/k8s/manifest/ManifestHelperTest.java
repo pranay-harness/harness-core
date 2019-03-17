@@ -7,16 +7,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.URL;
 import java.util.List;
 
 public class ManifestHelperTest {
   @Test
+  @Category(UnitTests.class)
   public void toYamlSmokeTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -30,6 +33,7 @@ public class ManifestHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void processYamlSmokeTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -41,6 +45,7 @@ public class ManifestHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void processYamlMultiResourceTest() throws Exception {
     URL url = this.getClass().getResource("/mongo.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -62,6 +67,7 @@ public class ManifestHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void invalidYamlTest() {
     try {
       processYaml(":");
@@ -71,6 +77,7 @@ public class ManifestHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void invalidYamlObjectTest() {
     try {
       processYaml("object");
@@ -80,6 +87,7 @@ public class ManifestHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void processYamlMissingKindTest() throws Exception {
     URL url = this.getClass().getResource("/missing-kind.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -91,6 +99,7 @@ public class ManifestHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void processYamlMissingNameTest() throws Exception {
     URL url = this.getClass().getResource("/missing-name.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
@@ -102,6 +111,7 @@ public class ManifestHelperTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNormalizeFolderPath() {
     assertThat(ManifestHelper.normalizeFolderPath("abc")).isEqualTo("abc/");
     assertThat(ManifestHelper.normalizeFolderPath("abc/")).isEqualTo("abc/");

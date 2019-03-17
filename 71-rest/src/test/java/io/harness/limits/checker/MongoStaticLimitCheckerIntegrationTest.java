@@ -6,12 +6,14 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.Counter;
 import io.harness.limits.impl.model.StaticLimit;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 
@@ -40,6 +42,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCheckAndConsume() {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5);
     String id = persistence.save(new Counter(key, 0));
@@ -69,6 +72,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCheckAndConsumeConcurrent() throws ExecutionException, InterruptedException {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5);
     String id = persistence.save(new Counter(key, 0));

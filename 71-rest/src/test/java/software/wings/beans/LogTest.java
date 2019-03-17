@@ -13,10 +13,13 @@ import static software.wings.beans.Log.NO_FORMATTING;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.Log.doneColoring;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class LogTest {
   @Test
+  @Category(UnitTests.class)
   public void testLogColor() {
     String foo = color("foo", Yellow);
 
@@ -24,6 +27,7 @@ public class LogTest {
     assertThat(doneColoring(foo)).isEqualTo("\033[0;" + Yellow.value + "m\033[40mfoo" + NO_FORMATTING);
   }
   @Test
+  @Category(UnitTests.class)
   public void testLogColorNested() {
     String bar = color("abc" + color("foo", Yellow) + "def", Blue);
 
@@ -34,6 +38,7 @@ public class LogTest {
             + "m\033[40mdef" + NO_FORMATTING);
   }
   @Test
+  @Category(UnitTests.class)
   public void testLogColorMultiple() {
     String two = "a" + color("b", Yellow) + "c" + color("d", Blue) + "e";
 
@@ -50,6 +55,7 @@ public class LogTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLogWeight() {
     String foo = color("foo", Yellow, Bold);
 
@@ -58,6 +64,7 @@ public class LogTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLogBackground() {
     String foo = color("foo", White, Normal, RedDark);
 

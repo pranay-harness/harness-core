@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import io.harness.beans.PageRequest;
+import io.harness.category.element.IntegrationTests;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.AuditServiceTest;
@@ -19,6 +21,7 @@ import java.io.ByteArrayInputStream;
 @Ignore
 public class AuditServiceIntegrationTest extends AuditServiceTest {
   @Test
+  @Category(IntegrationTests.class)
   public void shouldCreateRequestPayload() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header.getRequestTime()).isNull();
@@ -40,6 +43,7 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldFinalize() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();
@@ -55,6 +59,7 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldDeleteAuditRecordsRequestFiles() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header.getRequestTime()).isNull();

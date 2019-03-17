@@ -14,8 +14,10 @@ import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfigur
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -55,6 +57,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are active
    */
   @Test
+  @Category(UnitTests.class)
   public void testExecuteInternal_noAlert() {
     saveDelegate("host1", 2);
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
@@ -66,6 +69,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are down
    */
   @Test
+  @Category(UnitTests.class)
   public void testExecuteInternal_noDelegateAlert() {
     saveDelegate("host1", 12);
     saveDelegate("host2", 10);
@@ -86,6 +90,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * Some of the delegates are down
    */
   @Test
+  @Category(UnitTests.class)
   public void testExecuteInternal_delegatesDownAlert() {
     saveDelegate("host1", 2);
     saveDelegate("host2", 10);
@@ -122,6 +127,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSMTPAlert() {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);
     when(emailHelperUtil.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(false);

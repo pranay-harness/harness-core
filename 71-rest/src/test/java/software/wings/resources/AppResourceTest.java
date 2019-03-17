@@ -7,11 +7,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -66,6 +68,7 @@ public class AppResourceTest {
    * Test find by name.
    */
   @Test
+  @Category(UnitTests.class)
   public void testFindByName() {
     when(appService.get(TEST_UUID, true)).thenReturn(testApp);
     RestResponse<Application> actual =

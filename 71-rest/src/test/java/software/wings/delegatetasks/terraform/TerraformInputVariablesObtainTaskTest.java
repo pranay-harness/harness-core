@@ -7,10 +7,12 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -59,6 +61,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRun() {
     List<GitFile> gitFiles = new ArrayList<>();
     gitFiles.add(GitFile.builder()
@@ -88,6 +91,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoTerraformFilesFound() {
     when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean(), any(), anyBoolean()))
         .thenReturn(GitFetchFilesResult.builder().files(Collections.EMPTY_LIST).build());

@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
@@ -90,7 +90,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
   }
 
   protected SettingAttribute buildSettingAttribute(
-      String accountId, String yamlFilePath, String uuid, B config, Category category) {
+      String accountId, String yamlFilePath, String uuid, B config, SettingCategory category) {
     String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     return SettingAttribute.Builder.aSettingAttribute()
         .withAccountId(accountId)

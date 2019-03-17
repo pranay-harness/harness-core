@@ -17,11 +17,13 @@ import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.apache.http.client.HttpResponseException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -82,6 +84,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
     when(buildWithDetails.getDescription()).thenReturn("test-description");
@@ -105,6 +108,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
 
@@ -126,6 +130,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailWhenBuildUnstable() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
 
@@ -147,6 +152,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailWhenNoJobFound() throws Exception {
     when(build.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
 
@@ -163,6 +169,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPassWhenBuildUnstableAndUnstableSuccessSet() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
 

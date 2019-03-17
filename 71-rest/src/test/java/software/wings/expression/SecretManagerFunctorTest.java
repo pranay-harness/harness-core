@@ -8,11 +8,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
+import io.harness.category.element.UnitTests;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.FunctorException;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -35,6 +37,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   private static final String WORKFLOW_EXECUTION_ID = "WORKFLOW_EXECUTION_ID";
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDecryptLocalEncryptedServiceVariables() {
     final String secretName = "MySecretName";
 
@@ -105,6 +108,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDecryptKMSEncryptedServiceVariables() {
     final String secretName = "MySecretName";
     final int token = HashGenerator.generateIntegerHash();
@@ -141,6 +145,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   }
 
   @Test(expected = FunctorException.class)
+  @Category(UnitTests.class)
   public void shouldRejectInternalFunctor() {
     final String secretName = "MySecretName";
     final int token = HashGenerator.generateIntegerHash();

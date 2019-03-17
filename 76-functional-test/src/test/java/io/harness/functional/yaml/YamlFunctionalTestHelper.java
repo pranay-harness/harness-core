@@ -32,7 +32,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -76,7 +76,7 @@ public class YamlFunctionalTestHelper {
             .withAccountId(ACCOUNT_ID)
             .withAppId(GLOBAL_APP_ID)
             .withValue(settingValue)
-            .withCategory(Category.getCategory(SettingVariableTypes.valueOf(settingValue.getType())))
+            .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(settingValue.getType())))
             .build();
 
     Setup.portal()
@@ -108,7 +108,7 @@ public class YamlFunctionalTestHelper {
             .withAccountId(ACCOUNT_ID)
             .withAppId(GLOBAL_APP_ID)
             .withValue(gcpConfig)
-            .withCategory(Category.getCategory(SettingVariableTypes.valueOf(gcpConfig.getType())))
+            .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(gcpConfig.getType())))
             .build();
 
     settingAttribute = settingsService.save(settingAttribute);

@@ -68,24 +68,18 @@ public class CategoryTimeoutRule extends Timeout {
         timeoutMS = 300;
       } else if (slow) {
         timeoutMS = TimeUnit.SECONDS.toMillis(2);
-      } else {
-        timeoutMS = TimeUnit.SECONDS.toMillis(1);
       }
     } else if (integration) {
       if (fast) {
         timeoutMS = TimeUnit.SECONDS.toMillis(10);
       } else if (slow) {
         timeoutMS = TimeUnit.MINUTES.toMillis(5);
-      } else {
-        timeoutMS = TimeUnit.MINUTES.toMillis(1);
       }
     } else if (functional) {
       if (fast) {
         timeoutMS = TimeUnit.MINUTES.toMillis(1);
       } else if (slow) {
         timeoutMS = TimeUnit.MINUTES.toMillis(15);
-      } else {
-        timeoutMS = TimeUnit.MINUTES.toMillis(10);
       }
     }
 

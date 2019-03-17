@@ -8,12 +8,14 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -33,6 +35,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Inject MainConfiguration mainConfiguration;
 
   @Test
+  @Category(UnitTests.class)
   public void testHandle() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
     when(emailRequest.getEmailData()).thenReturn(mock(EmailData.class));
@@ -42,6 +45,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testErrorResponse() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
     EmailData emailData = Mockito.mock(EmailData.class);
@@ -58,6 +62,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   @Ignore
   public void testSMTPConnectivity() {
     SmtpConfig smtpConfig =

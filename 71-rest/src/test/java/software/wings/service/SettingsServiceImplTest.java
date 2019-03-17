@@ -58,12 +58,14 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -77,7 +79,7 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
 import software.wings.beans.User;
@@ -167,6 +169,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should list settings.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListSettings() {
     settingsService.list(aPageRequest().build(), null, null);
     verify(mockWingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
@@ -176,6 +179,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should save setting attribute.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveSettingAttribute() {
     settingsService.save(aSettingAttribute()
                              .withName("NAME")
@@ -189,6 +193,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by app id.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetByAppId() {
     settingsService.get(APP_ID, SETTING_ID);
     verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
@@ -202,6 +207,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by app id and env id.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetByAppIdAndEnvId() {
     settingsService.get(APP_ID, ENV_ID, SETTING_ID);
     verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
@@ -215,6 +221,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by id.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetById() {
     settingsService.get(SETTING_ID);
     verify(mockWingsPersistence).get(eq(SettingAttribute.class), eq(SETTING_ID));
@@ -224,12 +231,13 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDelete() {
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withAppId("APP_ID")
                                             .withAccountId("ACCOUNT_ID")
                                             .withName("SETTING_NAME")
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withValue(JenkinsConfig.builder()
                                                            .jenkinsUrl(JENKINS_URL)
                                                            .password(PASSWORD)
@@ -248,18 +256,20 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteSettingAttributesByType() {
     settingsService.deleteSettingAttributesByType(ACCOUNT_ID, APP_ID, ENV_ID, "JENKINS");
     verify(mockWingsPersistence).delete(any(Query.class));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThroeExceptionIfReferencedConnectorDeleted() {
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withAppId("APP_ID")
                                             .withAccountId("ACCOUNT_ID")
                                             .withName("SETTING_NAME")
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withValue(JenkinsConfig.builder()
                                                            .jenkinsUrl(JENKINS_URL)
                                                            .password(PASSWORD)
@@ -278,12 +288,13 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThroeExceptionIfReferencedCloudProviderDeleted() {
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withAppId("APP_ID")
                                             .withAccountId("ACCOUNT_ID")
                                             .withName("SETTING_NAME")
-                                            .withCategory(Category.CLOUD_PROVIDER)
+                                            .withCategory(SettingCategory.CLOUD_PROVIDER)
                                             .withValue(AwsConfig.builder().build())
                                             .build();
     when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
@@ -302,6 +313,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by name.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetByName() {
     settingsService.getByName(ACCOUNT_ID, APP_ID, "NAME");
     verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
@@ -313,6 +325,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetByNameAndValueType() {
     when(spyQuery.get()).thenReturn(aSettingAttribute().build());
 
@@ -332,6 +345,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should list connection attributes.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListConnectionAttributes() {
     settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
     verify(mockWingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
@@ -341,6 +355,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should list bastion host connection attributes.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListBastionHostConnectionAttributes() {
     settingsService.getSettingAttributesByType(
         "APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name());
@@ -348,6 +363,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateShouldFailIfSettingAttributeDoesNotExist() {
     SettingAttribute aSettingAttribute =
         aSettingAttribute()
@@ -369,6 +385,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateShouldWorkWithSameData() {
     final String uuid = UUID.randomUUID().toString();
     SettingAttribute settingAttribute =
@@ -377,7 +394,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withAccountId(ACCOUNT_ID)
             .withName("MY_CLOUD_PROVIDER")
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
             .build();
 
@@ -391,6 +408,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateShouldMaskHostConnectionPrivateKey() {
     final String uuid = UUID.randomUUID().toString();
     HostConnectionAttributes hostConnectionAttributes = aHostConnectionAttributes()
@@ -406,7 +424,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .withAppId(APP_ID)
                                             .withAccountId(ACCOUNT_ID)
                                             .withName("MY_SSH_KEY")
-                                            .withCategory(Category.SETTING)
+                                            .withCategory(SettingCategory.SETTING)
                                             .withValue(hostConnectionAttributes)
                                             .build();
 
@@ -426,6 +444,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateWhenValid() {
     final String uuid = UUID.randomUUID().toString();
     final SettingAttribute settingAttribute =
@@ -434,7 +453,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withAccountId(ACCOUNT_ID)
             .withName("MY_CLOUD_PROVIDER_00")
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
             .build();
     doReturn(true).when(settingValidationService).validate(settingAttribute);
@@ -444,6 +463,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateWhenNotValid() {
     final String uuid = UUID.randomUUID().toString();
     final SettingAttribute settingAttribute =
@@ -452,7 +472,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withAccountId(ACCOUNT_ID)
             .withName("MY_CLOUD_PROVIDER_01")
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
             .build();
     doReturn(false).when(settingValidationService).validate(settingAttribute);
@@ -462,6 +482,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateIdValid() {
     final String uuid = UUID.randomUUID().toString();
     final SettingAttribute settingAttribute =
@@ -470,7 +491,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withAccountId(ACCOUNT_ID)
             .withName("MY_CLOUD_PROVIDER_02")
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
             .build();
     doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
@@ -481,6 +502,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateIdWhenNotExists() {
     final String uuid = UUID.randomUUID().toString();
     doReturn(null).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
@@ -490,6 +512,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testUsageRestrictionsWithNothingSet() {
     try {
@@ -515,7 +538,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                .withAppId(APP_ID_1)
                                                .withName(SA_1)
                                                .withValue(settingValue1)
-                                               .withCategory(Category.CONNECTOR)
+                                               .withCategory(SettingCategory.CONNECTOR)
                                                .build();
 
       SettingValue settingValue2 =
@@ -526,7 +549,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                .withAppId(APP_ID_2)
                                                .withName(SA_2)
                                                .withValue(settingValue2)
-                                               .withCategory(Category.CONNECTOR)
+                                               .withCategory(SettingCategory.CONNECTOR)
                                                .build();
 
       SettingValue settingValue3 =
@@ -537,7 +560,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                .withAppId(APP_ID_3)
                                                .withName(SA_3)
                                                .withValue(settingValue3)
-                                               .withCategory(Category.CONNECTOR)
+                                               .withCategory(SettingCategory.CONNECTOR)
                                                .build();
 
       settingAttributeList.add(settingAttribute1);
@@ -715,6 +738,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetApplicationDefaults() {
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);
@@ -745,6 +769,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountDefaults() {
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);

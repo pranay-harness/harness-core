@@ -62,7 +62,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
@@ -470,11 +470,11 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void ensureSettingAttributeSafeToDelete(SettingAttribute settingAttribute) {
-    if (settingAttribute.getCategory().equals(Category.CLOUD_PROVIDER)) {
+    if (settingAttribute.getCategory().equals(SettingCategory.CLOUD_PROVIDER)) {
       ensureCloudProviderSafeToDelete(settingAttribute);
-    } else if (settingAttribute.getCategory().equals(Category.CONNECTOR)) {
+    } else if (settingAttribute.getCategory().equals(SettingCategory.CONNECTOR)) {
       ensureConnectorSafeToDelete(settingAttribute);
-    } else if (settingAttribute.getCategory().equals(Category.SETTING)) {
+    } else if (settingAttribute.getCategory().equals(SettingCategory.SETTING)) {
       ensureSettingSafeToDelete(settingAttribute);
     }
   }

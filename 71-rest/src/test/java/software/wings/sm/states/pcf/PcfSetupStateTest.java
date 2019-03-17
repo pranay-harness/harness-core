@@ -46,9 +46,11 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -253,6 +255,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
     ExecutionResponse executionResponse = pcfSetupState.execute(context);

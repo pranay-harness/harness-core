@@ -7,9 +7,11 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.annotation.MorphiaMove;
+import io.harness.category.element.UnitTests;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -42,6 +44,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRead() {
     HolderEntity entity =
         HolderEntity.builder()

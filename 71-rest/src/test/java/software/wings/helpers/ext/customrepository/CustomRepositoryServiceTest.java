@@ -6,12 +6,14 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
 import io.harness.shell.ShellExecutionService;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -32,6 +34,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   private static final String ARTIFACT_RESULT_PATH = "ARTIFACT_RESULT_PATH";
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBuildDetails() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"
         + "testGetBuildDetails.json");
@@ -75,6 +78,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetBuildsWithCustomMapping() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"
         + "raw.json");
@@ -113,6 +117,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testGetBuildsWithInvalidCustomMappingWithoutArtifactRoot() {
     Map<String, String> attributeMapping = new HashMap<>();
     attributeMapping.put("assets[0].downloadUrl", "metadata.downloadUrl");
@@ -127,6 +132,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testGetBuildsWithInvalidCustomMappingWithoutBuildNo() {
     Map<String, String> attributeMapping = new HashMap<>();
     attributeMapping.put("assets[0].downloadUrl", "metadata.downloadUrl");

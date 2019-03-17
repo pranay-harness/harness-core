@@ -1,7 +1,9 @@
 package software.wings.core.ssh.executors;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by anubhaw on 2/5/16.
@@ -14,6 +16,7 @@ public class SshJumpBoxExecutorTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void testExecute() throws Exception {
     //    SshSessionConfig jumpboxConfig =
     //        new SshSessionConfigBuilder().executionId(generateUuid()).host("192.168.43.163").port(22)

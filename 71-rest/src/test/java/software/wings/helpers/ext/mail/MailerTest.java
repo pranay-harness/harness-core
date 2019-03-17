@@ -11,11 +11,13 @@ import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import freemarker.template.TemplateException;
+import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 import java.io.IOException;
@@ -53,6 +55,7 @@ public class MailerTest extends WingsBaseTest {
    */
   @Test
   @Owner(emails = "anubhaw@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void shouldSendNormalEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)
@@ -91,6 +94,7 @@ public class MailerTest extends WingsBaseTest {
    */
   @Test
   @Owner(emails = "anubhaw@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void shouldSendHtmlEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)
@@ -127,6 +131,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendTemplatedEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)

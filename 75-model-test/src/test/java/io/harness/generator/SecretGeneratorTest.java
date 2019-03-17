@@ -6,9 +6,11 @@ import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.ModelTest;
+import io.harness.category.element.UnitTests;
 import io.harness.scm.SecretName;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +21,7 @@ public class SecretGeneratorTest extends ModelTest {
   @Inject SecretGenerator secretGenerator;
 
   @Test
+  @Category(UnitTests.class)
   public void testStore() {
     final SecretName secretKey = SecretName.builder().value("secret_key").build();
 

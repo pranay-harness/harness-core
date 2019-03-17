@@ -8,11 +8,13 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -47,6 +49,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Category(UnitTests.class)
   public void testDeploymentNeeded() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
     triggerTask.run(new Object[] {triggerRequest});
@@ -57,6 +60,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeploymentNeededTrueCase() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
     triggerRequest.setFilePaths(asList("abc/ghi.txt"));
@@ -75,6 +79,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeploymentNeededFalseCase() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
     triggerRequest.setFilePaths(asList("abc/xyz.txt"));
@@ -93,6 +98,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeploymentNeededException() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
     when(gitService.fetchFilesBetweenCommits(any(), any(), any(), any()))

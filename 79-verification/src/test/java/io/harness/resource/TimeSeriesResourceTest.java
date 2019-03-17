@@ -8,11 +8,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.VerificationBaseTest;
+import io.harness.category.element.UnitTests;
 import io.harness.resources.TimeSeriesResource;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -96,6 +98,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSaveMetricData() throws IOException {
     when(timeSeriesAnalysisService.saveMetricData(
              accountId, applicationId, stateExecutionId, delegateTaskId, new ArrayList<>()))
@@ -106,6 +109,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetMetricData() throws IOException {
     boolean compareCurrent = true;
     when(timeSeriesAnalysisService.getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0))
@@ -129,6 +133,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSaveMLAnalysisRecords() throws IOException {
     when(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, applicationId, stateExecutionId,
              workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
@@ -141,6 +146,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetScores() throws IOException {
     when(timeSeriesAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, 0, 1))
         .thenReturn(timeSeriesMLScores);
@@ -150,6 +156,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetMetricTemplate() {
     when(timeSeriesAnalysisService.getMetricTemplate(
              applicationId, stateType, stateExecutionId, serviceId, cvConfigId, groupName))

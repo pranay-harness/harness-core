@@ -26,12 +26,14 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -100,6 +102,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteNoService() {
     List<Map<String, String>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
@@ -110,6 +113,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteWithService() {
     wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
     List<Map<String, String>> artifacts =
@@ -121,6 +125,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteByEventNoTrigger() {
     String payLoad = "Some payload";
     WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, null).getEntity();
@@ -129,6 +134,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldExecuteByEventTriggerInvalidJson() {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
@@ -139,6 +145,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteByEventTriggerBitBucket() throws IOException {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
@@ -155,6 +162,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestJsonParsing() throws IOException {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
@@ -176,6 +184,7 @@ public class WebHookServiceTest extends WingsBaseTest {
         .isEqualTo("23 - MyVal - ${app.name}");
   }
   @Test
+  @Category(UnitTests.class)
   public void shouldTestJsonGitHubPushParsing() throws IOException {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
@@ -194,6 +203,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestJsonBitBucketPushParsing() throws IOException {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
@@ -210,6 +220,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithoutActions() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -238,6 +249,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithClosedAction() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -269,6 +281,7 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "srinivas@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithDifferentEvent() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -299,6 +312,7 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "srinivas@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithDifferentAction() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -330,6 +344,7 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "srinivas@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void shouldTriggerGitHubPushRequest() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -359,6 +374,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPopulateUrlFieldsWhenTriggering() {
     final Application application =
         anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build();

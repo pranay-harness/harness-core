@@ -19,11 +19,11 @@ public class ResourceConstraintServiceIntegrationTest extends WingsBaseTest {
     owners = ownersManager.create();
   }
 
-  @Test
-  public void testOrdering() throws InvalidPermitsException, UnableToRegisterConsumerException {
-    final ResourceConstraint resourceConstraint = resourceConstraintGenerator.ensureResourceConstraint(
-        seed, owners, ResourceConstraint.builder().uuid(generateUuid()).build());
-    final Constraint constraint = resourceConstraintService.createAbstraction(resourceConstraint);
+  @Test @Category(IntegrationTests.class) public void testOrdering() throws InvalidPermitsException,
+  UnableToRegisterConsumerException { final ResourceConstraint resourceConstraint =
+  resourceConstraintGenerator.ensureResourceConstraint( seed, owners,
+  ResourceConstraint.builder().uuid(generateUuid()).build()); final Constraint constraint =
+  resourceConstraintService.createAbstraction(resourceConstraint);
 
     Concurrent.test(10, i -> {
       for (int j = 0; j < 10; j++) {

@@ -13,9 +13,11 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
@@ -23,7 +25,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.common.Constants;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -68,6 +70,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
 
@@ -80,6 +83,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGetNullRestrictions() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
 
@@ -102,7 +106,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(aSettingAttribute()
-                                    .withCategory(Category.CONNECTOR)
+                                    .withCategory(SettingCategory.CONNECTOR)
                                     .withName(jenkinsProviderName)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(JenkinsConfig.builder()

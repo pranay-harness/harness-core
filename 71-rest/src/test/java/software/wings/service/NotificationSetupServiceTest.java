@@ -13,8 +13,10 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -47,6 +49,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateNotificationGroup() {
     String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
@@ -59,6 +62,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listDefaultNotificationGroup() {
     String accountId = generateUuid();
 
@@ -82,6 +86,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateNotificationGroupDefaultValue() {
     String accountId = generateUuid();
 
@@ -110,6 +115,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListNotificationGroups() {
     String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
@@ -129,6 +135,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountId() {
     String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
@@ -147,6 +154,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountIdName() {
     String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
@@ -165,6 +173,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteNotificationGroup() {
     String accountId = generateUuid();
     NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
@@ -174,6 +183,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldReadNotificationGroup() {
     String accountId = generateUuid();
     NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
@@ -205,6 +215,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void TestGetUserEmailAddressFromNotificationGroups() {
     String accountId = generateUuid();
 

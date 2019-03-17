@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
@@ -32,6 +33,7 @@ import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +153,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDefaultBaseline() {
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setName(generateUuid());
@@ -171,6 +174,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFuture() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     logger.info("currentMin: {}", currentMinute);
@@ -216,6 +220,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLogsCollectionNoBaselineSet() {
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
@@ -230,6 +235,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLogsCollection() {
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
@@ -288,6 +294,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTriggerLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
@@ -312,6 +319,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTriggerLogsCollectionInvalidState() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
@@ -324,6 +332,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTriggerLogsCollectionCompletedCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
@@ -340,6 +349,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTriggerLogsCollectionNextMinuteDataCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
@@ -391,6 +401,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLogsL1Clustering() {
     continuousVerificationService.triggerLogsL1Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
@@ -445,6 +456,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLogsL2Clustering() {
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =

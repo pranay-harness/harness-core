@@ -28,8 +28,10 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.beans.PageRequest;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -73,6 +75,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldList() {
     PageRequest pageRequest = aPageRequest().addFilter("appId", EQ, APP_ID).build();
     notificationService.list(pageRequest);
@@ -83,6 +86,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGet() {
     when(wingsPersistence.getWithAppId(Notification.class, APP_ID, NOTIFICATION_ID))
         .thenReturn(anInformationNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
@@ -97,6 +101,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should send notification async.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendNotificationAsync() {
     InformationNotification notification =
         anInformationNotification()
@@ -115,6 +120,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should mark notification completed.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldMarkNotificationCompleted() {
     notificationService.markNotificationCompleted(APP_ID, NOTIFICATION_ID);
     verify(wingsPersistence).updateFields(Notification.class, NOTIFICATION_ID, ImmutableMap.of("complete", true));
@@ -124,6 +130,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should act.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAct() {
     ApprovalNotification approvalNotification = Mockito.spy(anApprovalNotification()
                                                                 .withAppId(APP_ID)

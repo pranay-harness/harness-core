@@ -20,11 +20,13 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.queue.Queue;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -191,6 +193,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_PDS() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
@@ -234,6 +237,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_AmiInfraMapping() {
     endsAtTime = System.currentTimeMillis();
     endsAtTime = System.currentTimeMillis();
@@ -273,6 +277,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_CodeDeployInfraMapping() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
@@ -311,6 +316,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AMI() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
@@ -372,6 +378,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_CodeDeploy() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_AWS_CODEDEPLOY,
@@ -422,6 +429,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_ECS() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_ECS,
@@ -481,6 +489,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData =
@@ -544,6 +553,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData =
@@ -605,6 +615,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes_rollback() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData =
@@ -670,6 +681,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIsSupported() throws Exception {
     assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH));
     assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM));
@@ -682,6 +694,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetPrivateDnsName() throws Exception {
     String privateDnsName = "ip-172-31-11-6.ec2.internal";
 
@@ -719,6 +732,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testManualSyncSuccess() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory =
         spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
@@ -774,6 +788,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testManualSyncFailure() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory =
         spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,

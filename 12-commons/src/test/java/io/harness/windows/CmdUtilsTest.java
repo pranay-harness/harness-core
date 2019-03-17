@@ -2,10 +2,13 @@ package io.harness.windows;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CmdUtilsTest {
   @Test
+  @Category(UnitTests.class)
   public void testEscapeEnvironmentValue() {
     assertThat(CmdUtils.escapeEnvValueSpecialChars("path")).isEqualTo("path");
     assertThat(CmdUtils.escapeEnvValueSpecialChars("path>")).isEqualTo("path^>");
@@ -15,6 +18,7 @@ public class CmdUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEscapeEnvironmentValueWithPercentage() {
     assertThat(CmdUtils.escapeEnvValueSpecialChars("%path%")).isEqualTo("^%path^%");
     assertThat(CmdUtils.escapeEnvValueSpecialChars("%path%me")).isEqualTo("^%path^%me");

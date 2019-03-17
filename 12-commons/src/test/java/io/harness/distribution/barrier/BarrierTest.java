@@ -11,8 +11,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
+import io.harness.category.element.UnitTests;
 import io.harness.distribution.barrier.Barrier.State;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class BarrierTest {
   BarrierId id = new BarrierId("foo");
@@ -28,6 +30,7 @@ public class BarrierTest {
                           .build();
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateBarrier() throws UnableToSaveBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
 
@@ -38,6 +41,7 @@ public class BarrierTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLoadBarrier() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
 
@@ -50,6 +54,7 @@ public class BarrierTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRunningForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
     ForceProctor proctor = mock(ForceProctor.class);
@@ -66,6 +71,7 @@ public class BarrierTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testChildFailedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
     ForceProctor proctor = mock(ForceProctor.class);
@@ -82,6 +88,7 @@ public class BarrierTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testChildMixedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
     ForceProctor proctor = mock(ForceProctor.class);
@@ -98,6 +105,7 @@ public class BarrierTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTopAbsentForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
     ForceProctor proctor = mock(ForceProctor.class);
@@ -113,6 +121,7 @@ public class BarrierTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTopSucceededForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
     ForceProctor proctor = mock(ForceProctor.class);
@@ -128,6 +137,7 @@ public class BarrierTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAbandonedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
     ForceProctor proctor = mock(ForceProctor.class);

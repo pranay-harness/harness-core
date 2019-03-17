@@ -23,8 +23,10 @@ import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
@@ -53,6 +55,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Test keepAlivePath is taken when delegate.KeepAlivePacket = true
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateRequest_KeepAliveRequest() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     doReturn(null).when(delegateService).handleEcsDelegateKeepAlivePacket(any());
@@ -67,6 +70,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Test EcsDelegateRegistration path is taken, when delegate.KeepAlivePacket = false
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateRequest_EcsDelegateRegistration() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     doReturn(aDelegate().withHostName("delegate_1").build()).when(delegateService).handleEcsDelegateRegistration(any());
@@ -83,6 +87,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Test HandleEcsDelegateKeepAlivePacket flow
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateKeepAlivePacket() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     doReturn(null)
@@ -136,6 +141,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    *            - just update this same existing delegate
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_activeDelegateWithId() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     mockWingsPersistanceForUpdateCall();
@@ -169,6 +175,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Expected - Should throw exception
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_empty_UUid_token() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
 
@@ -202,6 +209,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * This existing delegate should be updated
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_with_valid_seqNum_token() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
 
@@ -254,6 +262,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * So new delegate record with hostname hostname_1 will be created.
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_with_valid_seqNum_token_2() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
 
@@ -303,6 +312,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * - Test it takes path registerDelegateWithNewSequenceGeneration() in this case
    */
   @Test
+  @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_with_valid_seqNum_token_3() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
 
@@ -334,6 +344,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    *  - Delete any existing delegate associated with that config
    */
   @Test
+  @Category(UnitTests.class)
   public void testGetInactiveDelegateSequenceConfigToReplace() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
 
@@ -372,6 +383,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Category(UnitTests.class)
   public void testSeqNumAndTokenMatchesConfig() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
 
@@ -409,6 +421,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * New record should be {accId=1, seqNum=2, token="abc", hostname="host"}
    */
   @Test
+  @Category(UnitTests.class)
   public void testAddNewDelegateSequenceConfigRecord() {
     delegateService = spy(DelegateServiceImpl.class);
     mockWingsPersistanceForUpdateCall();
@@ -446,6 +459,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    *  - No stale config, we take path to create a new record for DelegateSequenceConfig
    */
   @Test
+  @Category(UnitTests.class)
   public void testRegisterDelegateWithNewSequenceGeneration() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     mockWingsPersistanceForUpdateCall();
@@ -528,6 +542,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetDelegateHostNameByRemovingSeqNum() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     assertEquals("hostname_harness__delegate",
@@ -536,6 +551,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetDelegateSeqNumFromHostName() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     assertEquals("1",
@@ -544,6 +560,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateExistingDelegateWithSequenceConfigData() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     doReturn(aDelegateSequenceBuilder()

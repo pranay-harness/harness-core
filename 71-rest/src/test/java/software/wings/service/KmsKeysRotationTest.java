@@ -14,6 +14,7 @@ import static org.powermock.reflect.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
@@ -21,6 +22,7 @@ import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
@@ -77,6 +79,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void rotateAwsKeysSameARN() throws Exception {
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(Base.GLOBAL_ACCOUNT_ID, false);
     assertEquals(1, kmsConfigs.size());
@@ -106,6 +109,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void rotateAwsKeysAndArn() throws Exception {
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(Base.GLOBAL_ACCOUNT_ID, false);
     assertEquals(1, kmsConfigs.size());

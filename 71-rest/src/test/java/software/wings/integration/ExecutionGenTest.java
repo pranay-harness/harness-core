@@ -8,9 +8,11 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -32,6 +34,7 @@ public class ExecutionGenTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(ExecutionGenTest.class);
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void generateData() {
     PageRequest<WorkflowExecution> pageRequest = aPageRequest().withLimit("500").build();

@@ -14,7 +14,9 @@ import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListInstanceProfilesResult;
 import com.amazonaws.services.identitymanagement.model.ListRolesResult;
 import com.amazonaws.services.identitymanagement.model.Role;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -30,6 +32,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsIamHelperServiceDelegateImpl awsIamHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testListIAMRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);
     doReturn(mockClient)
@@ -48,6 +51,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListIamInstanceRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);
     doReturn(mockClient)

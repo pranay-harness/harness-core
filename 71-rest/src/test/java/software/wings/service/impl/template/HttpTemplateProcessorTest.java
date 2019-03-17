@@ -31,7 +31,9 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -60,11 +62,13 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
   @Inject private TemplateService templateService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadDefaultTemplates() {
     templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     HttpTemplate httpTemplate =
@@ -86,6 +90,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     Template template = getTemplate(parentFolder);
@@ -128,6 +133,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotUpdateEntitiesIfNotLinked() {
     Template savedTemplate = createHttpTemplate();
 
@@ -206,6 +212,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     Template template = getTemplate(parentFolder);

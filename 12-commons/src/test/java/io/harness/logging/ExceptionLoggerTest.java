@@ -8,10 +8,12 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -23,6 +25,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCollectResponseMessages() {
     final WingsException exception =
         new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(INVALID_ARGUMENT)));
@@ -30,6 +33,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExcludeReportTarget() {
     final WingsException exception =
         new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(DEFAULT_ERROR_CODE)));
@@ -44,6 +48,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCalculateErrorMessage() {
     WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
 
@@ -59,6 +64,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCalculateErrorMessageForChain() {
     WingsException innerException = new WingsException(DEFAULT_ERROR_CODE);
     innerException.addContext(String.class, "test");

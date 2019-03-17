@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.time.Timestamp;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -112,6 +114,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoAnalysisRecords() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
         NewRelicCVServiceConfiguration.builder().applicationId(generateUUID()).build();
@@ -144,6 +147,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoMergingWithoutGap() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
         NewRelicCVServiceConfiguration.builder().applicationId(generateUUID()).build();
@@ -272,6 +276,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void testTimeSeries() {
     final int DURATION_IN_HOURS = 12;
 
@@ -445,6 +450,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testWithActualData() throws IOException {
     readAndSaveAnalysisRecords();
 
@@ -456,6 +462,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
+  @Category(UnitTests.class)
   @Ignore
   public void testSortingFromDB() throws IOException {
     String cvConfigId = readAndSaveAnalysisRecords();
@@ -475,6 +483,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
+  @Category(UnitTests.class)
   @Ignore
   public void testDeeplinkUrlAppDynamicsFromDB() throws IOException {
     String cvConfigId = readAndSaveAnalysisRecords();
@@ -558,6 +568,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testSorting() throws IOException {
     long currentTime = System.currentTimeMillis();
@@ -654,6 +665,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetRiskArray() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -724,6 +736,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTrafficLight() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -847,6 +860,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void testRiskArrayEndpointContainment() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -913,6 +927,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRiskSortLevel() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -1001,6 +1016,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     wingsPersistence.save(riskSummaries);
   }
   @Test
+  @Category(UnitTests.class)
   public void testNoTxnMetricFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -1042,6 +1058,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTxnFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -1102,6 +1119,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMetricFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -1165,6 +1183,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTxnMetricFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())

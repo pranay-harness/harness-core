@@ -12,9 +12,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
@@ -38,6 +40,7 @@ public class PageRequestTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRequestElemMatch() {
     {
       final Dummy dummy = new Dummy();

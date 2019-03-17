@@ -4,9 +4,11 @@ import static org.junit.Assert.assertTrue;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.TerraformFetchTargetsTask;
@@ -67,6 +69,7 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getTargetModulesTest() {
     List<String> targetModules = terraformFetchTargetsTask.getTargetModules(parsedContentWithModulesAndResources);
     assertTrue(
@@ -77,6 +80,7 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getTargetResourcesTest() {
     List<String> targetResources = terraformFetchTargetsTask.getTargetResources(parsedContentWithModulesAndResources);
     assertTrue(targetResources.containsAll(Arrays.asList("aws_s3_bucket.example", "aws_s3_bucket.example1"))

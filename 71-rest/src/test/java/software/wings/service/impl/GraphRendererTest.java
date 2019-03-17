@@ -30,7 +30,9 @@ import static software.wings.sm.StateType.REPEAT;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -48,6 +50,7 @@ public class GraphRendererTest extends WingsBaseTest {
   @Inject GraphRenderer graphRenderer;
 
   @Test
+  @Category(UnitTests.class)
   public void testIsSubWorkflow() {
     assertThat(GraphRenderer.isSubWorkflow(null)).isFalse();
     assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().build())).isFalse();
@@ -58,6 +61,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSanity() {
     List<StateExecutionInstance> stateExecutionInstances = asList(aStateExecutionInstance()
                                                                       .withDisplayName("origin")
@@ -73,6 +77,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerateHierarchyNode() {
     final StateExecutionInstance parent = aStateExecutionInstance()
                                               .withDisplayName("Deploy Service")
@@ -164,6 +169,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testConvertToNode() {
     final StateExecutionInstance instance = aStateExecutionInstance()
                                                 .withDisplayName("state name")
@@ -186,6 +192,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAggregateStatus() {
     assertThat(GraphRenderer.aggregateStatus(asList(NEW, NEW, NEW))).isEqualTo(NEW);
     assertThat(GraphRenderer.aggregateStatus(asList(STARTING, STARTING, STARTING))).isEqualTo(STARTING);
@@ -227,6 +234,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAggregateNodeName() {
     assertThat(GraphRenderer.aggregateNodeName(true, 0, true)).isEqualTo("instances");
     assertThat(GraphRenderer.aggregateNodeName(false, 0, true)).isEqualTo("instances");

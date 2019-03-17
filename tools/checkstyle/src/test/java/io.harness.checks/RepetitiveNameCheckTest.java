@@ -4,6 +4,7 @@ import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.TreeWalker;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class RepetitiveNameCheckTest extends AbstractModuleTestSupport {
   @Override
@@ -22,6 +23,7 @@ public class RepetitiveNameCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
+  @Category(AbstractModuleTestSupport.class)
   public void testNonStaticLoggerIssues() throws Exception {
     final String[] expected = {
         "7:16: The entity has repetitive name with its package. It was designed to be used as static import."};
@@ -29,6 +31,7 @@ public class RepetitiveNameCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
+  @Category(AbstractModuleTestSupport.class)
   public void testFalsePositive() throws Exception {
     final String[] expected = {};
     verify(config(), getPath("RepetitiveNameCheckNonIssues.jv"), expected);

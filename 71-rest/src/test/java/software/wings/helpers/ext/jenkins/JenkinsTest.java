@@ -18,10 +18,12 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 
@@ -57,6 +59,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetJobFromJenkins() throws IOException {
     assertThat(jenkins.getJob("scheduler")).isNotNull();
   }
@@ -68,6 +71,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetJobsFromJenkins() throws IOException {
     wireMockRule.stubFor(
         get(urlEqualTo("/job/parentJob/api/json"))
@@ -89,6 +93,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetJobsFromJenkinsForDifferentHost() throws IOException {
     wireMockRule.stubFor(
         get(urlEqualTo("/job/parentJob/api/json"))
@@ -112,6 +117,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnNullWhenJobDoesNotExist() throws URISyntaxException, IOException {
     assertThat(jenkins.getJob("scheduler1")).isNull();
   }
@@ -123,6 +129,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnArtifactsByBuildNumber() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler", "57", "build/libs/docker-scheduler-*.jar");
@@ -137,6 +144,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
     assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
@@ -150,6 +158,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnNullArtifactIfJobIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler1", "57", "build/libs/docker-scheduler-*.jar");
@@ -163,6 +172,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnNullArtifactIfBuildIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler", "-1", "build/libs/docker-scheduler-*.jar");
@@ -176,6 +186,7 @@ public class JenkinsTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnNullArtifactWhenArtifactPathDoesnotMatch() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "57", "build/libs/dummy-*.jar");
     assertThat(fileInfo).isNull();
@@ -187,6 +198,7 @@ public class JenkinsTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForGitJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler", 5);
     assertThat(buildDetails)
@@ -199,6 +211,7 @@ public class JenkinsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuildForGitJob() throws IOException {
     BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler");
     assertThat(buildDetails).isNotNull();
@@ -207,12 +220,14 @@ public class JenkinsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNullLastSuccessfulBuildForNonExistingGitJob() throws IOException {
     BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler1");
     assertThat(buildDetails).isNull();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForSvnJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler-svn", 5);
     assertThat(buildDetails)
@@ -222,24 +237,28 @@ public class JenkinsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerJobWithParameters() throws IOException {
     QueueReference queueItem = jenkins.trigger("todolist_war", ImmutableMap.of("Test", "Test"));
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchBuildFromQueueItem() throws IOException {
     Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"));
     assertThat(build.getQueueId()).isEqualTo(27287);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerJobWithoutParameters() throws IOException {
     QueueReference queueItem = jenkins.trigger("todolist_war", Collections.emptyMap());
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testJobNormalizedNames() throws Exception {
     JenkinsImpl jenkins = new JenkinsImpl("http://localhost:8080");
     assertEquals("TestJob", jenkins.getNormalizedName("TestJob"));
@@ -248,6 +267,7 @@ public class JenkinsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestGetJobParameters() {
     JobWithDetails jobWithDetails = jenkins.getJob("todolist_promot");
     assertThat(jobWithDetails).isNotNull();

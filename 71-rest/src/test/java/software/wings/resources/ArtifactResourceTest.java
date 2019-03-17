@@ -24,11 +24,13 @@ import com.google.common.io.Files;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Verifier;
 import software.wings.beans.artifact.Artifact;
@@ -114,6 +116,7 @@ public class ArtifactResourceTest {
    * Should create new artifact.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateNewArtifact() {
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
@@ -136,6 +139,7 @@ public class ArtifactResourceTest {
    * Should update artifact.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateArtifact() {
     Artifact artifact = anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build();
 
@@ -152,6 +156,7 @@ public class ArtifactResourceTest {
    * Should get artifact.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifact() {
     RestResponse<Artifact> restResponse = RESOURCES.client()
                                               .target("/artifacts/" + ARTIFACT_ID + "?appId=" + APP_ID)
@@ -167,6 +172,7 @@ public class ArtifactResourceTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDownloadArtifact() throws IOException {
     Response restResponse = RESOURCES.client()
                                 .target("/artifacts/" + ARTIFACT_ID + "/artifactFile"
@@ -187,6 +193,7 @@ public class ArtifactResourceTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListArtifact() {
     RESOURCES.client()
         .target("/artifacts/?appId=" + APP_ID)
@@ -199,6 +206,7 @@ public class ArtifactResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListArtifactWithServiceId() {
     RESOURCES.client()
         .target("/artifacts/?appId=" + APP_ID + "&serviceId=" + SERVICE_ID)
@@ -215,6 +223,7 @@ public class ArtifactResourceTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteArtifact() throws IOException {
     Response response = RESOURCES.client().target("/artifacts/" + ARTIFACT_ID + "?appId=" + APP_ID).request().delete();
     verify(ARTIFACT_SERVICE).delete(APP_ID, ARTIFACT_ID);

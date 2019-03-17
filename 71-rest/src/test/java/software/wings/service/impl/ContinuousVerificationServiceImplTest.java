@@ -10,7 +10,9 @@ import com.google.common.collect.Sets;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -126,6 +128,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         .build();
   }
   @Test
+  @Category(UnitTests.class)
   public void testNullUser() throws ParseException {
     setupMocks();
     LinkedHashMap<Long,
@@ -139,6 +142,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllValidPermissions() throws ParseException {
     setupMocks();
     LinkedHashMap<Long,
@@ -152,6 +156,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoPermissionsForEnvironment() throws ParseException {
     setupMocks();
     AppPermissionSummary permissionSummary = buildAppPermissionSummary();
@@ -171,6 +176,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoPermissionsForService() throws ParseException {
     setupMocks();
     AppPermissionSummary permissionSummary = buildAppPermissionSummary();
@@ -189,6 +195,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHeatMapResolutionEnum() {
     long endTime = System.currentTimeMillis();
 

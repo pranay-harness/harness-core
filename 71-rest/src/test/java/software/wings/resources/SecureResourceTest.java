@@ -44,6 +44,7 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
@@ -55,6 +56,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -304,6 +306,7 @@ public class SecureResourceTest {
    * Should get public resource without authorization.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetPublicResourceWithoutAuthorization() {
     Response response = resources.client().target("/secure-resources/publicApiAuthTokenNotRequired").request().get();
     assertThat(response.getStatus()).isEqualTo(200);
@@ -313,6 +316,7 @@ public class SecureResourceTest {
    * Should deny access for non public resource without valid token.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
     Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
         .hasCauseInstanceOf(WingsException.class)
@@ -323,6 +327,7 @@ public class SecureResourceTest {
    * Should require authorization by default for non public resource.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldRequireAuthorizationByDefaultForNonPublicResource() {
     RestResponse<User> response = resources.client()
                                       .target("/secure-resources/NonPublicApi?appId=" + APP_ID)
@@ -336,6 +341,7 @@ public class SecureResourceTest {
    * Should authorize app scope resource read request for user with required permission.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAuthorizeAppScopeResourceReadRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceReadActionRole));
 
@@ -351,6 +357,7 @@ public class SecureResourceTest {
    * Should authorize app scope resource write request for user with required permission.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAuthorizeAppScopeResourceWriteRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceCreateActionRole));
 
@@ -366,6 +373,7 @@ public class SecureResourceTest {
    * Should authorize env scope resource read request for user with required permission.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
     user.setRoles(asList(envAllResourceReadActionRole));
 
@@ -382,6 +390,7 @@ public class SecureResourceTest {
    * Should authorize env scope resource write request for user with required permission.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAuthorizeEnvScopeResourceWriteRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceCreateActionRole));
 
@@ -395,6 +404,7 @@ public class SecureResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateTokenForDelegate() {
     RestResponse<String> response = resources.client()
                                         .target("/secure-resources/delegateAuth?accountId=ACCOUNT_ID")

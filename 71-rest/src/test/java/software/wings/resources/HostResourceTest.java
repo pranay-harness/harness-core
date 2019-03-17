@@ -14,10 +14,12 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.infrastructure.Host;
@@ -52,6 +54,7 @@ public class HostResourceTest extends WingsBaseTest {
    * Should list hosts.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();

@@ -25,7 +25,9 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetDescription;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealth;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -42,6 +44,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsElbHelperServiceDelegateImpl awsElbHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testListClassicLoadBalancers() {
     com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient mockClassicClient =
         mock(com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient.class);
@@ -63,6 +66,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListApplicationLoadBalancers() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
     doReturn(mockV2Client)
@@ -84,6 +88,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListEleasticLoadBalancers() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
     doReturn(mockV2Client)
@@ -106,6 +111,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListNetworkLoadBalancers() {
     AmazonElasticLoadBalancingClient mockv2Client = mock(AmazonElasticLoadBalancingClient.class);
     doReturn(mockv2Client)
@@ -126,6 +132,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListTargetGroupsForAlb() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
     doReturn(mockV2Client)
@@ -149,6 +156,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllInstancesRegistered() {
     com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient mockClassicClient =
         mock(com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient.class);
@@ -169,6 +177,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllTargetsRegistered() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -192,6 +201,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllTargetsDeRegistered() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -212,6 +222,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllInstancesDeRegistered() {
     com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient mockClassicClient =
         mock(com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient.class);
@@ -231,6 +242,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCloneTargetGroup() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
     doReturn(mockV2Client)

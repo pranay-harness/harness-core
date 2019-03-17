@@ -12,10 +12,12 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.util.concurrent.TimeLimiter;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -89,6 +91,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeployInstall() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     helmCliListReleasesResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
@@ -103,6 +106,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDeployUpgrade() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
     helmCliListReleasesResponse.setOutput(LIST_RELEASE_RESPONSE_KEY);
@@ -118,6 +122,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepo()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmInstallCommandRequest.setGitConfig(GitConfig.builder().build());
@@ -139,6 +144,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepoWithVariableYamlFiles()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmInstallCommandRequest.setGitConfig(GitConfig.builder().build());
@@ -162,6 +168,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testAddValuesYamlFromGitRepoWithException()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmInstallCommandRequest.setGitConfig(GitConfig.builder().build());

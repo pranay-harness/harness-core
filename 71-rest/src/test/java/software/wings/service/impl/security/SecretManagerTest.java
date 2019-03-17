@@ -21,9 +21,11 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -56,6 +58,7 @@ public class SecretManagerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMaskEncryptedFields() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
     secretManager.maskEncryptedFields(awsConfig);
@@ -63,6 +66,7 @@ public class SecretManagerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testResetUnchangedEncryptedFields() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
     AwsConfig maskedAwsConfig = AwsConfig.builder()
@@ -75,6 +79,7 @@ public class SecretManagerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListSecrets_withEmptyResponse() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
     int pageSize = 40;
@@ -95,6 +100,7 @@ public class SecretManagerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListSecrets_withLargePageSize_multipleBatches() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
     int pageSize = 10000;
@@ -120,6 +126,7 @@ public class SecretManagerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListSecrets_withFullResponse_singleBatch() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
     int pageSize = 40;
@@ -143,6 +150,7 @@ public class SecretManagerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListSecrets_withFullResponse_multiBatches() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
     int pageSize = 40;

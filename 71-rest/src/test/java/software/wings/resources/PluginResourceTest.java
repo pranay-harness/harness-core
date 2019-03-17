@@ -5,10 +5,12 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.AccountPlugin;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
@@ -39,6 +41,7 @@ public class PluginResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     RestResponse<List<AccountPlugin>> restResponse = RESOURCES.client()
                                                          .target("/plugins/ACCOUNT_ID/installed")
@@ -48,6 +51,7 @@ public class PluginResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetInstalledPluginSettingSchema() throws Exception {
     RestResponse<Map<String, JsonNode>> restResponse =
         RESOURCES.client()

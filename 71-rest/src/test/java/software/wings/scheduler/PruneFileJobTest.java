@@ -12,9 +12,11 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
@@ -60,6 +62,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void selfPruneTheJobWhenSucceed() throws Exception {
     when(wingsPersistence.get(Artifact.class, ENTITY_ID)).thenReturn(null);
     doNothing().when(fileService).deleteFile(ENTITY_ID, FileBucket.PLATFORMS);
@@ -75,6 +78,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void selfPruneTheJobIfServiceStillThereFirstTime() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
 
@@ -89,6 +93,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void selfPruneTheJobIfServiceStillThere() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
 
@@ -103,6 +108,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void UnhandledClass() throws Exception {
     when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
 
@@ -120,6 +126,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void WrongClass() throws Exception {
     JobExecutionContext context = mock(JobExecutionContext.class);
     when(context.getJobDetail()).thenReturn(details(Base.class, ENTITY_ID, FileBucket.PLATFORMS));
@@ -131,6 +138,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void retryIfServiceThrew() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(null);
 

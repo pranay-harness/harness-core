@@ -7,10 +7,12 @@ import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 import java.util.Random;
@@ -28,6 +30,7 @@ public class ConstraintTest {
   ConsumerId consumer4 = new ConsumerId("consumer4");
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateConstraint() throws UnableToSaveConstraintException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
@@ -36,6 +39,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLoadConstraint() throws UnableToSaveConstraintException, UnableToLoadConstraintException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
@@ -51,6 +55,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegisterConsumer()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
@@ -66,6 +71,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegisterConsumerFIFO() throws UnableToSaveConstraintException, InvalidPermitsException,
                                                 UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
@@ -77,6 +83,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegisterConsumerASAP() throws UnableToSaveConstraintException, InvalidPermitsException,
                                                 UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
@@ -89,6 +96,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegisterConsumerUnblocked()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
              PermanentlyBlockedConsumerException {
@@ -114,6 +122,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegisterConsumerFinished()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
              PermanentlyBlockedConsumerException {
@@ -133,6 +142,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRunnableConsumersASAP()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
              PermanentlyBlockedConsumerException {
@@ -152,6 +162,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUnits() throws UnableToSaveConstraintException, InvalidPermitsException,
                                  UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
@@ -162,6 +173,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRunnableConsumersFIFO()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
              PermanentlyBlockedConsumerException {
@@ -181,6 +193,7 @@ public class ConstraintTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSimulation() throws UnableToSaveConstraintException, InvalidPermitsException,
                                       UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();

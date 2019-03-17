@@ -14,7 +14,9 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -88,6 +90,7 @@ public class PipelineServiceDBTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdatePipeline() {
     final Account account = createAccount();
     final Application application = createApplication(account);

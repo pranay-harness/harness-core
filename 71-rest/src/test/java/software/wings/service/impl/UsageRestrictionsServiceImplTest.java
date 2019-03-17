@@ -37,11 +37,13 @@ import com.google.common.collect.Sets;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -207,6 +209,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHasAllEnvAccessOfType() {
     UsageRestrictions usageRestrictions = null;
     GenericEntityFilter appFilter = null;
@@ -262,6 +265,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDefaultRestrictionsWithMultipleUserGroups() {
     try {
       List<String> appIds = asList(APP_ID_1);
@@ -313,16 +317,19 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDefaultRestrictionsWithAdminUserAndSelectedAppsAndSelectedEnvs() {
     shouldGetDefaultRestrictionsWithUserAndSelectedAppsAndSelectedEnvs(true);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDefaultRestrictionsWithNonAdminUserAndSelectedAppsAndSelectedEnvs() {
     shouldGetDefaultRestrictionsWithUserAndSelectedAppsAndSelectedEnvs(false);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHaveAccessWithUserHavingUpdateAccessToApp() {
     try {
       boolean isAccountAdmin = true;
@@ -431,6 +438,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHaveAccessWithAdminUserAndNoRestrictions() {
     try {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
@@ -483,6 +491,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHaveAccessWithNonAdminUserAndNoRestrictions() {
     try {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
@@ -535,6 +544,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void isEditableByNonProdSupportAndAllAppAllEnvRestrictions() {
     try {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
@@ -564,6 +574,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void isEditableBySpecificAppAndAllAppAllEnvRestrictions() {
     try {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
@@ -595,6 +606,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHaveAccessWithUserHavingReadAccessToApp() {
     try {
       boolean isAccountAdmin = true;
@@ -639,6 +651,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRemoveEnvReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
 
@@ -657,6 +670,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRemoveAppReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
 
@@ -675,6 +689,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRemoveAppReferencesWithNullAppEnvRestrictions() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
     usageRestrictions.setAppEnvRestrictions(null);
@@ -686,6 +701,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPurgeDanglingReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
 
@@ -698,6 +714,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnReferenceSummaries() {
     setupUsageRestrictionsForAppEnvReferenceTesting();
 
@@ -778,6 +795,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHaveAccessWithUserHavingNoAccessToApp() {
     try {
       boolean isAccountAdmin = true;
@@ -831,6 +849,7 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCheckIfValidUsageRestrictions() {
     try {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);

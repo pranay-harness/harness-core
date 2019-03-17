@@ -12,11 +12,13 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -52,6 +54,7 @@ public class ExecutionResourceTest {
    * Test find by name.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testListExecutions() {
     String appId = generateUuid();

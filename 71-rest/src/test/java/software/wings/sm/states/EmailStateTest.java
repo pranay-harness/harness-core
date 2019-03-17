@@ -19,8 +19,10 @@ import com.google.inject.Injector;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -100,6 +102,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should send email.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendEmail() {
     emailState.setBody("body");
     emailState.setSubject("subject");
@@ -120,6 +123,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should evaluate context elements for email subject and body.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateContextElementsForEmailSubjectAndBody() {
     emailState.setBody("Deployed to host ${host.hostName}");
     emailState.setSubject("Deployed ${host.hostName}");
@@ -152,6 +156,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should capture error message when failed to send email.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCaptureErrorMessageWhenFailedToSendEmail() {
     doThrow(new RuntimeException("Test exception")).when(emailNotificationService).send(emailData);
 
@@ -174,6 +179,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should return execution result as error when not ignored.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnExecutionResultAsErrorWhenNotIgnored() {
     doThrow(new RuntimeException("Test exception")).when(emailNotificationService).send(emailData);
 
@@ -197,6 +203,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should render deployment triggered by for email subject and body.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderDeploymentTriggeredBy() {
     emailState.setBody("Deployment triggered by: ${deploymentTriggeredBy}");
     emailState.setSubject("Deployment triggered by: ${deploymentTriggeredBy}");

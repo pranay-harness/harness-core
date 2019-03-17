@@ -25,10 +25,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
@@ -98,6 +100,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLastExecutionNodes() throws NoSuchAlgorithmException, KeyManagementException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
@@ -168,6 +171,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLastExecutionNodesWithPhase() throws NoSuchAlgorithmException, KeyManagementException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
@@ -266,6 +270,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException {
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
@@ -302,6 +307,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCanaryNewNodesHelm() throws NoSuchAlgorithmException, KeyManagementException {
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()

@@ -2,8 +2,10 @@ package io.harness.observer;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SubjectTest {
   private static final String OBSERVER_KEY = "observer";
@@ -18,16 +20,19 @@ public class SubjectTest {
   }
 
   @Test(expected = NullPointerException.class)
+  @Category(UnitTests.class)
   public void testRegisterNPE() {
     subject.register(null);
   }
 
   @Test(expected = NullPointerException.class)
+  @Category(UnitTests.class)
   public void testUnregisterNPE() {
     subject.unregister(null);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegisterUnregister() {
     subject.register(OBSERVER_KEY);
     subject.register(OBSERVER_1_KEY);
@@ -42,6 +47,7 @@ public class SubjectTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFireApproveFromAllWithArg() {
     subject.register(OBSERVER_KEY);
 

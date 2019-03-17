@@ -20,9 +20,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.api.DeploymentType;
@@ -111,6 +113,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestNonTemplatized() {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
@@ -147,6 +150,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTestAllTemplatized() throws ParseException, IOException {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
@@ -223,6 +227,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetMetricType() {
     String errType = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.ERRORS_PER_MINUTE);
     assertNotNull(errType);

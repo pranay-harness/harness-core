@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by peeyushaggarwal on 10/25/16.
@@ -23,6 +25,7 @@ public class JenkinsExecutionDataTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetExecutionSummary() throws Exception {
     assertThat(jenkinsExecutionData.getExecutionSummary())
         .containsAllEntriesOf(ImmutableMap.of("jobName",
@@ -32,6 +35,7 @@ public class JenkinsExecutionDataTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetExecutionDetails() throws Exception {
     assertThat(jenkinsExecutionData.getExecutionDetails())
         .containsAllEntriesOf(ImmutableMap.of("jobName",

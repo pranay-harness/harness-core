@@ -87,12 +87,14 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.rule.RealMongo;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -317,6 +319,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testUsageMetrics() {
     Map<String, Integer> instanceCountMap = usageMetricsHelper.getAllValidInstanceCounts();
@@ -339,6 +342,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void shallTestInstanceStats() {
     try {
@@ -398,6 +402,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void shallGetAppInstanceSummaryStatsByService() {
     try {
@@ -421,6 +426,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void shallGetServiceInstanceStats() {
     try {
@@ -443,6 +449,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void shallGetServiceInstanceDashboard() {
     try {

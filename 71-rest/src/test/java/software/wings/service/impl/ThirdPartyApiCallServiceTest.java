@@ -7,9 +7,11 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.resources.ActivityResource;
 import software.wings.resources.DelegateResource;
@@ -40,6 +42,7 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSaveAndGetApiCallLogs() throws Exception {
     int numOfApiCallLogs = 10;
     List<ThirdPartyApiCallLog> apiCallLogs = new ArrayList<>();

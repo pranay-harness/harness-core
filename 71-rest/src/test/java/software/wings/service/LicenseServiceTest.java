@@ -8,10 +8,12 @@ import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
@@ -42,6 +44,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailSavingAccountWithoutLicense() {
     thrown.expect(WingsException.class);
     thrown.expectMessage("Invalid / Null license info");
@@ -50,6 +53,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveTrialAccountWithDefaultValues() {
     long expiryTime = LicenseUtil.getDefaultTrialExpiryTime();
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -70,6 +74,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveAccountWithSpecificType() {
     long timestamp = System.currentTimeMillis() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -91,6 +96,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveAccountWithSpecificTypeAndExpiryTime() {
     long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -110,6 +116,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdatePaidAccountWithDefaultValues() {
     long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -131,6 +138,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateTrialAccountWithDefaultValues() {
     long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -159,6 +167,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailToUpdateTrialAccountWithNullLicenseInfo() {
     long expiryTime = LicenseUtil.getDefaultTrialExpiryTime();
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -179,6 +188,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateTrialAccount3WithDefaultValues() {
     long expiryTime = LicenseUtil.getDefaultTrialExpiryTime();
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -208,6 +218,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateAccountWithSpecificType() {
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
@@ -232,6 +243,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateAccountWithSpecificTypeAndExpiryTime() {
     long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -260,6 +272,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateOnPremTrialAccountWithDefaultValues() {
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
@@ -286,6 +299,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateOnPremTrialAccountWithSpecificValues() {
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.PAID);
@@ -315,6 +329,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNewLicense() {
     Calendar calendar = Calendar.getInstance();
     calendar.add(Calendar.DATE, 1);
@@ -343,6 +358,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCheckForLicenseExpiry() throws InterruptedException {
     long expiryTime = System.currentTimeMillis() + 1000;
     LicenseInfo licenseInfo = new LicenseInfo();

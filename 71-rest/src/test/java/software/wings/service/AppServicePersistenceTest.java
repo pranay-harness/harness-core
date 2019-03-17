@@ -13,9 +13,11 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.queue.QueueListener;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -50,6 +52,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
   private static String dummyAppID = "dummy" + appId;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteApplication()
       throws SchedulerException, InterruptedException, ExecutionException, TimeoutException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

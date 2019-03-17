@@ -14,7 +14,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -34,6 +36,7 @@ public class SlackMessageDispatcherTest extends WingsBaseTest {
   @Mock private NotificationMessageResolver notificationMessageResolver;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendSlackMessage() {
     when(notificationMessageResolver.getSlackTemplate(ENTITY_CREATE_NOTIFICATION.name())).thenReturn("some template");
 

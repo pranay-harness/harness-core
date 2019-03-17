@@ -7,11 +7,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
@@ -53,6 +55,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSave() {
     val stats = sampleSnapshot();
     val ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
@@ -70,6 +73,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAggregateOverPeriod() {
     val from = Instant.now();
 
@@ -106,6 +110,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPercentile() {
     val from = Instant.now();
 
@@ -146,6 +151,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLastSnapshotTime() {
     val before = Instant.now();
     val stat = sampleSnapshot();

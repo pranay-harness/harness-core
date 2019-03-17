@@ -11,9 +11,11 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -40,6 +42,7 @@ public class ZombieHunterJobTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Test
+  @Category(UnitTests.class)
   public void huntingExpeditionSchedule() {
     for (int i = 0; i < ZombieHunterJob.zombieTypes.size(); i++) {
       final OffsetDateTime huntingExpedition = ZombieHunterJob.nextHuntingExpedition(i);
@@ -55,6 +58,7 @@ public class ZombieHunterJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void exploratoryExpedition() {
     Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
     wingsPersistence.save(account);
@@ -75,6 +79,7 @@ public class ZombieHunterJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void huntingExpedition() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -98,6 +103,7 @@ public class ZombieHunterJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void huntingForOwnersFromMultipleCollections() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 

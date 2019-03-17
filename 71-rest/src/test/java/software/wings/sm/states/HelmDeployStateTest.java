@@ -43,11 +43,13 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.Lists;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -229,6 +231,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute() throws InterruptedException {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
         .thenReturn(HelmChartSpecification.builder()
@@ -265,6 +268,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testExecuteWithNullChartSpec() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID)).thenReturn(null);
 
@@ -272,6 +276,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testExecuteWithNullReleaseName() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID)).thenReturn(null);
     helmDeployState.setHelmReleaseNamePrefix(null);
@@ -280,6 +285,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testErrorResponseFromDelegate() throws InterruptedException {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
         .thenReturn(HelmChartSpecification.builder()
@@ -295,6 +301,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
   public void testEmptyHelmChartSpec() {
     helmDeployState.execute(context);
     verify(serviceResourceService).getHelmChartSpecification(APP_ID, SERVICE_ID);
@@ -302,6 +309,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEmptyHelmChartSpecWithGit() {
     when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
 
@@ -317,6 +325,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteWithCommandFlags() {
     helmDeployState.setCommandFlags(COMMAND_FLAGS);
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
@@ -341,6 +350,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecuteWithHelmRollbackForCommandFlags() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
         .thenReturn(HelmChartSpecification.builder()

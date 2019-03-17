@@ -43,10 +43,12 @@ import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Injector;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -161,6 +163,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should create password based ssh config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreatePasswordBasedSshConfig() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
@@ -186,6 +189,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should create key based ssh config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateKeyBasedSshConfig() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_KEY.getUuid()).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
@@ -210,6 +214,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should create bastion host based ssh config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateBastionHostBasedSshConfig() {
     Host host =
         builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).withBastionConnAttr(BASTION_HOST_ATTR.getUuid()).build();
@@ -244,6 +249,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should execute exec command.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteExecCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
@@ -256,6 +262,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should execute copy command.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteCopyCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     ScpCommandUnit commandUnit = aScpCommandUnit()
@@ -282,6 +289,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnit commandUnit = new InitSshCommandUnit();
@@ -325,6 +333,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    *
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteInitCommandV2() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnitV2 commandUnit = new InitSshCommandUnitV2();
@@ -353,6 +362,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnit commandUnit = new InitSshCommandUnit();
@@ -407,6 +417,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    *
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteInitCommandV2WithNestedUnits() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnitV2 commandUnit = new InitSshCommandUnitV2();

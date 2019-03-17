@@ -21,9 +21,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.WorkflowElement;
@@ -47,6 +49,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should get decorated notification message.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDecoratedNotificationMessage() {
     String decoratedNotificationMessage = NotificationMessageResolver.getDecoratedNotificationMessage(
         notificationMessageResolver.getWebTemplate(ENTITY_CREATE_NOTIFICATION.name()),
@@ -58,6 +61,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should fail on in complete map.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFailOnInCompleteMap() {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(()
@@ -68,6 +72,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetPlaceholderValues() {
     String ApprovalUrl =
         String.format("PORTAL_URL/#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",

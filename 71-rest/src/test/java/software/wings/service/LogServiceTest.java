@@ -13,10 +13,12 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Log;
 import software.wings.service.intfc.LogService;
@@ -44,6 +46,7 @@ public class LogServiceTest extends WingsBaseTest {
    * Should list logs.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListLogs() {
     List<Log> logs = getLogsToSave(100);
     logService.batchedSave(logs);
@@ -57,6 +60,7 @@ public class LogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotSaveMoreThanLimit() {
     List<Log> logs = getLogsToSave(2 * MAX_LOG_ROWS_PER_ACTIVITY);
     logService.batchedSave(logs);
@@ -70,6 +74,7 @@ public class LogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExportLogs() throws IOException {
     List<Log> logs = getLogsToSave(100);
     logService.batchedSave(logs);

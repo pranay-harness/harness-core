@@ -88,7 +88,7 @@ public class SettingAttribute extends Base {
   @NotEmpty @EntityName @Trimmed private String name;
   @Valid private SettingValue value;
   @Valid @Transient private ConnectivityValidationAttributes validationAttributes;
-  private Category category = Category.SETTING;
+  private SettingCategory category = SettingCategory.SETTING;
   private List<String> appIds;
   private UsageRestrictions usageRestrictions;
 
@@ -96,7 +96,7 @@ public class SettingAttribute extends Base {
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @Transient private transient String encryptedBy;
 
-  public enum Category {
+  public enum SettingCategory {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
@@ -107,12 +107,12 @@ public class SettingAttribute extends Base {
 
     private List<SettingVariableTypes> settingVariableTypes;
 
-    Category(List<SettingVariableTypes> settingVariableTypes) {
+    SettingCategory(List<SettingVariableTypes> settingVariableTypes) {
       this.settingVariableTypes = settingVariableTypes;
     }
 
-    public static Category getCategory(SettingVariableTypes settingVariableType) {
-      return stream(Category.values())
+    public static SettingCategory getCategory(SettingVariableTypes settingVariableType) {
+      return stream(SettingCategory.values())
           .filter(category -> category.settingVariableTypes.contains(settingVariableType))
           .findFirst()
           .orElse(null);
@@ -125,7 +125,7 @@ public class SettingAttribute extends Base {
     private String name;
     private SettingValue value;
     private ConnectivityValidationAttributes connectivityValidationAttributes;
-    private Category category = Category.SETTING;
+    private SettingCategory category = SettingCategory.SETTING;
     private List<String> appIds;
     private String uuid;
     private String appId = GLOBAL_APP_ID;
@@ -161,7 +161,7 @@ public class SettingAttribute extends Base {
       return this;
     }
 
-    public Builder withCategory(Category category) {
+    public Builder withCategory(SettingCategory category) {
       this.category = category;
       return this;
     }

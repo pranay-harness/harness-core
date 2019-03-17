@@ -4,7 +4,9 @@ import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -26,6 +28,7 @@ public class EmailNotificationListenerTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendEmailOnReceivingMessage() throws Exception {
     emailNotificationListener.onMessage(testEmailData);
     verify(emailNotificationService).send(testEmailData);

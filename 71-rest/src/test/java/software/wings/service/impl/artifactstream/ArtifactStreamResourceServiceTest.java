@@ -12,8 +12,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -58,6 +60,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should create artifact stream.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateArtifactStream() {
     assertThat(artifactStreamService.create(artifactStream)).isNotNull();
   }
@@ -66,6 +69,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should list all artifact streams.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListAllArtifactStreams() {
     List<ArtifactStream> artifactStreams = Lists.newArrayList();
     artifactStreams.add(artifactStreamService.create(artifactStream));
@@ -78,6 +82,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should delete artifact stream.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteArtifactStream() {
     ArtifactStream dbArtifactStream = artifactStreamService.create(artifactStream);
     artifactStreamService.delete(dbArtifactStream.getAppId(), dbArtifactStream.getUuid());

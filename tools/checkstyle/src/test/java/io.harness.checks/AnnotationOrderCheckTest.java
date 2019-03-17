@@ -4,6 +4,7 @@ import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.TreeWalker;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AnnotationOrderCheckTest extends AbstractModuleTestSupport {
   @Override
@@ -22,6 +23,7 @@ public class AnnotationOrderCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
+  @Category(AbstractModuleTestSupport.class)
   public void testIssues() throws Exception {
     final String[] expected = {"7:1: Annotation Value must be placed before annotation Builder",
         "12:1: Annotation Data must be placed before annotation Builder",
@@ -32,6 +34,7 @@ public class AnnotationOrderCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
+  @Category(AbstractModuleTestSupport.class)
   public void testFalsePositive() throws Exception {
     //    final String[] expected = {};
     //    verify(config(), getPath("WingsExceptionCheckNonIssues.jv"), expected);

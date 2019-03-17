@@ -3,10 +3,12 @@ package io.harness.integration;
 import static org.junit.Assert.assertTrue;
 
 import io.harness.VerificationBaseIntegrationTest;
+import io.harness.category.element.UnitTests;
 import io.harness.resources.intfc.ExperimentalLogAnalysisResource;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 
 import java.net.UnknownHostException;
@@ -25,6 +27,7 @@ public class ExperimentalLogAnalysisResourceIntegrationTest extends Verification
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLogExpAnalysisInfo() throws UnknownHostException {
     WebTarget getTarget = client.target(VERIFICATION_API_BASE + "/"
         + "learning-exp" + ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL

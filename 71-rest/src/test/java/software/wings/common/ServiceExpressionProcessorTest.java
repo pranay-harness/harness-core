@@ -19,9 +19,11 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -53,6 +55,7 @@ public class ServiceExpressionProcessorTest {
    * Should return matching services.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnMatchingServices() {
     List<ServiceElement> services = Lists.newArrayList(aServiceElement().withName("A1234").build(),
         aServiceElement().withName("B1234").build(), aServiceElement().withName("C1234").build());
@@ -84,6 +87,7 @@ public class ServiceExpressionProcessorTest {
    * Should return list all.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnListAll() {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
         Service.builder().name("B1234").build(), Service.builder().name("C1234").build());
@@ -115,6 +119,7 @@ public class ServiceExpressionProcessorTest {
    * Should return list all from context.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnListAllFromContext() {
     Service serviceC = Service.builder().name("C1234").uuid(SERVICE_ID).build();
 
@@ -138,6 +143,7 @@ public class ServiceExpressionProcessorTest {
    * Should return list some by name.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnListSomeByName() {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
         Service.builder().name("B1234").build(), Service.builder().name("C1234").build());
@@ -166,6 +172,7 @@ public class ServiceExpressionProcessorTest {
    * Should return list some by name.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnSelectedListSomeByName() {
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD))
@@ -188,6 +195,7 @@ public class ServiceExpressionProcessorTest {
    * Should return not from context.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnNotFromContext() {
     Service serviceC = Service.builder().name("C1234").build();
 

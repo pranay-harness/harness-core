@@ -26,12 +26,14 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -95,6 +97,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendFirstWorkflowEvent() {
     UserThreadLocal.set(user);
     try {
@@ -120,6 +123,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendFirstCV247Event() {
     UserThreadLocal.set(user);
     try {
@@ -149,6 +153,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendRBACEventForFirstUserGroup() {
     UserThreadLocal.set(user);
     try {
@@ -174,6 +179,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendRBACEventForFirstUser() {
     UserThreadLocal.set(user);
     try {
@@ -199,6 +205,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendWhitelistEvent() {
     UserThreadLocal.set(user);
     try {
@@ -224,6 +231,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSend2FASetupEvent() {
     UserThreadLocal.set(user);
     try {
@@ -235,6 +243,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendUserInviteEvent() {
     UserThreadLocal.set(user);
     try {
@@ -246,6 +255,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendInstalledDelegateEvent() {
     UserThreadLocal.set(user);
     try {
@@ -270,6 +280,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testConfirmUserRegistrationEvent() {
     UserThreadLocal.set(user);
     try {
@@ -282,6 +293,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFirstDeploymentEvent() {
     UserThreadLocal.set(user);
     try {
@@ -305,6 +317,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFirstRollbackEvent() {
     UserThreadLocal.set(user);
     try {

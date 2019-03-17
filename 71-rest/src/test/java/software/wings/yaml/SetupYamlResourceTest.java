@@ -109,8 +109,7 @@ public class SetupYamlResourceTest {
   }
 
   /*
-  @Test
-  public void testGetYaml() {
+  @Test @Category(UnitTests.class) public void testGetYaml() {
     RestResponse<YamlPayload> actual = resources.client().target("/setupYaml/" + TEST_ACCOUNT_ID).request().get(new
   GenericType<RestResponse<YamlPayload>>() {});
 
@@ -122,8 +121,7 @@ public class SetupYamlResourceTest {
   */
 
   /*
-  @Test
-  public void testUpdateFromYamlNoChange() {
+  @Test @Category(UnitTests.class) public void testUpdateFromYamlNoChange() {
     RestResponse<SetupYaml> actual = resources.client().target("/setupYaml/" +
   TEST_ACCOUNT_ID).request().put(Entity.entity(TEST_YP, MediaType.APPLICATION_JSON), new
   GenericType<RestResponse<SetupYaml>>() {});
@@ -138,8 +136,7 @@ public class SetupYamlResourceTest {
   */
 
   /*
-  @Test
-  public void testUpdateFromYamlAddOnly() {
+  @Test @Category(UnitTests.class) public void testUpdateFromYamlAddOnly() {
     RestResponse<SetupYaml> actual = resources.client().target("/setupYaml/" +
   TEST_ACCOUNT_ID).request().put(Entity.entity(TEST_YP2, MediaType.APPLICATION_JSON), new
   GenericType<RestResponse<SetupYaml>>() {});
@@ -154,8 +151,7 @@ public class SetupYamlResourceTest {
   */
 
   /*
-  @Test
-  public void testUpdateFromYamlAddAndDeleteNotEnabled() {
+  @Test @Category(UnitTests.class) public void testUpdateFromYamlAddAndDeleteNotEnabled() {
     RestResponse<SetupYaml>
         actual = resources.client().target("/setupYaml/" + TEST_ACCOUNT_ID).request().put(Entity.entity(TEST_YP3,
   MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
@@ -171,8 +167,7 @@ public class SetupYamlResourceTest {
   */
 
   /*
-  @Test
-  public void testUpdateFromYamlAddAndDeleteEnabled() {
+  @Test @Category(UnitTests.class) public void testUpdateFromYamlAddAndDeleteEnabled() {
     RestResponse<SetupYaml> actual = resources.client().target("/setupYaml/" + TEST_ACCOUNT_ID +
   "?deleteEnabled=true").request().put(Entity.entity(TEST_YP3, MediaType.APPLICATION_JSON), new
   GenericType<RestResponse<SetupYaml>>() {});

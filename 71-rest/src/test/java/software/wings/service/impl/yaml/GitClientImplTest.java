@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -27,6 +28,7 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.util.FS;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -164,6 +166,7 @@ public class GitClientImplTest extends WingsBaseTest {
       + "-----END RSA PRIVATE KEY-----\n";
 
   @Test
+  @Category(UnitTests.class)
   public void testAddToGitDiffResult() throws Exception {
     DiffEntry entry = mock(DiffEntry.class);
     Repository repository = mock(Repository.class);
@@ -255,6 +258,7 @@ public class GitClientImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCloneRepoWithSSH() throws Exception {
     try {
       Git gitResult = gitSyncCloneRepository();

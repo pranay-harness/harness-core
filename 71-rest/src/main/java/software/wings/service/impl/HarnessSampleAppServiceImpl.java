@@ -33,7 +33,7 @@ import software.wings.beans.SampleAppStatus;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.AccountService;
@@ -167,13 +167,13 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     if (existingKubeCluster != null) {
       entityStatusList.add(SampleAppEntityStatus.builder()
                                .entityName(K8S_CLOUD_PROVIDER_NAME)
-                               .entityType(Category.CLOUD_PROVIDER.name())
+                               .entityType(SettingCategory.CLOUD_PROVIDER.name())
                                .health(Health.GOOD)
                                .build());
     } else {
       entityStatusList.add(SampleAppEntityStatus.builder()
                                .entityName(K8S_CLOUD_PROVIDER_NAME)
-                               .entityType(Category.CLOUD_PROVIDER.name())
+                               .entityType(SettingCategory.CLOUD_PROVIDER.name())
                                .health(Health.BAD)
                                .build());
       health = Health.BAD;
@@ -185,13 +185,13 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     if (existingDockerConnector != null) {
       entityStatusList.add(SampleAppEntityStatus.builder()
                                .entityName(HARNESS_DOCKER_HUB_CONNECTOR)
-                               .entityType(Category.CONNECTOR.name())
+                               .entityType(SettingCategory.CONNECTOR.name())
                                .health(Health.GOOD)
                                .build());
     } else {
       entityStatusList.add(SampleAppEntityStatus.builder()
                                .entityName(HARNESS_DOCKER_HUB_CONNECTOR)
-                               .entityType(Category.CONNECTOR.name())
+                               .entityType(SettingCategory.CONNECTOR.name())
                                .health(Health.BAD)
                                .build());
       health = Health.BAD;

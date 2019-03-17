@@ -22,12 +22,14 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.waiter.ErrorNotifyResponseData;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -88,6 +90,7 @@ public class ShellScriptStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAsyncResponseOnShellScriptSuccessAndSaveSweepingOutput() {
     when(executionContext.getStateExecutionData())
         .thenReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build());
@@ -115,6 +118,7 @@ public class ShellScriptStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAsyncResponseOnShellScriptFailureAndNotSaveSweepingOutput() {
     when(executionContext.getStateExecutionData())
         .thenReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build());
@@ -135,6 +139,7 @@ public class ShellScriptStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailShellScriptStateOnErrorResponse() {
     ExecutionResponse executionResponse = shellScriptState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID, ErrorNotifyResponseData.builder().errorMessage("Failed").build()));
@@ -143,12 +148,14 @@ public class ShellScriptStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEscapifyBash() {
     assertThat(shellScriptFunctor.escapeString("a'b\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y")
                    .equals("a\\'b\\\"c\\`d\\$e~f!g@h#i%j^k\\&l*m\\(n\\)o-p_r{s}t[]\\|\\;:u,v.w/x?y"));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEscapifyPowershell() {
     assertThat(shellScriptFunctor.escapeString("a'b\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y")
                    .equals("a\\'b\\\"c\\`d\\$e~f!g@h#i%j^k\\&l*m\\(n\\)o-p_r{s}t[]\\|\\;:u,v.w/x?y"));

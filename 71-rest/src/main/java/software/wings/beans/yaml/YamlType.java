@@ -52,7 +52,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -75,7 +75,7 @@ import software.wings.verification.CVConfiguration;
  * @author rktummala on 10/17/17
  */
 public enum YamlType {
-  CLOUD_PROVIDER(Category.CLOUD_PROVIDER.name(),
+  CLOUD_PROVIDER(SettingCategory.CLOUD_PROVIDER.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
   ARTIFACT_SERVER(YamlConstants.ARTIFACT_SERVER,

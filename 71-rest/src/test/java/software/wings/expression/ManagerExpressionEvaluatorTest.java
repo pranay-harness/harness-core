@@ -13,8 +13,10 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.beans.SweepingOutput;
@@ -34,6 +36,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private SweepingOutputService sweepingOutputService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSubstituteHostUrl() {
     Host host = new Host();
     host.setHostName("app123.application.com");
@@ -45,6 +48,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSubstitutePartially() {
     Host host = new Host();
     host.setHostName("${HOST}.$DOMAIN.${COM}");
@@ -58,6 +62,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateEc2Instance() {
     Instance ec2 = new Instance();
     ec2.setPrivateDnsName("ip-172-31-24-237.ec2.internal");
@@ -85,6 +90,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderSweepingOutputFunctor() {
     String appId = generateUuid();
     String pipelineExecutionId = generateUuid();
@@ -119,6 +125,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRenderSweepingOutputValue() {
     String appId = generateUuid();
     String pipelineExecutionId = generateUuid();

@@ -4,12 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CryptoUtilTest {
   public static final int LEN = 10;
 
   @Test
+  @Category(UnitTests.class)
   public void testSecureRandAlphaNumString() {
     String alphaNumericPattern = "^[a-zA-Z0-9]*$";
 

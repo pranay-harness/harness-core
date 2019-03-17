@@ -16,6 +16,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import io.harness.PersistenceTest;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
@@ -23,6 +24,7 @@ import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     String uuid = generateUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
@@ -67,6 +70,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAcquireEphemeralLock() {
     String uuid = generateUuid();
     try (AcquiredLock lock = persistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
@@ -79,6 +83,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testConcurrentAcquireEphemeralLock() {
     String uuid = generateUuid();
@@ -92,6 +97,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAcquireLockAfterDestroy() {
     String uuid = generateUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
@@ -105,6 +111,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTryToAcquireEphemeralLock() {
     String uuid = generateUuid();
     try (AcquiredLock outer =
@@ -113,6 +120,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTryToAcquireLock() {
     String uuid = generateUuid();
     try (AcquiredLock outer = persistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
@@ -124,6 +132,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore // The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.
   public void testAcquireAfterTimeout() throws InterruptedException {
     class AnotherLock implements Runnable {

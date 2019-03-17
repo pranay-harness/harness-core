@@ -7,9 +7,11 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -33,6 +35,7 @@ public class AwsEcsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRun() {
     AwsEcsRequest request = AwsEcsListClustersRequest.builder().build();
     task.run(request);

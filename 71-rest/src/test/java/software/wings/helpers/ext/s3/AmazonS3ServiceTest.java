@@ -13,9 +13,11 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import io.harness.category.element.UnitTests;
 import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -53,6 +55,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetBuckets() {
     when(awsHelperService.listS3Buckets(awsConfig, null)).thenReturn(Lists.newArrayList(new Bucket("bucket1")));
     Map<String, String> buckets = amazonS3Service.getBuckets(awsConfig, null);
@@ -60,6 +63,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     ListObjectsV2Result listObjectsV2Result = new ListObjectsV2Result();
     listObjectsV2Result.setBucketName("bucket1");
@@ -74,6 +78,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDownloadArtifacts() throws IOException, URISyntaxException {
     File file = new File("test.txt");
     file.createNewFile();
@@ -117,6 +122,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactBuildDetails() throws IOException, URISyntaxException {
     ListObjectsV2Result listObjectsV2Result = new ListObjectsV2Result();
     listObjectsV2Result.setBucketName("bucket1");
@@ -140,6 +146,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactsBuildDetails() throws IOException, URISyntaxException {
     ListObjectsV2Result listObjectsV2Result = new ListObjectsV2Result();
     listObjectsV2Result.setBucketName("bucket1");

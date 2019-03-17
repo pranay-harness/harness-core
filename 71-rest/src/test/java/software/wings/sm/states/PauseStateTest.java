@@ -17,9 +17,11 @@ import com.google.inject.Injector;
 
 import freemarker.template.TemplateException;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -94,6 +96,7 @@ public class PauseStateTest extends WingsBaseTest {
    * @throws IOException       the io exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSendEmailAndReturnCorrelationIdOnExecute() throws EmailException, TemplateException, IOException {
     pauseState.setBody("body");
     pauseState.setSubject("subject");

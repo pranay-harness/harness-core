@@ -36,9 +36,11 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -115,6 +117,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecute() {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(asList(User.Builder.anUser().build()));
@@ -132,6 +135,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSkipDisabledStep() {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(asList(User.Builder.anUser().build()));
@@ -144,12 +148,14 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = approvalState.getTimeoutMillis();
     assertThat(timeoutMillis).isEqualTo(DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
     Integer timeoutMillis = approvalState.getTimeoutMillis();
@@ -157,6 +163,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandlePipelineAbortWithTimeoutMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
@@ -179,6 +186,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleWorkflowAbortWithTimeoutMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
@@ -200,6 +208,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandlePipelineAbortWithAbortMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
@@ -221,6 +230,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleWorkflowAbortWithAbortMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
@@ -242,6 +252,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetPlaceholderValues() {
     ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
     approvalStateExecutionData.setStartTs(100L);
@@ -265,6 +276,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForWorkflow() {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).build());
@@ -282,6 +294,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForPipelineWithApproval() {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.PIPELINE).build());
@@ -298,6 +311,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForPipelineWithWorkflowApproval() {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).build());

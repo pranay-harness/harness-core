@@ -22,11 +22,13 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
@@ -92,6 +94,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveAccount() {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
@@ -103,6 +106,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRegisterNewUser_invalidAccountName_shouldFail() {
     Account account = anAccount()
                           .withCompanyName(COMPANY_NAME)
@@ -122,6 +126,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailSavingAccountWithoutLicense() {
     thrown.expect(WingsException.class);
     thrown.expectMessage("Invalid / Null license info");
@@ -130,6 +135,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteAccount() {
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
     accountService.delete(accountId);
@@ -140,6 +146,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateCompanyName() {
     Account account = wingsPersistence.saveAndGet(
         Account.class, anAccount().withCompanyName("Wings").withAccountName("Wings").build());
@@ -149,12 +156,14 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountByCompanyName() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(accountService.getByName(HARNESS_NAME)).isEqualTo(account);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountByAccountName() {
     Account account = wingsPersistence.saveAndGet(
         Account.class, anAccount().withAccountName(HARNESS_NAME).withCompanyName(HARNESS_NAME).build());
@@ -162,12 +171,14 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccount() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDelegateConfiguration() {
     String accountId =
         wingsPersistence.save(anAccount()
@@ -183,6 +194,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDelegateConfigurationFromGlobalAccount() {
     wingsPersistence.save(anAccount()
                               .withUuid(GLOBAL_ACCOUNT_ID)
@@ -201,6 +213,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListAllAccounts() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
@@ -213,6 +226,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountWithDefaults() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(account).isNotNull();
@@ -242,6 +256,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetServicesForAccountBreadcrumb() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -267,6 +282,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetServicesForAccount() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -293,6 +309,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetServicesForAccountDisabledCVConfig() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -332,6 +349,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetServicesForAccountSpecificService() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -359,6 +377,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetServicesForAccountLastOffset() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();

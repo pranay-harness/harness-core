@@ -21,11 +21,13 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
@@ -98,6 +100,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSaveAnalysisRecordsML() {
     int numOfGroups = 5;
     int numOfMinutes = 10;
@@ -132,6 +135,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetHistoricalAnalysis() {
     // setup
     int sampleMinute = 1000000;
@@ -160,6 +164,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetHistoricalAnalysisNoHistorical() {
     // setup
     int sampleMinute = 1000000;
@@ -188,6 +193,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetHistoricalAnalysisBadAppIdCvConfigId() {
     // setup
     int sampleMinute = 1000000;
@@ -221,6 +227,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCompression() throws IOException {
     long analysisMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     String cvConfigId = generateUuid();
@@ -259,6 +266,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCleanup() {
     int numOfRecords = 10;
     for (int i = 0; i < numOfRecords; i++) {

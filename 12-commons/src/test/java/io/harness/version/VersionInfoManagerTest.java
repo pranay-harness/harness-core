@@ -2,7 +2,9 @@ package io.harness.version;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class VersionInfoManagerTest {
   private static String sampleVersionInfoYaml = "version   : 1.1.1.1\n"
@@ -12,6 +14,7 @@ public class VersionInfoManagerTest {
       + "timestamp : 180621-0636";
 
   @Test
+  @Category(UnitTests.class)
   public void testGetVersionInfo() {
     VersionInfoManager versionInfoManager = new VersionInfoManager(sampleVersionInfoYaml);
     VersionInfo versionInfo = versionInfoManager.getVersionInfo();

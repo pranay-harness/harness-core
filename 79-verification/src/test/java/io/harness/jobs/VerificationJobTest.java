@@ -11,9 +11,11 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.VerificationBaseTest;
+import io.harness.category.element.UnitTests;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -40,6 +42,7 @@ public class VerificationJobTest extends VerificationBaseTest {
   JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
 
   @Test
+  @Category(UnitTests.class)
   public void test_triggerDataProcessorCron() {
     Account account = createAccount(AccountType.PAID, AccountStatus.ACTIVE);
     List<Account> accounts = new ArrayList<>();
@@ -52,6 +55,7 @@ public class VerificationJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void test_deleteCrons() {
     Account account = createAccount(AccountType.PAID, AccountStatus.ACTIVE);
     List<Account> accounts = new ArrayList<>();

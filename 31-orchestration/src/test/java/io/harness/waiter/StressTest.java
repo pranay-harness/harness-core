@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.BypassRuleMixin.Bypass;
@@ -13,6 +14,7 @@ import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,7 @@ public class StressTest extends OrchestrationTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   @Bypass
   public void stress() throws IOException {

@@ -27,9 +27,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -100,6 +102,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should list saved service templates.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListSavedServiceTemplates() {
     PageResponse<ServiceTemplate> pageResponse =
         aPageResponse().withResponse(asList(builder.but().withServiceId(SERVICE_ID).build())).build();
@@ -120,6 +123,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should save service template.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveServiceTemplate() {
     when(wingsPersistence.saveAndGet(eq(ServiceTemplate.class), any(ServiceTemplate.class)))
         .thenReturn(builder.build());
@@ -132,6 +136,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should create default service template by env.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateDefaultServiceTemplateByEnv() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
     when(serviceResourceService.findServicesByApp(APP_ID)).thenReturn(asList(service));
@@ -152,6 +157,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should create default service template by service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateDefaultServiceTemplateByService() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
     Environment environment = Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
@@ -173,6 +179,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should update service template.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateServiceTemplate() {
     ServiceTemplate template = builder.build();
     when(wingsPersistence.getWithAppId(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
@@ -188,6 +195,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should delete service template.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteServiceTemplate() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     templateService.delete(APP_ID, TEMPLATE_ID);
@@ -203,6 +211,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should prune by environment.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneByEnvironment() {
     when(query.asList())
         .thenReturn(asList(aServiceTemplate()
@@ -221,6 +230,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should delete by service.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneByService() {
     doNothing().when(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
     when(query.asList())
@@ -240,6 +250,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should override config files.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldOverrideConfigFiles() {
     ConfigFile configFile1 = ConfigFile.builder().relativeFilePath("app.properties").build();
     configFile1.setName("app.properties");
@@ -265,6 +276,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldComputeConfigFilesForHosts() {
     when(wingsPersistence.get(ServiceTemplate.class, TEMPLATE_ID)).thenReturn(builder.build());

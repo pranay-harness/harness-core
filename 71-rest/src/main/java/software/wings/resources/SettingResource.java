@@ -28,7 +28,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
@@ -127,7 +127,7 @@ public class SettingResource {
         ((EncryptableSetting) variable.getValue()).setDecrypted(true);
       }
     }
-    variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
+    variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
   }
 
   /**
@@ -205,15 +205,15 @@ public class SettingResource {
       UsageRestrictions usageRestrictionsFromJson =
           usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
 
-      return new RestResponse<>(
-          settingsService.save(aSettingAttribute()
-                                   .withAccountId(accountId)
-                                   .withAppId(appId)
-                                   .withName(name)
-                                   .withValue(value)
-                                   .withCategory(Category.getCategory(SettingVariableTypes.valueOf(value.getType())))
-                                   .withUsageRestrictions(usageRestrictionsFromJson)
-                                   .build()));
+      return new RestResponse<>(settingsService.save(
+          aSettingAttribute()
+              .withAccountId(accountId)
+              .withAppId(appId)
+              .withName(name)
+              .withValue(value)
+              .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(value.getType())))
+              .withUsageRestrictions(usageRestrictionsFromJson)
+              .build()));
     }
     return new RestResponse<>();
   }
@@ -296,7 +296,7 @@ public class SettingResource {
             .withName(name)
             .withAccountId(accountId)
             .withAppId(appId)
-            .withCategory(Category.getCategory(SettingVariableTypes.valueOf(type)))
+            .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(type)))
             .withUsageRestrictions(usageRestrictionsFromJson);
     if (value != null) {
       ((EncryptableSetting) value).setAccountId(accountId);
@@ -352,7 +352,7 @@ public class SettingResource {
             .withName(name)
             .withAccountId(accountId)
             .withAppId(appId)
-            .withCategory(Category.getCategory(SettingVariableTypes.valueOf(type)))
+            .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(type)))
             .withValue(value);
 
     return new RestResponse<>(settingsService.validateConnectivity(settingAttribute.build()));

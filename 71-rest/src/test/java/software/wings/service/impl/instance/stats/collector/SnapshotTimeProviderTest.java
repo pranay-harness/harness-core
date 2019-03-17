@@ -5,13 +5,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 public class SnapshotTimeProviderTest {
   @Test
+  @Category(UnitTests.class)
   public void testProvider() {
     Instant lastTs = Instant.now().minus(21, ChronoUnit.MINUTES);
 

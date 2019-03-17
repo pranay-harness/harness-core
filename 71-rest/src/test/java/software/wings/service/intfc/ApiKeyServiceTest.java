@@ -22,8 +22,10 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -44,6 +46,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private ApiKeyService apiKeyService;
 
   @Test
+  @Category(UnitTests.class)
   public void testGenerate() {
     Account account = anAccount().withUuid(ACCOUNT_ID).withAccountKey(ACCOUNT_KEY).build();
     doReturn(account).when(accountService).get(ACCOUNT_ID);
@@ -54,6 +57,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDelete() {
     String uuid = generateUuid();
     apiKeyService.delete(uuid);
@@ -67,6 +71,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGet() {
     Account account = anAccount().withUuid(ACCOUNT_ID).withAccountKey(ACCOUNT_KEY).build();
     doReturn(account).when(accountService).get(ACCOUNT_ID);
@@ -86,6 +91,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testList() {
     PageRequest request = PageRequestBuilder.aPageRequest().build();
     apiKeyService.list(request);
@@ -93,6 +99,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidate() {
     Account account = anAccount().withUuid(ACCOUNT_ID).withAccountKey(ACCOUNT_KEY).build();
     doReturn(account).when(accountService).get(ACCOUNT_ID);

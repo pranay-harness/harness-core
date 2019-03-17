@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
@@ -24,6 +25,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -78,6 +80,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
   public void testGetEc2Metrics() throws Exception {
     WebTarget target = client.target(
         API_BASE + "/cloudwatch/get-metric-names?accountId=" + accountId + "&awsNameSpace=" + AwsNameSpace.EC2);
@@ -88,6 +91,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
   public void testGetLoadBalancersTest() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-load-balancers?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
@@ -98,6 +102,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
     CloudWatchSetupTestNodeData setupTestNodedata = getCloudWatchSetupTestNodedata();
     WebTarget target = client.target(API_BASE + "/cloudwatch/node-data?accountId=" + accountId);
@@ -114,6 +119,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
   @Ignore("Will be enabled once AWS Access Key in Datagen has access to lambda functions")
   public void testGetLambdaFunctionNames() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
@@ -128,6 +134,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
   public void testGetECSClusternNames() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-ecs-cluster-names?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
@@ -141,6 +148,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
   public void testGetEC2InstancesNames() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-ec2-instances?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());

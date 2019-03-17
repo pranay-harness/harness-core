@@ -9,9 +9,11 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -35,6 +37,7 @@ public class InfraDownloadServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testInfraDownloadFailForEnvWhenNoServiceAccDefined() {
     try {
       String url = infraDownloadService.getDownloadUrlForDelegate("4333");
@@ -45,6 +48,7 @@ public class InfraDownloadServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore // TODO: fix and un-ignore the test
   public void testDelegateDownload() {
     /***

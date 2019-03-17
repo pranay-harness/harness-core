@@ -13,7 +13,9 @@ import com.hierynomus.smbj.auth.AuthenticationContext;
 import com.hierynomus.smbj.connection.Connection;
 import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SmbConfig;
@@ -50,6 +52,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
                                                  .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSmbPaths() throws IOException {
     // Mock SmbClient, Connection, DiskShare and Session
     doReturn(connection).when(smbClient).connect(smbHelperService.getSMBConnectionHost(smbConfig.getSmbUrl()));
@@ -66,18 +69,21 @@ public class SmbHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSmbConnectionHost() {
     assertThat(smbHelperService.getSMBConnectionHost(SHARE_URL)).isNotEmpty().isEqualTo("10.0.0.1");
     assertThat(smbHelperService.getSMBConnectionHost("smb://10.0.0.1/share")).isNotEmpty().isEqualTo("10.0.0.1");
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSmbSharedFolder() {
     assertThat(smbHelperService.getSharedFolderName(SHARE_URL)).isNotEmpty().isEqualTo("share");
     assertThat(smbHelperService.getSharedFolderName("smb://10.0.0.1/share")).isNotEmpty().isEqualTo("share");
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSmbArtifactDetails() throws IOException {
     // Mock SmbClient, Connection, DiskShare and Session
     doReturn(connection).when(smbClient).connect(smbHelperService.getSMBConnectionHost(smbConfig.getSmbUrl()));

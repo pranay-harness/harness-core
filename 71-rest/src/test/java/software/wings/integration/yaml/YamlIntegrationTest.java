@@ -8,10 +8,12 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
@@ -88,6 +90,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGitSyncAppCreatedOnHarness() throws Exception {
     String appName = "App" + System.currentTimeMillis();
     String yamlPath =
@@ -104,6 +107,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGitSyncServiceCreatedOnHarness() throws Exception {
     if (application == null) {
       application =
@@ -177,6 +181,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGitSyncCloudProviderCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(
@@ -195,6 +200,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGitSyncInfraProvisionerCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(
@@ -214,6 +220,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGitSyncEnvironmentCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(
@@ -232,6 +239,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
   // Environment with Physical Service Infra
   @Test
+  @Category(UnitTests.class)
   public void testGitSyncEnvironment1CreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(

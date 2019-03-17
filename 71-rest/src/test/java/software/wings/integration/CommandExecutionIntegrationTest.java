@@ -25,11 +25,13 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.persistence.ReadPref;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ServiceInstance;
@@ -141,6 +143,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    * Should execute command.
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldExecuteCommand() {
     CommandExecutionStatus commandExecutionStatus = serviceCommandExecutorService.execute(command, context);
     command.getCommandUnits().forEach(
@@ -152,6 +155,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    * Should capture failed execution command unit.
    */
   @Test
+  @Category(IntegrationTests.class)
   public void shouldCaptureFailedExecutionCommandUnit() {
     ((ExecCommandUnit) command.getCommandUnits().get(6)).setCommandString("INVALID_COMMAND");
     CommandExecutionStatus commandExecutionStatus = serviceCommandExecutorService.execute(command, context);

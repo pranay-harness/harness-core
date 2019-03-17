@@ -16,10 +16,12 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import software.wings.WingsBaseTest;
@@ -61,6 +63,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should create whitelist config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateWhitelist() {
     Whitelist whitelist2 = Whitelist.builder()
                                .accountId(ACCOUNT_ID)
@@ -84,6 +87,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should update whitelist config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateWhitelist() {
     Whitelist whitelist2 = Whitelist.builder()
                                .accountId(ACCOUNT_ID)
@@ -107,6 +111,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should update whitelist config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteWhitelist() {
     when(WHITELIST_SERVICE.delete(ACCOUNT_ID, WHITELIST_ID)).thenReturn(true);
 
@@ -123,6 +128,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should list whitelist config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldList() {
     PageResponse<Whitelist> pageResponse = aPageResponse().withResponse(Lists.newArrayList(WHITELIST)).build();
     when(WHITELIST_SERVICE.list(any(String.class), any(PageRequest.class))).thenReturn(pageResponse);
@@ -143,6 +149,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should read whitelist config.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldRead() {
     when(WHITELIST_SERVICE.get(ACCOUNT_ID, WHITELIST_ID)).thenReturn(WHITELIST);
 
@@ -159,6 +166,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should read whitelist config.
    */
   @Test
+  @Category(UnitTests.class)
   public void isIpWhitelisted() {
     when(WHITELIST_SERVICE.isValidIPAddress(ACCOUNT_ID, "127.0.0.1")).thenReturn(true);
 

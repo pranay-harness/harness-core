@@ -30,8 +30,10 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.waiter.NotifyEventListener;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -91,6 +93,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTrigger() throws InterruptedException {
     String appId = generateUuid();
 
@@ -145,6 +148,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerFailedTransition() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -207,6 +211,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerAndFail() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -267,6 +272,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerAsync() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -336,6 +342,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerFailedAsync() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -410,6 +417,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAdviceToMarkSuccess() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -472,6 +480,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAdviceToMarkFailed() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -534,6 +543,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAdviceToMarkAborted() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -619,6 +629,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerAndFailAsync() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -677,6 +688,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldFailAfterException() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -735,6 +747,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerSimpleFork() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -778,6 +791,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerMixedFork() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
@@ -832,6 +846,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCleanForRetry() {
     List<ContextElement> originalNotifyElements = asList(anInstanceElement().withDisplayName("foo").build());
 
@@ -867,6 +882,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSendManualInterventionNeededNotification() {
     NotificationRule notificationRule = aNotificationRule()
                                             .withNotificationGroups(Arrays.asList(aNotificationGroup()

@@ -31,6 +31,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.ReadPref;
@@ -46,6 +47,7 @@ import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -69,7 +71,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -200,6 +202,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getKmsConfigGlobal() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
@@ -216,6 +219,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
@@ -230,6 +234,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getKmsConfigForAccount() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
@@ -244,6 +249,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 3, successes = 1)
+  @Category(UnitTests.class)
   public void saveAndEditConfig() throws IOException {
     String name = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -286,6 +292,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void localNullEncryption() throws Exception {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
@@ -297,6 +304,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void localEncryption() throws Exception {
     final String keyToEncrypt = UUID.randomUUID().toString();
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), null, null);
@@ -307,6 +315,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsNullEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final char[] keyToEncrypt = null;
@@ -319,6 +328,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final String keyToEncrypt = UUID.randomUUID().toString();
@@ -331,6 +341,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void localEncryptionWhileSaving() {
     String password = UUID.randomUUID().toString();
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -345,7 +356,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(appDynamicsConfig.getAccountId())
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -366,6 +377,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void localEncryptionWhileSavingNullEncryptedData() {
     final ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder()
                                                     .accountId(UUID.randomUUID().toString())
@@ -378,7 +390,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(artifactoryConfig.getAccountId())
                                             .withValue(artifactoryConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -398,6 +410,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionWhileSavingFeatureDisabled() {
     String password = UUID.randomUUID().toString();
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -412,7 +425,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(appDynamicsConfig.getAccountId())
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -433,6 +446,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void enableKmsAfterSaving() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -450,7 +464,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -466,6 +480,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionWhileSaving() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -482,7 +497,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -514,6 +529,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void secretUsageLog() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -530,7 +546,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -554,6 +570,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionSaveMultiple() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -575,7 +592,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -608,6 +625,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNumOfEncryptedValue() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveGlobalKmsConfig(accountId, kmsConfig);
@@ -628,7 +646,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -655,7 +673,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId2)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -674,6 +692,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void noKmsEncryptionUpdateObject() throws IOException, IllegalAccessException {
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -687,7 +706,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -805,6 +824,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   public void noKmsEncryptionUpdateServiceVariable() throws IOException, IllegalAccessException {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
@@ -877,6 +897,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionUpdateObject() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -893,7 +914,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -963,6 +984,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -979,7 +1001,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -1107,6 +1129,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void updateSettingAttributeAfterKmsEnabled() throws IOException, IllegalAccessException {
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -1120,7 +1143,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -1175,6 +1198,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveServiceVariableNoKMS() throws IOException {
     String value = UUID.randomUUID().toString();
     final ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -1229,6 +1253,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveServiceVariableNoEncryption() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1291,6 +1316,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getSecret() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1329,6 +1355,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void kmsEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1419,6 +1446,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionSaveServiceVariableTemplate() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1459,6 +1487,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -1524,6 +1553,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionDeleteSettingAttribute() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1543,7 +1573,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -1564,6 +1594,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1583,7 +1614,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -1618,6 +1649,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionDeleteSettingAttributeQuery() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1637,7 +1669,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -1667,6 +1699,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsEncryptionSaveGlobalConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
 
@@ -1691,6 +1724,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listEncryptedValues() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1710,7 +1744,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(appDynamicsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -1759,6 +1793,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listKmsConfigMultiple() throws IOException {
     KmsConfig kmsConfig1 = getKmsConfig();
     kmsConfig1.setDefault(true);
@@ -1842,6 +1877,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(UnitTests.class)
   public void listKmsGlobalDefault() throws IOException {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setName("Global config");
@@ -1903,6 +1939,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listKmsConfigOrder() throws IOException {
     int numOfKms = 10;
     for (int i = 1; i <= numOfKms; i++) {
@@ -1928,6 +1965,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listKmsConfigHasDefault() throws IOException {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setDefault(false);
@@ -2000,6 +2038,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void listKmsConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -2059,6 +2098,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void transitionKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
@@ -2081,7 +2121,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .withAccountId(accountId)
                                                 .withValue(appDynamicsConfig)
                                                 .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(Category.CONNECTOR)
+                                                .withCategory(SettingCategory.CONNECTOR)
                                                 .withEnvId(UUID.randomUUID().toString())
                                                 .withName(UUID.randomUUID().toString())
                                                 .build();
@@ -2139,6 +2179,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void transitionAndDeleteKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
@@ -2161,7 +2202,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .withAccountId(accountId)
                                                 .withValue(appDynamicsConfig)
                                                 .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(Category.CONNECTOR)
+                                                .withCategory(SettingCategory.CONNECTOR)
                                                 .withEnvId(UUID.randomUUID().toString())
                                                 .withName(UUID.randomUUID().toString())
                                                 .build();
@@ -2200,6 +2241,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void transitionKmsForConfigFile() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
@@ -2279,6 +2321,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveAwsConfig() throws IOException, InterruptedException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
@@ -2296,7 +2339,7 @@ public class KmsTest extends WingsBaseTest {
                                               .withAccountId(accountId)
                                               .withValue(awsConfig)
                                               .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(Category.CLOUD_PROVIDER)
+                                              .withCategory(SettingCategory.CLOUD_PROVIDER)
                                               .withEnvId(UUID.randomUUID().toString())
                                               .withName(UUID.randomUUID().toString())
                                               .build();
@@ -2313,6 +2356,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void saveUpdateConfigFileNoKms() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
@@ -2412,6 +2456,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileNoEncryption() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
@@ -2459,6 +2504,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
@@ -2583,6 +2629,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileTemplateWithEncryption() throws IOException {
     final long seed = System.currentTimeMillis();
@@ -2675,6 +2722,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kmsExceptionTest() {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setKmsArn("invalid krn");
@@ -2700,6 +2748,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void reuseYamlPasswordNoEncryption() throws IOException, IllegalAccessException {
     int numOfSettingAttributes = 5;
     String password = "password";
@@ -2716,7 +2765,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -2738,7 +2787,7 @@ public class KmsTest extends WingsBaseTest {
                              .withAccountId(accountId)
                              .withValue(appDynamicsConfig)
                              .withAppId(UUID.randomUUID().toString())
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withEnvId(UUID.randomUUID().toString())
                              .withName(UUID.randomUUID().toString())
                              .build();
@@ -2802,6 +2851,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void reuseYamlPasswordKmsEncryption() throws IOException, IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
@@ -2821,7 +2871,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -2842,7 +2892,7 @@ public class KmsTest extends WingsBaseTest {
                              .withAccountId(accountId)
                              .withValue(appDynamicsConfig)
                              .withAppId(UUID.randomUUID().toString())
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withEnvId(UUID.randomUUID().toString())
                              .withName(UUID.randomUUID().toString())
                              .build();
@@ -2907,6 +2957,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void reuseYamlPasswordNewEntityKmsEncryption() throws IOException, IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
@@ -2925,7 +2976,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
                                             .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
@@ -2949,7 +3000,7 @@ public class KmsTest extends WingsBaseTest {
                            .withAccountId(accountId)
                            .withValue(appDynamicsConfig)
                            .withAppId(UUID.randomUUID().toString())
-                           .withCategory(Category.CONNECTOR)
+                           .withCategory(SettingCategory.CONNECTOR)
                            .withEnvId(UUID.randomUUID().toString())
                            .withName(UUID.randomUUID().toString())
                            .build();
@@ -2966,6 +3017,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getUsageLogs() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -3028,7 +3080,7 @@ public class KmsTest extends WingsBaseTest {
                                          .withAccountId(appDynamicsConfig.getAccountId())
                                          .withValue(appDynamicsConfig)
                                          .withAppId(UUID.randomUUID().toString())
-                                         .withCategory(Category.CONNECTOR)
+                                         .withCategory(SettingCategory.CONNECTOR)
                                          .withEnvId(UUID.randomUUID().toString())
                                          .withName(UUID.randomUUID().toString())
                                          .build();
@@ -3055,6 +3107,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getChangeLogs() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -3071,7 +3124,7 @@ public class KmsTest extends WingsBaseTest {
                                          .withAccountId(appDynamicsConfig.getAccountId())
                                          .withValue(appDynamicsConfig)
                                          .withAppId(UUID.randomUUID().toString())
-                                         .withCategory(Category.CONNECTOR)
+                                         .withCategory(SettingCategory.CONNECTOR)
                                          .withEnvId(UUID.randomUUID().toString())
                                          .withName(UUID.randomUUID().toString())
                                          .build();

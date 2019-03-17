@@ -37,12 +37,14 @@ import com.google.inject.Inject;
 import de.danielbechler.util.Collections;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import io.harness.queue.Queue;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -123,6 +125,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateArtifactWhenValid() {
     assertThat(artifactService.create(artifactBuilder.but().build()))
         .isNotNull()
@@ -130,6 +133,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldAddArtifactFile() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(savedArtifact).isNotNull().hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
@@ -147,12 +151,14 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionWhenAppIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> artifactService.create(artifactBuilder.but().withAppId("BAD_APP_ID").build()));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionWhenReleaseIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(
@@ -160,6 +166,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {
     assertThatExceptionOfType(ConstraintViolationException.class)
@@ -167,6 +174,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateArtifactWhenValid() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
 
@@ -175,6 +183,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionWhenArtifactToBeUpdatedIsInvalid() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
 
@@ -184,6 +193,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateStatusApproved() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
@@ -193,6 +203,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateStatusWithErrorMessage() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     artifactService.updateStatus(
@@ -204,6 +215,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateContentStatus() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED, DOWNLOADED);
@@ -214,6 +226,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateContentStatusWithErrorMessage() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     artifactService.updateStatus(
@@ -226,12 +239,14 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotDownloadFileForArtifactWhenNotReady() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.download(APP_ID, savedArtifact.getUuid())).isNull();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDownloadFileForArtifactWhenReady() {
     File file = null;
     try {
@@ -258,6 +273,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListArtifact() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
@@ -266,6 +282,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListArtifactWithDetails() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
@@ -277,6 +294,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListSortByBuildNo() {
     constructArtifacts();
 
@@ -293,6 +311,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListSortByBuildNoWithNoServiceId() {
     constructArtifacts();
 
@@ -307,6 +326,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotListArtifactsOfDeletedArtifactStreams() {
     constructArtifacts();
 
@@ -330,12 +350,14 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifact() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid())).isEqualTo(savedArtifact);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactWithServices() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
@@ -346,6 +368,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchLatestArtifactForArtifactStream() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(jenkinsArtifactStream);
@@ -356,6 +379,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchLastCollectedApprovedArtifactForArtifactStream() {
     Artifact artifact = artifactBuilder.build();
     Artifact savedArtifact = artifactService.create(artifact);
@@ -369,6 +393,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchLastCollectedArtifactForArtifactStream() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), RUNNING);
@@ -380,6 +405,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactByBuildNumberSource() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
@@ -392,12 +418,14 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void shouldStartArtifactCollectionNoArtifact() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(null);
     artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCollectArtifactAlreadyQueued() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(QUEUED).build());
@@ -407,6 +435,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCollectArtifactAlreadyRunning() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(RUNNING).build());
@@ -416,6 +445,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCollectArtifactWhenContentStatusMetadata() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(METADATA_ONLY).build());
@@ -425,6 +455,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCollectArtifactWhenContentStatusDOWNLOADING() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(DOWNLOADING).build());
@@ -434,6 +465,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCollectArtifactWhenContentStatusDOWNLOADED() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(DOWNLOADED).build());
@@ -443,6 +475,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCollectArtifact() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(NOT_DOWNLOADED).build());
@@ -452,6 +485,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactContentStatus() {
     Artifact artifact = artifactBuilder.withStatus(APPROVED).withContentStatus(NOT_DOWNLOADED).build();
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
@@ -460,6 +494,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactContentStatusDeleted() {
     Artifact artifact = artifactBuilder.withStatus(APPROVED).build();
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
@@ -469,6 +504,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactContentStatusStreamDeleted() {
     Artifact artifact = artifactBuilder.withUuid(ARTIFACT_ID).withStatus(APPROVED).build();
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
@@ -478,6 +514,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactContentStatusStreamDeletedWithFiles() {
     Artifact artifact = artifactBuilder.withUuid(ARTIFACT_ID)
                             .withStatus(APPROVED)
@@ -490,6 +527,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForDockerStream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(DockerArtifactStream.builder()
@@ -503,6 +541,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForEcrStream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(EcrArtifactStream.builder()
@@ -516,6 +555,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForGcrStream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(GcrArtifactStream.builder()
@@ -529,6 +569,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForAcrStream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(GcrArtifactStream.builder()
@@ -542,6 +583,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForAmiStream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(AmiArtifactStream.builder()
@@ -555,6 +597,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForS3Stream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(AmazonS3ArtifactStream.builder()
@@ -568,6 +611,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForNexusDockerStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build());
@@ -583,6 +627,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForNexusStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.WAR).build());
@@ -598,6 +643,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForArtifactoryDockerStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build());
@@ -613,6 +659,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForArtifactoryStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.RPM).build());
@@ -628,6 +675,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForJenkinsStream() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifactBuilder.build());
     assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(null);
@@ -635,6 +683,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStatusForBambooStream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(BambooArtifactStream.builder()
@@ -648,6 +697,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteArtifact() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
@@ -656,6 +706,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotDeleteMetadataOnlyArtifacts() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
                                                     .appId(APP_ID)
@@ -706,6 +757,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteArtifactsWithNoArtifactFiles() {
     JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
                                                       .sourceName("todolistwar")
@@ -738,6 +790,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteArtifactsWithArtifactFiles() {
     JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
                                                       .sourceName("todolistwar")
@@ -779,6 +832,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotDeleteFailedArtifacts() {
     JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
                                                       .sourceName("todolistwar")
@@ -820,6 +874,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotDeleteArtifactsGreaterThanRetentionTime() {
     JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
                                                       .sourceName("todolistwar")
@@ -862,6 +917,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchArtifacts() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
@@ -869,6 +925,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteWhenArtifactSourceNameChanged() {
     JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
                                                       .sourceName("todolistwar")

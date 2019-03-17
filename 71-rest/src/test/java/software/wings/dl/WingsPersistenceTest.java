@@ -24,9 +24,11 @@ import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.CreatedAtAccess;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -38,7 +40,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.common.Constants;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.security.EncryptionService;
@@ -75,6 +77,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query by in operator.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldQueryByINOperator() {
     TestEntity entity = new TestEntity();
     entity.setFieldA("fieldA11");
@@ -99,6 +102,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query by in operator.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldQueryListByINOperator() {
     TestEntity entity = new TestEntity();
     entity.setFieldList(Lists.newArrayList("fieldList11", "fieldList12", "fieldList13"));
@@ -123,6 +127,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query by in operator.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldQueryListObjectByINOperator() {
     TestEntityB b11 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b11"));
     TestEntityB b12 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b12"));
@@ -158,6 +163,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should paginate filter sort.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPaginateFilterSort() {
     createEntitiesForPagination();
 
@@ -180,6 +186,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTakeQueryParams() {
     UriInfo uriInfo = mock(UriInfo.class);
     Map<String, List<String>> queryParams = new HashMap<>();
@@ -207,6 +214,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params in simplified form.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTakeQueryParamsInSimplifiedForm() {
     UriInfo uriInfo = mock(UriInfo.class);
     MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
@@ -231,6 +239,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    */
   // Query will look like search[0][value]=fieldA1&search[0][value]=fieldA2
   @Test
+  @Category(UnitTests.class)
   public void shouldTakeQueryParamsWithInOp() {
     UriInfo uriInfo = mock(UriInfo.class);
     Map<String, List<String>> queryParams = new HashMap<>();
@@ -260,6 +269,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should work with query with number values.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkWithQueryWithNumberValues() {
     UriInfo uriInfo = mock(UriInfo.class);
     Map<String, List<String>> queryParams = new HashMap<>();
@@ -288,6 +298,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params in simplified form.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTakeQueryParamsForReferenceArrays() {
     TestEntityB testEntityB1 = new TestEntityB();
     testEntityB1.setFieldB("fieldB1");
@@ -334,6 +345,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should update map
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateMap() {
     TestEntity entity = new TestEntity();
     entity.setFieldA("fieldA11");
@@ -360,6 +372,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should update map entry
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateMapEntry() {
     TestEntity entity = new TestEntity();
     entity.setFieldA("fieldA11");
@@ -392,6 +405,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query map
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldQueryMap() {
     TestEntity entity = new TestEntity();
     entity.setFieldA("fieldA11");
@@ -461,6 +475,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query Count only
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldQueryCountOnly() {
     createEntitiesForPagination();
 
@@ -481,6 +496,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query Count only
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldQueryListOnly() {
     createEntitiesForPagination();
 
@@ -503,6 +519,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query Count only
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldQueryCountAndList() {
     createEntitiesForPagination();
 
@@ -521,6 +538,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should save referenced object.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveReferencedObject() {
     TestEntityB entityB = new TestEntityB();
     entityB.setFieldB("fieldB1");
@@ -549,6 +567,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * A couple of tests to check on encrypted behavior.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldStoreAndRetrieveEncryptedPassword() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
       String rand = String.valueOf(Math.random());
@@ -562,7 +581,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                         .build();
       SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                               .withAccountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
-                                              .withCategory(Category.CONNECTOR)
+                                              .withCategory(SettingCategory.CONNECTOR)
                                               .withName("Jenkins Config" + rand)
                                               .withValue(jenkinsConfig)
                                               .build();
@@ -582,6 +601,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateEncryptedPassword() {
     String rand = String.valueOf(Math.random());
     String originalPassword = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
@@ -593,7 +613,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
-                                            .withCategory(Category.CONNECTOR)
+                                            .withCategory(SettingCategory.CONNECTOR)
                                             .withName("Jenkins Config" + rand)
                                             .withValue(jenkinsConfig)
                                             .build();
@@ -615,6 +635,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldStoreAndRetrieveEncryptedConfigValue() {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
@@ -636,6 +657,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldStoreAndRetrieveUnencryptedConfigValue() {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();

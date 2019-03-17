@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.jobs.LogAnalysisManagerJob.LogAnalysisTask;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
@@ -36,6 +37,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -157,6 +159,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveAnalysisSummaryControlClusters() throws Exception {
     loginAdminUser();
     int numOfControlClusters = 1 + r.nextInt(10);
@@ -226,6 +229,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFeatureflagDemoSuccess() {
     loginAdminUser();
     wingsPersistence.delete(
@@ -296,6 +300,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFeatureflagDemoFail() {
     loginAdminUser();
     wingsPersistence.delete(
@@ -365,6 +370,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
@@ -480,6 +486,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void controlButNoTestData() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -685,6 +692,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testButNoControlDataFirstExecution() throws IOException, InterruptedException {
     final String query = UUID.randomUUID().toString();
     final String host = UUID.randomUUID().toString();
@@ -753,6 +761,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNoControlNotFirstExecution() throws Exception {
     final String query = UUID.randomUUID().toString();
     final String host = UUID.randomUUID().toString();
@@ -815,6 +824,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void noControlandTestData() throws IOException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -923,6 +933,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void withControlAndTest() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -1060,6 +1071,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchCorrectLastWorkflowLogsMissingData() {
     final String query = UUID.randomUUID().toString();
     String workflow1 = addWorkflowDataForLogs(true, query);
@@ -1070,6 +1082,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchCorrectLastWorkflowLogs() {
     final String query = UUID.randomUUID().toString();
     String workflow1 = addWorkflowDataForLogs(true, query);
@@ -1080,6 +1093,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchCorrectLastWorkflowLogsFirstWorkflow() {
     final String query = UUID.randomUUID().toString();
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
@@ -1088,6 +1102,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchCorrectLastWorkflowLogsNoData() {
     final String query = UUID.randomUUID().toString();
     String workflow1 = addWorkflowDataForLogs(false, query);
@@ -1152,6 +1167,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetCurrentExecutionLogs() throws Exception {
     final Random r = new Random();
     final int numOfExecutions = 4;
@@ -1227,6 +1243,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLastExecutionLogs() throws Exception {
     final Random r = new Random();
     final int numOfExecutions = 1;
@@ -1362,6 +1379,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void onlyFeedback() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();

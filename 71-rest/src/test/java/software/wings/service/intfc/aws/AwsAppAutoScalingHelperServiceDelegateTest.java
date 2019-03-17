@@ -9,7 +9,9 @@ import com.amazonaws.services.applicationautoscaling.model.PredefinedMetricSpeci
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
 import com.amazonaws.services.applicationautoscaling.model.TargetTrackingScalingPolicyConfiguration;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
@@ -19,6 +21,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   @Inject private AwsAppAutoScalingHelperServiceDelegate scalingHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testGetJsonForAwsScalableTarget() throws Exception {
     String json = "{\n"
         + "            \"ServiceNamespace\": \"ecs\",\n"
@@ -38,6 +41,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetJsonForAwsScalingPolicy() throws Exception {
     String json = "{\n"
         + "            \"ScalableDimension\": \"ecs:service:DesiredCount\",\n"
@@ -63,6 +67,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetJsonForAwsScalingPolicies() throws Exception {
     String json = "  [ {\n"
         + "            \"ScalableDimension\": \"ecs:service:DesiredCount\",\n"

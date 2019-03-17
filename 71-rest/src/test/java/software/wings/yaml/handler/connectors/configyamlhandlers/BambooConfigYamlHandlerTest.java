@@ -8,13 +8,15 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
 
 import java.io.IOException;
@@ -36,6 +38,7 @@ public class BambooConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
   public void setUp() throws HarnessException, IOException {}
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String bambooProviderName = "Bamboo" + System.currentTimeMillis();
 
@@ -47,6 +50,7 @@ public class BambooConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String bambooProviderName = "Bamboo" + System.currentTimeMillis();
 
@@ -60,7 +64,7 @@ public class BambooConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(aSettingAttribute()
-                                    .withCategory(Category.CONNECTOR)
+                                    .withCategory(SettingCategory.CONNECTOR)
                                     .withName(bambooProviderName)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(BambooConfig.builder()

@@ -6,9 +6,11 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ public class PersistentLockCleanupJobTest extends WingsBaseTest {
   @Inject @InjectMocks PersistentLockCleanupJob job;
 
   @Test
+  @Category(UnitTests.class)
   public void selfPruneTheJobWhenSucceed() throws Exception {
     OffsetDateTime before = OffsetDateTime.now().minusSeconds(1);
     try (AcquiredLock lock =

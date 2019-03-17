@@ -10,8 +10,10 @@ import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -67,6 +69,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigration() {
     Application application = createApplication();
 
@@ -81,6 +84,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMigrationWithExistingAppYamlGitConfig() {
     Application application = createApplication();
 

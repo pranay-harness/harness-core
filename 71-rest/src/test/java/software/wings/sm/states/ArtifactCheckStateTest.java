@@ -12,9 +12,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.Artifact.ContentStatus;
@@ -53,12 +55,14 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void emptyArtifacts() {
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
     assertEquals("Artifacts are not required.", executionResponse.getErrorMessage());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void failedArtifacts() {
     String failedArtifactId = wingsPersistence.save(anArtifact().withStatus(Status.FAILED).withAppId(appId).build());
     String errorArtifactId = wingsPersistence.save(anArtifact().withStatus(Status.ERROR).withAppId(appId).build());
@@ -69,6 +73,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void allDownloadedArtifacts() {
     String artifactId1 = wingsPersistence.save(anArtifact()
                                                    .withStatus(Status.READY)
@@ -90,6 +95,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void kickDownloadArtifacts() {
     ArtifactStream artifactStream1 = new JenkinsArtifactStream();
     artifactStream1.setAppId(appId);

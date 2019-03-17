@@ -15,9 +15,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -66,6 +68,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
    *
    */
   @Test
+  @Category(UnitTests.class)
   public void testSaveAndRead() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .uuid(harnessUserGroupId1)
@@ -86,6 +89,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testList() {
     HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
                                              .uuid(harnessUserGroupId1)
@@ -117,6 +121,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateMembers() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .uuid(harnessUserGroupId1)
@@ -140,6 +145,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateAccounts() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .uuid(harnessUserGroupId1)
@@ -164,6 +170,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllowedActions() {
     HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
                                              .uuid(harnessUserGroupId1)
@@ -193,6 +200,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSupportAccountsForUser() {
     HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
                                              .uuid(harnessUserGroupId1)
@@ -234,6 +242,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testDelete() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .uuid(harnessUserGroupId1)

@@ -4,8 +4,10 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import lombok.Builder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -24,6 +26,7 @@ public class EntityNameTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllowedCharSet() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     Validator validator = factory.getValidator();

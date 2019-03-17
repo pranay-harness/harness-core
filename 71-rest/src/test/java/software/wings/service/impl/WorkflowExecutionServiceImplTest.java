@@ -56,6 +56,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -68,6 +69,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -209,6 +211,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldTriggerComplexWorkflow() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
@@ -376,6 +379,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void triggerPipeline() throws InterruptedException {
     Service service = addService("svc1");
@@ -525,6 +529,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerWorkflow() throws InterruptedException {
     String appId = app.getUuid();
     triggerWorkflow(appId, env);
@@ -537,6 +542,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   @Owner(emails = "george@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void shouldTriggerWorkflowWithRelease() throws InterruptedException {
     String appId = app.getUuid();
     Workflow workflow = createExecutableWorkflow(appId, env);
@@ -582,6 +588,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
 
@@ -600,6 +607,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateFailedCount() throws InterruptedException {
     String appId = app.getUuid();
     triggerWorkflow(appId, env);
@@ -656,11 +664,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerWorkflowFailForExpiredTrialLicense() throws InterruptedException {
     shouldTriggerWorkflowFailForExpiredLicense(AccountType.TRIAL);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerWorkflowFailForExpiredPaidLicense() throws InterruptedException {
     shouldTriggerWorkflowFailForExpiredLicense(AccountType.PAID);
   }
@@ -699,11 +709,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerPipelineFailForExpiredTrialLicense() throws InterruptedException {
     shouldTriggerPipelineFailForExpiredLicense(AccountType.TRIAL);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerPipelineFailForExpiredPaidLicense() throws InterruptedException {
     shouldTriggerPipelineFailForExpiredLicense(AccountType.PAID);
   }
@@ -777,6 +789,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListWorkflow() throws InterruptedException {
     String appId = app.getUuid();
 
@@ -796,6 +809,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPauseAndResumeState() throws InterruptedException {
     Graph graph = getAbortedGraph();
 
@@ -878,6 +892,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO - Fix this, it's failing in Jenkins - almost all the time
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
     Service service1 = addService("svc1");
@@ -1016,6 +1031,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * Should throw invalid argument for invalid workflow id.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForInvalidWorkflowId() {
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -1043,6 +1059,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO: fix this. It seems there is production issues
   @Test
+  @Category(UnitTests.class)
   public void shouldAbortState() throws InterruptedException {
     Graph graph = getAbortedGraph();
 
@@ -1134,6 +1151,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldAbortAllStates() {
     Service service1 = addService("svc1");
     Service service2 = addService("svc2");
@@ -1199,6 +1217,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldWaitOnError() throws InterruptedException {
     Host applicationHost1 = wingsPersistence.saveAndGet(
@@ -1389,6 +1408,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldRetryOnError() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
@@ -1544,6 +1564,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerCanaryWorkflow() throws InterruptedException {
     Service service = addService("svc1");
 
@@ -1559,6 +1580,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
     Service service1 = addService("svc1");
 
@@ -1860,6 +1882,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldObtainNoLastGoodDeployedArtifacts() {
     String appId = app.getUuid();
     Workflow workflow = createExecutableWorkflow(appId, env);
@@ -1869,6 +1892,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldObtainLastGoodDeployedArtifacts() throws InterruptedException {
     String appId = app.getUuid();
     Workflow workflow = createExecutableWorkflow(appId, env);
@@ -1880,6 +1904,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetDeploymentMetdata() {
     String appId = app.getUuid();
     Service service = addService("svc1");
@@ -1927,6 +1952,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = {"srinivas@harness.io"})
+  @Category(UnitTests.class)
   public void shouldListWaitingOnDeployments() {
     String appId = app.getUuid();
     Workflow workflow = createExecutableWorkflow(appId, env);
@@ -1950,6 +1976,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = {"srinivas@harness.io"})
+  @Category(UnitTests.class)
   public void shouldFetchWorkflowExecutionStartTs() throws Exception {
     String appId = app.getUuid();
     Workflow workflow = createExecutableWorkflow(appId, env);

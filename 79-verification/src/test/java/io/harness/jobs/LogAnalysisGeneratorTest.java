@@ -10,6 +10,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
@@ -17,6 +18,7 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -92,6 +94,7 @@ public class LogAnalysisGeneratorTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBugsnagNonNN() {
     analysisContext.setStateType(StateType.BUG_SNAG);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));
@@ -105,6 +108,7 @@ public class LogAnalysisGeneratorTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNonBugsnagNN() {
     analysisContext.setStateType(StateType.APP_DYNAMICS);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));

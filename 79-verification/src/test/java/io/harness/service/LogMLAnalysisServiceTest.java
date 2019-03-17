@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
@@ -27,6 +28,7 @@ import io.harness.service.intfc.LogAnalysisService;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
@@ -149,6 +151,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveLogDataWithNoState() throws Exception {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
         workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId,
@@ -158,6 +161,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveLogDataWithInvalidState() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
@@ -172,6 +176,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void saveLogDataNoHeartbeat() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
@@ -186,6 +191,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void saveLogDataValid() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -237,6 +243,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void getLogDataNoSuccessfulWorkflowExecution() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -278,6 +285,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void getLogDataSuccessfulWorkflowExecution() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -332,6 +340,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testBumpClusterLevel() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -395,6 +404,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testIsLogDataCollected() throws Exception {
     final String query = UUID.randomUUID().toString();
@@ -434,6 +444,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveLogCollectionMinuteMinusOne() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -465,6 +476,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotSaveEmptyControlAndTestEvents() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -495,6 +507,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAnalysisSummaryUnknownClusters() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -540,6 +553,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAnalysisSummaryCompression() throws Exception {
     ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(r.nextInt(10)).values());
     Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(1 + r.nextInt(10));
@@ -592,6 +606,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAnalysisSummaryTestClusters() throws Exception {
     int numOfTestClusters = 1 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -652,6 +667,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAnalysisSummaryControlClusters() throws Exception {
     int numOfControlClusters = 1 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -712,6 +728,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getCollectionMinuteForL1NoRecords() throws Exception {
     assertEquals(-1,
         analysisService.getCollectionMinuteForLevel(UUID.randomUUID().toString(), appId, stateExecutionId,
@@ -719,6 +736,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getCollectionMinuteForL1PartialRecords() throws Exception {
     String query = UUID.randomUUID().toString();
     int numOfHosts = 2 + r.nextInt(10);
@@ -755,6 +773,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getCollectionMinuteForL1AllRecords() throws Exception {
     String query = UUID.randomUUID().toString();
     int numOfHosts = 1 + r.nextInt(10);
@@ -787,6 +806,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void hasDataRecords() throws Exception {
     String query = UUID.randomUUID().toString();
@@ -820,6 +840,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getLogDataRecordForL0() throws Exception {
     String query = UUID.randomUUID().toString();
     assertFalse(analysisService.getHearbeatRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2, null).isPresent());
@@ -852,6 +873,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void deleteClusterLevel() throws Exception {
     String query = UUID.randomUUID().toString();
@@ -910,6 +932,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void loadPythonResponse() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
@@ -925,6 +948,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void checkClusterScores() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
@@ -944,6 +968,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUserFeedback() throws Exception {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
@@ -981,6 +1006,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void test24x7UserFeedback() throws Exception {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
@@ -1009,6 +1035,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void test24x7UserFeedbackUpdateExistingFeedback() throws Exception {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
@@ -1051,6 +1078,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void logQueryTrim() {
     ElkAnalysisState elkAnalysisState = new ElkAnalysisState("some name");
     elkAnalysisState.setQuery(" er ror ");
@@ -1058,6 +1086,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void formatDate() {
     ZonedDateTime zdt = ZonedDateTime.parse("2018-05-10T16:35:27.044Z");
     logger.info("" + zdt.toEpochSecond());
@@ -1076,6 +1105,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testReadLogMLRecordFromDB() throws Exception {
     ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(1 + r.nextInt(10)).values());
     Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(1 + r.nextInt(10));
@@ -1112,6 +1142,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCleanup() {
     int numOfRecords = 10;
     for (int i = 0; i < numOfRecords; i++) {

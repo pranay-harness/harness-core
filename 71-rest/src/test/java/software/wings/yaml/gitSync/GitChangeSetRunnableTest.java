@@ -13,7 +13,9 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,6 +34,7 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
   @Inject @InjectMocks private GitChangeSetRunnable gitChangeSetRunnable;
 
   @Test
+  @Category(UnitTests.class)
   public void testShouldPerformStuckJobCheck() {
     assertTrue(gitChangeSetRunnable.shouldPerformStuckJobCheck());
 
@@ -44,6 +47,7 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRetryAnyStuckYamlChangeSet() {
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder().accountId(WingsTestConstants.ACCOUNT_ID).build();
     yamlChangeSet.setUuid("12345");

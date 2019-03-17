@@ -35,8 +35,10 @@ import com.google.common.collect.ImmutableMap;
 import com.amazonaws.regions.Regions;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -78,6 +80,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @InjectMocks private EcsSteadyStateCheck check = new EcsSteadyStateCheck("stateName");
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     PhaseElement mockPhaseElement = mock(PhaseElement.class);
@@ -125,6 +128,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);

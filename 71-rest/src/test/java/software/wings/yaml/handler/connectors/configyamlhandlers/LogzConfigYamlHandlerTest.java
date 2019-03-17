@@ -8,12 +8,14 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.LogzConfig;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 
@@ -34,6 +36,7 @@ public class LogzConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   public void setUp() throws HarnessException, IOException {}
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String logzProviderName = "Logz" + System.currentTimeMillis();
 
@@ -45,6 +48,7 @@ public class LogzConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String logzProviderName = "Logz" + System.currentTimeMillis();
 
@@ -63,7 +67,7 @@ public class LogzConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
     logzConfig.setToken(token.toCharArray());
 
     return settingsService.save(aSettingAttribute()
-                                    .withCategory(Category.CONNECTOR)
+                                    .withCategory(SettingCategory.CONNECTOR)
                                     .withName(logzProviderName)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(logzConfig)

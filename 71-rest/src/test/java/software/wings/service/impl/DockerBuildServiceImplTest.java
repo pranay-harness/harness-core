@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private DockerBuildService dockerBuildService;
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetBuilds() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -56,6 +59,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuild() {
     DockerConfig dockerConfig =
         DockerConfig.builder()
@@ -68,6 +72,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     DockerConfig dockerConfig =
         DockerConfig.builder()
@@ -85,6 +90,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldValidateCredentials() {
     DockerConfig dockerConfig =
         DockerConfig.builder()

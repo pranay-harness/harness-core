@@ -7,8 +7,10 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 /**
@@ -21,6 +23,7 @@ public class PageResponseTest extends WingsBaseTest {
    * Should return page response as an object.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnPageResponseAsAnObject() {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(Lists.newArrayList());

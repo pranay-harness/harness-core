@@ -29,7 +29,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -81,6 +83,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService;
 
   @Test
+  @Category(UnitTests.class)
   public void testDoApplications() throws Exception {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
     Map<String, AppPermissionSummary> appPermissionSummaryMap = new HashMap<>();

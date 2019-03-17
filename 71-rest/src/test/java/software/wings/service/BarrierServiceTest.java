@@ -19,8 +19,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BarrierInstance;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -36,6 +38,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   @Inject private BarrierService barrierService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSave() {
     final BarrierInstance.Pipeline barrierPipeline =
         BarrierInstance.Pipeline.builder().executionId(generateUuid()).build();
@@ -49,6 +52,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testObtainInstancesWithNoBarriers() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
@@ -69,6 +73,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testObtainInstancesWithSingleBarrier() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
@@ -102,6 +107,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testObtainInstances() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow1 =
         aCanaryOrchestrationWorkflow()
@@ -177,6 +183,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testObtainInstancesWithTwoBarriersInTheSamePhaseStep() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
@@ -210,6 +217,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testObtainInstancesWithTwoBarriersInTheSameWorkflowPhase() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
@@ -245,6 +253,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testObtainInstancesWithDifferentBarriers() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()

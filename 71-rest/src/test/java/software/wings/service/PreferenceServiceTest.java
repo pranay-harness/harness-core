@@ -8,8 +8,10 @@ import static software.wings.service.impl.PreferenceServiceImpl.USER_ID_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.WingsBaseTest;
@@ -38,6 +40,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGet() {
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
     assertThat(
@@ -46,6 +49,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreate() {
     Preference createdPreference =
         preferenceService.save(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, TEST_USER_ID, preference);
@@ -53,6 +57,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldList() {
     preference.setAppId(Base.GLOBAL_APP_ID);
     preference.setAccountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
@@ -66,6 +71,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdate() {
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
     savedPreference.setName("NEW NAME");
@@ -75,6 +81,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDelete() {
     wingsPersistence.saveAndGet(Preference.class, preference);
     preferenceService.delete(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, TEST_USER_ID, TEST_PREFERENCE_ID);

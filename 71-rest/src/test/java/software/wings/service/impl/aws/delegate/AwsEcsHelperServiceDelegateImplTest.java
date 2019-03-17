@@ -14,7 +14,9 @@ import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.ListClustersResult;
 import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.Service;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -29,6 +31,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEcsHelperServiceDelegateImpl awsEcsHelperServiceDelegate;
 
   @Test
+  @Category(UnitTests.class)
   public void testListClusters() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
     doReturn(mockClient)
@@ -44,6 +47,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListServicesForCluster() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
     doReturn(mockClient)

@@ -14,10 +14,12 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -76,6 +78,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetNodeDataValidCase() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setValidationUrl("this is a testurl");
@@ -101,6 +104,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetNodeDataValidNoLoad() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setValidationUrl("this is a testurl");
@@ -126,6 +130,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testGetNodeDataNullServerConfigId() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setValidationUrl("this is a testurl");
@@ -147,6 +152,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testGetNodeDataNullFetchConfig() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setValidationUrl("this is a testurl");
@@ -168,6 +174,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testGetNodeDataExceptionWhileFetch() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setValidationUrl("this is a testurl");
@@ -189,6 +196,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateDelegateTaskDatadog() {
     // Setup
     DatadogConfig dConfg = DatadogConfig.builder().accountId("accountId").url("datadogUrl").build();
@@ -228,6 +236,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateAppD24x7Task() {
     // Setup
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder().build();
@@ -267,6 +276,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreateNewRelic24x7Task() {
     NewRelicConfig nrConfig = NewRelicConfig.builder().build();
     SettingAttribute attribute = new SettingAttribute();
@@ -304,12 +314,14 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreate24x7TaskBadState() {
     boolean response = service.collect247Data("cvConfigId", StateType.HTTP, 1540419553000l, 1540420454000l);
     assertFalse(response);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreate24x7TaskPrometheus() {
     PrometheusConfig nrConfig = PrometheusConfig.builder().build();
     SettingAttribute attribute = new SettingAttribute();
@@ -346,6 +358,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCreate24x7TaskCloudWatch() {
     AwsConfig awsConfig = AwsConfig.builder().build();
     SettingAttribute attribute = new SettingAttribute();

@@ -13,11 +13,13 @@ import static software.wings.beans.User.Builder.anUser;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.authentication.AuthenticationManager;
@@ -71,6 +73,7 @@ public class UserResourceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListUsers() {
     when(USER_SERVICE.list(any(PageRequest.class), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
@@ -84,6 +87,7 @@ public class UserResourceTest {
   }
 
   @Test(expected = BadRequestException.class)
+  @Category(UnitTests.class)
   public void shouldErrorOnListWhenAccountIdIsNotFound() {
     RestResponse<PageResponse<User>> restResponse =
         RESOURCES.client().target("/users").request().get(new GenericType<RestResponse<PageResponse<User>>>() {});

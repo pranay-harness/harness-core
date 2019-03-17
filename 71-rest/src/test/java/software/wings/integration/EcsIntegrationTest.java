@@ -31,9 +31,11 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.category.element.IntegrationTests;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +55,7 @@ public class EcsIntegrationTest {
   private ObjectMapper mapper = new ObjectMapper();
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldDescribeCluster() {
     List<String> clusterArns = ecsClient.listClusters().getClusterArns();
     clusterArns.stream()
@@ -64,6 +67,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldDescribeContainerInstances() {
     List<String> clusterArns = ecsClient.listClusters().getClusterArns();
     clusterArns.stream()
@@ -75,6 +79,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldCreateCluster() {
     CreateClusterRequest demo2 = new CreateClusterRequest().withClusterName("Demo2");
     CreateClusterResult demo2Cluster = ecsClient.createCluster(demo2);
@@ -82,6 +87,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldFetchContainerInstanceForService() {
     ListTasksResult listTasksResult =
         ecsClient.listTasks(new ListTasksRequest().withCluster("test2").withServiceName("Nix__docker__Development__6"));
@@ -91,6 +97,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldCreateTaskDefinition() throws IOException {
     /*
     {
@@ -122,6 +129,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldCreateService() throws IOException {
     /*
     {
@@ -140,6 +148,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldUpdateService() throws IOException {
     String serviceJson =
         "{\"cluster\":\"demo\",\"desiredCount\":1,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:7\"}";
@@ -149,6 +158,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldScaleUpTheService() throws IOException {
     String serviceJson =
         "{\"cluster\":\"demo\",\"desiredCount\":10,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:6\"}";
@@ -158,6 +168,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldScaleDownTheService() throws IOException {
     String serviceJson =
         "{\"cluster\":\"demo\",\"desiredCount\":0,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:6\"}";
@@ -167,6 +178,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldAddContainerInstance() {
     AmazonEC2Client amazonEC2Client = new AmazonEC2Client(
         new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
@@ -188,6 +200,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldScaleContainerInstanceCluster() {
     AmazonAutoScalingClient amazonAutoScalingClient = new AmazonAutoScalingClient(
         new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
@@ -204,6 +217,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldWaitTillAllInstanceaAreReady() {
     //    AmazonAutoScalingClient amazonAutoScalingClient =
     //        new AmazonAutoScalingClient(new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ",
@@ -214,6 +228,7 @@ public class EcsIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldReturnServices() {
     AmazonECSClient amazonECSClient = new AmazonECSClient(
         new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));

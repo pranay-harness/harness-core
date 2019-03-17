@@ -31,8 +31,10 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.shell.ScriptType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -61,11 +63,13 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
   @Inject private TemplateService templateService;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldLoadDefaultTemplates() {
     templateService.loadDefaultTemplates(TemplateType.SHELL_SCRIPT, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveShellScriptTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
@@ -91,6 +95,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateShellScriptTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     Template template = getTemplate(parentFolder);
@@ -118,6 +123,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotUpdateEntitiesIfNotLinked() {
     Template savedTemplate = createShellScriptTemplate();
 
@@ -161,6 +167,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     Template template = getTemplate(parentFolder);

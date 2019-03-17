@@ -15,10 +15,12 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
@@ -140,6 +142,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGetForLocal() throws HarnessException, IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext =
         createChangeContext(localValidYamlContent, validYamlFilePath);
@@ -158,6 +161,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGetForRemote() throws HarnessException, IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext = createChangeContext(remoteYamlContent, validYamlFilePath);
 
@@ -175,6 +179,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext =
         createChangeContext(localValidYamlContent, invalidYamlFilePath);
@@ -224,6 +229,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGetForEnvOverrideWithLocalStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(WingsTestConstants.ENV_ID)
@@ -248,6 +254,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGetForEnvOverrideWithRemoteStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(WingsTestConstants.ENV_ID)
@@ -278,6 +285,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGetForEnvServiceOverrideWithLocalStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(ENV_ID)
@@ -303,6 +311,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGetForEnvServiceOverrideWithRemoteStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(WingsTestConstants.ENV_ID)

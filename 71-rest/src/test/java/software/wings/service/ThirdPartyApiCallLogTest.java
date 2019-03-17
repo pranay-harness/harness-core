@@ -3,10 +3,12 @@ package software.wings.service;
 import static org.junit.Assert.assertEquals;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -74,6 +76,7 @@ public class ThirdPartyApiCallLogTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testStatusTag() throws IOException {
     String failedCallLogJson = JsonUtils.asJson(failedCallLog);
     ThirdPartyApiCallLog obj = JsonUtils.asObject(failedCallLogJson, ThirdPartyApiCallLog.class);

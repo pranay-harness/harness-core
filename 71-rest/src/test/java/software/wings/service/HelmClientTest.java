@@ -1,7 +1,9 @@
 package software.wings.service;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.helpers.ext.helm.HelmClient;
@@ -22,6 +24,7 @@ public class HelmClientTest {
 
   private HelmClient helmClient = new HelmClientImpl();
   @Test
+  @Category(UnitTests.class)
   public void shouldInstall() throws InterruptedException, IOException, TimeoutException, ExecutionException {
     //    HelmCommandResponse helmCommandResponse =
     //        helmClient.install(HelmInstallCommandRequest.builder()
@@ -38,6 +41,7 @@ public class HelmClientTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdate() throws InterruptedException, IOException, TimeoutException, ExecutionException {
     //    HelmCommandResponse helmCommandResponse =
     //        helmClient.upgrade(HelmInstallCommandRequest.builder()
@@ -54,6 +58,7 @@ public class HelmClientTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRollback() throws InterruptedException, IOException, TimeoutException {
     HelmCommandResponse helmCommandResponse =
         helmClient.rollback(HelmRollbackCommandRequest.builder().releaseName("rel1").prevReleaseVersion(1).build());

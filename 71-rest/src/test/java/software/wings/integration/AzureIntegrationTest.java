@@ -7,11 +7,13 @@ import com.google.inject.Inject;
 
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerservice.OSType;
+import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -51,11 +53,13 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void azureAuthenticationTest() {
     azureHelperService.validateAzureAccountCredential(clientId, tenantId, key);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getSubscriptionsTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -64,6 +68,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getContainerRegistriesTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -79,6 +84,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getVirtualMachineScaleSetsTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -93,6 +99,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getAvailabilitySets() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -108,6 +115,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "rathnakara.malatesha@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -125,6 +133,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "rathnakara.malatesha@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void getHostsByResourceGroupAndTag() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -162,6 +171,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Category(UnitTests.class)
   public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -183,6 +193,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getKubernetesClusters() {
     AzureConfig config = getAzureConfig();
     List<AzureKubernetesCluster> clusters =

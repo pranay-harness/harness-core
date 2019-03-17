@@ -2,10 +2,13 @@ package io.harness.k8s.kubectl;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GetCommandTest {
   @Test
+  @Category(UnitTests.class)
   public void testAllResources() {
     Kubectl client = Kubectl.client(null, null);
 
@@ -15,6 +18,7 @@ public class GetCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllPodsInNamespace() {
     Kubectl client = Kubectl.client(null, null);
 
@@ -24,6 +28,7 @@ public class GetCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSpecificPod() {
     Kubectl client = Kubectl.client(null, null);
 
@@ -33,6 +38,7 @@ public class GetCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAllPodsAndServices() {
     Kubectl client = Kubectl.client(null, null);
 
@@ -42,6 +48,7 @@ public class GetCommandTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetEvents() {
     Kubectl client = Kubectl.client(null, null);
 

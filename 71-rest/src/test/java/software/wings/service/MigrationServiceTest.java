@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
+import io.harness.category.element.UnitTests;
 import migrations.MigrationList;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 import java.util.HashSet;
@@ -14,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MigrationServiceTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void versionsShouldBeUnique() {
     Set<Integer> versions = new HashSet<>();
     MigrationList.getMigrations().forEach(pair -> {
@@ -24,6 +27,7 @@ public class MigrationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void versionsShouldBeSequential() {
     AtomicInteger last = new AtomicInteger(-1);
     MigrationList.getMigrations().forEach(pair -> {

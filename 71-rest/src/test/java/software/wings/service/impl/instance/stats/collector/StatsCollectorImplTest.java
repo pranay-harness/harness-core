@@ -2,12 +2,15 @@ package software.wings.service.impl.instance.stats.collector;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
 
 public class StatsCollectorImplTest {
   @Test
+  @Category(UnitTests.class)
   public void alignedWith10thMinute() {
     Instant instant = Instant.parse("2018-12-03T10:10:30.00Z");
     Instant aligned = StatsCollectorImpl.alignedWithMinute(instant, 10);

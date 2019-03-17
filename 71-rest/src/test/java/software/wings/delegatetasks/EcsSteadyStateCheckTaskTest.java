@@ -16,9 +16,11 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -51,6 +53,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRun() {
     doReturn(new DescribeServicesResult().withServices(
                  new Service().withServiceName("Name").withClusterArn("Cluster").withDesiredCount(1)))

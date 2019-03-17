@@ -24,10 +24,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.MembersInjector;
 
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -89,6 +91,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
    * Should get app.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -112,6 +115,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactForService() {
     when(artifactService.get(APP_ID, ARTIFACT_ID))
         .thenReturn(
@@ -127,6 +131,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetNullArtifact() {
     when(artifactService.get(APP_ID, ARTIFACT_ID))
         .thenReturn(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
@@ -141,6 +146,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactWithSourceProperties() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -183,6 +189,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAccountDefaults() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 

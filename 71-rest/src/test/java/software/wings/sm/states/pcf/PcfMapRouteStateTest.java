@@ -52,9 +52,11 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -248,6 +250,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_ROUTE + "}");
@@ -255,6 +258,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes_New_Route_Name() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_ROUTE_PCF + "}");
@@ -303,6 +307,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_pcfAPP_infra_tempRoute() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_TEMP_ROUTE + "}");
@@ -345,6 +350,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_pcfOldAPP_infra_route() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_OLD_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_ROUTE + "}");
@@ -389,6 +395,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_pcfOldAPP_infra_tempRoute() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_OLD_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_TEMP_ROUTE + "}");
@@ -431,6 +438,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_BG_routes() {
     on(context).set("serviceTemplateService", serviceTemplateService);
     ExecutionResponse executionResponse = pcfSwitchBlueGreenRoutes.execute(context);

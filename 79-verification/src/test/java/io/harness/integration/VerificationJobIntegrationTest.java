@@ -10,12 +10,14 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.VerificationBaseIntegrationTest;
+import io.harness.category.element.UnitTests;
 import io.harness.jobs.MetricDataProcessorJob;
 import io.harness.jobs.VerificationJob;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +52,7 @@ public class VerificationJobIntegrationTest extends VerificationBaseIntegrationT
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute() {
     job.addJob(jobScheduler);
 
@@ -61,6 +64,7 @@ public class VerificationJobIntegrationTest extends VerificationBaseIntegrationT
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMultiAccountCron() throws SchedulerException, TimeoutException, InterruptedException {
     Account account1 = createAccount(AccountType.PAID, AccountStatus.ACTIVE);
     Account account2 = createAccount(AccountType.TRIAL, AccountStatus.EXPIRED);

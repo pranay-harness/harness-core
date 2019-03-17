@@ -7,8 +7,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.auth0.jwt.interfaces.Claim;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 
@@ -20,6 +22,7 @@ public class SecretManagerTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGenerateToken() {
     String token =
         secretManager.generateJWTToken(ImmutableMap.of(CLAIM_KEY, CLAIM_VALUE), JWT_CATEGORY.EXTERNAL_SERVICE_SECRET);
@@ -27,6 +30,7 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldVerifyToken() {
     String jwtToken =
         secretManager.generateJWTToken(ImmutableMap.of(CLAIM_KEY, CLAIM_VALUE), JWT_CATEGORY.EXTERNAL_SERVICE_SECRET);
@@ -36,12 +40,14 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionWhenNoTokenFoundOnValidation() {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> secretManager.verifyJWTToken("INVALID_TOKEN", JWT_CATEGORY.EXTERNAL_SERVICE_SECRET));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionWhenResourceDoesntMatchOnValiation() {
     String token = secretManager.generateJWTToken(null, JWT_CATEGORY.EXTERNAL_SERVICE_SECRET);
     assertThatExceptionOfType(WingsException.class)

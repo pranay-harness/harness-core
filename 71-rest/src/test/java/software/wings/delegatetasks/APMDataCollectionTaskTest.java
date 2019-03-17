@@ -6,9 +6,11 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -76,6 +78,7 @@ public class APMDataCollectionTaskTest {
     return m;
   }
   @Test
+  @Category(UnitTests.class)
   public void testBatchingHosts() throws Exception {
     setup();
     DataCollectionTaskResult tr = dataCollectionTask.initDataCollection(dataCollectionTask.getParameters());
@@ -88,6 +91,7 @@ public class APMDataCollectionTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testMoreThanFiftyHostsInBatch() throws Exception {
     setup();
     Map<String, String> hostList = new HashMap<>();
@@ -113,6 +117,7 @@ public class APMDataCollectionTaskTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testEmptyEncryptedCredentialsInitDataCollection() {
     setup();
     APMDataCollectionInfo info = (APMDataCollectionInfo) dataCollectionTask.getParameters()[0];

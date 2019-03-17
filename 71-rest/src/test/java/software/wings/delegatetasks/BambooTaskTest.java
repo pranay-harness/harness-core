@@ -7,10 +7,12 @@ import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.Maps;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -65,6 +67,7 @@ public class BambooTaskTest {
         .thenReturn(Status.builder().finished(true).build());
   }
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(bambooService.getBuildResult(bambooConfig, null, planKey))
         .thenReturn(Result.builder().buildResultKey(buildResultKey).buildState("Successful").build());

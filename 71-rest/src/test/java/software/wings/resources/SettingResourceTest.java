@@ -7,8 +7,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.HARNESS_BAMBOO;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -16,7 +18,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -45,7 +47,7 @@ public class SettingResourceTest extends WingsBaseTest {
                            .withAccountId(ACCOUNT_ID)
                            .withAppId(APP_ID)
                            .withName(HARNESS_BAMBOO + System.currentTimeMillis())
-                           .withCategory(Category.CLOUD_PROVIDER)
+                           .withCategory(SettingCategory.CLOUD_PROVIDER)
                            .withValue(bambooConfig)
                            .build();
 
@@ -55,6 +57,7 @@ public class SettingResourceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSaveSettingAttribute() {
     settingResource.save(APP_ID, ACCOUNT_ID, settingAttribute);
 
@@ -66,6 +69,7 @@ public class SettingResourceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateSettingAttribute() {
     settingResource.update(APP_ID, ACCOUNT_ID, settingAttribute);
 

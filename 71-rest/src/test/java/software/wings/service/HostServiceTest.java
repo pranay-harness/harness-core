@@ -29,10 +29,12 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -108,6 +110,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should list hosts.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(hostBuilder.but().build()));
@@ -128,6 +131,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should get host.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetHost() {
     Host host = hostBuilder.build();
     when(hostQuery.get()).thenReturn(host);
@@ -143,6 +147,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should update host.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateHost() {
     Host host = hostBuilder.withUuid(HOST_ID).build();
     when(hostQuery.get()).thenReturn(hostBuilder.build());
@@ -156,6 +161,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should delete host.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteHost() {
     Host host = hostBuilder.withAppId(APP_ID).withUuid(HOST_ID).build();
     when(hostQuery.get()).thenReturn(host);
@@ -169,6 +175,7 @@ public class HostServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     hostService.pruneDescendingEntities(APP_ID, HOST_ID);
     InOrder inOrder = inOrder(wingsPersistence, configService, serviceInstanceService);
@@ -180,6 +187,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should get hosts by host ids.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetHostsByHostIds() {
     when(hostQuery.asList()).thenReturn(asList(hostBuilder.withUuid(HOST_ID).build()));
     List<Host> hosts = hostService.getHostsByHostIds(APP_ID, ENV_ID, asList(HOST_ID));
@@ -197,6 +205,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should bulk save.
    */
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldBulkSave() {
     /*
@@ -236,6 +245,7 @@ public class HostServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldGetInfrastructureHostUsageByApplication() {
     /*

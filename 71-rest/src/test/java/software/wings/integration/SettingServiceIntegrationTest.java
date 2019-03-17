@@ -13,6 +13,7 @@ import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
@@ -21,11 +22,12 @@ import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
 
@@ -58,13 +60,14 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   // push.
   @Test
   @Repeat(times = 5)
+  @Category(IntegrationTests.class)
   @Ignore
   public void shouldSaveJenkinsConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
             .post(entity(aSettingAttribute()
                              .withName(HARNESS_JENKINS + System.currentTimeMillis())
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withAccountId(accountId)
                              .withValue(JenkinsConfig.builder()
                                             .accountId(accountId)
@@ -85,13 +88,14 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   @Ignore
   public void shouldThrowExceptionForUnreachableJenkinsUrl() {
     Response response =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
             .post(entity(aSettingAttribute()
                              .withName(HARNESS_JENKINS + System.currentTimeMillis())
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withAccountId(accountId)
                              .withValue(JenkinsConfig.builder()
                                             .accountId(accountId)
@@ -111,12 +115,13 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldSaveNexusConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
             .post(entity(aSettingAttribute()
                              .withName(HARNESS_NEXUS + System.currentTimeMillis())
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withAccountId(accountId)
                              .withValue(NexusConfig.builder()
                                             .nexusUrl(NEXUS_URL)
@@ -135,12 +140,13 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void shouldSaveBambooConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
             .post(entity(aSettingAttribute()
                              .withName(HARNESS_BAMBOO + System.currentTimeMillis())
-                             .withCategory(Category.CONNECTOR)
+                             .withCategory(SettingCategory.CONNECTOR)
                              .withAccountId(accountId)
                              .withValue(BambooConfig.builder()
                                             .accountId(accountId)
@@ -160,13 +166,14 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Category(IntegrationTests.class)
   public void shouldSaveDockerConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
             .post(
                 entity(aSettingAttribute()
                            .withName(HARNESS_DOCKER_REGISTRY + System.currentTimeMillis())
-                           .withCategory(Category.CONNECTOR)
+                           .withCategory(SettingCategory.CONNECTOR)
                            .withAccountId(accountId)
                            .withValue(DockerConfig.builder()
                                           .accountId(accountId)

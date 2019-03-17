@@ -27,8 +27,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -84,6 +86,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute new execution.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldComputeNewExecution() {
     State s1 = aRepeatState()
                    .withName("ByInstance")
@@ -125,6 +128,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute inprogress estimate.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldComputeInprogressEstimate() {
     State s1 = aRepeatState()
                    .withName("ByService")
@@ -217,6 +221,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute inprogress estimate with failed node.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldComputeInprogressEstimateWithFailedNode() {
     State s1 = aRepeatState()
                    .withName("ByService")

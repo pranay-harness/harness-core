@@ -9,8 +9,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.ldaptive.Connection;
 import org.ldaptive.DefaultConnectionFactory;
@@ -94,11 +96,13 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateConnectionConfig() {
     assertThat(helper.validateConnectionConfig().getStatus()).isEqualTo(Status.SUCCESS);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateUserConfig() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
     when(search.execute()).thenReturn(searchResult);
@@ -115,6 +119,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void validateGroupConfig() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
     when(search.execute(any())).thenReturn(searchResult);
@@ -135,6 +140,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void populateGroupSize() throws LdapException {
     LdapEntry group = new LdapEntry("groupDN");
     SearchResult groups = new SearchResult(group);
@@ -147,6 +153,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void populateGroupSizeWithoutExtendedMatchingFilterShouldFailAndThenSucceed() throws LdapException {
     LdapEntry group = new LdapEntry("groupDN");
     SearchResult groups = new SearchResult(group);
@@ -161,6 +168,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getGroupByDn() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
     when(search.execute(any())).thenReturn(searchResult);
@@ -172,6 +180,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void authenticate() throws Exception {
     mockLdapSearchBuilder(searchBuilder, search);
     when(search.execute(any())).thenReturn(searchResult);

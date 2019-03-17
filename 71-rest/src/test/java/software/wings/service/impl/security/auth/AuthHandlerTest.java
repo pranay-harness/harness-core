@@ -34,7 +34,9 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
@@ -175,6 +177,7 @@ public class AuthHandlerTest extends WingsBaseTest {
           .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkForAccountAdministratorFirstTime() {
     setupForAllApp();
 
@@ -198,6 +201,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchPermissionsForAccountAdministrator() {
     setupForAllApp();
     List<UserGroup> userGroups = asList(UserGroup.builder()
@@ -360,6 +364,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchPermissionsForAppAdministrator() {
     setupForAllApp();
     List<UserGroup> userGroups =
@@ -373,6 +378,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchPermissionsForProdSupport() {
     setupForAllApp();
     EnvFilter envFilter = new EnvFilter();
@@ -469,6 +475,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchPermissionsForOneEnvOnly() {
     setupForAllApp();
     EnvFilter envFilter = new EnvFilter();
@@ -537,6 +544,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchPermissionsForMultiplePermissionsInUserGroup() {
     setupForAllApp();
     EnvFilter envFilter = new EnvFilter();
@@ -608,6 +616,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchPermissionsForNoEnv() {
     setupForNoEnvs();
     EnvFilter envFilter = new EnvFilter();
@@ -645,6 +654,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFetchPermissionsForBuildAndApprovalPipeline() {
     setupForNoEnvs();
     EnvFilter envFilter = new EnvFilter();
@@ -684,6 +694,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testPermissionsForPipelinesInMultipleEnvsAndMultiplePermissions() {
     setupForAllApp();
     EnvFilter devFilter = new EnvFilter();
@@ -788,6 +799,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAllEntities_multiplePages() {
     // Scenario page size = 10, total = 11
     int total = 11;
@@ -823,6 +835,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAllEntities_multiplePages_multiplesOfPageSize() {
     // Scenario page size = 10, total = 20
     int total = 20;
@@ -857,6 +870,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAllEntities_onePage() {
     // Scenario page size = 10, total = 8
     int total = 8;
@@ -876,6 +890,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetAllEntities_noResults() {
     // Scenario page size = 10, total = 0
     int total = 0;

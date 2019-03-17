@@ -21,8 +21,10 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -67,24 +69,28 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListNamespaces() {
     List<String> namespaces = cloudWatchService.listNamespaces(SETTING_ID, "us-east-1");
     assertThat(namespaces).hasSize(1).containsExactly(NAMESPACE);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListMetrics() {
     List<String> namespaces = cloudWatchService.listMetrics(SETTING_ID, "us-east-1", NAMESPACE);
     assertThat(namespaces).hasSize(1).containsExactly(METRIC_NAME);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListDimensions() {
     List<String> namespaces = cloudWatchService.listDimensions(SETTING_ID, "us-east-1", NAMESPACE, METRIC_NAME);
     assertThat(namespaces).hasSize(1).containsExactly(METRIC_DIMENSION);
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchMetricsAllMetrics() {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics = CloudWatchServiceImpl.fetchMetrics();
     assertEquals("There are 4 different types of metrics", 4, cloudwatchMetrics.keySet().size());
@@ -95,6 +101,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchSpecificMetrics() {
     CloudWatchCVServiceConfiguration cvServiceConfiguration = CloudWatchCVServiceConfiguration.builder().build();
     Map<String, List<CloudWatchMetric>> ecsList = new HashMap<>();
@@ -114,6 +121,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFetchSpecificMetricsNone() {
     CloudWatchCVServiceConfiguration cvServiceConfiguration = CloudWatchCVServiceConfiguration.builder().build();
 

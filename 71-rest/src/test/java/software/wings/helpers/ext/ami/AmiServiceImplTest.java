@@ -4,7 +4,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.ec2.model.Filter;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.Map;
 
 public class AmiServiceImplTest {
   @Test
+  @Category(UnitTests.class)
   public void testGetFiltersWithNullEmptyValues() {
     AmiServiceImpl service = new AmiServiceImpl();
     List<Filter> filters = service.getFilters(null, null);
@@ -36,6 +39,7 @@ public class AmiServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetFiltersWithTags() {
     AmiServiceImpl service = new AmiServiceImpl();
     Map<String, List<String>> tagMap = new HashMap<>();
@@ -57,6 +61,7 @@ public class AmiServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetFiltersWithFilterMap() {
     AmiServiceImpl service = new AmiServiceImpl();
     Map<String, String> filterMap = new HashMap<>();

@@ -24,6 +24,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.persistence.ReadPref;
 import io.harness.service.intfc.ContinuousVerificationService;
@@ -34,6 +35,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Account;
@@ -101,6 +103,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testQueueWithStatus() {
     int numOfTasks = 100;
     for (int i = 0; i < numOfTasks; i++) {
@@ -139,6 +142,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testQueueWithStatus24x7Task() {
     int numOfTasks = 100;
     for (int i = 0; i < numOfTasks; i++) {
@@ -172,6 +176,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testQueueWithStatus24x7TaskTrue() {
     int numOfTasks = 100;
     for (int i = 0; i < numOfTasks; i++) {
@@ -204,6 +209,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAlreadyQueued() {
     int numOfTasks = 5;
     for (int i = 0; i < numOfTasks; i++) {
@@ -227,6 +233,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testAlreadyQueuedForMinute() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
                                                                 .state_execution_id(stateExecutionId)
@@ -247,6 +254,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testRetryExceeded() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
                                                                 .state_execution_id(stateExecutionId)
@@ -260,6 +268,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testQueueWithTimeOut() throws InterruptedException {
     LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.SECONDS.toMillis(5);
     long startTime = System.currentTimeMillis();
@@ -303,6 +312,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void testInitializeServiceSecretKeys() {
     assertTrue(wingsPersistence.createQuery(ServiceSecretKey.class).asList().isEmpty());
@@ -328,6 +338,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testParseVersion() {
     ServiceApiVersion latestVersion = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
     assertEquals(latestVersion, Misc.parseApisVersion("application/json"));
@@ -339,6 +350,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUniqueIndexExperimentalTask() {
     assertTrue(
         learningEngineService.addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask.builder()
@@ -360,6 +372,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCV247TaskQueue() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
         NewRelicCVServiceConfiguration.builder().applicationId(generateUUID()).build();
@@ -447,6 +460,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testLockCleanup() {
     DBCollection collection =
         wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_locks");

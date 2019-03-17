@@ -9,11 +9,13 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -21,7 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
@@ -62,7 +64,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
     settingAttribute =
         aSettingAttribute()
             .withName("bamboo")
-            .withCategory(Category.CONNECTOR)
+            .withCategory(SettingCategory.CONNECTOR)
             .withAccountId(accountId)
             .withValue(BambooConfig.builder()
                            .accountId(accountId)
@@ -75,18 +77,21 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getJobs() {
     Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
     assertFalse(jobs.isEmpty());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getPlans() {
     Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
     assertFalse(plans.isEmpty());
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getPlansWithType() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);
@@ -96,6 +101,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getArtifactPaths() {
     Set<String> artifactPaths =
         buildSourceService.getArtifactPaths(appId, "TOD-TOD", settingAttribute.getUuid(), null, streamType.name());
@@ -104,6 +110,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getBuilds() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);
@@ -120,6 +127,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void getLastSuccessfulBuild() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);

@@ -19,8 +19,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.HQuery;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -58,6 +60,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<NotificationBatch> updateOperations;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerNotificationGroupDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
 
@@ -94,6 +97,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldTriggerUserGroupDispatcher() {
     String accountId = "some-account-id";
 

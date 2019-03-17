@@ -7,8 +7,10 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
+import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -48,6 +50,7 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCopyConfigForWinRm() throws IOException {
     // Create a test web.config file
     List<ConfigFile> configFiles = new ArrayList<>();

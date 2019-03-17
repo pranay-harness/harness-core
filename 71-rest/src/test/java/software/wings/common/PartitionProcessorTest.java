@@ -7,9 +7,11 @@ package software.wings.common;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.api.PartitionElement;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -27,6 +29,7 @@ public class PartitionProcessorTest {
    * Should partition by count.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionByCount() {
     SampleElement e1 = new SampleElement("e1");
     SampleElement e2 = new SampleElement("e2");
@@ -51,6 +54,7 @@ public class PartitionProcessorTest {
    * Should partition by pct.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionByPct() {
     SampleElement e1 = new SampleElement("e1");
     SampleElement e2 = new SampleElement("e2");
@@ -80,6 +84,7 @@ public class PartitionProcessorTest {
    * Should partition by pct with all.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionByPctWithAll() {
     SampleElement e1 = new SampleElement("e1");
     SampleElement e2 = new SampleElement("e2");
@@ -115,6 +120,7 @@ public class PartitionProcessorTest {
    * Should partition by mixed pct and count.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionByMixedPctAndCount() {
     SampleElement e1 = new SampleElement("e1");
     SampleElement e2 = new SampleElement("e2");
@@ -141,6 +147,7 @@ public class PartitionProcessorTest {
    * Should partition with mixed pct and count.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionWithMixedPctAndCount() {
     SampleElement e1 = new SampleElement("e1");
     SampleElement e2 = new SampleElement("e2");
@@ -168,6 +175,7 @@ public class PartitionProcessorTest {
    * Should partition by with pct.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionByWithPct() {
     SampleElement e1 = new SampleElement("e1");
     SampleElement e2 = new SampleElement("e2");
@@ -197,6 +205,7 @@ public class PartitionProcessorTest {
    * Should partition by with count.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldPartitionByWithCount() {
     SampleElement e1 = new SampleElement("e1");
     SampleElement e2 = new SampleElement("e2");

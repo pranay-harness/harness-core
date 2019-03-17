@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -20,7 +20,7 @@ public class CloudProviderSampleDataProvider {
   public SettingAttribute createKubernetesClusterConfig(String accountId) {
     SettingAttribute kubeCluster =
         aSettingAttribute()
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withName(K8S_CLOUD_PROVIDER_NAME)
             .withAccountId(accountId)
             .withValue(KubernetesClusterConfig.builder()

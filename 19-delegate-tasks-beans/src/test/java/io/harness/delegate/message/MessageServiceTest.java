@@ -16,10 +16,12 @@ import static org.mockito.Mockito.when;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +68,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWriteMessage() throws IOException {
     messageService.writeMessage("message-text", "p1", "p2");
 
@@ -80,6 +83,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldReadMessage() throws IOException {
     String line = Joiner.on(PRIMARY_DELIMITER)
                       .join(asList(IN, "100", OTHER_MESSENGER_TYPE, otherProcessId, "message-text",
@@ -97,6 +101,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSendMessage() throws IOException {
     messageService.writeMessageToChannel(OTHER_MESSENGER_TYPE, otherProcessId, "message-text", "p1", "p2");
 
@@ -111,6 +116,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldRetrieveMessage() throws IOException {
     String line = Joiner.on(PRIMARY_DELIMITER)
                       .join(asList(OUT, "100", OTHER_MESSENGER_TYPE, otherProcessId, "message-text",
@@ -128,6 +134,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCloseChannel() throws IOException {
     FileUtils.writeLines(messageFile,
         singletonList(Joiner.on(PRIMARY_DELIMITER)
@@ -154,6 +161,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWriteData() throws IOException {
     messageService.putData(data1, "foo", "bar");
     messageService.putData(data1, "baz", "qux");
@@ -174,6 +182,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @SuppressWarnings({"unchecked"})
   public void shouldReadData() throws IOException {
     Map<String, Object> map1 = new HashMap<>();
@@ -194,6 +203,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @SuppressWarnings({"unchecked"})
   public void shouldRemoveData() throws IOException {
     Map<String, Object> map1 = new HashMap<>();
@@ -210,6 +220,7 @@ public class MessageServiceTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCloseData() throws IOException {
     Map<String, Object> map1 = new HashMap<>();
     map1.put("foo", "bar");

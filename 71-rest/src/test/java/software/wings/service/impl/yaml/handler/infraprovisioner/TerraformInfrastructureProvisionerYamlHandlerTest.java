@@ -15,8 +15,10 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -68,6 +70,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
       + "sourceRepoBranch: master";
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext();
     Yaml yaml = (Yaml) getYaml(validYamlContent, Yaml.class);

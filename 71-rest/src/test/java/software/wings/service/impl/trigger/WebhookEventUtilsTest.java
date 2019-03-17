@@ -12,9 +12,11 @@ import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_LAB_EV
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -36,6 +38,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   @Mock HttpHeaders httpHeaders;
 
   @Test
+  @Category(UnitTests.class)
   public void shouldObtainWebhookSource() {
     when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT))
         .thenReturn(GitHubEventType.PUSH.name())
@@ -49,6 +52,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldObtainGHPushBranchAndCommitId() throws IOException {
     when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).thenReturn(GitHubEventType.PUSH.getValue());
     Map<String, Object> payload = obtainPayload(GH_PUSH_REQ_FILE);
@@ -58,6 +62,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldObtainBitBucketPushBranchAndCommitId() throws IOException {
     when(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT)).thenReturn(BitBucketEventType.PUSH.getValue());
     Map<String, Object> payload = obtainPayload(BITBUCKET_PUSH_REQ_FILE);
@@ -67,6 +72,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldObtainGitLabBranchAndCommitId() throws IOException {
     when(httpHeaders.getHeaderString(X_GIT_LAB_EVENT)).thenReturn(GitLabEventType.PUSH.getValue());
     Map<String, Object> payload = obtainPayload(GITLAB_PUSH_REQ_FILE);

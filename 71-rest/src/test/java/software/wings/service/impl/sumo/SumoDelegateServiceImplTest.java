@@ -8,9 +8,11 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -44,6 +46,7 @@ public class SumoDelegateServiceImplTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testValidateConfigBadUrl() throws IOException {
     when(sumoConfig.getSumoUrl()).thenReturn("htt//localhost:9000/");
     SumoDelegateServiceImpl sumoDelegateService = new SumoDelegateServiceImpl();
@@ -58,6 +61,7 @@ public class SumoDelegateServiceImplTest {
   }
 
   @Test(expected = SumoClientException.class)
+  @Category(UnitTests.class)
   public void testSumoException() throws IOException {
     doThrow(new SumoServerException("https://localhost:9000/", "{\"message\": \"This is broken\"}"))
         .when(sumoConfig)

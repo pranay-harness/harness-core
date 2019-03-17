@@ -5,10 +5,12 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
 
+import io.harness.category.element.UnitTests;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -53,6 +55,7 @@ public class SshExecutorFactoryTest {
    * @param name         the name
    */
   @Test
+  @Category(UnitTests.class)
   @Parameters(method = "params")
   @TestCaseName("{method}{2}")
   public void shouldGetExecutorFor(ExecutorType executorType, Class<? extends AbstractSshExecutor> klass, String name) {

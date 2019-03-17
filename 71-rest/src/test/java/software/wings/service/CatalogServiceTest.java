@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -32,6 +34,7 @@ public class CatalogServiceTest extends WingsBaseTest {
    * Should get cardview sort by.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCardviewSortBy() {
     List<CatalogItem> catalogItems = catalogService.getCatalogItems("CARD_VIEW_SORT_BY");
     logger.debug("catalogItems: {}", catalogItems);
@@ -43,6 +46,7 @@ public class CatalogServiceTest extends WingsBaseTest {
    * Should get catalogs.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetCatalogs() {
     Map<String, List<CatalogItem>> catalogs = catalogService.getCatalogs("CARD_VIEW_SORT_BY", "ARTIFACT_TYPE");
     assertThat(catalogs).isNotNull();

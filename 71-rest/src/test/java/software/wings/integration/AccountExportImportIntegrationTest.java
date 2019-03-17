@@ -8,11 +8,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -53,6 +55,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testAccountExportImport() throws Exception {
     byte[] exportedAccountData = exportAccountData(accountId);
     assertNotNull(exportedAccountData);
@@ -76,6 +79,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testImportBrandNewAccountDataFromZipFile() {
     String qaHarnessAccountId = "zEaak-FLS425IEO7OLzMUg";
     String qaHarnessAccountName = "Harness-QA";
@@ -114,6 +118,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testImportQEAccountDataFromZipFile() {
     String qaHarnessAccountId = "eWZFoTkESDSkPfnGwAp0lQ";
     String qaHarnessAccountName = "QEAccount";
@@ -146,6 +151,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testSpecificExport() throws Exception {
     byte[] exportedAccountData =
         exportSpecificAccountData(accountId, Application.class.getAnnotation(Entity.class).value());
@@ -168,6 +174,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testSpecificExport_noEntityTypes_shouldFail() {
     try {
       WebTarget target =

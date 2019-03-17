@@ -9,6 +9,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
@@ -21,6 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +69,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 10, successes = 10)
+  @Category(UnitTests.class)
   @Ignore
   public void testLimitsEnforcement() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
@@ -111,6 +114,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 10, successes = 10)
+  @Category(UnitTests.class)
   @Ignore
   public void testLimitsEnforcementConcurrent() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);

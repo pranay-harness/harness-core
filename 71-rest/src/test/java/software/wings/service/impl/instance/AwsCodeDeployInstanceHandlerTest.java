@@ -45,8 +45,10 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Reservation;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -174,6 +176,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances_syncJob() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(
@@ -251,6 +254,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances_NewDeployment() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
     setPageResponse(pageResponse);
@@ -337,6 +341,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
+  @Category(UnitTests.class)
   public void testSyncInstances_NewDeployment_Rollback() throws Exception {
     doReturn(Optional.of(DeploymentSummary.builder()
                              .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())

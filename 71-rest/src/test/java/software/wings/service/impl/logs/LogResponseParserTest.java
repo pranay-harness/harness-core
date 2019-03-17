@@ -6,7 +6,9 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.log.LogResponseParser;
 import software.wings.service.impl.log.LogResponseParser.LogResponseData;
@@ -22,6 +24,7 @@ import java.util.Map;
 
 public class LogResponseParserTest {
   @Test
+  @Category(UnitTests.class)
   public void testParseValidResponse() throws IOException {
     String textLoad =
         Resources.toString(LogResponseParserTest.class.getResource("/apm/sampleElkResponse.json"), Charsets.UTF_8);
@@ -54,6 +57,7 @@ public class LogResponseParserTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testParseValidResponseMultiple() throws IOException {
     String textLoad = Resources.toString(
         LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);

@@ -11,6 +11,8 @@ import static software.wings.beans.Idempotent.TENTATIVE;
 import com.google.inject.Inject;
 
 import com.mongodb.MongoCommandException;
+import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
@@ -21,6 +23,7 @@ import io.harness.threading.Concurrent;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Idempotent;
 import software.wings.common.MongoIdempotentRegistry;
@@ -72,6 +75,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testMongoRegisterNewAssumptions() {
     wingsPersistence.delete(Idempotent.class, id.getValue());
@@ -84,6 +88,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testMongoRegisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = new Idempotent();
     tentativeIdempotent.setUuid(id.getValue());
@@ -98,6 +103,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testMongoRegisterSucceededAssumptions() {
     Idempotent doneIdempotent = new Idempotent();
@@ -116,6 +122,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testMongoUnregisterMissingAssumptions() {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
@@ -124,6 +131,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testMongoUnregisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = new Idempotent();
     tentativeIdempotent.setUuid(id.getValue());
@@ -136,6 +144,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testMongoUnregisterSucceededAssumptions() {
     Idempotent doneIdempotent = new Idempotent();
     doneIdempotent.setUuid(id.getValue());
@@ -149,6 +158,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testConcurrency() throws InterruptedException {
     wingsPersistence.delete(Idempotent.class, id.getValue());
@@ -170,6 +180,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testResult() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, dataId.getValue());
@@ -178,6 +189,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @RealMongo
   public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, id.getValue());

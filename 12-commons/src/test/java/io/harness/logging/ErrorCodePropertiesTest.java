@@ -3,9 +3,11 @@ package io.harness.logging;
 import static io.harness.logging.LoggingInitializer.RESPONSE_MESSAGE_FILE;
 import static org.junit.Assert.assertEquals;
 
+import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 
 public class ErrorCodePropertiesTest {
   @Test
+  @Category(UnitTests.class)
   public void testErrorCodesInProperties() {
     Properties messages = new Properties();
     try (InputStream in = getClass().getResourceAsStream(RESPONSE_MESSAGE_FILE)) {

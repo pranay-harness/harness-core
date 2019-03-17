@@ -35,9 +35,11 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -124,12 +126,15 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateBackendController() {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateFrontendController() {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteController() {
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
 
@@ -140,12 +145,15 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateFrontendService() {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCreateBackendService() {}
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteService() {
     kubernetesContainerService.deleteService(KUBERNETES_CONFIG, Collections.emptyList(), "service");
 
@@ -156,6 +164,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void shouldSetControllerPodCount() {
     List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
@@ -169,6 +178,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetControllerPodCount() {
     when(scalableReplicationController.get())
         .thenReturn(new ReplicationControllerBuilder().withNewSpec().withReplicas(8).endSpec().build());

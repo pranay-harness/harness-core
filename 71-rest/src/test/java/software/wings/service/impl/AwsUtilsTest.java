@@ -11,7 +11,9 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Filter;
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -28,11 +30,13 @@ public class AwsUtilsTest extends WingsBaseTest {
   @InjectMocks @Inject private AwsUtils utils;
 
   @Test
+  @Category(UnitTests.class)
   public void testGetHostnameFromPrivateDnsName() {
     assertThat(utils.getHostnameFromPrivateDnsName("ip-172-31-18-241.ec2.internal")).isEqualTo("ip-172-31-18-241");
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetHostnameFromConvention() {
     doReturn(HOST_NAME).when(mockExpressionEvaluator).substitute(anyString(), any());
     utils.getHostnameFromConvention(Collections.emptyMap(), HOST_NAME);
@@ -40,6 +44,7 @@ public class AwsUtilsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetAwsFilters() {
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping()

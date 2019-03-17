@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.VerificationBaseTest;
+import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.network.SafeHttpCall;
@@ -17,6 +18,7 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.WorkflowExecution;
@@ -66,6 +68,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSaveLogAnalysisMLRecords_shouldSuccess() throws IOException {
     Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);
     when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(WorkflowExecution.builder().build())));
@@ -80,6 +83,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testGetLogExpAnalysisInfo_shouldSuccess() throws IOException {
     List<LogMLExpAnalysisInfo> expectedData = getLogMLExpAnalysisInfo();
     when(logAnalysisService.getExpAnalysisInfoList()).thenReturn(expectedData);
@@ -89,6 +93,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExperimentalTask_shouldSuccess() throws IOException {
     RestResponse<Boolean> response =
         logAnalysisResource.experimentalTask(mockAccountId, mockApplicationId, mockStateExecutionId);

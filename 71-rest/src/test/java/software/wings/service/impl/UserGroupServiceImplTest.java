@@ -38,9 +38,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -131,6 +133,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSaveAndRead() {
     UserGroup userGroup = UserGroup.builder()
                               .accountId(accountId)
@@ -182,6 +185,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testList() {
     UserGroup userGroup1 = UserGroup.builder()
                                .uuid(userGroupId)
@@ -213,6 +217,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testListByName() {
     UserGroup userGroup1 = UserGroup.builder()
                                .uuid(userGroupId)
@@ -231,6 +236,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCloneUserGroup() {
     final UserGroup storedGroupToClone = UserGroup.builder()
                                              .uuid(USER_GROUP_ID)
@@ -260,6 +266,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateUserGroup() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(anUser().withUuid(generateUuid()).build())) {
       ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
@@ -337,6 +344,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateNotificationSettings() {
     String accountId = "some-account-id";
     UserGroup ug = UserGroup.builder().accountId(accountId).name("some-name").build();
@@ -355,6 +363,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testUpdateMembers() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
       ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
@@ -408,6 +417,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testIsUserAuthorizedToAcceptOrRejectApproval() {
     User user = createUser("User");
     wingsPersistence.save(user);

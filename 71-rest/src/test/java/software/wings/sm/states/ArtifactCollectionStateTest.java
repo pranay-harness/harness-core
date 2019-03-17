@@ -24,10 +24,12 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -122,6 +124,7 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldFailOnNoArtifactStream() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(null);
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
@@ -131,6 +134,7 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExecuteWithDelayQueue() {
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream)).thenReturn(null);
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
@@ -140,6 +144,7 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAsyncResponse() {
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(
@@ -148,6 +153,7 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldArtifactCollectionEvaluateBuildNo() {
     artifactCollectionState.setBuildNo("${regex.extract('...', ${workflow.variables.sourceCommitHash})}");
     when(artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, "0fc", false))
@@ -159,6 +165,7 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   @Ignore // for srinivas to modify; need to simulate real Jenkins
   public void shouldArtifactCollectionEvaluateBuildNoFromDescription() {
     artifactCollectionState.setBuildNo("${regex.replace('tag: ([\\w-]+)', '$1', ${Jenkins.description}}");
@@ -171,12 +178,14 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = artifactCollectionState.getTimeoutMillis();
     assertThat(timeoutMillis).isEqualTo(Math.toIntExact(DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS));
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     artifactCollectionState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
     Integer timeoutMillis = artifactCollectionState.getTimeoutMillis();
@@ -184,6 +193,7 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldHandleAbort() {
     executionContext.getStateExecutionInstance().setStateExecutionMap(
         ImmutableMap.of(ARTIFACT_COLLECTION.name(), ArtifactCollectionExecutionData.builder().build()));

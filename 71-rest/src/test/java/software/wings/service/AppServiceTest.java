@@ -32,10 +32,12 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -142,6 +144,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should save application.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveApplication() {
     Application app =
         anApplication().withName("AppA").withAccountId(ACCOUNT_ID).withDescription("Description1").build();
@@ -178,6 +181,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListApplication() {
     Application application = anApplication().build();
     PageResponse<Application> pageResponse = new PageResponse<>();
@@ -189,6 +193,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldListApplicationWithDetails() {
     Application application = anApplication().build();
     PageResponse<Application> pageResponse = new PageResponse<>();
@@ -203,6 +208,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should get application.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetApplicationWithDetails() {
     PageResponse<Notification> notificationPageResponse = new PageResponse<>();
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
@@ -213,6 +219,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetApplicationWithDefaults() {
     when(wingsPersistence.get(Application.class, APP_ID))
         .thenReturn(anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
@@ -242,6 +249,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldReturnTrueForExistingApplicationInExistApi() {
     when(query.getKey()).thenReturn(new Key<>(Application.class, "applications", APP_ID));
     assertThat(appService.exist(APP_ID)).isTrue();
@@ -249,6 +257,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForNonExistentApplicationGet() {
     assertThatThrownBy(() -> appService.get("NON_EXISTENT_APP_ID"))
         .isInstanceOf(WingsException.class)
@@ -256,6 +265,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldNotThrowExceptionForNonExistentApplicationDelete() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     appService.delete("NON_EXISTENT_APP_ID");
@@ -265,6 +275,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateApplication() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
       Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
@@ -289,6 +300,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteApplication() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -308,6 +320,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
     appService.pruneDescendingEntities(APP_ID);
@@ -326,6 +339,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldPruneDescendingObjectSomeFailed() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
     doThrow(new WingsException("Forced exception")).when(pipelineService).pruneByApplication(APP_ID);

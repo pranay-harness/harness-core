@@ -6,8 +6,10 @@ import static org.junit.Assert.assertEquals;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import io.harness.category.element.UnitTests;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.helpers.ext.mail.EmailData;
 
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.util.Map;
  */
 public class OutgoingEmailTest {
   @Test
+  @Category(UnitTests.class)
   public void testEmailTemplates() throws Exception {
     Configuration cfg = new Configuration(VERSION_2_3_23);
     cfg.setClassForTemplateLoading(getClass(), "/mailtemplates");

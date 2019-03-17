@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
 
@@ -16,6 +18,7 @@ public class ExternalApiRateLimitingServiceTest extends WingsBaseTest {
   @Inject private ExternalApiRateLimitingService service;
 
   @Test
+  @Category(UnitTests.class)
   public void testAllowedRequests() {
     String key = "abcd";
     double numAllowed = 0;

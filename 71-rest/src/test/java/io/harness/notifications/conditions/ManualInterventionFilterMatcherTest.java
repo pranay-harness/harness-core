@@ -4,10 +4,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 
+import io.harness.category.element.UnitTests;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
 import io.harness.notifications.beans.ManualInterventionAlertFilters;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertFilter;
@@ -18,6 +20,7 @@ import java.util.Arrays;
 
 public class ManualInterventionFilterMatcherTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   public void testMatch() {
     AlertFilter filter = new AlertFilter(AlertType.ApprovalNeeded, new Conditions(Operator.MATCHING, null, null));
     Alert manualInterventionAlert = manualInterventionAlert();

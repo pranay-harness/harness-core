@@ -5,11 +5,13 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
 import software.wings.dl.WingsPersistence;
@@ -42,6 +44,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testSerialization() {
     val snapshot = getSampleSnapshot();
 

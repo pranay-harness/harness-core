@@ -6,9 +6,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
@@ -38,6 +40,7 @@ public class RoleRefreshUtil extends WingsBaseTest {
   @Inject AppService appService;
 
   @Test
+  @Category(UnitTests.class)
   @Ignore
   public void recreateRoles() {
     PageResponse<User> users = userService.list(aPageRequest().build(), false);

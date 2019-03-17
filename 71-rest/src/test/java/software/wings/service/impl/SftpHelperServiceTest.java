@@ -14,12 +14,14 @@ import static software.wings.service.impl.instance.InstanceHelperTest.ACCOUNT_ID
 import com.google.api.client.util.Lists;
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.PathComponents;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SftpConfig;
@@ -56,6 +58,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
                                                    .build();
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSftpPaths() throws IOException {
     List<String> artifactPaths = new ArrayList<>();
     artifactPaths.add(ARTIFACT_PATH);
@@ -73,6 +76,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetSftpConnectionHost() {
     assertThat(sftpHelperService.getSFTPConnectionHost(SFTP_WIN_URL)).isNotEmpty().isEqualTo("10.0.0.1");
     assertThat(sftpHelperService.getSFTPConnectionHost(SFTP_UNIX_URL)).isNotEmpty().isEqualTo("10.0.0.1");
@@ -81,6 +85,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldCheckConnectionSFTPServer() throws IOException {
     doNothing().when(sshClient).connect(sftpHelperService.getSFTPConnectionHost(SFTP_WIN_URL));
     doReturn(true)
@@ -89,6 +94,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactBuildDetails() throws IOException {
     // Create SFTP client
     doReturn(sftpClient).when(sshClient).newSFTPClient();

@@ -2,11 +2,14 @@ package software.wings.beans;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 public class DockerConfigTest extends WingsBaseTest {
   @Test
+  @Category(UnitTests.class)
   // test with a URL that doesn't end on a / and make sure a / gets added
   public void testConstructorWithUrlWithoutSlash() {
     String urlWithoutSlash = "http://some.docker.com/v2/registry";
@@ -19,6 +22,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {
     // Normal Config
     DockerConfig dockerConfig = new DockerConfig();
@@ -29,6 +33,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDockerHasCredentials() {
     DockerConfig dockerConfig = DockerConfig.builder()
                                     .dockerRegistryUrl("some registry url")
@@ -39,6 +44,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldDockerHasNoCredentials() {
     DockerConfig dockerConfig = new DockerConfig();
     assertThat(dockerConfig.getUsername()).isNotNull().isEqualTo("");

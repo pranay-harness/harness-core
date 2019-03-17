@@ -26,12 +26,14 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.amazonaws.services.ecs.model.LaunchType;
+import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -145,6 +147,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void tbsValidateNetworkParameters() {
     Yaml yaml = Yaml.builder()
                     .assignPublicIp(true)
@@ -191,6 +194,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     // testCrud(validYamlContent1);
     testCrud(validYamlContent2);
@@ -226,6 +230,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 

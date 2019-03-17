@@ -23,9 +23,11 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -105,6 +107,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testTraverseDirectory() throws Exception {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
     directoryPath.add(APPLICATIONS_FOLDER);
@@ -144,6 +147,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCloneEntityUsingYaml_Workflow() throws Exception {
     doReturn(null).when(workflowService).readWorkflowByName(anyString(), anyString());
     doReturn(aWorkflow().withAppId(APP_ID).withUuid(WORKFLOW_ID).build())
@@ -154,6 +158,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCloneEntityUsingYaml_Pipeline() throws Exception {
     doReturn(null).when(pipelineService).getPipelineByName(anyString(), anyString());
     doReturn(Pipeline.builder().appId(APP_ID).uuid(PIPELINE_ID).build())
@@ -164,6 +169,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCloneEntityUsingYaml_Provisioner() throws Exception {
     doReturn(null).when(provisionerService).getByName(anyString(), anyString());
     doReturn(CloudFormationInfrastructureProvisioner.builder().appId(APP_ID).uuid(PROVISIONER_ID).build())

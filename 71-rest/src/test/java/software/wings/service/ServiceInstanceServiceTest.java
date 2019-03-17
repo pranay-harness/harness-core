@@ -39,9 +39,11 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -101,6 +103,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should list service instances.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldListServiceInstances() {
     PageResponse<ServiceInstance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(builder.build()));
@@ -121,6 +124,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should save service instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldSaveServiceInstance() {
     ServiceInstance serviceInstance = builder.build();
     when(wingsPersistence.saveAndGet(eq(ServiceInstance.class), eq(serviceInstance))).thenReturn(serviceInstance);
@@ -133,6 +137,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should update service instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateActivity() {
     long createdAt = System.currentTimeMillis();
     Activity activity = Activity.builder()
@@ -173,6 +178,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should get service instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldGetServiceInstance() {
     when(query.get()).thenReturn(builder.withUuid(SERVICE_INSTANCE_ID).build());
     ServiceInstance savedServiceInstance = serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
@@ -188,6 +194,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should delete service instance.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteServiceInstance() {
     serviceInstanceService.delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(wingsPersistence).delete(query);
@@ -200,6 +207,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should delete by env.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteByEnv() {
     when(query.asList()).thenReturn(asList(builder.withUuid(SERVICE_INSTANCE_ID).build()));
     doNothing().when(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
@@ -214,6 +222,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should delete by service template.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldDeleteByServiceTemplate() {
     when(query.asList()).thenReturn(asList(builder.withUuid(SERVICE_INSTANCE_ID).build()));
     doNothing().when(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
@@ -229,6 +238,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should update host instance mapping.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldUpdateHostInstanceMapping() {
     List<Host> newHostList = singletonList(aHost()
                                                .withAppId(APP_ID)

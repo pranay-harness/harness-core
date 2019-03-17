@@ -52,9 +52,11 @@ import com.amazonaws.regions.Regions;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
+import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -287,6 +289,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_createStackState() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationCreateStackState.setTimeoutMillis(1000);
@@ -294,6 +297,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_createStackStateWithAwsTemplatized() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationCreateStackState.setTimeoutMillis(1000);
@@ -336,6 +340,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_deleteStackState() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationDeleteStackState.setTimeoutMillis(1000);
@@ -344,6 +349,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testExecute_deleteStackStateAwsTempaltized() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationDeleteStackState.setTimeoutMillis(1000);

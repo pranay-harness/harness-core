@@ -7,8 +7,10 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -23,6 +25,7 @@ public class SSOSettingServiceTest extends WingsBaseTest {
   @Inject @InjectMocks SSOSettingService ssoSettingService;
 
   @Test
+  @Category(UnitTests.class)
   public void testSamlSettingsCRUD() {
     SamlSettings samlSettings = SamlSettings.builder()
                                     .metaDataFile("TestMetaDataFile")
@@ -121,6 +124,7 @@ public class SSOSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testNegativeTest() {
     try {
       SamlSettings samlSettings = SamlSettings.builder().build();

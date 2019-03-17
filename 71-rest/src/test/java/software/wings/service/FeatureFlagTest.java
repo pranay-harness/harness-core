@@ -9,8 +9,10 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
+import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -65,60 +67,70 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeEnabledWhenTrue() {
     wingsPersistence.save(ffTrue);
     assertThat(featureFlagService.isEnabled(FEATURE, ACCOUNT_ID)).isTrue();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeDisabledWhenFalse() {
     wingsPersistence.save(ffFalse);
     assertThat(featureFlagService.isEnabled(FEATURE, ACCOUNT_ID)).isFalse();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrue() {
     wingsPersistence.save(ffTrue);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalse() {
     wingsPersistence.save(ffFalse);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isFalse();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrueWith() {
     wingsPersistence.save(ffTrueWith);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalseWith() {
     wingsPersistence.save(ffFalseWith);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isFalse();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrueWithout() {
     wingsPersistence.save(ffTrueWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalseWithout() {
     wingsPersistence.save(ffFalseWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isFalse();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedTrueWith() {
     wingsPersistence.save(ffTrueWith);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedFalseWith() {
     // This tests whitelisting
     wingsPersistence.save(ffFalseWith);
@@ -126,18 +138,21 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedTrueWithout() {
     wingsPersistence.save(ffTrueWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedFalseWithout() {
     wingsPersistence.save(ffFalseWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isFalse();
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFeatureFlagEnabledInConfig() {
     when(mainConfiguration.getFeatureNames()).thenReturn(FEATURE.name());
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.ONPREM);
@@ -150,6 +165,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testFeatureFlagEnabledInConfigSaas() {
     when(mainConfiguration.getFeatureNames()).thenReturn(FEATURE.name());
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
@@ -162,6 +178,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testWithBadFlagEnabledValues() {
     when(mainConfiguration.getFeatureNames()).thenReturn("wrongName");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.ONPREM);

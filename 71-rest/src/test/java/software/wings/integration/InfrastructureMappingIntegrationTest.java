@@ -17,12 +17,15 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.inject.Inject;
 
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -86,6 +89,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldSelectServiceInstances() {
     SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(
         SettingAttribute.class, aSettingAttribute().withAccountId(app.getAccountId()).withName("hca").build());
@@ -174,6 +178,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   @Ignore
   public void shouldSelectAwsInfrastructureInstances() {
     List<Key<ServiceTemplate>> templateRefKeysByService =
@@ -211,6 +216,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   @Ignore
   public void shouldProvisionAwsNodes() {
     List<Key<ServiceTemplate>> templateRefKeysByService =

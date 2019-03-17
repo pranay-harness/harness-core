@@ -11,12 +11,15 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.URL;
 
 public class EncodingUtilsTest {
   @Test
+  @Category(UnitTests.class)
   public void testCompression() throws Exception {
     StringBuilder stringToCompress = new StringBuilder(generateUuid());
     for (int i = 0; i < 100; i++) {
@@ -29,6 +32,7 @@ public class EncodingUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testCompressionWithStringEncoding() throws Exception {
     StringBuilder stringToCompress = new StringBuilder(generateUuid());
     for (int i = 0; i < 100; i++) {
@@ -41,6 +45,7 @@ public class EncodingUtilsTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void testBase64() throws Exception {
     URL url = this.getClass().getResource("/dos-config.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);

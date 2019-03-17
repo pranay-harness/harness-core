@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Cache;
 
@@ -22,6 +24,7 @@ public class CachingTest extends WingsBaseTest {
    * Should cache repeated calls.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldCacheRepeatedCalls() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).contains(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
@@ -33,6 +36,7 @@ public class CachingTest extends WingsBaseTest {
    * Should not cache when key is different.
    */
   @Test
+  @Category(UnitTests.class)
   public void shouldNotCacheWhenKeyIsDifferent() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).contains(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
