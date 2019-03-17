@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.context.ContextElementType;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -96,7 +96,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   @Ignore
   public void testGetLastExecutionNodesECS() throws NoSuchAlgorithmException, KeyManagementException {
     AwsConfig awsConfig = AwsConfig.builder()

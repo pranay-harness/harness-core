@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.IntegrationTests;
-import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -89,7 +88,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void shouldSelectServiceInstances() {
     SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(
         SettingAttribute.class, aSettingAttribute().withAccountId(app.getAccountId()).withName("hca").build());

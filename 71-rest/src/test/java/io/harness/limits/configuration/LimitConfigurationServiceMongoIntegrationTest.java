@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
@@ -48,7 +48,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testSaveAndGet() {
     ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(SOME_ACCOUNT_ID, new StaticLimit(10), CREATE_APPLICATION);
     boolean configured = configuredLimitService.configure(cl.getAccountId(), CREATE_APPLICATION, cl.getLimit());
@@ -62,7 +62,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testUpsert() {
     String accountId = SOME_ACCOUNT_ID;
     boolean configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, new StaticLimit(10));
@@ -82,7 +82,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testUpsertForRateLimits() {
     String accountId = SOME_ACCOUNT_ID;
 

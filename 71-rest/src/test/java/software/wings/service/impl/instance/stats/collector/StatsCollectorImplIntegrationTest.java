@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -73,7 +73,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testCreateStats() throws URISyntaxException {
     Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
 

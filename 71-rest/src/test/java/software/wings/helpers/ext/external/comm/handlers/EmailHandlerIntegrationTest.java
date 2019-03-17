@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -35,7 +35,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Inject MainConfiguration mainConfiguration;
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testHandle() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
     when(emailRequest.getEmailData()).thenReturn(mock(EmailData.class));
@@ -45,7 +45,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testErrorResponse() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
     EmailData emailData = Mockito.mock(EmailData.class);
@@ -62,7 +62,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 3, successes = 1)
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   @Ignore
   public void testSMTPConnectivity() {
     SmtpConfig smtpConfig =

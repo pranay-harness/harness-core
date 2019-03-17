@@ -33,7 +33,6 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
-import io.harness.category.element.UnitTests;
 import io.harness.jobs.MetricAnalysisJob.MetricAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -135,7 +134,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testFeatureEnabled() {
     WebTarget target = client.target(API_BASE + "/account/feature-flag-enabled?accountId=" + accountId
         + "&featureName=" + FeatureName.values()[0].name());
@@ -184,7 +183,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void getNewRelicApplicationInstances() throws Exception {
     WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);
@@ -276,7 +275,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testMetricSave() throws Exception {
     final int numOfMinutes = 4;
     final int numOfBatches = 5;
@@ -540,7 +539,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void generateMetricsTest() throws Exception {
     // because of the CV_DEMO flag tests, all generate metrics tests should go here.
     // the CV_DEMO tests should run last
@@ -603,7 +602,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void noControlNoTest() throws IOException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
@@ -720,7 +719,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void controlNoTest() {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
@@ -855,7 +854,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testNoControl() {
     final String workflowId = generateUuid();
     final String workflowExecutionId = generateUuid();
@@ -992,7 +991,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void txnInTestButNotControl() throws InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
@@ -1178,7 +1177,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void getMetricTemplate() throws IOException, InterruptedException {
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();

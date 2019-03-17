@@ -64,6 +64,7 @@ else
     echo '\033[0;34m' formatting poms ... to disable: '\033[0;37m'git config --add $POM_FORMAT_PROPERTY false '\033[0m'
 
     mvn sortpom:sort > /dev/null
+    pushd tools > /dev/null; mvn sortpom:sort > /dev/null; popd > /dev/null
 
     #do the formatting
     for file in `find . -type f -name pom.xml`

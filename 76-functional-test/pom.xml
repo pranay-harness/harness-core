@@ -7,9 +7,6 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>76-functional-test</artifactId>
-    <properties>
-        <excludedGroups>io.harness.category.element.FunctionalTests.class</excludedGroups>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -61,6 +58,12 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>81-delegate</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <scope>test</scope>
@@ -108,15 +111,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <excludedGroups>${excludedGroups}</excludedGroups>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

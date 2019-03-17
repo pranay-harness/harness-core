@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.persistence.ReadPref;
 import lombok.val;
 import org.junit.After;
@@ -44,7 +44,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testSerialization() {
     val snapshot = getSampleSnapshot();
 

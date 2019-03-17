@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
@@ -91,7 +91,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testGetAllApplications() throws Exception {
     // get all applications
     WebTarget target = client.target(
@@ -110,7 +110,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testGetAllTiers() throws Exception {
     // get all applications
     WebTarget target = client.target(
@@ -137,7 +137,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   @Ignore
   public void testGetAllTierBTMetrics() throws Exception {
     SettingAttribute appdSettingAttribute = settingsService.get(appdynamicsSettingId);
@@ -179,7 +179,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testGetDependentTiers() throws IOException {
     WebTarget target = client.target(
         API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + accountId);
@@ -212,7 +212,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void testGetDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
