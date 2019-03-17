@@ -24,6 +24,7 @@ import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
 import migrations.all.DropDelegateScopeCollectionMigration;
+import migrations.all.DropMongoGcsFileIdMappingCollectionMigration;
 import migrations.all.DropOldCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
 import migrations.all.DropYamlGitSyncCollectionMigration;
@@ -195,6 +196,7 @@ public class MigrationList {
         .add(Pair.of(228, NewRelicMetricDataBaselineMigration.class))
         .add(Pair.of(229, AddAccountIdToAppEntities.class))
         .add(Pair.of(230, MigrateCVMetadataApplicationId.class))
+        .add(Pair.of(231, DropMongoGcsFileIdMappingCollectionMigration.class))
         .build();
   }
 }
