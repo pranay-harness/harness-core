@@ -2,7 +2,7 @@ package io.harness.jobs;
 
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
+import static software.wings.common.VerificationConstants.DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_MINUTES;
 
 import com.google.inject.Inject;
@@ -70,12 +70,13 @@ public class VerificationMetricJob implements Job {
                           .withIdentity(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP)
                           .withDescription("Verification job ")
                           .build();
-      Trigger trigger = TriggerBuilder.newTrigger()
-                            .withIdentity(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP)
-                            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                              .withIntervalInSeconds(DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS)
-                                              .repeatForever())
-                            .build();
+      Trigger trigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP)
+              .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                .withIntervalInSeconds(DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS)
+                                .repeatForever())
+              .build();
       jobScheduler.scheduleJob(job, trigger);
       logger.info("Added VerificationMetricJob with details : {}", job);
     }

@@ -96,6 +96,8 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   private Map<String, String> deeplinkMetadata = new HashMap<>();
 
+  private transient Map<String, String> deeplinkUrl;
+
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
@@ -144,7 +146,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     recordBuilder.set("dataCollectionMinute", dataCollectionMinute);
     addFieldIfNotEmpty(recordBuilder, "host", host, false);
     addFieldIfNotEmpty(recordBuilder, "level", level == null ? null : level.name(), false);
-    addFieldIfNotEmpty(recordBuilder, "tag", tag, true);
+    addFieldIfNotEmpty(recordBuilder, "tag", tag, false);
     addFieldIfNotEmpty(recordBuilder, "groupName", groupName, false);
 
     if (isNotEmpty(values)) {

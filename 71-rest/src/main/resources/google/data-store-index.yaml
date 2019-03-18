@@ -44,3 +44,10 @@ indexes:
   - name: cvConfigId
   - name: dataCollectionMinute
     direction: desc
+
+- kind: newRelicMetricRecords
+  properties:
+  - name: cvConfigId
+  - name: dataCollectionMinute
+  - name: tag
+    direction: desc

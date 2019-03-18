@@ -833,6 +833,24 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         return null;
     }
   }
+
+  private void setDeeplinkUrlInRecords(CVConfiguration cvConfiguration, SettingValue connectorConfig, long startTime,
+      long endTime, List<NewRelicMetricDataRecord> records) {
+    if (isNotEmpty(records)) {
+      records.forEach(record -> {
+        if (isNotEmpty(record.getDeeplinkMetadata())) {
+          record.getDeeplinkMetadata().forEach((metric, metadata) -> {
+            if (record.getDeeplinkUrl() == null) {
+              record.setDeeplinkUrl(new HashMap<>());
+            }
+            String link = getDeeplinkUrl(cvConfiguration, connectorConfig, startTime, endTime, metadata);
+            record.getDeeplinkUrl().put(metric, link);
+          });
+        }
+      });
+    }
+  }
+
   private String getDeeplinkUrl(
       CVConfiguration cvConfig, SettingValue connectorConfig, long startTime, long endTime, String metricString) {
     switch (cvConfig.getStateType()) {
@@ -1083,6 +1101,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               }
             });
         filterMetrics(filter, records);
+        setDeeplinkUrlInRecords(cvConfiguration, connectorConfig, startTime, endTime, records);
 
         metricRecords.addAll(records);
       } else {
@@ -1108,6 +1127,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
           // filter for metric names
           filterMetrics(filter, records);
+          setDeeplinkUrlInRecords(cvConfiguration, connectorConfig, startTime, endTime, records);
           metricRecords.addAll(records);
           previousOffSet += response.size();
           dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
@@ -1150,9 +1170,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 metricRecord.getDataCollectionMinute(), getNormalizedMetricValue(metricName, metricRecord));
         metricMap.get(metricName).setMetricType(getMetricType(cvConfiguration, metricName));
         if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
-          if (metricRecord.getDeeplinkMetadata().containsKey(metricName)) {
-            String deeplinkUrl = getDeeplinkUrl(cvConfiguration, connectorConfig, startTime, endTime,
-                metricRecord.getDeeplinkMetadata().get(metricName));
+          if (metricRecord.getDeeplinkUrl().containsKey(metricName)) {
+            String deeplinkUrl = metricRecord.getDeeplinkUrl().get(metricName);
             metricMap.get(metricName).setMetricDeeplinkUrl(deeplinkUrl);
           }
         }
