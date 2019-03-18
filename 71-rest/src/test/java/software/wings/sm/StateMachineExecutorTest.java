@@ -404,8 +404,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setUuid(executionUuid);
     workflowExecution.setAppId(sm.getAppId());
-    // TODO: Temporary disable setting the state machine
-    // workflowExecution.setStateMachine(sm);
+    workflowExecution.setStateMachine(sm);
     workflowExecution.setStateMachineId(sm.getUuid());
     wingsPersistence.save(workflowExecution);
     return executionUuid;
