@@ -49,6 +49,7 @@ import com.microsoft.azure.management.compute.VirtualMachine;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
@@ -478,9 +479,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         fieldsToRemove.add("role");
       }
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
-      validateInfraMapping(infrastructureMapping, fromYaml);
-      keyValuePairs.put("loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
-      keyValuePairs.put("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
+      PhysicalInfrastructureMapping physicalInfrastructureMapping =
+          (PhysicalInfrastructureMapping) infrastructureMapping;
+      validateInfraMapping(physicalInfrastructureMapping, fromYaml);
+      if (isNotEmpty(physicalInfrastructureMapping.hosts())) {
+        keyValuePairs.put("hosts", physicalInfrastructureMapping.hosts());
+      } else {
+        fieldsToRemove.add("hosts");
+      }
+      if (isNotEmpty(physicalInfrastructureMapping.getHostNames())) {
+        keyValuePairs.put("hostNames", physicalInfrastructureMapping.getHostNames());
+      } else {
+        fieldsToRemove.add("hostNames");
+      }
+      if (isNotEmpty(physicalInfrastructureMapping.getLoadBalancerId())) {
+        keyValuePairs.put("loadBalancerId", physicalInfrastructureMapping.getLoadBalancerId());
+      } else {
+        fieldsToRemove.add("loadBalancerId");
+      }
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingWinRm) {
       validateInfraMapping(infrastructureMapping, fromYaml);
       keyValuePairs.put(
@@ -816,6 +832,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
+    if (pyInfraMapping.getProvisionerId() != null) {
+      return;
+    }
     pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
   }
 
@@ -999,6 +1018,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
+      if (EmptyPredicate.isNotEmpty(pyInfraMapping.hosts())) {
+        return pyInfraMapping.hosts();
+      }
       List<String> hostNames = pyInfraMapping.getHostNames()
                                    .stream()
                                    .map(String::trim)
@@ -1628,6 +1650,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       InfrastructureMapping infrastructureMapping, String appId, String workflowExecutionId) {
     List<String> hostDisplayNames = new ArrayList<>();
     if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
+      if (infrastructureMapping.getProvisionerId() != null) {
+        return ((PhysicalInfrastructureMappingBase) infrastructureMapping)
+            .hosts()
+            .stream()
+            .map(Host::getHostName)
+            .collect(Collectors.toList());
+      }
       return ((PhysicalInfrastructureMappingBase) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;

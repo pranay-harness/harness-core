@@ -30,16 +30,19 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import io.harness.waiter.ErrorNotifyResponseData;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
@@ -58,10 +61,13 @@ import software.wings.beans.TaskType;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.prune.PruneEvent;
+import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -78,6 +84,8 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -249,7 +257,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public InfrastructureProvisioner get(String appId, String infrastructureProvisionerId) {
-    return wingsPersistence.getWithAppId(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
+    InfrastructureProvisioner infrastructureProvisioner =
+        wingsPersistence.getWithAppId(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
+    if (infrastructureProvisioner == null) {
+      throw new InvalidRequestException("Provisioner Not Found");
+    }
+    return infrastructureProvisioner;
   }
 
   @Override
@@ -284,9 +297,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit) {
     InfrastructureProvisioner infrastructureProvisioner = get(appId, infrastructureProvisionerId);
-    if (infrastructureProvisioner == null) {
-      return;
-    }
+
+    ensureSafeToDelete(appId, infrastructureProvisionerId);
 
     String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
@@ -322,14 +334,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   // Region is optional and is not present in the blue print properties for cloud formation provisioners and
   // present for terraform
   private void applyProperties(Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping,
-      List<NameValuePair> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
+      List<BlueprintProperty> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
       Optional<String> region, NodeFilteringType nodeFilteringType) {
-    final Map<String, Object> stringMap = new HashMap<>();
-
-    generateMapToUpdateInfraMapping(contextMap, properties, executionLogCallbackOptional, stringMap, region);
+    Map<String, Object> propertyNameEvaluatedMap =
+        generateMapToUpdateInfraMapping(contextMap, properties, executionLogCallbackOptional, region);
 
     try {
-      infrastructureMapping.applyProvisionerVariables(stringMap, nodeFilteringType);
+      infrastructureMapping.applyProvisionerVariables(propertyNameEvaluatedMap, nodeFilteringType);
       infrastructureMappingService.update(infrastructureMapping);
     } catch (Exception e) {
       addToExecutionLog(executionLogCallbackOptional, ExceptionUtils.getMessage(e));
@@ -337,33 +348,69 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
   }
 
-  private void generateMapToUpdateInfraMapping(Map<String, Object> contextMap, List<NameValuePair> properties,
-      Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Map<String, Object> stringMap,
+  private Map<String, Object> generateMapToUpdateInfraMapping(Map<String, Object> contextMap,
+      List<BlueprintProperty> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
       Optional<String> region) {
+    Map<String, Object> propertyNameEvaluatedMap = getPropertyNameEvaluatedMap(
+        properties.stream()
+            .map(property -> new NameValuePair(property.getName(), property.getValue(), property.getValueType()))
+            .collect(toList()),
+        contextMap, executionLogCallbackOptional);
+
+    for (BlueprintProperty property : properties) {
+      if (isNotEmpty(property.getFields())) {
+        String propertyName = property.getName();
+        Object evaluatedValue = propertyNameEvaluatedMap.get(propertyName);
+        if (evaluatedValue == null) {
+          throw new InvalidRequestException(String.format("Property %s not found for resolving fields", propertyName));
+        }
+        List<NameValuePair> fields = property.getFields();
+        if (evaluatedValue instanceof List) {
+          List<Map<String, Object>> fieldsEvaluatedList = new ArrayList<>();
+          for (Object evaluatedEntry : (List) evaluatedValue) {
+            fieldsEvaluatedList.add(getPropertyNameEvaluatedMap(
+                fields, (Map<String, Object>) evaluatedEntry, executionLogCallbackOptional));
+          }
+          propertyNameEvaluatedMap.put(propertyName, fieldsEvaluatedList);
+
+        } else {
+          getPropertyNameEvaluatedMap(fields, (Map<String, Object>) evaluatedValue, executionLogCallbackOptional);
+        }
+      }
+    }
+
+    region.ifPresent(s -> propertyNameEvaluatedMap.put("region", s));
+    return propertyNameEvaluatedMap;
+  }
+
+  @NotNull
+  private Map<String, Object> getPropertyNameEvaluatedMap(List<NameValuePair> properties,
+      Map<String, Object> contextMap, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional) {
+    Map<String, Object> propertyNameEvaluatedMap = new HashMap<>();
     for (NameValuePair property : properties) {
       if (property.getValue() == null) {
         continue;
       }
-      Object evaluated = null;
+      Object evaluated;
       try {
         evaluated = evaluator.evaluate(property.getValue(), contextMap);
       } catch (Exception exception) {
         String errorMsg =
-            String.format("The infrastructure provisioner mapping value %s was not resolved from the provided outputs",
+            String.format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
                 property.getName());
         addToExecutionLog(executionLogCallbackOptional, errorMsg);
         throw new InvalidRequestException(errorMsg, exception, USER);
       }
       if (evaluated == null) {
         String errorMsg =
-            String.format("The infrastructure provisioner mapping value %s was not resolved from the provided outputs",
+            String.format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
                 property.getName());
         addToExecutionLog(executionLogCallbackOptional, errorMsg);
         throw new InvalidRequestException(errorMsg);
       }
-      stringMap.put(property.getName(), evaluated);
+      propertyNameEvaluatedMap.put(property.getName(), evaluated);
     }
-    region.ifPresent(s -> stringMap.put("region", s));
+    return propertyNameEvaluatedMap;
   }
 
   private void addToExecutionLog(Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, String errorMsg) {
@@ -562,5 +609,60 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       throw new InvalidRequestException("No state file found");
     }
     return outputStream -> fileService.downloadToStream(latestFileId, outputStream, FileBucket.TERRAFORM_STATE);
+  }
+
+  @Override
+  public ShellScriptInfrastructureProvisioner getShellScriptProvisioner(String appId, String provisionerId) {
+    InfrastructureProvisioner infrastructureProvisioner = get(appId, provisionerId);
+    if (!(infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner)) {
+      throw new InvalidRequestException("Provisioner not of type Shell Script");
+    }
+    return (ShellScriptInfrastructureProvisioner) infrastructureProvisioner;
+  }
+
+  @Override
+  public Map<String, String> extractTextVariables(List<NameValuePair> variables, ExecutionContext context) {
+    if (isEmpty(variables)) {
+      return Collections.emptyMap();
+    }
+    return variables.stream()
+        .filter(entry -> entry.getValue() != null)
+        .filter(entry -> "TEXT".equals(entry.getValueType()))
+        .collect(toMap(NameValuePair::getName, entry -> context.renderExpression(entry.getValue())));
+  }
+
+  @Override
+  public Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId) {
+    if (isEmpty(variables)) {
+      return Collections.emptyMap();
+    }
+    String accountId = appService.getAccountIdByAppId(appId);
+    return variables.stream()
+        .filter(entry -> entry.getValue() != null)
+        .filter(entry -> "ENCRYPTED_TEXT".equals(entry.getValueType()))
+        .collect(toMap(NameValuePair::getName, entry -> {
+          final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                                                  .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
+                                                  .filter(EncryptedData.ID_KEY, entry.getValue())
+                                                  .get();
+
+          if (encryptedData == null) {
+            throw new InvalidRequestException(format("The encrypted variable %s was not found", entry.getName()));
+          }
+
+          EncryptionConfig encryptionConfig =
+              secretManager.getEncryptionConfig(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+
+          return EncryptedDataDetail.builder()
+              .encryptionType(encryptedData.getEncryptionType())
+              .encryptedData(encryptedData)
+              .encryptionConfig(encryptionConfig)
+              .build();
+        }));
+  }
+
+  @Override
+  public String getEntityId(String provisionerId, String envId) {
+    return provisionerId + "-" + envId;
   }
 }

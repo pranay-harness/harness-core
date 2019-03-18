@@ -131,6 +131,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -432,7 +433,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return cachedStencils;
     }
 
-    List<StateTypeDescriptor> stencils = Arrays.asList(values());
+    List<StateTypeDescriptor> stencils = new ArrayList<>(Arrays.asList(values()));
+
+    if (!featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_PROVISION, null)) {
+      stencils.remove(StateType.SHELL_SCRIPT_PROVISION);
+    }
 
     Map<String, StateTypeDescriptor> mapByType = new HashMap<>();
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();

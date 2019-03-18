@@ -427,6 +427,8 @@ public interface Constants {
   String DE_PROVISION_CLOUD_FORMATION = "CloudFormation Delete Stack";
   String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
 
+  String PROVISION_SHELL_SCRIPT = "Shell Script Provision";
+
   /**
    * The constant DELEGATE_DIR.
    */

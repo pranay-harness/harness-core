@@ -31,13 +31,13 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.NameValuePair;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
@@ -71,9 +71,9 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                     .serviceId(SERVICE_ID)
                     .deploymentType(DeploymentType.SSH)
                     .properties(Arrays.asList(
-                        NameValuePair.builder().name("region").value("${cloudformation.myregion}").build(),
-                        NameValuePair.builder().name("vpcs").value("${cloudformation.myvpcs}").build(),
-                        NameValuePair.builder().name("tags").value("${cloudformation.mytags}").build()))
+                        BlueprintProperty.builder().name("region").value("${cloudformation.myregion}").build(),
+                        BlueprintProperty.builder().name("vpcs").value("${cloudformation.myvpcs}").build(),
+                        BlueprintProperty.builder().name("tags").value("${cloudformation.mytags}").build()))
                     .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build()))
             .build();

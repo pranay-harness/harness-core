@@ -89,6 +89,9 @@ public class HostServiceImpl implements HostService {
     if (host.getBastionConnAttr() != null) {
       builder.put("bastionConnAttr", host.getBastionConnAttr());
     }
+    if (host.getProperties() != null) {
+      builder.put("properties", host.getProperties());
+    }
     wingsPersistence.updateFields(Host.class, savedHost.getUuid(), builder.build());
 
     return get(savedHost.getAppId(), savedHost.getEnvId(), host.getUuid());
@@ -103,6 +106,7 @@ public class HostServiceImpl implements HostService {
                                .filter("appId", appHost.getAppId())
                                .filter("envId", appHost.getEnvId())
                                .filter("infraMappingId", appHost.getInfraMappingId())
+                               .filter("properties", appHost.getProperties())
                                .get();
     return applicationHost != null ? applicationHost : wingsPersistence.saveAndGet(Host.class, appHost);
   }

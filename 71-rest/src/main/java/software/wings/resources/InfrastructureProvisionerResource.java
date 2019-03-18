@@ -129,7 +129,7 @@ public class InfrastructureProvisionerResource {
   @ExceptionMetered
   @AuthRule(permissionType = PROVISIONER, action = READ)
   public RestResponse<InfrastructureProvisioner> get(
-      @QueryParam("appId") String appId, @PathParam("infraProvisionerId") String infraProvisionerId) {
+      @QueryParam("appId") @NotEmpty String appId, @PathParam("infraProvisionerId") String infraProvisionerId) {
     return new RestResponse<>(infrastructureProvisionerService.get(appId, infraProvisionerId));
   }
 

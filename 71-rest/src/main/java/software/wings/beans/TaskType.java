@@ -58,8 +58,10 @@ import software.wings.delegatetasks.jira.JiraTask;
 import software.wings.delegatetasks.jira.ShellScriptApprovalTask;
 import software.wings.delegatetasks.k8s.K8sTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
+import software.wings.delegatetasks.shellscript.provisioner.ShellScriptProvisionTask;
 import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AcrValidation;
+import software.wings.delegatetasks.validation.AlwaysTrueValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.AwsConnectionValidation;
@@ -314,7 +316,9 @@ public enum TaskType {
   SHELL_SCRIPT_APPROVAL(TaskGroup.SCRIPT, ShellScriptApprovalTask.class, ShellScriptApprovalValidation.class),
   CUSTOM_GET_BUILDS(TaskGroup.CUSTOM, ServiceImplDelegateTask.class, CustomArtifactSourceValidation.class),
   CUSTOM_VALIDATE_ARTIFACT_STREAM(
-      TaskGroup.CUSTOM, ServiceImplDelegateTask.class, CustomArtifactSourceValidation.class);
+      TaskGroup.CUSTOM, ServiceImplDelegateTask.class, CustomArtifactSourceValidation.class),
+  SHELL_SCRIPT_PROVISION_TASK(
+      TaskGroup.SHELL_SCRIPT_PROVISION, ShellScriptProvisionTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

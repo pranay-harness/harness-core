@@ -41,6 +41,7 @@ import static software.wings.common.Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK;
 import static software.wings.common.Constants.KUBERNETES_SERVICE_SETUP;
 import static software.wings.common.Constants.PCF_UNMAP_ROUT;
 import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.PROVISION_SHELL_SCRIPT;
 import static software.wings.common.Constants.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.common.Constants.ROLLBACK_AWS_AMI_CLUSTER;
 import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
@@ -175,6 +176,7 @@ import software.wings.sm.states.provision.CloudFormationCreateStackState;
 import software.wings.sm.states.provision.CloudFormationDeleteStackState;
 import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
+import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -529,13 +531,16 @@ public enum StateType implements StateTypeDescriptor {
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",
       asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
+  SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISIONERS, 2, PROVISION_SHELL_SCRIPT, null,
+      asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
   //  TERRAFORM_ADJUST(AdjustTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
   //      asList(INFRASTRUCTURE_NODE), ORCHESTRATION_STENCILS),
 
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Destroy",
       asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, PROVISIONERS, PROVISION_CLOUD_FORMATION,
+  CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, PROVISIONERS, 1, PROVISION_CLOUD_FORMATION,
       asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, PROVISIONERS, DE_PROVISION_CLOUD_FORMATION,

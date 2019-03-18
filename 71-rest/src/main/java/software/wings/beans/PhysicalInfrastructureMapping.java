@@ -5,14 +5,20 @@ import static java.lang.String.format;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
+import software.wings.beans.infrastructure.Host;
 import software.wings.utils.Util;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
@@ -24,7 +30,43 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(Map<String, Object> blueprintProperties, NodeFilteringType nodeFilteringType) {
+    if (EmptyPredicate.isEmpty(blueprintProperties)) {
+      throw new InvalidRequestException("Infra Provisioner Mapping inputs can't be empty");
+    }
+    List<Map<String, Object>> hostList = (List<Map<String, Object>>) blueprintProperties.get("hostArrayPath");
+    if (hostList == null) {
+      throw new InvalidRequestException("Host array path not found");
+    }
+    List<Host> hosts = new ArrayList<>();
+
+    for (Map<String, Object> hostAttributes : hostList) {
+      Host host = Host.Builder.aHost()
+                      .withAppId(getAppId())
+                      .withEnvId(getEnvId())
+                      .withHostConnAttr(getHostConnectionAttrs())
+                      .withInfraMappingId(getUuid())
+                      .withServiceTemplateId(getServiceTemplateId())
+                      .withProperties(new HashMap<>())
+                      .build();
+
+      for (Entry<String, Object> entry : hostAttributes.entrySet()) {
+        switch (entry.getKey()) {
+          case "Hostname":
+            host.setHostName((String) hostAttributes.get(entry.getKey()));
+            host.setPublicDns((String) hostAttributes.get(entry.getKey()));
+            break;
+          default:
+            host.getProperties().put(entry.getKey(), hostAttributes.get(entry.getKey()));
+        }
+      }
+      if (EmptyPredicate.isEmpty(host.getPublicDns())) {
+        throw new InvalidRequestException("Hostname can't be empty");
+      }
+      hosts.add(host);
+    }
+    hosts(hosts);
+  }
 
   @SchemaIgnore
   @Override
@@ -53,9 +95,9 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, String connection) {
+        String loadBalancer, String connection, List<Host> hosts) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, name, hostNames, loadBalancer);
+          computeProviderName, name, hostNames, loadBalancer, hosts);
       this.connection = connection;
     }
   }
@@ -83,6 +125,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
     private String computeProviderName;
     private String name;
     private boolean autoPopulate = true;
+    private List<Host> hosts;
 
     private Builder() {}
 
@@ -200,6 +243,11 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
       return this;
     }
 
+    public PhysicalInfrastructureMapping.Builder withHosts(List<Host> hosts) {
+      this.hosts = hosts;
+      return this;
+    }
+
     public PhysicalInfrastructureMapping build() {
       PhysicalInfrastructureMapping physicalInfrastructureMapping = new PhysicalInfrastructureMapping();
       physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
@@ -225,6 +273,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
       physicalInfrastructureMapping.setName(name);
       physicalInfrastructureMapping.setAutoPopulate(autoPopulate);
       physicalInfrastructureMapping.setAccountId(accountId);
+      physicalInfrastructureMapping.hosts(hosts);
       return physicalInfrastructureMapping;
     }
   }

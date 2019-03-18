@@ -7,6 +7,7 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.AWS;
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.GCP;
+import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.PHYSICAL_DATA_CENTER;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +32,7 @@ public class InfrastructureMappingBlueprint {
   public static final String SERVICE_ID_KEY = "serviceId";
 
   // List of supported from provisioners clouds
-  public enum CloudProviderType { AWS, GCP }
+  public enum CloudProviderType { AWS, GCP, PHYSICAL_DATA_CENTER }
 
   // List of possible node filtering done by the blue print
   public enum NodeFilteringType { AWS_INSTANCE_FILTER, AWS_AUTOSCALING_GROUP, AWS_ECS_EC2, AWS_ECS_FARGATE }
@@ -40,12 +41,13 @@ public class InfrastructureMappingBlueprint {
   @NotNull private DeploymentType deploymentType;
   @NotNull private CloudProviderType cloudProviderType;
   private NodeFilteringType nodeFilteringType;
-  @NotNull @NotEmpty private List<NameValuePair> properties;
+  @NotNull @NotEmpty private List<BlueprintProperty> properties;
 
   private static Map<Pair<DeploymentType, CloudProviderType>, InfrastructureMappingType> infrastructureMappingTypeMap =
       ImmutableMap.of(Pair.of(SSH, AWS), InfrastructureMappingType.AWS_SSH, Pair.of(ECS, AWS), AWS_ECS,
           Pair.of(KUBERNETES, GCP), InfrastructureMappingType.GCP_KUBERNETES, Pair.of(AWS_LAMBDA, AWS),
-          InfrastructureMappingType.AWS_AWS_LAMBDA);
+          InfrastructureMappingType.AWS_AWS_LAMBDA, Pair.of(SSH, PHYSICAL_DATA_CENTER),
+          InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH);
 
   public static final Map<Pair<DeploymentType, CloudProviderType>, Map<String, String>>
       infrastructureMappingPropertiesMap = ImmutableMap.of(Pair.of(SSH, AWS),
@@ -75,6 +77,6 @@ public class InfrastructureMappingBlueprint {
     private DeploymentType deploymentType;
     private CloudProviderType cloudProviderType;
     private NodeFilteringType nodeFilteringType;
-    private List<NameValuePair.Yaml> properties;
+    private List<BlueprintProperty.Yaml> properties;
   }
 }

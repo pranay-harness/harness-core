@@ -29,6 +29,7 @@ public class HostElement implements ContextElement {
   private String ip;
   private String instanceId;
   private String publicDns;
+  private Map<String, Object> properties;
   private Instance ec2Instance;
 
   @Override
@@ -74,6 +75,14 @@ public class HostElement implements ContextElement {
 
   public void setEc2Instance(Instance ec2Instance) {
     this.ec2Instance = ec2Instance;
+  }
+
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
   }
 
   @Override
@@ -134,6 +143,7 @@ public class HostElement implements ContextElement {
     private String ip;
     private String instanceId;
     private String publicDns;
+    private Map<String, Object> properties;
     private Instance ec2Instance;
 
     private Builder() {}
@@ -172,6 +182,11 @@ public class HostElement implements ContextElement {
       return this;
     }
 
+    public Builder withProperties(Map<String, Object> properties) {
+      this.properties = properties;
+      return this;
+    }
+
     public HostElement build() {
       HostElement hostElement = new HostElement();
       hostElement.setUuid(uuid);
@@ -179,6 +194,7 @@ public class HostElement implements ContextElement {
       hostElement.setIp(ip);
       hostElement.setInstanceId(instanceId);
       hostElement.setPublicDns(publicDns);
+      hostElement.setProperties(properties);
       hostElement.setEc2Instance(ec2Instance);
       return hostElement;
     }
