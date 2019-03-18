@@ -13,6 +13,7 @@ import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.SettingGenerator.Settings;
 import software.wings.beans.Application;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
@@ -70,9 +71,9 @@ public class InfrastructureProvisionerGenerator {
                     .serviceId(archive.getUuid())
                     .deploymentType(SSH)
                     .cloudProviderType(AWS)
-                    .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
-                        NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
-                        NameValuePair.builder().name("tags").value("${terraform.archive_tags}").build()))
+                    .properties(asList(BlueprintProperty.builder().name("region").value("${terraform.region}").build(),
+                        BlueprintProperty.builder().name("securityGroups").value("${terraform.security_group}").build(),
+                        BlueprintProperty.builder().name("tags").value("${terraform.archive_tags}").build()))
                     .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build()))
             .build();

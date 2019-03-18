@@ -23,9 +23,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
@@ -109,7 +109,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
                     .cloudProviderType(CloudProviderType.AWS)
                     .deploymentType(SSH)
                     .serviceId(SERVICE_ID)
-                    .properties(asList(NameValuePair.builder().name("k2").value("v2").build()))
+                    .properties(asList(BlueprintProperty.builder().name("k2").value("v2").build()))
                     .build()))
             .build();
     TerraformInfrastructureProvisioner.Yaml yaml1 = handler.toYaml(provisioner, APP_ID);

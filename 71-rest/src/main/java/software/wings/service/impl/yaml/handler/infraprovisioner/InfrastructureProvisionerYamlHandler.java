@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.HarnessException;
 import software.wings.beans.Application;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisioner.Yaml;
@@ -28,6 +29,7 @@ import software.wings.utils.Util;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B extends InfrastructureProvisioner>
     extends BaseYamlHandler<Y, B> {
@@ -38,22 +40,35 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
 
   private InfrastructureMappingBlueprint.Yaml mapBluePrintBeanToYaml(
       InfrastructureMappingBlueprint blueprint, String appId) {
-    NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
+    List<BlueprintProperty.Yaml> blueprintPropertiesYaml =
+        blueprint.getProperties()
+            .stream()
+            .map(blueprintProperty -> {
+              BlueprintProperty.Yaml blueprintPropertyYaml = BlueprintProperty.Yaml.builder()
+                                                                 .name(blueprintProperty.getName())
+                                                                 .value(blueprintProperty.getValue())
+                                                                 .valueType(blueprintProperty.getValueType())
+                                                                 .build();
+              NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
 
-    List<NameValuePair.Yaml> nameValueYamls = Collections.EMPTY_LIST;
-    if (EmptyPredicate.isNotEmpty(blueprint.getProperties())) {
-      nameValueYamls = blueprint.getProperties()
-                           .stream()
-                           .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
-                           .collect(toList());
-    }
+              List<NameValuePair.Yaml> fieldsYamls = Collections.EMPTY_LIST;
+              if (EmptyPredicate.isNotEmpty(blueprintProperty.getFields())) {
+                fieldsYamls = blueprintProperty.getFields()
+                                  .stream()
+                                  .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
+                                  .collect(toList());
+              }
+              blueprintPropertyYaml.setFields(fieldsYamls);
+              return blueprintPropertyYaml;
+            })
+            .collect(Collectors.toList());
 
     return InfrastructureMappingBlueprint.Yaml.builder()
         .cloudProviderType(blueprint.getCloudProviderType())
         .deploymentType(blueprint.getDeploymentType())
         .nodeFilteringType(blueprint.getNodeFilteringType())
         .serviceName(getServiceName(appId, blueprint.getServiceId()))
-        .properties(Util.getSortedNameValuePairYamlList(nameValueYamls))
+        .properties(blueprintPropertiesYaml)
         .build();
   }
 
@@ -104,13 +119,29 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     String serviceId = getServiceId(appId, yaml.getServiceName());
     notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, USER);
 
-    List<NameValuePair> nameValuePairList = null;
-    if (yaml.getProperties() != null) {
-      nameValuePairList =
+    List<BlueprintProperty> blueprintProperties = null;
+    if (isNotEmpty(yaml.getProperties())) {
+      blueprintProperties =
           yaml.getProperties()
               .stream()
-              .map(nvpYaml -> NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build())
-              .collect(toList());
+              .map(yamlProperty -> {
+                BlueprintProperty blueprintProperty = BlueprintProperty.builder()
+                                                          .name(yamlProperty.getName())
+                                                          .value(yamlProperty.getValue())
+                                                          .valueType(yamlProperty.getValueType())
+                                                          .build();
+                if (isNotEmpty(yamlProperty.getFields())) {
+                  List<NameValuePair> fields =
+                      yamlProperty.getFields()
+                          .stream()
+                          .map(nvpYaml
+                              -> NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build())
+                          .collect(toList());
+                  blueprintProperty.setFields(fields);
+                }
+                return blueprintProperty;
+              })
+              .collect(Collectors.toList());
     }
 
     return InfrastructureMappingBlueprint.builder()
@@ -118,7 +149,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
         .deploymentType(yaml.getDeploymentType())
         .nodeFilteringType(yaml.getNodeFilteringType())
         .serviceId(serviceId)
-        .properties(nameValuePairList)
+        .properties(blueprintProperties)
         .build();
   }
 

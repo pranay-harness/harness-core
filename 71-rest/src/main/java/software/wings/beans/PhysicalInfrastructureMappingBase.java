@@ -8,12 +8,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.infrastructure.Host;
 
 import java.util.List;
 import java.util.Objects;
 
 public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMapping {
   @Attributes(title = "Host Names", required = true) private List<String> hostNames;
+  private List<Host> hosts;
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
 
@@ -26,15 +28,17 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
     private List<String> hostNames;
+    private List<Host> hosts;
     private String loadBalancer;
 
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer) {
+        String loadBalancer, List<Host> hosts) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName);
       this.hostNames = hostNames;
       this.loadBalancer = loadBalancer;
+      this.hosts = hosts;
     }
   }
 
@@ -85,5 +89,13 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
 
   public void setLoadBalancerName(String loadBalancerName) {
     this.loadBalancerName = loadBalancerName;
+  }
+
+  public List<Host> hosts() {
+    return hosts;
+  }
+
+  public void hosts(List<Host> hosts) {
+    this.hosts = hosts;
   }
 }

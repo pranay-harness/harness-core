@@ -12,6 +12,8 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.ExecutionContext;
@@ -63,4 +65,12 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner);
 
   StreamingOutput downloadTerraformState(String provisionerId, String envId);
+
+  ShellScriptInfrastructureProvisioner getShellScriptProvisioner(String appId, String provisionerId);
+
+  Map<String, String> extractTextVariables(List<NameValuePair> variables, ExecutionContext context);
+
+  Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId);
+
+  String getEntityId(String provisionerId, String envId);
 }

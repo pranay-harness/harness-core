@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
+import software.wings.beans.infrastructure.Host;
 import software.wings.utils.Util;
 
 import java.util.List;
@@ -51,9 +52,9 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, String winRmProfile) {
+        String loadBalancer, String winRmProfile, List<Host> hosts) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, name, hostNames, loadBalancer);
+          computeProviderName, name, hostNames, loadBalancer, hosts);
       this.winRmProfile = winRmProfile;
     }
   }

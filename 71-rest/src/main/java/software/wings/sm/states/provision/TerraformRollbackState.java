@@ -114,16 +114,18 @@ public class TerraformRollbackState extends TerraformProvisionState {
     Map<String, String> textVariables = null;
     Map<String, EncryptedDataDetail> encryptedTextVariables = null;
     if (allVariables != null) {
-      textVariables = extractTextVariables(allVariables.stream(), context);
-      encryptedTextVariables = extractEncryptedTextVariables(allVariables.stream(), context);
+      textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
+      encryptedTextVariables =
+          infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
     }
 
     List<NameValuePair> allBackendConfigs = configParameter.getBackendConfigs();
     Map<String, String> backendConfigs = null;
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
     if (allBackendConfigs != null) {
-      backendConfigs = extractTextVariables(allBackendConfigs.stream(), context);
-      encryptedBackendConfigs = extractEncryptedTextVariables(allBackendConfigs.stream(), context);
+      backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
+      encryptedBackendConfigs =
+          infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
     }
 
     List<String> targets = configParameter.getTargets();

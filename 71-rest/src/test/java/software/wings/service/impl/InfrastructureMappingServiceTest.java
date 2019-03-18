@@ -55,6 +55,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
@@ -402,15 +403,13 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
     assertThat(returnedInfra).isNotNull();
     Map<String, Object> keyValuePairs = new LinkedHashMap<>();
-    keyValuePairs.put("loadBalancerId", null);
     keyValuePairs.put("computeProviderSettingId", COMPUTE_PROVIDER_ID_CHANGED);
     keyValuePairs.put("hostConnectionAttrs", "HOST_CONN_ATTR_ID_1");
     keyValuePairs.put("hostNames", singletonList(HOST_NAME));
     keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID_CHANGED);
     keyValuePairs.put("name", "Name4");
 
-    Set<String> fieldsToRemove = new HashSet<>();
-    fieldsToRemove.add("provisionerId");
+    Set<String> fieldsToRemove = Sets.newHashSet("provisionerId", "hosts", "loadBalancerId");
     verify(wingsPersistence)
         .updateFields(PhysicalInfrastructureMapping.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
     verify(wingsPersistence, times(2)).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);

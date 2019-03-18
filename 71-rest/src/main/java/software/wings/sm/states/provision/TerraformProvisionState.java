@@ -30,7 +30,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.security.encryption.EncryptionConfig;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
@@ -61,7 +60,6 @@ import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCom
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformfConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -94,7 +92,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class TerraformProvisionState extends State {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionState.class);
@@ -108,7 +105,7 @@ public abstract class TerraformProvisionState extends State {
 
   @Inject @Transient private transient AppService appService;
   @Inject @Transient private transient ActivityService activityService;
-  @Inject @Transient private transient InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject @Transient protected transient InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
@@ -274,38 +271,6 @@ public abstract class TerraformProvisionState extends State {
     activityService.updateStatus(activityId, appId, status);
   }
 
-  protected Map<String, String> extractTextVariables(Stream<NameValuePair> variables, ExecutionContext context) {
-    return variables.filter(entry -> entry.getValue() != null)
-        .filter(entry -> "TEXT".equals(entry.getValueType()))
-        .collect(toMap(NameValuePair::getName, entry -> context.renderExpression(entry.getValue())));
-  }
-
-  protected Map<String, EncryptedDataDetail> extractEncryptedTextVariables(
-      Stream<NameValuePair> variables, ExecutionContext context) {
-    String accountId = appService.getAccountIdByAppId(context.getAppId());
-    return variables.filter(entry -> entry.getValue() != null)
-        .filter(entry -> "ENCRYPTED_TEXT".equals(entry.getValueType()))
-        .collect(toMap(NameValuePair::getName, entry -> {
-          final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
-                                                  .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-                                                  .filter(EncryptedData.ID_KEY, entry.getValue())
-                                                  .get();
-
-          if (encryptedData == null) {
-            throw new InvalidRequestException(format("The encrypted variable %s was not found", entry.getName()));
-          }
-
-          EncryptionConfig encryptionConfig =
-              secretManager.getEncryptionConfig(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-
-          return EncryptedDataDetail.builder()
-              .encryptionType(encryptedData.getEncryptionType())
-              .encryptedData(encryptedData)
-              .encryptionConfig(encryptionConfig)
-              .build();
-        }));
-  }
-
   protected static List<NameValuePair> validateAndFilterVariables(
       List<NameValuePair> workflowVariables, List<NameValuePair> provisionerVariables) {
     Map<String, String> variableTypesMap = isNotEmpty(provisionerVariables)
@@ -372,64 +337,82 @@ public abstract class TerraformProvisionState extends State {
 
       final Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
       if (isNotEmpty(rawVariables)) {
-        variables = extractTextVariables(rawVariables.entrySet().stream().map(entry
-                                             -> NameValuePair.builder()
-                                                    .valueType("TEXT")
-                                                    .name(entry.getKey())
-                                                    .value((String) entry.getValue())
-                                                    .build()),
-            context);
+        variables =
+            infrastructureProvisionerService.extractTextVariables(rawVariables.entrySet()
+                                                                      .stream()
+                                                                      .map(entry
+                                                                          -> NameValuePair.builder()
+                                                                                 .valueType("TEXT")
+                                                                                 .name(entry.getKey())
+                                                                                 .value((String) entry.getValue())
+                                                                                 .build())
+                                                                      .collect(Collectors.toList()),
+                context);
       }
 
       final Map<String, Object> rawBackendConfigs =
           (Map<String, Object>) fileMetadata.getMetadata().get(BACKEND_CONFIGS_KEY);
       if (isNotEmpty(rawBackendConfigs)) {
-        backendConfigs = extractTextVariables(rawBackendConfigs.entrySet().stream().map(entry
-                                                  -> NameValuePair.builder()
-                                                         .valueType("TEXT")
-                                                         .name(entry.getKey())
-                                                         .value((String) entry.getValue())
-                                                         .build()),
-            context);
+        backendConfigs =
+            infrastructureProvisionerService.extractTextVariables(rawBackendConfigs.entrySet()
+                                                                      .stream()
+                                                                      .map(entry
+                                                                          -> NameValuePair.builder()
+                                                                                 .valueType("TEXT")
+                                                                                 .name(entry.getKey())
+                                                                                 .value((String) entry.getValue())
+                                                                                 .build())
+                                                                      .collect(Collectors.toList()),
+                context);
       }
 
       final Map<String, Object> rawEncryptedVariables =
           (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_VARIABLES_KEY);
       if (isNotEmpty(rawEncryptedVariables)) {
-        encryptedVariables = extractEncryptedTextVariables(rawEncryptedVariables.entrySet().stream().map(entry
-                                                               -> NameValuePair.builder()
-                                                                      .valueType("ENCRYPTED_TEXT")
-                                                                      .name(entry.getKey())
-                                                                      .value((String) entry.getValue())
-                                                                      .build()),
-            context);
+        encryptedVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
+            rawEncryptedVariables.entrySet()
+                .stream()
+                .map(entry
+                    -> NameValuePair.builder()
+                           .valueType("ENCRYPTED_TEXT")
+                           .name(entry.getKey())
+                           .value((String) entry.getValue())
+                           .build())
+                .collect(Collectors.toList()),
+            context.getAppId());
       }
 
       final Map<String, Object> rawEncryptedBackendConfigs =
           (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_BACKEND_CONFIGS_KEY);
       if (isNotEmpty(rawEncryptedBackendConfigs)) {
-        encryptedBackendConfigs = extractEncryptedTextVariables(rawEncryptedBackendConfigs.entrySet().stream().map(entry
-                                                                    -> NameValuePair.builder()
-                                                                           .valueType("ENCRYPTED_TEXT")
-                                                                           .name(entry.getKey())
-                                                                           .value((String) entry.getValue())
-                                                                           .build()),
-            context);
+        encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
+            rawEncryptedBackendConfigs.entrySet()
+                .stream()
+                .map(entry
+                    -> NameValuePair.builder()
+                           .valueType("ENCRYPTED_TEXT")
+                           .name(entry.getKey())
+                           .value((String) entry.getValue())
+                           .build())
+                .collect(Collectors.toList()),
+            context.getAppId());
       }
       List<String> targets = (List<String>) fileMetadata.getMetadata().get(TARGETS_KEY);
       if (isNotEmpty(targets)) {
         setTargets(targets);
       }
     } else {
-      final Collection<NameValuePair> validVariables =
+      final List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
 
-      variables = extractTextVariables(validVariables.stream(), context);
-      encryptedVariables = extractEncryptedTextVariables(validVariables.stream(), context);
+      variables = infrastructureProvisionerService.extractTextVariables(validVariables, context);
+      encryptedVariables =
+          infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
 
       if (this.backendConfigs != null) {
-        backendConfigs = extractTextVariables(this.backendConfigs.stream(), context);
-        encryptedBackendConfigs = extractEncryptedTextVariables(this.backendConfigs.stream(), context);
+        backendConfigs = infrastructureProvisionerService.extractTextVariables(this.backendConfigs, context);
+        encryptedBackendConfigs =
+            infrastructureProvisionerService.extractEncryptedTextVariables(this.backendConfigs, context.getAppId());
       }
     }
     targets = resolveTargets(targets, context);

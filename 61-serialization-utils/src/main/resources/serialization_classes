@@ -656,4 +656,4 @@ software.wings.beans.notification.NotificationSettings, 5626
 # Do not use this class to register classes to kryo. This creates semantic dependencies.
 # and lower layers cant test it. Use KryoRegistrar to register the classes.
 # Refer ManagerKryoRegistrar, PersistenceRegistrar for usage example
-# No more classes to be added here 
+# No more classes to be added here

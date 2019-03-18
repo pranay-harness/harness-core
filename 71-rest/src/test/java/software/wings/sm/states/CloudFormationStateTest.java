@@ -71,12 +71,12 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingBlueprint;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
@@ -227,7 +227,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
                 .sourceType(TEMPLATE_BODY.name())
                 .mappingBlueprints(Arrays.asList(InfrastructureMappingBlueprint.builder()
                                                      .serviceId(SERVICE_ID)
-                                                     .properties(Arrays.asList(NameValuePair.builder()
+                                                     .properties(Arrays.asList(BlueprintProperty.builder()
                                                                                    .name("$(cloudformation.region)")
                                                                                    .value(Regions.US_EAST_1.name())
                                                                                    .build()))

@@ -21,11 +21,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationInfrastructureProvisioner.Yaml;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -105,7 +105,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
                     .deploymentType(SSH)
                     .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .serviceId(SERVICE_ID)
-                    .properties(asList(NameValuePair.builder().name("k2").value("v2").build()))
+                    .properties(asList(BlueprintProperty.builder().name("k2").value("v2").build()))
                     .build()))
             .build();
 

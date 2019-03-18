@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -29,7 +30,7 @@ public class Host extends Base {
   private String hostConnAttr;
   private String bastionConnAttr;
   private String winrmConnAttr;
-
+  private Map<String, Object> properties;
   private Instance ec2Instance;
 
   /**
@@ -195,6 +196,14 @@ public class Host extends Base {
     this.ec2Instance = ec2Instance;
   }
 
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -257,6 +266,7 @@ public class Host extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private Instance ec2Instance;
+    private Map<String, Object> properties;
 
     private Builder() {}
 
@@ -439,6 +449,11 @@ public class Host extends Base {
       return this;
     }
 
+    public Builder withProperties(Map<String, Object> properties) {
+      this.properties = properties;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -461,6 +476,7 @@ public class Host extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withPublicDns(publicDns)
+          .withProperties(properties)
           .withEc2Instance(ec2Instance);
     }
 
@@ -486,6 +502,7 @@ public class Host extends Base {
       host.setCreatedAt(createdAt);
       host.setLastUpdatedBy(lastUpdatedBy);
       host.setLastUpdatedAt(lastUpdatedAt);
+      host.setProperties(properties);
       host.setEc2Instance(ec2Instance);
       return host;
     }

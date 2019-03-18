@@ -55,6 +55,7 @@ import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -174,5 +175,6 @@ public class ManagerMorphiaClasses {
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
       LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
       AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class,
-      DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class, GlobalApiKey.class);
+      DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class, GlobalApiKey.class,
+      ShellScriptInfrastructureProvisioner.class);
 }
