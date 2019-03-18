@@ -854,8 +854,9 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public User generateBearerTokenForUser(User user) {
-    AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
-    authToken.setJwtToken(generateJWTSecret(authToken.getUuid()));
+    AuthToken authToken =
+        new AuthToken(user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
+    authToken.setJwtToken(generateJWTSecret(authToken));
     wingsPersistence.save(authToken);
     boolean isFirstLogin = user.getLastLogin() == 0L;
     user.setLastLogin(System.currentTimeMillis());
@@ -879,7 +880,7 @@ public class AuthServiceImpl implements AuthService {
         account -> featureFlagService.isEnabled(FeatureName.REFRESH_TOKEN, account.getUuid()));
   }
 
-  private String generateJWTSecret(String authToken) {
+  private String generateJWTSecret(AuthToken authToken) {
     String jwtAuthSecret = secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET);
     int duration = JWT_CATEGORY.AUTH_SECRET.getValidityDuration();
     try {
@@ -888,7 +889,10 @@ public class AuthServiceImpl implements AuthService {
           .withIssuer("Harness Inc")
           .withIssuedAt(new Date())
           .withExpiresAt(new Date(System.currentTimeMillis() + duration))
-          .withClaim("authToken", authToken)
+          .withClaim("authToken", authToken.getUuid())
+          .withClaim("acctId", authToken.getAccountId())
+          .withClaim("usrId", authToken.getUserId())
+          .withClaim("env", configuration.getEnvPath())
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");

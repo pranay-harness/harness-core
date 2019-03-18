@@ -431,6 +431,21 @@ public class UserResource {
   }
 
   /**
+   * Explicitly switch account for a logged in user. A new JWT bearer token with the new account ID will be generated
+   * and returned as part of the response.
+   */
+  @GET
+  @Path("switch-account")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> switchAccount(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(
+        authenticationManager.switchAccount(authenticationManager.extractToken(authorization, "Bearer"), accountId));
+  }
+
+  /**
    * Login.
    *
    * @return the rest response

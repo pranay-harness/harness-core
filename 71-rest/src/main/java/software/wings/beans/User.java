@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -380,6 +382,12 @@ public class User extends Base implements Principal {
   }
 
   public String getLastAccountId() {
+    if (isEmpty(lastAccountId)) {
+      if (isNotEmpty(accounts)) {
+        // The first account will be considered as last account if not set. It will be used for encoding AuthToken.
+        lastAccountId = accounts.get(0).getUuid();
+      }
+    }
     return lastAccountId;
   }
 

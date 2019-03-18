@@ -19,13 +19,11 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class AuthToken extends Base {
   @Transient private User user;
+  private String accountId;
   private String userId;
   private long expireAt;
   private String jwtToken;
   private boolean refreshed;
-
-  // TODO: remove this a after February 10th 2019
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date ttl;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
@@ -33,10 +31,12 @@ public class AuthToken extends Base {
   /**
    * Instantiates a new auth token.
    *
+   * @param accountId           the account id
    * @param userId              the user id
    * @param tokenExpiryInMillis the token expiry in millis
    */
-  public AuthToken(String userId, Long tokenExpiryInMillis) {
+  public AuthToken(String accountId, String userId, Long tokenExpiryInMillis) {
+    this.accountId = accountId;
     this.userId = userId;
     setUuid(secureRandAlphaNumString(32));
     setAppId(Base.GLOBAL_APP_ID);

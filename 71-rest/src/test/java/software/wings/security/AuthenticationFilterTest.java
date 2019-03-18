@@ -187,7 +187,7 @@ public class AuthenticationFilterTest {
       doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
       doReturn(false).when(authenticationFilter).externalFacingAPI();
       doReturn(false).when(authenticationFilter).customApi();
-      AuthToken authToken = new AuthToken("testUser", 0L);
+      AuthToken authToken = new AuthToken(ACCOUNT_ID, "testUser", 0L);
       authToken.setUser(mock(User.class));
       when(authService.validateToken(anyString())).thenReturn(authToken);
       authenticationFilter.filter(context);
