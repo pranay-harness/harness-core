@@ -106,12 +106,15 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
                                                            .query(query)
                                                            .encryptedDataDetails(encryptedDataDetails)
                                                            .build(),
-        "1m", null, startTime, endTime, false, 5, 0, null);
+        "1m", null, startTime, endTime, true, 5, 0, null);
 
     if (isEmpty(responseWithoutHost) || isEmpty(hostName)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
-          .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
+          .loadResponse(VerificationLoadResponse.builder()
+                            .isLoadPresent(!isEmpty(responseWithoutHost))
+                            .loadResponse(responseWithoutHost)
+                            .build())
           .build();
     } else {
       List<LogElement> responseWithHost = getResponse(SumoDataCollectionInfo.builder()
