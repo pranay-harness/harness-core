@@ -1044,8 +1044,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowType(ORCHESTRATION);
     workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-    // TODO: Temporary disable setting the state machine
-    // workflowExecution.setStateMachine(stateMachine);
+    workflowExecution.setStateMachine(stateMachine);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);

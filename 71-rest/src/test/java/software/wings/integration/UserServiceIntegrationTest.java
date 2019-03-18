@@ -132,6 +132,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = "mark.lu@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void testSwitchAccount() {
     WebTarget target = client.target(API_BASE + "/users/switch-account?accountId=" + accountId);
