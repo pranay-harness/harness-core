@@ -262,7 +262,8 @@ public class SecureResourceTest {
     when(cacheHelper.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
     when(cachePermissionInfo.get(ACCOUNT_ID + "~" + USER_ID)).thenReturn(userPermissionInfo);
 
-    when(genericDbCache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(USER_ID, TOKEN_EXPIRY_IN_MILLIS));
+    when(genericDbCache.get(AuthToken.class, VALID_TOKEN))
+        .thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, TOKEN_EXPIRY_IN_MILLIS));
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(genericDbCache.get(Application.class, APP_ID))

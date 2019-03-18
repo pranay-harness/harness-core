@@ -6,6 +6,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -128,6 +129,27 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
     assertEquals(0, restResponse.getResponseMessages().size());
     assertTrue(restResponse.getResource());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testSwitchAccount() {
+    WebTarget target = client.target(API_BASE + "/users/switch-account?accountId=" + accountId);
+    RestResponse<User> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<User>>() {});
+    assertEquals(0, restResponse.getResponseMessages().size());
+    User user = restResponse.getResource();
+    assertNotNull(user);
+    String jwtToken = user.getToken();
+    assertNotNull(jwtToken);
+
+    // Switch again, a new token should be generated.
+    restResponse = getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<User>>() {});
+    assertEquals(0, restResponse.getResponseMessages().size());
+    user = restResponse.getResource();
+    assertNotNull(user);
+    String newJwtToken = user.getToken();
+    assertNotEquals(jwtToken, newJwtToken);
   }
 
   @Test

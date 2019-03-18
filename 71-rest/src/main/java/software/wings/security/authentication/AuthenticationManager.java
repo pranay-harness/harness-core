@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AuthToken;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.security.SecretManager.JWT_CATEGORY;
@@ -135,6 +136,13 @@ public class AuthenticationManager {
       logger.error("Get response type failed", e);
       throw new WingsException(UNKNOWN_ERROR, USER);
     }
+  }
+
+  public User switchAccount(String bearerToken, String accountId) {
+    AuthToken authToken = authService.validateToken(bearerToken);
+    User user = authToken.getUser();
+    user.setLastAccountId(accountId);
+    return authService.generateBearerTokenForUser(user);
   }
 
   private User generate2faJWTToken(User user) {

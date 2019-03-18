@@ -101,8 +101,8 @@ public class AuthServiceTest extends WingsBaseTest {
     when(cacheHelper.getUserCache()).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().withUuid(USER_ID).build());
 
-    when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(USER_ID, 86400000L));
-    when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(USER_ID, 0L));
+    when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
+    when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
     when(cache.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).build());
     when(cache.get(Environment.class, ENV_ID))
         .thenReturn(
@@ -279,7 +279,7 @@ public class AuthServiceTest extends WingsBaseTest {
     String authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
 
     String tokenString = user.getToken();
-    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
     authToken.setJwtToken(user.getToken());
     when(cache.get(Matchers.any(), Matchers.matches(authTokenId))).thenReturn(authToken);
     assertThat(authService.validateToken(tokenString)).isEqualTo(authToken);
@@ -300,7 +300,7 @@ public class AuthServiceTest extends WingsBaseTest {
     User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
     when(userCache.get(USER_ID)).thenReturn(mockUser);
     User user = authService.generateBearerTokenForUser(mockUser);
-    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
     when(cache.get(Matchers.any(), Matchers.matches(user.getToken()))).thenReturn(authToken);
     assertThat(user.getToken().length()).isEqualTo(32);
     authService.validateToken(user.getToken());
@@ -321,7 +321,7 @@ public class AuthServiceTest extends WingsBaseTest {
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
     String authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
     String tokenString = user.getToken();
-    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
     authToken.setJwtToken(user.getToken());
     when(cache.get(Matchers.any(), Matchers.matches(authTokenId))).thenReturn(authToken);
     final String oldToken = user.getToken();
@@ -352,7 +352,7 @@ public class AuthServiceTest extends WingsBaseTest {
     /**
      * Simulating the old token
      */
-    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
     authToken.setUuid(token);
     when(cache.get(Matchers.any(), Matchers.matches(token))).thenReturn(authToken);
     user = authService.refreshToken(token);
