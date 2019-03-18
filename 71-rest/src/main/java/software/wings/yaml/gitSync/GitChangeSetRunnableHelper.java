@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
@@ -29,14 +30,20 @@ public class GitChangeSetRunnableHelper {
         .asList();
   }
 
+  private static final BasicDBObject notQueuedStatusDBObject =
+      new BasicDBObject("status", new BasicDBObject("$in", new String[] {Status.QUEUED.name()}));
+
   public List<String> getQueuedAccountIdList(WingsPersistence wingsPersistence) {
-    return wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
-        .distinct(
-            "accountId", new BasicDBObject("status", new BasicDBObject("$in", new String[] {Status.QUEUED.name()})));
+    return HPersistence.retry(()
+                                  -> wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
+                                         .distinct("accountId", notQueuedStatusDBObject));
   }
 
+  private static final BasicDBObject runningStatusDBObject = new BasicDBObject("status", Status.RUNNING.name());
+
   public List<String> getRunningAccountIdList(WingsPersistence wingsPersistence) {
-    return wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
-        .distinct("accountId", new BasicDBObject("status", Status.RUNNING.name()));
+    return HPersistence.retry(()
+                                  -> wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
+                                         .distinct("accountId", runningStatusDBObject));
   }
 }

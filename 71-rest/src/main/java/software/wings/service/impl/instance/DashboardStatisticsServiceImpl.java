@@ -37,6 +37,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -99,6 +100,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -452,8 +454,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
 
-    aggregationPipeline.aggregate(ServiceInstanceCount.class)
-        .forEachRemaining(serviceInstanceCount -> instanceInfoList.add(serviceInstanceCount));
+    final Iterator<ServiceInstanceCount> aggregate =
+        HPersistence.retry(() -> aggregationPipeline.aggregate(ServiceInstanceCount.class));
+    aggregate.forEachRemaining(serviceInstanceCount -> instanceInfoList.add(serviceInstanceCount));
     return constructInstanceSummaryStatsByService(instanceInfoList, offset, limit);
   }
 
