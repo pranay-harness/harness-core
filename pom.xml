@@ -40,16 +40,16 @@
         <build.minorVersion>0</build.minorVersion>
         <build.number>27100</build.number>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
+        <categories>io.harness.category.element.UnitTests.class</categories>
         <checkStyleFile>harness_checks.xml</checkStyleFile>
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
         <dropwizard.version>1.0.2</dropwizard.version>
-        <excludedGroups />
+        <excludedCategories />
         <extensions-version>2.4.3</extensions-version>
         <fastxml.version>2.7.7</fastxml.version>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
-        <includedGroups>io.harness.category.element.UnitTests.class</includedGroups>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
@@ -1457,8 +1457,8 @@
                     <configuration>
                         <forkCount>6</forkCount>
                         <reuseForks>true</reuseForks>
-                        <groups>${includedGroups}</groups>
-                        <excludedGroups>${excludedGroups}</excludedGroups>
+                        <groups>${categories}</groups>
+                        <excludedGroups>${excludedCategories}</excludedGroups>
                     </configuration>
                 </plugin>
                 <plugin>
