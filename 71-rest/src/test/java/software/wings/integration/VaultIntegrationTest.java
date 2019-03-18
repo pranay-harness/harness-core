@@ -182,7 +182,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  public void testUpdateKmsEncryptedSeretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
+  public void testUpdateKmsEncryptedSecretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
     assertNotNull(savedKmsConfig);
@@ -191,6 +191,66 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       testUpdateEncryptedFile(savedKmsConfig);
     } finally {
       deleteKmsConfig(kmsConfigId);
+    }
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testUpdateSecret_changeDefaultSecretManager_fromKmsToVault_shouldSucceed() {
+    // Start with KMS as default secret manager
+    String kmsConfigId = createKmsConfig(kmsConfig);
+    KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
+    assertNotNull(savedKmsConfig);
+
+    try {
+      // Created a secret in KMS.
+      String secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
+
+      // No change to use Vault as DEFAULT secret manager!
+      String vaultConfigId = createVaultConfig(vaultConfig);
+      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+      assertNotNull(savedVaultConfig);
+
+      try {
+        // Update will save the secret in VAULT as vault is the default now.
+        updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
+        verifySecretValue(secretUuid, "MySecretValue_Modified", savedVaultConfig);
+        deleteSecretText(secretUuid);
+      } finally {
+        deleteVaultConfig(vaultConfigId);
+      }
+    } finally {
+      deleteKmsConfig(kmsConfigId);
+    }
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testUpdateSecret_changeDefaultSecretManager_fromVaultToKms_shouldSucceed() {
+    // Start with VAULT as default secret manager
+    String vaultConfigId = createVaultConfig(vaultConfig);
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertNotNull(savedVaultConfig);
+
+    try {
+      // Created a secret in Vault.
+      String secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
+
+      // No change to use KMS as DEFAULT secret manager!
+      String kmsConfigId = createKmsConfig(kmsConfig);
+      KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
+      assertNotNull(savedKmsConfig);
+
+      try {
+        // Update will save the secret in KMS as KMS is the default now.
+        updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
+        verifySecretValue(secretUuid, "MySecretValue_Modified", kmsConfig);
+        deleteSecretText(secretUuid);
+      } finally {
+        deleteKmsConfig(kmsConfigId);
+      }
+    } finally {
+      deleteVaultConfig(vaultConfigId);
     }
   }
 

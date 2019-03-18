@@ -200,7 +200,7 @@ public class SecretManagerImpl implements SecretManager {
       case KMS:
         final KmsConfig kmsConfig = kmsService.getSecretConfig(accountId);
         rv = kmsService.encrypt(secret, accountId, kmsConfig);
-        rv.setType(settingType);
+        rv.setKmsId(kmsConfig.getUuid());
         break;
 
       case VAULT:
@@ -220,13 +220,15 @@ public class SecretManagerImpl implements SecretManager {
                               .build();
         }
         rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
-        rv.setType(settingType);
+        rv.setKmsId(vaultConfig.getUuid());
         break;
 
       default:
         throw new IllegalStateException("Invalid type:  " + encryptionType);
     }
     rv.setName(secretName);
+    rv.setEncryptionType(encryptionType);
+    rv.setType(settingType);
     rv.setUsageRestrictions(usageRestrictions);
     return rv;
   }
@@ -1080,6 +1082,7 @@ public class SecretManagerImpl implements SecretManager {
           KmsConfig kmsConfig = update ? kmsService.getKmsConfig(accountId, encryptedData.getKmsId())
                                        : kmsService.getSecretConfig(accountId);
           newEncryptedFile = kmsService.encryptFile(accountId, kmsConfig, name, inputBytes);
+          newEncryptedFile.setKmsId(kmsConfig.getUuid());
           if (update) {
             fileService.deleteFile(savedFileId, CONFIGS);
           }
@@ -1089,17 +1092,22 @@ public class SecretManagerImpl implements SecretManager {
           VaultConfig vaultConfig = update ? vaultService.getVaultConfig(accountId, encryptedData.getKmsId())
                                            : vaultService.getSecretConfig(accountId);
           newEncryptedFile = vaultService.encryptFile(accountId, vaultConfig, name, inputBytes, encryptedData);
+          newEncryptedFile.setKmsId(vaultConfig.getUuid());
           break;
 
         default:
           throw new IllegalArgumentException("Invalid type " + encryptionType);
       }
+      newEncryptedFile.setEncryptionType(encryptionType);
+      newEncryptedFile.setType(SettingVariableTypes.CONFIG_FILE);
     }
 
     if (update) {
       if (newEncryptedFile != null) {
         encryptedData.setEncryptionKey(newEncryptedFile.getEncryptionKey());
         encryptedData.setEncryptedValue(newEncryptedFile.getEncryptedValue());
+        encryptedData.setKmsId(newEncryptedFile.getKmsId());
+        encryptedData.setEncryptionType(newEncryptedFile.getEncryptionType());
       }
     } else {
       encryptedData = newEncryptedFile;
