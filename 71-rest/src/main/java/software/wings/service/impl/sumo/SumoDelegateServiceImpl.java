@@ -1,6 +1,8 @@
 package software.wings.service.impl.sumo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.SUMO_CONFIGURATION_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
@@ -177,21 +179,22 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     } catch (InterruptedException e) {
       throw new WingsException("Unable to get client for given config");
     } catch (SumoServerException sumoServerException) {
+      saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
+          String.valueOf(endTime), sumoServerException.getErrorMessage(), requestTimeStamp,
+          OffsetDateTime.now().toInstant().toEpochMilli(), sumoServerException.getHTTPStatus(), FieldType.TEXT);
       if (sumoServerException.getHTTPStatus() == SUMO_RATE_LIMIT_STATUS) {
-        saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
-            String.valueOf(endTime), sumoServerException.getErrorMessage(), requestTimeStamp,
-            OffsetDateTime.now().toInstant().toEpochMilli(), HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
         int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
         logger.info("Encountered Rate limiting from sumo. Sleeping {}seconds for logCollectionMin {}", 30 + randomNum,
             logCollectionMinute);
         sleep(RETRY_SLEEP.plus(Duration.ofSeconds(randomNum)));
       }
-      throw sumoServerException;
+      throw new WingsException(SUMO_CONFIGURATION_ERROR, sumoServerException.getErrorMessage(), USER)
+          .addParam("reason", sumoServerException.getErrorMessage());
     } catch (Exception e) {
       saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
           String.valueOf(endTime), ExceptionUtils.getStackTrace(e), requestTimeStamp,
           OffsetDateTime.now().toInstant().toEpochMilli(), HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
-      throw e;
+      throw new WingsException(SUMO_CONFIGURATION_ERROR, e).addParam("reason", e.getMessage());
     }
   }
 
@@ -264,8 +267,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       case SOURCE_NAME:
         return logMessage.getSourceName();
       default:
-        throw new WingsException(
-            "Invalid host name field " + dataCollectionInfo.getHostnameField(), WingsException.USER);
+        throw new WingsException("Invalid host name field " + dataCollectionInfo.getHostnameField(), USER);
     }
   }
 
