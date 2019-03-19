@@ -294,8 +294,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest,
       boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
-    pageRequest.addFieldsExcluded(WorkflowExecution.STATE_MACHINE_KEY);
-
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     if (isEmpty(res)) {
       return res;
@@ -562,6 +560,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               if (envStateExecutionData.getWorkflowExecutionId() != null) {
                 WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
                     workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+                workflowExecution2.setStateMachine(null);
                 stageExecution.setWorkflowExecutions(asList(workflowExecution2));
                 stageExecution.setStatus(workflowExecution2.getStatus());
               }
@@ -696,7 +695,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public WorkflowExecution getExecutionWithoutSummary(String appId, String workflowExecutionId) {
-    WorkflowExecution workflowExecution = getWorkflowExecutionWithoutStateMachine(appId, workflowExecutionId);
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("WorkflowExecution", workflowExecution, USER);
 
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
@@ -813,16 +812,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
   }
 
-  @Override
-  public WorkflowExecution getWorkflowExecutionWithoutStateMachine(String appId, String workflowExecutionId) {
-    logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
-    return wingsPersistence.createQuery(WorkflowExecution.class)
-        .filter(WorkflowExecution.APP_ID_KEY, appId)
-        .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
-        .project(WorkflowExecution.STATE_MACHINE_KEY, false)
-        .get();
-  }
-
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus,
       boolean upToDate, Set<String> excludeFromAggregation) {
     if (includeGraph) {
@@ -932,19 +921,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    StateMachine stateMachine = workflowService.readLatestStateMachine(appId, pipelineId);
-    if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + pipelineId);
-    }
+    StateMachine stateMachine = new StateMachine(pipeline, workflowService.stencilMap());
+
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .uuid(generateUuid())
                                               .status(NEW)
                                               .appId(appId)
                                               .workflowId(pipelineId)
                                               .workflowType(WorkflowType.PIPELINE)
-                                              // TODO: Temporary disable setting the state machine
-                                              // .stateMachine(stateMachine)
-                                              .stateMachineId(stateMachine.getUuid())
+                                              .stateMachine(stateMachine)
                                               .name(pipeline.getName())
                                               .build();
 
