@@ -1,7 +1,10 @@
 package migrations.all;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -13,7 +16,9 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.instance.InstanceService;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,45 +32,48 @@ public class CleanupOrphanInstances implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(CleanupOrphanInstances.class);
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private InstanceService instanceService;
 
   @Override
   public void migrate() {
     try {
       logger.info("Start - Deleting of orphan instances");
 
-      List<Key<Application>> appKeyList = wingsPersistence.createQuery(Application.class).asKeyList();
+      List<Key<Application>> appKeyList = wingsPersistence.createQuery(Application.class, excludeAuthority).asKeyList();
       Set<String> apps = appKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
 
-      List<Key<Service>> serviceKeyList = wingsPersistence.createQuery(Service.class).asKeyList();
+      List<Key<Service>> serviceKeyList = wingsPersistence.createQuery(Service.class, excludeAuthority).asKeyList();
       Set<String> services = serviceKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
 
-      List<Key<Environment>> envKeyList = wingsPersistence.createQuery(Environment.class).asKeyList();
+      List<Key<Environment>> envKeyList = wingsPersistence.createQuery(Environment.class, excludeAuthority).asKeyList();
       Set<String> envs = envKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
 
       List<Key<InfrastructureMapping>> infraKeyList =
           wingsPersistence.createQuery(InfrastructureMapping.class).asKeyList();
       Set<String> infraMappings = infraKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
 
-      List<Instance> instances = wingsPersistence.createQuery(Instance.class).asList();
-      Set<String> orphanInstances =
-          instances.stream()
-              .filter(instance
-                  -> !apps.contains(instance.getAppId()) || !services.contains(instance.getServiceId())
-                      || !envs.contains(instance.getEnvId()) || !infraMappings.contains(instance.getInfraMappingId()))
-              .map(instance -> instance.getUuid())
-              .collect(Collectors.toSet());
+      Query<Instance> query = wingsPersistence.createQuery(Instance.class, excludeAuthority)
+                                  .filter("isDeleted", false)
+                                  .project("_id", true)
+                                  .project("appId", true)
+                                  .project("envId", true)
+                                  .project("serviceId", true)
+                                  .project("infraMappingId", true);
 
-      logger.info("Number of orphaned instances identified: " + orphanInstances.size());
-      Query query = wingsPersistence.createQuery(Instance.class);
-      query.field("_id").in(orphanInstances);
-
-      boolean delete = wingsPersistence.delete(query);
-      if (delete) {
-        logger.info("Deleted orphan instances successfully");
-      } else {
-        logger.error("Unable to delete orphan instances");
+      Set<String> orphanInstances = new HashSet<>();
+      try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
+        while (iterator.hasNext()) {
+          Instance instance = iterator.next();
+          if (!apps.contains(instance.getAppId()) || !services.contains(instance.getServiceId())
+              || !envs.contains(instance.getEnvId()) || !infraMappings.contains(instance.getInfraMappingId())) {
+            orphanInstances.add(instance.getUuid());
+          }
+        }
       }
 
+      logger.info("Number of orphaned instances identified: " + orphanInstances.size());
+      instanceService.delete(orphanInstances);
+      logger.info("Deleted orphan instances successfully");
     } catch (Exception ex) {
       logger.error("Error while deleting orphan instances", ex);
     }
