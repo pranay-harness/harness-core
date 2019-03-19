@@ -121,7 +121,11 @@ public class ExecutionResource {
     if (isNotBlank(orchestrationId)) {
       pageRequest.addFilter("workflowId", Operator.EQ, orchestrationId);
     }
-    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false));
+    final PageResponse<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
+
+    workflowExecutions.forEach(we -> we.setStateMachine(null));
+    return new RestResponse<>(workflowExecutions);
   }
 
   /**
