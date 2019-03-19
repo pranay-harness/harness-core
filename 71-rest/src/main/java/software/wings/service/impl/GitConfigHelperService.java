@@ -66,11 +66,11 @@ public class GitConfigHelperService {
     try {
       ResponseData notifyResponseData = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.GIT_COMMAND.name())
               .accountId(gitConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.GIT_COMMAND.name())
                         .parameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
                         .timeout(TimeUnit.SECONDS.toMillis(60))
                         .build())

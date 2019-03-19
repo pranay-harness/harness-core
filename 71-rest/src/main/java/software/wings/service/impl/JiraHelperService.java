@@ -78,10 +78,10 @@ public class JiraHelperService {
         secretManager.getEncryptionDetails(jiraConfig, APP_ID_KEY, WORKFLOW_EXECUTION_ID));
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(APP_ID_KEY)
                                     .data(TaskData.builder()
+                                              .taskType(TaskType.JIRA.name())
                                               .parameters(new Object[] {jiraTaskParameters})
                                               .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                               .build())
@@ -213,10 +213,10 @@ public class JiraHelperService {
         secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID));
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(appId)
                                     .data(TaskData.builder()
+                                              .taskType(TaskType.JIRA.name())
                                               .parameters(new Object[] {jiraTaskParameters})
                                               .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                               .build())

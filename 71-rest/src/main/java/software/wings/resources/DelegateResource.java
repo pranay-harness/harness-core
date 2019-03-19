@@ -472,7 +472,8 @@ public class DelegateResource {
       final Object[] parameters = delegatePackage.getDelegateTask().getData().getParameters();
 
       if (parameters != null && (parameters.length != 1 || !(parameters[0] instanceof TaskParameters))) {
-        logger.warn("Task {} need task parameters refactoring", delegatePackage.getDelegateTask().getTaskType());
+        logger.warn(
+            "Task {} need task parameters refactoring", delegatePackage.getDelegateTask().getData().getTaskType());
       }
     }
 

@@ -438,11 +438,11 @@ public abstract class TerraformProvisionState extends State {
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
-                                    .taskType(TERRAFORM_PROVISION_TASK.name())
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
                                     .data(TaskData.builder()
+                                              .taskType(TERRAFORM_PROVISION_TASK.name())
                                               .parameters(new Object[] {parameters})
                                               .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                                               .build())

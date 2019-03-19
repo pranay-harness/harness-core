@@ -225,7 +225,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
+    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
         TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name());
     APMDataCollectionInfo dataCollectionInfo =
         (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
@@ -265,7 +265,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
+    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
         TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name());
     AppdynamicsDataCollectionInfo dataCollectionInfo =
         (AppdynamicsDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
@@ -303,7 +303,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
+    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
         TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA.name());
     NewRelicDataCollectionInfo dataCollectionInfo =
         (NewRelicDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
@@ -348,7 +348,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
+    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
         TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name());
     PrometheusDataCollectionInfo dataCollectionInfo =
         (PrometheusDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
@@ -381,7 +381,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
+    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
         TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name());
     CloudWatchDataCollectionInfo dataCollectionInfo =
         (CloudWatchDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];

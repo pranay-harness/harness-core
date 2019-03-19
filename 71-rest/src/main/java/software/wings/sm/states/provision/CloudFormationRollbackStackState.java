@@ -121,12 +121,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       delegateTask =
           DelegateTask.builder()
               .async(true)
-              .taskType(CLOUD_FORMATION_TASK.name())
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .appId(executionContext.getApp().getUuid())
               .data(TaskData.builder()
+                        .taskType(CLOUD_FORMATION_TASK.name())
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -150,12 +150,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       delegateTask =
           DelegateTask.builder()
               .async(true)
-              .taskType(CLOUD_FORMATION_TASK.name())
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .appId(executionContext.getApp().getUuid())
               .data(TaskData.builder()
+                        .taskType(CLOUD_FORMATION_TASK.name())
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
                         .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))

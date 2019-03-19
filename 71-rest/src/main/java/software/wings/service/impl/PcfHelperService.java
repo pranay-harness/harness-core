@@ -50,11 +50,11 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.PCF_COMMAND_TASK.name())
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .pcfCommandType(PcfCommandType.VALIDATE)
@@ -87,11 +87,11 @@ public class PcfHelperService {
 
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.PCF_COMMAND_TASK.name())
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInstanceSyncRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .pcfApplicationName(pcfApplicationName)
@@ -154,11 +154,11 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.PCF_COMMAND_TASK.name())
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .pcfCommandType(PcfCommandType.DATAFETCH)
@@ -191,11 +191,11 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.PCF_COMMAND_TASK.name())
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .pcfCommandType(PcfCommandType.CREATE_ROUTE)
@@ -234,11 +234,11 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.PCF_COMMAND_TASK.name())
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .organization(organization)
@@ -271,11 +271,11 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.PCF_COMMAND_TASK.name())
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .organization(organization)
@@ -309,11 +309,11 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
-              .taskType(TaskType.PCF_COMMAND_TASK.name())
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
               .data(TaskData.builder()
+                        .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .organization(organization)

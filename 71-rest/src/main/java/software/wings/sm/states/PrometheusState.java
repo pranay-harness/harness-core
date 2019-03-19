@@ -135,11 +135,11 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.PROMETHEUS_METRIC_DATA_COLLECTION_TASK.name())
             .accountId(appService.get(context.getAppId()).getAccountId())
             .appId(context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
+                      .taskType(TaskType.PROMETHEUS_METRIC_DATA_COLLECTION_TASK.name())
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                       .build())

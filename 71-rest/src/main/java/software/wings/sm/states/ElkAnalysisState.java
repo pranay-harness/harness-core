@@ -278,11 +278,11 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       String waitId = generateUuid();
       delegateTasks.add(DelegateTask.builder()
                             .async(true)
-                            .taskType(TaskType.ELK_COLLECT_LOG_DATA.name())
                             .accountId(accountId)
                             .appId(context.getAppId())
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .taskType(TaskType.ELK_COLLECT_LOG_DATA.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                                       .build())

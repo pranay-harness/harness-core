@@ -64,9 +64,8 @@ public class DelegateServiceImplTest extends CategoryTest {
     final DelegatePackage delegatePackage = DelegatePackage.builder()
                                                 .delegateTask(DelegateTask.builder()
                                                                   .async(true)
-                                                                  .taskType("HTTP")
                                                                   .uuid(delegateTaskId)
-                                                                  .data(TaskData.builder().build())
+                                                                  .data(TaskData.builder().taskType("HTTP").build())
                                                                   .build())
                                                 .build();
 
@@ -95,9 +94,8 @@ public class DelegateServiceImplTest extends CategoryTest {
     final DelegatePackage delegatePackage = DelegatePackage.builder()
                                                 .delegateTask(DelegateTask.builder()
                                                                   .async(true)
-                                                                  .taskType("HTTP")
                                                                   .uuid(delegateTaskId)
-                                                                  .data(TaskData.builder().build())
+                                                                  .data(TaskData.builder().taskType("HTTP").build())
                                                                   .build())
                                                 .encryptionConfigs(encryptionConfigMap)
                                                 .secretDetails(secretDetails)

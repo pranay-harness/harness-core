@@ -586,7 +586,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);
-      TaskType.valueOf(task.getTaskType())
+      TaskType.valueOf(task.getData().getTaskType())
           .getDelegateRunnableTask(DELEGATE_ID, task,
               o
               -> asyncExecutionResponse =

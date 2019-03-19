@@ -1374,7 +1374,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
     wingsPersistence.save(task);
     logger.info("{} task: uuid: {}, accountId: {}, type: {}, correlationId: {}",
-        async ? "Queueing async" : "Executing sync", task.getUuid(), task.getAccountId(), task.getTaskType(),
+        async ? "Queueing async" : "Executing sync", task.getUuid(), task.getAccountId(), task.getData().getTaskType(),
         task.getCorrelationId());
 
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
@@ -1412,19 +1412,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
     } else if (eligibleDelegates.isEmpty()) {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
-          activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
+          activeDelegates.size(), task.getUuid(), task.getData().getTaskType(), task.getAccountId());
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
           aNoEligibleDelegatesAlert()
               .withAppId(task.getAppId())
               .withEnvId(task.getEnvId())
               .withInfraMappingId(task.getInfrastructureMappingId())
-              .withTaskGroup(TaskType.valueOf(task.getTaskType()).getTaskGroup())
-              .withTaskType(TaskType.valueOf(task.getTaskType()))
+              .withTaskGroup(TaskType.valueOf(task.getData().getTaskType()).getTaskGroup())
+              .withTaskType(TaskType.valueOf(task.getData().getTaskType()))
               .build());
     }
 
-    logger.info(
-        "{} delegates {} eligible to execute task {}", eligibleDelegates.size(), eligibleDelegates, task.getTaskType());
+    logger.info("{} delegates {} eligible to execute task {}", eligibleDelegates.size(), eligibleDelegates,
+        task.getData().getTaskType());
     return eligibleDelegates;
   }
 
@@ -1496,7 +1496,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         return null;
       } else {
         logger.info("No whitelisted delegates found for task {}", taskId);
-        List<String> criteria = TaskType.valueOf(delegateTask.getTaskType()).getCriteria(delegateTask, injector);
+        List<String> criteria =
+            TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTask, injector);
         String errorMessage = "No delegates could reach the resource. " + criteria;
         logger.info("Task {}: {}", taskId, errorMessage);
         ResponseData response;
@@ -1647,7 +1648,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    logger.info("Assigning {} task {} to delegate {} {}", delegateTask.getTaskType(), taskId, delegateId,
+    logger.info("Assigning {} task {} to delegate {} {}", delegateTask.getData().getTaskType(), taskId, delegateId,
         delegateTask.isAsync() ? "(async)" : "(sync)");
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(ACCOUNT_ID, delegateTask.getAccountId())

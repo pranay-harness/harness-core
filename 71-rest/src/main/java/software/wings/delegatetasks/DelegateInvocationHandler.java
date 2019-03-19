@@ -36,17 +36,19 @@ public class DelegateInvocationHandler implements InvocationHandler {
     delegateArguments[0] = proxy.getClass().getInterfaces()[0].getName();
     delegateArguments[1] = method.getName();
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
-    DelegateTaskBuilder builder =
-        DelegateTask.builder()
-            .taskType(taskType.name())
-            .data(TaskData.builder().parameters(delegateArguments).timeout(syncTaskContext.getTimeout()).build())
-            .accountId(syncTaskContext.getAccountId())
-            .appId(syncTaskContext.getAppId())
-            .envId(syncTaskContext.getEnvId())
-            .infrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
-            .async(false)
-            .tags(syncTaskContext.getTags())
-            .correlationId(syncTaskContext.getCorrelationId());
+    DelegateTaskBuilder builder = DelegateTask.builder()
+                                      .data(TaskData.builder()
+                                                .taskType(taskType.name())
+                                                .parameters(delegateArguments)
+                                                .timeout(syncTaskContext.getTimeout())
+                                                .build())
+                                      .accountId(syncTaskContext.getAccountId())
+                                      .appId(syncTaskContext.getAppId())
+                                      .envId(syncTaskContext.getEnvId())
+                                      .infrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
+                                      .async(false)
+                                      .tags(syncTaskContext.getTags())
+                                      .correlationId(syncTaskContext.getCorrelationId());
 
     String awsConfigTag = getAwsConfigTags(args);
     if (isNotEmpty(awsConfigTag)) {

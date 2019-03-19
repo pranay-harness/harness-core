@@ -168,14 +168,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldAssignTaskWithAllMatchingTags() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .taskType(TaskType.SCRIPT.name())
-                                    .tags(ImmutableList.of("a", "b"))
-                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .tags(ImmutableList.of("a", "b"))
+            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+            .build();
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
                             .withUuid(DELEGATE_ID)
@@ -190,14 +190,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithPartialMatchingTags() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .taskType(TaskType.SCRIPT.name())
-                                    .tags(ImmutableList.of("a", "b"))
-                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .tags(ImmutableList.of("a", "b"))
+            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+            .build();
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
                             .withUuid(DELEGATE_ID)
@@ -212,14 +212,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithNoMatchingTags() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .taskType(TaskType.SCRIPT.name())
-                                    .tags(ImmutableList.of("a", "b"))
-                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .tags(ImmutableList.of("a", "b"))
+            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+            .build();
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
                             .withUuid(DELEGATE_ID)
@@ -234,14 +234,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldAssignTaskWithEmptyDelegateTaskTags() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .taskType(TaskType.SCRIPT.name())
-                                    .tags(null)
-                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .tags(null)
+            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+            .build();
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
                             .withUuid(DELEGATE_ID)
@@ -256,14 +256,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithEmptyDelegateTags() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .taskType(TaskType.SCRIPT.name())
-                                    .tags(ImmutableList.of("a", "b"))
-                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .tags(ImmutableList.of("a", "b"))
+            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+            .build();
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
                             .withUuid(DELEGATE_ID)
@@ -332,13 +332,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.HTTP.name())
+                                              .parameters(params)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
 
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isTrue();
   }
@@ -354,13 +356,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.HTTP.name())
+                                              .parameters(params)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
 
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
@@ -376,13 +380,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.HTTP.name())
+                                              .parameters(params)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
 
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
@@ -390,30 +396,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetConnectedWhitelistedDelegates() {
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withStatus(ENABLED)
-                            .withLastHeartBeat(clock.millis())
-                            .withConnected(true)
-                            .build();
-    wingsPersistence.save(delegate);
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(true)
-                              .build());
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-
-    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = createDelegateTask(true, "criteria");
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -421,9 +404,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     assertThat(delegateIds.get(0)).isEqualTo(DELEGATE_ID);
   }
 
-  @Test
-  @Category(UnitTests.class)
-  public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() {
+  private DelegateTask createDelegateTask(boolean b, String criteria) {
     Delegate delegate = aDelegate()
                             .withAccountId(ACCOUNT_ID)
                             .withUuid(DELEGATE_ID)
@@ -436,18 +417,26 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
                               .criteria("criteria")
-                              .validated(false)
+                              .validated(b)
                               .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    Object[] params = {HttpTaskParameters.builder().url(criteria).build()};
+    return DelegateTask.builder()
+        .async(true)
+        .accountId(ACCOUNT_ID)
+        .data(TaskData.builder()
+                  .taskType(TaskType.HTTP.name())
+                  .parameters(params)
+                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                  .build())
+        .build();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() {
+    DelegateTask delegateTask = createDelegateTask(false, "criteria");
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -474,13 +463,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.HTTP.name())
+                                              .parameters(params)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -490,30 +481,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOtherCriteria() {
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withStatus(ENABLED)
-                            .withLastHeartBeat(clock.millis())
-                            .withConnected(true)
-                            .build();
-    wingsPersistence.save(delegate);
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(true)
-                              .build());
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-
-    Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = createDelegateTask(true, "criteria-other");
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -524,13 +492,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetNullFirstAttemptDelegate() {
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.HTTP.name())
+                                              .parameters(params)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
 
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
 
@@ -540,30 +510,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetFirstAttemptDelegate() {
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withStatus(ENABLED)
-                            .withLastHeartBeat(clock.millis())
-                            .withConnected(true)
-                            .build();
-    wingsPersistence.save(delegate);
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(true)
-                              .build());
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-
-    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.HTTP.name())
-            .data(TaskData.builder().parameters(params).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = createDelegateTask(true, "criteria");
 
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
 

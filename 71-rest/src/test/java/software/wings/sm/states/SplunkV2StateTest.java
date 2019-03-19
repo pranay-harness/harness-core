@@ -204,7 +204,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertEquals(1, tasks.size());
     DelegateTask task = tasks.get(0);
-    assertEquals(TaskType.SPLUNK_COLLECT_LOG_DATA.name(), task.getTaskType());
+    assertEquals(TaskType.SPLUNK_COLLECT_LOG_DATA.name(), task.getData().getTaskType());
 
     final SplunkDataCollectionInfo expectedCollectionInfo =
         SplunkDataCollectionInfo.builder()

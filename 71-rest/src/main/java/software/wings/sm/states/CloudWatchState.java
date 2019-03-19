@@ -200,7 +200,6 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.CLOUD_WATCH_COLLECT_METRIC_DATA.name())
             .accountId(appService.get(context.getAppId()).getAccountId())
             .appId(context.getAppId())
             .waitId(waitId)
@@ -208,6 +207,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                     ? singletonList(dataCollectionInfo.getAwsConfig().getTag())
                     : null)
             .data(TaskData.builder()
+                      .taskType(TaskType.CLOUD_WATCH_COLLECT_METRIC_DATA.name())
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                       .build())

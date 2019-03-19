@@ -55,11 +55,11 @@ public class APMDataCollectionTaskTest {
 
     DelegateTask task = DelegateTask.builder()
                             .async(true)
-                            .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                       .build())

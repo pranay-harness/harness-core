@@ -130,12 +130,9 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     BuildSourceParameters buildSourceRequest;
 
     String waitId = generateUuid();
-    final TaskDataBuilder dataBuilder = TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
-                                                  .async(true)
-                                                  .taskType(TaskType.BUILD_SOURCE_TASK.name())
-                                                  .appId(GLOBAL_APP_ID)
-                                                  .waitId(waitId);
+    final TaskDataBuilder dataBuilder =
+        TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().async(true).appId(GLOBAL_APP_ID).waitId(waitId);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       // Defaulting to the 60 secs

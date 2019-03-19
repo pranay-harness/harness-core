@@ -1282,14 +1282,14 @@ public class DelegateServiceImpl implements DelegateService {
         // Not whitelisted. Perform validation.
         //@TODO Remove this once TaskValidation does not use secrets
         applyDelegateSecretFunctor(delegatePackage);
-        DelegateValidateTask delegateValidateTask = TaskType.valueOf(delegateTask.getTaskType())
+        DelegateValidateTask delegateValidateTask = TaskType.valueOf(delegateTask.getData().getTaskType())
                                                         .getDelegateValidateTask(delegateId, delegateTask,
                                                             getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
         ExecutorService executorService = delegateTask.isAsync()
             ? asyncExecutorService
-            : delegateTask.getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
+            : delegateTask.getData().getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
         currentlyValidatingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
@@ -1351,15 +1351,15 @@ public class DelegateServiceImpl implements DelegateService {
       return;
     }
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
-        delegateTask.getTaskType());
+        delegateTask.getData().getTaskType());
     DelegateRunnableTask delegateRunnableTask =
-        TaskType.valueOf(delegateTask.getTaskType())
+        TaskType.valueOf(delegateTask.getData().getTaskType())
             .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask),
                 getPreExecutionFunction(delegateTask));
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = delegateTask.isAsync()
         ? asyncExecutorService
-        : delegateTask.getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
+        : delegateTask.getData().getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
     Future taskFuture = executorService.submit(delegateRunnableTask);
     logger.info("Task future in executeTask: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
         taskFuture.isCancelled());

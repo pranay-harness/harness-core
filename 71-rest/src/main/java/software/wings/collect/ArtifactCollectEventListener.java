@@ -110,11 +110,11 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.JENKINS_COLLECTION.name())
             .accountId(accountId)
             .appId(jenkinsArtifactStream.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
+                      .taskType(TaskType.JENKINS_COLLECTION.name())
                       .parameters(
                           new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
                               jenkinsArtifactStream.getJobname(), jenkinsArtifactStream.getArtifactPaths(),
@@ -130,12 +130,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.BAMBOO_COLLECTION.name())
             .accountId(accountId)
             .appId(bambooArtifactStream.getAppId())
             .waitId(waitId)
             .data(
                 TaskData.builder()
+                    .taskType(TaskType.BAMBOO_COLLECTION.name())
                     .parameters(new Object[] {bambooConfig,
                         secretManager.getEncryptionDetails(bambooConfig, null, null), bambooArtifactStream.getJobname(),
                         bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
@@ -150,12 +150,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.NEXUS_COLLECTION.name())
             .accountId(accountId)
             .appId(nexusArtifactStream.getAppId())
             .waitId(waitId)
             .data(
                 TaskData.builder()
+                    .taskType(TaskType.NEXUS_COLLECTION.name())
                     .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
                         nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
                         nexusArtifactStream.getArtifactPaths(), artifact.getBuildNo()})
@@ -170,11 +170,11 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
             .accountId(accountId)
             .appId(artifactoryArtifactStream.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
+                      .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
                       .parameters(new Object[] {artifactoryConfig,
                           secretManager.getEncryptionDetails(artifactoryConfig, null, null),
                           artifactoryArtifactStream.getJobname(), artifact.getMetadata()})
@@ -189,12 +189,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.AMAZON_S3_COLLECTION.name())
             .accountId(accountId)
             .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .appId(amazonS3ArtifactStream.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
+                      .taskType(TaskType.AMAZON_S3_COLLECTION.name())
                       .parameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
                           amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
                       .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

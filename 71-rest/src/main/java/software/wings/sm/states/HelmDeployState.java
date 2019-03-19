@@ -243,9 +243,9 @@ public class HelmDeployState extends State {
                                   .async(true)
                                   .accountId(app.getAccountId())
                                   .appId(app.getUuid())
-                                  .taskType(TaskType.HELM_COMMAND_TASK.name())
                                   .waitId(activity.getUuid())
                                   .data(TaskData.builder()
+                                            .taskType(TaskType.HELM_COMMAND_TASK.name())
                                             .parameters(new Object[] {commandRequest})
                                             .timeout(TimeUnit.HOURS.toMillis(1))
                                             .build())
@@ -366,8 +366,8 @@ public class HelmDeployState extends State {
 
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .taskType(TaskType.HELM_COMMAND_TASK.name())
             .data(TaskData.builder()
+                      .taskType(TaskType.HELM_COMMAND_TASK.name())
                       .parameters(new Object[] {helmReleaseHistoryCommandRequest})
                       .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
                       .build())

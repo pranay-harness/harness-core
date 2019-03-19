@@ -482,10 +482,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
             .accountId(accountId)
             .appId(appId)
             .data(TaskData.builder()
+                      .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
                       .parameters(new Object[] {
                           TerraformProvisionParameters.builder()
                               .scriptPath(terraformDirectory)
@@ -548,10 +548,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
             .accountId(accountId)
             .appId(appId)
             .data(TaskData.builder()
+                      .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
                       .parameters(new Object[] {
                           TerraformProvisionParameters.builder()
                               .sourceRepo(gitConfig)

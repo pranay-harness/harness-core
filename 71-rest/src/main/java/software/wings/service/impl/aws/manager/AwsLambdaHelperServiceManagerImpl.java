@@ -50,11 +50,11 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
   private AwsResponse executeTask(String accountId, AwsLambdaFunctionRequest request) {
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .taskType(TaskType.AWS_LAMBDA_TASK.name())
             .accountId(accountId)
             .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
+                      .taskType(TaskType.AWS_LAMBDA_TASK.name())
                       .parameters(new Object[] {request})
                       .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                       .build())

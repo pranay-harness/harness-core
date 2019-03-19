@@ -121,11 +121,11 @@ public class ScriptApprovalJob implements Job {
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
                                     .accountId(accountId)
                                     .appId(appId)
                                     .waitId(activityId)
                                     .data(TaskData.builder()
+                                              .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
                                               .parameters(new Object[] {shellScriptApprovalTaskParameters})
                                               .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                               .build())

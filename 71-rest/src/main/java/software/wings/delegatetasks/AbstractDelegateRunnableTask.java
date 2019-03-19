@@ -54,7 +54,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     this.appId = delegateTask.getAppId();
     this.consumer = consumer;
     this.preExecute = preExecute;
-    this.taskType = delegateTask.getTaskType();
+    this.taskType = delegateTask.getData().getTaskType();
     this.isAsync = delegateTask.isAsync();
   }
 
