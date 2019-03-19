@@ -7,80 +7,29 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.EncryptionReflectUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
-/**
- * Created by anubhaw on 5/16/16.
- */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 public abstract class SettingValue {
-  private String type;
+  @Getter @Setter private String type;
+  @Getter @Setter private transient boolean decrypted;
 
-  private transient boolean decrypted;
-
-  /**
-   * Instantiates a new setting value.
-   *
-   * @param type the type
-   */
   public SettingValue(String type) {
     this.type = type;
   }
 
-  /**
-   * Gets type.
-   *
-   * @return the type
-   */
-  public String getType() {
-    return type;
-  }
-
-  /**
-   * Sets type.
-   *
-   * @param type the type
-   */
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  /**
-   * Gets setting type.
-   *
-   * @return the setting type
-   */
   @SchemaIgnore
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.valueOf(type);
   }
 
-  /**
-   * Sets setting type.
-   *
-   * @param type the type
-   */
-  public void setSettingType(SettingVariableTypes type) {
-    //
-  }
-
-  /**
-   * Gets encrypted fields.
-   *
-   * @return the encrypted fields
-   */
-  @SchemaIgnore
-  public boolean isDecrypted() {
-    return decrypted;
-  }
-
-  public void setDecrypted(boolean decrypted) {
-    this.decrypted = decrypted;
-  }
+  public void setSettingType(SettingVariableTypes type) {}
 
   @SchemaIgnore
   @JsonIgnore
@@ -321,22 +270,13 @@ public abstract class SettingValue {
 
     INFRASTRUCTURE_MAPPING;
 
-    private String displayName;
+    @Getter private String displayName;
 
     SettingVariableTypes() {
       this.displayName = name();
     }
     SettingVariableTypes(String displayName) {
       this.displayName = displayName;
-    }
-
-    /**
-     * Gets display name.
-     *
-     * @return the display name
-     */
-    public String getDisplayName() {
-      return displayName;
     }
   }
 
