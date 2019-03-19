@@ -433,6 +433,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     final Map<String, Object> contextMap = context.asMap();
     contextMap.put(infrastructureProvisioner.variableKey(), outputs);
+    contextMap.putAll(outputs);
 
     try (HIterator<InfrastructureMapping> infrastructureMappings =
              new HIterator<>(wingsPersistence.createQuery(InfrastructureMapping.class)
