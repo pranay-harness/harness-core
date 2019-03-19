@@ -152,7 +152,7 @@ public class VerificationJob implements Job {
       Trigger trigger = TriggerBuilder.newTrigger()
                             .withIdentity(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)
                             .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                              .withIntervalInSeconds((int) (CRON_POLL_INTERVAL / 10))
+                                              .withIntervalInSeconds(30)
                                               .withMisfireHandlingInstructionNowWithExistingCount()
                                               .repeatForever())
                             .startAt(startDate)

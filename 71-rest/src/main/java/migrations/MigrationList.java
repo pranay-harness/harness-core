@@ -14,6 +14,7 @@ import migrations.all.AddValidUntilToWaitQueue;
 import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
+import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CreateDefaultAlertNotificationRule;
@@ -199,6 +200,7 @@ public class MigrationList {
         .add(Pair.of(230, MigrateCVMetadataApplicationId.class))
         .add(Pair.of(231, DropMongoGcsFileIdMappingCollectionMigration.class))
         .add(Pair.of(232, AddTemplateMgmtPermissionToAdminUserGroup.class))
+        .add(Pair.of(233, CVCollectionCronFrequencyMigration.class))
         .build();
   }
 }
