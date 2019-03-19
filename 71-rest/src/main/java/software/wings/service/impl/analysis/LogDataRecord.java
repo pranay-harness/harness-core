@@ -29,11 +29,17 @@ import java.util.List;
  */
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @Indexes({
-  @Index(fields = {
-    @Field("stateType")
-    , @Field("stateExecutionId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("clusterLevel"),
-        @Field("clusterLevel"), @Field("logCollectionMinute")
-  }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
+  @Index(fields =
+      {
+        @Field("stateType")
+        , @Field("stateExecutionId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("clusterLevel"),
+            @Field("clusterLevel"), @Field("logCollectionMinute")
+      },
+      options = @IndexOptions(unique = true, name = "logUniqueIdx"))
+  ,
+      @Index(fields = {
+        @Field("cvConfigId"), @Field("logCollectionMinute")
+      }, options = @IndexOptions(unique = false, name = "cvLogsIdx"))
 })
 @Data
 @NoArgsConstructor
