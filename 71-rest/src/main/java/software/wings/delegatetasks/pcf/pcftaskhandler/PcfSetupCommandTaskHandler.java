@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -52,8 +53,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * This method is responsible for fetching previous release version information
    * like, previous releaseNames with Running instances, All existing previous releaseNames.
    */
-  public PcfCommandExecutionResponse executeTaskInternal(
-      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (!(pcfCommandRequest instanceof PcfCommandSetupRequest)) {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandSetupRequest"));
     }
@@ -92,7 +93,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               + 1;
 
       // Delete any older application excpet most recent 1.
-      deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest);
+      deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest, executionLogCallback);
 
       // Fetch apps again, as apps may have been deleted/downsized
       previousReleases =
@@ -192,7 +193,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    */
   @VisibleForTesting
   void deleteOlderApplications(List<ApplicationSummary> previousReleases, PcfRequestConfig pcfRequestConfig,
-      PcfCommandSetupRequest pcfCommandSetupRequest) {
+      PcfCommandSetupRequest pcfCommandSetupRequest, ExecutionLogCallback executionLogCallback) {
     if (EmptyPredicate.isEmpty(previousReleases)) {
       return;
     }
@@ -210,8 +211,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
     if (isNotEmpty(appsWithZeroInstances)) {
       executionLogCallback.saveExecutionLog("\n# Deleting Applications with 0 instances");
-      appsWithZeroInstances.forEach(
-          applicationSummary -> { deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted); });
+      appsWithZeroInstances.forEach(applicationSummary -> {
+        deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted, executionLogCallback);
+      });
     }
 
     List<ApplicationSummary> appsWithNonZeroInstances =
@@ -221,7 +223,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                 applicationSummary -> pcfCommandTaskHelper.getRevisionFromReleaseName(applicationSummary.getName())))
             .collect(toList());
 
-    logApplicationsRetentionsMsg(appsWithNonZeroInstances, olderActiveVersionCountToKeep);
+    logApplicationsRetentionsMsg(appsWithNonZeroInstances, olderActiveVersionCountToKeep, executionLogCallback);
 
     // At this point, all apps with 0 instances have been deleted.
     // Now, we need to keep "olderActiveVersionCountToKeep" no of apps.
@@ -232,10 +234,10 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       for (int index = appsWithNonZeroInstances.size() - 2; index >= 0; index--) {
         ApplicationSummary applicationSummary = appsWithNonZeroInstances.get(index);
         if (appsDownsizedCount < olderActiveVersionCountToKeep - 1) {
-          downsizeApplicationToZero(applicationSummary, pcfRequestConfig);
+          downsizeApplicationToZero(applicationSummary, pcfRequestConfig, executionLogCallback);
           appsDownsizedCount++;
         } else {
-          deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted);
+          deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted, executionLogCallback);
         }
       }
     }
@@ -252,41 +254,44 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
   }
 
-  private void logApplicationsRetentionsMsg(
-      List<ApplicationSummary> appsWithNonZeroInstances, Integer olderActiveVersionCountToKeep) {
+  private void logApplicationsRetentionsMsg(List<ApplicationSummary> appsWithNonZeroInstances,
+      Integer olderActiveVersionCountToKeep, ExecutionLogCallback executionLogCallback) {
     if (isEmpty(appsWithNonZeroInstances)) {
       return;
     }
 
     executionLogCallback.saveExecutionLog("\n# Processing Apps with Non-Zero Instances");
-    executionLogCallback.saveExecutionLog(new StringBuilder(128)
-                                              .append("# No Change For Most Recent Application: ")
-                                              .append(appsWithNonZeroInstances.get(0).getName())
-                                              .toString());
+    executionLogCallback.saveExecutionLog(
+        new StringBuilder(128)
+            .append("# No Change For Most Recent Application: ")
+            .append(appsWithNonZeroInstances.get(appsWithNonZeroInstances.size() - 1).getName())
+            .toString());
 
-    for (int i = 1; i < appsWithNonZeroInstances.size(); i++) {
-      String msg;
-      if (i < olderActiveVersionCountToKeep) {
-        msg = new StringBuilder(128)
-                  .append("# Application: ")
-                  .append(appsWithNonZeroInstances.get(i).getName())
-                  .append(" Will Be Downsized To 0")
-                  .toString();
-      } else {
-        msg = new StringBuilder(128)
-                  .append("# Application: ")
-                  .append(appsWithNonZeroInstances.get(i).getName())
-                  .append(" Will Be Deleted")
-                  .toString();
+    if (appsWithNonZeroInstances.size() > 2) {
+      for (int i = appsWithNonZeroInstances.size() - 2; i >= 0; i--) {
+        String msg;
+        if (i < olderActiveVersionCountToKeep) {
+          msg = new StringBuilder(128)
+                    .append("# Application: ")
+                    .append(appsWithNonZeroInstances.get(i).getName())
+                    .append(" Will Be Downsized To 0")
+                    .toString();
+        } else {
+          msg = new StringBuilder(128)
+                    .append("# Application: ")
+                    .append(appsWithNonZeroInstances.get(i).getName())
+                    .append(" Will Be Deleted")
+                    .toString();
+        }
+
+        executionLogCallback.saveExecutionLog(msg);
       }
-
-      executionLogCallback.saveExecutionLog(msg);
     }
     executionLogCallback.saveExecutionLog("");
   }
 
-  private void deleteApplication(
-      ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig, Set<String> appsDeleted) {
+  private void deleteApplication(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig,
+      Set<String> appsDeleted, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(
         new StringBuilder().append("# Application Being Deleted: ").append(applicationSummary.getName()).toString());
     pcfRequestConfig.setApplicationName(applicationSummary.getName());
@@ -303,7 +308,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
   }
 
-  private void downsizeApplicationToZero(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig) {
+  private void downsizeApplicationToZero(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("# Application Being Downsized To 0: ")
                                               .append(applicationSummary.getName())

@@ -300,7 +300,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .resizeApplication(any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfDeployCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null);
+        pcfDeployCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     PcfDeployCommandResponse pcfDeployCommandResponse =
@@ -429,7 +429,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .resizeApplication(any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null);
+        pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     PcfDeployCommandResponse pcfDeployCommandResponse =
@@ -466,7 +466,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     // Fetch Orgs
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null);
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     PcfInfraMappingDataResponse pcfInfraMappingDataResponse =
@@ -480,7 +480,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     // Fetch Spaces for org
     pcfCommandRequest.setActionType(ActionType.FETCH_SPACE);
     pcfCommandRequest.setOrganization(ORG);
-    pcfCommandExecutionResponse = pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null);
+    pcfCommandExecutionResponse =
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
@@ -492,7 +493,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     // Fetch Routes
     pcfCommandRequest.setActionType(ActionType.FETCH_ROUTE);
     pcfCommandRequest.setSpace(SPACE);
-    pcfCommandExecutionResponse = pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null);
+    pcfCommandExecutionResponse =
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     assertNotNull(pcfInfraMappingDataResponse.getRouteMaps());
     assertEquals(2, pcfInfraMappingDataResponse.getRouteMaps().size());
@@ -542,7 +544,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     // Fetch Orgs
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfApplicationDetailsCommandTaskHandler.executeTaskInternal(pcfInstanceSyncRequest, null);
+        pcfApplicationDetailsCommandTaskHandler.executeTaskInternal(pcfInstanceSyncRequest, null, executionLogCallback);
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     PcfInstanceSyncResponse pcfInstanceSyncResponse =

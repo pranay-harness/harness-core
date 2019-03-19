@@ -20,16 +20,15 @@ public abstract class PcfCommandTaskHandler {
   @Inject protected DelegateLogService delegateLogService;
   @Inject protected PcfCommandTaskHelper pcfCommandTaskHelper;
 
-  protected ExecutionLogCallback executionLogCallback;
-
   public PcfCommandExecutionResponse executeTask(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    executionLogCallback = new ExecutionLogCallback(delegateLogService, pcfCommandRequest.getAccountId(),
-        pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), pcfCommandRequest.getCommandName());
+    ExecutionLogCallback executionLogCallback =
+        new ExecutionLogCallback(delegateLogService, pcfCommandRequest.getAccountId(), pcfCommandRequest.getAppId(),
+            pcfCommandRequest.getActivityId(), pcfCommandRequest.getCommandName());
 
-    return executeTaskInternal(pcfCommandRequest, encryptedDataDetails);
+    return executeTaskInternal(pcfCommandRequest, encryptedDataDetails, executionLogCallback);
   }
 
-  protected abstract PcfCommandExecutionResponse executeTaskInternal(
-      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails);
+  protected abstract PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback);
 }
