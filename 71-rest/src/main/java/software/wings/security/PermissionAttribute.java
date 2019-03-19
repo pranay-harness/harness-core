@@ -322,5 +322,9 @@ public class PermissionAttribute {
      * Provisioner permission permissionType
      */
     PROVISIONER,
+    /**
+     * Manage templates
+     */
+    TEMPLATE_MANAGEMENT
   }
 }

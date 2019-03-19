@@ -22,6 +22,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
+import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.security.UserRequestContext.EntityInfo;
@@ -1385,7 +1386,8 @@ public class AuthHandler {
   }
 
   private Set<PermissionType> getAllAccountPermissions() {
-    return Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE);
+    return Sets.newHashSet(
+        USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE, TEMPLATE_MANAGEMENT);
   }
 
   private Set<Action> getAllActions() {

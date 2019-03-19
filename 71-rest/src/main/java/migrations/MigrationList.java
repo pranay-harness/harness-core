@@ -6,6 +6,7 @@ import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
+import migrations.all.AddTemplateMgmtPermissionToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
@@ -197,6 +198,7 @@ public class MigrationList {
         .add(Pair.of(229, AddAccountIdToAppEntities.class))
         .add(Pair.of(230, MigrateCVMetadataApplicationId.class))
         .add(Pair.of(231, DropMongoGcsFileIdMappingCollectionMigration.class))
+        .add(Pair.of(232, AddTemplateMgmtPermissionToAdminUserGroup.class))
         .build();
   }
 }

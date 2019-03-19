@@ -1,5 +1,7 @@
 package io.harness.functional.template;
 
+import static io.harness.generator.AccountGenerator.adminUserEmail;
+import static io.harness.generator.AccountGenerator.readOnlyEmail;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +63,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   final String SCRIPT_TEMPLATE_NAME = "Another Sample Shell Script";
   final String SCRIPT_NAME1 = "Another Sample Shell Script - 1";
   final String SCRIPT_NAME2 = "Another Sample Shell Script - 2";
+  final String SCRIPT_NAME3 = "Another Sample Shell Script - 3";
   OwnerManager.Owners owners;
   Application application;
   Account account;
@@ -236,14 +239,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
             + "export C=\"ccc\"");
 
     // Delete template
-    Setup.portal()
-        .auth()
-        .oauth2(bearerToken)
-        .queryParam("accountId", account.getUuid())
-        .pathParam("templateId", savedTemplate.getUuid())
-        .delete("/templates/{templateId}")
-        .then()
-        .statusCode(200);
+    deleteTemplate(bearerToken, account.getUuid(), savedTemplate.getUuid(), 200);
 
     // Make sure that it is deleted
     savedTemplateResponse = Setup.portal()
@@ -255,6 +251,128 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                                 .get("/templates/{templateId}")
                                 .as(templateType.getType());
     assertThat(savedTemplateResponse.getResource()).isNull();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testCRUDTemplateRBAC() {
+    String readOnlyPassword = "readonlyuser";
+    String bearerToken = Setup.getAuthToken(readOnlyEmail, readOnlyPassword);
+
+    // Create template
+    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER);
+    ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
+                                                  .scriptType(ScriptType.BASH.name())
+                                                  .scriptString("echo \"Hello\" ${name}\n"
+                                                      + "export A=\"aaa\"\n"
+                                                      + "export B=\"bbb\"")
+                                                  .outputVars("A,B")
+                                                  .build();
+    Template template = Template.builder()
+                            .type(TemplateType.SHELL_SCRIPT.name())
+                            .accountId(account.getUuid())
+                            .name(SCRIPT_NAME3)
+                            .templateObject(shellScriptTemplate)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                            .build();
+    GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
+
+    };
+
+    RestResponse<Template> savedTemplateResponse = Setup.portal()
+                                                       .auth()
+                                                       .oauth2(bearerToken)
+                                                       .queryParam("accountId", account.getUuid())
+                                                       .body(template)
+                                                       .contentType(ContentType.JSON)
+                                                       .post("/templates")
+                                                       .as(templateType.getType());
+    assertThat(savedTemplateResponse.getResponseMessages()).isNotEmpty();
+    assertThat(savedTemplateResponse.getResponseMessages().get(0).getCode().getStatus().getStatusCode()).isEqualTo(400);
+
+    bearerToken = Setup.getAuthToken(adminUserEmail, "admin");
+    savedTemplateResponse = Setup.portal()
+                                .auth()
+                                .oauth2(bearerToken)
+                                .queryParam("accountId", account.getUuid())
+                                .body(template)
+                                .contentType(ContentType.JSON)
+                                .post("/templates")
+                                .as(templateType.getType());
+
+    Template savedTemplate = savedTemplateResponse.getResource();
+    resetCache();
+    assertThat(savedTemplate).isNotNull();
+
+    // Get template and validate template object and variables
+    savedTemplateResponse = Setup.portal()
+                                .auth()
+                                .oauth2(bearerToken)
+                                .contentType(ContentType.JSON)
+                                .queryParam("accountId", account.getUuid())
+                                .pathParam("templateId", savedTemplate.getUuid())
+                                .get("/templates/{templateId}")
+                                .as(templateType.getType());
+
+    savedTemplate = savedTemplateResponse.getResource();
+    assertThat(savedTemplate).isNotNull();
+
+    // update template and validate
+    shellScriptTemplate = ShellScriptTemplate.builder()
+                              .scriptType(ScriptType.BASH.name())
+                              .scriptString("echo \"Hello\" ${name}\n"
+                                  + "export A=\"aaa\"\n"
+                                  + "export B=\"bbb\"\n"
+                                  + "export C=\"ccc\"")
+                              .outputVars("A,B,C")
+                              .build();
+    template = Template.builder()
+                   .type(TemplateType.SHELL_SCRIPT.name())
+                   .accountId(account.getUuid())
+                   .name(SCRIPT_NAME3)
+                   .templateObject(shellScriptTemplate)
+                   .folderId(parentFolder.getUuid())
+                   .appId(GLOBAL_APP_ID)
+                   .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                   .version(savedTemplate.getVersion())
+                   .build();
+
+    bearerToken = Setup.getAuthToken(readOnlyEmail, readOnlyPassword);
+
+    savedTemplateResponse = Setup.portal()
+                                .auth()
+                                .oauth2(bearerToken)
+                                .contentType(ContentType.JSON)
+                                .body(template)
+                                .queryParam("accountId", account.getUuid())
+                                .pathParam("templateId", savedTemplate.getUuid())
+                                .put("/templates/{templateId}")
+                                .as(templateType.getType());
+
+    assertThat(savedTemplateResponse.getResponseMessages()).isNotEmpty();
+    assertThat(savedTemplateResponse.getResponseMessages().get(0).getCode().getStatus().getStatusCode()).isEqualTo(400);
+
+    // Delete template shouldn't be allowed
+    deleteTemplate(bearerToken, account.getUuid(), savedTemplate.getUuid(), 400);
+
+    bearerToken = Setup.getAuthToken(adminUserEmail, "admin");
+
+    // Delete template
+    deleteTemplate(bearerToken, account.getUuid(), savedTemplate.getUuid(), 200);
+  }
+
+  private void deleteTemplate(String bearerToken, String accountId, String templateId, int expectedHttpResponse) {
+    // Delete template
+    Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .pathParam("templateId", templateId)
+        .delete("/templates/{templateId}")
+        .then()
+        .statusCode(expectedHttpResponse);
   }
 
   @Test

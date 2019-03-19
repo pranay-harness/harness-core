@@ -56,12 +56,12 @@ import java.util.concurrent.TimeUnit;
 public class AccountGenerator {
   private static final String adminUserUuid = "lv0euRhKRCyiXWzS7pOg6g";
   private static final String adminUserName = "Admin";
-  private static final String adminUserEmail = "admin@harness.io";
+  public static final String adminUserEmail = "admin@harness.io";
   private static final SecretName adminPassword = new SecretName("user_admin_password");
 
   private static final String readOnlyUserUuid = "nhLgdGgxS_iqa0KP5edC-w";
   private static final String readOnlyUserName = "readonlyuser";
-  private static final String readOnlyEmail = "readonlyuser@harness.io";
+  public static final String readOnlyEmail = "readonlyuser@harness.io";
   private static final SecretName readOnlyPassword = new SecretName("user_readonly_password");
 
   private static final String rbac1UserUuid = "BnTbQTIJS4SkadzYv0BcbA";

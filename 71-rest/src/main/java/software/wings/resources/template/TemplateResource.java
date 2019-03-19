@@ -1,8 +1,8 @@
 package software.wings.resources.template;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
 import com.google.inject.Inject;
 
@@ -56,7 +56,7 @@ public class TemplateResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<Template> save(@QueryParam("accountId") String accountId, Template template) {
     template.setAccountId(accountId);
     template.setAppId(GLOBAL_APP_ID);
@@ -73,7 +73,7 @@ public class TemplateResource {
   @Path("{templateId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<Template> update(
       @QueryParam("accountId") String accountId, @PathParam("templateId") String templateId, Template template) {
     template.setAccountId(accountId);
@@ -92,7 +92,7 @@ public class TemplateResource {
   @Path("{templateId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse delete(@QueryParam("accountId") String accountId, @PathParam("templateId") String templateId) {
     templateService.delete(accountId, templateId);
     return new RestResponse();
