@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -153,7 +154,19 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
 
     List<Service> services = serviceResourceService.findServicesByApp(appId);
-    ImmutableMap<String, Service> serviceMap = Maps.uniqueIndex(services, Service::getUuid);
+    ImmutableMap<String, Service> serviceMap;
+    try {
+      serviceMap = Maps.uniqueIndex(services, Service::getUuid);
+    } catch (Exception ex) {
+      logger.warn("Logging services in case of NPE");
+      for (Service service : services) {
+        logger.info(format("Service name %s uuid %s appId %s accountId %s", service.getName(), service.getUuid(),
+            service.getAppId(), service.getAccountId()));
+      }
+
+      throw ex;
+    }
+
     serviceTemplateMap.forEach((serviceTemplateId, serviceTemplate) -> {
       Service tempService = serviceMap.get(serviceTemplate.getServiceId());
       serviceTemplate.setServiceArtifactType(tempService != null ? tempService.getArtifactType() : ArtifactType.OTHER);
