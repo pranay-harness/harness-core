@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -157,8 +158,22 @@ public class ContinuousVerificationDashboardResource {
   @Timed
   @ExceptionMetered
   public RestResponse<SortedSet<TransactionTimeSeries>> getFilteredTimeSeriesOfHeatMapUnit(
-      @QueryParam("accountId") @Valid final String accountId, @Valid TimeSeriesFilter timeSeriesFilter) {
-    return new RestResponse<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(timeSeriesFilter));
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("cvConfigId") @Valid final String cvConfigId,
+      @QueryParam("startTime") @Valid final long startTime, @QueryParam("endTime") @Valid final long endTime,
+      @QueryParam("historyStartTime") @Valid final long historyStartTime,
+      @QueryParam("txnNames[]") @Valid final List<String> txnNames,
+      @QueryParam("metricNames[]") @Valid final List<String> metricNames,
+      @QueryParam("tags[]") @Valid final List<String> tags) {
+    return new RestResponse<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                                                     .cvConfigId(cvConfigId)
+                                                                     .startTime(startTime)
+                                                                     .endTime(endTime)
+                                                                     .historyStartTime(historyStartTime)
+                                                                     .txnNames(Sets.newHashSet(txnNames))
+                                                                     .metricNames(Sets.newHashSet(metricNames))
+                                                                     .tags(Sets.newHashSet(tags))
+                                                                     .build()));
   }
 
   @POST

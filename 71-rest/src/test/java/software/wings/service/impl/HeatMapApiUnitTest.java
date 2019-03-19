@@ -11,7 +11,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -472,13 +472,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long historyStart = TimeUnit.MINUTES.toMillis(25685326);
 
     RestResponse<SortedSet<TransactionTimeSeries>> timeSeries =
-        cvDashboardResource.getFilteredTimeSeriesOfHeatMapUnit(accountId,
-            TimeSeriesFilter.builder()
-                .startTime(startTime + 1)
-                .endTime(1541177160000L)
-                .cvConfigId(cvConfigId)
-                .historyStartTime(0)
-                .build());
+        cvDashboardResource.getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, startTime + 1, 1541177160000L, 0,
+            Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+
     assertEquals(7, timeSeries.getResource().size());
   }
 
@@ -600,13 +596,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
-            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                TimeSeriesFilter.builder()
-                    .startTime(currentTime - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES) + 1)
-                    .endTime(currentTime)
-                    .cvConfigId(cvConfigId)
-                    .historyStartTime(0)
-                    .build())
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId,
+                currentTime - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES) + 1, currentTime, 0,
+                Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())
             .getResource();
 
     assertEquals(9, timeSeries.size());
@@ -624,15 +616,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     timeSeriesMLAnalysisRecord.getTransactions().get("9").getMetrics().get("0").setMax_risk(1);
     wingsPersistence.save(timeSeriesMLAnalysisRecord);
 
-    timeSeries = cvDashboardResource
-                     .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                         TimeSeriesFilter.builder()
-                             .startTime(currentTime - TimeUnit.MINUTES.toMillis(15))
-                             .endTime(currentTime)
-                             .cvConfigId(cvConfigId)
-                             .historyStartTime(0)
-                             .build())
-                     .getResource();
+    timeSeries =
+        cvDashboardResource
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, currentTime - TimeUnit.MINUTES.toMillis(15),
+                currentTime, 0, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())
+            .getResource();
 
     assertEquals(9, timeSeries.size());
     timeSeriesList = new ArrayList<>(timeSeries);
@@ -968,15 +956,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       wingsPersistence.save(timeSeriesMLAnalysisRecords);
       saveRiskSummaries(timeSeriesMLAnalysisRecords);
     }
-    SortedSet<TransactionTimeSeries> timeSeries = cvDashboardResource
-                                                      .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                                                          TimeSeriesFilter.builder()
-                                                              .startTime(1541688360001l)
-                                                              .endTime(1541689260000l)
-                                                              .cvConfigId(cvConfigId)
-                                                              .historyStartTime(1541681160001l)
-                                                              .build())
-                                                      .getResource();
+    SortedSet<TransactionTimeSeries> timeSeries =
+        cvDashboardResource
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541688360001l, 1541689260000l, 1541681160001l,
+                Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())
+            .getResource();
 
     ArrayList<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
     for (int i = 0; i < timeSeriesList.size() - 1; i++) {
@@ -1046,14 +1030,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       wingsPersistence.save(metricDataRecords);
     }
 
-    final SortedSet<TransactionTimeSeries> timeSeries = cvDashboardResource
-                                                            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                                                                TimeSeriesFilter.builder()
-                                                                    .cvConfigId(cvConfigId)
-                                                                    .startTime(1541678400000L)
-                                                                    .endTime(1541685600000L)
-                                                                    .build())
-                                                            .getResource();
+    final SortedSet<TransactionTimeSeries> timeSeries =
+        cvDashboardResource
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
+                Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())
+            .getResource();
     assertEquals(43, timeSeries.size());
   }
 
@@ -1090,13 +1071,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     final SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
-            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                TimeSeriesFilter.builder()
-                    .cvConfigId(cvConfigId)
-                    .startTime(1541678400000L)
-                    .endTime(1541685600000L)
-                    .txnNames(Sets.newHashSet("/api/setup-as-code", "/api/infrastructure-mappings", "/api/userGroups"))
-                    .build())
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
+                Lists.newArrayList("/api/setup-as-code", "/api/infrastructure-mappings", "/api/userGroups"),
+                Lists.newArrayList(), Lists.newArrayList())
             .getResource();
     List<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
     assertEquals(3, timeSeries.size());
@@ -1151,13 +1128,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
-            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                TimeSeriesFilter.builder()
-                    .cvConfigId(cvConfigId)
-                    .startTime(1541678400000L)
-                    .endTime(1541685600000L)
-                    .metricNames(Sets.newHashSet("95th Percentile Response Time (ms)"))
-                    .build())
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
+                Lists.newArrayList(), Lists.newArrayList("95th Percentile Response Time (ms)"), Lists.newArrayList())
             .getResource();
     assertEquals(43, timeSeries.size());
     timeSeries.forEach(transactionTimeSeries -> {
@@ -1167,13 +1139,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     });
 
     timeSeries = cvDashboardResource
-                     .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                         TimeSeriesFilter.builder()
-                             .cvConfigId(cvConfigId)
-                             .startTime(1541678400000L)
-                             .endTime(1541685600000L)
-                             .metricNames(Sets.newHashSet("Number of Slow Calls"))
-                             .build())
+
+                     .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
+                         Lists.newArrayList(), Lists.newArrayList("Number of Slow Calls"), Lists.newArrayList())
                      .getResource();
     assertEquals(17, timeSeries.size());
     timeSeries.forEach(transactionTimeSeries -> {
@@ -1215,14 +1183,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
-            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                TimeSeriesFilter.builder()
-                    .cvConfigId(cvConfigId)
-                    .startTime(1541678400000L)
-                    .endTime(1541685600000L)
-                    .txnNames(Sets.newHashSet("/api/setup-as-code", "/api/infrastructure-mappings"))
-                    .metricNames(Sets.newHashSet("95th Percentile Response Time (ms)", "Number of Slow Calls"))
-                    .build())
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
+                Lists.newArrayList("/api/setup-as-code", "/api/infrastructure-mappings"),
+                Lists.newArrayList("95th Percentile Response Time (ms)", "Number of Slow Calls"), Lists.newArrayList())
             .getResource();
     assertEquals(2, timeSeries.size());
     assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
@@ -1235,15 +1198,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     });
 
     timeSeries = cvDashboardResource
-                     .getFilteredTimeSeriesOfHeatMapUnit(accountId,
-                         TimeSeriesFilter.builder()
-                             .cvConfigId(cvConfigId)
-                             .startTime(1541678400000L)
-                             .endTime(1541685600000L)
-                             .txnNames(Sets.newHashSet("/api/setup-as-code", "/api/infrastructure-mappings"))
-                             .metricNames(Sets.newHashSet("Number of Slow Calls"))
-                             .build())
+                     .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
+                         Lists.newArrayList("/api/setup-as-code", "/api/infrastructure-mappings"),
+                         Lists.newArrayList("Number of Slow Calls"), Lists.newArrayList())
                      .getResource();
+
     assertEquals(2, timeSeries.size());
     assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
     assertEquals("/api/infrastructure-mappings", timeSeries.last().getTransactionName());
