@@ -18,7 +18,6 @@ import static software.wings.service.intfc.analysis.ClusterLevel.HF;
 import static software.wings.service.intfc.analysis.ClusterLevel.L0;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -142,9 +141,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   private void deleteClusterLevel(String appId, String cvConfigId, String host, int logCollectionMinute,
       ClusterLevel fromLevel, ClusterLevel toLevel) {
-    Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
+    Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                      .filter("cvConfigId", cvConfigId)
-                                     .filter("appId", appId)
                                      .filter("clusterLevel", fromLevel);
 
     if (ClusterLevel.L2.equals(toLevel)) {
@@ -160,9 +158,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     logger.info("Deleted clustered data for cvConfigId: {}, minute {}, fromLevel {}, toLevel {}", cvConfigId,
         logCollectionMinute, fromLevel, toLevel);
     try {
-      query = wingsPersistence.createQuery(LogDataRecord.class)
+      query = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                   .filter("cvConfigId", cvConfigId)
-                  .filter("appId", appId)
                   .filter("clusterLevel", ClusterLevel.getHeartBeatLevel(fromLevel));
 
       if (ClusterLevel.L2.equals(toLevel)) {
@@ -968,11 +965,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public long getMaxCVCollectionMinute(String appId, String cvConfigId) {
-    LogDataRecord logDataRecord = wingsPersistence.createQuery(LogDataRecord.class)
-                                      .filter("appId", appId)
+    LogDataRecord logDataRecord = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                       .filter("cvConfigId", cvConfigId)
-                                      .field("clusterLevel")
-                                      .in(Lists.newArrayList(H0, H1, H2, HF))
                                       .order("-logCollectionMinute")
                                       .get();
 
@@ -982,8 +976,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public long getLogRecordMinute(String appId, String cvConfigId, ClusterLevel clusterLevel, OrderType orderType) {
     LogDataRecord logDataRecord =
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter("appId", appId)
+        wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
             .filter("cvConfigId", cvConfigId)
             .filter("clusterLevel", clusterLevel)
             .order(orderType == OrderType.DESC ? "-logCollectionMinute" : "logCollectionMinute")
@@ -996,41 +989,35 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public Set<String> getHostsForMinute(
       String appId, String cvConfigId, long logRecordMinute, ClusterLevel... clusterLevels) {
     Set<String> hosts = new HashSet<>();
-    int previousOffSet = 0;
     Set<ClusterLevel> finalClusterLevels = new HashSet<>();
     for (int i = 0; i < clusterLevels.length; i++) {
       finalClusterLevels.add(clusterLevels[i]);
       finalClusterLevels.add(ClusterLevel.getHeartBeatLevel(clusterLevels[i]));
     }
-    PageRequest<LogDataRecord> pageRequest = aPageRequest()
-                                                 .withOffset(String.valueOf(previousOffSet))
-                                                 .withLimit("1000")
-                                                 .addFilter("appId", Operator.EQ, appId)
-                                                 .addFilter("cvConfigId", Operator.EQ, cvConfigId)
-                                                 .addFilter("clusterLevel", Operator.IN, finalClusterLevels.toArray())
-                                                 .addFilter("logCollectionMinute", Operator.EQ, logRecordMinute)
-                                                 .addFieldsExcluded("logMessage")
-                                                 .build();
 
-    PageResponse<LogDataRecord> response = wingsPersistence.query(LogDataRecord.class, pageRequest, excludeCount);
-    while (!response.isEmpty()) {
-      response.getResponse().forEach(dataRecord -> hosts.add(dataRecord.getHost()));
-
-      // filter for metric names
-      previousOffSet += response.size();
-      pageRequest.setOffset(String.valueOf(previousOffSet));
-      response = wingsPersistence.query(LogDataRecord.class, pageRequest, excludeCount);
+    try (HIterator<LogDataRecord> logRecordIterator =
+             new HIterator<>(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                                 .filter("cvConfigId", cvConfigId)
+                                 .filter("logCollectionMinute", logRecordMinute)
+                                 .project("logMessage", false)
+                                 .fetch())) {
+      while (logRecordIterator.hasNext()) {
+        final LogDataRecord logDataRecord = logRecordIterator.next();
+        if (finalClusterLevels.contains(logDataRecord.getClusterLevel())) {
+          hosts.add(logDataRecord.getHost());
+        }
+      }
     }
     return hosts;
   }
 
   @Override
   public long getLastCVAnalysisMinute(String appId, String cvConfigId) {
-    final LogMLAnalysisRecord mlAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                                     .filter("appId", appId)
-                                                     .filter("cvConfigId", cvConfigId)
-                                                     .order("-logCollectionMinute")
-                                                     .get();
+    final LogMLAnalysisRecord mlAnalysisRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter("cvConfigId", cvConfigId)
+            .order(Sort.descending("logCollectionMinute"))
+            .get();
     return mlAnalysisRecord == null ? -1 : mlAnalysisRecord.getLogCollectionMinute();
   }
 
