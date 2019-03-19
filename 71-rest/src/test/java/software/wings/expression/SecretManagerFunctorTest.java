@@ -159,6 +159,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   private void assertDelegateDecryptedValue(
       String secretName, SecretManagerFunctor secretManagerFunctor, String decryptedValue) {
     assertThat(decryptedValue).isNotNull().startsWith("${secretDelegate.obtain(");
+    assertThat(decryptedValue).isNotNull().contains(String.valueOf(secretManagerFunctor.getExpressionFunctorToken()));
     assertThat(secretManagerFunctor.getEvaluatedDelegateSecrets()).isNotEmpty().containsKey(secretName);
     assertThat(secretManagerFunctor.getEvaluatedDelegateSecrets().get(secretName));
     assertThat(secretManagerFunctor.getEncryptionConfigs()).isNotEmpty();

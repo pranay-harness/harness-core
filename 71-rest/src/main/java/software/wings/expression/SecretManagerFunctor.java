@@ -105,7 +105,8 @@ public class SecretManagerFunctor implements ExpressionFunctor {
     String secretDetailsUuid = generateUuid();
 
     secretDetails.put(secretDetailsUuid, secretDetail);
-    evaluatedDelegateSecrets.put(secretName, "${secretDelegate.obtain(\"" + secretDetailsUuid + "\")}");
+    evaluatedDelegateSecrets.put(
+        secretName, "${secretDelegate.obtain(\"" + secretDetailsUuid + "\", " + expressionFunctorToken + ")}");
     return evaluatedDelegateSecrets.get(secretName);
   }
 }
