@@ -8,9 +8,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Validator.notNullCheck;
 

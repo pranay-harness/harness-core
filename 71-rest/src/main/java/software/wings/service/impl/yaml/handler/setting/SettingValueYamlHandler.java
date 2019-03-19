@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 

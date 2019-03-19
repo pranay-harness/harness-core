@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.defaults;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

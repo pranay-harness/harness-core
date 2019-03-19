@@ -21,6 +21,7 @@ import static software.wings.beans.Environment.APP_ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.ENVIRONMENT_TYPE_KEY;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -73,7 +74,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
@@ -263,7 +263,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                           .withUuid(TEMPLATE_ID)
                                           .withDescription(TEMPLATE_DESCRIPTION)
                                           .withServiceId(SERVICE_ID)
-                                          .withEnvId(Base.GLOBAL_ENV_ID)
+                                          .withEnvId(GLOBAL_ENV_ID)
                                           .withInfrastructureMappings(asList(physicalInfrastructureMapping))
                                           .build();
 
@@ -428,7 +428,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                           .withUuid(TEMPLATE_ID)
                                           .withDescription(TEMPLATE_DESCRIPTION)
                                           .withServiceId(SERVICE_ID)
-                                          .withEnvId(Base.GLOBAL_ENV_ID)
+                                          .withEnvId(GLOBAL_ENV_ID)
                                           .withInfrastructureMappings(asList(physicalInfrastructureMapping))
                                           .build();
 
@@ -487,7 +487,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                           .withUuid(TEMPLATE_ID)
                                           .withDescription(TEMPLATE_DESCRIPTION)
                                           .withServiceId(SERVICE_ID)
-                                          .withEnvId(Base.GLOBAL_ENV_ID)
+                                          .withEnvId(GLOBAL_ENV_ID)
                                           .withInfrastructureMappings(asList(physicalInfrastructureMapping))
                                           .build();
 

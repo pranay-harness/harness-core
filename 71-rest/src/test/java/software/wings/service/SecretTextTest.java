@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEFAULT_SECRET_MANAGER;
@@ -49,7 +50,6 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
@@ -1594,7 +1594,7 @@ public class SecretTextTest extends WingsBaseTest {
       for (int j = 0; j < numOfServiceVariables; j++) {
         ServiceVariable serviceVariable = ServiceVariable.builder()
                                               .templateId(UUID.randomUUID().toString())
-                                              .envId(Base.GLOBAL_ENV_ID)
+                                              .envId(GLOBAL_ENV_ID)
                                               .entityType(EntityType.SERVICE)
                                               .entityId(service.getUuid())
                                               .parentServiceVariableId(UUID.randomUUID().toString())
@@ -2084,7 +2084,7 @@ public class SecretTextTest extends WingsBaseTest {
       for (int j = 0; j < numOfServiceVariables; j++) {
         ServiceVariable serviceVariable = ServiceVariable.builder()
                                               .templateId(UUID.randomUUID().toString())
-                                              .envId(Base.GLOBAL_ENV_ID)
+                                              .envId(GLOBAL_ENV_ID)
                                               .entityType(EntityType.SERVICE)
                                               .entityId(service.getUuid())
                                               .parentServiceVariableId(UUID.randomUUID().toString())

@@ -58,11 +58,6 @@ public class Base
 
   public static final String TEMPATE_UUID_KEY = "templateUuid";
 
-  /**
-   * The constant GLOBAL_ENV_ID.
-   */
-  public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
-
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;

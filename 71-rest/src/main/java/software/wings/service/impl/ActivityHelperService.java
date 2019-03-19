@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

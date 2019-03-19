@@ -15,6 +15,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -1661,7 +1662,7 @@ public class SecretManagerImpl implements SecretManager {
           envIds = new HashSet<>();
           referredAppEnvMap.put(appId, envIds);
         }
-        if (isNotEmpty(envId) && !Base.GLOBAL_ENV_ID.equals(envId)) {
+        if (isNotEmpty(envId) && !GLOBAL_ENV_ID.equals(envId)) {
           envIds.add(envId);
         }
       }
