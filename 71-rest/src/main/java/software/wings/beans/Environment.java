@@ -45,6 +45,8 @@ public class Environment extends Base {
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
 
+  public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
+
   @NotEmpty @EntityName private String name;
   private String description;
   private String configMapYaml;

@@ -1,7 +1,8 @@
 import jenkins.model.Jenkins
+
 import javax.xml.transform.stream.StreamSource
-import java.util.regex.Pattern
 import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 def updateJob(name, amount) {
     job = Jenkins.instance.getItemByFullName(name)

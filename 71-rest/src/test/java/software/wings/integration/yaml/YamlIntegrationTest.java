@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 

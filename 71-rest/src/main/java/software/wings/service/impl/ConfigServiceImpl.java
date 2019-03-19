@@ -7,10 +7,10 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;

@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.util.Arrays.stream;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;

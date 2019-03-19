@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.service;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
@@ -266,7 +266,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     ServiceVariable serviceVariable = serviceVariableBuilder.build();
     serviceVariable.setAppId(appId);
-    serviceVariable.setEnvId(Base.GLOBAL_ENV_ID);
+    serviceVariable.setEnvId(GLOBAL_ENV_ID);
 
     return serviceVariable;
   }

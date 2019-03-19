@@ -13,7 +13,7 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;

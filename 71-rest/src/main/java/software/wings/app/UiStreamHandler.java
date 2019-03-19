@@ -8,6 +8,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -72,7 +73,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
 
         String accountId = pathSegments.get(1);
         String appId = pathSegments.get(2).replace("all", Base.GLOBAL_APP_ID);
-        String envId = pathSegments.get(3).replace("all", Base.GLOBAL_ENV_ID);
+        String envId = pathSegments.get(3).replace("all", GLOBAL_ENV_ID);
         Channel channel = Channel.getChannelByChannelName(pathSegments.get(5));
 
         if (channel == null) {

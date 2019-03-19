@@ -15,7 +15,7 @@ import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
 import static software.wings.beans.SettingAttribute.NAME_KEY;

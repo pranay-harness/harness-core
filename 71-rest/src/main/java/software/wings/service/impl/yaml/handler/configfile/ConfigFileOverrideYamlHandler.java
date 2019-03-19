@@ -4,6 +4,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -17,7 +18,6 @@ import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
@@ -165,7 +165,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       if (serviceName == null) {
         configFile.setEntityType(EntityType.ENVIRONMENT);
         configFile.setEntityId(envId);
-        configFile.setEnvId(Base.GLOBAL_ENV_ID);
+        configFile.setEnvId(GLOBAL_ENV_ID);
         configFile.setTemplateId(ConfigFile.DEFAULT_TEMPLATE_ID);
       } else {
         Service service = serviceResourceService.getServiceByName(appId, serviceName);

@@ -3,8 +3,8 @@ package software.wings.sm.states;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
