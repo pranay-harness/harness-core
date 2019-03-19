@@ -14,7 +14,6 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.CALL_COUNT;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
-import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.THROUGHPUT;
 
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
@@ -245,7 +244,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
               NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
               if (webTransactions.getCall_count() > 0) {
-                metricDataRecord.getValues().put(THROUGHPUT, webTransactions.getThroughput());
                 metricDataRecord.getValues().put(AVERAGE_RESPONSE_TIME, webTransactions.getAverage_response_time());
                 metricDataRecord.getValues().put(CALL_COUNT, (double) webTransactions.getCall_count());
                 metricDataRecord.getValues().put(REQUSET_PER_MINUTE, (double) webTransactions.getRequests_per_minute());

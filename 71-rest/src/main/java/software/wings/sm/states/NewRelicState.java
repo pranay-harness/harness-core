@@ -266,7 +266,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     if (NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.containsKey(metricName)) {
       return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.get(metricName).getMetricType().name();
     }
-    logger.error("Invalid metricName in NewRelic {}", metricName);
+    logger.info("Invalid metricName in NewRelic {}", metricName);
     return null;
   }
 

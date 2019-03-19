@@ -229,7 +229,8 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
           analysisRecordQuery.field("logCollectionMinute").greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime));
     } else {
       analysisRecordQuery =
-          analysisRecordQuery.field("logCollectionMinute").greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime));
+          analysisRecordQuery.field("logCollectionMinute")
+              .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime) + CRON_POLL_INTERVAL_IN_MINUTES);
     }
     return analysisRecordQuery.asList();
   }
