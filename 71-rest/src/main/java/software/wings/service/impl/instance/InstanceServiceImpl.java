@@ -178,6 +178,12 @@ public class InstanceServiceImpl implements InstanceService {
     setUnset(updateOperations, "isDeleted", true);
 
     wingsPersistence.update(query, updateOperations);
+
+    if ("appId".equals(fieldName)) {
+      Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
+      syncStatusQuery.filter(fieldName, value);
+      wingsPersistence.delete(syncStatusQuery);
+    }
   }
 
   private void pruneByEntity(Map<String, String> inputs) {
@@ -190,6 +196,10 @@ public class InstanceServiceImpl implements InstanceService {
     setUnset(updateOperations, "isDeleted", true);
 
     wingsPersistence.update(query, updateOperations);
+
+    Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
+    inputs.forEach((key, value) -> syncStatusQuery.filter(key, value));
+    wingsPersistence.delete(syncStatusQuery);
   }
 
   @Override
