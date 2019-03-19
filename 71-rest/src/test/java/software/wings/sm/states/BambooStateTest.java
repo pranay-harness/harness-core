@@ -90,7 +90,7 @@ public class BambooStateTest {
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
-        .hasFieldOrPropertyWithValue("taskType", BAMBOO.name());
+        .hasFieldOrPropertyWithValue("data.taskType", BAMBOO.name());
   }
 
   @Test

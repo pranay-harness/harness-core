@@ -527,11 +527,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
-                                    .taskType(TaskType.GIT_COMMAND.name())
                                     .accountId(accountId)
                                     .appId(GLOBAL_APP_ID)
                                     .waitId(waitId)
                                     .data(TaskData.builder()
+                                              .taskType(TaskType.GIT_COMMAND.name())
                                               .parameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
                                                   secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
                                                   GitCommitRequest.builder()
@@ -678,11 +678,11 @@ public class YamlGitServiceImpl implements YamlGitService {
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
       DelegateTask delegateTask = DelegateTask.builder()
                                       .async(true)
-                                      .taskType(TaskType.GIT_COMMAND.name())
                                       .accountId(accountId)
                                       .appId(GLOBAL_APP_ID)
                                       .waitId(waitId)
                                       .data(TaskData.builder()
+                                                .taskType(TaskType.GIT_COMMAND.name())
                                                 .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
                                                     secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
                                                     GitDiffRequest.builder()

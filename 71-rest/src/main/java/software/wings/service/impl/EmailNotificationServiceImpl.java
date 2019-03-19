@@ -112,16 +112,17 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     try {
       EmailRequest request =
           EmailRequest.builder().emailData(emailData).encryptionDetails(encryptionDetails).smtpConfig(config).build();
-      DelegateTask delegateTask =
-          DelegateTask.builder()
-              .taskType(TaskType.COLLABORATION_PROVIDER_TASK.name())
-              .accountId(emailData.getAccountId())
-              .appId(GLOBAL_APP_ID)
-              .waitId(waitId)
-              .data(
-                  TaskData.builder().parameters(new Object[] {request}).timeout(TimeUnit.MINUTES.toMillis(10)).build())
-              .async(true)
-              .build();
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .accountId(emailData.getAccountId())
+                                      .appId(GLOBAL_APP_ID)
+                                      .waitId(waitId)
+                                      .data(TaskData.builder()
+                                                .taskType(TaskType.COLLABORATION_PROVIDER_TASK.name())
+                                                .parameters(new Object[] {request})
+                                                .timeout(TimeUnit.MINUTES.toMillis(10))
+                                                .build())
+                                      .async(true)
+                                      .build();
       waitNotifyEngine.waitForAll(new EmailNotificationCallBack(), waitId);
       delegateService.queueTask(delegateTask);
       return true;

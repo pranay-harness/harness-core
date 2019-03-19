@@ -96,11 +96,11 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(context.getAccountId())
-                                    .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())
                                     .waitId(activityId)
                                     .appId(context.getAppId())
                                     .async(true)
                                     .data(TaskData.builder()
+                                              .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())
                                               .parameters(new Object[] {parameters})
                                               .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                                               .build())

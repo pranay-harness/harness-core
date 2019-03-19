@@ -50,12 +50,12 @@ public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServi
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)
-            .taskType(TaskType.AWS_ROUTE53_TASK.name())
             .accountId(accountId)
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
+                      .taskType(TaskType.AWS_ROUTE53_TASK.name())
                       .parameters(new Object[] {request})
                       .timeout(MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                       .build())

@@ -129,14 +129,16 @@ public class SettingValidationService {
                                                           .encryptedDataDetails(encryptionDetails)
                                                           .settingAttribute(settingAttribute)
                                                           .build();
-      DelegateTask delegateTask =
-          DelegateTask.builder()
-              .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
-              .accountId(settingAttribute.getAccountId())
-              .appId(settingAttribute.getAppId())
-              .async(false)
-              .data(TaskData.builder().parameters(new Object[] {request}).timeout(TimeUnit.MINUTES.toMillis(2)).build())
-              .build();
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .accountId(settingAttribute.getAccountId())
+                                      .appId(settingAttribute.getAppId())
+                                      .async(false)
+                                      .data(TaskData.builder()
+                                                .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
+                                                .parameters(new Object[] {request})
+                                                .timeout(TimeUnit.MINUTES.toMillis(2))
+                                                .build())
+                                      .build();
       try {
         ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
         if (notifyResponseData instanceof ErrorNotifyResponseData) {

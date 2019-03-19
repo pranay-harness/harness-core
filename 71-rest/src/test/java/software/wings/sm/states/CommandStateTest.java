@@ -341,10 +341,10 @@ public class CommandStateTest extends WingsBaseTest {
                 .async(true)
                 .appId(APP_ID)
                 .accountId(ACCOUNT_ID)
-                .taskType(TaskType.COMMAND.name())
                 .waitId(ACTIVITY_ID)
                 .data(
                     TaskData.builder()
+                        .taskType(TaskType.COMMAND.name())
                         .parameters(new Object[] {COMMAND,
                             aCommandExecutionContext()
                                 .withAppId(APP_ID)
@@ -549,9 +549,9 @@ public class CommandStateTest extends WingsBaseTest {
     DelegateTaskBuilder builder = DelegateTask.builder()
                                       .appId(APP_ID)
                                       .accountId(ACCOUNT_ID)
-                                      .taskType(TaskType.COMMAND.name())
                                       .waitId(ACTIVITY_ID)
                                       .data(TaskData.builder()
+                                                .taskType(TaskType.COMMAND.name())
                                                 .parameters(new Object[] {command, commandExecutionContext})
                                                 .timeout(TimeUnit.MINUTES.toMillis(30))
                                                 .build());

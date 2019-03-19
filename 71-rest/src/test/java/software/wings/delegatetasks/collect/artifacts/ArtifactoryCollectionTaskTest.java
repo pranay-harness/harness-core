@@ -42,11 +42,11 @@ public class ArtifactoryCollectionTaskTest {
   private DelegateTask collectionTask =
       DelegateTask.builder()
           .async(true)
-          .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
           .accountId(ACCOUNT_ID)
           .appId(APP_ID)
           .waitId("123456789")
           .data(TaskData.builder()
+                    .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
                     .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
                         artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
                         ImmutableMap.of("buildNo", "1.1")})

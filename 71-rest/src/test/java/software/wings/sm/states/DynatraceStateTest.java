@@ -136,7 +136,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertEquals(1, tasks.size());
     DelegateTask task = tasks.get(0);
-    assertEquals(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name(), task.getTaskType());
+    assertEquals(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name(), task.getData().getTaskType());
 
     DynaTraceDataCollectionInfo expectedCollectionInfo =
         DynaTraceDataCollectionInfo.builder()

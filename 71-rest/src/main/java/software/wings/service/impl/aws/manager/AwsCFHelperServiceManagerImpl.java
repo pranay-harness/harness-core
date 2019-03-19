@@ -68,12 +68,12 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   private AwsResponse executeTask(String accountId, AwsCFRequest request, String appId) {
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .taskType(TaskType.AWS_CF_TASK.name())
             .accountId(accountId)
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
+                      .taskType(TaskType.AWS_CF_TASK.name())
                       .parameters(new Object[] {request})
                       .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                       .build())

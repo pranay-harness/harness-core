@@ -177,11 +177,11 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .appId(infrastructureMapping.getAppId())
             .waitId(activity.getUuid())
             .data(TaskData.builder()
+                      .taskType(ECS_COMMAND_TASK.name())
                       .parameters(new Object[] {request, encryptedDetails})
                       .timeout(MINUTES.toMillis(containerServiceElement.getServiceSteadyStateTimeout()))
                       .build())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .taskType(ECS_COMMAND_TASK.name())
             .async(true)
             .envId(infrastructureMapping.getEnvId())
             .build();

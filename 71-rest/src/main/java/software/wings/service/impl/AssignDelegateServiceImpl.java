@@ -95,7 +95,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public boolean canAssign(String delegateId, DelegateTask task) {
     return canAssign(delegateId, task.getAccountId(), task.getAppId(), task.getEnvId(),
         task.getInfrastructureMappingId(),
-        isNotBlank(task.getTaskType()) ? TaskType.valueOf(task.getTaskType()).getTaskGroup() : null, task.getTags());
+        isNotBlank(task.getData().getTaskType()) ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup() : null,
+        task.getTags());
   }
 
   @Override
@@ -123,12 +124,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return (isEmpty(delegate.getIncludeScopes())
                || delegate.getIncludeScopes().stream().anyMatch(scope
                       -> scopeMatch(scope, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(),
-                          isNotBlank(task.getTaskType()) ? TaskType.valueOf(task.getTaskType()).getTaskGroup() : null)))
+                          isNotBlank(task.getData().getTaskType())
+                              ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup()
+                              : null)))
         && (isEmpty(delegate.getExcludeScopes())
                || delegate.getExcludeScopes().stream().noneMatch(scope
                       -> scopeMatch(scope, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(),
-                          isNotBlank(task.getTaskType()) ? TaskType.valueOf(task.getTaskType()).getTaskGroup()
-                                                         : null)));
+                          isNotBlank(task.getData().getTaskType())
+                              ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup()
+                              : null)));
   }
 
   private boolean scopeMatch(
@@ -162,7 +166,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean isWhitelisted(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
@@ -181,7 +185,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean shouldValidate(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
@@ -209,7 +213,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                                     .filter(delegateId -> canAssign(delegateId, task))
                                                     .collect(toList());
 
-      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           for (String delegateId : connectedEligibleDelegates) {
             Optional<DelegateConnectionResult> result =
@@ -240,7 +244,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public void refreshWhitelist(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> cachedResult =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));

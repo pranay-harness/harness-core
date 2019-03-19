@@ -51,7 +51,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private long lastUpdatedAt;
 
   private String version;
-  @NotNull private String taskType;
   private List<String> tags;
   @NotEmpty private String accountId;
   private String waitId;

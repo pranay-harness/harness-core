@@ -169,11 +169,11 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
-                                    .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
                                     .accountId(appService.get(context.getAppId()).getAccountId())
                                     .appId(context.getAppId())
                                     .waitId(waitId)
                                     .data(TaskData.builder()
+                                              .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
                                               .parameters(new Object[] {dataCollectionInfo})
                                               .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                               .build())
