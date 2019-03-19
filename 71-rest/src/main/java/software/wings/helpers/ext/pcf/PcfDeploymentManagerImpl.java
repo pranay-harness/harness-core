@@ -136,7 +136,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       }
 
       return applicationSummaries.stream()
-          .filter(applicationSummary -> applicationSummary.getName().startsWith(prefix))
+          .filter(applicationSummary -> getAppPrefixByRemovingNumber(applicationSummary.getName()).equals(prefix))
           .sorted(comparingInt(applicationSummary -> getRevisionFromServiceName(applicationSummary.getName())))
           .collect(toList());
 
@@ -242,6 +242,20 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       }
     }
     return -1;
+  }
+
+  public String getAppPrefixByRemovingNumber(String name) {
+    if (name != null) {
+      int index = name.lastIndexOf(DELIMITER);
+      if (index >= 0) {
+        try {
+          return name.substring(0, index);
+        } catch (NumberFormatException e) {
+          // Ignore
+        }
+      }
+    }
+    return name;
   }
 
   public String checkConnectivity(PcfConfig pcfConfig) {

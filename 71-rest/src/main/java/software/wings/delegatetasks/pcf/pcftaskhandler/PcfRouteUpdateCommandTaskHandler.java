@@ -35,8 +35,8 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
    * @param encryptedDataDetails
    * @return
    */
-  public PcfCommandExecutionResponse executeTaskInternal(
-      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (!(pcfCommandRequest instanceof PcfCommandRouteUpdateRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("pcfCommandRequest", "Must be instance of PcfCommandRouteUpdateRequest"));
@@ -62,10 +62,10 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
               .build();
 
       if (pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().isStandardBlueGreen()) {
-        performRouteUpdateForStandardBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig);
+        performRouteUpdateForStandardBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
         resizeOldApplicationsIfRequired(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
       } else {
-        performRouteUpdateForSimulatedBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig);
+        performRouteUpdateForSimulatedBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
       }
 
       executionLogCallback.saveExecutionLog("\n--------- PCF Route Update completed successfully");
@@ -123,7 +123,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private void performRouteUpdateForSimulatedBlueGreen(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
-      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     PcfRouteUpdateRequestConfigData data = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
 
     for (String appName : data.getExistingApplicationNames()) {
@@ -136,7 +136,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private void performRouteUpdateForStandardBlueGreen(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
-      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     PcfRouteUpdateRequestConfigData data = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
 
     List<String> mapRouteForNewApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();

@@ -16,6 +16,7 @@ import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
@@ -30,8 +31,8 @@ import java.util.List;
 public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(PcfApplicationDetailsCommandTaskHandler.class);
 
-  public PcfCommandExecutionResponse executeTaskInternal(
-      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (!(pcfCommandRequest instanceof PcfInstanceSyncRequest)) {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfInstanceSyncRequest"));
     }

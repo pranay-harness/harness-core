@@ -20,6 +20,7 @@ import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -46,8 +47,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
    * @param encryptedDataDetails
    * @return
    */
-  public PcfCommandExecutionResponse executeTaskInternal(
-      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (!(pcfCommandRequest instanceof PcfCommandRollbackRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("pcfCommandRequest", "Must be instance of PcfCommandRollbackRequest"));
