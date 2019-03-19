@@ -6,6 +6,7 @@ import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.CleanupOrphanInstances;
+import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SendInviteUrlForAllUserInvites;
@@ -40,6 +41,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(15, BaseMigration.class))
         .add(Pair.of(16, AddOrchestrationToWorkflows.class))
         .add(Pair.of(17, CleanupOrphanInstances.class))
+        .add(Pair.of(18, CleanupSyncStatusForDeletedEntities.class))
         .build();
   }
 }
