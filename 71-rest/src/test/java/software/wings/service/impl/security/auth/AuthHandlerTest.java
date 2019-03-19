@@ -19,6 +19,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.APPLICA
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
+import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.sm.StateType.APPROVAL;
@@ -84,7 +85,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject private AuthHandler authHandler;
 
   private List<PermissionType> accountPermissionTypes =
-      asList(ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE, USER_PERMISSION_MANAGEMENT);
+      asList(ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE, USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT);
   private List<Action> allActions = asList(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
 
   private List<String> appIds = asList(APP_ID, "appId1", "appId2", "appId3");
@@ -194,7 +195,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(accountPermissionSummary).isNotNull();
     assertThat(accountPermissionSummary.getPermissions())
         .isNotNull()
-        .hasSize(3)
+        .hasSize(4)
         .hasSameElementsAs(accountPermissionTypes);
 
     assertThat(isEmpty(userPermissionInfo.getAppPermissionMap()));
@@ -216,7 +217,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(accountPermissionSummary).isNotNull();
     assertThat(accountPermissionSummary.getPermissions())
         .isNotNull()
-        .hasSize(3)
+        .hasSize(4)
         .hasSameElementsAs(accountPermissionTypes);
 
     verifyAllAppPermissions(userPermissionInfo);

@@ -1,6 +1,7 @@
 package software.wings.resources.template;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
 import com.google.inject.Inject;
 
@@ -14,7 +15,8 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
-import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.template.TemplateFolderService;
@@ -33,8 +35,8 @@ import javax.ws.rs.QueryParam;
 @Api("template-galleries")
 @Path("/template-galleries")
 @Produces("application/json")
-@Scope(PermissionAttribute.ResourceType.TEMPLATE)
-@AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+@Scope(ResourceType.TEMPLATE)
+@AuthRule(permissionType = PermissionType.LOGGED_IN)
 public class TemplateGalleryResource {
   @Inject TemplateGalleryService templateGalleryService;
   @Inject TemplateFolderService templateFolderService;
@@ -57,6 +59,7 @@ public class TemplateGalleryResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<TemplateGallery> save(
       @QueryParam("accountId") String accountId, TemplateGallery templateGallery) {
     templateGallery.setAccountId(accountId);
@@ -72,6 +75,7 @@ public class TemplateGalleryResource {
   @Path("{templateGalleryId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<TemplateGallery> update(@QueryParam("accountId") String accountId,
       @PathParam("templateGalleryId") String templateId, TemplateGallery templateGallery) {
     return new RestResponse<>(templateGalleryService.update(templateGallery));
@@ -87,6 +91,7 @@ public class TemplateGalleryResource {
   @Path("{galleryId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse delete(@PathParam("galleryId") String galleryId) {
     templateGalleryService.delete(galleryId);
     return new RestResponse();
@@ -111,6 +116,7 @@ public class TemplateGalleryResource {
   @Path("folders")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<TemplateFolder> saveFolder(
       @QueryParam("accountId") String accountId, TemplateFolder templateFolder) {
     templateFolder.setAppId(GLOBAL_APP_ID);
@@ -130,6 +136,7 @@ public class TemplateGalleryResource {
   @Path("folders/{templateFolderId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<TemplateFolder> updateFolder(@QueryParam("accountId") String accountId,
       @PathParam("templateFolderId") String templateFolderId, TemplateFolder templateFolder) {
     templateFolder.setAppId(GLOBAL_APP_ID);
@@ -162,6 +169,7 @@ public class TemplateGalleryResource {
   @Path("folders/{templateFolderId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse deleteFolder(@PathParam("templateFolderId") String templateFolderId) {
     templateFolderService.delete(templateFolderId);
     return new RestResponse();
