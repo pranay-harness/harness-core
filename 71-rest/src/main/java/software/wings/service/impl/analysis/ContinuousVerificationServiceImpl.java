@@ -759,7 +759,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         continue;
       }
 
-      units.add(HeatMapUnit.builder().endTime(unitTime - 1).startTime(unitTime - cronPollIntervalMs).na(1).build());
+      units.add(HeatMapUnit.builder()
+                    .endTime(unitTime + cronPollIntervalMs - 1)
+                    .startTime(unitTime)
+                    .overallScore(-2)
+                    .na(1)
+                    .build());
     }
     return units;
   }
@@ -772,7 +777,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .filter("appId", appId)
             .filter("cvConfigId", cvConfiguration.getUuid())
             .field("analysisMinute")
-            .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
+            .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime) + CRON_POLL_INTERVAL_IN_MINUTES)
             .field("analysisMinute")
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
             .order("analysisMinute")

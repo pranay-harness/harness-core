@@ -1216,7 +1216,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = {"praveen.sugavanam@harness.io", "sriram@harness.io"}, intermittent = true)
+  @Owner(emails = {"sriram@harness.io"}, intermittent = true)
   @Category(IntegrationTests.class)
   public void txnDatadog() throws IOException, InterruptedException {
     final String workflowId = UUID.randomUUID().toString();

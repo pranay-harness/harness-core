@@ -157,6 +157,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       query = query.filter("host", host);
     }
     wingsPersistence.delete(query);
+    logger.info("Deleted clustered data for cvConfigId: {}, minute {}, fromLevel {}, toLevel {}", cvConfigId,
+        logCollectionMinute, fromLevel, toLevel);
     try {
       query = wingsPersistence.createQuery(LogDataRecord.class)
                   .filter("cvConfigId", cvConfigId)
@@ -300,6 +302,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           LogDataRecord.generateDataRecords(logsCVConfiguration.getStateType(), appId, cvConfigId, null, null, null,
               logsCVConfiguration.getServiceId(), clusterLevel, ClusterLevel.getHeartBeatLevel(clusterLevel), logData);
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
+      logger.info("Saved clustered data for cvConfig: {}, minute {}, toLevel {}", cvConfigId, logCollectionMinute,
+          clusterLevel);
     }
 
     switch (clusterLevel) {
