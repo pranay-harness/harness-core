@@ -41,6 +41,7 @@ import java.util.Objects;
                                                                              , @Field("name") }))
 public class Application extends Base {
   public static final String NAME_KEY = "name";
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   @NotEmpty private String name;
   private String description;

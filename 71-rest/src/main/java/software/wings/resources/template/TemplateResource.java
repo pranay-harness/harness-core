@@ -1,6 +1,6 @@
 package software.wings.resources.template;
 
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 

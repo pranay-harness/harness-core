@@ -9,7 +9,6 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
-import static software.wings.common.Constants.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
@@ -144,7 +143,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .name(SCRIPT_TEMPLATE_NAME)
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
-                            .appId(GLOBAL_APP_ID)
+                            .appId(Application.GLOBAL_APP_ID)
                             .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
@@ -208,7 +207,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                    .name(SCRIPT_TEMPLATE_NAME)
                    .templateObject(shellScriptTemplate)
                    .folderId(parentFolder.getUuid())
-                   .appId(GLOBAL_APP_ID)
+                   .appId(Application.GLOBAL_APP_ID)
                    .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
                    .version(savedTemplate.getVersion())
                    .build();
@@ -274,7 +273,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .name(SCRIPT_NAME3)
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
-                            .appId(GLOBAL_APP_ID)
+                            .appId(Application.GLOBAL_APP_ID)
                             .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
@@ -334,7 +333,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                    .name(SCRIPT_NAME3)
                    .templateObject(shellScriptTemplate)
                    .folderId(parentFolder.getUuid())
-                   .appId(GLOBAL_APP_ID)
+                   .appId(Application.GLOBAL_APP_ID)
                    .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
                    .version(savedTemplate.getVersion())
                    .build();
@@ -420,7 +419,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .name(name)
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
-                            .appId(GLOBAL_APP_ID)
+                            .appId(Application.GLOBAL_APP_ID)
                             .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
