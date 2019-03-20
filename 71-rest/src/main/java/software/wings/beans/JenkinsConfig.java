@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +27,9 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by peeyushaggarwal on 5/26/16.
  */
@@ -31,7 +37,8 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Data
 @ToString(exclude = {"password", "token"})
 @EqualsAndHashCode(callSuper = false)
-public class JenkinsConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
+public class JenkinsConfig
+    extends SettingValue implements EncryptableSetting, ArtifactSourceable, ExecutionCapabilityDemander {
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
   @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_PASSWORD_FIELD, TOKEN_FIELD})
   @NotEmpty
@@ -76,6 +83,11 @@ public class JenkinsConfig extends SettingValue implements EncryptableSetting, A
   @Override
   public String fetchRegistryUrl() {
     return getJenkinsUrl();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(jenkinsUrl));
   }
 
   @Data
