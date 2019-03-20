@@ -69,6 +69,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";
   public static final String START_TS_KEY = "startTs";
   public static final String STATE_MACHINE_KEY = "stateMachine";
+  public static final String STATE_MACHINE_ID_KEY = "stateMachineId";
   public static final String STATUS_KEY = "status";
   public static final String TRIGGERED_BY = "triggeredBy";
   public static final String UUID_KEY = "uuid";
