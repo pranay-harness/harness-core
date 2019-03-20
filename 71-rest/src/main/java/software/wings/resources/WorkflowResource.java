@@ -601,6 +601,9 @@ public class WorkflowResource {
   @LearningEngineAuth
   public RestResponse<WorkflowExecution> getWorkflowExecutionForStateExecution(
       @QueryParam("appId") String appId, @QueryParam("stateExecutionId") String stateExecutionId) {
-    return new RestResponse<>(workflowService.getWorkflowExecutionForStateExecutionId(appId, stateExecutionId));
+    final WorkflowExecution workflowExecution =
+        workflowService.getWorkflowExecutionForStateExecutionId(appId, stateExecutionId);
+    workflowExecution.setStateMachine(null);
+    return new RestResponse<>();
   }
 }

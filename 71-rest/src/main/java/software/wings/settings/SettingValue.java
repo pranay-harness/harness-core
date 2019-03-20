@@ -18,7 +18,16 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 public abstract class SettingValue {
   @Getter @Setter private String type;
-  @Getter @Setter private transient boolean decrypted;
+  @JsonIgnore @SchemaIgnore private transient boolean decrypted;
+
+  @SchemaIgnore
+  public boolean isDecrypted() {
+    return decrypted;
+  }
+
+  public void setDecrypted(boolean decrypted) {
+    this.decrypted = decrypted;
+  }
 
   public SettingValue(String type) {
     this.type = type;
