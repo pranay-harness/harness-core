@@ -59,6 +59,9 @@ public class HelmConstants {
   public static final String HELM_DELETE_RELEASE_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm delete ${COMMAND_FLAGS} ${FLAGS} ${RELEASE_NAME}";
 
+  public static final String HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE =
+      "helm template ${CHART_LOCATION} ${OVERRIDE_VALUES} ${RELEASE_NAME} ${NAMESPACE}";
+
   public static final long DEFAULT_HELM_COMMAND_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
   public static final String DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS = "60"; // seconds
 

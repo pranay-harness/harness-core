@@ -7,6 +7,7 @@ import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -90,4 +91,7 @@ public interface HelmClient {
 
   HelmCliResponse repoUpdate(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException;
+
+  HelmCliResponse templateForK8sV2(String releaseName, String namespace, String chartLocation,
+      List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
 }

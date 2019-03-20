@@ -15,6 +15,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_RELEASE_HIST_CO
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_REPO_LIST_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_REPO_UPDATE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_ROLLBACK_COMMAND_TEMPLATE;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_UPGRADE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_VERSION_COMMAND_TEMPLATE;
 
@@ -40,6 +41,7 @@ import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -56,13 +58,13 @@ public class HelmClientImpl implements HelmClient {
   @Override
   public HelmInstallCommandResponse install(HelmInstallCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
-    String keyValueOverrides = constructValueOverrideFile(commandRequest);
+    String keyValueOverrides = constructValueOverrideFile(commandRequest.getVariableOverridesYamlFiles());
     String chartReference = getChartReference(commandRequest.getChartSpecification());
 
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String installCommand = HELM_INSTALL_COMMAND_TEMPLATE.replace("${OVERRIDE_VALUES}", keyValueOverrides)
-                                .replace("${RELEASE_NAME}", getReleaseFlag(commandRequest))
-                                .replace("${NAMESPACE}", getNamespaceFlag(commandRequest))
+                                .replace("${RELEASE_NAME}", getReleaseFlag(commandRequest.getReleaseName()))
+                                .replace("${NAMESPACE}", getNamespaceFlag(commandRequest.getNamespace()))
                                 .replace("${CHART_REFERENCE}", chartReference);
 
     installCommand = applyCommandFlags(installCommand, commandRequest);
@@ -79,7 +81,7 @@ public class HelmClientImpl implements HelmClient {
   @Override
   public HelmInstallCommandResponse upgrade(HelmInstallCommandRequest commandRequest)
       throws IOException, ExecutionException, TimeoutException, InterruptedException {
-    String keyValueOverrides = constructValueOverrideFile(commandRequest);
+    String keyValueOverrides = constructValueOverrideFile(commandRequest.getVariableOverridesYamlFiles());
     String chartReference = getChartReference(commandRequest.getChartSpecification());
 
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
@@ -217,6 +219,19 @@ public class HelmClientImpl implements HelmClient {
     return executeHelmCLICommand(command);
   }
 
+  @Override
+  public HelmCliResponse templateForK8sV2(String releaseName, String namespace, String chartLocation,
+      List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+    String keyValueOverrides = constructValueOverrideFile(valuesOverrides);
+
+    String templateCommand = HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE.replace("${CHART_LOCATION}", chartLocation)
+                                 .replace("${OVERRIDE_VALUES}", keyValueOverrides)
+                                 .replace("${RELEASE_NAME}", getReleaseFlag(releaseName))
+                                 .replace("${NAMESPACE}", getNamespaceFlag(namespace));
+
+    return executeHelmCLICommand(templateCommand);
+  }
+
   private HelmCliResponse executeHelmCLICommand(String command)
       throws IOException, InterruptedException, TimeoutException {
     logger.info("Execution Helm command [{}]", command); // TODO:: remove it later
@@ -236,12 +251,12 @@ public class HelmClientImpl implements HelmClient {
     return HelmCliResponse.builder().commandExecutionStatus(status).output(processResult.outputString()).build();
   }
 
-  private String getReleaseFlag(HelmInstallCommandRequest requestParameters) {
-    return "--name " + requestParameters.getReleaseName();
+  private String getReleaseFlag(String releaseName) {
+    return "--name " + releaseName;
   }
 
-  private String getNamespaceFlag(HelmInstallCommandRequest requestParameters) {
-    return "--namespace " + requestParameters.getNamespace();
+  private String getNamespaceFlag(String namespace) {
+    return "--namespace " + namespace;
   }
 
   private String getChartReference(HelmChartSpecification chartSpecification) {
@@ -258,11 +273,10 @@ public class HelmClientImpl implements HelmClient {
     return chartReference;
   }
 
-  private String constructValueOverrideFile(HelmInstallCommandRequest requestParameters)
-      throws IOException, ExecutionException {
+  private String constructValueOverrideFile(List<String> valuesYamlFiles) throws IOException, ExecutionException {
     StringBuilder fileOverrides = new StringBuilder();
-    if (isNotEmpty(requestParameters.getVariableOverridesYamlFiles())) {
-      for (String yamlFileContent : requestParameters.getVariableOverridesYamlFiles()) {
+    if (isNotEmpty(valuesYamlFiles)) {
+      for (String yamlFileContent : valuesYamlFiles) {
         String md5Hash = DigestUtils.md5Hex(yamlFileContent);
         String overrideFilePath = OVERRIDE_FILE_PATH.replace("${CONTENT_HASH}", md5Hash);
 
@@ -272,7 +286,7 @@ public class HelmClientImpl implements HelmClient {
             FileUtils.forceMkdir(overrideFile.getParentFile());
             FileUtils.writeStringToFile(overrideFile, yamlFileContent, UTF_8);
           }
-          fileOverrides.append(" -f").append(overrideFilePath);
+          fileOverrides.append(" -f ").append(overrideFilePath);
         }
       }
     }
