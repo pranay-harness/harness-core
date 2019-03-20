@@ -179,6 +179,8 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
   }
 
   @Override
+  @JsonIgnore
+  @SchemaIgnore
   public boolean isDecrypted() {
     return false;
   }

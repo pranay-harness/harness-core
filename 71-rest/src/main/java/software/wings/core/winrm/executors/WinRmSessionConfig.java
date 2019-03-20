@@ -1,5 +1,6 @@
 package software.wings.core.winrm.executors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -37,6 +38,8 @@ public class WinRmSessionConfig implements EncryptableSetting {
   }
 
   @Override
+  @JsonIgnore
+  @SchemaIgnore
   public boolean isDecrypted() {
     return false;
   }

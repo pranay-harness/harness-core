@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
@@ -62,6 +63,8 @@ public class SshSessionConfig implements EncryptableSetting {
   }
 
   @Override
+  @JsonIgnore
+  @SchemaIgnore
   public boolean isDecrypted() {
     return false;
   }

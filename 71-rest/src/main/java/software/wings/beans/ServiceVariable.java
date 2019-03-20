@@ -84,7 +84,7 @@ public class ServiceVariable extends Base implements EncryptableSetting {
 
   @SchemaIgnore @Transient private String secretTextName;
 
-  @SchemaIgnore @Transient private boolean decrypted;
+  @JsonIgnore @SchemaIgnore @Transient private boolean decrypted;
 
   @SchemaIgnore @Transient private String serviceId;
 

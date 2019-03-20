@@ -6,6 +6,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.network.Http.joinHostPort;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -97,8 +98,9 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.decrypted = decrypted;
   }
 
-  @SchemaIgnore
   @Override
+  @JsonIgnore
+  @SchemaIgnore
   public boolean isDecrypted() {
     return decrypted || isNotBlank(delegateName);
   }

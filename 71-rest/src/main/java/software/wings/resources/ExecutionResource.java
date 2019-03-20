@@ -144,6 +144,10 @@ public class ExecutionResource {
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("excludeFromAggregation") Set<String> excludeFromAggregation) {
+    final WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, excludeFromAggregation);
+    workflowExecution.setStateMachine(null);
+
     return new RestResponse<>(
         workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, excludeFromAggregation));
   }
@@ -458,7 +462,12 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
   public RestResponse<List<WorkflowExecution>> getWaitingOnDeployments(
       @QueryParam("appId") String appId, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<>(workflowExecutionService.listWaitingOnDeployments(appId, workflowExecutionId));
+    final List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listWaitingOnDeployments(appId, workflowExecutionId);
+
+    workflowExecutions.forEach(we -> we.setStateMachine(null));
+
+    return new RestResponse<>(workflowExecutions);
   }
 
   @GET
