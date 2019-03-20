@@ -1,6 +1,7 @@
 package software.wings.service.impl.prometheus;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
@@ -13,7 +14,6 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -117,7 +117,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
 
       SyncTaskContext taskContext = SyncTaskContext.builder()
                                         .accountId(settingAttribute.getAccountId())
-                                        .appId(Base.GLOBAL_APP_ID)
+                                        .appId(GLOBAL_APP_ID)
                                         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                         .build();
       try {

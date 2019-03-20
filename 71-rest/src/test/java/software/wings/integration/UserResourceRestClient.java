@@ -7,6 +7,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.utils.WingsIntegrationTestConstants.API_BASE;
 import static software.wings.utils.WingsIntegrationTestConstants.DEFAULT_USER_KEY;
@@ -37,7 +38,6 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.Base;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
@@ -130,7 +130,7 @@ public class UserResourceRestClient {
 
     if (user == null) {
       user = anUser().withEmail(adminUserEmail).withName(adminUserName).withPassword(adminPassword).build();
-      user.setAppId(Base.GLOBAL_APP_ID);
+      user.setAppId(GLOBAL_APP_ID);
       user.getAccounts().add(account);
       user.setEmailVerified(true);
       String hashed = hashpw(new String(user.getPassword()), BCrypt.gensalt());

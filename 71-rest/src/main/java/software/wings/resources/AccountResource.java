@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 

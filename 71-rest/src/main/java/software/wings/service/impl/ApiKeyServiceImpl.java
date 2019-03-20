@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,7 +17,6 @@ import io.harness.exception.UnauthorizedException;
 import org.mindrot.jbcrypt.BCrypt;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
-import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AccountService;
@@ -44,7 +44,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     int KEY_LEN = 80;
     String apiKey = CryptoUtil.secureRandAlphaNumString(KEY_LEN);
     wingsPersistence.save(ApiKeyEntry.builder()
-                              .appId(Base.GLOBAL_APP_ID)
+                              .appId(GLOBAL_APP_ID)
                               .encryptedKey(getSimpleEncryption(accountId).encryptChars(apiKey.toCharArray()))
                               .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
                               .accountId(accountId)

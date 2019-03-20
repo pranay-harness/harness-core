@@ -1,5 +1,7 @@
 package migrations.all;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
@@ -22,7 +24,6 @@ public class UpdateGitSyncErrorMigration implements Migration {
   @Inject WingsPersistence wingsPersistence;
   @Inject YamlHelper yamlHelper;
   @Inject AppService appService;
-  private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   private Map<String, String> appIdMap = new HashMap<>();
   @Override
   public void migrate() {

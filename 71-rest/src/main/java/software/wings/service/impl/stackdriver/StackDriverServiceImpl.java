@@ -1,7 +1,7 @@
 package software.wings.service.impl.stackdriver;
 
 import static io.harness.eraro.ErrorCode.STACKDRIVER_ERROR;
-import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_METRIC;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 

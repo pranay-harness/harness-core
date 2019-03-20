@@ -4,6 +4,7 @@ import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -20,7 +21,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.LicenseInfo;
 import software.wings.common.Constants;
@@ -64,7 +64,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
                                       .entityType(EntityType.ACCOUNT)
                                       .gitConnectorId(GIT_CONNECTOR_ID_KEY + "1")
                                       .build();
-    yamlGitConfig.setAppId(Base.GLOBAL_APP_ID);
+    yamlGitConfig.setAppId(GLOBAL_APP_ID);
     yamlGitService.save(yamlGitConfig);
   }
 
@@ -97,7 +97,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
                                       .entityType(EntityType.APPLICATION)
                                       .gitConnectorId(GIT_CONNECTOR_ID_KEY + "2")
                                       .build();
-    yamlGitConfig.setAppId(Base.GLOBAL_APP_ID);
+    yamlGitConfig.setAppId(GLOBAL_APP_ID);
     yamlGitService.save(yamlGitConfig);
 
     yamlGitConfigAppMigration.migrate();

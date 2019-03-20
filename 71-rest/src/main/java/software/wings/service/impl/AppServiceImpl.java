@@ -11,6 +11,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
@@ -46,7 +47,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
@@ -183,7 +183,7 @@ public class AppServiceImpl implements AppService {
 
   List<Role> createDefaultRoles(Application app) {
     return Lists.newArrayList(roleService.save(aRole()
-                                                   .withAppId(Base.GLOBAL_APP_ID)
+                                                   .withAppId(GLOBAL_APP_ID)
                                                    .withAccountId(app.getAccountId())
                                                    .withName(APPLICATION_ADMIN.getDisplayName())
                                                    .withRoleType(APPLICATION_ADMIN)
@@ -192,7 +192,7 @@ public class AppServiceImpl implements AppService {
                                                    .withAppName(app.getName())
                                                    .build()),
         roleService.save(aRole()
-                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAppId(GLOBAL_APP_ID)
                              .withAccountId(app.getAccountId())
                              .withName(PROD_SUPPORT.getDisplayName())
                              .withRoleType(PROD_SUPPORT)
@@ -201,7 +201,7 @@ public class AppServiceImpl implements AppService {
                              .withAppName(app.getName())
                              .build()),
         roleService.save(aRole()
-                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAppId(GLOBAL_APP_ID)
                              .withAccountId(app.getAccountId())
                              .withName(NON_PROD_SUPPORT.getDisplayName())
                              .withRoleType(NON_PROD_SUPPORT)

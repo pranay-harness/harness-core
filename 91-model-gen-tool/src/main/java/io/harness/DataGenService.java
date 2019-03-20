@@ -12,7 +12,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
@@ -74,7 +74,6 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -495,7 +494,7 @@ public class DataGenService {
     List<SystemCatalog> systemCatalogs = systemCatalogService.list(aPageRequest()
                                                                        .addFilter("catalogType", EQ, APPSTACK)
                                                                        .addFilter("family", EQ, TOMCAT)
-                                                                       .addFilter("appId", EQ, Base.GLOBAL_APP_ID)
+                                                                       .addFilter("appId", EQ, GLOBAL_APP_ID)
                                                                        .build());
 
     Map<String, SystemCatalog> fileToSystemCatalog =
@@ -508,7 +507,7 @@ public class DataGenService {
                           .withCatalogType(APPSTACK)
                           .withName("Standard Tomcat 7")
                           .withFileName("apache-tomcat-7.0.78.tar.gz")
-                          .withAppId(Base.GLOBAL_APP_ID)
+                          .withAppId(GLOBAL_APP_ID)
                           .withFamily(TOMCAT)
                           .withNotes("System created.")
                           .withVersion("7.0.78")
@@ -533,7 +532,7 @@ public class DataGenService {
     List<SystemCatalog> systemCatalogs = systemCatalogService.list(aPageRequest()
                                                                        .addFilter("catalogType", EQ, APPSTACK)
                                                                        .addFilter("family", EQ, TOMCAT)
-                                                                       .addFilter("appId", EQ, Base.GLOBAL_APP_ID)
+                                                                       .addFilter("appId", EQ, GLOBAL_APP_ID)
                                                                        .build());
     accounts.forEach(account -> {
       for (SystemCatalog systemCatalog : systemCatalogs) {

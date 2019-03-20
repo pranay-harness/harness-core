@@ -3,8 +3,8 @@ package software.wings.service.impl.yaml;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.COMMIT_AND_PUSH;
 import static software.wings.utils.Validator.notNullCheck;
@@ -20,7 +20,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -188,7 +187,7 @@ public class GitCommandCallback implements NotifyCallback {
                       .accountId(accountId)
                       .yamlChangeSet(YamlChangeSet.builder()
                                          .accountId(accountId)
-                                         .appId(Base.GLOBAL_APP_ID)
+                                         .appId(GLOBAL_APP_ID)
                                          .gitToHarness(true)
                                          .status(Status.COMPLETED)
                                          .gitFileChanges(gitDiffResult.getGitFileChanges())

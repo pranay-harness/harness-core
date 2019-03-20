@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -69,11 +70,8 @@ public abstract class EntityNameValidationMigration implements Migration {
   }
 
   private List<String> getAccountIdsToMigrate() {
-    PageRequest<Account> request = aPageRequest()
-                                       .withLimit(UNLIMITED)
-                                       .addFieldsIncluded("uuid")
-                                       .addFilter("appId", EQ, "__GLOBAL_APP_ID__")
-                                       .build();
+    PageRequest<Account> request =
+        aPageRequest().withLimit(UNLIMITED).addFieldsIncluded("uuid").addFilter("appId", EQ, GLOBAL_APP_ID).build();
     List<Account> accounts = wingsPersistence.query(Account.class, request).getResponse();
     return accounts.stream().map(Base::getUuid).collect(Collectors.toList());
   }

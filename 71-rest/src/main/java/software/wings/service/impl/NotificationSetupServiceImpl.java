@@ -8,8 +8,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;

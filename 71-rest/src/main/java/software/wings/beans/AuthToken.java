@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessExportableEntity;
@@ -39,7 +40,7 @@ public class AuthToken extends Base {
     this.accountId = accountId;
     this.userId = userId;
     setUuid(secureRandAlphaNumString(32));
-    setAppId(Base.GLOBAL_APP_ID);
+    setAppId(GLOBAL_APP_ID);
     expireAt = System.currentTimeMillis() + tokenExpiryInMillis;
   }
 }

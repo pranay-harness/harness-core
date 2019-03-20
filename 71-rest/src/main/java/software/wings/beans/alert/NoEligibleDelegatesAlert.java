@@ -1,7 +1,7 @@
 package software.wings.beans.alert;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 

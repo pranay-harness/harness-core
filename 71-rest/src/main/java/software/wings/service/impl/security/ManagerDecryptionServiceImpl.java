@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static java.lang.String.format;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import io.harness.security.encryption.EncryptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.Base;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -69,7 +69,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     }
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(object.getAccountId())
-                                          .appId(Base.GLOBAL_APP_ID)
+                                          .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                           .build();
     try {

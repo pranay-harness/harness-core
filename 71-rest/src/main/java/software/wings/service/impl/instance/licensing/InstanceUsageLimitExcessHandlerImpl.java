@@ -1,12 +1,13 @@
 package software.wings.service.impl.instance.licensing;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
-import software.wings.beans.Base;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
@@ -40,14 +41,14 @@ public class InstanceUsageLimitExcessHandlerImpl implements InstanceUsageLimitEx
 
     if (!withinLimit) {
       Optional<Alert> alert = alertService.findExistingAlert(
-          accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
+          accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
       if (!alert.isPresent()) {
-        alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
+        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
       } else {
         log.info("Alert already exists. Skipping creation. Alert Data: {}", alertData);
       }
     } else {
-      alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
     }
   }
 

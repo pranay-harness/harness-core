@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
@@ -17,7 +18,6 @@ import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
@@ -212,7 +212,7 @@ public class SSOServiceImpl implements SSOService {
     try {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(accountId)
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                             .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
@@ -233,7 +233,7 @@ public class SSOServiceImpl implements SSOService {
     try {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(accountId)
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                             .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
@@ -254,7 +254,7 @@ public class SSOServiceImpl implements SSOService {
     try {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(accountId)
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                             .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
@@ -278,7 +278,7 @@ public class SSOServiceImpl implements SSOService {
     try {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(ldapSettings.getAccountId())
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                             .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
@@ -297,7 +297,7 @@ public class SSOServiceImpl implements SSOService {
     EncryptedDataDetail encryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(ldapSettings.getAccountId())
-                                          .appId(Base.GLOBAL_APP_ID)
+                                          .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)

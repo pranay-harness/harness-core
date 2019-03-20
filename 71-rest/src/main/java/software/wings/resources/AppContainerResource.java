@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.ResourceType.APP_STACK;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
@@ -18,7 +19,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
-import software.wings.beans.Base;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppContainerService;
 
@@ -98,7 +98,7 @@ public class AppContainerResource {
   public RestResponse<AppContainer> uploadPlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
-    appContainer.setAppId(Base.GLOBAL_APP_ID);
+    appContainer.setAppId(GLOBAL_APP_ID);
     appContainer.setAccountId(accountId);
     appContainer.setFileName(new File(fileDetail.getFileName()).getName());
 
@@ -127,7 +127,7 @@ public class AppContainerResource {
       @PathParam("appContainerId") String appContainerId, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
-    appContainer.setAppId(Base.GLOBAL_APP_ID);
+    appContainer.setAppId(GLOBAL_APP_ID);
     appContainer.setUuid(appContainerId);
     appContainer.setFileName(new File(fileDetail.getFileName()).getName());
     appContainer.setAccountId(accountId);
