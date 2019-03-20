@@ -29,7 +29,7 @@ public class ElkLogFetchRequest {
   private final String indices;
   private final String hostnameField;
   private final String messageField;
-  private final String timestampField;
+  @Builder.Default private String timestampField = "@timestamp";
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
