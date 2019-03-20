@@ -147,9 +147,7 @@ public class ExecutionResource {
     final WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, excludeFromAggregation);
     workflowExecution.setStateMachine(null);
-
-    return new RestResponse<>(
-        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, excludeFromAggregation));
+    return new RestResponse<>(workflowExecution);
   }
 
   /**
