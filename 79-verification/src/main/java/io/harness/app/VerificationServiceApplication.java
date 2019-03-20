@@ -8,7 +8,7 @@ import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_MINUTES;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 import static software.wings.common.VerificationConstants.getDataCollectionMetricHelpDocument;
 import static software.wings.common.VerificationConstants.getIgnoredErrorsMetricHelpDocument;
@@ -198,7 +198,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void initMetrics() {
     harnessMetricRegistry.registerGaugeMetric(
-        LEARNING_ENGINE_TASK_QUEUED_TIME_IN_MINUTES, null, getDataAnalysisMetricHelpDocument());
+        LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null, getDataAnalysisMetricHelpDocument());
     harnessMetricRegistry.registerGaugeMetric(
         DATA_COLLECTION_TASKS_PER_MINUTE, null, getDataCollectionMetricHelpDocument());
     harnessMetricRegistry.registerGaugeMetric(
