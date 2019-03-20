@@ -53,6 +53,7 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
+import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.jira.JiraTask;
 import software.wings.delegatetasks.jira.ShellScriptApprovalTask;
@@ -345,8 +346,22 @@ public enum TaskType {
     return on(delegateValidateTaskClass).create(delegateId, delegateTask, postExecute).get();
   }
 
+  // TODO: This should become default 1, once all tasks are migrated and feature flag is removed.
+  public DelegateValidateTask getDelegateValidateTaskVersionForCapabilityFramework(
+      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
+    return on(CapabilityCheckController.class).create(delegateId, delegateTask, postExecute).get();
+  }
+
   public List<String> getCriteria(DelegateTask delegateTask, Injector injector) {
     DelegateValidateTask delegateValidateTask = on(delegateValidateTaskClass).create(null, delegateTask, null).get();
+    injector.injectMembers(delegateValidateTask);
+    return delegateValidateTask.getCriteria();
+  }
+
+  // TODO: This should become default 1, once all tasks are migrated and feature flag is removed.
+  public List<String> getCriteriaVersionForCapabilityFramework(DelegateTask delegateTask, Injector injector) {
+    DelegateValidateTask delegateValidateTask =
+        on(CapabilityCheckController.class).create(null, delegateTask, null).get();
     injector.injectMembers(delegateValidateTask);
     return delegateValidateTask.getCriteria();
   }

@@ -1,26 +1,27 @@
 package software.wings.delegatetasks.delegatecapability;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.executioncapability.CapabilityCheckGeneratorFactory;
-import io.harness.delegate.beans.executioncapability.CapabilityCheckResponse;
-import io.harness.delegate.beans.executioncapability.CapabilityGenerator;
+import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheckFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class CapabilityCheckController extends AbstractDelegateValidateTask {
   @Inject CapabilityCheckFactory capabilityCheckFactory;
-  @Inject CapabilityCheckGeneratorFactory capabilityCheckGeneratorFactory;
 
   public CapabilityCheckController(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
@@ -29,16 +30,20 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    List<CapabilityCheckResponse> checkResponses = new ArrayList<>();
+    List<CapabilityResponse> checkResponses = new ArrayList<>();
     try {
-      CapabilityGenerator capabilityGenerator =
-          capabilityCheckGeneratorFactory.obtainCapabilityCheckGenerator(getTaskType());
+      List<ExecutionCapability> executionCapabilities = getExecutionCapabilities();
 
-      List<ExecutionCapability> delegateCapabilities =
-          capabilityGenerator.generateDelegateCapabilities(getParameters());
+      if (isEmpty(executionCapabilities)) {
+        executionCapabilities =
+            Arrays.stream(getParameters())
+                .filter(param -> param instanceof ExecutionCapabilityDemander)
+                .flatMap(param -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities().stream())
+                .collect(toList());
+      }
 
-      delegateCapabilities.forEach(delegateCapability
-          -> checkResponses.add(capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.fetchCapabilityType())
+      executionCapabilities.forEach(delegateCapability
+          -> checkResponses.add(capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType())
                                     .performCapabilityCheck(delegateCapability)));
 
     } catch (Exception e) {
@@ -50,24 +55,30 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    CapabilityGenerator checkGenerator = capabilityCheckGeneratorFactory.obtainCapabilityCheckGenerator(getTaskType());
+    List<ExecutionCapability> executionCapabilities = getExecutionCapabilities();
 
-    List<ExecutionCapability> delegateCapabilities = checkGenerator.generateDelegateCapabilities(getParameters());
+    if (isEmpty(executionCapabilities)) {
+      executionCapabilities =
+          Arrays.stream(getParameters())
+              .filter(param -> param instanceof ExecutionCapabilityDemander)
+              .flatMap(param -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities().stream())
+              .collect(toList());
+    }
 
-    List<String> criterias = new ArrayList<>();
-    delegateCapabilities.forEach(delegateCapability -> criterias.add(delegateCapability.fetchCapabilityBasis()));
-    return criterias;
+    return executionCapabilities.stream()
+        .map(executionCapability -> executionCapability.fetchCapabilityBasis())
+        .collect(toList());
   }
 
-  // TODO: remove this method once manager is updated to receive CapabilityCheckResponse
+  // TODO: remove this method once manager is updated to receive CapabilityResponse
   // Manager expects DelegateConnectionResult. This is to be deprecated in future,
-  // So we receive output with new data structure "CapabilityCheckResponse"
+  // So we receive output with new data structure "CapabilityResponse"
   // and convert in into something manager understands for now
   private List<DelegateConnectionResult> convertResponsesIntoDelegateConnectionResults(
-      List<CapabilityCheckResponse> checkResponses) {
+      List<CapabilityResponse> checkResponses) {
     List<DelegateConnectionResult> delegateConnectionResults = new ArrayList<>();
 
-    if (EmptyPredicate.isNotEmpty(checkResponses)) {
+    if (isNotEmpty(checkResponses)) {
       checkResponses.forEach(checkResponse -> {
         delegateConnectionResults.add(DelegateConnectionResult.builder()
                                           .validated(checkResponse.isValidated())

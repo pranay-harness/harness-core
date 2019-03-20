@@ -5,6 +5,8 @@ import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.CapabilityType;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -28,5 +30,7 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(DelegateConfiguration.class, 5469);
     kryo.register(SecretDetail.class, 19001);
     kryo.register(TaskData.class, 19002);
+    kryo.register(HttpConnectionExecutionCapability.class, 19003);
+    kryo.register(CapabilityType.class, 19004);
   }
 }

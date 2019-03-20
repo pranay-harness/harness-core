@@ -6,6 +6,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -24,18 +26,20 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
 
   private String accountId;
   private String delegateId;
-  private Object[] parameters;
   private String taskType;
   private Consumer<List<DelegateConnectionResult>> consumer;
+  private TaskData taskData;
+  private List<ExecutionCapability> executionCapabilities;
 
   public AbstractDelegateValidateTask(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
     this.accountId = delegateTask.getAccountId();
     this.delegateId = delegateId;
-    this.parameters = delegateTask.getData().getParameters();
     this.delegateTaskId = delegateTask.getUuid();
     this.taskType = delegateTask.getData().getTaskType();
     this.consumer = consumer;
+    this.taskData = delegateTask.getData();
+    this.executionCapabilities = delegateTask.getExecutionCapabilities();
   }
 
   @Override
@@ -78,10 +82,18 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
 
   @SuppressFBWarnings("EI_EXPOSE_REP")
   public Object[] getParameters() {
-    return parameters;
+    return getTaskData().getParameters();
   }
 
   protected String getTaskType() {
     return taskType;
+  }
+
+  protected TaskData getTaskData() {
+    return taskData;
+  }
+
+  protected List<ExecutionCapability> getExecutionCapabilities() {
+    return executionCapabilities;
   }
 }
