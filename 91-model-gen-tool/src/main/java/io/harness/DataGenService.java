@@ -61,6 +61,7 @@ import io.harness.scm.SecretName;
 import io.harness.seeddata.SampleDataProviderService;
 import org.junit.rules.TemporaryFolder;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Indexed;
@@ -217,10 +218,11 @@ public class DataGenService {
     }
 
     featureFlagService.initializeFeatureFlags();
-    wingsPersistence.save(ServiceSecretKey.builder()
-                              .serviceType(ServiceType.LEARNING_ENGINE)
-                              .serviceSecret("67d9b94d9856665afc21acd3aa745401")
-                              .build());
+    wingsPersistence.findAndModify(
+        wingsPersistence.createQuery(ServiceSecretKey.class).filter("serviceType", ServiceType.LEARNING_ENGINE),
+        wingsPersistence.createUpdateOperations(ServiceSecretKey.class)
+            .set("serviceSecret", "67d9b94d9856665afc21acd3aa745401"),
+        new FindAndModifyOptions().upsert(true));
     learningEngineService.initializeServiceSecretKeys();
   }
 
