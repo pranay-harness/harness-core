@@ -84,7 +84,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
     // Read all the service commands that references the given
     try (HIterator<ArtifactStream> iterator =
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
-                                 .filter(ArtifactStream.TEMPATE_UUID_KEY, template.getUuid())
+                                 .filter(ArtifactStream.TEMPLATE_UUID_KEY, template.getUuid())
                                  .fetch())) {
       while (iterator.hasNext()) {
         ArtifactStream artifactStream = iterator.next();

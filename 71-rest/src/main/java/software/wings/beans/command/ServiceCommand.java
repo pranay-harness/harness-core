@@ -27,6 +27,8 @@ import java.util.Optional;
 @Entity(value = "serviceCommands", noClassnameStored = true)
 @HarnessExportableEntity
 public class ServiceCommand extends Base {
+  public static final String TEMPLATE_UUID_KEY = "templateUuid";
+
   private String name;
   @Indexed private String serviceId;
   private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();

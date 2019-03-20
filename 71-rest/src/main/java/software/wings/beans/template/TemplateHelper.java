@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.TEMPATE_UUID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -97,12 +96,12 @@ public class TemplateHelper {
   private String lookupLinkedTemplateField(TemplateType templateType) {
     switch (templateType) {
       case SSH:
-        return TEMPATE_UUID_KEY;
+        return ServiceCommand.TEMPLATE_UUID_KEY;
       case HTTP:
       case SHELL_SCRIPT:
         return Workflow.LINKED_TEMPLATE_UUIDS_KEY;
       case ARTIFACT_SOURCE:
-        return TEMPATE_UUID_KEY;
+        return ArtifactStream.TEMPLATE_UUID_KEY;
       default:
         unhandled(templateType);
     }
