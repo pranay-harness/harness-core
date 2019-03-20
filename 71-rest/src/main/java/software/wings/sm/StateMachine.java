@@ -99,17 +99,6 @@ public class StateMachine extends Base {
    * @param graph      the graph
    * @param stencilMap the stencil map
    */
-  public StateMachine(Workflow workflow, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
-    this(workflow, workflow.getDefaultVersion(), graph, stencilMap);
-  }
-
-  /**
-   * Instantiates a new state machine.
-   *
-   * @param workflow   the workflow
-   * @param graph      the graph
-   * @param stencilMap the stencil map
-   */
   public StateMachine(
       Workflow workflow, Integer originVersion, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
     orchestrationWorkflow = workflow.getOrchestrationWorkflow();
