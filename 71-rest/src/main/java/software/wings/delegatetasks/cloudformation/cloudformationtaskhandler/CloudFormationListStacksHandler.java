@@ -11,6 +11,7 @@ import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationListStacksRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
@@ -26,8 +27,8 @@ import java.util.stream.Collectors;
 @Singleton
 @NoArgsConstructor
 public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHandler {
-  protected CloudFormationCommandExecutionResponse executeInternal(
-      CloudFormationCommandRequest request, List<EncryptedDataDetail> details) {
+  protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
+      List<EncryptedDataDetail> details, ExecutionLogCallback executionLogCallback) {
     CloudFormationListStacksRequest cloudFormationListStacksRequest = (CloudFormationListStacksRequest) request;
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     AwsConfig awsConfig = cloudFormationListStacksRequest.getAwsConfig();

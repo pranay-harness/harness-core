@@ -31,7 +31,6 @@ public abstract class CloudFormationCommandTaskHandler {
   @Inject protected AwsCFHelperServiceDelegate awsCFHelperServiceDelegate;
   @Inject private DelegateLogService delegateLogService;
 
-  protected ExecutionLogCallback executionLogCallback;
   protected static final String stackNamePrefix = "HarnessStack-";
 
   protected Optional<Stack> getIfStackExists(String suffix, AwsConfig awsConfig, String region) {
@@ -49,12 +48,13 @@ public abstract class CloudFormationCommandTaskHandler {
 
   public CloudFormationCommandExecutionResponse execute(
       CloudFormationCommandRequest request, List<EncryptedDataDetail> details) {
-    executionLogCallback = new ExecutionLogCallback(delegateLogService, request.getAccountId(), request.getAppId(),
-        request.getActivityId(), request.getCommandName());
-    return executeInternal(request, details);
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService, request.getAccountId(),
+        request.getAppId(), request.getActivityId(), request.getCommandName());
+    return executeInternal(request, details, executionLogCallback);
   }
 
-  protected long printStackEvents(CloudFormationCommandRequest request, long stackEventsTs, Stack stack) {
+  protected long printStackEvents(CloudFormationCommandRequest request, long stackEventsTs, Stack stack,
+      ExecutionLogCallback executionLogCallback) {
     List<StackEvent> stackEvents = getStackEvents(request, stack);
     boolean printed = false;
     long currentLatestTs = -1;
@@ -90,6 +90,6 @@ public abstract class CloudFormationCommandTaskHandler {
     return isNotEmpty(reason) ? reason : StringUtils.EMPTY;
   }
 
-  protected abstract CloudFormationCommandExecutionResponse executeInternal(
-      CloudFormationCommandRequest request, List<EncryptedDataDetail> details);
+  protected abstract CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
+      List<EncryptedDataDetail> details, ExecutionLogCallback executionLogCallback);
 }
