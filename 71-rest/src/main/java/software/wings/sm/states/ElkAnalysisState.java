@@ -309,6 +309,11 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     this.analysisServerConfigId = analysisServerConfigId;
   }
 
+  /**
+   * Validates Query on Manager side. No ELK call is made here.
+   *
+   * @return
+   */
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
@@ -318,7 +323,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
           .indices(indices)
           .hostnameField(hostnameField)
           .messageField(messageField)
-          .timestampField(timestampField)
           .hosts(Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"))
           .startTime(1518724315175L - TimeUnit.MINUTES.toMillis(1))
           .endTime(1518724315175L)

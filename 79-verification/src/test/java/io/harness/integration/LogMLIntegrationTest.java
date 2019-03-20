@@ -232,16 +232,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testFeatureflagDemoSuccess() {
     loginAdminUser();
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", FeatureName.CV_DEMO.name()));
-
-    wingsPersistence.save(FeatureFlag.builder().name(FeatureName.CV_DEMO.name()).enabled(false).build());
-
-    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
-
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(SettingAttribute.class).filter("accountId", accountId).filter("name", "elk_prod"));
+    initDemoSetup("elk_prod");
     String serverConfigId = wingsPersistence.save(
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("elk_prod").build());
 
@@ -303,15 +294,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testFeatureflagDemoFail() {
     loginAdminUser();
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", FeatureName.CV_DEMO.name()));
-
-    wingsPersistence.save(FeatureFlag.builder().name(FeatureName.CV_DEMO.name()).enabled(false).build());
-
-    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
-
-    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("name", "elk_dev"));
+    initDemoSetup("elk_dev");
 
     String serverConfigId = wingsPersistence.save(
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("elk_dev").build());
@@ -367,6 +350,18 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     LogMLAnalysisSummary summary = restResponse.getResource();
     assertEquals("cv-demo-query", summary.getQuery());
+  }
+
+  private void initDemoSetup(String serverName) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", FeatureName.CV_DEMO.name()));
+
+    wingsPersistence.save(FeatureFlag.builder().name(FeatureName.CV_DEMO.name()).enabled(false).build());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
+
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("name", serverName));
   }
 
   @Test
