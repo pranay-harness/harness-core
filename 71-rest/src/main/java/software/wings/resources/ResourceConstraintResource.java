@@ -61,7 +61,6 @@ public class ResourceConstraintResource {
   public RestResponse<ResourceConstraint> save(
       @QueryParam("accountId") String accountId, ResourceConstraint resourceConstraint) {
     resourceConstraint.setAccountId(accountId);
-    resourceConstraint.setAppId(ResourceConstraint.GLOBAL_APP_ID);
     if (resourceConstraint.getStrategy() == null) {
       resourceConstraint.setStrategy(Strategy.ASAP);
     }
@@ -76,9 +75,9 @@ public class ResourceConstraintResource {
   public RestResponse<ResourceConstraint> update(@QueryParam("accountId") String accountId,
       @PathParam("resourceConstraintId") String resourceConstraintId, ResourceConstraint resourceConstraint) {
     resourceConstraint.setUuid(resourceConstraintId);
-    resourceConstraint.setAppId(ResourceConstraint.GLOBAL_APP_ID);
     resourceConstraint.setAccountId(accountId);
-    return new RestResponse<>(resourceConstraintService.update(resourceConstraint));
+    resourceConstraintService.update(resourceConstraint);
+    return new RestResponse<>(resourceConstraint);
   }
 
   @DELETE

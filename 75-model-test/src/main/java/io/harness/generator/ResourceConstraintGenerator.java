@@ -76,7 +76,7 @@ public class ResourceConstraintGenerator {
     ResourceConstraintBuilder builder = ResourceConstraint.builder();
 
     if (resourceConstraint != null && resourceConstraint.getAccountId() != null) {
-      builder.accountId(resourceConstraint.getAppId());
+      builder.accountId(resourceConstraint.getAccountId());
     } else {
       Account account = owners.obtainAccount(() -> accountGenerator.ensureRandom(seed, owners));
       builder.accountId(account.getUuid());

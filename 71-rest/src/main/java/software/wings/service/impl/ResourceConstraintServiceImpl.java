@@ -85,7 +85,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @ValidationGroups(Create.class)
   public ResourceConstraint save(ResourceConstraint resourceConstraint) {
     try {
-      return wingsPersistence.saveAndGet(ResourceConstraint.class, resourceConstraint);
+      wingsPersistence.save(resourceConstraint);
+      return resourceConstraint;
     } catch (DuplicateKeyException exception) {
       throw new InvalidRequestException("The resource constraint name cannot be reused.", exception, USER);
     }
@@ -93,8 +94,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   @ValidationGroups(Update.class)
-  public ResourceConstraint update(ResourceConstraint resourceConstraint) {
-    return wingsPersistence.saveAndGet(ResourceConstraint.class, resourceConstraint);
+  public void update(ResourceConstraint resourceConstraint) {
+    wingsPersistence.merge(resourceConstraint);
   }
 
   @Override

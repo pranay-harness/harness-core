@@ -20,7 +20,7 @@ public interface ResourceConstraintService extends OwnedByAccount {
 
   @ValidationGroups(Create.class) ResourceConstraint save(@Valid ResourceConstraint resourceConstraint);
 
-  @ValidationGroups(Update.class) ResourceConstraint update(@Valid ResourceConstraint resourceConstraint);
+  @ValidationGroups(Update.class) void update(@Valid ResourceConstraint resourceConstraint);
 
   ResourceConstraint get(String accountId, String resourceConstraintId);
 
