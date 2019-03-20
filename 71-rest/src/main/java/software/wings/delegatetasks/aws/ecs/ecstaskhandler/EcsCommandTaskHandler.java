@@ -20,15 +20,14 @@ public abstract class EcsCommandTaskHandler {
   @Inject protected EncryptionService encryptionService;
   @Inject protected DelegateLogService delegateLogService;
 
-  protected ExecutionLogCallback executionLogCallback;
-
   public EcsCommandExecutionResponse executeTask(
       EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    executionLogCallback = new ExecutionLogCallback(delegateLogService, ecsCommandRequest.getAccountId(),
-        ecsCommandRequest.getAppId(), ecsCommandRequest.getActivityId(), ecsCommandRequest.getCommandName());
+    ExecutionLogCallback executionLogCallback =
+        new ExecutionLogCallback(delegateLogService, ecsCommandRequest.getAccountId(), ecsCommandRequest.getAppId(),
+            ecsCommandRequest.getActivityId(), ecsCommandRequest.getCommandName());
 
     try {
-      return executeTaskInternal(ecsCommandRequest, encryptedDataDetails);
+      return executeTaskInternal(ecsCommandRequest, encryptedDataDetails, executionLogCallback);
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(
           "Failed while executing EcsCommandTask: " + ecsCommandRequest.getEcsCommandType(), LogLevel.ERROR);
@@ -38,6 +37,6 @@ public abstract class EcsCommandTaskHandler {
     }
   }
 
-  protected abstract EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails);
+  protected abstract EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback);
 }

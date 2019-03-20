@@ -41,8 +41,8 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private AwsClusterService awsClusterService;
   static final String DASH_STRING = "----------";
 
-  public EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     EcsCommandExecutionResponse executionResponse = EcsCommandExecutionResponse.builder().build();
     EcsServiceDeployResponse ecsServiceDeployResponse = ecsDeployCommandTaskHelper.getEmptyEcsServiceDeployResponse();
     executionResponse.setEcsCommandResponse(ecsServiceDeployResponse);

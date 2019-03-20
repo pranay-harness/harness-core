@@ -16,6 +16,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.command.EcsSetupParams;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
@@ -28,8 +29,8 @@ import java.util.List;
 public class EcsBlueGreenRoute53SetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 
-  public EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     try {
       if (!(ecsCommandRequest instanceof EcsBGRoute53ServiceSetupRequest)) {
         return EcsCommandExecutionResponse.builder()

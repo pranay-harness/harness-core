@@ -46,8 +46,8 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Inject private EcsContainerService ecsContainerService;
 
-  public EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     EcsServiceSetupResponse ecsCommandResponse = EcsServiceSetupResponse.builder()
                                                      .isBlueGreen(true)
                                                      .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -69,8 +69,8 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
         ContainerSetupCommandUnitExecutionData.builder();
     commandExecutionDataBuilder.ecsRegion(setupParams.getRegion());
     setTargetGroupForProdListener(
-        encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, commandExecutionDataBuilder);
-    createStageListenerNewServiceIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest);
+        encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, commandExecutionDataBuilder, executionLogCallback);
+    createStageListenerNewServiceIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest, executionLogCallback);
     commandExecutionDataBuilder.stageEcsListener(setupParams.getStageListenerArn());
     commandExecutionDataBuilder.targetGroupForNewService(setupParams.getTargetGroupArn());
     commandExecutionDataBuilder.targetGroupForExistingService(setupParams.getTargetGroupArn2());
@@ -90,25 +90,28 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
         .build();
   }
 
-  private void createStageListenerNewServiceIfRequired(
-      List<EncryptedDataDetail> encryptedDataDetails, EcsBGServiceSetupRequest ecsBGServiceSetupRequest) {
+  private void createStageListenerNewServiceIfRequired(List<EncryptedDataDetail> encryptedDataDetails,
+      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, ExecutionLogCallback executionLogCallback) {
     EcsSetupParams setupParams = ecsBGServiceSetupRequest.getEcsSetupParams();
     if (isNotBlank(setupParams.getStageListenerArn())) {
-      String targetGroupForNewService = getTargetGroupForListener(
-          encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, setupParams.getStageListenerArn());
+      String targetGroupForNewService = getTargetGroupForListener(encryptedDataDetails, ecsBGServiceSetupRequest,
+          setupParams, setupParams.getStageListenerArn(), executionLogCallback);
       setupParams.setTargetGroupArn(targetGroupForNewService);
     } else {
       if (isNotBlank(setupParams.getTargetGroupArn())) {
         // This is just validation. Making Sure Target Group to be used with New Service Exists.
-        validateTargetGroupProvidedForNewService(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams);
+        validateTargetGroupProvidedForNewService(
+            encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, executionLogCallback);
       } else {
-        cloneListenerProdListenerIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams);
+        cloneListenerProdListenerIfRequired(
+            encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, executionLogCallback);
       }
     }
   }
 
   private void cloneListenerProdListenerIfRequired(List<EncryptedDataDetail> encryptedDataDetails,
-      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams) {
+      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams,
+      ExecutionLogCallback executionLogCallback) {
     List<AwsElbListener> listeners =
         awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(ecsBGServiceSetupRequest.getAwsConfig(),
             encryptedDataDetails, setupParams.getRegion(), setupParams.getLoadBalancerName());
@@ -139,7 +142,8 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
     }
 
     // First create StageTargetGroup if doesn't exist
-    cloneTargetGroupFromProdTargetGroupIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams);
+    cloneTargetGroupFromProdTargetGroupIfRequired(
+        encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, executionLogCallback);
     // Now create Listener
     Listener listener = awsElbHelperServiceDelegate.createStageListener(ecsBGServiceSetupRequest.getAwsConfig(),
         encryptedDataDetails, setupParams.getRegion(), setupParams.getProdListenerArn(),
@@ -148,7 +152,8 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
   }
 
   private void cloneTargetGroupFromProdTargetGroupIfRequired(List<EncryptedDataDetail> encryptedDataDetails,
-      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams) {
+      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams,
+      ExecutionLogCallback executionLogCallback) {
     // Get Prod Target Group
     String prodTargetGroupArn = setupParams.getTargetGroupArn2();
     Optional<TargetGroup> optionalProdTargetGroup = awsElbHelperServiceDelegate.getTargetGroup(
@@ -176,7 +181,8 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
   }
 
   private void validateTargetGroupProvidedForNewService(List<EncryptedDataDetail> encryptedDataDetails,
-      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams) {
+      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams,
+      ExecutionLogCallback executionLogCallback) {
     Optional<TargetGroup> optionalGroup =
         awsElbHelperServiceDelegate.getTargetGroup(ecsBGServiceSetupRequest.getAwsConfig(), encryptedDataDetails,
             setupParams.getRegion(), setupParams.getTargetGroupArn());
@@ -194,15 +200,17 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
 
   private void setTargetGroupForProdListener(List<EncryptedDataDetail> encryptedDataDetails,
       EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams,
-      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
+      ExecutionLogCallback executionLogCallback) {
     // This is targetGroupArn currently associated with ProdListener for ELB
-    String prodTargetGroupArn = getTargetGroupForListener(
-        encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, setupParams.getProdListenerArn());
+    String prodTargetGroupArn = getTargetGroupForListener(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams,
+        setupParams.getProdListenerArn(), executionLogCallback);
     setupParams.setTargetGroupArn2(prodTargetGroupArn);
   }
 
   private String getTargetGroupForListener(List<EncryptedDataDetail> encryptedDataDetails,
-      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams, String listenerArn) {
+      EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams, String listenerArn,
+      ExecutionLogCallback executionLogCallback) {
     Listener listener = awsElbHelperServiceDelegate.getElbListener(
         ecsBGServiceSetupRequest.getAwsConfig(), encryptedDataDetails, setupParams.getRegion(), listenerArn);
 

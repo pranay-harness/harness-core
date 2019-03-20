@@ -37,8 +37,8 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsContainerService ecsContainerService;
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 
-  public EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     EcsServiceSetupResponse commandResponse =
         EcsServiceSetupResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 

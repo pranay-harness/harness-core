@@ -14,6 +14,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ResizeCommandUnit;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -29,8 +30,8 @@ import java.util.List;
 public class EcsServiceDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private Injector injector;
 
-  public EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     try {
       if (!(ecsCommandRequest instanceof EcsServiceDeployRequest)) {
         return EcsCommandExecutionResponse.builder()

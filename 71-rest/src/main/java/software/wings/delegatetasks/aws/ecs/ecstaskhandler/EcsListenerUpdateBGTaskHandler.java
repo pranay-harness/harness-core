@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -27,8 +28,8 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
   @Inject private EcsContainerService ecsContainerService;
   @Inject private EcsSwapRoutesCommandTaskHelper ecsSwapRoutesCommandTaskHelper;
 
-  public EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     EcsListenerUpdateCommandResponse ecsCommandResponse = EcsListenerUpdateCommandResponse.builder().build();
     if (!(ecsCommandRequest instanceof EcsBGListenerUpdateRequest)) {
       ecsCommandResponse.setOutput("Invalid Request Type: Expected was : EcsBGListenerUpdateRequest");
@@ -47,7 +48,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
     }
 
     if (isUpdateRequired(request, encryptedDataDetails)) {
-      logListenerUpdateDetails(request);
+      logListenerUpdateDetails(request, executionLogCallback);
       awsElbHelperServiceDelegate.updateListenersForEcsBG(request.getAwsConfig(), encryptedDataDetails,
           request.getProdListenerArn(), request.getStageListenerArn(), request.getRegion());
       executionLogCallback.saveExecutionLog("Successfully update Prod and Stage Listeners");
@@ -70,7 +71,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
         .build();
   }
 
-  private void logListenerUpdateDetails(EcsBGListenerUpdateRequest request) {
+  private void logListenerUpdateDetails(EcsBGListenerUpdateRequest request, ExecutionLogCallback executionLogCallback) {
     if (!request.isRollback()) {
       executionLogCallback.saveExecutionLog(
           new StringBuilder(128)
