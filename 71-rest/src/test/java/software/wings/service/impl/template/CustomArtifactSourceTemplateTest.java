@@ -2,7 +2,7 @@ package software.wings.service.impl.template;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;

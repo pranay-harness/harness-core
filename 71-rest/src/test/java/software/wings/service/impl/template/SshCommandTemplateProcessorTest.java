@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.command.Command.Builder.aCommand;

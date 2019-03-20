@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance.limits;
 
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import com.google.inject.Inject;
 
 import io.harness.limits.Action;
@@ -35,7 +37,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
 
   @Override
   public void checkAndAct(String accountId) {
-    if (Base.GLOBAL_ACCOUNT_ID.equals(accountId)) {
+    if (GLOBAL_ACCOUNT_ID.equals(accountId)) {
       return;
     }
 

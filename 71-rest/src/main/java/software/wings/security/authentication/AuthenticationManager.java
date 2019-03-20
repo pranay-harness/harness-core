@@ -9,7 +9,7 @@ import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import com.google.inject.Inject;

@@ -51,7 +51,6 @@ public class VerificationConstants {
   public static final String ECS_HOST_NAME = "ECS_HOST";
   public static final String WORKFLOW_CV_COLLECTION_CRON_GROUP = "_WORKFLOW_CV_COLLECTION_CRON_GROUP";
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
-  public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 

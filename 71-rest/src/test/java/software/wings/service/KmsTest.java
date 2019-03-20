@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
@@ -60,7 +61,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
@@ -205,7 +205,7 @@ public class KmsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getKmsConfigGlobal() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
-    kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
+    kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
 
     KmsConfig savedConfig = kmsService.getSecretConfig(UUID.randomUUID().toString());
     assertNull(savedConfig);
@@ -214,7 +214,7 @@ public class KmsTest extends WingsBaseTest {
 
     savedConfig = kmsService.getSecretConfig(UUID.randomUUID().toString());
     kmsConfig = getKmsConfig();
-    kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
+    kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     assertEquals(kmsConfig, savedConfig);
   }
 
@@ -1703,14 +1703,14 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionSaveGlobalConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
 
-    kmsResource.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
+    kmsResource.saveKmsConfig(GLOBAL_ACCOUNT_ID, kmsConfig);
     assertEquals(1, wingsPersistence.createQuery(KmsConfig.class).count());
 
     KmsConfig savedKmsConfig = kmsService.getSecretConfig(accountId);
     assertNotNull(savedKmsConfig);
 
     kmsConfig = getKmsConfig();
-    assertEquals(Base.GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
+    assertEquals(GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
     assertEquals(kmsConfig.getAccessKey(), savedKmsConfig.getAccessKey());
     assertEquals(kmsConfig.getSecretKey(), savedKmsConfig.getSecretKey());
     assertEquals(kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn());
@@ -1902,7 +1902,7 @@ public class KmsTest extends WingsBaseTest {
 
     int kmsNum = numOfKms;
     for (KmsConfig kmsConfig : kmsConfigs) {
-      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+      if (kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
         assertFalse(kmsConfig.isDefault());
         assertEquals("Global config", kmsConfig.getName());
       } else {
@@ -1924,7 +1924,7 @@ public class KmsTest extends WingsBaseTest {
     int defaultSet = 0;
     kmsNum = numOfKms - 1;
     for (KmsConfig kmsConfig : kmsConfigs) {
-      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+      if (kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
         assertTrue(kmsConfig.isDefault());
         assertEquals("Global config", kmsConfig.getName());
         defaultSet++;
@@ -2000,7 +2000,7 @@ public class KmsTest extends WingsBaseTest {
         assertEquals(SECRET_MASK, actualConfig.getKmsArn());
         assertEquals(SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
-        assertEquals(Base.GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
+        assertEquals(GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
       }
     }
 
@@ -2029,7 +2029,7 @@ public class KmsTest extends WingsBaseTest {
         assertEquals(globalKmsConfig.getKmsArn(), actualConfig.getKmsArn());
         assertEquals(globalKmsConfig.getSecretKey(), actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
-        assertEquals(Base.GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
+        assertEquals(GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
       }
     }
 

@@ -15,6 +15,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
@@ -171,7 +172,7 @@ public class SecretManagerImpl implements SecretManager {
     for (KmsConfig kmsConfig : kmsConfigs) {
       if (defaultVaultSet && kmsConfig.isDefault()) {
         Preconditions.checkState(
-            kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID), "found both kms and vault configs to be default");
+            kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID), "found both kms and vault configs to be default");
         kmsConfig.setDefault(false);
       }
       rv.add(kmsConfig);

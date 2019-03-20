@@ -17,6 +17,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
@@ -50,7 +51,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
@@ -356,14 +356,14 @@ public class VaultTest extends WingsBaseTest {
     }
     // set kms default config
     KmsConfig kmsConfig = getKmsConfig();
-    kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
+    kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     kmsService.saveGlobalKmsConfig(accountId, kmsConfig);
 
     List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId);
     assertEquals(1, encryptionConfigs.size());
     KmsConfig savedKmsConfig = (KmsConfig) encryptionConfigs.get(0);
     assertTrue(savedKmsConfig.isDefault());
-    assertEquals(Base.GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
+    assertEquals(GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
 
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -377,7 +377,7 @@ public class VaultTest extends WingsBaseTest {
 
     savedKmsConfig = (KmsConfig) encryptionConfigs.get(1);
     assertFalse(savedKmsConfig.isDefault());
-    assertEquals(Base.GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
+    assertEquals(GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
   }
 
   @Test

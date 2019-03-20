@@ -5,7 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
 import static software.wings.beans.CommandCategory.Type.COPY;

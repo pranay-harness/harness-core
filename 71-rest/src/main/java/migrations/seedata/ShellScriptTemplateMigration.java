@@ -1,7 +1,7 @@
 package migrations.seedata;
 
 import static java.util.Arrays.asList;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
