@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.Base.LINKED_TEMPLATE_UUIDS_KEY;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -151,7 +150,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
 
     when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
 
-    when(query.field(LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
+    when(query.field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
     when(end.contains(savedTemplate.getUuid())).thenReturn(query);
     when(query.fetch()).thenReturn(workflowIterator);
     when(workflowIterator.getCursor()).thenReturn(dbCursor);
@@ -190,7 +189,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
 
     when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
 
-    when(query.field(LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
+    when(query.field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
     when(end.contains(savedTemplate.getUuid())).thenReturn(query);
     when(query.fetch()).thenReturn(workflowIterator);
     when(workflowIterator.getCursor()).thenReturn(dbCursor);
