@@ -61,4 +61,23 @@ public class GitServiceImpl implements GitService {
             .recursive(isRecursive)
             .build());
   }
+
+  @Override
+  public void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, String connectorId, String commitId,
+      String branch, List<String> filePaths, boolean useBranch) {
+    gitClient.checkoutFilesByPathForHelmSourceRepo(gitConfig,
+        GitFetchFilesRequest.builder()
+            .commitId(commitId)
+            .branch(branch)
+            .filePaths(filePaths)
+            .gitConnectorId(connectorId)
+            .useBranch(useBranch)
+            .recursive(true)
+            .build());
+  }
+
+  @Override
+  public void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
+    gitClient.resetWorkingDir(gitConfig, gitConnectorId);
+  }
 }

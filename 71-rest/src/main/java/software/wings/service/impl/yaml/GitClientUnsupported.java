@@ -69,4 +69,14 @@ public class GitClientUnsupported implements GitClient {
   public GitFetchFilesResult fetchFilesBetweenCommits(GitConfig gitConfig, GitFilesBetweenCommitsRequest gitRequest) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
+
+  @Override
+  public void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
+    throw new UnsupportedOperationException("Git operations not supported.");
+  }
+
+  @Override
+  public void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
+    throw new UnsupportedOperationException("Git operations not supported.");
+  }
 }

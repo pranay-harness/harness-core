@@ -566,6 +566,38 @@ public class GitClientImpl implements GitClient {
     }
   }
 
+  private void checkoutFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
+    synchronized (gitClientHelper.getLockObject(gitRequest.getGitConnectorId())) {
+      logger.info(new StringBuilder(128)
+                      .append(" Processing Git command: FETCH_FILES ")
+                      .append("Account: ")
+                      .append(gitConfig.getAccountId())
+                      .append(", repo: ")
+                      .append(gitConfig.getRepoUrl())
+                      .append(gitRequest.isUseBranch() ? ", Branch: " : ", CommitId: ")
+                      .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
+                      .append(", filePaths: ")
+                      .append(gitRequest.getFilePaths())
+
+                      .toString());
+
+      String gitConnectorId = gitRequest.getGitConnectorId();
+      // create repository/gitFilesDownload/<AccId>/<GitConnectorId> path
+      gitClientHelper.createDirStructureForFileDownload(gitConfig, gitConnectorId);
+
+      // clone repo locally without checkout
+      String branch = gitRequest.isUseBranch() ? gitRequest.getBranch() : StringUtils.EMPTY;
+      cloneRepoForFilePathCheckout(gitConfig, branch, gitConnectorId);
+
+      // if useBranch is set, use it to checkout latest, else checkout given commitId
+      if (gitRequest.isUseBranch()) {
+        checkoutBranchForPath(gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+      } else {
+        checkoutGivenCommitForPath(gitRequest.getCommitId(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+      }
+    }
+  }
+
   @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
     // Default it to yaml
@@ -581,35 +613,10 @@ public class GitClientImpl implements GitClient {
      * */
     synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
       try {
-        logger.info(new StringBuilder(128)
-                        .append(" Processing Git command: FETCH_FILES ")
-                        .append("Account: ")
-                        .append(gitConfig.getAccountId())
-                        .append(", repo: ")
-                        .append(gitConfig.getRepoUrl())
-                        .append(gitRequest.isUseBranch() ? ", Branch: " : ", CommitId: ")
-                        .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
-                        .append(", filePaths: ")
-                        .append(gitRequest.getFilePaths())
-
-                        .toString());
-
-        // create repository/gitFilesDownload/<AccId>/<GitConnectorId> path
-        gitClientHelper.createDirStructureForFileDownload(gitConfig, gitConnectorId);
-
-        // clone repo locally without checkout
-        String branch = gitRequest.isUseBranch() ? gitRequest.getBranch() : StringUtils.EMPTY;
-        cloneRepoForFilePathCheckout(gitConfig, branch, gitConnectorId);
-
-        // if useBranch is set, use it to checkout latest, else checkout given commitId
-        if (gitRequest.isUseBranch()) {
-          checkoutBranchForPath(gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
-        } else {
-          checkoutGivenCommitForPath(gitRequest.getCommitId(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
-        }
+        checkoutFiles(gitConfig, gitRequest);
 
         List<GitFile> gitFiles = new ArrayList<>();
-        String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitConnectorId);
+        String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitRequest.getGitConnectorId());
 
         gitRequest.getFilePaths().forEach(filePath -> {
           try {
@@ -658,6 +665,16 @@ public class GitClientImpl implements GitClient {
                     .toString());
       }
     }
+  }
+
+  @Override
+  public void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
+    if (gitConfig.getGitRepoType() == null) {
+      gitConfig.setGitRepoType(GitRepositoryType.YAML);
+    }
+
+    validateRequiredArgs(gitRequest);
+    checkoutFiles(gitConfig, gitRequest);
   }
 
   private Predicate<Path> matchingFilesExtensions(GitFetchFilesRequest gitRequest) {
@@ -754,7 +771,8 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
+  @Override
+  public void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
       logger.info("Resetting repo");
       ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetType.HARD);
