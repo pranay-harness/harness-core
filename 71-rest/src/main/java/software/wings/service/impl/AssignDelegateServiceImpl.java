@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.CapabilityUtil.isTaskTypeMigratedToCapabilityFramework;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.FeatureName;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -35,6 +37,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -59,6 +62,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
   @Inject private Injector injector;
+  @Inject private FeatureFlagService featureFlagService;
 
   private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>
       delegateConnectionResultCache =
@@ -166,7 +170,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean isWhitelisted(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : fetchCriteria(task)) {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
@@ -185,7 +189,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean shouldValidate(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : fetchCriteria(task)) {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
@@ -213,7 +217,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                                     .filter(delegateId -> canAssign(delegateId, task))
                                                     .collect(toList());
 
-      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : fetchCriteria(task)) {
         if (isNotBlank(criteria)) {
           for (String delegateId : connectedEligibleDelegates) {
             Optional<DelegateConnectionResult> result =
@@ -230,6 +234,24 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return delegateIds;
   }
 
+  // TODO: This is temporary solution till all DelegateValidationTasks are moved to
+  // TODO: New Capability Framework. This will simplify once that is done
+  private List<String> fetchCriteria(DelegateTask task) {
+    // Capability Generation has already happened.
+    if (isNotEmpty(task.getExecutionCapabilities())) {
+      return task.getExecutionCapabilities()
+          .stream()
+          .map(executionCapability -> executionCapability.fetchCapabilityBasis())
+          .collect(toList());
+    }
+
+    if (isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())
+        && featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId())) {
+      return TaskType.valueOf(task.getData().getTaskType()).getCriteriaVersionForCapabilityFramework(task, injector);
+    }
+    return TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector);
+  }
+
   @Override
   public String pickFirstAttemptDelegate(DelegateTask task) {
     List<String> delegates = connectedWhitelistedDelegates(task);
@@ -244,7 +266,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public void refreshWhitelist(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector)) {
+      for (String criteria : fetchCriteria(task)) {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> cachedResult =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));

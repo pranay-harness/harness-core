@@ -1280,11 +1280,11 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateTask delegateTask = delegatePackage.getDelegateTask();
       if (isEmpty(delegateTask.getDelegateId())) {
         // Not whitelisted. Perform validation.
-        //@TODO Remove this once TaskValidation does not use secrets
-        applyDelegateSecretFunctor(delegatePackage);
-        DelegateValidateTask delegateValidateTask = TaskType.valueOf(delegateTask.getData().getTaskType())
-                                                        .getDelegateValidateTask(delegateId, delegateTask,
-                                                            getPostValidationFunction(delegateTaskEvent, delegateTask));
+        // TODO: Remove this once TaskValidation does not use secrets
+
+        // applyDelegateSecretFunctor(delegatePackage);
+        DelegateValidateTask delegateValidateTask = getDelegateValidateTask(delegateTaskEvent, delegateTask);
+
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
         ExecutorService executorService = delegateTask.isAsync()
@@ -1301,6 +1301,17 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (IOException e) {
       logger.error("Unable to get task for validation", e);
     }
+  }
+
+  // TODO: This is temporary hack till Capability feature is tested thoroughly and this flag is removed.
+  private DelegateValidateTask getDelegateValidateTask(DelegateTaskEvent delegateTaskEvent, DelegateTask delegateTask) {
+    if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
+      return TaskType.valueOf(delegateTask.getData().getTaskType())
+          .getDelegateValidateTaskVersionForCapabilityFramework(
+              delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
+    }
+    return TaskType.valueOf(delegateTask.getData().getTaskType())
+        .getDelegateValidateTask(delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
   }
 
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(

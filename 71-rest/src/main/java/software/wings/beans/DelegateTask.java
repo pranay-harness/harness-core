@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.mongo.KryoConverter;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -39,11 +40,14 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   public static final String DATA_TIMEOUT_KEY = "data.timeout";
   public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
   public static final String DELEGATE_ID_KEY = "delegateId";
+  public static final String PRE_ASSIGNED_DELEGATE_ID = "preAssignedDelegateId";
+  public static final String EXECUTION_CAPABILITIES = "executionCapabilities";
 
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
   public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
   @NotNull private TaskData data;
+  private List<ExecutionCapability> executionCapabilities;
 
   @Id private String uuid;
   @Indexed protected String appId;

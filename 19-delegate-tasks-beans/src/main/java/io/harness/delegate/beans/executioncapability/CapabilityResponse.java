@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class CapabilityCheckResponse {
+public class CapabilityResponse {
   private String accountId;
   private String delegateId;
   // TODO: Remove this comment once manager is updated to receive this response object.

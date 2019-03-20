@@ -14,6 +14,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.UpdatedAtAccess.LAST_UPDATED_AT_KEY;
+import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
@@ -46,6 +47,7 @@ import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -90,6 +92,8 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.CapabilityUtil;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -101,6 +105,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.network.Http;
 import io.harness.persistence.HPersistence;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
@@ -242,6 +247,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private DelegateServiceHelper delegateServiceHelper;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -1371,14 +1377,33 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setVersion(getVersion());
     task.setBroadcastCount(1);
     task.setLastBroadcastAt(clock.millis());
-    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
     wingsPersistence.save(task);
+
+    generateCapabilitiesForTaskIfFeatureEnabled(task);
+    String preAssignedDelegateId = assignDelegateService.pickFirstAttemptDelegate(task);
+
+    // Update fields for DelegateTask, preAssignedDelegateId and executionCapabilities if not empty
+    task = updateDelegateTaskWithPreAssignedDelegateId(task, preAssignedDelegateId, task.getExecutionCapabilities());
+
     logger.info("{} task: uuid: {}, accountId: {}, type: {}, correlationId: {}",
         async ? "Queueing async" : "Executing sync", task.getUuid(), task.getAccountId(), task.getData().getTaskType(),
         task.getCorrelationId());
 
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     return task;
+  }
+
+  // TODO: Required right now, as at delegateSide based on capabilities are present or not,
+  // TODO: either new CapabilityCheckController or existing ValidationClass is used.
+  private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
+    if (!CapabilityUtil.isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())
+        || !featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId())) {
+      return;
+    }
+
+    DelegatePackage delegatePackage = getDelegataePackgeWithEncryptionConfig(task, task.getDelegateId());
+    delegateServiceHelper.embedCapabilitiesInDelegateTask(task,
+        isEmpty(delegatePackage.getEncryptionConfigs()) ? EMPTY_LIST : delegatePackage.getEncryptionConfigs().values());
   }
 
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
@@ -1435,6 +1460,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (delegateTask == null) {
       return null;
     }
+
     if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
       logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
       ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
@@ -1445,8 +1471,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return assignTask(delegateId, taskId, delegateTask);
     } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
       setValidationStarted(delegateId, delegateTask);
-      return resolvePreAssignmentExpressions(delegateTask, delegateId);
-
+      return DelegatePackage.builder().delegateTask(delegateTask).build();
     } else {
       logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
       return null;
@@ -1479,6 +1504,32 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return assignTask(delegateId, taskId, delegateTask);
     }
     return null;
+  }
+
+  private DelegateTask updateDelegateTaskWithPreAssignedDelegateId(
+      DelegateTask delegateTask, String preAssignedDelegateId, List<ExecutionCapability> executionCapabilities) {
+    if (isBlank(preAssignedDelegateId) && isEmpty(executionCapabilities)) {
+      return wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
+    }
+
+    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                    .filter(ACCOUNT_ID, delegateTask.getAccountId())
+                                    .filter("status", QUEUED)
+                                    .field(DelegateTask.DELEGATE_ID_KEY)
+                                    .doesNotExist()
+                                    .filter(ID_KEY, delegateTask.getUuid());
+
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class);
+
+    if (isNotBlank(preAssignedDelegateId)) {
+      updateOperations.set(DelegateTask.PRE_ASSIGNED_DELEGATE_ID, preAssignedDelegateId);
+    }
+
+    if (isNotEmpty(executionCapabilities)) {
+      updateOperations.set(DelegateTask.EXECUTION_CAPABILITIES, executionCapabilities);
+    }
+
+    return wingsPersistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
   }
 
   @Override
@@ -1593,6 +1644,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
               delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId(),
               delegateTask.getWorkflowExecutionId(), delegateTask.getData().getExpressionFunctorToken());
+
       if (delegateTask.getData().getParameters().length == 1
           && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
         logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegateTask {}", delegateTask.getUuid());
@@ -1609,6 +1661,34 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             .build();
       }
 
+    } catch (FunctorException | CriticalExpressionEvaluationException exception) {
+      logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
+      Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                          .filter(ACCOUNT_ID, delegateTask.getAccountId())
+                                          .filter(ID_KEY, delegateTask.getUuid());
+      DelegateTaskResponse response =
+          DelegateTaskResponse.builder()
+              .response(ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build())
+              .responseCode(ResponseCode.FAILED)
+              .accountId(delegateTask.getAccountId())
+              .build();
+      handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
+    }
+    return DelegatePackage.builder().delegateTask(delegateTask).build();
+  }
+
+  private DelegatePackage getDelegataePackgeWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
+    try {
+      if (delegateServiceHelper.isTaskParameterType(delegateTask.getData())) {
+        return resolvePreAssignmentExpressions(delegateTask, delegateId);
+      } else {
+        // TODO: Ideally we should not land here, as we should always be passing TaskParameter only for
+        // TODO: delegate task. But for now, this is needed. (e.g. Tasks containing Jenkinsonfig, BambooConfig etc.)
+        Map<String, EncryptionConfig> encryptionConfigMap =
+            delegateServiceHelper.fetchEncryptionDetailsListFromParameters(delegateTask.getData());
+
+        return DelegatePackage.builder().delegateTask(delegateTask).encryptionConfigs(encryptionConfigMap).build();
+      }
     } catch (FunctorException | CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
