@@ -160,7 +160,12 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         continue;
       }
 
-      units.add(HeatMapUnit.builder().endTime(unitTime - 1).startTime(unitTime - cronPollIntervalMs).na(1).build());
+      units.add(HeatMapUnit.builder()
+                    .endTime(unitTime + cronPollIntervalMs - 1)
+                    .startTime(unitTime)
+                    .overallScore(-2)
+                    .na(1)
+                    .build());
     }
     return units;
   }
