@@ -3,7 +3,6 @@ package software.wings.service.impl.template;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
-import static software.wings.beans.Base.LINKED_TEMPLATE_UUIDS_KEY;
 
 import com.google.inject.Inject;
 
@@ -42,7 +41,7 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
     }
     try (HIterator<Workflow> workflowIterator =
              new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
-                                 .field(LINKED_TEMPLATE_UUIDS_KEY)
+                                 .field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)
                                  .contains(template.getUuid())
                                  .fetch())) {
       while (workflowIterator.hasNext()) {

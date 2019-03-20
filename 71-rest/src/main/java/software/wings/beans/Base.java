@@ -54,8 +54,6 @@ public class Base
 
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
-  public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
-
   public static final String TEMPATE_UUID_KEY = "templateUuid";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
