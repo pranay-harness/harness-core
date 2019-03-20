@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.JenkinsConfig;
@@ -11,7 +13,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class JenkinsTaskParams {
+public class JenkinsTaskParams implements ExecutionCapabilityDemander {
   JenkinsConfig jenkinsConfig;
   List<EncryptedDataDetail> encryptedDataDetails;
   String jobName;
@@ -24,4 +26,9 @@ public class JenkinsTaskParams {
   String queuedBuildUrl;
   long timeout;
   long startTs;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return jenkinsConfig.fetchRequiredExecutionCapabilities();
+  }
 }
