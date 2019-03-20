@@ -308,7 +308,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         break;
       case L1:
         deleteClusterLevel(appId, cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
-        if (isEmpty(getHostsForMinute(appId, cvConfigId, logCollectionMinute, H0))) {
+        if (isEmpty(getHostsForMinute(appId, cvConfigId, logCollectionMinute, L0))) {
           try {
             learningEngineService.markCompleted(null, "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute,
                 logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
