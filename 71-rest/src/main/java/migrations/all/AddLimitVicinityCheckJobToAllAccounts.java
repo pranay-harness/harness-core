@@ -1,5 +1,7 @@
 package migrations.all;
 
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -10,7 +12,6 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LimitVicinityCheckerJob;
 
@@ -26,7 +27,7 @@ public class AddLimitVicinityCheckJobToAllAccounts implements Migration {
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
         Account account = records.next();
-        if (Base.GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
+        if (GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
           continue;
         }
         LimitVicinityCheckerJob.delete(jobScheduler, account.getUuid());

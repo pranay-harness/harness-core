@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -107,7 +108,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId).filter("isDefault", true).get();
 
     if (kmsConfig == null) {
-      kmsConfig = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", Base.GLOBAL_ACCOUNT_ID).get();
+      kmsConfig = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", GLOBAL_ACCOUNT_ID).get();
     }
 
     if (kmsConfig != null) {
@@ -122,7 +123,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
     validateKms(accountId, kmsConfig);
-    return saveKmsConfigInternal(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
+    return saveKmsConfigInternal(GLOBAL_ACCOUNT_ID, kmsConfig);
   }
 
   @Override
@@ -251,7 +252,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     try (HIterator<KmsConfig> iterator = new HIterator(wingsPersistence.createQuery(KmsConfig.class)
                                                            .field("accountId")
-                                                           .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                                                           .in(Lists.newArrayList(accountId, GLOBAL_ACCOUNT_ID))
                                                            .order("-createdAt")
                                                            .fetch())) {
       KmsConfig globalConfig = null;
@@ -266,7 +267,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
           defaultSet = true;
         }
 
-        if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+        if (kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
           globalConfig = kmsConfig;
         }
         EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
@@ -366,7 +367,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public KmsConfig getKmsConfig(String accountId, String entityId) {
     KmsConfig kmsConfig = wingsPersistence.createQuery(KmsConfig.class)
                               .field("accountId")
-                              .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                              .in(Lists.newArrayList(accountId, GLOBAL_ACCOUNT_ID))
                               .filter("_id", entityId)
                               .get();
 

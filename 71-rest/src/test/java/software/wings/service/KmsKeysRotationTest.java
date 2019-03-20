@@ -11,6 +11,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.reflect.Whitebox.setInternalState;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
-import software.wings.beans.Base;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -81,7 +81,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void rotateAwsKeysSameARN() throws Exception {
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(Base.GLOBAL_ACCOUNT_ID, false);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(GLOBAL_ACCOUNT_ID, false);
     assertEquals(1, kmsConfigs.size());
     KmsConfig kmsConfig = kmsConfigs.iterator().next();
     assertNotNull(kmsConfig);
@@ -100,7 +100,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     kmsConfig.setAccessKey(newAccessKey);
     kmsConfig.setSecretKey(newSecretKey);
     try {
-      kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
+      kmsService.saveKmsConfig(GLOBAL_ACCOUNT_ID, kmsConfig);
     } catch (WingsException e) {
       logger.error("Key rotation failed, {}", e.getParams());
       fail();
@@ -111,7 +111,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void rotateAwsKeysAndArn() throws Exception {
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(Base.GLOBAL_ACCOUNT_ID, false);
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(GLOBAL_ACCOUNT_ID, false);
     assertEquals(1, kmsConfigs.size());
     KmsConfig oldKmsConfig = kmsConfigs.iterator().next();
     String kmsName = oldKmsConfig.getName();
@@ -134,7 +134,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     }
     assertFalse("arn must be provided", isEmpty(newSecretArn));
 
-    String newKmsConfigId = kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID,
+    String newKmsConfigId = kmsService.saveKmsConfig(GLOBAL_ACCOUNT_ID,
         KmsConfig.builder()
             .name("rotatedKMS-" + generateUuid())
             .accessKey(newAccessKey)
@@ -175,7 +175,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
       assertEquals("remaining non migrated secrets " + oldSecrets, 0, oldSecrets.size());
       logger.info("total migrated secrets are {}",
           wingsPersistence.createQuery(EncryptedData.class).filter("kmsId", newKmsConfigId).asKeyList());
-      kmsService.deleteKmsConfig(Base.GLOBAL_ACCOUNT_ID, oldKmsConfig.getUuid());
+      kmsService.deleteKmsConfig(GLOBAL_ACCOUNT_ID, oldKmsConfig.getUuid());
       wingsPersistence.updateField(KmsConfig.class, newKmsConfigId, "name", kmsName);
       wingsPersistence.updateField(KmsConfig.class, newKmsConfigId, "isDefault", false);
     } finally {

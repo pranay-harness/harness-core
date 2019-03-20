@@ -1,7 +1,7 @@
 package io.harness.generator;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 

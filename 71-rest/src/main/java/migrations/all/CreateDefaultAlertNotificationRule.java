@@ -1,12 +1,13 @@
 package migrations.all;
 
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import com.google.inject.Inject;
 
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.Base;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertNotificationRuleService;
@@ -28,7 +29,7 @@ public class CreateDefaultAlertNotificationRule implements Migration {
 
       for (Account account : accounts) {
         String accountId = account.getUuid();
-        if (Base.GLOBAL_ACCOUNT_ID.equals(accountId)) {
+        if (GLOBAL_ACCOUNT_ID.equals(accountId)) {
           continue;
         }
 

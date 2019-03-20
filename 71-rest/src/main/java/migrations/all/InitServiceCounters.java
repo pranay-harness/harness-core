@@ -1,5 +1,7 @@
 package migrations.all;
 
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import com.google.inject.Inject;
 
 import io.harness.limits.Action;
@@ -10,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
@@ -39,7 +40,7 @@ public class InitServiceCounters implements Migration {
       log.info("Total accounts fetched. Count: {}", accounts.size());
       for (Account account : accounts) {
         String accountId = account.getUuid();
-        if (Base.GLOBAL_ACCOUNT_ID.equals(accountId)) {
+        if (GLOBAL_ACCOUNT_ID.equals(accountId)) {
           continue;
         }
 

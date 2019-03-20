@@ -1,7 +1,7 @@
 package migrations.seedata;
 
 import static java.lang.String.format;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import com.google.inject.Inject;
