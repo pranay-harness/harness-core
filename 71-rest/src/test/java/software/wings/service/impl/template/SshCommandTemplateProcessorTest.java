@@ -12,7 +12,7 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.beans.command.ServiceCommand.TEMPATE_UUID_KEY;
+import static software.wings.beans.command.ServiceCommand.TEMPLATE_UUID_KEY;
 import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
@@ -198,7 +198,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
                                         .withTemplateVersion(LATEST_TAG)
                                         .build();
 
-    when(query.filter(TEMPATE_UUID_KEY, savedTemplate.getUuid())).thenReturn(query);
+    when(query.filter(TEMPLATE_UUID_KEY, savedTemplate.getUuid())).thenReturn(query);
     when(query.fetch()).thenReturn(serviceCommandIterator);
 
     when(serviceCommandIterator.getCursor()).thenReturn(dbCursor);

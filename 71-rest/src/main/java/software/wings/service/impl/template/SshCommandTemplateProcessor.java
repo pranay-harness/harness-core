@@ -82,7 +82,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     // Read all the service commands that references the given
     try (HIterator<ServiceCommand> iterator =
              new HIterator<>(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)
-                                 .filter(ServiceCommand.TEMPATE_UUID_KEY, template.getUuid())
+                                 .filter(ServiceCommand.TEMPLATE_UUID_KEY, template.getUuid())
                                  .fetch())) {
       while (iterator.hasNext()) {
         ServiceCommand serviceCommand = iterator.next();

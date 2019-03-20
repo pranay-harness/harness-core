@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.TEMPATE_UUID_KEY;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -76,7 +75,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTest {
     artifactStream.setTemplateUuid(savedTemplate.getUuid());
     artifactStream.setTemplateVersion(LATEST_TAG);
     when(wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)).thenReturn(query);
-    when(query.filter(TEMPATE_UUID_KEY, savedTemplate.getUuid())).thenReturn(query);
+    when(query.filter(ArtifactStream.TEMPLATE_UUID_KEY, savedTemplate.getUuid())).thenReturn(query);
     when(query.fetch()).thenReturn(artifactStreamIterator);
     when(artifactStreamIterator.getCursor()).thenReturn(dbCursor);
     when(artifactStreamIterator.hasNext()).thenReturn(true).thenReturn(false);

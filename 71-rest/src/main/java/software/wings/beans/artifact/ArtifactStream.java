@@ -41,6 +41,8 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable {
+  public static final String TEMPLATE_UUID_KEY = "templateUuid";
+
   protected static final String dateFormat = "HHMMSS";
 
   public static final String NAME_KEY = "name";
