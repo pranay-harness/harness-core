@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -27,8 +28,8 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
   @Inject private AwsRoute53HelperServiceDelegate awsRoute53HelperServiceDelegate;
   @Inject private AwsServiceDiscoveryHelperServiceDelegate awsServiceDiscoveryHelperServiceDelegate;
 
-  public EcsCommandExecutionResponse executeTaskInternal(
-      EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     try {
       if (!(ecsCommandRequest instanceof EcsBGRoute53DNSWeightUpdateRequest)) {
         return EcsCommandExecutionResponse.builder()
