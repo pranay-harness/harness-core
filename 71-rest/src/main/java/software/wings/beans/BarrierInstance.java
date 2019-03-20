@@ -2,12 +2,15 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -16,6 +19,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Entity(value = "barrierInstances", noClassnameStored = true)
 @Indexes({
@@ -26,11 +30,15 @@ import java.util.List;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class BarrierInstance extends Base {
+public class BarrierInstance implements PersistentEntity, UuidAware {
+  public static final String APP_ID_KEY = "appId";
   public static final String NAME_KEY = "name";
   public static final String STATE_KEY = "state";
   public static final String PIPELINE_EXECUTION_ID_KEY = "pipeline.executionId";
   public static final String PIPELINE_WORKFLOWS_PIPELINE_STATE_ID_KEY = "pipeline.workflows.pipelineStateId";
+
+  @Id private String uuid;
+  @Indexed @NotNull protected String appId;
 
   private String name;
   @Indexed private String state;
