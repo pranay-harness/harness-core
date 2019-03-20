@@ -14,4 +14,9 @@ public interface GitService {
 
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
       List<String> filePaths, boolean useBranch, List<String> fileExtensions, boolean isRecursive);
+
+  void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, String connectorId, String commitId, String branch,
+      List<String> filePaths, boolean useBranch);
+
+  void resetWorkingDir(GitConfig gitConfig, String gitConnectorId);
 }

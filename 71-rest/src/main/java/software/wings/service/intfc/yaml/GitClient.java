@@ -100,4 +100,8 @@ public interface GitClient {
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
 
   GitFetchFilesResult fetchFilesBetweenCommits(GitConfig gitConfig, GitFilesBetweenCommitsRequest gitRequest);
+
+  void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
+
+  void resetWorkingDir(GitConfig gitConfig, String gitConnectorId);
 }
