@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddOrchestrationToWorkflows;
+import migrations.all.AddStateMachineToWorkflowExecutions;
 import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.CleanupOrphanInstances;
@@ -42,6 +43,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(16, AddOrchestrationToWorkflows.class))
         .add(Pair.of(17, CleanupOrphanInstances.class))
         .add(Pair.of(18, CleanupSyncStatusForDeletedEntities.class))
+        .add(Pair.of(19, AddStateMachineToWorkflowExecutions.class))
         .build();
   }
 }
