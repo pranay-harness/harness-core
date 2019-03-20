@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessExportableEntity;
@@ -26,7 +27,7 @@ public class EmailVerificationToken extends Base {
    * @param userId the user id
    */
   public EmailVerificationToken(String userId) {
-    setAppId(Base.GLOBAL_APP_ID);
+    setAppId(GLOBAL_APP_ID);
     this.userId = userId;
     this.token = secureRandAlphaNumString(32);
   }

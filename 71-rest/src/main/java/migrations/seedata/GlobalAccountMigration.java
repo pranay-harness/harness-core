@@ -3,7 +3,7 @@ package migrations.seedata;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V2_INSTALL_PATH;
 

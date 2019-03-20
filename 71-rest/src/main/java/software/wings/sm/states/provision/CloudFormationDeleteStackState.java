@@ -3,7 +3,7 @@ package software.wings.sm.states.provision;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 

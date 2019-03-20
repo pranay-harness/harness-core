@@ -14,8 +14,6 @@ import java.util.regex.Pattern;
 //       needed.
 @Deprecated
 public interface Constants {
-  String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
-
   /**
    * The constant DEFAULT_WORKFLOW_NAME.
    */

@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;

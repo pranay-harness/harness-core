@@ -8,7 +8,7 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.NAME_KEY;
 import static software.wings.common.TemplateConstants.GENERIC_JSON_PATH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;

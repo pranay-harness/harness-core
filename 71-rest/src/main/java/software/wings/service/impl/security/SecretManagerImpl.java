@@ -16,6 +16,7 @@ import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
@@ -1554,10 +1555,10 @@ public class SecretManagerImpl implements SecretManager {
               .build();
       try {
         kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
-        alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+        alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (Exception e) {
         logger.info("Could not validate kms for account {} and kmsId {}", accountId, kmsConfig.getUuid(), e);
-        alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
     }
   }
@@ -1574,10 +1575,10 @@ public class SecretManagerImpl implements SecretManager {
       try {
         vaultService.encrypt(
             VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
-        alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+        alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (Exception e) {
         logger.info("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
-        alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
     }
   }
@@ -1657,7 +1658,7 @@ public class SecretManagerImpl implements SecretManager {
         }
       }
 
-      if (isNotEmpty(appId) && !Base.GLOBAL_APP_ID.equals(appId)) {
+      if (isNotEmpty(appId) && !GLOBAL_APP_ID.equals(appId)) {
         Set<String> envIds = referredAppEnvMap.get(appId);
         if (envIds == null) {
           envIds = new HashSet<>();

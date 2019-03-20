@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.SUMO_CONFIGURATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
@@ -26,7 +27,6 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
 import software.wings.beans.SumoConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -312,7 +312,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       String collectionStartTime, String collectionEndTime, Object searchJobStatusResponse, Long requestTimeStamp,
       Long responseTimeStamp, int httpStatus, FieldType responseFieldType) {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(config.getAccountId(), Base.GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(config.getAccountId(), GLOBAL_APP_ID, null);
     }
     apiCallLog.setTitle("Fetch request to " + config.getSumoUrl());
     apiCallLog.addFieldToRequest(

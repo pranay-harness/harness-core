@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
@@ -24,7 +25,6 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -208,7 +208,7 @@ public class LdapGroupSyncJob implements Job {
       LdapSettings ldapSettings, EncryptedDataDetail encryptedDataDetail, UserGroup userGroup) {
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(ldapSettings.getAccountId())
-                                          .appId(Base.GLOBAL_APP_ID)
+                                          .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
 

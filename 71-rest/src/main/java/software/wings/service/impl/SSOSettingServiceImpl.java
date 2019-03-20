@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION;

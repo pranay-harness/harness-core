@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -25,7 +26,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Base;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.EmailSendingFailedAlert;
@@ -170,7 +170,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailTemplateData);
     verifyNoMoreInteractions(delegateService);
     verifyNoMoreInteractions(settingsService);
-    verify(alertService).closeAlertsOfType(ACCOUNT_ID, Base.GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
+    verify(alertService).closeAlertsOfType(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
   }
 
   /**
@@ -184,7 +184,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     emailDataNotificationService.send(systemEmailBodyData);
     verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailBodyData);
     verifyNoMoreInteractions(settingsService, delegateService);
-    verify(alertService).closeAlertsOfType(ACCOUNT_ID, Base.GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
+    verify(alertService).closeAlertsOfType(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
   }
 
   /**
@@ -220,7 +220,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     emailDataNotificationService.send(systemEmailTemplateData);
     String errorMessage = emailUtil.getErrorString(systemEmailTemplateData);
     verify(alertService)
-        .openAlert(ACCOUNT_ID, Base.GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
+        .openAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
             EmailSendingFailedAlert.builder().emailAlertData(errorMessage).build());
     verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailTemplateData);
   }
@@ -233,7 +233,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     emailDataNotificationService.send(nonSystemEmailBodyData);
     verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), nonSystemEmailBodyData);
     verifyNoMoreInteractions(delegateService, queue);
-    verify(alertService).closeAlertsOfType(ACCOUNT_ID, Base.GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
+    verify(alertService).closeAlertsOfType(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
   }
 
   @Test
@@ -245,7 +245,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     emailDataNotificationService.send(nonSystemEmailBodyData);
     String errorMessage = emailUtil.getErrorString(nonSystemEmailBodyData);
     verify(alertService)
-        .openAlert(ACCOUNT_ID, Base.GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
+        .openAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
             EmailSendingFailedAlert.builder().emailAlertData(errorMessage).build());
     verifyNoMoreInteractions(mailer, delegateService, queue);
   }

@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.service.impl.PreferenceServiceImpl.USER_ID_KEY;
 
@@ -15,7 +16,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Base;
 import software.wings.beans.DeploymentPreference;
 import software.wings.beans.Preference;
 import software.wings.dl.WingsPersistence;
@@ -36,7 +36,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
     preference.setAccountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
     preference.setUserId(TEST_USER_ID);
     preference.setUuid(TEST_PREFERENCE_ID);
-    preference.setAppId(Base.GLOBAL_APP_ID);
+    preference.setAppId(GLOBAL_APP_ID);
   }
 
   @Test
@@ -59,7 +59,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldList() {
-    preference.setAppId(Base.GLOBAL_APP_ID);
+    preference.setAppId(GLOBAL_APP_ID);
     preference.setAccountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
     preference.setUserId(TEST_USER_ID);
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);

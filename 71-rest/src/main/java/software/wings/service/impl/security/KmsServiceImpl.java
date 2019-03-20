@@ -9,6 +9,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -28,7 +29,6 @@ import io.harness.security.encryption.EncryptionType;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
-import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SyncTaskContext;
@@ -64,11 +64,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (kmsConfig == null || value == null) {
       return encryptLocal(value);
     }
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(accountId)
-                                          .appId(Base.GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .encrypt(accountId, value, kmsConfig);
   }
@@ -86,7 +83,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                               .accountId(accountId)
                                               .timeout(Duration.ofSeconds(5).toMillis())
-                                              .appId(Base.GLOBAL_APP_ID)
+                                              .appId(GLOBAL_APP_ID)
                                               .correlationId(data.getName())
                                               .build();
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)

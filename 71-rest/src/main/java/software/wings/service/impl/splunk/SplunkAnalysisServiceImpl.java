@@ -1,6 +1,7 @@
 package software.wings.service.impl.splunk;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -11,7 +12,6 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.Base;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SyncTaskContext;
@@ -54,11 +54,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
 
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    SyncTaskContext taskContext = SyncTaskContext.builder()
-                                      .accountId(accountId)
-                                      .appId(Base.GLOBAL_APP_ID)
-                                      .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                      .build();
+    SyncTaskContext taskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     List<LogElement> responseWithoutHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,

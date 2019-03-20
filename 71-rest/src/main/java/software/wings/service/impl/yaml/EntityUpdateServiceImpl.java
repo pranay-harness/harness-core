@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.exception.WingsException.SRE;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;

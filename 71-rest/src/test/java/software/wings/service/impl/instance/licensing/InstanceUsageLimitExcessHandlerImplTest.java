@@ -5,6 +5,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
@@ -14,7 +15,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Base;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.InstanceUsageLimitAlert;
@@ -37,7 +37,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
     long percentLimit = 90L;
 
     when(limitChecker.isWithinLimit(accountId, percentLimit, 10D)).thenReturn(false);
-    when(alertService.findExistingAlert(eq(accountId), eq(Base.GLOBAL_APP_ID),
+    when(alertService.findExistingAlert(eq(accountId), eq(GLOBAL_APP_ID),
              eq(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT), any(InstanceUsageLimitAlert.class)))
         .thenReturn(Optional.empty());
 
@@ -46,13 +46,13 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
     Optional<Alert> alert = Optional.of(sampleAlert(accountId));
 
     // after first time, alert should be saved
-    when(alertService.findExistingAlert(eq(accountId), eq(Base.GLOBAL_APP_ID),
+    when(alertService.findExistingAlert(eq(accountId), eq(GLOBAL_APP_ID),
              eq(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT), any(InstanceUsageLimitAlert.class)))
         .thenReturn(alert);
 
     usageLimitExcessHandler.handle(accountId, 10D);
     verify(alertService, times(1))
-        .openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
+        .openAlert(accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
             InstanceUsageLimitExcessHandlerImpl.createAlertData(accountId, percentLimit));
   }
 
@@ -64,13 +64,13 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
 
     when(limitChecker.isWithinLimit(accountId, percentLimit, 10D)).thenReturn(false);
 
-    when(alertService.findExistingAlert(eq(accountId), eq(Base.GLOBAL_APP_ID),
+    when(alertService.findExistingAlert(eq(accountId), eq(GLOBAL_APP_ID),
              eq(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT), any(InstanceUsageLimitAlert.class)))
         .thenReturn(Optional.of(sampleAlert(accountId)));
 
     usageLimitExcessHandler.handle(accountId, 10D);
     verify(alertService, times(0))
-        .openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
+        .openAlert(accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
             InstanceUsageLimitExcessHandlerImpl.createAlertData(accountId, percentLimit));
   }
 
@@ -83,7 +83,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
     when(limitChecker.isWithinLimit(accountId, percentLimit, 10D)).thenReturn(true);
     usageLimitExcessHandler.handle(accountId, 10D);
     verify(alertService)
-        .closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
+        .closeAlert(accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
             InstanceUsageLimitExcessHandlerImpl.createAlertData(accountId, percentLimit));
   }
 

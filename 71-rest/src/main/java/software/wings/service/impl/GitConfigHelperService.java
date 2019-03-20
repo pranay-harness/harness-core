@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.exception.WingsException.USER;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import com.google.inject.Inject;

@@ -5,7 +5,7 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
@@ -28,7 +28,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.Base;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
@@ -214,7 +213,7 @@ public class SettingValidationService {
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
         || settingValue instanceof ArtifactoryConfig || settingValue instanceof SmbConfig
         || settingValue instanceof SftpConfig) {
-      buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID)
+      buildSourceService.getBuildService(settingAttribute, GLOBAL_APP_ID)
           .validateArtifactServer(settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AppDynamicsConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS, encryptedDataDetails);

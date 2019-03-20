@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance.limits;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
@@ -16,7 +17,6 @@ import io.harness.limits.lib.StaticLimit;
 import io.harness.limits.lib.StaticLimitChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
@@ -71,14 +71,14 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
 
       if (checker.hasCrossedPercentLimit(percentToWarnOn)) {
         if (alertService
-                .findExistingAlert(accountId, Base.GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData)
+                .findExistingAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData)
                 .isPresent()) {
           log.info("Resource Usage Alert already exists. Skipping Creation. Data: {}", alertData);
         } else {
-          alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
+          alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
         }
       } else {
-        alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
+        alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
       }
     } else {
       log.error("Unhandled type of limit checker. Either alert for it, or explicitly exclude it. Class: {}",

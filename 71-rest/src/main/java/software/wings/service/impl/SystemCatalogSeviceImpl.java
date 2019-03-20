@@ -1,13 +1,13 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.stream.BoundedInputStream;
-import software.wings.beans.Base;
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
@@ -59,7 +59,7 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
 
     String fileId = fileService.saveFile(systemCatalog, in, fileBucket);
     systemCatalog.setFileUuid(fileId);
-    systemCatalog.setAppId(Base.GLOBAL_APP_ID);
+    systemCatalog.setAppId(GLOBAL_APP_ID);
 
     File tempFile = new File(
         System.getProperty("java.io.tmpdir"), systemCatalog.getCatalogType().name() + Thread.currentThread().getId());

@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 
 import com.google.common.collect.Lists;
@@ -20,7 +21,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.service.intfc.NotificationSetupService;
@@ -202,7 +202,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
         aNotificationGroup()
             .withName(name)
             .withEditable(true)
-            .withAppId(Base.GLOBAL_APP_ID)
+            .withAppId(GLOBAL_APP_ID)
             .withAccountId(accountId)
             .withDefaultNotificationGroupForAccount(defaultNotificationGroupForAccount)
             .addAddressesByChannelType(NotificationChannelType.EMAIL, Lists.newArrayList("a@b.com", "b@c.com"))

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -32,7 +33,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
   }
 
   protected String getSourceRepoSettingName(String appId, String sourceRepoSettingId) {
-    SettingAttribute settingAttribute = settingsService.get(SettingAttribute.GLOBAL_APP_ID, sourceRepoSettingId);
+    SettingAttribute settingAttribute = settingsService.get(GLOBAL_APP_ID, sourceRepoSettingId);
     notNullCheck("Invalid Source Repo Setting:" + sourceRepoSettingId, settingAttribute, USER);
     return settingAttribute.getName();
   }

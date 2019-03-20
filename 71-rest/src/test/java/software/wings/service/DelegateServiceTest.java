@@ -19,7 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Event.Builder.anEvent;
@@ -67,7 +67,6 @@ import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
-import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
@@ -123,7 +122,7 @@ import java.util.zip.GZIPInputStream;
  */
 public class DelegateServiceTest extends WingsBaseTest {
   private static final Delegate.Builder BUILDER = aDelegate()
-                                                      .withAppId(Base.GLOBAL_APP_ID)
+                                                      .withAppId(GLOBAL_APP_ID)
                                                       .withAccountId(ACCOUNT_ID)
                                                       .withIp("127.0.0.1")
                                                       .withHostName("localhost")
@@ -276,7 +275,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotRegisterExistingDelegateForDeletedAccount() {
     Delegate delegate = delegateService.add(aDelegate()
-                                                .withAppId(Base.GLOBAL_APP_ID)
+                                                .withAppId(GLOBAL_APP_ID)
                                                 .withAccountId("DELETED_ACCOUNT")
                                                 .withIp("127.0.0.1")
                                                 .withHostName("localhost")
@@ -294,7 +293,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotRegisterNewDelegateForDeletedAccount() {
     Delegate delegate = aDelegate()
-                            .withAppId(Base.GLOBAL_APP_ID)
+                            .withAppId(GLOBAL_APP_ID)
                             .withAccountId("DELETED_ACCOUNT")
                             .withIp("127.0.0.1")
                             .withHostName("localhost")

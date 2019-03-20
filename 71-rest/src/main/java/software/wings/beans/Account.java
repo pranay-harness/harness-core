@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;

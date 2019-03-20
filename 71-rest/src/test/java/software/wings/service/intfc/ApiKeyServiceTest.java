@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 
@@ -33,7 +34,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
-import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.Validator;
@@ -80,7 +80,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
     when(query.filter(anyString(), anyObject())).thenReturn(query);
     String apiKey = "Foo";
     ApiKeyEntry apiKeyEntry = ApiKeyEntry.builder()
-                                  .appId(Base.GLOBAL_APP_ID)
+                                  .appId(GLOBAL_APP_ID)
                                   .encryptedKey(getSimpleEncryption(ACCOUNT_ID).encryptChars(apiKey.toCharArray()))
                                   .hashOfKey("Hash Of Key")
                                   .accountId(ACCOUNT_ID)
@@ -108,7 +108,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
         PageResponseBuilder.aPageResponse()
             .withResponse(
                 Arrays.asList(ApiKeyEntry.builder()
-                                  .appId(Base.GLOBAL_APP_ID)
+                                  .appId(GLOBAL_APP_ID)
                                   .encryptedKey(getSimpleEncryption(ACCOUNT_ID).encryptChars(apiKey.toCharArray()))
                                   .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
                                   .accountId(ACCOUNT_ID)

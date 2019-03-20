@@ -5,7 +5,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.fail;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -104,7 +103,7 @@ public class YamlIntegrationTestHelper {
                           .branchName("test")
                           .enabled(true)
                           .build();
-      yamlGitConfig.setAppId(Base.GLOBAL_APP_ID);
+      yamlGitConfig.setAppId(GLOBAL_APP_ID);
     } else {
       yamlGitConfig.setSyncMode(SyncMode.BOTH);
       yamlGitConfig.setUrl(URL_FOR_GIT_SYNC);

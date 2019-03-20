@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
@@ -13,7 +14,6 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ApiKeyEntry;
-import software.wings.beans.Base;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -56,7 +56,7 @@ public class ApiKeyResource {
   @ExceptionMetered
   public RestResponse<PageResponse<ApiKeyEntry>> list(
       @NotEmpty @QueryParam("accountId") String accountId, @BeanParam PageRequest<ApiKeyEntry> pageRequest) {
-    pageRequest.addFilter("appId", EQ, Base.GLOBAL_APP_ID);
+    pageRequest.addFilter("appId", EQ, GLOBAL_APP_ID);
     pageRequest.addFilter("accountId", EQ, accountId);
     return new RestResponse<>(apiKeyService.list(pageRequest));
   }

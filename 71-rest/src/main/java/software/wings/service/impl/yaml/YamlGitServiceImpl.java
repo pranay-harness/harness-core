@@ -11,9 +11,9 @@ import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.GitCommit.STATUS_KEY;
 import static software.wings.beans.GitCommit.YAML_GIT_CONFIG_IDS_KEY;
@@ -446,11 +446,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private List<Account> getAllAccounts() {
-    PageRequest<Account> request = aPageRequest()
-                                       .withLimit(UNLIMITED)
-                                       .addFieldsIncluded("uuid")
-                                       .addFilter("appId", EQ, "__GLOBAL_APP_ID__")
-                                       .build();
+    PageRequest<Account> request =
+        aPageRequest().withLimit(UNLIMITED).addFieldsIncluded("uuid").addFilter("appId", EQ, GLOBAL_APP_ID).build();
     return accountService.list(request);
   }
 
