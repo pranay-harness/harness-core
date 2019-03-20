@@ -13,6 +13,7 @@ import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
@@ -25,8 +26,8 @@ import java.util.Optional;
 @Singleton
 @NoArgsConstructor
 public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskHandler {
-  protected CloudFormationCommandExecutionResponse executeInternal(
-      CloudFormationCommandRequest request, List<EncryptedDataDetail> details) {
+  protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
+      List<EncryptedDataDetail> details, ExecutionLogCallback executionLogCallback) {
     CloudFormationDeleteStackRequest cloudFormationDeleteStackRequest = (CloudFormationDeleteStackRequest) request;
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     AwsConfig awsConfig = cloudFormationDeleteStackRequest.getAwsConfig();
@@ -87,7 +88,7 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
             break;
           }
           case "DELETE_IN_PROGRESS": {
-            stackEventsTs = printStackEvents(request, stackEventsTs, stack);
+            stackEventsTs = printStackEvents(request, stackEventsTs, stack, executionLogCallback);
             break;
           }
           default: {
