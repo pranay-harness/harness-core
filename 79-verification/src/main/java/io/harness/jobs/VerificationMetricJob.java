@@ -3,7 +3,7 @@ package io.harness.jobs;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_MINUTES;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
 
 import com.google.inject.Inject;
 
@@ -57,11 +57,11 @@ public class VerificationMetricJob implements Job {
             .order(Sort.ascending("createdAt"))
             .get();
 
-    long taskQueuedMinute = lastQueuedAnalysisTask != null
-        ? TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary() - lastQueuedAnalysisTask.getCreatedAt())
+    long taskQueuedTimeInSeconds = lastQueuedAnalysisTask != null
+        ? TimeUnit.MILLISECONDS.toSeconds(Timestamp.currentMinuteBoundary() - lastQueuedAnalysisTask.getCreatedAt())
         : 0;
-    logger.info("Learning Engine task has been queued for {} minutes", taskQueuedMinute);
-    metricRegistry.recordGaugeValue(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_MINUTES, null, taskQueuedMinute);
+    logger.info("Learning Engine task has been queued for {} Seconds", taskQueuedTimeInSeconds);
+    metricRegistry.recordGaugeValue(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
