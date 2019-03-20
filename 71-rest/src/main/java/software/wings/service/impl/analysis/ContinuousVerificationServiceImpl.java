@@ -1151,7 +1151,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         tag = HARNESS_DEFAULT_TAG;
       }
       if (!observedTimeSeries.containsKey(tag)) {
-        observedTimeSeries.put(tag, new HashMap<>());
+        observedTimeSeries.put(tag, new ConcurrentHashMap<>());
       }
       Map<String, Map<String, TimeSeriesOfMetric>> txnMetricTimeSeries = observedTimeSeries.get(tag);
       if (!txnMetricTimeSeries.containsKey(metricRecord.getName())) {
