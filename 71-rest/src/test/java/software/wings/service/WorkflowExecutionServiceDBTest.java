@@ -86,8 +86,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   public void shouldListExecutions() {
     CountsByStatuses countsByStatuses = aCountsByStatuses().build();
 
-    final WorkflowExecutionBuilder workflowExecutionBuilder =
-        WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID).stateMachineId(STATE_MACHINE_ID);
+    final WorkflowExecutionBuilder workflowExecutionBuilder = WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID);
 
     wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(SUCCESS).build());
     wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
@@ -148,7 +147,6 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
                                               .appId(appId)
                                               .envId(envId)
                                               .stateMachine(stateMachine)
-                                              .stateMachineId(stateMachineId)
                                               .workflowId(workflowId)
                                               .status(ExecutionStatus.SUCCESS)
                                               .serviceExecutionSummaries(executionSummaries)

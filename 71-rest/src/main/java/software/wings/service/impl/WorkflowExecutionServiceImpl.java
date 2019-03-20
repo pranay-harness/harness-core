@@ -134,6 +134,7 @@ import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -561,6 +562,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
                     workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
                 workflowExecution2.setStateMachine(null);
+
                 stageExecution.setWorkflowExecutions(asList(workflowExecution2));
                 stageExecution.setStatus(workflowExecution2.getStatus());
               }
@@ -1012,10 +1014,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!workflow.getOrchestrationWorkflow().isValid()) {
       throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
     }
-    StateMachine stateMachine = workflowService.readStateMachine(appId, workflowId, workflow.getDefaultVersion());
-    if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + workflowId);
-    }
+
+    StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
+        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), workflowService.stencilMap());
 
     WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(appId);
@@ -1030,7 +1031,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setWorkflowType(ORCHESTRATION);
     workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     workflowExecution.setStateMachine(stateMachine);
-    workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
 
@@ -2062,6 +2062,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       breakdown.setQueued(total - (breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress()));
     } else {
       StateMachine sm = obtainStateMachine(workflowExecution);
+      if (sm == null) {
+        return;
+      }
 
       Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
       try (HIterator<StateExecutionInstance> iterator =

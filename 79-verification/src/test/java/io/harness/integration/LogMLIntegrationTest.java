@@ -1257,19 +1257,19 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final String serviceId = "some-service";
     final TreeBasedTable<Integer, Integer, Set<LogDataRecord>> addedMessages = TreeBasedTable.create();
 
+    StateMachine stateMachine = new StateMachine();
+    stateMachine.setInitialStateName("some-state");
+    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
+    stateMachine.setUuid(generateUuid());
+    stateMachine.setAppId(appId);
+
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .status(ExecutionStatus.SUCCESS)
                                               .workflowId(workflowId)
                                               .appId(appId)
-                                              .stateMachineId(UUID.randomUUID().toString())
+                                              .stateMachine(stateMachine)
                                               .build();
     wingsPersistence.save(workflowExecution);
-    StateMachine stateMachine = new StateMachine();
-    stateMachine.setInitialStateName("some-state");
-    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
-    stateMachine.setUuid(workflowExecution.getStateMachineId());
-    stateMachine.setAppId(appId);
-    wingsPersistence.save(stateMachine);
     Set<String> hosts = new HashSet<>();
 
     for (int executionNumber = 1; executionNumber <= numOfExecutions; executionNumber++) {
