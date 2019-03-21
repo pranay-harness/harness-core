@@ -355,16 +355,11 @@ public class K8sTaskHelper {
 
     StringBuilder valuesFilesOptionsBuilder = new StringBuilder(128);
     for (int i = 0; i < valuesFiles.size(); i++) {
-      try {
-        String item = valuesFiles.get(i);
-        validateValuesFileContents(item);
-        String valuesFileName = format("values-%d.yaml", i);
-        FileIo.writeUtf8StringToFile(k8sDelegateTaskParams.getWorkingDirectory() + '/' + valuesFileName, item);
-        valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
-      } catch (Exception e) {
-        executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
-        throw e;
-      }
+      String item = valuesFiles.get(i);
+      validateValuesFileContents(item);
+      String valuesFileName = format("values-%d.yaml", i);
+      FileIo.writeUtf8StringToFile(k8sDelegateTaskParams.getWorkingDirectory() + '/' + valuesFileName, item);
+      valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
     }
 
     String valuesFileOptions = valuesFilesOptionsBuilder.toString();
