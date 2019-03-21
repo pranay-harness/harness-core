@@ -11,6 +11,7 @@ import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTIO
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
@@ -110,7 +111,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfiguration.setAccountId(accountId);
     cvConfiguration.setAppId(appId);
     cvConfiguration.setStateType(stateType);
-    wingsPersistence.save(cvConfiguration);
+    try {
+      wingsPersistence.save(cvConfiguration);
+    } catch (DuplicateKeyException ex) {
+      throw new WingsException("A Service Verification with the name " + cvConfiguration.getName()
+          + " already exists. Please choose a unique name.");
+    }
     saveMetricTemplate(appId, accountId, cvConfiguration, stateType);
     return cvConfiguration.getUuid();
   }
@@ -133,6 +139,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                           .filter("envId", envId)
                                           .get();
 
+    if (cvConfiguration == null) {
+      return null;
+    }
     fillInServiceAndConnectorNames(cvConfiguration);
     return (T) cvConfiguration;
   }
@@ -140,9 +149,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public String updateConfiguration(CVConfiguration cvConfiguration, String appId) {
     CVConfiguration savedConfiguration =
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, cvConfiguration.getUuid());
+
     UpdateOperations<CVConfiguration> updateOperations =
         getUpdateOperations(cvConfiguration.getStateType(), cvConfiguration, savedConfiguration);
-    wingsPersistence.update(savedConfiguration, updateOperations);
+    try {
+      wingsPersistence.update(savedConfiguration, updateOperations);
+    } catch (DuplicateKeyException ex) {
+      throw new WingsException("A Service Verification with the name " + cvConfiguration.getName()
+          + " already exists. Please choose a unique name.");
+    }
     return savedConfiguration.getUuid();
   }
 
@@ -223,7 +238,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, serviceConfigurationId);
     UpdateOperations<CVConfiguration> updateOperations =
         getUpdateOperations(stateType, updatedConfig, savedConfiguration);
-    wingsPersistence.update(savedConfiguration, updateOperations);
+    try {
+      wingsPersistence.update(savedConfiguration, updateOperations);
+    } catch (DuplicateKeyException ex) {
+      throw new WingsException("A Service Verification with the name " + updatedConfig.getName()
+          + " already exists. Please choose a unique name.");
+    }
     // TODO update metric template if it makes sense
     return savedConfiguration.getUuid();
   }
