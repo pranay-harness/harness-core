@@ -22,7 +22,7 @@ public interface BambooBuildService extends BuildService<BambooConfig> {
 
   @DelegateTaskType(TaskType.BAMBOO_GET_JOBS)
   List<JobDetails> getJobs(
-      BambooConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName);
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName);
 
   @DelegateTaskType(TaskType.BAMBOO_GET_ARTIFACT_PATHS)
   List<String> getArtifactPaths(
@@ -36,5 +36,5 @@ public interface BambooBuildService extends BuildService<BambooConfig> {
   Map<String, String> getPlans(BambooConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.BAMBOO_VALIDATE_ARTIFACT_SERVER)
-  boolean validateArtifactServer(BambooConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails);
+  boolean validateArtifactServer(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails);
 }
