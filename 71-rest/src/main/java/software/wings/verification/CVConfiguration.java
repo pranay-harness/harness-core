@@ -7,8 +7,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -25,6 +28,11 @@ import javax.validation.constraints.NotNull;
  */
 
 @Entity(value = "verificationServiceConfigurations")
+@Indexes({
+  @Index(fields = {
+    @Field("appId"), @Field("envId"), @Field("name")
+  }, options = @IndexOptions(unique = true, name = "nameUniqueIndex"))
+})
 @HarnessExportableEntity
 @Data
 @NoArgsConstructor

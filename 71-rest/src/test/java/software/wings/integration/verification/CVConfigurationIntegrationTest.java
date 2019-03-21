@@ -877,6 +877,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     newRelicCVServiceConfiguration.setConnectorId(settingAttributeId);
     newRelicCVServiceConfiguration.setMetrics(Collections.singletonList("apdexScore"));
     newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    newRelicCVServiceConfiguration.setName("name2");
 
     appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
     appDynamicsCVServiceConfiguration.setAppId(appId);
@@ -888,6 +889,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
+    appDynamicsCVServiceConfiguration.setName("name1");
 
     // Adding a workflow cvConfiguration. And verify this configuration is not returned from the REST API
     AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfigurationFromWorkflow =
@@ -902,6 +904,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfigurationFromWorkflow.setConnectorId(generateUuid());
     appDynamicsCVServiceConfigurationFromWorkflow.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfigurationFromWorkflow.setAnalysisTolerance(AnalysisTolerance.HIGH);
+    appDynamicsCVServiceConfigurationFromWorkflow.setName("name");
 
     // Save 2 cvConfigs with the same appId but different envIds
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + NEW_RELIC;
