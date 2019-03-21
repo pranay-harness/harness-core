@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -235,7 +236,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
             .build();
     wingsPersistence.save(execution1);
 
-    Service service = Service.builder().appId(appId).uuid(serviceId).build();
+    Service service = Service.builder().appId(appId).name(generateUUID()).uuid(serviceId).build();
     wingsPersistence.save(service);
     // Call
 
@@ -244,13 +245,17 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         accountId, before, after, userService.getUserByEmail(WingsIntegrationTestConstants.adminUserEmail), serviceId);
 
     // Verify
+    boolean executionFound = false;
     assertTrue("There's atleast one deployment execution", workflowExecutionList.size() > 0);
-    assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getUuid());
-    assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
-    assertEquals(
-        "pipeline id matches", "pipelineId", workflowExecutionList.get(0).getPipelineSummary().getPipelineId());
-    assertEquals(
-        "pipeline name matches", "pipelineName", workflowExecutionList.get(0).getPipelineSummary().getPipelineName());
+    for (WorkflowExecution execution : workflowExecutionList) {
+      if (execution.getUuid().equals(workflowExecutionId)) {
+        executionFound = true;
+        assertEquals("Status is success", ExecutionStatus.SUCCESS, execution.getStatus());
+        assertEquals("pipeline id matches", "pipelineId", execution.getPipelineSummary().getPipelineId());
+        assertEquals("pipeline name matches", "pipelineName", execution.getPipelineSummary().getPipelineName());
+      }
+    }
+    assertTrue("Workflow execution should be in the returned list", executionFound);
   }
 
   @Test

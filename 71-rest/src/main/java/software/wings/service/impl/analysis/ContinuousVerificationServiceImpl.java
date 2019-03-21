@@ -41,6 +41,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import org.jetbrains.annotations.NotNull;
@@ -438,26 +439,24 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           user);
       return results;
     }
-    PageRequest<WorkflowExecution> workflowExecutionPageRequest =
-        PageRequestBuilder.aPageRequest()
-            .addFilter("appId", Operator.EQ, service.getAppId())
-            .addFieldsExcluded("serviceExecutionSummaries", "executionArgs", "keywords", "breakdown",
-                "statusInstanceBreakdownMap", WorkflowExecution.STATE_MACHINE_KEY)
-            .addFilter("startTs", Operator.GE, startTime)
-            .addFilter("startTs", Operator.LT, endTime)
-            .withLimit(String.valueOf(PAGE_LIMIT))
-            .withOffset(String.valueOf(START_OFFSET))
-            .build();
 
-    int previousOffSet = 0;
+    Query<WorkflowExecution> workflowExecutionQuery = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                          .filter("appId", service.getAppId())
+                                                          .field("startTs")
+                                                          .greaterThanOrEq(startTime)
+                                                          .field("startTs")
+                                                          .lessThan(endTime)
+                                                          .project("serviceExecutionSummaries", false)
+                                                          .project("keywords", false)
+                                                          .project("breakdown", false)
+                                                          .project("statusInstanceBreakdownMap", false)
+                                                          .project(WorkflowExecution.STATE_MACHINE_KEY, false)
+                                                          .project("executionArgs", false);
 
-    PageResponse<WorkflowExecution> workflowExecutionResponse =
-        wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
-    while (!workflowExecutionResponse.isEmpty()) {
-      results.addAll(workflowExecutionResponse.getResponse());
-      previousOffSet += workflowExecutionResponse.size();
-      workflowExecutionPageRequest.setOffset(String.valueOf(previousOffSet));
-      workflowExecutionResponse = wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
+    try (HIterator<WorkflowExecution> records = new HIterator<>(workflowExecutionQuery.fetch())) {
+      while (records.hasNext()) {
+        results.add(records.next());
+      }
     }
 
     List<WorkflowExecution> resultList = new ArrayList<>();
