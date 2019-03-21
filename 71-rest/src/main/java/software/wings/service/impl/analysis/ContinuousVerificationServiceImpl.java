@@ -441,8 +441,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     PageRequest<WorkflowExecution> workflowExecutionPageRequest =
         PageRequestBuilder.aPageRequest()
             .addFilter("appId", Operator.EQ, service.getAppId())
-            .addFieldsExcluded(
-                "serviceExecutionSummaries", "executionArgs", "keywords", "breakdown", "statusInstanceBreakdownMap")
+            .addFieldsExcluded("serviceExecutionSummaries", "executionArgs", "keywords", "breakdown",
+                "statusInstanceBreakdownMap", WorkflowExecution.STATE_MACHINE_KEY)
             .addFilter("startTs", Operator.GE, startTime)
             .addFilter("startTs", Operator.LT, endTime)
             .withLimit(String.valueOf(PAGE_LIMIT))

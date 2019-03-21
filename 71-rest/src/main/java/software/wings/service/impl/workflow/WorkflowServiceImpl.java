@@ -506,9 +506,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                   .addFilter("appId", EQ, workflow.getAppId())
                   .build();
 
-          workflow.setWorkflowExecutions(
+          final List<WorkflowExecution> workflowExecutions =
               workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
-                  .getResponse());
+                  .getResponse();
+
+          workflowExecutions.forEach(we -> we.setStateMachine(null));
+          workflow.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
           logger.error(format("Failed to fetch recent executions for workflow %s", workflow.getUuid()), e);
         }
