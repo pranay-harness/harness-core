@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.Set;
 
 public class DelegateCapabilityUtilTest {
-  private static Set<String> taskGroupsMoved = new HashSet<>(Arrays.asList("HTTP", "JENKINS", "BAMBOO", "GCS"));
+  private static Set<String> taskGroupsMoved =
+      new HashSet<>(Arrays.asList("HTTP", "JENKINS", "BAMBOO", "GCS", "DOCKER", "NEXUS", "ARTIFACTORY"));
 
   @Test
   @Category(UnitTests.class)

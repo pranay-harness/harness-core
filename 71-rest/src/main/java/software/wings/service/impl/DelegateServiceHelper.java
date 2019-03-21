@@ -87,14 +87,14 @@ public class DelegateServiceHelper {
         // There can be more than 1 non-Local encryptedDataDetails.
         // e.g. in case of JenkinConfig, it has token / username-password. User will select 1
         // of the auth mechanism. In this case, it will have 2 encryptedDataDetails (same entry twice)
-        EncryptedDataDetail encryptedDataDetail = nonLocalEncryptedDetails.get(0);
-
-        final String encryptionConfigUuid = encryptedDataDetail.getEncryptionConfig().getUuid();
-
-        encryptionConfigsMap.put(encryptionConfigUuid, encryptedDataDetail.getEncryptionConfig());
+        if (isNotEmpty(nonLocalEncryptedDetails)) {
+          EncryptedDataDetail encryptedDataDetail = nonLocalEncryptedDetails.get(0);
+          encryptionConfigsMap.put(
+              encryptedDataDetail.getEncryptionConfig().getUuid(), encryptedDataDetail.getEncryptionConfig());
+        }
       }
     } catch (Exception e) {
-      logger.warn("Failed while generating Encryption Configs from EncryptionDataDetails");
+      logger.warn("Failed while generating Encryption Configs from EncryptionDataDetails: " + e);
     }
     return encryptionConfigsMap;
   }
@@ -119,5 +119,13 @@ public class DelegateServiceHelper {
     }
 
     return false;
+  }
+
+  public String generateLogStringWithCapabilitiesGenerated(DelegateTask task) {
+    StringBuilder builder =
+        new StringBuilder(128).append("Capabilities Generate for Task: ").append(task.getUuid()).append(" are: ");
+
+    task.getExecutionCapabilities().forEach(capability -> builder.append('\n').append(capability.toString()));
+    return builder.toString();
   }
 }
