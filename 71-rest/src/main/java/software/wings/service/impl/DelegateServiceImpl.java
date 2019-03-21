@@ -1404,6 +1404,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegatePackage delegatePackage = getDelegataePackgeWithEncryptionConfig(task, task.getDelegateId());
     delegateServiceHelper.embedCapabilitiesInDelegateTask(task,
         isEmpty(delegatePackage.getEncryptionConfigs()) ? EMPTY_LIST : delegatePackage.getEncryptionConfigs().values());
+
+    if (isNotEmpty(task.getExecutionCapabilities())) {
+      logger.info(delegateServiceHelper.generateLogStringWithCapabilitiesGenerated(task));
+    }
   }
 
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {

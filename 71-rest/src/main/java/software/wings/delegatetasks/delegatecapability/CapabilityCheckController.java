@@ -11,6 +11,8 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheckFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class CapabilityCheckController extends AbstractDelegateValidateTask {
+  private static final Logger logger = LoggerFactory.getLogger(CapabilityCheckController.class);
   @Inject CapabilityCheckFactory capabilityCheckFactory;
 
   public CapabilityCheckController(
@@ -42,9 +45,11 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
                 .collect(toList());
       }
 
-      executionCapabilities.forEach(delegateCapability
-          -> checkResponses.add(capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType())
-                                    .performCapabilityCheck(delegateCapability)));
+      executionCapabilities.forEach(delegateCapability -> {
+        logger.info("Checking Capability: " + delegateCapability.toString());
+        checkResponses.add(capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType())
+                               .performCapabilityCheck(delegateCapability));
+      });
 
     } catch (Exception e) {
       return emptyList();
