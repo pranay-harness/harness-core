@@ -397,9 +397,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       if (!gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getCommitId())) {
         throw new InvalidRequestException("CommitId cannot be empty if useBranch is not selected", USER);
       }
-    } else {
+    } else if (StoreType.Local.equals(applicationManifest.getStoreType())) {
       if (gitFileConfig != null) {
-        throw new InvalidRequestException("Git file config should be null for store type local", USER);
+        throw new InvalidRequestException(
+            "Git file config should be null for store type " + applicationManifest.getStoreType(), USER);
       }
     }
   }
@@ -412,7 +413,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Application manifest doesn't exist with id " + appManifestId, USER);
     }
 
-    if (StoreType.Local.equals(appManifest.getStoreType())) {
+    if (!StoreType.Remote.equals(appManifest.getStoreType())) {
       throw new InvalidRequestException(
           "Manifest files from git should only be requested when store type is remote", USER);
     }
