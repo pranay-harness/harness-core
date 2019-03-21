@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_BRANCH_REF;
@@ -52,7 +53,8 @@ public class WebhookEventUtils {
       return WebhookSource.BITBUCKET;
     }
     throw new InvalidRequestException("Unable to resolve the Webhook Source. "
-        + "One of the " + eventHeaders + " must be present in Headers");
+            + "One of the " + eventHeaders + " must be present in Headers",
+        USER);
   }
 
   public String obtainBranchName(WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
