@@ -1,7 +1,6 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.ERROR;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import com.google.inject.Inject;
@@ -14,12 +13,9 @@ import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.StateExecutionData;
-import software.wings.verification.log.LogsCVConfiguration;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -40,7 +36,6 @@ public class LogAnalysisExecutionData extends StateExecutionData {
   private Set<String> lastExecutionNodes;
   private int analysisMinute;
   private String delegateTaskId;
-  private String verificationServiceTaskId;
 
   @Override
   @JsonIgnore
@@ -95,21 +90,6 @@ public class LogAnalysisExecutionData extends StateExecutionData {
     putNotNull(executionDetails, "previousVersionNodes",
         ExecutionDataValue.builder().displayName("Previous version nodes").value(lastExecutionNodes).build());
 
-    if (isNotEmpty(verificationServiceTaskId)) {
-      AnalysisContext analysisContext = wingsPersistence.get(AnalysisContext.class, verificationServiceTaskId);
-      if (AnalysisComparisonStrategy.PREDICTIVE.equals(analysisContext.getComparisonStrategy())) {
-        if (isNotEmpty(analysisContext.getPredictiveCvConfigId())) {
-          LogsCVConfiguration logsCVConfiguration =
-              wingsPersistence.get(LogsCVConfiguration.class, analysisContext.getPredictiveCvConfigId());
-          putNotNull(executionDetails, "baseline",
-              ExecutionDataValue.builder()
-                  .displayName("Baseline")
-                  .value("From " + new Date(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()))
-                      + " To " + new Date(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineEndMinute())))
-                  .build());
-        }
-      }
-    }
     return executionDetails;
   }
 }

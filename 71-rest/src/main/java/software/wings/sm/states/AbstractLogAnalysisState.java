@@ -207,8 +207,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       // Set the rendered query into the analysis context which will be used during task analysis.
       analysisContext.setQuery(getRenderedQuery());
 
-      final String verificationServiceTaskId = scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-      executionData.setVerificationServiceTaskId(verificationServiceTaskId);
+      scheduleAnalysisCronJob(analysisContext, delegateTaskId);
 
       return anExecutionResponse()
           .withAsync(true)
