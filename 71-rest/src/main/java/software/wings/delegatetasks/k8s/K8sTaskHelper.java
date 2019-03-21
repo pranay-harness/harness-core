@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static io.harness.k8s.manifest.ManifestHelper.getFirstLoadBalancerService;
@@ -499,12 +500,8 @@ public class K8sTaskHelper {
     return sb.toString();
   }
 
-  public List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
+  private List<ManifestFile> fetchManifestFilesForRemoteStore(K8sDelegateManifestConfig delegateManifestConfig,
       ExecutionLogCallback executionLogCallback, GitService gitService, EncryptionService encryptionService) {
-    if (StoreType.Local.equals(delegateManifestConfig.getManifestStoreTypes())) {
-      return delegateManifestConfig.getManifestFiles();
-    }
-
     if (isBlank(delegateManifestConfig.getGitFileConfig().getFilePath())) {
       delegateManifestConfig.getGitFileConfig().setFilePath(StringUtils.EMPTY);
     }
@@ -523,6 +520,24 @@ public class K8sTaskHelper {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return null;
     }
+  }
+
+  public List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
+      ExecutionLogCallback executionLogCallback, GitService gitService, EncryptionService encryptionService) {
+    StoreType storeType = delegateManifestConfig.getManifestStoreTypes();
+    switch (storeType) {
+      case Local:
+        return delegateManifestConfig.getManifestFiles();
+
+      case Remote:
+        return fetchManifestFilesForRemoteStore(
+            delegateManifestConfig, executionLogCallback, gitService, encryptionService);
+
+      default:
+        unhandled(storeType);
+    }
+
+    return null;
   }
 
   private static String getRelativePath(String filePath, String prefixPath) {
