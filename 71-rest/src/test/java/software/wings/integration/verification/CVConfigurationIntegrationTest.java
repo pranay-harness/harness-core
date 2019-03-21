@@ -6,6 +6,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
@@ -143,13 +144,16 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     loadBalancerMetrics.add(
         new CloudWatchMetric("Latency", "Latenc", "LoadBalancerName", "Load balancer name", "ERROR", true));
     loadBalancerMetricsByLoadBalancer.put("init-test", loadBalancerMetrics);
-
-    List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
-    ec2Metrics.add(
-        new CloudWatchMetric("CPUUtilization", "CPU Usage", "InstanceId", "Host name expression", "VALUE", true));
-
     cloudWatchCVServiceConfiguration.setLoadBalancerMetrics(loadBalancerMetricsByLoadBalancer);
     cloudWatchCVServiceConfiguration.setRegion("us-east-2");
+
+    Map<String, List<CloudWatchMetric>> metricsByLambdaFunction = new HashMap<>();
+    List<CloudWatchMetric> lambdaMetrics = new ArrayList<>();
+    lambdaMetrics.add(new CloudWatchMetric(
+        "Invocations", "Invocations Sum", "FunctionName", "Lambda Function Name", "THROUGHPUT", true));
+    metricsByLambdaFunction.put("lambda_fn1", lambdaMetrics);
+
+    cloudWatchCVServiceConfiguration.setLambdaFunctionsMetrics(metricsByLambdaFunction);
   }
 
   private void createNewRelicConfig(boolean enabled24x7) {
@@ -571,6 +575,41 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestBuilderWithAuthHeader(target).put(
         entity(fetchedObject, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     restResponse.getResource();
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public <T extends CVConfiguration> void testCloudWatchConfigurationWithOnlyLamdaMetrics() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url =
+        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(cloudWatchCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<CloudWatchCVServiceConfiguration> getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<CloudWatchCVServiceConfiguration>>() {});
+    CloudWatchCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+
+    fetchedObject.setEcsMetrics(null);
+    fetchedObject.setEc2InstanceNames(null);
+    fetchedObject.setLoadBalancerMetrics(null);
+
+    // Call PUT
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + CLOUD_WATCH + "&serviceConfigurationId=" + savedObjectUuid;
+    logger.info("PUT " + url);
+    target = client.target(url);
+    getRequestBuilderWithAuthHeader(target).put(
+        entity(fetchedObject, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    assertNotNull(restResponse.getResource());
   }
 
   @Test
