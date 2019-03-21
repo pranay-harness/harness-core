@@ -22,3 +22,8 @@ public
 @RandomNonTrackedAnnotation
 class Class2 {
 }
+
+
+public class Class3 {
+    @Getter @SchemaIgnore private int foo;
+}

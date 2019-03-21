@@ -51,8 +51,8 @@ public class Log extends Base implements GoogleDataStoreAware {
   @NotNull private LogLevel logLevel;
   @NotNull private CommandExecutionStatus commandExecutionStatus;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

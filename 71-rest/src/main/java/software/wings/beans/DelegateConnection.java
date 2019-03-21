@@ -29,5 +29,5 @@ public class DelegateConnection extends Base {
   private String version;
   private long lastHeartbeat;
 
-  @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @JsonIgnore @SchemaIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
 }

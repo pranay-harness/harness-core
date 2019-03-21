@@ -59,8 +59,8 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
   private LogMLClusterScores cluster_scores;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 }

@@ -47,8 +47,8 @@ public class SweepingOutput extends Base {
 
   public enum Scope { PIPELINE, WORKFLOW, PHASE }
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

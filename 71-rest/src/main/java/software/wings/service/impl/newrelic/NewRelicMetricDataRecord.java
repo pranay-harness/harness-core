@@ -98,8 +98,8 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   private transient Map<String, String> deeplinkUrl;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 

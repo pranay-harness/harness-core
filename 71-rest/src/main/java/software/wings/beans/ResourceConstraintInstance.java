@@ -44,8 +44,8 @@ public class ResourceConstraintInstance extends Base {
 
   private long acquiredAt;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 

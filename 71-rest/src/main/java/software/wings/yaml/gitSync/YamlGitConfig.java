@@ -52,7 +52,7 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   private boolean keyAuth;
   @NotEmpty private String gitConnectorId;
 
-  @SchemaIgnore @JsonIgnore private String encryptedPassword;
+  @JsonIgnore @SchemaIgnore private String encryptedPassword;
 
   private SyncMode syncMode;
   private boolean enabled;
@@ -84,8 +84,8 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
     ARTIFACT_STREAM
   }
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   public GitConfig getGitConfig(SettingAttribute sshSettingAttribute) {
     return GitConfig.builder()
         .accountId(this.accountId)

@@ -136,8 +136,8 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   @SchemaIgnore @Indexed private List<String> keywords;
 
   @Default
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
