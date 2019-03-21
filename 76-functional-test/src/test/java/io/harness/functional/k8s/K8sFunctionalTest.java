@@ -30,6 +30,7 @@ import io.harness.generator.SettingGenerator;
 import io.harness.rule.OwnerRule.Owner;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -70,6 +71,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Ignore
   @Category(FunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
@@ -77,6 +79,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Ignore
   @Category(FunctionalTests.class)
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
@@ -84,6 +87,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Ignore
   @Category(FunctionalTests.class)
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);

@@ -15,8 +15,6 @@ import com.google.inject.Injector;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.scheduler.InjectorJobFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,27 +78,6 @@ public class JiraPollingJobTest extends WingsBaseTest {
     when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
              APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
         .thenReturn(ExecutionStatus.REJECTED);
-
-    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
-    jiraApprovalParams.setJiraConnectorId(JIRA_CONNECTOR_ID);
-    jiraApprovalParams.setIssueId(JIRA_ISSUE_ID);
-    jiraApprovalParams.setApprovalField(APPROVAL_FIELD);
-    jiraApprovalParams.setApprovalValue(APPROVAL_VALUE);
-    jiraApprovalParams.setRejectionField(REJECTION_FIELD);
-    jiraApprovalParams.setRejectionValue(REJECTION_VALUE);
-
-    JiraPollingJob.doPollingJob(
-        jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
-    listener.waitToSatisfy(ofSeconds(35));
-    assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isFalse();
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void shouldDeleteJobOnError() throws TimeoutException, InterruptedException {
-    when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
-             APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
-        .thenThrow(new WingsException(ErrorCode.UNKNOWN_ERROR));
 
     JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
     jiraApprovalParams.setJiraConnectorId(JIRA_CONNECTOR_ID);
