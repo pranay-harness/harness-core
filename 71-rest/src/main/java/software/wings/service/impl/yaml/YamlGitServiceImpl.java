@@ -980,7 +980,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         ArrayList arrayList = (ArrayList) ((LinkedHashMap) map.get("push")).get("changes");
         return (String) ((LinkedHashMap) (((LinkedHashMap) (arrayList.get(0))).get("new"))).get("name");
       } else {
-        logger.error(format(GIT_YAML_LOG_PREFIX + "Unsupported webhook token header %s", headers));
+        logger.info(format(GIT_YAML_LOG_PREFIX + "Unsupported webhook token header %s", headers));
       }
 
       return "";

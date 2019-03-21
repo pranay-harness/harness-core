@@ -5,9 +5,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
+import io.harness.category.element.IntegrationTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -35,6 +37,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(IntegrationTests.class)
   public void testSaveDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
         AppDynamicsCVServiceConfiguration.builder().tierId(tierId).appDynamicsApplicationId("1234").build();
@@ -50,6 +53,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Category(IntegrationTests.class)
   public void testUpdateGoodCase() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
         AppDynamicsCVServiceConfiguration.builder().tierId(tierId).appDynamicsApplicationId("1234").build();
@@ -73,6 +77,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
+  @Category(IntegrationTests.class)
   public void testUpdateDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
         AppDynamicsCVServiceConfiguration.builder().tierId(tierId).appDynamicsApplicationId("1234").build();
