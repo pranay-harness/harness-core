@@ -32,7 +32,7 @@ public class ObjectYamlUtils {
   private static final String dotMatchRegex = "\\.";
   private static final String encodedDot = "[dot]";
   public static final String YAML_DOCUMENT_DELIMITER = "---";
-  private static final String newLineRegex = "\\r?\\n";
+  public static final String newLineRegex = "\\r?\\n";
 
   private static boolean isCollection(String str) {
     return str.endsWith("]");

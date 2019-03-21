@@ -1,6 +1,7 @@
 package io.harness.k8s.manifest;
 
 import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
+import static io.harness.k8s.manifest.ObjectYamlUtils.newLineRegex;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
 import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.KubernetesResource.redactSecretValues;
@@ -10,6 +11,8 @@ import com.google.common.collect.ImmutableSet;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
+import com.esotericsoftware.yamlbeans.parser.Parser.ParserException;
+import com.esotericsoftware.yamlbeans.tokenizer.Tokenizer.TokenizerException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.model.HarnessAnnotations;
@@ -198,7 +201,26 @@ public class ManifestHelper {
         throw new KubernetesValuesException("Object is not a map.");
       }
     } catch (YamlException e) {
-      throw new KubernetesValuesException(e.getMessage(), e.getCause());
+      String message = e.getMessage();
+      if (e.getCause() != null) {
+        Throwable cause = e.getCause();
+        if (cause instanceof ParserException || cause instanceof TokenizerException) {
+          String lineSnippet = getYamlLineKey(valuesFileContent, cause.getMessage());
+          message += " " + cause.getMessage() + ". @[" + lineSnippet + "]";
+        }
+      }
+      throw new KubernetesValuesException(message, e.getCause());
+    }
+  }
+
+  private static String getYamlLineKey(String valuesFileContent, String errorMessage) {
+    try {
+      int lineNumber = Integer.parseInt(
+          errorMessage.substring(errorMessage.indexOf("Line ") + "Line ".length(), errorMessage.indexOf(',')));
+      String line = valuesFileContent.split(newLineRegex)[lineNumber];
+      return line.substring(0, line.indexOf(':'));
+    } catch (RuntimeException e) {
+      return "<>";
     }
   }
 
