@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
@@ -13,7 +12,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.slf4j.Logger;
@@ -86,10 +84,9 @@ public class DelegateServiceHelper {
                 .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() != EncryptionType.LOCAL)
                 .collect(Collectors.toList());
 
-        if (nonLocalEncryptedDetails.size() > 1) {
-          throw new InvalidRequestException("More than one encrypted records associated", USER);
-        }
-
+        // There can be more than 1 non-Local encryptedDataDetails.
+        // e.g. in case of JenkinConfig, it has token / username-password. User will select 1
+        // of the auth mechanism. In this case, it will have 2 encryptedDataDetails (same entry twice)
         EncryptedDataDetail encryptedDataDetail = nonLocalEncryptedDetails.get(0);
 
         final String encryptionConfigUuid = encryptedDataDetail.getEncryptionConfig().getUuid();
