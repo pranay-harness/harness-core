@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.yaml.YamlFunctionalTestHelper;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,7 @@ public class HelmWithChartSpecWorkflowYamlFunctionalTest extends AbstractFunctio
   }
 
   @Test
+  @Owner(emails = "anshul@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
   public void testHelmWorkflowWithChartSpec() {
     uploadYamlZipFile(ACCOUNT_ID, OLD_APP_NAME, SETUP_FOLDER_PATH + APPLICATIONS_FOLDER);
