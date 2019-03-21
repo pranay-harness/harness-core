@@ -71,6 +71,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.SecretDetail;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
@@ -1284,7 +1285,6 @@ public class DelegateServiceImpl implements DelegateService {
 
         // applyDelegateSecretFunctor(delegatePackage);
         DelegateValidateTask delegateValidateTask = getDelegateValidateTask(delegateTaskEvent, delegateTask);
-
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
         ExecutorService executorService = delegateTask.isAsync()
@@ -1308,16 +1308,16 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
       return TaskType.valueOf(delegateTask.getData().getTaskType())
           .getDelegateValidateTaskVersionForCapabilityFramework(
-              delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
+              delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid()));
     }
     return TaskType.valueOf(delegateTask.getData().getTaskType())
-        .getDelegateValidateTask(delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
+        .getDelegateValidateTask(
+            delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid()));
   }
 
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
-      DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
+      DelegateTaskEvent delegateTaskEvent, String taskId) {
     return delegateConnectionResults -> {
-      String taskId = delegateTask.getUuid();
       currentlyValidatingTasks.remove(taskId);
       currentlyValidatingFutures.remove(taskId);
       logger.info("Removed {} from validating futures on post validation", taskId);
@@ -1365,7 +1365,7 @@ public class DelegateServiceImpl implements DelegateService {
         delegateTask.getData().getTaskType());
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(delegateTask.getData().getTaskType())
-            .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask),
+            .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask.getUuid()),
                 getPreExecutionFunction(delegateTask));
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = delegateTask.isAsync()
@@ -1375,7 +1375,7 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Task future in executeTask: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
         taskFuture.isCancelled());
     currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);
-    timeoutEnforcementService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
+    timeoutEnforcementService.submit(() -> enforceDelegateTaskTimeout(delegateTask.getUuid(), delegateTask.getData()));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
 
@@ -1393,22 +1393,22 @@ public class DelegateServiceImpl implements DelegateService {
     };
   }
 
-  private Consumer<DelegateTaskResponse> getPostExecutionFunction(@NotNull DelegateTask delegateTask) {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId) {
     return taskResponse -> {
       Response<ResponseBody> response = null;
       try {
-        logger.info("Sending response for task {} to manager", delegateTask.getUuid());
+        logger.info("Sending response for task {} to manager", taskId);
         response = timeLimiter.callWithTimeout(() -> {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
-            resp = managerClient.sendTaskStatus(delegateId, delegateTask.getUuid(), accountId, taskResponse).execute();
+            resp = managerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
-              logger.info("Task {} response sent to manager", delegateTask.getUuid());
+              logger.info("Task {} response sent to manager", taskId);
               return resp;
             } else {
-              logger.warn("Response received for sent task {}: {}. {}", delegateTask.getUuid(),
-                  resp == null ? "null" : resp.code(), retries > 0 ? "Retrying." : "Giving up.");
+              logger.warn("Response received for sent task {}: {}. {}", taskId, resp == null ? "null" : resp.code(),
+                  retries > 0 ? "Retrying." : "Giving up.");
               sleep(ofMillis(200));
             }
           }
@@ -1419,9 +1419,9 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (Exception e) {
         logger.error("Unable to send response to manager", e);
       } finally {
-        currentlyExecutingTasks.remove(delegateTask.getUuid());
-        if (currentlyExecutingFutures.remove(delegateTask.getUuid()) != null) {
-          logger.info("Removed {} from executing futures on post execution", delegateTask.getUuid());
+        currentlyExecutingTasks.remove(taskId);
+        if (currentlyExecutingFutures.remove(taskId) != null) {
+          logger.info("Removed {} from executing futures on post execution", taskId);
         }
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
@@ -1433,25 +1433,23 @@ public class DelegateServiceImpl implements DelegateService {
     };
   }
 
-  private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
+  private void enforceDelegateTaskTimeout(String taskId, TaskData taskData) {
     long startTime = clock.millis();
     boolean stillRunning = true;
-    long timeout = delegateTask.getData().getTimeout() + TimeUnit.SECONDS.toMillis(30L);
+    long timeout = taskData.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
     Future taskFuture = null;
     while (stillRunning && clock.millis() - startTime < timeout) {
-      logger.info("Task time remaining for {}: {} ms", delegateTask.getUuid(), startTime + timeout - clock.millis());
+      logger.info("Task time remaining for {}: {} ms", taskId, startTime + timeout - clock.millis());
       sleep(ofSeconds(5));
-      taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
+      taskFuture = currentlyExecutingFutures.get(taskId);
       if (taskFuture != null) {
-        logger.info("Task future: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
-            taskFuture.isCancelled());
+        logger.info("Task future: {} - done:{}, cancelled:{}", taskId, taskFuture.isDone(), taskFuture.isCancelled());
       }
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }
     if (stillRunning) {
-      logger.error("Task {} timed out after {} milliseconds", delegateTask.getUuid(), timeout);
-      Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
-          .ifPresent(future -> future.cancel(true));
+      logger.error("Task {} timed out after {} milliseconds", taskId, timeout);
+      Optional.ofNullable(currentlyExecutingFutures.get(taskId)).ifPresent(future -> future.cancel(true));
     }
     if (taskFuture != null) {
       try {
@@ -1459,14 +1457,14 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (UncheckedTimeoutException e) {
         logger.error("Timed out getting task future");
       } catch (CancellationException e) {
-        logger.error("Task {} was cancelled", delegateTask.getUuid());
+        logger.error("Task {} was cancelled", taskId);
       } catch (Exception e) {
-        logger.error("Error from task future {}", delegateTask.getUuid(), e);
+        logger.error("Error from task future {}", taskId, e);
       }
     }
-    currentlyExecutingTasks.remove(delegateTask.getUuid());
-    if (currentlyExecutingFutures.remove(delegateTask.getUuid()) != null) {
-      logger.info("Removed {} from executing futures on timeout", delegateTask.getUuid());
+    currentlyExecutingTasks.remove(taskId);
+    if (currentlyExecutingFutures.remove(taskId) != null) {
+      logger.info("Removed {} from executing futures on timeout", taskId);
     }
   }
 
