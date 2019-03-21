@@ -51,3 +51,9 @@ indexes:
   - name: dataCollectionMinute
   - name: tag
     direction: desc
+
+- kind: newRelicMetricRecords
+  properties:
+  - name: tag
+  - name: dataCollectionMinute
+    direction: desc
