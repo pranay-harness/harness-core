@@ -53,7 +53,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Permission;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
@@ -863,21 +862,12 @@ public class AuthServiceImpl implements AuthService {
     userService.update(user);
 
     userService.evictUserFromCache(user.getUuid());
-    if (isRefreshTokenEnabledForUser(user)) {
-      user.setToken(authToken.getJwtToken());
-    } else {
-      user.setToken(authToken.getUuid());
-    }
+    user.setToken(authToken.getJwtToken());
     Account account = user.getAccounts().get(0);
     usageMetricsEventPublisher.publishUserLoginEvent(account.getUuid(), account.getAccountName());
 
     user.setFirstLogin(isFirstLogin);
     return user;
-  }
-
-  protected boolean isRefreshTokenEnabledForUser(User user) {
-    return user.getAccounts().stream().anyMatch(
-        account -> featureFlagService.isEnabled(FeatureName.REFRESH_TOKEN, account.getUuid()));
   }
 
   private String generateJWTSecret(AuthToken authToken) {

@@ -52,7 +52,7 @@ public class User extends Base implements Principal {
 
   @Transient private String accountName;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
+  @JsonIgnore @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
 
   @Transient private List<UserGroup> userGroups = new ArrayList<>();
 
