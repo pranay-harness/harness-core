@@ -69,8 +69,8 @@ public class BarrierInstance implements PersistentEntity, UuidAware {
 
   private Pipeline pipeline;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());

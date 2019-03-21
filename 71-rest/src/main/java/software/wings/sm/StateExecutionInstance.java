@@ -133,8 +133,8 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
   private OrchestrationWorkflowType orchestrationWorkflowType;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

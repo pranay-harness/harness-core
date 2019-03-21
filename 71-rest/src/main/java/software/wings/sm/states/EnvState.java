@@ -75,7 +75,7 @@ public class EnvState extends State {
   @SchemaIgnore private String pipelineId;
   @SchemaIgnore private String pipelineStateElementId;
 
-  @SchemaIgnore @JsonIgnore private Map<String, String> workflowVariables;
+  @JsonIgnore @SchemaIgnore private Map<String, String> workflowVariables;
 
   @Transient @Inject private WorkflowService workflowService;
 

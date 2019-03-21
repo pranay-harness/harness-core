@@ -78,8 +78,8 @@ public class Activity extends Base {
   private ExecutionStatus status = ExecutionStatus.RUNNING;
   private TriggeredBy triggeredBy;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

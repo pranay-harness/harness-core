@@ -42,8 +42,8 @@ public class SecretUsageLog extends Base {
   // not stored
   @Transient private transient String workflowExecutionName;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());

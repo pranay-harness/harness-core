@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 public class EmptyPredicateTest extends CategoryTest {
-  @Builder
   @Getter
+  @Builder
   static class Custom implements IsEmpty {
     boolean empty;
   }

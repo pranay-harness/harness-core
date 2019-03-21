@@ -13,6 +13,7 @@ import java.util.Map;
 public class AnnotationOrderCheck extends AbstractCheck {
   private static final String ORDER_MSG_KEY = "code.readability.annotation.order";
   private static final String MODIFIER_MSG_KEY = "code.readability.annotation.modifier";
+  private static final String INCOMPATIBLE_MSG_KEY = "annotation.problem.incompatible";
 
   @Override
   public int[] getDefaultTokens() {
@@ -31,6 +32,8 @@ public class AnnotationOrderCheck extends AbstractCheck {
   Map<String, Integer> annotationOrder = ImmutableMap.<String, Integer>builder()
                                              .put("Value", 1)
                                              .put("Data", 1)
+                                             .put("Getter", 2)
+                                             .put("Setter", 3)
                                              .put("Builder", 11)
                                              .put("NoArgsConstructor", 12)
                                              .put("AllArgsConstructor", 13)
@@ -41,7 +44,19 @@ public class AnnotationOrderCheck extends AbstractCheck {
                                              .put("Repeat", 33)
                                              .put("Category", 34)
                                              .put("Ignore", 35)
+                                             .put("JsonIgnore", 41)
+                                             .put("SchemaIgnore", 51)
                                              .build();
+
+  Map<String, Map<String, String>> incompatible =
+      ImmutableMap.<String, Map<String, String>>builder()
+          .put("SchemaIgnore",
+              ImmutableMap.<String, String>builder()
+                  .put("Getter",
+                      "Lombok is not propagating the field annotations when creating getter methods. "
+                          + "This will result of @SchemaIgnore annotation to be noop. You cannot use them on the same field.")
+                  .build())
+          .build();
 
   @Override
   public int[] getAcceptableTokens() {
@@ -53,10 +68,20 @@ public class AnnotationOrderCheck extends AbstractCheck {
     final String name = AnnotationMixin.name(annotation);
     final Integer order = annotationOrder.get(name);
 
+    Map<String, String> incompatibleMap = incompatible.get(name);
+
     DetailAST prevAnnotation = annotation.getPreviousSibling();
     if (order != null) {
       while (prevAnnotation != null && prevAnnotation.getType() == TokenTypes.ANNOTATION) {
         final String prevName = AnnotationMixin.name(prevAnnotation);
+
+        if (incompatibleMap != null) {
+          String msg = incompatibleMap.get(prevName);
+          if (msg != null) {
+            log(annotation, INCOMPATIBLE_MSG_KEY, name, prevName, msg);
+          }
+        }
+
         prevAnnotation = prevAnnotation.getPreviousSibling();
 
         final Integer prevOrder = annotationOrder.get(prevName);

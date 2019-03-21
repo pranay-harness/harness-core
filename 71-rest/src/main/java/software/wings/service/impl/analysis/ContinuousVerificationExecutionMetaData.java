@@ -51,8 +51,8 @@ public class ContinuousVerificationExecutionMetaData extends Base {
   private ExecutionStatus executionStatus;
 
   @Default
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 }

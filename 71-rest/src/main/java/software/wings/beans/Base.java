@@ -62,8 +62,8 @@ public class Base
    * TODO: Add isDeleted boolean field to enable soft delete. @swagat
    */
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Transient
   private transient String entityYamlPath; // TODO:: remove it with changeSet batching
 
@@ -73,7 +73,7 @@ public class Base
     return entityYamlPath;
   }
 
-  @JsonIgnore @SchemaIgnore @Setter private transient boolean syncFromGit;
+  @Setter @JsonIgnore @SchemaIgnore private transient boolean syncFromGit;
 
   @JsonIgnore
   @SchemaIgnore
@@ -119,8 +119,8 @@ public class Base
     lastUpdatedBy = embeddedUser;
   }
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   public Map<String, Object> getShardKeys() {
     Map<String, Object> shardKeys = new HashMap<>();
     shardKeys.put("appId", appId);

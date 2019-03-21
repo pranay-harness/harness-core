@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 
 import com.google.common.base.MoreObjects;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
@@ -55,7 +54,7 @@ public class Application extends Base {
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
-  @SchemaIgnore @Indexed @Getter @Setter private List<String> keywords;
+  @Getter @Setter @Indexed private List<String> keywords;
 
   @Getter @Setter private transient YamlGitConfig yamlGitConfig;
 

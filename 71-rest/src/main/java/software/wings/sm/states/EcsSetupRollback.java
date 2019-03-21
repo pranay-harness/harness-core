@@ -10,7 +10,6 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -55,7 +54,7 @@ import java.util.Map;
 public class EcsSetupRollback extends State {
   public static final String ECS_DAEMON_SERVICE_ROLLBACK_COMMAND = "ECS Daemon Service Rollback";
 
-  @SchemaIgnore @Getter @Setter private int serviceSteadyStateTimeout;
+  @Getter @Setter private int serviceSteadyStateTimeout;
 
   @Inject private transient SecretManager secretManager;
   @Inject private transient EcsStateHelper ecsStateHelper;

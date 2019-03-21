@@ -35,8 +35,8 @@ public class Alert extends Base {
   private AlertData alertData;
   private long closedAt;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 

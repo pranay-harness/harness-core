@@ -76,8 +76,8 @@ public class AnalysisContext extends Base {
 
   private int retry;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 

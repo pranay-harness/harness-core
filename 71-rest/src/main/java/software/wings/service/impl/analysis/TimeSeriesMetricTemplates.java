@@ -44,7 +44,7 @@ public class TimeSeriesMetricTemplates extends Base {
 
   @NotEmpty private Map<String, TimeSeriesMetricDefinition> metricTemplates;
 
-  @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @JsonIgnore @SchemaIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
 
   @Builder
   public TimeSeriesMetricTemplates(StateType stateType, String stateExecutionId, String cvConfigId, String accountId,

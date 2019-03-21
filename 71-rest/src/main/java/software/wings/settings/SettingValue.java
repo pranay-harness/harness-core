@@ -40,8 +40,8 @@ public abstract class SettingValue {
 
   public void setSettingType(SettingVariableTypes type) {}
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   public List<Field> getEncryptedFields() {
     return EncryptionReflectUtils.getEncryptedFields(this.getClass());
   }

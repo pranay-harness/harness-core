@@ -50,7 +50,7 @@ public class CVConfiguration extends Base {
   @Transient @SchemaIgnore private String envName;
   @Transient @SchemaIgnore private String appName;
 
-  @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @JsonIgnore @SchemaIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
 
   public AnalysisComparisonStrategy getComparisonStrategy() {
     return comparisonStrategy == null ? AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS : comparisonStrategy;

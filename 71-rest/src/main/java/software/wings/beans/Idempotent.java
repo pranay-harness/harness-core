@@ -27,8 +27,8 @@ public class Idempotent extends Base {
   private String state;
   private List<IdempotentResult> result;
 
-  @SchemaIgnore
   @JsonIgnore
+  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(3).toInstant());
 }

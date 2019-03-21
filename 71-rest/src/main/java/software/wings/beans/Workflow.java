@@ -11,7 +11,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
@@ -57,7 +56,7 @@ public class Workflow extends Base {
 
   private List<TemplateExpression> templateExpressions;
 
-  @SchemaIgnore @Indexed @Getter @Setter private List<String> keywords;
+  @Getter @Setter @Indexed private List<String> keywords;
 
   @Transient private String notes;
 
