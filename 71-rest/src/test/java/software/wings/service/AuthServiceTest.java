@@ -4,9 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -301,62 +299,10 @@ public class AuthServiceTest extends WingsBaseTest {
     when(userCache.get(USER_ID)).thenReturn(mockUser);
     User user = authService.generateBearerTokenForUser(mockUser);
     AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
-    when(cache.get(Matchers.any(), Matchers.matches(user.getToken()))).thenReturn(authToken);
-    assertThat(user.getToken().length()).isEqualTo(32);
+    JWT jwt = JWT.decode(user.getToken());
+    String authTokenUuid = jwt.getClaim("authToken").asString();
+    when(cache.get(Matchers.any(), Matchers.matches(authTokenUuid))).thenReturn(authToken);
+    assertThat(user.getToken().length() > 32);
     authService.validateToken(user.getToken());
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testRefreshTokenWithFeatureFlagEnabled() throws UnsupportedEncodingException {
-    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
-    when(userCache.get(USER_ID)).thenReturn(mockUser);
-    when(userService.update(any(User.class))).thenReturn(mockUser);
-    doNothing().when(userService).evictUserFromCache(anyString());
-    User user = authService.generateBearerTokenForUser(mockUser);
-    assertThat(user.getToken().length()).isGreaterThan(32);
-    Algorithm algorithm = Algorithm.HMAC256(AUTH_SECRET);
-    JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
-    String authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
-    String tokenString = user.getToken();
-    AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
-    authToken.setJwtToken(user.getToken());
-    when(cache.get(Matchers.any(), Matchers.matches(authTokenId))).thenReturn(authToken);
-    final String oldToken = user.getToken();
-    user = authService.refreshToken(oldToken);
-    assertThat(user.getToken().length()).isGreaterThan(32);
-    authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
-    verifier.verify(user.getToken());
-
-    try {
-      user = authService.refreshToken(oldToken);
-      fail("TOKEN_ALREADY_REFRESHED_ONCE should be thrown ");
-    } catch (Exception e) {
-      Assertions.assertThat(e).isInstanceOf(WingsException.class);
-      Assertions.assertThat((WingsException) e).hasMessage(ErrorCode.TOKEN_ALREADY_REFRESHED_ONCE.name());
-    }
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testRefreshTokenWithFeatureFlagDisabled() {
-    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
-    when(userCache.get(USER_ID)).thenReturn(mockUser);
-    User user = authService.generateBearerTokenForUser(mockUser);
-    String token = user.getToken();
-    assertThat(token.length()).isEqualTo(32);
-    /**
-     * Simulating the old token
-     */
-    AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
-    authToken.setUuid(token);
-    when(cache.get(Matchers.any(), Matchers.matches(token))).thenReturn(authToken);
-    user = authService.refreshToken(token);
-
-    assertThat(user.getToken()).isEqualTo(token);
   }
 }
