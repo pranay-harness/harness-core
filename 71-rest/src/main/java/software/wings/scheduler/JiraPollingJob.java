@@ -16,6 +16,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
@@ -24,6 +26,8 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class JiraPollingJob implements Job {
+  private static final Logger logger = LoggerFactory.getLogger(JiraPollingJob.class);
+
   public static final String GROUP = "JIRA_POLLING_CRON_JOB";
   private static final int POLL_INTERVAL_SECONDS = 10;
   private static final int DELAY_START_SECONDS = 30;
@@ -98,8 +102,9 @@ public class JiraPollingJob implements Job {
         jiraHelperService.approveWorkflow(action, approvalId, user, appId, workflowExecutionId, approval);
       }
     } catch (Exception ex) {
-      // TODO:: Swagat: Add logging and not all exceptions are terminal.
-      isTerminalState = true;
+      logger.error("Exception in execute JiraPollingJob. approvalId: {}, workflowExecutionId: {} ", approvalId,
+          workflowExecutionId, ex);
+      // TODO:: Swagat: Add logic to determine terminal exceptions and cleanup for those.
     }
 
     if (isTerminalState) {
