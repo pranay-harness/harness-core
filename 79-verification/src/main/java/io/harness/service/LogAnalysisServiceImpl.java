@@ -652,6 +652,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                   .filter("appId", appId)
                                                   .field("logCollectionMinute")
                                                   .lessThanOrEq(analysisMinute)
+                                                  .filter("deprecated", false)
                                                   .order("-logCollectionMinute")
                                                   .get();
     if (logMLAnalysisRecord != null) {

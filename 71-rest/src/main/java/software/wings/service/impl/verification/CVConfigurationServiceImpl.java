@@ -286,6 +286,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                 .filter("cvConfigId", cvConfigId)
                                 .field("logCollectionMinute")
                                 .greaterThanOrEq(logsCVConfiguration.getBaselineStartMinute()));
+    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                .filter("appId", appId)
+                                .filter("cvConfigId", cvConfigId)
+                                .field("logCollectionMinute")
+                                .lessThanOrEq(logsCVConfiguration.getBaselineStartMinute()),
+        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class).set("deprecated", true));
     wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                 .filter("appId", appId)
                                 .filter("cvConfigId", cvConfigId));
