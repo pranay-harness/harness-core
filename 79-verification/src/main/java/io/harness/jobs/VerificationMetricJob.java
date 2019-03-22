@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.time.Timestamp;
 import org.mongodb.morphia.query.Sort;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -58,7 +57,7 @@ public class VerificationMetricJob implements Job {
             .get();
 
     long taskQueuedTimeInSeconds = lastQueuedAnalysisTask != null
-        ? TimeUnit.MILLISECONDS.toSeconds(Timestamp.currentMinuteBoundary() - lastQueuedAnalysisTask.getCreatedAt())
+        ? TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastQueuedAnalysisTask.getCreatedAt())
         : 0;
     logger.info("Learning Engine task has been queued for {} Seconds", taskQueuedTimeInSeconds);
     metricRegistry.recordGaugeValue(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
