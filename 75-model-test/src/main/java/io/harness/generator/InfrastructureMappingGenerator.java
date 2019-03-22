@@ -44,9 +44,12 @@ import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -65,6 +68,7 @@ public class InfrastructureMappingGenerator {
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private EnvironmentService environmentService;
+  @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private WingsPersistence wingsPersistence;
 
@@ -100,11 +104,11 @@ public class InfrastructureMappingGenerator {
       case ECS_EC2_TEST:
         return ensureEcsEc2Test(seed, owners);
       case K8S_ROLLING_TEST:
-        return ensureK8sTest(seed, owners, "functional-test-rolling");
+        return ensureK8sTest(seed, owners, "fn-test-rolling");
       case K8S_BLUE_GREEN_TEST:
-        return ensureK8sTest(seed, owners, "functional-test-bg");
+        return ensureK8sTest(seed, owners, "fn-test-bg");
       case K8S_CANARY_TEST:
-        return ensureK8sTest(seed, owners, "functional-test-canary");
+        return ensureK8sTest(seed, owners, "fn-test-canary");
       default:
         unhandled(predefined);
     }
@@ -197,26 +201,34 @@ public class InfrastructureMappingGenerator {
       owners.add(environment);
     }
 
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvId(environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
+
+    if (applicationManifest == null) {
+      environmentService.createValues(environment.getAppId(), environment.getUuid(), null,
+          ManifestFile.builder().fileName("values.yaml").fileContent("serviceType: ClusterIP\n").build());
+    }
+
     Service service = owners.obtainService();
     if (service == null) {
       service = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
-      environmentService.createValues(environment.getAppId(), environment.getUuid(), service.getUuid(),
-          ManifestFile.builder().fileName("values.yaml").fileContent("serviceType: ClusterIP\n").build());
       owners.add(service);
     }
 
     final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, HARNESS_GCP_EXPLORATION);
 
+    String namespaceUnique = namespace + '-' + System.currentTimeMillis();
+
     InfrastructureMapping newInfrastructureMapping =
         aGcpKubernetesInfrastructureMapping()
-            .withName("exploration-harness-test-" + namespace + System.currentTimeMillis())
+            .withName("exploration-harness-test-" + namespaceUnique)
             .withAutoPopulate(false)
             .withInfraMappingType(GCP_KUBERNETES.name())
             .withDeploymentType(DeploymentType.KUBERNETES.name())
             .withComputeProviderType(SettingVariableTypes.GCP.name())
             .withComputeProviderSettingId(gcpCloudProvider.getUuid())
             .withClusterName("us-west1-a/harness-test")
-            .withNamespace(namespace)
+            .withNamespace(namespaceUnique)
             .withServiceId(service.getUuid())
             .withEnvId(environment.getUuid())
             .withAccountId(owners.obtainAccount().getUuid())
