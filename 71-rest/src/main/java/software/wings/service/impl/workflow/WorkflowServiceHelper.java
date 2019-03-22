@@ -11,6 +11,7 @@ import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -305,14 +306,14 @@ public class WorkflowServiceHelper {
   }
 
   public List<String> getKeywords(Workflow workflow) {
-    List<Object> keywords = workflow.generateKeywords();
+    List<String> keywords = workflow.generateKeywords();
     if (workflow.getEnvId() != null) {
       Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId());
       if (environment != null) {
         keywords.add(environment.getName());
       }
     }
-    return trimList(keywords);
+    return trimStrings(keywords);
   }
 
   public void setKeywords(Workflow workflow) {

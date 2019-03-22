@@ -41,7 +41,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
-public class Environment extends Base {
+public class Environment extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
 
@@ -215,10 +215,9 @@ public class Environment extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
-    keywords.addAll(asList(name, description, environmentType));
-    keywords.addAll(super.generateKeywords());
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
+    keywords.addAll(asList(name, description, environmentType.name()));
     return keywords;
   }
 

@@ -22,9 +22,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.KeywordsAware;
 import software.wings.beans.Variable;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -37,7 +37,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class Template extends Base {
+public class Template extends Base implements KeywordsAware {
   public static final String FOLDER_ID_KEY = "folderId";
   public static final String FOLDER_PATH_ID_KEY = "folderPathId";
   public static final String GALLERY_ID_KEY = "galleryId";
@@ -91,10 +91,9 @@ public class Template extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, type));
-    keywords.addAll(super.generateKeywords());
     return keywords;
   }
 }

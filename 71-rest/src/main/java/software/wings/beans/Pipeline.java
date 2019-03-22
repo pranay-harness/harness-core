@@ -41,7 +41,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
-public class Pipeline extends Base {
+public class Pipeline extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
 
@@ -95,10 +95,9 @@ public class Pipeline extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
-    keywords.addAll(asList(name, description, PIPELINE));
-    keywords.addAll(super.generateKeywords());
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
+    keywords.addAll(asList(name, description, PIPELINE.name()));
     return keywords;
   }
 

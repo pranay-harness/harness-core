@@ -5,7 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
@@ -239,7 +239,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public Environment save(Environment environment) {
     String accountId = appService.getAccountIdByAppId(environment.getAppId());
     environment.setAccountId(accountId);
-    environment.setKeywords(trimList(environment.generateKeywords()));
+    environment.setKeywords(trimStrings(environment.generateKeywords()));
     Environment savedEnvironment = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
@@ -274,7 +274,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment savedEnvironment =
         wingsPersistence.getWithAppId(Environment.class, environment.getAppId(), environment.getUuid());
 
-    List<String> keywords = trimList(environment.generateKeywords());
+    List<String> keywords = trimStrings(environment.generateKeywords());
 
     UpdateOperations<Environment> updateOperations =
         wingsPersistence.createUpdateOperations(Environment.class)

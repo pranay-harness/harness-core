@@ -3,6 +3,7 @@ package software.wings.service.impl.template;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
@@ -170,7 +171,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
     List<String> existingKeywords = oldTemplate.getKeywords();
-    List<String> generatedKeywords = trimList(template.generateKeywords());
+    List<String> generatedKeywords = trimStrings(template.generateKeywords());
     if (isNotEmpty(existingKeywords)) {
       generatedKeywords.addAll(existingKeywords);
     }
@@ -466,7 +467,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private List<String> getKeywords(Template template) {
-    List<String> generatedKeywords = trimList(template.generateKeywords());
+    List<String> generatedKeywords = trimStrings(template.generateKeywords());
     return addUserKeyWords(template.getKeywords(), generatedKeywords);
   }
 

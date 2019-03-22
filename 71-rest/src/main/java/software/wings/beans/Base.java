@@ -22,11 +22,9 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.security.UserThreadLocal;
+import software.wings.security.ThreadLocalUserProvider;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
@@ -105,7 +103,7 @@ public class Base
       this.appId = uuid;
     }
 
-    EmbeddedUser embeddedUser = prepareEmbeddedUser();
+    EmbeddedUser embeddedUser = ThreadLocalUserProvider.threadLocalUser();
     if (createdBy == null && !(this instanceof Account)) {
       createdBy = embeddedUser;
     }
@@ -125,38 +123,5 @@ public class Base
     Map<String, Object> shardKeys = new HashMap<>();
     shardKeys.put("appId", appId);
     return shardKeys;
-  }
-
-  public List<Object> generateKeywords() {
-    EmbeddedUser embeddedUser = prepareEmbeddedUser();
-    if (createdBy == null) {
-      createdBy = embeddedUser;
-    }
-    List<Object> keyWordList = new ArrayList<>();
-    if (createdBy != null) {
-      keyWordList.add(createdBy.getName());
-      keyWordList.add(createdBy.getEmail());
-    }
-
-    if (lastUpdatedBy == null) {
-      lastUpdatedBy = embeddedUser;
-    }
-    if (lastUpdatedBy != null && !lastUpdatedBy.equals(createdBy)) {
-      keyWordList.add(lastUpdatedBy.getName());
-      keyWordList.add(lastUpdatedBy.getEmail());
-    }
-    return keyWordList;
-  }
-
-  private EmbeddedUser prepareEmbeddedUser() {
-    User user = UserThreadLocal.get();
-    if (user != null) {
-      return EmbeddedUser.builder()
-          .uuid(UserThreadLocal.get().getUuid())
-          .email(UserThreadLocal.get().getEmail())
-          .name(UserThreadLocal.get().getName())
-          .build();
-    }
-    return null;
   }
 }

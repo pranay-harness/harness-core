@@ -1,11 +1,12 @@
 package migrations.all;
 
+import static io.harness.data.structure.ListUtils.trimStrings;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
-import io.harness.data.structure.ListUtils;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
 import migrations.Migration;
@@ -37,12 +38,12 @@ public class AppKeywordsMigration implements Migration {
           logger.info("Applications: {} updated", i);
         }
         ++i;
-        List<Object> keywords = application.generateKeywords();
+        List<String> keywords = application.generateKeywords();
         bulkWriteOperation
             .find(wingsPersistence.createQuery(Service.class)
                       .filter(Service.ID_KEY, application.getUuid())
                       .getQueryObject())
-            .updateOne(new BasicDBObject("$set", new BasicDBObject("keywords", ListUtils.trimList(keywords))));
+            .updateOne(new BasicDBObject("$set", new BasicDBObject("keywords", trimStrings(keywords))));
       }
     }
     if (i % BATCH_SIZE != 1) {

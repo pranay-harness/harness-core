@@ -43,7 +43,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Service extends Base {
+public class Service extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String ARTIFACT_TYPE = "artifactType";
 
@@ -116,10 +116,12 @@ public class Service extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
-    keywords.addAll(asList(name, description, artifactType));
-    keywords.addAll(super.generateKeywords());
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
+    keywords.addAll(asList(name, description));
+    if (artifactType != null) {
+      keywords.add(artifactType.name());
+    }
     return keywords;
   }
 

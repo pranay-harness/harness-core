@@ -25,6 +25,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.KeywordsAware;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,7 @@ import java.util.List;
 @Indexes(@Index(options = @IndexOptions(name = "duplicateKey", unique = true),
     fields = { @Field("accountId")
                , @Field("name"), @Field("pathId") }))
-public class TemplateFolder extends Base {
+public class TemplateFolder extends Base implements KeywordsAware {
   public static final String GALLERY_ID_KEY = "galleryId";
   public static final String KEYWORDS_KEY = "keywords";
   public static final String NAME_KEY = "name";
@@ -102,10 +103,9 @@ public class TemplateFolder extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description));
-    keywords.addAll(super.generateKeywords());
     return keywords;
   }
 }

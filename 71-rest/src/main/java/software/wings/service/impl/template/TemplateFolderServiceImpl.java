@@ -27,7 +27,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.ListUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
@@ -98,7 +97,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   private List<String> getKeywords(TemplateFolder templateFolder) {
-    List<String> generatedKeywords = ListUtils.trimList(templateFolder.generateKeywords());
+    List<String> generatedKeywords = trimStrings(templateFolder.generateKeywords());
     return TemplateHelper.addUserKeyWords(templateFolder.getKeywords(), generatedKeywords);
   }
 
