@@ -92,6 +92,10 @@ if [[ -v "jwtAuthSecret" ]]; then
     sed -i "s|dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq|${jwtAuthSecret}|" /opt/harness/config.yml
 fi
 
+if [[ -v "jwtIdentityServiceSecret" ]]; then
+    sed -i "s|HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=|${jwtIdentityServiceSecret}|" /opt/harness/config.yml
+fi
+
 if [[ -v "FEATURES" ]]; then
     sed -i "s|featuresEnabled:|featuresEnabled: ${FEATURES}|" /opt/harness/config.yml
 fi

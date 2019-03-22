@@ -10,6 +10,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.User.Builder.anUser;
 
 import com.google.common.collect.Sets;
@@ -29,6 +30,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -42,18 +45,22 @@ import software.wings.beans.security.HarnessUserGroup;
 import software.wings.common.Constants;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.SecretManager;
+import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * Created by rsingh on 4/24/17.
@@ -62,6 +69,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
   @Inject private AccountService accountService;
   @Inject private UserService userService;
+  @Inject private SecretManager secretManager;
 
   @Before
   public void setUp() throws Exception {
@@ -151,6 +159,30 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertNotNull(user);
     String newJwtToken = user.getToken();
     assertNotEquals(jwtToken, newJwtToken);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testLoginUserUsingIdentityServiceAuth() {
+    WebTarget target = client.target(API_BASE + "/users/user/login?email=" + adminUserEmail);
+
+    String identityServiceToken = generateIdentityServiceJwtToken();
+    RestResponse<User> response = target.request()
+                                      .header(HttpHeaders.AUTHORIZATION, "IdentityService " + identityServiceToken)
+                                      .get(new GenericType<RestResponse<User>>() {});
+    assertEquals(0, response.getResponseMessages().size());
+    User user = response.getResource();
+    assertNotNull(user);
+    assertNotNull(user.getToken());
+  }
+
+  private String generateIdentityServiceJwtToken() {
+    MainConfiguration configuration = new MainConfiguration();
+    PortalConfig portalConfig = new PortalConfig();
+    portalConfig.setJwtIdentityServiceSecret("HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=");
+    configuration.setPortal(portalConfig);
+    setInternalState(secretManager, "configuration", configuration);
+    return secretManager.generateJWTToken(new HashMap<>(), JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
   }
 
   @Test

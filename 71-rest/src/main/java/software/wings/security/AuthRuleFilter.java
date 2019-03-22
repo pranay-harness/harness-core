@@ -30,6 +30,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
+import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
@@ -418,7 +419,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
     // externalAPI() doesn't need any authorization
-    return publicAPI() || requestContext.getMethod().equals(OPTIONS) || externalAPI()
+    return publicAPI() || requestContext.getMethod().equals(OPTIONS) || externalAPI() || identityServiceAPI()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
@@ -432,6 +433,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private List<String> getRequestParamsFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     return queryParameters.get(key) != null ? queryParameters.get(key) : pathParameters.get(key);
+  }
+
+  private boolean identityServiceAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    return resourceMethod.getAnnotation(IdentityServiceAuth.class) != null
+        || resourceClass.getAnnotation(IdentityServiceAuth.class) != null;
   }
 
   private boolean publicAPI() {

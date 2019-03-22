@@ -39,6 +39,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.security.authentication.AuthenticationManager;
@@ -374,6 +375,27 @@ public class UserResource {
   }
 
   /**
+   * Look up the user object using email and login the user. Intended for internal use only.
+   * E.g. The Identity Service authenticated the user through OAuth provider and get the user email, then
+   * login this user through this API directly.
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("user/login")
+  @Timed
+  @ExceptionMetered
+  @IdentityServiceAuth
+  public RestResponse<User> loginUser(@QueryParam("email") String email) {
+    User user = userService.getUserByEmail(urlDecode(email));
+    user = authService.generateBearerTokenForUser(user);
+    String token = user.getToken();
+    RestResponse<User> restResponse = getPublicUser(user);
+    restResponse.getResource().setToken(token);
+    return restResponse;
+  }
+
+  /**
    * Get rest response.
    *
    * @param accountId the account id
@@ -436,7 +458,6 @@ public class UserResource {
    */
   @GET
   @Path("switch-account")
-  @PublicApi
   @Timed
   @ExceptionMetered
   public RestResponse<User> switchAccount(
