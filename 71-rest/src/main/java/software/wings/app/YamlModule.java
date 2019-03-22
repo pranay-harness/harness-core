@@ -122,6 +122,7 @@ import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappin
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.CloudFormationInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
+import software.wings.service.impl.yaml.handler.infraprovisioner.ShellScriptProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.TerraformInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
@@ -352,5 +353,7 @@ public class YamlModule extends AbstractModule {
         .to(TerraformInfrastructureProvisionerYamlHandler.class);
     infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.CLOUD_FORMATION.name())
         .to(CloudFormationInfrastructureProvisionerYamlHandler.class);
+    infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.SHELL_SCRIPT.name())
+        .to(ShellScriptProvisionerYamlHandler.class);
   }
 }

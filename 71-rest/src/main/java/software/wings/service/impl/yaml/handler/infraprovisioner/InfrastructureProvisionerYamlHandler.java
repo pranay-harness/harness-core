@@ -176,11 +176,15 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     }
 
     if (isNotEmpty(yaml.getVariables())) {
-      List<NameValuePair> nameValuePairList =
-          yaml.getVariables()
-              .stream()
-              .map(nvpYaml -> NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build())
-              .collect(toList());
+      List<NameValuePair> nameValuePairList = yaml.getVariables()
+                                                  .stream()
+                                                  .map(nvpYaml
+                                                      -> NameValuePair.builder()
+                                                             .name(nvpYaml.getName())
+                                                             .value(nvpYaml.getValue())
+                                                             .valueType(nvpYaml.getValueType())
+                                                             .build())
+                                                  .collect(toList());
 
       bean.setVariables(nameValuePairList);
     }
