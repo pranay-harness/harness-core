@@ -122,6 +122,7 @@ public class SshSessionFactory {
       session.setPassword(password);
       session.setUserInfo(new SshUserInfo(new String(password, Charsets.UTF_8)));
     } else if (config.isKeyLess()) {
+      logger.info("SSH using KeyPath");
       String keyPath = getKeyPath(config);
       if (!new File(keyPath).isFile()) {
         throw new JSchException("File at " + keyPath + " does not exist", new FileNotFoundException());
@@ -133,6 +134,7 @@ public class SshSessionFactory {
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else if (config.getKey() != null && config.getKey().length > 0) {
+      logger.info("SSH using Key");
       if (null == config.getKeyPassphrase()) {
         jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.UTF_8), null, null);
       } else {
@@ -163,7 +165,6 @@ public class SshSessionFactory {
     String commandString = !StringUtils.isEmpty(password)
         ? format("echo %s | kinit %s", password, kerberosConfig.getPrincipalWithRealm())
         : format("kinit %s -k -t %s", kerberosConfig.getPrincipalWithRealm(), kerberosConfig.getKeyTabFilePath());
-    logger.info("Executing command " + commandString);
     return executeLocalCommand(commandString);
   }
 
