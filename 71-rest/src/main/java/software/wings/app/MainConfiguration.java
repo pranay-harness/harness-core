@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Singleton;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -47,6 +48,7 @@ import java.util.Optional;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Singleton
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty
   private AssetsConfiguration assetsConfiguration =

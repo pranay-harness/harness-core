@@ -37,6 +37,7 @@ public class SecretManager {
     PASSWORD_SECRET(4 * 60 * 60 * 1000), // 4 hrs
     ZENDESK_SECRET(4 * 60 * 60 * 1000), // 4 hrs
     EXTERNAL_SERVICE_SECRET(60 * 60 * 1000), // 1hr
+    IDENTITY_SERVICE_SECRET(60 * 60 * 1000), // 1hr
     AUTH_SECRET(24 * 60 * 60 * 1000), // 24 hr
     JIRA_SERVICE_SECRET(7 * 24 * 60 * 60 * 1000); // 7 days
 
@@ -67,6 +68,8 @@ public class SecretManager {
         return configuration.getPortal().getJwtAuthSecret();
       case JIRA_SERVICE_SECRET:
         return configuration.getPortal().getJwtExternalServiceSecret();
+      case IDENTITY_SERVICE_SECRET:
+        return configuration.getPortal().getJwtIdentityServiceSecret();
       default:
         return configuration.getPortal().getJwtMultiAuthSecret();
     }

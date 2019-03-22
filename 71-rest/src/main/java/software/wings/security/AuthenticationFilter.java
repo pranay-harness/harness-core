@@ -23,9 +23,11 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
+import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.ApiKeyService;
@@ -49,7 +51,7 @@ import javax.ws.rs.core.Response;
 @Singleton
 @Priority(AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
-  @VisibleForTesting static final String EXTERNAL_FACING_API_HEADER = "X-Api-Key";
+  @VisibleForTesting public static final String EXTERNAL_FACING_API_HEADER = "X-Api-Key";
   private static final int NUM_MANAGERS = 3;
 
   @Context private ResourceInfo resourceInfo;
@@ -61,11 +63,12 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private ApiKeyService apiKeyService;
   private AuditHelper auditHelper;
   private ExternalApiRateLimitingService rateLimitingService;
+  private SecretManager secretManager;
 
   @Inject
   public AuthenticationFilter(AuthService authService, WingsPersistence wingsPersistence,
       MainConfiguration configuration, UserService userService, AuditService auditService, AuditHelper auditHelper,
-      ApiKeyService apiKeyService, ExternalApiRateLimitingService rateLimitingService) {
+      ApiKeyService apiKeyService, ExternalApiRateLimitingService rateLimitingService, SecretManager secretManager) {
     this.authService = authService;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -74,6 +77,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     this.auditHelper = auditHelper;
     this.apiKeyService = apiKeyService;
     this.rateLimitingService = rateLimitingService;
+    this.secretManager = secretManager;
   }
 
   @Override
@@ -96,6 +100,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorization == null) {
       throw new WingsException(INVALID_TOKEN, USER);
+    }
+
+    if (isIdentityServiceRequest(containerRequestContext)) {
+      String identityServiceToken =
+          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
+      secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
+      return;
     }
 
     if (isDelegateRequest(containerRequestContext)) {
@@ -212,6 +223,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine ");
   }
 
+  private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {
+    return identityServiceAPI()
+        && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
+  }
+
   private boolean isCustomApiRequest(ContainerRequestContext requestContext) {
     return customApi() && isNotEmpty(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION))
         && isNotEmpty(extractToken(requestContext, "Bearer"));
@@ -223,6 +239,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
   private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {
     return externalFacingAPI() && isNotEmpty(requestContext.getHeaderString(EXTERNAL_FACING_API_HEADER));
+  }
+
+  boolean identityServiceAPI() {
+    return resourceInfo.getResourceMethod().getAnnotation(IdentityServiceAuth.class) != null
+        || resourceInfo.getResourceClass().getAnnotation(IdentityServiceAuth.class) != null;
   }
 
   protected boolean delegateAPI() {
