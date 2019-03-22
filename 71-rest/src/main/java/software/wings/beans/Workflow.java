@@ -36,7 +36,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
-public class Workflow extends Base {
+public class Workflow extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String KEYWORDS_KEY = "keywords";
   public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
@@ -260,11 +260,15 @@ public class Workflow extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
-    keywords.addAll(asList(name, description, workflowType, notes));
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
+    keywords.addAll(asList(name, description, notes));
+    if (workflowType != null) {
+      keywords.add(workflowType.name());
+    }
+
     if (orchestrationWorkflow != null) {
-      keywords.add(orchestrationWorkflow.getOrchestrationWorkflowType());
+      keywords.add(orchestrationWorkflow.getOrchestrationWorkflowType().name());
       if (isNotEmpty(orchestrationWorkflow.getLinkedTemplateUuids())) {
         keywords.addAll(orchestrationWorkflow.getLinkedTemplateUuids());
       }
@@ -275,7 +279,6 @@ public class Workflow extends Base {
     if (services != null) {
       keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
     }
-    keywords.addAll(super.generateKeywords());
     return keywords;
   }
 

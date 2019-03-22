@@ -1,7 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -31,7 +31,6 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.ListUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -116,7 +115,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
         wingsPersistence.createQuery(TemplateGallery.class).field(ID_KEY).equal(templateGallery.getUuid());
     UpdateOperations<TemplateGallery> operations = wingsPersistence.createUpdateOperations(TemplateGallery.class);
 
-    List<String> userKeywords = ListUtils.trimStrings(templateGallery.getKeywords());
+    List<String> userKeywords = trimStrings(templateGallery.getKeywords());
     if (isNotEmpty(templateGallery.getDescription())) {
       if (isNotEmpty(userKeywords)) {
         userKeywords.remove(savedGallery.getDescription().toLowerCase());
@@ -265,7 +264,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     logger.info("Copying default templates for account {} success", accountName);
   }
   private List<String> getKeywords(TemplateGallery templateGallery) {
-    List<String> generatedKeywords = trimList(templateGallery.generateKeywords());
+    List<String> generatedKeywords = trimStrings(templateGallery.generateKeywords());
     return TemplateHelper.addUserKeyWords(templateGallery.getKeywords(), generatedKeywords);
   }
 

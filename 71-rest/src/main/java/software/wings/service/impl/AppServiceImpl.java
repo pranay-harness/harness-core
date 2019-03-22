@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -145,7 +145,7 @@ public class AppServiceImpl implements AppService {
 
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
       validateAppName(app);
-      app.setKeywords(trimList(app.generateKeywords()));
+      app.setKeywords(trimStrings(app.generateKeywords()));
 
       Application application =
           duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
@@ -322,7 +322,7 @@ public class AppServiceImpl implements AppService {
     validateAppName(app);
     Application savedApp = get(app.getUuid());
     Query<Application> query = wingsPersistence.createQuery(Application.class).filter(ID_KEY, app.getUuid());
-    List<String> keywords = trimList(app.generateKeywords());
+    List<String> keywords = trimStrings(app.generateKeywords());
 
     UpdateOperations<Application> operations =
         wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName()).set("keywords", keywords);

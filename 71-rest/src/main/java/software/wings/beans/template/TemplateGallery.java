@@ -20,8 +20,8 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.KeywordsAware;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity("templateGalleries")
@@ -32,7 +32,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class TemplateGallery extends Base {
+public class TemplateGallery extends Base implements KeywordsAware {
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String NAME_KEY = "name";
   @NotEmpty @EntityName(groups = {Create.class, Update.class}) private String name;
@@ -56,10 +56,9 @@ public class TemplateGallery extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description));
-    keywords.addAll(super.generateKeywords());
     return keywords;
   }
 }

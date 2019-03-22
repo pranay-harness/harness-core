@@ -38,7 +38,7 @@ import java.util.Objects;
 @Indexes(
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
-public class Application extends Base {
+public class Application extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
@@ -438,10 +438,9 @@ public class Application extends Base {
   }
 
   @Override
-  public List<Object> generateKeywords() {
-    List<Object> keywords = new ArrayList<>();
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description));
-    keywords.addAll(super.generateKeywords());
     return keywords;
   }
 

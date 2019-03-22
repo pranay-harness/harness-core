@@ -6,7 +6,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
@@ -163,7 +163,7 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
-    List<Object> keywords = pipeline.generateKeywords();
+    List<String> keywords = pipeline.generateKeywords();
     ensurePipelineStageUuids(pipeline);
 
     validatePipeline(pipeline, keywords);
@@ -172,7 +172,7 @@ public class PipelineServiceImpl implements PipelineService {
     setUnset(ops, "name", pipeline.getName());
     setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
     setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
-    setUnset(ops, "keywords", trimList(keywords));
+    setUnset(ops, "keywords", trimStrings(keywords));
 
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
                                 .filter("appId", pipeline.getAppId())
@@ -719,9 +719,9 @@ public class PipelineServiceImpl implements PipelineService {
         new Action(accountId, ActionType.CREATE_PIPELINE));
 
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
-      List<Object> keywords = pipeline.generateKeywords();
+      List<String> keywords = pipeline.generateKeywords();
       validatePipeline(pipeline, keywords);
-      pipeline.setKeywords(trimList(keywords));
+      pipeline.setKeywords(trimStrings(keywords));
       Pipeline finalPipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
       wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(finalPipeline, workflowService.stencilMap()));
 
@@ -752,7 +752,7 @@ public class PipelineServiceImpl implements PipelineService {
     return referencedPipelines;
   }
 
-  private void validatePipeline(Pipeline pipeline, List<Object> keywords) {
+  private void validatePipeline(Pipeline pipeline, List<String> keywords) {
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     final List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
