@@ -1127,5 +1127,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
             .filter("appId", appId)
             .asList()
             .size());
+    wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+        .filter("cvConfigId", savedObjectUuid)
+        .filter("appId", appId)
+        .asList()
+        .forEach(logMLAnalysisRecord -> assertTrue(logMLAnalysisRecord.isDeprecated()));
   }
 }
