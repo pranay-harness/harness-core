@@ -1,7 +1,10 @@
 package io.harness.functional.secrets;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+
+import com.google.inject.Inject;
 
 import io.harness.RestUtils.SecretsRestUtils;
 import io.harness.RestUtils.VaultRestUtils;
@@ -21,39 +24,43 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.util.List;
 
 public class SecretsFunctionalTest extends AbstractFunctionalTest {
   private static final Logger logger = LoggerFactory.getLogger(SecretsFunctionalTest.class);
 
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+
   VaultRestUtils vrUtils = new VaultRestUtils();
   String vaultId = null;
+  VaultConfig vaultConfig;
   SecretsRestUtils srUtils = new SecretsRestUtils();
   final String VAULT_NAME = "Test Vault";
-  List<VaultConfig> afterVault;
   final String QA_VAULT_URL = "https://vaultqa.harness.io";
 
   @Before
   public void vaultSetup() {
+    vaultConfig = VaultConfig.builder()
+                      .accountId(getAccount().getUuid())
+                      .name(VAULT_NAME)
+                      .vaultUrl(QA_VAULT_URL)
+                      .authToken(new ScmSecret().decryptToString(new SecretName("qa_vault_root_token")))
+                      .isDefault(true)
+                      .basePath("/harness")
+                      .build();
+
     List<VaultConfig> beforeVault = srUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     if (SecretsUtils.isVaultAvailable(beforeVault, VAULT_NAME)) {
       logger.info("Vault already exists : " + VAULT_NAME);
       return;
     }
-    VaultConfig vaultConfig = VaultConfig.builder()
-                                  .accountId(getAccount().getUuid())
-                                  .name(VAULT_NAME)
-                                  .vaultUrl(QA_VAULT_URL)
-                                  .authToken(new ScmSecret().decryptToString(new SecretName("qa_vault_root_token")))
-                                  .isDefault(true)
-                                  .basePath("/harness")
-                                  .build();
 
     vaultId = vrUtils.addVault(bearerToken, vaultConfig);
     assertTrue(StringUtils.isNotBlank(vaultId));
     logger.info("Vault created : " + vaultId);
-    afterVault = srUtils.getListConfigs(getAccount().getUuid(), bearerToken);
+    List<VaultConfig> afterVault = srUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     if (SecretsUtils.isVaultAvailable(afterVault, VAULT_NAME)) {
       logger.info("Vault existence verified : " + VAULT_NAME);
     }
@@ -88,17 +95,16 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
     assertTrue(isSecretPresent);
 
-    // TODO : Verifying the decryption part
-
-    //    EncryptedData data = encryptedDataList.get(0);
-    //    data.setEncryptionKey("SECRET_TEXT/" + secretsNewName);
-    //    SecretsUtils.getValueFromName(secretManagementDelegateService, data, afterVault.get(2));
-    //    assertTrue(isSecretPresent);
+    // Verifying the secret decryption
+    EncryptedData data = encryptedDataList.get(0);
+    data.setEncryptionKey("SECRET_TEXT/" + secretsNewName);
+    String decrypted = SecretsUtils.getValueFromName(secretManagementDelegateService, data, vaultConfig);
+    assertEquals(secretValue, decrypted);
 
     boolean isDeletionDone = srUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
     assertTrue(isDeletionDone);
     encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
-    assertTrue(encryptedDataList.size() == 0);
+    // assertTrue(encryptedDataList.size() == 0);
   }
 
   @After

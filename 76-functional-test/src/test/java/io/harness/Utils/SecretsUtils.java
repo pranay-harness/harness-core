@@ -51,8 +51,8 @@ public class SecretsUtils {
     return false;
   }
 
-  public static void getValueFromName(
+  public static String getValueFromName(
       SecretManagementDelegateService secretManagementDelegateService, EncryptedData data, VaultConfig vaultConfig) {
-    System.out.println(new String(secretManagementDelegateService.decrypt(data, vaultConfig)));
+    return new String(secretManagementDelegateService.decrypt(data, vaultConfig));
   }
 }
