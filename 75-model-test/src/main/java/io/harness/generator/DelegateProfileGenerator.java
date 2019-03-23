@@ -36,13 +36,17 @@ public class DelegateProfileGenerator {
     return ensurePredefined(delegateProfile);
   }
 
+  public DelegateProfile exists(DelegateProfile profile) {
+    return wingsPersistence.createQuery(DelegateProfile.class).filter("name", profile.getName()).get();
+  }
+
   public DelegateProfile ensurePredefined(DelegateProfile profile) {
-    DelegateProfile existing =
-        wingsPersistence.createQuery(DelegateProfile.class).filter("name", profile.getName()).get();
+    DelegateProfile existing = exists(profile);
     if (existing != null) {
       return existing;
     }
-    return delegateProfileService.add(profile);
+
+    return GeneratorUtils.suppressDuplicateException(() -> delegateProfileService.add(profile), () -> exists(profile));
   }
 
   private String getScript() throws IOException {

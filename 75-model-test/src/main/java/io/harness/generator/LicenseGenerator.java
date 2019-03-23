@@ -53,6 +53,7 @@ public class LicenseGenerator {
 
     builder.withIsActive(license.isActive());
 
+    // TODO: add ensure logic
     return wingsPersistence.saveAndGet(License.class, builder.build());
   }
 }

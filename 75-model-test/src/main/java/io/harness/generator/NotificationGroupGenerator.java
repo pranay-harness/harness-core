@@ -121,6 +121,7 @@ public class NotificationGroupGenerator {
       return preexisting;
     }
 
+    // TODO: add ensure logic
     return notificationSetupService.createNotificationGroup(newNotificationGroup);
   }
 }

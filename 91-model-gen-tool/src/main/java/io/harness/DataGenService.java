@@ -441,8 +441,11 @@ public class DataGenService {
     List<Application> apps = new ArrayList<>();
     for (int i = 0; i < NUM_APPS; i++) {
       String name = getName(appNames);
-      Application application =
-          applicationGenerator.ensureApplication(anApplication().withAccountId(accountId).withName(name).build());
+      Seed seed = new Seed(0);
+      Owners owners = ownerManager.create();
+
+      Application application = applicationGenerator.ensureApplication(
+          seed, owners, anApplication().withAccountId(accountId).withName(name).build());
       apps.add(application);
     }
     return apps;
@@ -454,7 +457,9 @@ public class DataGenService {
 
     for (int i = 0; i < NUM_SERVICES_PER_APP; i++) {
       String name = getName(serviceNames);
-      Service service = serviceGenerator.ensureService(
+      Seed seed = new Seed(0);
+      Owners owners = ownerManager.create();
+      Service service = serviceGenerator.ensureService(seed, owners,
           Service.builder().name(name).description(randomText(40)).appId(appId).artifactType(ArtifactType.WAR).build());
       services.add(service);
     }

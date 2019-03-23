@@ -20,9 +20,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DuplicateKeyException;
 import io.github.benas.randombeans.api.EnhancedRandom;
-import io.harness.exception.WingsException;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import io.harness.generator.OwnerManager.Owners;
@@ -163,7 +161,7 @@ public class InfrastructureMappingGenerator {
 
     final SettingAttribute ecsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
-    InfrastructureMapping newInfrastructureMapping =
+    InfrastructureMapping newInfraMapping =
         anEcsInfrastructureMapping()
             .withName("Ecs Ec2 type deployment Functional test" + System.currentTimeMillis())
             .withAutoPopulate(false)
@@ -181,17 +179,9 @@ public class InfrastructureMappingGenerator {
             .withAppId(owners.obtainApplication().getUuid())
             .withServiceTemplateId(owners.obtainServiceTemplate().getUuid())
             .build();
-    try {
-      return infrastructureMappingService.save(newInfrastructureMapping, true);
-    } catch (WingsException de) {
-      if (de.getCause() instanceof DuplicateKeyException) {
-        InfrastructureMapping exists = exists(newInfrastructureMapping);
-        if (exists != null) {
-          return exists;
-        }
-      }
-      throw de;
-    }
+
+    return GeneratorUtils.suppressDuplicateException(
+        () -> infrastructureMappingService.save(newInfraMapping, true), () -> exists(newInfraMapping));
   }
 
   private InfrastructureMapping ensureK8sTest(Randomizer.Seed seed, Owners owners, String namespace) {
@@ -219,33 +209,24 @@ public class InfrastructureMappingGenerator {
 
     String namespaceUnique = namespace + '-' + System.currentTimeMillis();
 
-    InfrastructureMapping newInfrastructureMapping =
-        aGcpKubernetesInfrastructureMapping()
-            .withName("exploration-harness-test-" + namespaceUnique)
-            .withAutoPopulate(false)
-            .withInfraMappingType(GCP_KUBERNETES.name())
-            .withDeploymentType(DeploymentType.KUBERNETES.name())
-            .withComputeProviderType(SettingVariableTypes.GCP.name())
-            .withComputeProviderSettingId(gcpCloudProvider.getUuid())
-            .withClusterName("us-west1-a/harness-test")
-            .withNamespace(namespaceUnique)
-            .withServiceId(service.getUuid())
-            .withEnvId(environment.getUuid())
-            .withAccountId(owners.obtainAccount().getUuid())
-            .withAppId(owners.obtainApplication().getUuid())
-            .withServiceTemplateId(owners.obtainServiceTemplate().getUuid())
-            .build();
-    try {
-      return infrastructureMappingService.save(newInfrastructureMapping, true);
-    } catch (WingsException de) {
-      if (de.getCause() instanceof DuplicateKeyException) {
-        InfrastructureMapping exists = exists(newInfrastructureMapping);
-        if (exists != null) {
-          return exists;
-        }
-      }
-      throw de;
-    }
+    InfrastructureMapping newInfraMapping = aGcpKubernetesInfrastructureMapping()
+                                                .withName("exploration-harness-test-" + namespaceUnique)
+                                                .withAutoPopulate(false)
+                                                .withInfraMappingType(GCP_KUBERNETES.name())
+                                                .withDeploymentType(DeploymentType.KUBERNETES.name())
+                                                .withComputeProviderType(SettingVariableTypes.GCP.name())
+                                                .withComputeProviderSettingId(gcpCloudProvider.getUuid())
+                                                .withClusterName("us-west1-a/harness-test")
+                                                .withNamespace(namespaceUnique)
+                                                .withServiceId(service.getUuid())
+                                                .withEnvId(environment.getUuid())
+                                                .withAccountId(owners.obtainAccount().getUuid())
+                                                .withAppId(owners.obtainApplication().getUuid())
+                                                .withServiceTemplateId(owners.obtainServiceTemplate().getUuid())
+                                                .build();
+
+    return GeneratorUtils.suppressDuplicateException(
+        () -> infrastructureMappingService.save(newInfraMapping, true), () -> exists(newInfraMapping));
   }
 
   private InfrastructureMapping ensurePhysicalWinRMTest(Randomizer.Seed seed, Owners owners) {
@@ -789,16 +770,8 @@ public class InfrastructureMappingGenerator {
         throw new UnsupportedOperationException();
     }
 
-    try {
-      return infrastructureMappingService.save(newInfrastructureMapping);
-    } catch (WingsException de) {
-      if (de.getCause() instanceof DuplicateKeyException) {
-        InfrastructureMapping exists = exists(newInfrastructureMapping);
-        if (exists != null) {
-          return exists;
-        }
-      }
-      throw de;
-    }
+    InfrastructureMapping finalInfraMapping = newInfrastructureMapping;
+    return GeneratorUtils.suppressDuplicateException(
+        () -> infrastructureMappingService.save(finalInfraMapping, true), () -> exists(finalInfraMapping));
   }
 }

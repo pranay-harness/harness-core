@@ -453,8 +453,10 @@ public class WorkflowGenerator {
         throw new UnsupportedOperationException();
       }
     }
+    final Workflow finalWorkflow = builder.build();
 
-    return workflowService.createWorkflow(builder.build());
+    return GeneratorUtils.suppressDuplicateException(
+        () -> workflowService.createWorkflow(finalWorkflow), () -> exists(finalWorkflow));
   }
 
   @Value

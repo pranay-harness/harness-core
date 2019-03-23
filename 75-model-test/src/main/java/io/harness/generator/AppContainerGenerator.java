@@ -21,7 +21,8 @@ public class AppContainerGenerator {
       return existing;
     }
 
-    return appContainerService.save(appContainer);
+    return GeneratorUtils.suppressDuplicateException(
+        () -> appContainerService.save(appContainer), () -> exists(appContainer));
   }
 
   public AppContainer exists(AppContainer appContainer) {

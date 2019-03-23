@@ -177,6 +177,9 @@ public class InfrastructureProvisionerGenerator {
         throw new UnsupportedOperationException();
       }
     }
-    return infrastructureProvisionerService.save(newInfrastructureProvisioner);
+
+    InfrastructureProvisioner finalInfraProvisioner = newInfrastructureProvisioner;
+    return GeneratorUtils.suppressDuplicateException(
+        () -> infrastructureProvisionerService.save(finalInfraProvisioner), () -> exists(finalInfraProvisioner));
   }
 }
