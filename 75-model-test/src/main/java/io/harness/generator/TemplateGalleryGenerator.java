@@ -67,7 +67,11 @@ public class TemplateGalleryGenerator {
     if (existing != null) {
       return existing;
     }
-    return templateGalleryService.save(builder.build());
+
+    final TemplateGallery finalTemplateGallery = builder.build();
+
+    return GeneratorUtils.suppressDuplicateException(
+        () -> templateGalleryService.save(finalTemplateGallery), () -> exists(finalTemplateGallery));
   }
 
   public TemplateGallery exists(TemplateGallery templateGallery) {

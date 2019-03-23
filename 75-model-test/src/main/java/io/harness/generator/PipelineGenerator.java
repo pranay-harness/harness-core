@@ -254,6 +254,7 @@ public class PipelineGenerator {
 
     builder.pipelineStages(pipeline.getPipelineStages());
 
+    // TODO: add ensure logic
     return pipelineService.save(builder.build());
   }
 }

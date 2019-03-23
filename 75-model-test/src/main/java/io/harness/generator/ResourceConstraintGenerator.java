@@ -105,6 +105,9 @@ public class ResourceConstraintGenerator {
       builder.strategy(random.nextObject(Strategy.class));
     }
 
-    return resourceConstraintService.save(builder.build());
+    final ResourceConstraint finalResourceConstraint = builder.build();
+
+    return GeneratorUtils.suppressDuplicateException(
+        () -> resourceConstraintService.save(finalResourceConstraint), () -> exists(finalResourceConstraint));
   }
 }

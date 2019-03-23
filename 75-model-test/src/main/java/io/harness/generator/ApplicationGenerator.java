@@ -6,9 +6,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DuplicateKeyException;
 import io.github.benas.randombeans.api.EnhancedRandom;
-import io.harness.exception.WingsException;
 import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
 import software.wings.beans.Account;
@@ -101,25 +99,9 @@ public class ApplicationGenerator {
       return preexisting;
     }
 
-    try {
-      return applicationService.save(builder.build());
-    } catch (WingsException | DuplicateKeyException we) {
-      if (we.getCause() instanceof DuplicateKeyException || we instanceof DuplicateKeyException) {
-        Application exists = exists(builder.build());
-        if (exists != null) {
-          return exists;
-        }
-      }
-      throw we;
-    }
-  }
+    final Application finalApplication = builder.build();
 
-  public Application ensureApplication(Application application) {
-    Application existing = exists(application);
-    if (existing != null) {
-      return existing;
-    }
-
-    return applicationService.save(application);
+    return GeneratorUtils.suppressDuplicateException(
+        () -> applicationService.save(finalApplication), () -> exists(finalApplication));
   }
 }

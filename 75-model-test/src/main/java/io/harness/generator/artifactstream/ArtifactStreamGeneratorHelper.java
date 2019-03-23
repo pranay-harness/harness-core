@@ -3,7 +3,7 @@ package io.harness.generator.artifactstream;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DuplicateKeyException;
+import io.harness.generator.GeneratorUtils;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -22,14 +22,7 @@ public class ArtifactStreamGeneratorHelper {
   }
 
   public ArtifactStream saveArtifactStream(ArtifactStream artifactStream) {
-    try {
-      return artifactStreamService.create(artifactStream, false);
-    } catch (DuplicateKeyException de) {
-      ArtifactStream exists = exists(artifactStream);
-      if (exists != null) {
-        return exists;
-      }
-      throw de;
-    }
+    return GeneratorUtils.suppressDuplicateException(
+        () -> artifactStreamService.create(artifactStream, false), () -> exists(artifactStream));
   }
 }

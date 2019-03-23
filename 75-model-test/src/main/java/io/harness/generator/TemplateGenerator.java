@@ -131,7 +131,10 @@ public class TemplateGenerator {
       }
     }
 
-    return templateService.save(builder.build());
+    final Template finalTemplate = builder.build();
+
+    return GeneratorUtils.suppressDuplicateException(
+        () -> templateService.save(finalTemplate), () -> exists(finalTemplate));
   }
 
   public Template exists(Template template) {

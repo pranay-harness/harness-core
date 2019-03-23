@@ -21,8 +21,6 @@ import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRes
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DuplicateKeyException;
-import io.harness.exception.WingsException;
 import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -529,17 +527,9 @@ public class SettingGenerator {
 
     builder.withValue(settingAttribute.getValue());
 
-    try {
-      return settingsService.forceSave(builder.build());
+    final SettingAttribute finalSettingAttribute = builder.build();
 
-    } catch (WingsException we) {
-      if (we.getCause() instanceof DuplicateKeyException) {
-        SettingAttribute exists = exists(builder.build());
-        if (exists != null) {
-          return exists;
-        }
-      }
-      throw we;
-    }
+    return GeneratorUtils.suppressDuplicateException(
+        () -> settingsService.forceSave(finalSettingAttribute), () -> exists(finalSettingAttribute));
   }
 }
