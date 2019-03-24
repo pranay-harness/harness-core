@@ -290,7 +290,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 10, "SumoLogic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 10, "Sumo Logic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.

@@ -101,7 +101,7 @@ public abstract class SettingValue {
     /**
      * SUMO setting variable types.
      */
-    SUMO("SumoLogic"),
+    SUMO("Sumo Logic"),
 
     /**
      * Datadog setting variable type.
