@@ -74,7 +74,7 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = "swamy@harness.io")
+  @Owner(emails = "swamy@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void listUsers() {
     logger.info("Starting the list users test");

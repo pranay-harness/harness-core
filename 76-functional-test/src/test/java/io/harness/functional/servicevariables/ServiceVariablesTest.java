@@ -118,7 +118,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io", intermittent = true)
+  @Owner(emails = "swamy@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void variablesTest() throws Exception {
     logger.info("Starting the test");

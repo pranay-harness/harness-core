@@ -83,7 +83,7 @@ public class Validator {
     try {
       runnable.run();
     } catch (DuplicateKeyException e) {
-      new WingsException(GENERAL_ERROR).addParam("message", "Duplicate " + field + " " + value);
+      new WingsException(GENERAL_ERROR, e).addParam("message", "Duplicate " + field + " " + value);
     }
   }
 

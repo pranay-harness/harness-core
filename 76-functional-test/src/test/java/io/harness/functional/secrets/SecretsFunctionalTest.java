@@ -17,6 +17,7 @@ import io.harness.scm.SecretName;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -67,10 +68,15 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     logger.info("Done");
   }
 
+  /*
+   * This test is disabled as it uses delegate to setup vault from test, which is not working as of now.
+   * Disbaling this temporarily until our team completes this from framework level.
+   */
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = "swamy@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
-  public void createSecretsTest() {
+  @Ignore
+  public void secretsCRUDTests() {
     logger.info("Secrets test starts");
     String secretsName = "Secret-" + System.currentTimeMillis();
     String secretsNewName = "newName-" + System.currentTimeMillis();
@@ -104,7 +110,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     boolean isDeletionDone = srUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
     assertTrue(isDeletionDone);
     encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
-    // assertTrue(encryptedDataList.size() == 0);
+    assertTrue(encryptedDataList.size() == 0);
   }
 
   @After
