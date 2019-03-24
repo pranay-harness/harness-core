@@ -1,6 +1,5 @@
 package software.wings.core.ssh.executors;
 
-import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
@@ -12,7 +11,6 @@ import com.google.common.base.Charsets;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +25,6 @@ import software.wings.security.encryption.EncryptionUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -85,7 +82,6 @@ public class SshSessionFactory {
    */
   public static Session getSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
     JSch jsch = new JSch();
-    //    JSch.setLogger(new jschLogger());
 
     Session session;
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme().equals(KERBEROS)) {
@@ -217,54 +213,5 @@ public class SshSessionFactory {
       keyPath = keyPath.replace("$HOME", userhome);
     }
     return keyPath;
-  }
-
-  /**
-   * The Class jschLogger.
-   */
-  @SuppressFBWarnings("NM_CLASS_NAMING_CONVENTION")
-  public static class jschLogger implements com.jcraft.jsch.Logger {
-    /**
-     * The Name.
-     */
-    static Map name = new java.util.Hashtable();
-
-    static {
-      name.put(DEBUG, "DEBUG: ");
-      name.put(INFO, "INFO: ");
-      name.put(WARN, "WARN: ");
-      name.put(ERROR, "ERROR: ");
-      name.put(FATAL, "FATAL: ");
-    }
-
-    /* (non-Javadoc)
-     * @see com.jcraft.jsch.Logger#isEnabled(int)
-     */
-    public boolean isEnabled(int level) {
-      return true;
-    }
-
-    /* (non-Javadoc)
-     * @see com.jcraft.jsch.Logger#log(int, java.lang.String)
-     */
-    public void log(int level, String message) {
-      switch (level) {
-        case DEBUG:
-          logger.debug(message);
-          break;
-        case INFO:
-          logger.info(message);
-          break;
-        case WARN:
-          logger.warn(message);
-          break;
-        case FATAL:
-        case ERROR:
-          logger.error(message);
-          break;
-        default:
-          unhandled(level);
-      }
-    }
   }
 }
