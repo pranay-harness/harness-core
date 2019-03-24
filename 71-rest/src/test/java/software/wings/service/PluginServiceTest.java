@@ -202,7 +202,7 @@ public class PluginServiceTest {
                 .withSettingClass(SumoConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("SumoLogic")
+                .withDisplayName("Sumo Logic")
                 .withType("SUMO")
                 .withPluginCategories(asList(Verification))
                 .build(),

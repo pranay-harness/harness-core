@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -34,8 +35,11 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.APMVerificationState.Method;
+import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
+import software.wings.sm.states.APMVerificationState.ResponseMapping;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -91,5 +95,61 @@ public class APMVerificationStateTest extends WingsBaseTest {
     APMMetricInfo metricWithHost = apmMetricInfos.get("queryWithHost").get(0);
     assertNotNull("Query with host has a hostJson", metricWithHost.getResponseMappers().get("host").getJsonPath());
     assertNotNull("Query with host has a hostRegex", metricWithHost.getResponseMappers().get("host").getRegexs());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    apmVerificationState.setMetricCollectionInfos(null);
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertEquals(
+        "Metric Collection Info should be missing", "Metric Collection Info", invalidFields.keySet().iterator().next());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateFieldsResponseMapping() {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    MetricCollectionInfo info =
+        MetricCollectionInfo.builder().collectionUrl("This is a sample URL").metricName("name").build();
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertEquals("ResponseMapping should be missing", "responseMapping", invalidFields.keySet().iterator().next());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateFieldsResponseMappingMetricValue() {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    MetricCollectionInfo info =
+        MetricCollectionInfo.builder().collectionUrl("This is a sample URL").metricName("name").build();
+    ResponseMapping mapping =
+        ResponseMapping.builder().metricValueJsonPath("metricValue").timestampJsonPath("timestamp").build();
+    info.setResponseMapping(mapping);
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertEquals("transactionName should be missing", "transactionName", invalidFields.keySet().iterator().next());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateFieldsResponseMappingHostName() {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    MetricCollectionInfo info =
+        MetricCollectionInfo.builder().collectionUrl("This is a sample URL ${host}").metricName("name").build();
+    ResponseMapping mapping = ResponseMapping.builder()
+                                  .metricValueJsonPath("metricValue")
+                                  .timestampJsonPath("timestamp")
+                                  .txnNameFieldValue("txnName")
+                                  .build();
+    info.setResponseMapping(mapping);
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertEquals("hostNameJsonPath should be missing", "hostNameJsonPath", invalidFields.keySet().iterator().next());
   }
 }

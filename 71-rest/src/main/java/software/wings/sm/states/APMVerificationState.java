@@ -148,6 +148,42 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     this.analysisServerConfigId = analysisServerConfigId;
   }
 
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isEmpty(metricCollectionInfos)) {
+      invalidFields.put("Metric Collection Info", "Metric collection info should not be empty");
+      return invalidFields;
+    }
+    metricCollectionInfos.forEach(metricCollectionInfo -> {
+      if (isEmpty(metricCollectionInfo.getCollectionUrl())) {
+        invalidFields.put("collectionUrl", "Metric Collection URL is empty");
+      }
+      if (isEmpty(metricCollectionInfo.getMetricName())) {
+        invalidFields.put("metricName", "MetricName is empty");
+      }
+      if (metricCollectionInfo.getResponseMapping() == null) {
+        invalidFields.put("responseMapping",
+            "Valid JSON Mappings for the response have not been provided for " + metricCollectionInfo.metricName);
+      } else {
+        ResponseMapping mapping = metricCollectionInfo.getResponseMapping();
+
+        if (isEmpty(mapping.getMetricValueJsonPath()) || isEmpty(mapping.getTimestampJsonPath())) {
+          invalidFields.put("metricValueJsonPath/timestampJsonPath",
+              "Metric value path is empty for " + metricCollectionInfo.metricName);
+        }
+        if (metricCollectionInfo.getCollectionUrl().contains("${host}") && isEmpty(mapping.getHostJsonPath())) {
+          invalidFields.put("hostNameJsonPath", "Host Name Json path is empty for " + metricCollectionInfo.metricName);
+        }
+        if (isEmpty(mapping.getTxnNameFieldValue()) && isEmpty(mapping.getTxnNameJsonPath())) {
+          invalidFields.put("transactionName", "Transaction Name is empty for " + metricCollectionInfo.metricName);
+        }
+      }
+    });
+
+    return invalidFields;
+  }
+
   public static Map<String, TimeSeriesMetricDefinition> metricDefinitions(
       Map<String, List<APMMetricInfo>> metricInfos) {
     Map<String, TimeSeriesMetricDefinition> metricTypeMap = new HashMap<>();
