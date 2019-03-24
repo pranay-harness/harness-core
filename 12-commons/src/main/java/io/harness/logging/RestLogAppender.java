@@ -7,6 +7,7 @@ import static java.time.Duration.ofSeconds;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
 import com.google.common.collect.Queues;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -61,6 +62,30 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     this.key = key;
   }
 
+  private void initializeRetrofit() {
+    retrofit = new Retrofit.Builder()
+                   .baseUrl(LOGDNA_HOST_DIRECT)
+                   .addConverterFactory(JacksonConverterFactory.create())
+                   .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_DIRECT))
+                   .build();
+    try {
+      LogLines logLines = new LogLines();
+      logLines.add(new LogLine("Init. Using " + LOGDNA_HOST_DIRECT, Level.INFO.toString(), programName));
+
+      new SimpleTimeLimiter().callWithTimeout(() -> {
+        Flow.retry(3, ofSeconds(1),
+            () -> retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute());
+        return true;
+      }, 5, TimeUnit.SECONDS, true);
+    } catch (Exception e) {
+      retrofit = new Retrofit.Builder()
+                     .baseUrl(LOGDNA_HOST_PROXY)
+                     .addConverterFactory(JacksonConverterFactory.create())
+                     .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_PROXY))
+                     .build();
+    }
+  }
+
   private void submitLogs() {
     try {
       int batchSize = 0;
@@ -78,35 +103,10 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         return;
       }
 
-      synchronized (this) {
-        if (retrofit == null) {
-          retrofit = new Retrofit.Builder()
-                         .baseUrl(LOGDNA_HOST_DIRECT)
-                         .addConverterFactory(JacksonConverterFactory.create())
-                         .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_DIRECT))
-                         .build();
-          try {
-            Flow.retry(3, ofSeconds(1),
-                ()
-                    -> retrofit.create(LogdnaRestClient.class)
-                           .postLogs(getAuthHeader(), localhostName, logLines)
-                           .execute());
-            return;
-          } catch (Exception e) {
-            logger.info("Failed to connect directly to logdna. Using proxy instead.", e);
-            retrofit = new Retrofit.Builder()
-                           .baseUrl(LOGDNA_HOST_PROXY)
-                           .addConverterFactory(JacksonConverterFactory.create())
-                           .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_PROXY))
-                           .build();
-          }
-        }
-      }
-
       Flow.retry(10, ofSeconds(3),
           () -> retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute());
     } catch (Exception ex) {
-      logger.error("Failed to submit logs after 10 tries to {}", retrofit == null ? "null" : retrofit.baseUrl(), ex);
+      logger.error("Failed to submit logs after 10 tries to {}", retrofit.baseUrl(), ex);
     }
   }
 
@@ -138,6 +138,8 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       logger.info("Not starting RestLogAppender since RestLogAppender is disabled");
       return;
     }
+
+    initializeRetrofit();
 
     super.start();
 
