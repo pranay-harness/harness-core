@@ -315,10 +315,11 @@ public class ArtifactCollectionUtil {
       managerDecryptionService.decrypt(
           nexusConfig, secretManager.getEncryptionDetails(nexusConfig, appId, workflowExecutionId));
 
-      String registryUrl =
-          ArtifactUtilities.getNexusRegistryUrl(nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort());
-      String repositoryName = ArtifactUtilities.getNexusRepositoryName(
-          nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(), nexusArtifactStream.getImageName());
+      String registryUrl = ArtifactUtilities.getNexusRegistryUrl(
+          nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(), nexusArtifactStream.getDockerRegistryUrl());
+      String repositoryName =
+          ArtifactUtilities.getNexusRepositoryName(nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(),
+              nexusArtifactStream.getDockerRegistryUrl(), nexusArtifactStream.getImageName());
       logger.info("Nexus Registry url: " + registryUrl);
       if (nexusConfig.hasCredentials()) {
         imageDetailsBuilder.name(repositoryName)

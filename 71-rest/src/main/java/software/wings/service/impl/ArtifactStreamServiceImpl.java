@@ -141,7 +141,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setSourceName(artifactStream.generateSourceName());
     setAutoPopulatedName(artifactStream);
     if (!artifactStream.isAutoPopulate() && isEmpty(artifactStream.getName())) {
-      throw new WingsException("Please provide valid artifact name", USER);
+      throw new WingsException("Artifact source name is mandatory", USER);
     }
 
     if (artifactStream.getTemplateUuid() != null) {
@@ -156,7 +156,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         }
       }
     }
-    String id = wingsPersistence.save(artifactStream);
+
+    String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
 
     yamlPushService.pushYamlChangeSet(
@@ -247,7 +248,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
 
-    ArtifactStream finalArtifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
+    ArtifactStream finalArtifactStream = Validator.duplicateCheck(
+        () -> wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream), "name", artifactStream.getName());
 
     if (!existingArtifactStream.getSourceName().equals(finalArtifactStream.getSourceName())) {
       if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {

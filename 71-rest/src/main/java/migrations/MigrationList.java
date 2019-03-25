@@ -63,6 +63,7 @@ import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataBaselineMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
+import migrations.all.NexusDockerArtifactStreamMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveDupInstanceStats;
@@ -203,6 +204,7 @@ public class MigrationList {
         .add(Pair.of(232, AddTemplateMgmtPermissionToAdminUserGroup.class))
         .add(Pair.of(233, CVCollectionCronFrequencyMigration.class))
         .add(Pair.of(234, VerificationMetricJobMigration.class))
+        .add(Pair.of(235, NexusDockerArtifactStreamMigration.class))
         .build();
   }
 }
