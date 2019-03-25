@@ -153,4 +153,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   void refreshCollectedArtifacts(String appId, String pipelineExecutionId, String workflowExecutionId);
 
   StateMachine obtainStateMachine(WorkflowExecution workflowExecution);
+
+  WorkflowExecution fetchLastWorkflowExecution(
+      @NotNull String appId, @NotNull String workflowId, String serviceId, String envId);
 }
