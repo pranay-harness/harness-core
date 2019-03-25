@@ -140,7 +140,6 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "mark.lu@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void testSwitchAccount() {
     WebTarget target = client.target(API_BASE + "/users/switch-account?accountId=" + accountId);
@@ -174,6 +173,9 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     User user = response.getResource();
     assertNotNull(user);
     assertNotNull(user.getToken());
+    assertNotNull(user.getAccounts());
+    assertTrue(user.getAccounts().size() > 0);
+    assertTrue(user.getSupportAccounts().size() > 0);
   }
 
   private String generateIdentityServiceJwtToken() {

@@ -389,10 +389,7 @@ public class UserResource {
   public RestResponse<User> loginUser(@QueryParam("email") String email) {
     User user = userService.getUserByEmail(urlDecode(email));
     user = authService.generateBearerTokenForUser(user);
-    String token = user.getToken();
-    RestResponse<User> restResponse = getPublicUser(user);
-    restResponse.getResource().setToken(token);
-    return restResponse;
+    return new RestResponse<>(user);
   }
 
   /**
