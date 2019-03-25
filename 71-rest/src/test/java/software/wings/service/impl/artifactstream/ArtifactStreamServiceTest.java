@@ -403,6 +403,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .imageName("wingsplugings/todolist")
                                                         .autoPopulate(true)
                                                         .serviceId(SERVICE_ID)
+                                                        .dockerRegistryUrl("https://nexus3.harness.io")
                                                         .build();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusDockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -418,7 +419,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("docker-private");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("wingsplugings/todolist");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getImageName()).isEqualTo("wingsplugings/todolist");
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getNexusDockerRegistryUrl())
+        .isEqualTo("https://nexus3.harness.io");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactName()).isEmpty();
+
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("docker-private");
     assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("wingsplugings/todolist");

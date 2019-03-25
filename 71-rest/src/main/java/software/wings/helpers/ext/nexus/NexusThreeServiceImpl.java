@@ -127,7 +127,8 @@ public class NexusThreeServiceImpl {
     String repoKey = artifactStreamAttributes.getJobName();
     String imageName = artifactStreamAttributes.getImageName();
     String repoName = ArtifactUtilities.getNexusRepositoryName(nexusConfig.getNexusUrl(),
-        artifactStreamAttributes.getNexusDockerPort(), artifactStreamAttributes.getImageName());
+        artifactStreamAttributes.getNexusDockerPort(), artifactStreamAttributes.getNexusDockerRegistryUrl(),
+        artifactStreamAttributes.getImageName());
     logger.info("Retrieving docker tags for repository {} imageName {} ", repoKey, imageName);
     List<BuildDetails> buildDetails = new ArrayList<>();
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
