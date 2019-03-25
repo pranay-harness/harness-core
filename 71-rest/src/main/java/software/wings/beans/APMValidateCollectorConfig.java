@@ -3,6 +3,7 @@ package software.wings.beans;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.states.APMVerificationState.Method;
 
@@ -14,8 +15,8 @@ import java.util.Map;
 @Data
 @Builder
 public class APMValidateCollectorConfig {
-  private String baseUrl;
-  private String url;
+  @NonNull private String baseUrl;
+  @NonNull private String url;
   private String body;
   private Method collectionMethod;
   private Map<String, String> headers;

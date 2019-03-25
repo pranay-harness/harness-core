@@ -82,6 +82,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   public void testGetNodeDataValidCase() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setValidationUrl("this is a testurl");
+    config.setUrl("this is a test url");
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(config);
 
@@ -108,6 +109,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   public void testGetNodeDataValidNoLoad() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setValidationUrl("this is a testurl");
+    config.setUrl("this is a test url");
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(config);
 
