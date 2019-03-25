@@ -39,7 +39,7 @@ public class ExternalFacingApiResource {
   @Path("/executions/{workflowExecutionId}/status")
   @Timed
   @ExceptionMetered
-  public ExecutionStatusResponse getWorkFlowExecutionStatus(
+  public ExecutionStatusResponse getWorkflowExecutionStatus(
       @NotEmpty @PathParam("workflowExecutionId") String workflowExecutionId,
       @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @QueryParam("appId") String appId) {
     WorkflowExecution execution = workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);

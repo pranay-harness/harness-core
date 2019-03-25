@@ -225,4 +225,15 @@
 
     </module>
 
+    <!-- Spelling consistence -->
+
+    <module name="RegexpSingleline">
+        <property name="format" value="[Ww]orkFlow"/>
+        <property name="message" value="Workflow is a single word"/>
+    </module>
+
+    <module name="RegexpOnFilename">
+        <property name="fileNamePattern" value="[Ww]orkFlow\."/>
+    </module>
+
 </module>

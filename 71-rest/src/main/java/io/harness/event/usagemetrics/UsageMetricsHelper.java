@@ -73,7 +73,7 @@ public class UsageMetricsHelper {
     return environment.getName();
   }
 
-  public String getWorkFlowName(String appId, String workflowId) {
+  public String getWorkflowName(String appId, String workflowId) {
     Workflow workflow = wingsPersistence.createQuery(Workflow.class)
                             .project(Workflow.NAME_KEY, true)
                             .filter(APP_ID_KEY, appId)

@@ -53,7 +53,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   Integer logCollectionMinute = 15;
 
   String taskId = String.valueOf(Math.random());
-  private String workFlowExecutionId = String.valueOf(Math.random());
+  private String workflowExecutionId = String.valueOf(Math.random());
   private ExperimentalLogMLAnalysisRecord experimentalLogMLAnalysisRecord;
 
   @Before
@@ -119,7 +119,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
                                          .appId(mockApplicationId)
                                          .stateType(StateType.ELK)
                                          .expName("testExp")
-                                         .workflowExecutionId(workFlowExecutionId)
+                                         .workflowExecutionId(workflowExecutionId)
                                          .build();
     logMLExpAnalysisInfoList.add(testdata1);
     return logMLExpAnalysisInfoList;

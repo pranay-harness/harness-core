@@ -9,7 +9,7 @@ package software.wings.graphql.datafetcher;
 public enum SchemaFieldsEnum {
   WORKFLOW("workflow"),
   WORKFLOW_LIST("workflows"),
-  WORKFLOW_EXECUTION_STATUS("workFlowExecution");
+  WORKFLOW_EXECUTION_STATUS("workflowExecution");
 
   private String fieldName;
 

@@ -627,12 +627,12 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String prevWorkflowExecutionId = wingsPersistence.save(workflowExecution);
 
     NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
     record.setWorkflowId(workflowId);
-    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setWorkflowExecutionId(prevWorkflowExecutionId);
     record.setServiceId(serviceId);
     record.setStateExecutionId(prevStateExecutionId);
     record.setTimeStamp(System.currentTimeMillis());
@@ -744,12 +744,12 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String prevWorkflowExecutionId = wingsPersistence.save(workflowExecution);
 
     NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
     record.setWorkflowId(workflowId);
-    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setWorkflowExecutionId(prevWorkflowExecutionId);
     record.setServiceId(serviceId);
     record.setStateExecutionId(prevStateExecutionId);
     record.setTimeStamp(System.currentTimeMillis());
@@ -760,7 +760,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn1");
     record1.setWorkflowId(workflowId);
-    record1.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record1.setWorkflowExecutionId(prevWorkflowExecutionId);
     record1.setServiceId(serviceId);
     record1.setStateExecutionId(prevStateExecutionId);
     record1.setTimeStamp(System.currentTimeMillis());
@@ -879,13 +879,13 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String prevWorkflowExecutionId = wingsPersistence.save(workflowExecution);
 
     NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
     record.setAppId(appId);
     record.setWorkflowId(workflowId);
-    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setWorkflowExecutionId(prevWorkflowExecutionId);
     record.setServiceId(serviceId);
     record.setStateExecutionId(prevStateExecutionId);
     record.setTimeStamp(System.currentTimeMillis());
@@ -1017,7 +1017,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String prevWorkflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<String> metricNames = new ArrayList<>();
     timeSeriesAnalysisService.saveMetricTemplates(appId, StateType.NEW_RELIC, stateExecutionId,
@@ -1028,7 +1028,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     record.setName("New Relic Heartbeat");
     record.setAppId(appId);
     record.setWorkflowId(workflowId);
-    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setWorkflowExecutionId(prevWorkflowExecutionId);
     record.setServiceId(serviceId);
     record.setStateExecutionId(prevStateExecutionId);
     record.setTimeStamp(System.currentTimeMillis());
@@ -1040,7 +1040,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     record1.setName("Dummy txn1");
     record1.setAppId(appId);
     record1.setWorkflowId(workflowId);
-    record1.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record1.setWorkflowExecutionId(prevWorkflowExecutionId);
     record1.setServiceId(serviceId);
     record1.setStateExecutionId(prevStateExecutionId);
     record1.setTimeStamp(System.currentTimeMillis());
@@ -1243,13 +1243,13 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String prevWorkflowExecutionId = wingsPersistence.save(workflowExecution);
 
     NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
     record.setAppId(appId);
     record.setWorkflowId(workflowId);
-    record.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record.setWorkflowExecutionId(prevWorkflowExecutionId);
     record.setServiceId(serviceId);
     record.setStateExecutionId(prevStateExecutionId);
     record.setTimeStamp(System.currentTimeMillis());
@@ -1261,7 +1261,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     record1.setName("Dummy txn1");
     record1.setAppId(appId);
     record1.setWorkflowId(workflowId);
-    record1.setWorkflowExecutionId(prevWorkFlowExecutionId);
+    record1.setWorkflowExecutionId(prevWorkflowExecutionId);
     record1.setServiceId(serviceId);
     record1.setStateExecutionId(prevStateExecutionId);
     record1.setTimeStamp(System.currentTimeMillis());
@@ -1352,7 +1352,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
                                           .parallelProcesses(1)
                                           .comparisonWindow(1)
                                           .tolerance(1)
-                                          .prevWorkflowExecutionId(prevWorkFlowExecutionId)
+                                          .prevWorkflowExecutionId(prevWorkflowExecutionId)
                                           .build();
     JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
     JobDataMap jobDataMap = mock(JobDataMap.class);

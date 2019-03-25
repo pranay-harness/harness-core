@@ -63,11 +63,11 @@ public class TimeSeriesResource {
   @ExceptionMetered
   public RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("workFlowExecutionId") String workFlowExecutionId,
+      @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("transactionName") String transactionName,
       @QueryParam("metricName") String metricName, @QueryParam("groupName") String groupName) {
     return new RestResponse<>(metricDataAnalysisService.getToolTip(
-        stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName, groupName));
+        stateExecutionId, workflowExecutionId, analysisMinute, transactionName, metricName, groupName));
   }
 
   @POST

@@ -499,7 +499,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .serviceIds(Lists.newArrayList(serviceId))
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String workflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<LogElement> logElements = new ArrayList<>();
 
@@ -521,7 +521,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(logElement);
 
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, prevStateExecutionId, workflowId,
-        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+        workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -533,7 +533,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = WorkflowExecution.builder()
-                            .uuid(workflowExecutionId)
+                            .uuid(this.workflowExecutionId)
                             .workflowId(workflowId)
                             .appId(appId)
                             .name(workflowId + "-execution-" + 0)
@@ -555,12 +555,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(splunkHeartBeatElement);
 
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+        this.workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
                                                            .stateType(StateType.SPLUNKV2)
                                                            .workflowId(workflowId)
-                                                           .workflowExecutionId(workFlowExecutionId)
+                                                           .workflowExecutionId(workflowExecutionId)
                                                            .executionStatus(ExecutionStatus.SUCCESS)
                                                            .applicationId(appId)
                                                            .workflowStartTs(System.currentTimeMillis())
@@ -573,7 +573,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
                                           .accountId(accountId)
                                           .appId(appId)
                                           .workflowId(workflowId)
-                                          .workflowExecutionId(workflowExecutionId)
+                                          .workflowExecutionId(this.workflowExecutionId)
                                           .prevWorkflowExecutionId(lastWorkflowExecutionId)
                                           .stateExecutionId(stateExecutionId)
                                           .serviceId(serviceId)
@@ -624,7 +624,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String workflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<LogElement> logElements = new ArrayList<>();
 
@@ -641,7 +641,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(splunkHeartBeatElement);
 
     analysisService.saveLogData(StateType.SUMO, accountId, appId, null, prevStateExecutionId, workflowId,
-        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+        workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -657,7 +657,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = WorkflowExecution.builder()
-                            .uuid(workflowExecutionId)
+                            .uuid(this.workflowExecutionId)
                             .workflowId(workflowId)
                             .appId(appId)
                             .name(workflowId + "-execution-" + 0)
@@ -682,8 +682,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(splunkHeartBeatElement);
 
     analysisService.saveLogData(StateType.SUMO, accountId, appId, null, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
-    return workFlowExecutionId;
+        this.workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    return workflowExecutionId;
   }
 
   @Test
@@ -760,12 +760,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   public void testNoControlNotFirstExecution() throws Exception {
     final String query = UUID.randomUUID().toString();
     final String host = UUID.randomUUID().toString();
-    String workFlowExecutionId = setupNoControlTest(query, host);
+    String workflowExecutionId = setupNoControlTest(query, host);
 
     ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
                                                            .stateType(StateType.SUMO)
                                                            .workflowId(workflowId)
-                                                           .workflowExecutionId(workFlowExecutionId)
+                                                           .workflowExecutionId(workflowExecutionId)
                                                            .executionStatus(ExecutionStatus.SUCCESS)
                                                            .applicationId(appId)
                                                            .workflowStartTs(System.currentTimeMillis())
@@ -777,7 +777,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .accountId(accountId)
             .appId(appId)
             .workflowId(workflowId)
-            .workflowExecutionId(workflowExecutionId)
+            .workflowExecutionId(this.workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
             .prevWorkflowExecutionId(analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
@@ -836,7 +836,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String workflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<LogElement> logElements = new ArrayList<>();
 
@@ -855,7 +855,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(elkBeatElement);
 
     analysisService.saveLogData(StateType.ELK, accountId, appId, null, prevStateExecutionId, workflowId,
-        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+        workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -867,7 +867,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = WorkflowExecution.builder()
-                            .uuid(workflowExecutionId)
+                            .uuid(this.workflowExecutionId)
                             .workflowId(workflowId)
                             .appId(appId)
                             .name(workflowId + "-execution-" + 0)
@@ -888,13 +888,13 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(elkBeatElement);
 
     analysisService.saveLogData(StateType.ELK, accountId, appId, null, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+        this.workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .accountId(accountId)
                                           .appId(appId)
                                           .workflowId(workflowId)
-                                          .workflowExecutionId(workflowExecutionId)
+                                          .workflowExecutionId(this.workflowExecutionId)
                                           .stateExecutionId(stateExecutionId)
                                           .serviceId(serviceId)
                                           .controlNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
@@ -945,7 +945,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .status(ExecutionStatus.SUCCESS)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String prevWorkflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<LogElement> logElements = new ArrayList<>();
 
@@ -976,7 +976,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
 
     analysisService.saveLogData(StateType.SUMO, accountId, appId, null, prevStateExecutionId, workflowId,
-        prevWorkFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+        prevWorkflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -1038,7 +1038,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
                                           .timeDuration(5)
                                           .stateType(StateType.SUMO)
                                           .correlationId(UUID.randomUUID().toString())
-                                          .prevWorkflowExecutionId(prevWorkFlowExecutionId)
+                                          .prevWorkflowExecutionId(prevWorkflowExecutionId)
                                           .build();
     JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
     JobDataMap jobDataMap = mock(JobDataMap.class);
@@ -1124,7 +1124,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .serviceIds(Lists.newArrayList(serviceId))
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String workflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<LogElement> logElements = new ArrayList<>();
 
@@ -1147,18 +1147,18 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
 
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, prevStateExecutionId, workflowId,
-        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+        workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
                                                            .stateType(StateType.SPLUNKV2)
                                                            .workflowId(workflowId)
-                                                           .workflowExecutionId(workFlowExecutionId)
+                                                           .workflowExecutionId(workflowExecutionId)
                                                            .executionStatus(ExecutionStatus.SUCCESS)
                                                            .applicationId(appId)
                                                            .workflowStartTs(System.currentTimeMillis())
                                                            .build();
     wingsPersistence.save(metaData);
-    return workFlowExecutionId;
+    return workflowExecutionId;
   }
 
   @Test
@@ -1392,7 +1392,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .serviceIds(Lists.newArrayList(serviceId))
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
-    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+    String workflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<LogElement> logElements = new ArrayList<>();
 
@@ -1411,7 +1411,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(splunkHeartBeatElement);
 
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, prevStateExecutionId, workflowId,
-        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+        workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -1423,7 +1423,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = WorkflowExecution.builder()
-                            .uuid(workflowExecutionId)
+                            .uuid(this.workflowExecutionId)
                             .workflowId(workflowId)
                             .appId(appId)
                             .name(workflowId + "-execution-" + 0)
@@ -1445,7 +1445,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     logElements.add(splunkHeartBeatElement);
 
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+        this.workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     String logmd5Hash = DigestUtils.md5Hex("hello");
 
@@ -1473,7 +1473,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
                                           .accountId(accountId)
                                           .appId(appId)
                                           .workflowId(workflowId)
-                                          .workflowExecutionId(workflowExecutionId)
+                                          .workflowExecutionId(this.workflowExecutionId)
                                           .prevWorkflowExecutionId(lastWorkflowExecutionId)
                                           .stateExecutionId(stateExecutionId)
                                           .serviceId(serviceId)
