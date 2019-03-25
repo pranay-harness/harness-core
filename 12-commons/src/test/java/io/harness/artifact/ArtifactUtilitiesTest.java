@@ -2,10 +2,13 @@ package io.harness.artifact;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.category.element.UnitTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ArtifactUtilitiesTest {
   @Test
+  @Category(UnitTests.class)
   public void shouldExtractNexusRegistryUrl() {
     assertThat(ArtifactUtilities.getNexusRegistryUrl("https://nexus.harness.io", "5000", null))
         .isEqualTo("https://nexus.harness.io:5000");
@@ -27,6 +30,7 @@ public class ArtifactUtilitiesTest {
   }
 
   @Test
+  @Category(UnitTests.class)
   public void shouldExtractNexusRepositoryName() {
     assertThat(
         ArtifactUtilities.getNexusRepositoryName("https://nexus.harness.io", "5000", null, "harness/todolist-sample"))
