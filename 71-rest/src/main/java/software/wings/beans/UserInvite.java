@@ -43,6 +43,12 @@ public class UserInvite extends Base {
 
   @Transient private char[] password;
 
+  private String accountName;
+
+  private String companyName;
+
+  private String marketPlaceToken;
+
   /**
    * Gets account id.
    *
@@ -168,6 +174,30 @@ public class UserInvite extends Base {
     this.agreement = agreement;
   }
 
+  public String getAccountName() {
+    return accountName;
+  }
+
+  public void setAccountName(String accountName) {
+    this.accountName = accountName;
+  }
+
+  public String getCompanyName() {
+    return companyName;
+  }
+
+  public void setCompanyName(String companyName) {
+    this.companyName = companyName;
+  }
+
+  public String getMarketPlaceToken() {
+    return marketPlaceToken;
+  }
+
+  public void setMarketPlaceToken(String marketPlaceToken) {
+    this.marketPlaceToken = marketPlaceToken;
+  }
+
   public static final class UserInviteBuilder {
     private String accountId;
     private String email;
@@ -183,6 +213,9 @@ public class UserInvite extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String companyName;
+    private String accountName;
+    private String marketPlaceToken;
     private UserInviteSource source = UserInviteSource.builder().build();
 
     private UserInviteBuilder() {}
@@ -266,6 +299,21 @@ public class UserInvite extends Base {
       return this;
     }
 
+    public UserInviteBuilder withCompanyName(String companyName) {
+      this.companyName = companyName;
+      return this;
+    }
+
+    public UserInviteBuilder withAccountName(String accountName) {
+      this.accountName = accountName;
+      return this;
+    }
+
+    public UserInviteBuilder withMarketPlaceToken(String marketPlaceToken) {
+      this.marketPlaceToken = marketPlaceToken;
+      return this;
+    }
+
     public UserInvite build() {
       UserInvite userInvite = new UserInvite();
       userInvite.setAccountId(accountId);
@@ -283,6 +331,9 @@ public class UserInvite extends Base {
       userInvite.setLastUpdatedAt(lastUpdatedAt);
       userInvite.setSource(source);
       userInvite.setAgreement(agreement);
+      userInvite.setAccountName(accountName);
+      userInvite.setCompanyName(companyName);
+      userInvite.setMarketPlaceToken(marketPlaceToken);
       return userInvite;
     }
   }

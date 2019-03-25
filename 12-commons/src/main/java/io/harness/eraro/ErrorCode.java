@@ -314,7 +314,11 @@ public enum ErrorCode {
 
   INVALID_TERRAFORM_TARGETS_REQUEST(Status.OK),
 
-  FILE_READ_FAILED;
+  FILE_READ_FAILED,
+
+  MARKETPLACE_TOKEN_NOT_FOUND,
+
+  INVALID_MARKETPLACE_TOKEN;
 
   private Status status = BAD_REQUEST;
   private String description;

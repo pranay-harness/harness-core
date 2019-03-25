@@ -13,6 +13,8 @@ import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
+import static io.harness.eraro.ErrorCode.INVALID_MARKETPLACE_TOKEN;
+import static io.harness.eraro.ErrorCode.MARKETPLACE_TOKEN_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_ALREADY_REGISTERED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
@@ -56,6 +58,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.interfaces.Claim;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -97,6 +100,7 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.EntityType;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
@@ -105,6 +109,7 @@ import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.UserInviteSource;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -115,6 +120,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
+import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
@@ -225,6 +231,17 @@ public class UserServiceImpl implements UserService {
     executorService.execute(() -> sendVerificationEmail(savedUser));
     eventPublishHelper.publishUserInviteFromAccountEvent(account.getUuid(), savedUser.getEmail());
     return savedUser;
+  }
+
+  @Override
+  public UserInvite createUserInviteForMarketPlace() {
+    UserInvite userInvite = new UserInvite();
+    userInvite.setSource(UserInviteSource.builder().type(SourceType.MARKETPLACE).build());
+    userInvite.setCompleted(false);
+
+    String inviteId = wingsPersistence.save(userInvite);
+    userInvite.setUuid(inviteId);
+    return userInvite;
   }
 
   /**
@@ -930,6 +947,104 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public User completeMarketPlaceSignup(User user, UserInvite userInvite) {
+    userInvite = marketPlaceSignup(user, userInvite);
+    return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
+  }
+
+  private UserInvite marketPlaceSignup(User user, UserInvite userInvite) {
+    validateUser(user);
+
+    UserInvite existingInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
+    if (existingInvite == null) {
+      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+    } else if (existingInvite.isCompleted()) {
+      return existingInvite;
+    }
+
+    String email = user.getEmail();
+    User existingUser = getUserByEmail(email);
+    if (existingUser != null) {
+      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+    }
+
+    if (userInvite.getMarketPlaceToken() == null) {
+      throw new WingsException(MARKETPLACE_TOKEN_NOT_FOUND);
+    }
+
+    String userInviteID;
+    String marketPlaceID;
+    try {
+      Map<String, Claim> claims =
+          secretManager.verifyJWTToken(userInvite.getMarketPlaceToken(), JWT_CATEGORY.MARKETPLACE_SIGNUP);
+      userInviteID = claims.get(MarketPlaceConstants.USERINVITE_ID_CLAIM_KEY).asString();
+      marketPlaceID = claims.get(MarketPlaceConstants.MARKETPLACE_ID_CLAIM_KEY).asString();
+      if (!userInviteID.equals(userInvite.getUuid())) {
+        throw new WingsException(String.format(
+            "UserInviteID in claim:[{%s}] does not match the userInviteID:[{%s}]", userInviteID, userInvite.getUuid()));
+      }
+    } catch (Exception e) {
+      throw new WingsException(INVALID_MARKETPLACE_TOKEN, e);
+    }
+    MarketPlace marketPlace = wingsPersistence.get(MarketPlace.class, marketPlaceID);
+
+    if (marketPlace == null) {
+      throw new WingsException(String.format("No MarketPlace found with marketPlaceID=[{%s}]", marketPlaceID));
+    }
+
+    LicenseInfo licenseInfo = LicenseInfo.builder()
+                                  .accountType(AccountType.PAID)
+                                  .licenseUnits(marketPlace.getOrderQuantity())
+                                  .expiryTime(marketPlace.getExpirationDate().getTime())
+                                  .accountStatus(AccountStatus.ACTIVE)
+                                  .build();
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(user.getAccountName())
+                          .withCompanyName(user.getCompanyName())
+                          .withLicenseInfo(licenseInfo)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+
+    account = setupAccount(account);
+
+    String accountId = account.getUuid();
+
+    List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
+
+    completeUserInviteForSignup(userInvite, accountId);
+
+    marketPlace.setAccountId(accountId);
+
+    wingsPersistence.save(marketPlace);
+
+    saveUserAndUserGroups(user, email, account, accountAdminGroups);
+
+    return userInvite;
+  }
+
+  private void saveUserAndUserGroups(User user, String email, Account account, List<UserGroup> accountAdminGroups) {
+    user.setAppId(GLOBAL_APP_ID);
+    user.setEmail(user.getEmail().trim().toLowerCase());
+    user.setPasswordHash(hashpw(new String(user.getPassword()), BCrypt.gensalt()));
+    user.setEmailVerified(true);
+    user.getAccounts().add(account);
+    user.setUserGroups(accountAdminGroups);
+
+    save(user, account.getUuid());
+
+    addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false);
+  }
+
+  private void validateUser(User user) {
+    if (user.getAccountName() == null || user.getCompanyName() == null) {
+      throw new InvalidRequestException("Account/company name is not provided", USER);
+    }
+    if (isEmpty(user.getName()) || isEmpty(user.getPassword())) {
+      throw new InvalidRequestException("User's name/password is not provided", USER);
+    }
+  }
+
+  @Override
   public UserInvite completeTrialSignup(User user, UserInvite userInvite) {
     if (user.getAccountName() == null || user.getCompanyName() == null) {
       throw new InvalidRequestException("Account/company name is not provided", USER);
@@ -967,26 +1082,21 @@ public class UserServiceImpl implements UserService {
     // For trial user just signed up, it will be assigned to the account admin role.
     List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
 
+    completeUserInviteForSignup(userInvite, accountId);
+
+    saveUserAndUserGroups(user, email, account, accountAdminGroups);
+
+    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+    return userInvite;
+  }
+
+  private void completeUserInviteForSignup(UserInvite userInvite, String accountId) {
     userInvite.setAccountId(accountId);
     userInvite.setCompleted(true);
     userInvite.setAgreement(true);
 
     // Update existing invite with the associated account ID and set the status to be completed.
     wingsPersistence.save(userInvite);
-
-    user.setAppId(GLOBAL_APP_ID);
-    user.setEmail(email);
-    user.setPasswordHash(hashpw(new String(user.getPassword()), BCrypt.gensalt()));
-    user.setEmailVerified(true);
-    user.getAccounts().add(account);
-    user.setUserGroups(accountAdminGroups);
-
-    save(user, accountId);
-
-    addUserToUserGroups(accountId, user, accountAdminGroups, false);
-
-    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
-    return userInvite;
   }
 
   @Override

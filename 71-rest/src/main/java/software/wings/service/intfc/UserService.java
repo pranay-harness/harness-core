@@ -45,6 +45,8 @@ public interface UserService extends OwnedByAccount {
    */
   boolean trialSignup(String email);
 
+  UserInvite createUserInviteForMarketPlace();
+
   User getUserSummary(User user);
 
   List<User> getUserSummary(List<User> userList);
@@ -323,6 +325,8 @@ public interface UserService extends OwnedByAccount {
    * @return the completed user invite
    */
   UserInvite completeTrialSignup(User user, UserInvite userInvite);
+
+  User completeMarketPlaceSignup(User user, UserInvite userInvite);
 
   /**
    * Complete the trial user signup using oauth. Both the trial account and the account admin user will be created

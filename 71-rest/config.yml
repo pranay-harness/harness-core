@@ -49,6 +49,11 @@ executionLogStorageMode: MONGO
 fileStorageMode: MONGO
 clusterName:
 
+mktPlaceConfig:
+  awsAccessKey: awsMktPlaceAccessKeyPlaceHolder
+  awsSecretKey: awsMktPlaceSecretKeyPlaceHolder
+  awsMarketPlaceProductCode: awsMktPlaceProductCodePlaceHolder
+
 marketoConfig:
   enabled: false #marketoConfigEnable
   url: "marketo_url_place_holder"
@@ -150,6 +155,7 @@ portal:
   jwtMultiAuthSecret: 5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN
   jwtSsoRedirectSecret: qY4GXZAlPJQPEV8JCPTNhgmDmnHZSAgorzGxvOY03Xptr8N9xDfAYbwGohr2pCRLfFG69vBQaNpeTjcV
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
+  jwtMarketPlaceSecret: NqlqtztOXgJSQeVocN74TLnldqNjdyZM8DyNwaAioOt7M3piQsDILSqUQEh2qhdTadh21HKVxnXuuGfh
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
   delegateDockerImage: harness/delegate:latest
 
@@ -174,7 +180,6 @@ awsRegionIdToName:
   us-gov-west-1: GovCloud
   cn-north-1: China North (Beijing)
   cn-northwest-1: China (Ningxia),
-  ca-central-1: Canada (Central);
 
 awsInstanceTypes:
   - t2.nano

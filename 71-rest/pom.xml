@@ -58,6 +58,14 @@
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-marketplaceentitlement</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-marketplacemeteringservice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-route53</artifactId>
         </dependency>
         <dependency>
