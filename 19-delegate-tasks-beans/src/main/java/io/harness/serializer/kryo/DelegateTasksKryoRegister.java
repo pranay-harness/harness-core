@@ -2,7 +2,9 @@ package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -32,5 +34,7 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(TaskData.class, 19002);
     kryo.register(HttpConnectionExecutionCapability.class, 19003);
     kryo.register(CapabilityType.class, 19004);
+    kryo.register(DelegateMetaInfo.class, 5372);
+    kryo.register(DelegateTaskNotifyResponseData.class, 5373);
   }
 }

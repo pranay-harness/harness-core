@@ -352,6 +352,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>com.github.scribejava</groupId>
+                <artifactId>scribejava-apis</artifactId>
+                <version>6.2.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>
                 <artifactId>compiler</artifactId>
                 <version>0.9.5</version>

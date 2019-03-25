@@ -1,5 +1,17 @@
 package io.harness.serializer.kryo;
 
+import com.google.api.client.util.ArrayMap;
+import com.google.api.services.monitoring.v3.model.BucketOptions;
+import com.google.api.services.monitoring.v3.model.Distribution;
+import com.google.api.services.monitoring.v3.model.Exponential;
+import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
+import com.google.api.services.monitoring.v3.model.Metric;
+import com.google.api.services.monitoring.v3.model.MonitoredResource;
+import com.google.api.services.monitoring.v3.model.Point;
+import com.google.api.services.monitoring.v3.model.TimeInterval;
+import com.google.api.services.monitoring.v3.model.TimeSeries;
+import com.google.api.services.monitoring.v3.model.TypedValue;
+
 import com.amazonaws.SdkClientException;
 import com.amazonaws.internal.SdkInternalList;
 import com.amazonaws.regions.Regions;
@@ -24,7 +36,15 @@ import com.amazonaws.services.ec2.model.ProductCode;
 import com.amazonaws.services.ec2.model.StateReason;
 import com.amazonaws.services.ec2.model.Tag;
 import com.esotericsoftware.kryo.Kryo;
+import com.hazelcast.spi.exception.TargetNotMemberException;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.sumologic.client.SumoServerException;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.harness.security.encryption.EncryptionConfig;
+import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
+import org.json.JSONException;
 
 public class ApiServiceKryoRegister implements KryoRegistrar {
   @Override
@@ -53,5 +73,24 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
     kryo.register(CpuOptions.class, 1022);
     kryo.register(CapacityReservationSpecificationResponse.class, 1023);
     kryo.register(CapacityReservationTargetResponse.class, 1024);
+    kryo.register(KubernetesClientException.class, 2000);
+    kryo.register(JSONException.class, 2001);
+    kryo.register(TargetNotMemberException.class, 2002);
+    kryo.register(SumoServerException.class, 2003);
+    kryo.register(ListTimeSeriesResponse.class, 2004);
+    kryo.register(TimeSeries.class, 2005);
+    kryo.register(Point.class, 2006);
+    kryo.register(Metric.class, 2007);
+    kryo.register(MonitoredResource.class, 2008);
+    kryo.register(TimeInterval.class, 2009);
+    kryo.register(TypedValue.class, 2010);
+    kryo.register(ArrayMap.class, 2011);
+    kryo.register(Distribution.class, 2012);
+    kryo.register(BucketOptions.class, 2013);
+    kryo.register(Exponential.class, 2014);
+    kryo.register(BasicDBList.class, 2015);
+    kryo.register(BasicDBObject.class, 2016);
+    kryo.register(EncryptionConfig.class, 5305);
+    kryo.register(EncryptionType.class, 5123);
   }
 }

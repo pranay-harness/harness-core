@@ -36,6 +36,19 @@ import de.javakaffee.kryoserializers.guava.LinkedListMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.ReverseListSerializer;
 import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.eraro.ResponseMessage;
+import io.harness.exception.DelegateRetryableException;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.FunctorException;
+import io.harness.exception.HintException;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KmsOperationException;
+import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UnexpectedException;
+import io.harness.exception.WingsException;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,6 +171,22 @@ public class HKryo extends Kryo {
     ImmutableSetSerializer.registerSerializers(this);
     ImmutableMapSerializer.registerSerializers(this);
     ImmutableMultimapSerializer.registerSerializers(this);
+
+    register(ErrorCode.class, 5233);
+    register(Level.class, 5590);
+    register(ResponseMessage.class, 5316);
+
+    register(DelegateRetryableException.class, 5521);
+    register(ExplanationException.class, 5324);
+    register(FunctorException.class, 5589);
+    register(HintException.class, 5325);
+    register(InvalidArgumentsException.class, 5326);
+    register(InvalidRequestException.class, 5327);
+    register(KmsOperationException.class, 5517);
+    register(UnauthorizedException.class, 5329);
+    register(UnexpectedException.class, 5330);
+    register(WingsException.ReportTarget.class, 5348);
+    register(WingsException.class, 5174);
   }
 
   private Registration check(Registration registration, int id) {
