@@ -801,6 +801,33 @@ public class UserResource {
     return getPublicUserInvite(userService.completeInvite(userInvite));
   }
 
+  /**
+   * Complete invite rest response.
+   *
+   * @param accountId  the account id
+   * @param inviteId   the invite id
+   * @param userInvite the user invite
+   * @return the rest response
+   */
+  @PublicApi
+  @PUT
+  @Path("invites/mktplace/{inviteId}/signin")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> completeMarketPlaceInvite(@QueryParam("account") @NotEmpty String accountName,
+      @QueryParam("company") @NotEmpty String companyName, @PathParam("inviteId") @NotEmpty String inviteId,
+      @NotNull UserInvite userInvite) {
+    userInvite.setUuid(inviteId);
+    User user = User.Builder.anUser()
+                    .withEmail(userInvite.getEmail())
+                    .withName(userInvite.getName())
+                    .withPassword(userInvite.getPassword())
+                    .withAccountName(accountName)
+                    .withCompanyName(companyName)
+                    .build();
+    return new RestResponse<User>(userService.completeMarketPlaceSignup(user, userInvite));
+  }
+
   @PublicApi
   @PUT
   @Path("invites/{inviteId}/signin")

@@ -30,6 +30,7 @@ import software.wings.DataStorageMode;
 import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
 import software.wings.security.authentication.oauth.BitbucketConfig;
 import software.wings.security.authentication.oauth.GithubConfig;
@@ -88,6 +89,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("azureConfig") private AzureConfig azureConfig;
   @JsonProperty("bitbucketConfig") private BitbucketConfig bitbucketConfig;
   @JsonProperty("gitlabConfig") private GitlabConfig gitlabConfig;
+  @JsonProperty("mktPlaceConfig") private MarketPlaceConfig marketPlaceConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

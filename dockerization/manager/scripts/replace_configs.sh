@@ -232,3 +232,15 @@ if [[ -v "LINKEDIN_OAUTH_CALLBACK_URL" ]]; then
     sed -i "s|linkedinCallbackUrl|${LINKEDIN_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
 fi
 
+if [[ -v "AWS_MARKETPLACE_ACCESSKEY" ]]; then
+    sed -i "s|awsMktPlaceAccessKeyPlaceHolder|${AWS_MARKETPLACE_ACCESSKEY}|" /opt/harness/config.yml
+fi
+
+if [[ -v "AWS_MARKETPLACE_SECRETKEY" ]]; then
+    sed -i "s|awsMktPlaceSecretKeyPlaceHolder|${AWS_MARKETPLACE_SECRETKEY}|" /opt/harness/config.yml
+fi
+
+if [[ -v "AWS_MARKETPLACE_PRODUCTCODE" ]]; then
+    sed -i "s|awsMktPlaceProductCodePlaceHolder|${AWS_MARKETPLACE_PRODUCTCODE}|" /opt/harness/config.yml
+fi
+

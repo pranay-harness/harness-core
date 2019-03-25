@@ -64,6 +64,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -92,18 +93,22 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
+import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
+import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.impl.MarketPlaceServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -170,6 +175,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private UserGroupService userGroupService;
   @Mock private CacheHelper cacheHelper;
   @Mock private LimitCheckerFactory limitCheckerFactory;
+  @Mock private AuthenticationManager authenticationManager;
 
   /**
    * The Cache.
@@ -182,7 +188,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
   @Inject @InjectMocks SecretManager secretManager;
-
+  @Inject @InjectMocks private MarketPlaceServiceImpl marketPlaceService;
   /**
    * Sets mocks.
    */
@@ -205,6 +211,82 @@ public class UserServiceTest extends WingsBaseTest {
     when(userInviteQuery.filter(any(), any())).thenReturn(userInviteQuery);
     when(limitCheckerFactory.getInstance(Mockito.any(io.harness.limits.Action.class)))
         .thenReturn(WingsTestConstants.mockChecker());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testMarketPlaceSignUp() {
+    when(configuration.getPortal().getJwtMarketPlaceSecret()).thenReturn("TESTSECRET");
+    UserInvite testInvite = UserInviteBuilder.anUserInvite().withUuid(USER_INVITE_ID).withEmail(USER_EMAIL).build();
+    testInvite.setPassword("TestPassword".toCharArray());
+    MarketPlace marketPlace = MarketPlace.builder()
+                                  .uuid("TESTUUID")
+                                  .type(MarketPlaceType.AWS)
+                                  .orderQuantity(10)
+                                  .expirationDate(new Date())
+                                  .build();
+    String token = marketPlaceService.getMarketPlaceToken(marketPlace, testInvite);
+
+    User savedUser = userBuilder.withUuid(USER_ID)
+                         .withEmail(USER_EMAIL)
+                         .withEmailVerified(false)
+                         .withCompanyName(COMPANY_NAME)
+                         .withAccountName(ACCOUNT_NAME)
+                         .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+                         .build();
+
+    try {
+      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      fail();
+    } catch (WingsException e) {
+      log().info("Expected error " + e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.USER_INVITATION_DOES_NOT_EXIST);
+    }
+
+    when(wingsPersistence.get(UserInvite.class, USER_INVITE_ID)).thenReturn(testInvite);
+    when(userService.getUserByEmail(USER_EMAIL)).thenReturn(savedUser);
+    try {
+      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      fail();
+    } catch (WingsException e) {
+      log().info("Expected error " + e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.USER_ALREADY_REGISTERED);
+    }
+
+    when(userService.getUserByEmail(USER_EMAIL)).thenReturn(null);
+    try {
+      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      fail();
+    } catch (WingsException e) {
+      log().info("Expected error " + e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.MARKETPLACE_TOKEN_NOT_FOUND);
+    }
+
+    testInvite.setMarketPlaceToken("fakeToken");
+
+    try {
+      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      fail();
+    } catch (WingsException e) {
+      log().info("Expected error " + e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_MARKETPLACE_TOKEN);
+    }
+
+    testInvite.setMarketPlaceToken(token);
+
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(ACCOUNT_NAME)
+                          .withCompanyName(COMPANY_NAME)
+                          .withUuid(ACCOUNT_ID)
+                          .build();
+
+    when(accountService.save(any(Account.class))).thenReturn(account);
+    when(wingsPersistence.saveAndGet(any(Class.class), any(User.class))).thenReturn(savedUser);
+    when(wingsPersistence.get(MarketPlace.class, "TESTUUID")).thenReturn(marketPlace);
+    when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
+    when(authenticationManager.defaultLogin(USER_EMAIL, "TestPassword")).thenReturn(savedUser);
+    User user = userService.completeMarketPlaceSignup(savedUser, testInvite);
+    assertThat(user).isEqualTo(savedUser);
   }
 
   /**

@@ -176,5 +176,5 @@ public class ManagerMorphiaClasses {
       LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
       AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class,
       DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class, GlobalApiKey.class,
-      ShellScriptInfrastructureProvisioner.class, KeywordsAware.class);
+      ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class);
 }

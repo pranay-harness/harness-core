@@ -143,6 +143,7 @@ import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
+import software.wings.service.impl.MarketPlaceServiceImpl;
 import software.wings.service.impl.MigrationServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
@@ -304,6 +305,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.MarketPlaceService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.NexusBuildService;
@@ -657,6 +659,7 @@ public class WingsModule extends DependencyModule {
     bind(PermitService.class).to(PermitServiceImpl.class);
 
     bind(GovernanceConfigService.class).to(GovernanceConfigServiceImpl.class);
+    bind(MarketPlaceService.class).to(MarketPlaceServiceImpl.class);
     bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
 
     // Start of deployment trigger dependencies
