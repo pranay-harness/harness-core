@@ -172,9 +172,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
           invalidFields.put("metricValueJsonPath/timestampJsonPath",
               "Metric value path is empty for " + metricCollectionInfo.metricName);
         }
-        if (metricCollectionInfo.getCollectionUrl().contains("${host}") && isEmpty(mapping.getHostJsonPath())) {
-          invalidFields.put("hostNameJsonPath", "Host Name Json path is empty for " + metricCollectionInfo.metricName);
-        }
+
         if (isEmpty(mapping.getTxnNameFieldValue()) && isEmpty(mapping.getTxnNameJsonPath())) {
           invalidFields.put("transactionName", "Transaction Name is empty for " + metricCollectionInfo.metricName);
         }
