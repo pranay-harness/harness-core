@@ -123,7 +123,6 @@
         <dependency>
             <groupId>com.github.scribejava</groupId>
             <artifactId>scribejava-apis</artifactId>
-            <version>6.2.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.spullara.mustache.java</groupId>
