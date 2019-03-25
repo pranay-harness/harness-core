@@ -383,8 +383,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
 
-    if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
-      notNullCheck("Git file config cannot be null for store type remote", gitFileConfig, USER);
+    if (StoreType.Remote.equals(applicationManifest.getStoreType())
+        || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
+      notNullCheck(
+          "Git file config cannot be null for store type " + applicationManifest.getStoreType(), gitFileConfig, USER);
 
       if (isBlank(gitFileConfig.getConnectorId())) {
         throw new InvalidRequestException("Connector id cannot be empty", USER);
