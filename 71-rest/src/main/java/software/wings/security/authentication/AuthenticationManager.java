@@ -199,7 +199,7 @@ public class AuthenticationManager {
       }
     } catch (Exception e) {
       logger.warn("Failed to login via SSO", e);
-      throw new WingsException(INVALID_CREDENTIAL);
+      throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
 
