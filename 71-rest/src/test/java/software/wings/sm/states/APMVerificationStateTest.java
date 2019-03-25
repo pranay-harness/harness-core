@@ -149,7 +149,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
     info.setResponseMapping(mapping);
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertTrue("Size should be 1", invalidFields.size() == 1);
-    assertEquals("hostNameJsonPath should be missing", "hostNameJsonPath", invalidFields.keySet().iterator().next());
+    assertTrue("Size should be 0", invalidFields.size() == 0);
   }
 }
