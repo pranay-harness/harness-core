@@ -6,8 +6,11 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -24,6 +27,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Mock SecretManager secretManager;
   @Mock EncryptionService encryptionService;
 
+  @Rule public ExpectedException thrown = ExpectedException.none();
   @Test
   @Category(UnitTests.class)
   public void encryptFields() {
@@ -149,6 +153,32 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     assertEquals("suffix", apmValidateCollectorConfig.getUrl());
     assertEquals(headers, apmVerificationConfig.getHeadersList());
     assertEquals("abc", apmValidateCollectorConfig.getHeaders().get("api_key_2"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void createAPMValidateCollectorConfigEmptyURL() throws IOException {
+    APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
+    List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
+    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    headers.add(APMVerificationConfig.KeyValues.builder()
+                    .key("api_key_2")
+                    .value("*****")
+                    .encryptedValue("abc")
+                    .encrypted(true)
+                    .build());
+
+    Optional<EncryptedDataDetail> encryptedDataDetail =
+        Optional.of(EncryptedDataDetail.builder().fieldName("api_key_2").build());
+
+    when(secretManager.encryptedDataDetails("111", "api_key_2", "abc")).thenReturn(encryptedDataDetail);
+    when(encryptionService.getDecryptedValue(encryptedDataDetail.get())).thenReturn("abc".toCharArray());
+    apmVerificationConfig.setHeadersList(headers);
+    apmVerificationConfig.setAccountId("111");
+    apmVerificationConfig.setUrl("base");
+    thrown.expect(WingsException.class);
+    apmVerificationConfig.createAPMValidateCollectorConfig(secretManager, encryptionService);
   }
 
   @Test
