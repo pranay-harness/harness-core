@@ -206,7 +206,7 @@ public class DelegateQueueTask implements Runnable {
         unassignedTasksQuery.or(unassignedTasksQuery.criteria("lastBroadcastAt").doesNotExist(),
             new WhereCriteria(
                 "this.lastBroadcastAt < " + now + " - Math.pow(2, this.broadcastCount) * " + REBROADCAST_FACTOR)));
-
+    // TODO: there is a race between these two queries
     List<DelegateTask> unassignedTasks = unassignedTasksQuery.asList();
     if (isNotEmpty(unassignedTasks)) {
       UpdateResults results = wingsPersistence.update(unassignedTasksQuery,

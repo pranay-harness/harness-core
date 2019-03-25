@@ -94,9 +94,9 @@ public class Validator {
       throw new WingsException(GENERAL_ERROR, USER, e).addParam("message", "Duplicate " + field + " " + value);
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
-        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Duplicate " + field + " " + value);
+        throw new WingsException(GENERAL_ERROR, USER, e).addParam("message", "Duplicate " + field + " " + value);
       }
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new WingsException(GENERAL_ERROR, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 }
