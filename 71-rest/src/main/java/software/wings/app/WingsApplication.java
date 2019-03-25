@@ -264,6 +264,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new EventsModule(configuration));
+    modules.add(new GraphQLModule());
 
     Injector injector = Guice.createInjector(modules);
 

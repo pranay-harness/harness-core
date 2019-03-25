@@ -100,6 +100,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -218,6 +219,7 @@ import software.wings.utils.Validator;
 
 import java.io.ObjectStreamClass;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
@@ -2603,6 +2605,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .in(envIds)
         .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
         .get(new FindOptions().skip(1));
+  }
+
+  @Override
+  public WorkflowExecution fetchLastWorkflowExecution(String appId, String workflowId, String serviceId, String envId) {
+    Query<WorkflowExecution> workflowExecutionQuery = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                          .filter("workflowType", ORCHESTRATION)
+                                                          .filter("workflowId", workflowId)
+                                                          .filter("appId", appId);
+
+    if (StringUtils.isNotBlank(serviceId)) {
+      workflowExecutionQuery.field("serviceIds").in(Arrays.asList(serviceId));
+    }
+
+    if (StringUtils.isNotBlank(envId)) {
+      workflowExecutionQuery.field("envIds").in(Arrays.asList(envId));
+    }
+
+    return workflowExecutionQuery.order(Sort.descending(WorkflowExecution.CREATED_AT_KEY)).get();
   }
 
   @Override
