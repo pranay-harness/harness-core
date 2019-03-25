@@ -8,15 +8,12 @@ import io.harness.factory.ClosingFactory;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ModelRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
-  private static final Logger logger = LoggerFactory.getLogger(ModelRule.class);
-
   private Injector injector;
   private ClosingFactory closingFactory = new ClosingFactory();
 
@@ -38,6 +35,9 @@ public class ModelRule implements MethodRule, MongoRuleMixin, DistributedLockRul
         injector.injectMembers(target);
         try {
           statement.evaluate();
+        } catch (RuntimeException exception) {
+          LoggerFactory.getLogger(ModelRule.class).error("Test exception", exception);
+          throw exception;
         } finally {
           after();
         }

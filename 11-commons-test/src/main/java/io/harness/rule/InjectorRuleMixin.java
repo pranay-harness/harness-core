@@ -8,6 +8,7 @@ import com.google.inject.Module;
 
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -25,7 +26,12 @@ public interface InjectorRuleMixin {
         Injector injector = Guice.createInjector(modules(annotations));
         initialize(injector);
         injector.injectMembers(target);
-        statement.evaluate();
+        try {
+          statement.evaluate();
+        } catch (RuntimeException exception) {
+          LoggerFactory.getLogger(InjectorRuleMixin.class).error("Test exception", exception);
+          throw exception;
+        }
       }
     };
   }
