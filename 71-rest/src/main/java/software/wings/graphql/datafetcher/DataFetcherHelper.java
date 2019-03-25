@@ -28,8 +28,8 @@ public class DataFetcherHelper {
    * @return
    */
   public Map<String, DataFetcher<?>> getDataFetcherMap() {
-    return ImmutableMap.of(WORKFLOW.getFieldName(), workflowDataFetcher.getWorkFlow(), WORKFLOW_LIST.getFieldName(),
-        workflowDataFetcher.getWorkFlows(), WORKFLOW_EXECUTION_STATUS.getFieldName(),
-        workflowDataFetcher.getWorkFlowExecutionStatus());
+    return ImmutableMap.of(WORKFLOW.getFieldName(), workflowDataFetcher.getWorkflow(), WORKFLOW_LIST.getFieldName(),
+        workflowDataFetcher.getWorkflows(), WORKFLOW_EXECUTION_STATUS.getFieldName(),
+        workflowDataFetcher.getWorkflowExecutionStatus());
   }
 }

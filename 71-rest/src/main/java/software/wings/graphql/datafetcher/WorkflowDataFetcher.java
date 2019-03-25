@@ -46,7 +46,7 @@ public class WorkflowDataFetcher {
    *      Need to sync up with @Rama again.
    * @return
    */
-  public DataFetcher<PageResponse<Workflow>> getWorkFlows() {
+  public DataFetcher<PageResponse<Workflow>> getWorkflows() {
     return environment -> {
       String appId = environment.getArgument(GraphQLConstants.APP_ID);
       String limit = environment.getArgument(GraphQLConstants.PAGE_LIMIT);
@@ -76,7 +76,7 @@ public class WorkflowDataFetcher {
     };
   }
 
-  public DataFetcher<Workflow> getWorkFlow() {
+  public DataFetcher<Workflow> getWorkflow() {
     return environment -> {
       String appId = environment.getArgument(GraphQLConstants.APP_ID);
       String workflowId = environment.getArgument(GraphQLConstants.ENTITY_ID);
@@ -93,7 +93,7 @@ public class WorkflowDataFetcher {
     };
   }
 
-  public DataFetcher<WorkflowExecution> getWorkFlowExecutionStatus() {
+  public DataFetcher<WorkflowExecution> getWorkflowExecutionStatus() {
     return environment -> {
       String appId = environment.getArgument(GraphQLConstants.APP_ID);
       String workflowId = environment.getArgument(GraphQLConstants.ENTITY_ID);

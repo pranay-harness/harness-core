@@ -65,19 +65,19 @@ public class TimeSeriesResource {
   @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workFlowExecutionId,
+      @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("groupName") final String groupName, @QueryParam("compareCurrent") boolean compareCurrent,
       TSRequest request) {
     if (compareCurrent) {
       return new RestResponse<>(timeSeriesAnalysisService.getRecords(appId, request.getStateExecutionId(), groupName,
           request.getNodes(), request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     } else {
-      if (workFlowExecutionId == null || workFlowExecutionId.equals("-1")) {
+      if (workflowExecutionId == null || workflowExecutionId.equals("-1")) {
         return new RestResponse<>(new ArrayList<>());
       }
 
       return new RestResponse<>(timeSeriesAnalysisService.getPreviousSuccessfulRecords(
-          appId, workFlowExecutionId, groupName, request.getAnalysisMinute(), request.getAnalysisStartMinute()));
+          appId, workflowExecutionId, groupName, request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     }
   }
 
@@ -107,7 +107,7 @@ public class TimeSeriesResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<List<TimeSeriesMLScores>> getScores(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("workFlowId") String workflowId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("workflowId") String workflowId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("limit") Integer limit) {
     return new RestResponse<>(
         timeSeriesAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, analysisMinute, limit));

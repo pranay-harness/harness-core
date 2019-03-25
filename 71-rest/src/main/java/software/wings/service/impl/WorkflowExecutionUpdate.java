@@ -201,7 +201,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
            * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
            */
           boolean manual = workflowExecution.getDeploymentTriggerId() == null;
-          String workflowName = usageMetricsHelper.getWorkFlowName(context.getAppId(), workflowId);
+          String workflowName = usageMetricsHelper.getWorkflowName(context.getAppId(), workflowId);
           usageMetricsEventPublisher.publishDeploymentDurationEvent(
               executionDuration, accountID, accountName, workflowId, workflowName, appId, applicationName);
           usageMetricsEventPublisher.publishDeploymentMetadataEvent(
