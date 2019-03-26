@@ -296,7 +296,7 @@ public class SecretTextTest extends WingsBaseTest {
     // check just changing the name still gives old value
     String newSecretName = generateUuid();
     secretManagementResource.updateSecret(
-        accountId, secretId, SecretText.builder().name(newSecretName).value(Constants.SECRET_MASK).build());
+        accountId, secretId, SecretText.builder().name(newSecretName).value(secretValue).build());
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertNull(savedVariable.getValue());
@@ -308,7 +308,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
     assertEquals(3, changeLogs.size());
-    assertEquals("Changed name", changeLogs.get(0).getDescription());
+    assertEquals("Changed name & value", changeLogs.get(0).getDescription());
     assertEquals("Changed usage restrictions", changeLogs.get(1).getDescription());
     assertEquals("Created", changeLogs.get(2).getDescription());
 
@@ -320,7 +320,7 @@ public class SecretTextTest extends WingsBaseTest {
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
     assertEquals(4, changeLogs.size());
     assertEquals("Changed name & value", changeLogs.get(0).getDescription());
-    assertEquals("Changed name", changeLogs.get(1).getDescription());
+    assertEquals("Changed name & value", changeLogs.get(1).getDescription());
     assertEquals("Changed usage restrictions", changeLogs.get(2).getDescription());
     assertEquals("Created", changeLogs.get(3).getDescription());
 

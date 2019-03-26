@@ -804,26 +804,33 @@ public class SecretManagerImpl implements SecretManager {
       StringBuilder builder = new StringBuilder();
       if (nameChanged) {
         builder.append("Changed name");
+        savedData.removeSearchTag(null, savedData.getName(), null);
+        savedData.setName(name);
+        savedData.addSearchTag(name);
+
+        // PL-1125: Remove old secret name in Vault if secret text's name changed to not have dangling entries.
+        if (savedData.getEncryptionType() == EncryptionType.VAULT && isEmpty(savedData.getPath())) {
+          // For harness managed secrets, we need to delete the corresponding entries in the Vault service.
+          String keyName = savedData.getEncryptionKey();
+          VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, savedData.getKmsId());
+          vaultService.deleteSecret(accountId, keyName, vaultConfig);
+        }
       }
       if (valueChanged) {
         builder.append(builder.length() > 0 ? " & value" : " Changed value");
       }
       if (pathChanged) {
         builder.append(builder.length() > 0 ? " & path" : " Changed path");
+        savedData.setPath(path);
       }
       if (usageRestrictions != null) {
         builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
       }
       auditMessage = builder.toString();
 
-      savedData.removeSearchTag(null, savedData.getName(), null);
-      savedData.setName(name);
-      savedData.setPath(path);
-      savedData.addSearchTag(name);
-
       // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
       // secret manager if the secret is 'path' enabled!
-      if (valueChanged || pathChanged) {
+      if (nameChanged || valueChanged || pathChanged) {
         EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
             secretValue, path, savedData, name, usageRestrictions);
         savedData.setEncryptionKey(encryptedData.getEncryptionKey());
@@ -1105,22 +1112,30 @@ public class SecretManagerImpl implements SecretManager {
       newEncryptedFile.setType(SettingVariableTypes.CONFIG_FILE);
     }
 
+    long uploadFileSize = inputBytes.length;
     if (update) {
       if (newEncryptedFile != null) {
+        // PL-1125: Remove old encrypted file in Vault if its name has changed so as not to have dangling entries.
+        if (encryptionType == EncryptionType.VAULT && !Objects.equals(oldName, name)) {
+          VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, encryptedData.getKmsId());
+          vaultService.deleteSecret(accountId, encryptedData.getEncryptionKey(), vaultConfig);
+        }
+
         encryptedData.setEncryptionKey(newEncryptedFile.getEncryptionKey());
         encryptedData.setEncryptedValue(newEncryptedFile.getEncryptedValue());
         encryptedData.setKmsId(newEncryptedFile.getKmsId());
         encryptedData.setEncryptionType(newEncryptedFile.getEncryptionType());
+        encryptedData.setFileSize(uploadFileSize);
       }
     } else {
       encryptedData = newEncryptedFile;
       encryptedData.setUuid(uuid);
       encryptedData.setType(SettingVariableTypes.CONFIG_FILE);
       encryptedData.setAccountId(accountId);
+      encryptedData.setFileSize(uploadFileSize);
     }
     encryptedData.setName(name);
     encryptedData.setEncryptionType(encryptionType);
-    encryptedData.setFileSize(inputStream.getTotalBytesRead());
     encryptedData.setUsageRestrictions(usageRestrictions);
     encryptedData.setBase64Encoded(true);
 
@@ -1146,7 +1161,7 @@ public class SecretManagerImpl implements SecretManager {
       }
       List<UuidAware> configFiles = fetchParents(accountId, parents);
       configFiles.forEach(configFile -> {
-        ((ConfigFile) configFile).setSize(inputStream.getTotalBytesRead());
+        ((ConfigFile) configFile).setSize(uploadFileSize);
         wingsPersistence.save((ConfigFile) configFile);
       });
     }
