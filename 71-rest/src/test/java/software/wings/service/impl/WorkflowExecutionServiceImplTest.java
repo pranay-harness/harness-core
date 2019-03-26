@@ -129,7 +129,6 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -479,15 +478,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     pipeline = pipelineService.save(pipeline);
     assertThat(pipeline).isNotNull();
     assertThat(pipeline.getUuid()).isNotNull();
-
-    PageRequest<StateMachine> req = aPageRequest()
-                                        .addFilter(StateMachine.APP_ID_KEY, EQ, app.getUuid())
-                                        .addFilter(StateMachine.ORIGIN_ID_KEY, EQ, pipeline.getUuid())
-                                        .build();
-    PageResponse<StateMachine> res = workflowService.listStateMachines(req);
-
-    assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
-    assertThat(res.get(0).getTransitions()).hasSize(0);
     return pipeline;
   }
 
