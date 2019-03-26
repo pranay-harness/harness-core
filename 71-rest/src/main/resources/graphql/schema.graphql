@@ -6,6 +6,7 @@ type Query {
   workflow(id: String!, appId: String!): Workflow
   workflows(appId: String!, limit: String, offSet: String): PageResponse
   workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution
+  workflowExecutionList(workflowId: String!, appId: String!, envId: String!, limit: String, offSet: String): PageResponse
 }
 
 type Service {
@@ -13,6 +14,12 @@ type Service {
    description: String
    artifactType: String
    deploymentType: String
+}
+
+
+type PageResponse {
+  total: Int
+  response: [Response]
 }
 
 type Workflow {
@@ -24,11 +31,6 @@ type Workflow {
   services: [Service]
 }
 
-type PageResponse {
-  total: Int
-  response: [Workflow]
-}
-
 type WorkflowExecution {
   id: String
   name: String
@@ -37,4 +39,5 @@ type WorkflowExecution {
   endTs: Long
 }
 
+union Response = Workflow | WorkflowExecution
 

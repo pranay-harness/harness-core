@@ -1,5 +1,7 @@
 package software.wings.graphql.provider;
 
+import static software.wings.graphql.utils.GraphQLConstants.QUERY_API;
+
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
@@ -10,6 +12,7 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import software.wings.graphql.datafetcher.DataFetcherHelper;
+import software.wings.graphql.typeresolver.TypeResolverHelper;
 
 import java.io.IOException;
 import java.net.URL;
@@ -23,9 +26,12 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
   private DataFetcherHelper dataFetcherHelper;
 
+  private TypeResolverHelper typeResolverHelper;
+
   @Inject
-  public GraphQLProvider(@NotNull DataFetcherHelper dataFetcherHelper) {
+  public GraphQLProvider(@NotNull DataFetcherHelper dataFetcherHelper, @NotNull TypeResolverHelper typeResolverHelper) {
     this.dataFetcherHelper = dataFetcherHelper;
+    this.typeResolverHelper = typeResolverHelper;
   }
   /**
    * Not synchronizing this method as it will be only
@@ -49,7 +55,10 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     RuntimeWiring.Builder builder = RuntimeWiring.newRuntimeWiring();
 
     this.dataFetcherHelper.getDataFetcherMap().forEach(
-        (k, v) -> builder.type("Query", typeWiring -> typeWiring.dataFetcher(k, v)));
+        (k, v) -> builder.type(QUERY_API, typeWiring -> typeWiring.dataFetcher(k, v)));
+
+    this.typeResolverHelper.getTypeResolverMap().forEach(
+        (k, v) -> builder.type(k, typeWiring -> typeWiring.typeResolver(v)));
 
     return builder.build();
   }

@@ -1,11 +1,13 @@
 package software.wings.graphql.datafetcher;
 
 import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW;
-import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW_EXECUTION_STATUS;
+import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW_EXECUTION;
+import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW_EXECUTION_LIST;
 import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW_LIST;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import graphql.schema.DataFetcher;
 
@@ -19,6 +21,7 @@ import java.util.Map;
  * they can just add an endry in <code>SchemaFieldsEnum</code>
  * and add the corresponding <code>DataFetcher</code> in this class
  */
+@Singleton
 public class DataFetcherHelper {
   @Inject private WorkflowDataFetcher workflowDataFetcher;
 
@@ -29,7 +32,8 @@ public class DataFetcherHelper {
    */
   public Map<String, DataFetcher<?>> getDataFetcherMap() {
     return ImmutableMap.of(WORKFLOW.getFieldName(), workflowDataFetcher.getWorkflow(), WORKFLOW_LIST.getFieldName(),
-        workflowDataFetcher.getWorkflows(), WORKFLOW_EXECUTION_STATUS.getFieldName(),
-        workflowDataFetcher.getWorkflowExecutionStatus());
+        workflowDataFetcher.getWorkflows(), WORKFLOW_EXECUTION.getFieldName(),
+        workflowDataFetcher.getWorkflowExecution(), WORKFLOW_EXECUTION_LIST.getFieldName(),
+        workflowDataFetcher.getWorkflowExecutionList());
   }
 }

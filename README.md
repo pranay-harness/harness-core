@@ -9,9 +9,9 @@
    `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 
 2. Install Java 8 download : 
-NOTE: Brew will download and install latest version of JDK/JRE, its recommended to install JDK/JRE_1.8.0_152 to be in sync with version everyone is using in the team.
+NOTE: Brew will download and install latest version of JDK/JRE, its recommended to install JDK/JRE_1.8.0_191 to be in sync with version everyone is using in the team.
 
-Download JDK 1.8-152 from [Java archive downloads](http://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase8-2177648.html), unzip it, then set `JAVA_HOME`, and `PATH` accordingly.
+Download JDK 1.8-191 from [Java archive downloads](http://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase8-2177648.html), unzip it, then set `JAVA_HOME`, and `PATH` accordingly.
 
 3. Install maven :
 
@@ -106,7 +106,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 then
 
-`mvn clean install -DskipTests && java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log &`
+`mvn clean install -DskipTests && java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log &`
 
 2. Run DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
 
@@ -118,7 +118,7 @@ then
 
 4. Start Verification service (Optional) : Open a new terminal and navigate to the same directory. And run following command:
 
-`java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dfile.encoding=UTF-8 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log &`
+`java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log &`
 
 ### Editing setup
 
@@ -174,7 +174,7 @@ Also make sure that the layout looks like this:
            'WingsApplication' class (found at software.wings.app.WingsApplication) with the following configurations.
 
        * VM Options:  
-           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
+           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar`
 
        * Program Arguments:  
            `server config.yml`
@@ -191,7 +191,7 @@ Also make sure that the layout looks like this:
        * JRE:  
            Default (1.8 - SDK of 'rest' module)
 
-       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
+       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 191)
        * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
 
 2. Create the "DelegateApplication":  
@@ -203,7 +203,7 @@ Also make sure that the layout looks like this:
     'DelegateApplication' class (found at software.wings.delegate.app.DelegateApplication) with the following configurations.
 
     _ VM Options:  
-    `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0`
+    `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dversion=999.0.0`
 
     _ Program Arguments:  
     `config-delegate.yml`
@@ -230,7 +230,7 @@ Also make sure that the layout looks like this:
            'VerificationServiceApplication' class (found at io.harness.app.VerificationServiceApplication) with the following configurations.
 
        * VM Options:
-           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
+           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar`
 
        * Program Arguments:
            `server verification-config.yml`
@@ -247,7 +247,7 @@ Also make sure that the layout looks like this:
        * JRE:
            Default (1.8 - SDK of 'rest' module)
 
-       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
+       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 191)
        * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
 
 4. Create the Data Model Generation tool - "DataGeneration":
@@ -260,7 +260,7 @@ Also make sure that the layout looks like this:
            'DataGenApplication' class (found at io.harness.DataGenApplication) with the following configurations.
 
        * VM Options:
-           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
+           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar`
 
        * Program Arguments:
            `server config-datagen.yml`
@@ -277,7 +277,7 @@ Also make sure that the layout looks like this:
        * JRE:
            Default (1.8 - SDK of 'rest' module)
 
-       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
+       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 191)
        * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
 
 ### Show current git branch in command prompt

@@ -5,6 +5,8 @@ import static software.wings.common.Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_ST
 import software.wings.beans.FeatureName;
 
 public class GraphQLConstants {
+  public static final String QUERY_API = "Query";
+  public static final String RESPONSE_TYPE = "Response";
   public static final String ENTITY_ID = "id";
   public static final String APP_ID = "appId";
   public static final String SERVICE_ID = "serviceId";
@@ -13,6 +15,7 @@ public class GraphQLConstants {
   public static final String PAGE_OFFSET = "offset";
   public static final String ZERO_OFFSET = "0";
   public static final String PAGE_SIZE_STR = DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR;
+  public static final int MAX_PAGE_SIZE = 20;
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";
 
   // Workflow related constants.
