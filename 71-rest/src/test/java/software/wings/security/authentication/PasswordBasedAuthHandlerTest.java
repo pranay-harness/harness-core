@@ -115,7 +115,7 @@ public class PasswordBasedAuthHandlerTest {
     mockUser.setPasswordHash("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
     when(configuration.getPortal()).thenReturn(mock(PortalConfig.class));
     doReturn(mockUser).when(authHandler).getUser(anyString());
-    User user = authHandler.authenticate("admin@harness.io", "admin");
+    User user = authHandler.authenticate("admin@harness.io", "admin").getUser();
     assertThat(user).isNotNull();
   }
 }

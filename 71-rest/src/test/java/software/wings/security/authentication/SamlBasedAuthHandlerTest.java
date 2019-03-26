@@ -110,7 +110,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     doReturn(samlClient).when(samlClientService).getSamlClient(samlSettings);
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
-    User returnedUser = authHandler.authenticate(oktaIdpUrl, samlResponseString);
+    User returnedUser = authHandler.authenticate(oktaIdpUrl, samlResponseString).getUser();
     assertThat(returnedUser).isEqualTo(user);
   }
 
@@ -158,7 +158,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     doReturn(samlClient).when(samlClientService).getSamlClient(any(SamlSettings.class));
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
-    User returnedUser = authHandler.authenticate(googleIdpUrl1, samlResponseString);
+    User returnedUser = authHandler.authenticate(googleIdpUrl1, samlResponseString).getUser();
     assertThat(returnedUser).isEqualTo(user);
   }
 
@@ -207,7 +207,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     doReturn(samlClient).when(samlClientService).getSamlClient(any(SamlSettings.class));
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
-    User returnedUser = authHandler.authenticate(azureIdpUrl2, samlResponseString);
+    User returnedUser = authHandler.authenticate(azureIdpUrl2, samlResponseString).getUser();
     assertThat(returnedUser).isEqualTo(user);
   }
 
@@ -236,7 +236,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     doNothing().when(samlUserGroupSync).syncUserGroup(any(SamlUserAuthorization.class), anyString(), anyString());
     doReturn(true).when(samlSettings).isAuthorizationEnabled();
-    User returnedUser = authHandler.authenticate(oktaIdpUrl, samlResponseString);
+    User returnedUser = authHandler.authenticate(oktaIdpUrl, samlResponseString).getUser();
     assertThat(returnedUser).isEqualTo(user);
   }
 

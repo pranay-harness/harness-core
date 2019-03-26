@@ -2,6 +2,7 @@ package software.wings.security.authentication;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -25,6 +26,13 @@ public class AuthenticationUtil {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private MainConfiguration configuration;
+
+  public User getUserOrReturnNullIfUserDoesNotExists(String userName) {
+    if (Strings.isNullOrEmpty(userName)) {
+      return null;
+    }
+    return getUserByEmail(userName);
+  }
 
   public User getUser(String userName) {
     return getUser(userName, null);

@@ -20,33 +20,32 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthHandler;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.AuthenticationResponse;
 import software.wings.security.authentication.AuthenticationUtil;
+import software.wings.security.authentication.OauthAuthenticationResponse;
 import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
-import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * This class authenticates user using oauth flow.
+ * It calls the corresponding OauthProvider for getting the email and once it receives that,
+ * applies the authentication mechanism filters to ensure that user is logging using the
+ * correct auth mechanism.
+ */
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OauthBasedAuthHandler implements AuthHandler {
   @Inject AuthenticationUtil authenticationUtil;
   @Inject UserService userService;
-  @Inject AuthService authService;
   @Inject MainConfiguration mainConfiguration;
-  @Inject GithubClientImpl githubClient;
-  @Inject BitbucketClient bitbucketClient;
-  @Inject GitlabClient gitlabClient;
-  @Inject LinkedinClientImpl linkedinClient;
-  @Inject GoogleClientImpl googleClient;
-  @Inject AzureClientImpl azureClient;
   @Inject SSOSettingServiceImpl ssoSettingService;
   @Inject UserServiceImpl userServiceImpl;
+  @Inject OauthOptions oauthOptions;
 
   static final Logger logger = LoggerFactory.getLogger(OauthBasedAuthHandler.class);
 
@@ -55,9 +54,19 @@ public class OauthBasedAuthHandler implements AuthHandler {
     return AuthenticationMechanism.OAUTH;
   }
 
+  /**
+   * @param credentials - Array of string having 3 values.
+   *  1) authorization_code - Special code which is to be used in further communication with the service provider.
+   *  2) state - this is special random jwt token code service provider sends when redirecting to harness as get param.
+   *             This code is generated from harness side and the auth provider sends it back to confirm that the
+   * request initiated from Harness and prevents chances of CSRF attack. 3) provider - The oauth provider sending the
+   * request
+   * @return the user associated with the email. If the user does not exists in harness, create and return for freemium
+   *     cluster.
+   */
   @Override
-  public User authenticate(String... credentials)
-      throws URISyntaxException, InterruptedException, ExecutionException, IOException {
+  public AuthenticationResponse authenticate(String... credentials)
+      throws InterruptedException, ExecutionException, IOException {
     if (credentials == null || credentials.length != 3) {
       throw new WingsException("Invalid arguments while authenticating using oauth");
     }
@@ -65,43 +74,47 @@ public class OauthBasedAuthHandler implements AuthHandler {
     final String state = credentials[1];
     final String domain = credentials[2];
 
-    // for debugging purposes. Remove it.
-    logger.info("Code is: [{}] and state is: [{}]", code, state);
-
     OauthClient oauthProvider = getOauthProvider(domain);
     final OauthUserInfo userInfo = oauthProvider.execute(code, state);
-    final String email = userInfo.email;
 
     User user = null;
     try {
-      user = authenticationUtil.getUser(email);
-      matchOauthDomainAndApplyEmailFilter(user, oauthProvider);
+      user = authenticationUtil.getUserOrReturnNullIfUserDoesNotExists(userInfo.getEmail());
 
-      // User can't ne null. If the user is not found, we expect a exception.
-      AuthenticationMechanism userAuthMechanism = userService.getAuthenticationMechanism(user);
-      if (!userAuthMechanism.equals(AuthenticationMechanism.OAUTH)) {
-        // if the User is from freemium and is trying to signup,
-        // he should get a mail saying that this is not his auth mechanism.
-        sendTrialSignupCompleteMailForFreeUsers(user);
-
-        logger.error(String.format("User [{}] tried to login using oauth while his authentication mechanism was: [{}]"),
-            user.getEmail(), userAuthMechanism);
-        throw new WingsException(ErrorCode.INCORRECT_SIGN_IN_MECHANISM);
-      }
-    } catch (WingsException we) {
-      if (ErrorCode.USER_DOES_NOT_EXIST.equals(we.getCode())) {
-        // Coming in this flow means that the user's email is not in the harness system.
-        // Create an account for the user and then log him in.
-
-        user = userService.completeOauthSignup(userInfo, oauthProvider);
+      // if the email doesn't exists in harness system, sign him up.
+      if (null == user) {
+        return OauthAuthenticationResponse.builder()
+            .oauthUserInfo(userInfo)
+            .userFoundInDB(false)
+            .oauthClient(oauthProvider)
+            .build();
       } else {
-        throw we;
+        verifyAuthMechanismOfUser(user, oauthProvider);
+        return new AuthenticationResponse(user);
       }
     } catch (Exception ex) {
-      logger.error(String.format("Failed to login via OauthBasedAuthHandler, email was %s", email), ex);
+      logger.error(String.format("Failed to login via OauthBasedAuthHandler, email was %s", userInfo.getEmail()), ex);
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, WingsException.USER);
     }
-    return user;
+  }
+
+  private void verifyAuthMechanismOfUser(User user, OauthClient oauthProvider) {
+    matchOauthProviderAndApplyEmailFilter(user, oauthProvider);
+    verifyAccountLevelAuthMechanismEqualsOauth(user);
+  }
+
+  private void verifyAccountLevelAuthMechanismEqualsOauth(User user) {
+    AuthenticationMechanism userAuthMechanism = userService.getAuthenticationMechanism(user);
+    if (!userAuthMechanism.equals(AuthenticationMechanism.OAUTH)) {
+      // Freemium user who has already signed up should get a mail saying his signup is complete and ask him to login on
+      // harness website.
+      sendTrialSignupCompleteMailForFreeUsers(user);
+
+      logger.error(
+          String.format("User [{}] tried to login using OauthMechanism while his authentication mechanism was: [{}]"),
+          user.getEmail(), userAuthMechanism);
+      throw new WingsException(ErrorCode.INCORRECT_SIGN_IN_MECHANISM);
+    }
   }
 
   private void sendTrialSignupCompleteMailForFreeUsers(User user) {
@@ -111,7 +124,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
     }
   }
 
-  private void matchOauthDomainAndApplyEmailFilter(final User user, final OauthClient oauthClient) {
+  private void matchOauthProviderAndApplyEmailFilter(final User user, final OauthClient oauthClient) {
     OauthSettings oauthSettings =
         ssoSettingService.getOauthSettingsByAccountId(authenticationUtil.getPrimaryAccount(user).getUuid());
     if (oauthSettings == null) {
@@ -127,7 +140,6 @@ public class OauthBasedAuthHandler implements AuthHandler {
       return;
     }
 
-    logger.info("Applying email filter for user: {} and filter {}", user.getEmail(), filter);
     String[] filters = filter.split(",");
     filters = StringUtils.stripAll(filters);
     String email = user.getEmail();
@@ -147,27 +159,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
     }
   }
 
-  private OauthClient getOauthProvider(final String domain) throws URISyntaxException {
-    switch (valueOf(domain)) {
-      case github:
-        return githubClient;
-      case linkedin:
-        return linkedinClient;
-      case google:
-        return googleClient;
-      case azure:
-        return azureClient;
-      case bitbucket:
-        return bitbucketClient;
-      case gitlab:
-        return gitlabClient;
-      default:
-        throw new WingsException(
-            String.format("Host URI did not match to any providers. Received host :[%s]", getHost(domain)));
-    }
-  }
-
-  private String getHost(String domain) throws URISyntaxException {
-    return new URI(domain).getHost();
+  private OauthClient getOauthProvider(final String domain) {
+    return oauthOptions.getOauthProvider(valueOf(domain));
   }
 }

@@ -142,6 +142,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void authenticate() {
     User mockUser = spy(new User());
+    AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
     mockUser.setUuid("TestUUID");
     PortalConfig portalConfig = mock(PortalConfig.class);
     when(portalConfig.getAuthTokenExpiryInMillis()).thenReturn(System.currentTimeMillis());
@@ -150,7 +151,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(AUTHENTICATION_UTL.getUser("testUser@test.com", WingsException.USER)).thenReturn(mockUser);
 
-    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString())).thenReturn(mockUser);
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(authenticationResponse);
     User authenticatedUser = mock(User.class);
     when(authenticatedUser.getToken()).thenReturn("TestToken");
     when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);

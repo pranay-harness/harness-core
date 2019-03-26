@@ -42,7 +42,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
   private static Logger logger = LoggerFactory.getLogger(SamlBasedAuthHandler.class);
 
   @Override
-  public User authenticate(String... credentials) {
+  public AuthenticationResponse authenticate(String... credentials) {
     try {
       if (credentials == null || credentials.length != 2) {
         throw new WingsException("Invalid arguments while authenticating using SAML");
@@ -60,7 +60,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
             SamlUserAuthorization.builder().email(user.getEmail()).userGroups(userGroups).build();
         samlUserGroupSync.syncUserGroup(samlUserAuthorization, account.getUuid(), samlSettings.getUuid());
       }
-      return user;
+      return new AuthenticationResponse(user);
     } catch (URISyntaxException e) {
       throw new WingsException("Saml Authentication Failed", e);
     }

@@ -88,7 +88,6 @@ public class AzureClientImpl extends BaseOauthClient implements OauthClient {
 
   private OAuth2AccessToken getAccessToken(final String code)
       throws InterruptedException, ExecutionException, IOException {
-    logger.info("Access token received is: {}", code);
     return service.getAccessToken(code);
   }
 
@@ -101,7 +100,6 @@ public class AzureClientImpl extends BaseOauthClient implements OauthClient {
       if (jsonObject.has(NAME_FIELD_NAME)) {
         name = jsonObject.getString(NAME_FIELD_NAME);
       }
-      logger.info("Parsed response from Azure client, email is {}, name is {}", email, name);
       return OauthUserInfo.builder().email(email).name(name).build();
     } catch (JSONException je) {
       logger.info("Unable to parse json in azure oauth", je);

@@ -1100,7 +1100,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User completeOauthSignup(OauthUserInfo userInfo, OauthClient oauthClient) {
+  public User signUpUserUsingOauth(OauthUserInfo userInfo, OauthClient oauthClient) {
     logger.info(String.format("User not found in db. Creating an account for: [%s]", userInfo.getEmail()));
     checkForFreemiumCluster();
     final User user = createUser(userInfo, oauthClient.getName());
