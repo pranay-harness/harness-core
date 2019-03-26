@@ -140,10 +140,8 @@ MONGO_URI=mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/harne
 mkdir -p $STORAGE_DIR_LOCATION
 
 
-
-function setUpMongoDB(){
-
-    echo "################################Starting up MongoDB################################"
+function setUpMongoDBFirstTime(){
+    echo "################################Starting up MongoDB for First Time ################################"
 
     printf "\n\n\n\n"
 
@@ -164,6 +162,31 @@ function setUpMongoDB(){
     chown -R 999 $runtime_dir/mongo/*
     chmod 777 $runtime_dir/mongo/$mongodb_data_dir
 
+    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm mongo:$MONGO_VERSION --port $mongodb_port
+
+    mongoContainerId=$(docker ps -q -f name=mongoContainer)
+
+    if [[ "${mongoContainerId}" == "" ]]; then
+        echo "MongoContainer did not start"
+        exit 1
+    else
+        echo "MongoContainer started with ID="$mongoContainerId
+    fi
+
+    echo "Sleeping for 5 seconds before proceeding"
+    sleep 5
+
+    docker exec mongoContainer mongo --port $mongodb_port admin --eval "db.createUser({user: '$mongodbUserName', pwd: '$mongodbPassword', roles:[{role:'$admin_user_role',db:'admin'}]});"
+
+    echo "Stopping MongoDB.... will restart it again "
+
+}
+
+
+function setUpMongoDB(){
+
+    echo "################################Starting up MongoDB################################"
+
     docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm mongo:$MONGO_VERSION -f /etc/mongod.conf
 
     mongoContainerId=$(docker ps -q -f name=mongoContainer)
@@ -183,12 +206,11 @@ function setUpMongoDB(){
 function seedMongoDB(){
     echo "################################Seeding MongoDB with data ################################"
 
-    docker exec mongoContainer mongo --port $mongodb_port admin --eval "db.createUser({user: '$mongodbUserName', pwd: '$mongodbPassword', roles:[{role:'$admin_user_role',db:'admin'}]});"
-
-
     docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/?authSource=admin < /scripts/add_first_user.js"
 
     docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/?authSource=admin < /scripts/add_learning_engine_secret.js"
+
+    stopDockerContainer "mongoContainer"
 
 }
 
@@ -346,13 +368,13 @@ function loadDockerImages(){
 
 function startUp(){
     loadDockerImages
-    setUpMongoDB
     if [[ ${newinstallation} == "true" ]];then
+        setUpMongoDBFirstTime
         seedMongoDB
     else
         echo "Not seeding Mongo,existing installation found "
     fi
-
+    setUpMongoDB
     setUpProxy
     setupManager
     setUpVerificationService
