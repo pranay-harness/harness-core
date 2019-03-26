@@ -286,7 +286,7 @@ public class Workflow extends Base implements KeywordsAware {
 
   /**
    * Temporary change for GraphQL api's
-   * Will
+   * Will change it in subsequent PR
    * @return
    */
   @JsonIgnore
