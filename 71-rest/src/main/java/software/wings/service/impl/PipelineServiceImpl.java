@@ -179,7 +179,8 @@ public class PipelineServiceImpl implements PipelineService {
                                 .filter(ID_KEY, pipeline.getUuid()),
         ops);
 
-    wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
+    final StateMachine stateMachine = new StateMachine(pipeline, workflowService.stencilMap());
+    wingsPersistence.save(stateMachine);
 
     Pipeline updatedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
@@ -723,7 +724,8 @@ public class PipelineServiceImpl implements PipelineService {
       validatePipeline(pipeline, keywords);
       pipeline.setKeywords(trimStrings(keywords));
       Pipeline finalPipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
-      wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(finalPipeline, workflowService.stencilMap()));
+      final StateMachine stateMachine = new StateMachine(finalPipeline, workflowService.stencilMap());
+      wingsPersistence.save(stateMachine);
 
       yamlPushService.pushYamlChangeSet(accountId, null, finalPipeline, Type.CREATE, pipeline.isSyncFromGit(), false);
 
