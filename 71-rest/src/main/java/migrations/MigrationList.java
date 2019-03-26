@@ -53,6 +53,7 @@ import migrations.all.InitWorkflowCounters;
 import migrations.all.LdapSettingsMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LicenseDataMigration;
+import migrations.all.LogAnalysisDeprecatedRecordMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.MarketoLeadDataMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
@@ -205,6 +206,7 @@ public class MigrationList {
         .add(Pair.of(233, CVCollectionCronFrequencyMigration.class))
         .add(Pair.of(234, VerificationMetricJobMigration.class))
         .add(Pair.of(235, NexusDockerArtifactStreamMigration.class))
+        .add(Pair.of(236, LogAnalysisDeprecatedRecordMigration.class))
         .build();
   }
 }
