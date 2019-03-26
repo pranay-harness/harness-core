@@ -28,7 +28,7 @@ public class OauthOptions {
     return getOauthProvider(oauthProvider).getRedirectUrl().toString();
   }
 
-  private OauthClient getOauthProvider(SupportedOauthProviders oauthProvider) {
+  public OauthClient getOauthProvider(SupportedOauthProviders oauthProvider) {
     switch (oauthProvider) {
       case github:
         return githubClient;

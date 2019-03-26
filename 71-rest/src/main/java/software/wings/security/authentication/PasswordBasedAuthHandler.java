@@ -29,7 +29,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public User authenticate(String... credentials) {
+  public AuthenticationResponse authenticate(String... credentials) {
     if (credentials == null || credentials.length != 2) {
       throw new WingsException(INVALID_ARGUMENT);
     }
@@ -45,7 +45,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
       throw new WingsException(EMAIL_NOT_VERIFIED, USER);
     }
     if (checkpw(password, user.getPasswordHash())) {
-      return user;
+      return new AuthenticationResponse(user);
     }
     throw new WingsException(INVALID_CREDENTIAL, USER);
   }

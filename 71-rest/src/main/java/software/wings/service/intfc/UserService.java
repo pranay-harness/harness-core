@@ -337,7 +337,7 @@ public interface UserService extends OwnedByAccount {
    * @param oauthClient The oauthClient being used for the signup process.
    * @return the new User
    */
-  User completeOauthSignup(OauthUserInfo userInfo, OauthClient oauthClient);
+  User signUpUserUsingOauth(OauthUserInfo userInfo, OauthClient oauthClient);
 
   /**
    * Complete the trial user signup and signin. Both the trial account and the account admin user will be created

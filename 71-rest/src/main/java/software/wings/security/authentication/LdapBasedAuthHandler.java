@@ -40,7 +40,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public User authenticate(String... credentials) {
+  public AuthenticationResponse authenticate(String... credentials) {
     if (credentials == null || credentials.length != 2) {
       throw new WingsException(INVALID_ARGUMENT);
     }
@@ -69,7 +69,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
           delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
               .authenticate(settings, settingsEncryptedDataDetail, username, passwordEncryptedDataDetail);
       if (authenticationResponse.getStatus().equals(Status.SUCCESS)) {
-        return user;
+        return new AuthenticationResponse(user);
       }
       throw new WingsException(INVALID_CREDENTIAL, USER);
     } finally {

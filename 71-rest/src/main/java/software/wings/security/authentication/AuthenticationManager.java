@@ -174,7 +174,7 @@ public class AuthenticationManager {
   public User defaultLogin(String userName, String password) {
     try {
       AuthHandler authHandler = getAuthHandler(getAuthenticationMechanism(userName));
-      User user = authHandler.authenticate(userName, password);
+      User user = authHandler.authenticate(userName, password).getUser();
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
@@ -205,7 +205,7 @@ public class AuthenticationManager {
 
   public Response samlLogin(String... credentials) throws URISyntaxException {
     try {
-      User user = samlBasedAuthHandler.authenticate(credentials);
+      User user = samlBasedAuthHandler.authenticate(credentials).getUser();
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
@@ -238,7 +238,17 @@ public class AuthenticationManager {
       if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, null)) {
         throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
       }
-      User user = oauthBasedAuthHandler.authenticate(credentials);
+      User user = null;
+      AuthenticationResponse authenticationResponse = oauthBasedAuthHandler.authenticate(credentials);
+
+      if (null == authenticationResponse.getUser()) {
+        OauthAuthenticationResponse oauthAuthenticationResponse = (OauthAuthenticationResponse) authenticationResponse;
+        user = userService.signUpUserUsingOauth(
+            oauthAuthenticationResponse.getOauthUserInfo(), oauthAuthenticationResponse.getOauthClient());
+      } else {
+        user = authenticationResponse.getUser();
+      }
+
       logger.info("OauthAuthentication succeeded for email {}", user.getEmail());
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
