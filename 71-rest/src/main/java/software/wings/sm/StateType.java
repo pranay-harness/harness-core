@@ -531,7 +531,7 @@ public enum StateType implements StateTypeDescriptor {
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",
       asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISIONERS, 2, PROVISION_SHELL_SCRIPT, null,
+  SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISIONERS, 2, PROVISION_SHELL_SCRIPT,
       asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   //  TERRAFORM_ADJUST(AdjustTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
@@ -756,8 +756,10 @@ public enum StateType implements StateTypeDescriptor {
     DeploymentType deploymentType = (DeploymentType) context;
     List<DeploymentType> supportedDeploymentTypes = new ArrayList<>();
     // TODO: SSH deployment referenced by more than one SelectNode states
-    for (InfrastructureMappingType supportedInfrastructureMappingType : supportedInfrastructureMappingTypes) {
-      supportedDeploymentTypes.addAll(supportedInfrastructureMappingType.getDeploymentTypes());
+    if (supportedInfrastructureMappingTypes != null) {
+      for (InfrastructureMappingType supportedInfrastructureMappingType : supportedInfrastructureMappingTypes) {
+        supportedDeploymentTypes.addAll(supportedInfrastructureMappingType.getDeploymentTypes());
+      }
     }
     return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
         || supportedDeploymentTypes.contains(deploymentType);
