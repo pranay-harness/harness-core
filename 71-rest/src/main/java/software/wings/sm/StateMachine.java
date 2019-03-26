@@ -19,14 +19,18 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAware;
 import io.harness.serializer.MapperUtils;
+import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphLink;
@@ -50,20 +54,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * Describes a StateMachine.
  *
  * @author Rishi
  */
+@Data
 @Entity(value = "stateMachines", noClassnameStored = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @HarnessExportableEntity
-public class StateMachine extends Base {
+public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware {
   private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
 
+  public static final String APP_ID_KEY = "appId";
   public static final String ORIGIN_ID_KEY = "originId";
   public static final String ORIGIN_VERSION_KEY = "originVersion";
+
+  @Id private String uuid;
+  @Indexed @NotNull protected String appId;
+  @Indexed private long createdAt;
 
   @Indexed private String originId;
 
@@ -1083,10 +1094,7 @@ public class StateMachine extends Base {
       stateMachine.setInitialStateName(initialStateName);
       stateMachine.setUuid(uuid);
       stateMachine.setAppId(appId);
-      stateMachine.setCreatedBy(createdBy);
       stateMachine.setCreatedAt(createdAt);
-      stateMachine.setLastUpdatedBy(lastUpdatedBy);
-      stateMachine.setLastUpdatedAt(lastUpdatedAt);
       return stateMachine;
     }
   }

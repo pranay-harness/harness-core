@@ -296,7 +296,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public StateMachine createStateMachine(StateMachine stateMachine) {
     stateMachine.validate();
-    return wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    wingsPersistence.save(stateMachine);
+    return stateMachine;
   }
 
   /**
@@ -924,7 +925,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       //      updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
-      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+      wingsPersistence.save(stateMachine);
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
 
       workflow.setOrchestration(orchestrationWorkflow);
@@ -1110,7 +1111,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
-      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+      wingsPersistence.save(stateMachine);
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
 

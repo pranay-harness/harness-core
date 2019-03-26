@@ -186,12 +186,13 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
     assertThat(pipelineArgumentCaptor.getValue()).isNotNull();
 
-    verify(wingsPersistence).saveAndGet(eq(StateMachine.class), stateMachineArgumentCaptor.capture());
+    verify(wingsPersistence).save(stateMachineArgumentCaptor.capture());
     StateMachine stateMachine = stateMachineArgumentCaptor.getValue();
     assertThat(stateMachine).isNotNull();
     assertThat(stateMachine.getStates()).isNotNull();
     assertThat(stateMachine.getStates().size()).isGreaterThan(60);
   }
+
   @Test
   @Category(UnitTests.class)
   public void shouldCreateLargePipeline() {
@@ -235,7 +236,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
     assertThat(pipelineArgumentCaptor.getValue()).isNotNull();
 
-    verify(wingsPersistence).saveAndGet(eq(StateMachine.class), stateMachineArgumentCaptor.capture());
+    verify(wingsPersistence).save(stateMachineArgumentCaptor.capture());
     StateMachine stateMachine = stateMachineArgumentCaptor.getValue();
     assertThat(stateMachine).isNotNull();
     assertThat(stateMachine.getStates().size()).isGreaterThan(60);
