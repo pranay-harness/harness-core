@@ -163,4 +163,15 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
     }
     return name + dateSuffix;
   }
+
+  /**
+   * Temporary change for GraphQL api's
+   * Will change it in subsequent PR
+   * @return
+   */
+  @JsonIgnore
+  @SchemaIgnore
+  public String getId() {
+    return getUuid();
+  }
 }

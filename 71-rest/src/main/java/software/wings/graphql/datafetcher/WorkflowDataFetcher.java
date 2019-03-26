@@ -96,7 +96,7 @@ public class WorkflowDataFetcher {
   public DataFetcher<WorkflowExecution> getWorkflowExecutionStatus() {
     return environment -> {
       String appId = environment.getArgument(GraphQLConstants.APP_ID);
-      String workflowId = environment.getArgument(GraphQLConstants.ENTITY_ID);
+      String workflowId = environment.getArgument(GraphQLConstants.WORKFLOW_ID);
       String serviceId = environment.getArgument(GraphQLConstants.SERVICE_ID);
       String envId = environment.getArgument(GraphQLConstants.ENV_ID);
 

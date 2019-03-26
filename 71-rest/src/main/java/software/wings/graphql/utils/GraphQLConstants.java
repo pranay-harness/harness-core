@@ -14,4 +14,7 @@ public class GraphQLConstants {
   public static final String ZERO_OFFSET = "0";
   public static final String PAGE_SIZE_STR = DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR;
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";
+
+  // Workflow related constants.
+  public static final String WORKFLOW_ID = "workflowId";
 }

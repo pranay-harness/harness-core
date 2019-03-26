@@ -5,7 +5,7 @@ schema {
 type Query {
   workflow(id: String!, appId: String!): Workflow
   workflows(appId: String!, limit: String, offSet: String): PageResponse
-  workFlowExecution(id: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution
+  workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution
 }
 
 type Service {
@@ -30,14 +30,11 @@ type PageResponse {
 }
 
 type WorkflowExecution {
-  uuid: String
+  id: String
   name: String
   status: String
-  startTs: Int
-  endTs: Int
-  isBaseline: Boolean
-  workflowId: String
-  envType: String
+  startTs: Long
+  endTs: Long
 }
 
 
