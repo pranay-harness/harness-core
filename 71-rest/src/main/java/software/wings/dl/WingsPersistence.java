@@ -128,7 +128,10 @@ public interface WingsPersistence extends HPersistence {
    */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);
 
-  <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable);
+  // PageResponse is a layer on top of HQuery that allows from paginated read from mongo collection.
+  // It sorts by createdAt to align the pages and can be slow for internal use. This method can be easily
+  // replaced with using createQuery and asList, but even better using iterators.
+  @Deprecated<T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable);
 
   /**
    * Creates a query and runs the authFilter to it.
