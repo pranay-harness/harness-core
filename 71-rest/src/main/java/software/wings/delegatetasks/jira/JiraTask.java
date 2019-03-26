@@ -77,42 +77,65 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   public ResponseData run(JiraTaskParameters parameters) {
     JiraAction jiraAction = parameters.getJiraAction();
 
+    ResponseData responseData = null;
+
+    logger.info("Executing JiraTask. Action: {}, IssueId: {} ApprovalId: {}", jiraAction, parameters.getIssueId(),
+        parameters.getApprovalId());
+
     switch (jiraAction) {
       case AUTH:
-        return validateCredentials(parameters);
+        responseData = validateCredentials(parameters);
+        break;
 
       case UPDATE_TICKET:
-        return updateTicket(parameters);
+        responseData = updateTicket(parameters);
+        break;
 
       case CREATE_TICKET:
-        return createTicket(parameters);
+        responseData = createTicket(parameters);
+        break;
 
       case CREATE_WEBHOOK:
-        return createWebhook(parameters);
+        responseData = createWebhook(parameters);
+        break;
 
       case DELETE_WEBHOOK:
-        return deleteWebhook(parameters);
+        responseData = deleteWebhook(parameters);
+        break;
 
       case GET_PROJECTS:
-        return getProjects(parameters);
+        responseData = getProjects(parameters);
+        break;
 
       case GET_FIELDS_OPTIONS:
-        return getFieldsAndOptions(parameters);
+        responseData = getFieldsAndOptions(parameters);
+        break;
 
       case GET_STATUSES:
-        return getStatuses(parameters);
+        responseData = getStatuses(parameters);
+        break;
 
       case GET_CREATE_METADATA:
-        return getCreateMetadata(parameters);
+        responseData = getCreateMetadata(parameters);
+        break;
 
       case CHECK_APPROVAL:
-        return checkJiraApproval(parameters);
+        responseData = checkJiraApproval(parameters);
+        break;
 
       default:
         break;
     }
 
-    return null;
+    if (responseData != null) {
+      logger.info("Done executing JiraTask. Action: {}, IssueId: {} ApprovalId: {}, Status: {}", jiraAction,
+          parameters.getIssueId(), parameters.getApprovalId(), ((JiraExecutionData) responseData).getStatus());
+    } else {
+      logger.error("JiraTask Action: {}. IssueId: {} ApprovalId: {}. null response.", jiraAction,
+          parameters.getIssueId(), parameters.getApprovalId());
+    }
+
+    return responseData;
   }
 
   private ResponseData validateCredentials(JiraTaskParameters parameters) {
@@ -415,13 +438,19 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       rejectionFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
     }
 
+    logger.info("IssueId: {}, approvalField: {}, approvalFieldValue: {}, rejectionField: {}, rejectionFieldValue: {}",
+        parameters.getIssueId(), parameters.getApprovalField(), approvalFieldValue, parameters.getRejectionField(),
+        rejectionFieldValue);
+
     if (EmptyPredicate.isNotEmpty(approvalFieldValue)
         && StringUtils.equals(approvalFieldValue, parameters.getApprovalValue())) {
+      logger.info("IssueId: {} Approved", parameters.getIssueId());
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     }
 
     if (EmptyPredicate.isNotEmpty(rejectionFieldValue)
         && StringUtils.equals(rejectionFieldValue, parameters.getRejectionValue())) {
+      logger.info("IssueId: {} Rejected", parameters.getIssueId());
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.REJECTED).build();
     }
 
