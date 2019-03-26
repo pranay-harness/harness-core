@@ -204,6 +204,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -312,7 +313,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    return getStencils(appId, workflowId, phaseId, stateTypeScopes);
+    Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
+
+    if (!featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_PROVISION, appService.getAccountIdByAppId(appId))) {
+      List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
+      if (isNotEmpty(stencilList)) {
+        for (Iterator<Stencil> it = stencilList.iterator(); it.hasNext();) {
+          Stencil stencil = it.next();
+          if (stencil.getType().equals(StateType.SHELL_SCRIPT_PROVISION.toString())) {
+            it.remove();
+          }
+        }
+      }
+    }
+
+    return stencils;
   }
 
   private Map<StateTypeScope, List<Stencil>> getStencils(
@@ -434,10 +449,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<>(Arrays.asList(values()));
-
-    if (!featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_PROVISION, null)) {
-      stencils.remove(StateType.SHELL_SCRIPT_PROVISION);
-    }
 
     Map<String, StateTypeDescriptor> mapByType = new HashMap<>();
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();
