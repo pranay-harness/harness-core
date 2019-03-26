@@ -9,11 +9,11 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
@@ -53,8 +53,6 @@ import org.mongodb.morphia.query.FieldEnd;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
-import software.wings.beans.BuildWorkflow;
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
@@ -69,6 +67,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
@@ -77,9 +76,6 @@ import software.wings.sm.states.PhaseSubWorkflow;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by anubhaw on 4/14/17.
- */
 public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   private static final String EXPECTED_WORKFLOW_URL =
@@ -87,6 +83,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String EXPECTED_PIPELINE_URL =
       "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/pipeline-execution/PIPELINE_EXECUTION_ID/workflow-execution/WORKFLOW_EXECUTION_ID/details";
 
+  @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowExecutionService workflowExecutionService;
@@ -151,14 +148,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotification() {
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withExecutionScope(ExecutionScope.WORKFLOW)
-                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
-                                            .build();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.SUCCESS);
 
     verifyNotifications(notificationRule);
@@ -177,10 +169,12 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                             .withNotificationGroups(notificationGroupList)
                                             .build();
 
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+    when(workflowService.readWorkflow(any(), any()))
+        .thenReturn(aWorkflow()
+                        .orchestrationWorkflow(
+                            aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build())
+                        .build());
 
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(executionContext.renderExpression("${workflow.variables.MyNotificationGroups}")).thenReturn("Group1, Group2");
 
     when(notificationSetupService.readNotificationGroupByName(ACCOUNT_ID, "Group1"))
@@ -228,14 +222,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                         .pipelineSummary(
                             PipelineSummary.builder().pipelineId(PIPELINE_ID).pipelineName("Pipeline Name").build())
                         .build());
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withExecutionScope(ExecutionScope.WORKFLOW)
-                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
-                                            .build();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
 
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -263,14 +252,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSendWorkflowPhaseStatusChangeNotification() {
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withExecutionScope(ExecutionScope.WORKFLOW_PHASE)
-                                            .withConditions(singletonList(ExecutionStatus.FAILED))
-                                            .build();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
-
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW_PHASE, singletonList(ExecutionStatus.FAILED));
 
     PhaseSubWorkflow phaseSubWorkflow = Mockito.mock(PhaseSubWorkflow.class);
     when(phaseSubWorkflow.getName()).thenReturn("Phase1");
@@ -303,14 +286,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationNoArtifacts() {
     when(executionContext.getArtifacts()).thenReturn(null);
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withExecutionScope(ExecutionScope.WORKFLOW)
-                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
-                                            .build();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
-
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
 
@@ -345,14 +322,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                          .withMetadata(ImmutableMap.of(BUILD_NO, "build-1"))
                                          .withServiceIds(ImmutableList.of("service-1"))
                                          .build()));
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withExecutionScope(ExecutionScope.WORKFLOW)
-                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
-                                            .build();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
-
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
 
@@ -384,14 +355,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getArtifacts()).thenReturn(null);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
         .thenReturn(WorkflowExecution.builder().triggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withExecutionScope(ExecutionScope.WORKFLOW)
-                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
-                                            .build();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
-
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
 
@@ -424,14 +389,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getArtifacts()).thenReturn(null);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
         .thenReturn(WorkflowExecution.builder().triggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withExecutionScope(ExecutionScope.WORKFLOW)
-                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
-                                            .build();
-    BuildWorkflow buildWorkflow =
-        aBuildOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
-    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(buildWorkflow);
     when(executionContext.getOrchestrationWorkflowType()).thenReturn(OrchestrationWorkflowType.BUILD);
 
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
@@ -458,5 +418,17 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("APP_NAME", APP_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
+  }
+
+  public NotificationRule setupNotificationRule(ExecutionScope scope, List<ExecutionStatus> executionStatuses) {
+    NotificationRule notificationRule =
+        aNotificationRule().withExecutionScope(scope).withConditions(executionStatuses).build();
+
+    when(workflowService.readWorkflow(any(), any()))
+        .thenReturn(aWorkflow()
+                        .orchestrationWorkflow(
+                            aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build())
+                        .build());
+    return notificationRule;
   }
 }
