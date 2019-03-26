@@ -3,6 +3,10 @@ package io.harness.rule;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+import io.harness.category.element.FunctionalTests;
+import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -67,11 +71,22 @@ public class OwnerRule extends RepeatRule {
       return statement;
     }
 
+    final Class categoryElement = CategoryTimeoutRule.fetchCategoryElement(description.getAnnotation(Category.class));
+
+    int repeatCount = 20;
+    if (categoryElement == UnitTests.class) {
+      repeatCount = 15;
+    } else if (categoryElement == IntegrationTests.class) {
+      repeatCount = 10;
+    } else if (categoryElement == FunctionalTests.class) {
+      repeatCount = 5;
+    }
+
     return RepeatRule.RepeatStatement.builder()
         .statement(statement)
         .parentRule(this)
-        .times(20)
-        .successes(20)
+        .times(repeatCount)
+        .successes(repeatCount)
         .timeoutOnly(true)
         .build();
   }
