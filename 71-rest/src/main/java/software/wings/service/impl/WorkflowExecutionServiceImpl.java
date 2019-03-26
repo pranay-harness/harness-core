@@ -927,6 +927,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     StateMachine stateMachine = new StateMachine(pipeline, workflowService.stencilMap());
+    stateMachine.setOrchestrationWorkflow(null);
 
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .uuid(generateUuid())
@@ -1027,6 +1028,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     //    StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
     //        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
     //        workflowService.stencilMap());
+
+    stateMachine.setOrchestrationWorkflow(null);
 
     WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(appId);

@@ -43,6 +43,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Service;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
@@ -52,6 +53,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
@@ -79,6 +81,7 @@ import javax.annotation.Nullable;
 public class WorkflowNotificationHelper {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowNotificationHelper.class);
 
+  @Inject private WorkflowService workflowService;
   @Inject private NotificationService notificationService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -93,7 +96,7 @@ public class WorkflowNotificationHelper {
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
-        getNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW, status);
+        obtainNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW, status);
     if (isEmpty(notificationRules)) {
       return;
     }
@@ -140,7 +143,7 @@ public class WorkflowNotificationHelper {
     // TODO:: use phaseSubworkflow to send rollback notifications
 
     List<NotificationRule> notificationRules =
-        getNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW_PHASE, status);
+        obtainNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW_PHASE, status);
     if (isEmpty(notificationRules)) {
       return;
     }
@@ -185,7 +188,7 @@ public class WorkflowNotificationHelper {
     }
   }
 
-  private List<NotificationRule> getNotificationApplicableToScope(
+  List<NotificationRule> obtainNotificationApplicableToScope(
       ExecutionContextImpl context, ExecutionScope executionScope, ExecutionStatus status) {
     if (ExecutionStatus.isNegativeStatus(status)) {
       status = FAILED;
@@ -194,7 +197,10 @@ public class WorkflowNotificationHelper {
     }
 
     List<NotificationRule> filteredNotificationRules = new ArrayList<>();
-    OrchestrationWorkflow orchestrationWorkflow = context.getStateMachine().getOrchestrationWorkflow();
+    final Workflow workflow = workflowService.readWorkflow(context.getAppId(), context.getWorkflowId());
+
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
       for (NotificationRule notificationRule : notificationRules) {
