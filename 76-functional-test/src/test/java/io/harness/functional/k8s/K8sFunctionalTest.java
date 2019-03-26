@@ -191,13 +191,13 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   private Workflow createK8sV2Workflow(String appId, String envId, String serviceId, String infraMappingId, String name,
       OrchestrationWorkflowType orchestrationWorkflowType) {
     Workflow workflow = aWorkflow()
-                            .withName(name)
-                            .withAppId(appId)
-                            .withEnvId(envId)
-                            .withServiceId(serviceId)
-                            .withInfraMappingId(infraMappingId)
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .name(name)
+                            .appId(appId)
+                            .envId(envId)
+                            .serviceId(serviceId)
+                            .infraMappingId(infraMappingId)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(orchestrationWorkflowType);
     return workflowRestUtil.createWorkflow(application.getAccountId(), appId, workflow);

@@ -162,16 +162,16 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     final String variablesTestName = "Variables Test";
 
     logger.info("Creating workflow with canary orchestration : " + variablesTestName);
-    Workflow workflow = aWorkflow()
-                            .withName("Variables Test")
-                            .withDescription("Variables Test")
-                            .withServiceId(service.getUuid())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withInfraMappingId(infrastructureMapping.getUuid())
-                            .withEnvId(environment.getUuid())
-                            .withOrchestrationWorkflow(
-                                aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .name("Variables Test")
+            .description("Variables Test")
+            .serviceId(service.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .envId(environment.getUuid())
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
+            .build();
 
     Workflow savedWorkflow =
         workflowRestUtil.createWorkflow(AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);

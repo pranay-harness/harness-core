@@ -80,10 +80,10 @@ public class PipelineServiceDBTest extends WingsBaseTest {
 
     BuildWorkflow orchestrationWorkflow = aBuildOrchestrationWorkflow().withGraph(graph).build();
     Workflow workflow = aWorkflow()
-                            .withAppId(application.getUuid())
-                            .withName("workflow1")
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(orchestrationWorkflow)
+                            .appId(application.getUuid())
+                            .name("workflow1")
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(orchestrationWorkflow)
                             .build();
 
     return workflowService.createWorkflow(workflow);

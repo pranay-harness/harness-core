@@ -114,7 +114,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
                                               .status(ExecutionStatus.SUCCESS)
                                               .build();
 
-    Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().appId(appId).uuid(workflowId).build();
 
     wingsPersistence.save(workflow);
     wingsPersistence.save(workflowExecution);

@@ -110,21 +110,21 @@ public class WorkflowServiceTestHelper {
 
     CustomOrchestrationWorkflow orchestrationWorkflow = aCustomOrchestrationWorkflow().withGraph(graph).build();
     return aWorkflow()
-        .withAppId(APP_ID)
-        .withName("workflow1")
-        .withDescription("Sample Workflow")
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(orchestrationWorkflow)
+        .appId(APP_ID)
+        .name("workflow1")
+        .description("Sample Workflow")
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(orchestrationWorkflow)
         .build();
   }
 
   public static Workflow constructCanaryWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withEnvId(ENV_ID)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -134,11 +134,11 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructCanaryWorkflowWithPhase() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withEnvId(ENV_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(
@@ -150,10 +150,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructCanaryWorkflowWithTwoPhases() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -165,10 +165,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructCanaryWithHttpStep() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(
                     aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(constructHttpStep()).build())
@@ -179,10 +179,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructCanaryWithHttpPhaseStep() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(
@@ -200,10 +200,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructCanaryHttpAsPostDeploymentStep() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPostDeploymentSteps(
                     aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(constructHttpStep()).build())
@@ -221,13 +221,13 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructBasicWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withServiceId(SERVICE_ID)
-        .withInfraMappingId(INFRA_MAPPING_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withEnvId(ENV_ID)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(
             aBasicOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -237,13 +237,13 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructBlueGreenWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withServiceId(SERVICE_ID)
-        .withInfraMappingId(INFRA_MAPPING_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withEnvId(ENV_ID)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(
             aBlueGreenOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -253,13 +253,13 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructBasicWorkflowWithPhase() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withServiceId(SERVICE_ID)
-        .withInfraMappingId(INFRA_MAPPING_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withEnvId(ENV_ID)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(
             aBasicOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -271,19 +271,19 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructBuildWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withOrchestrationWorkflow(aBuildOrchestrationWorkflow().build())
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .orchestrationWorkflow(aBuildOrchestrationWorkflow().build())
         .build();
   }
 
   public static Workflow constructMultiServiceWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withEnvId(ENV_ID)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .envId(ENV_ID)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aMultiServiceOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -293,11 +293,11 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructMultiServiceWorkflowWithPhase() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withEnvId(ENV_ID)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .envId(ENV_ID)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aMultiServiceOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(
@@ -309,10 +309,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructMulitServiceTemplateWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aMultiServiceOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(
@@ -326,10 +326,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructTemplatizedCanaryWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(
@@ -422,10 +422,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructWorkflowWithParam(PhaseStep phaseStep) {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(aWorkflowPhase()
@@ -441,10 +441,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructEcsWorkflow() {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withEnvId(ENV_ID)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(aWorkflowPhase()
@@ -465,10 +465,10 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructHelmWorkflowWithProperties(Map<String, Object> properties) {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withEnvId(ENV_ID)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .addWorkflowPhase(aWorkflowPhase()
@@ -585,12 +585,12 @@ public class WorkflowServiceTestHelper {
 
   public static Workflow constructBasicDeploymentTemplateWorkflow() {
     return aWorkflow()
-        .withEnvId(ENV_ID)
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withServiceId(SERVICE_ID)
-        .withInfraMappingId(INFRA_MAPPING_ID)
-        .withOrchestrationWorkflow(
+        .envId(ENV_ID)
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .orchestrationWorkflow(
             aBasicOrchestrationWorkflow()
                 .withWorkflowPhases(asList(aWorkflowPhase()
                                                .serviceId(SERVICE_ID)
@@ -601,18 +601,18 @@ public class WorkflowServiceTestHelper {
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                 .build())
-        .withTemplateExpressions(
+        .templateExpressions(
             asList(getEnvTemplateExpression(), getServiceTemplateExpression(), getInfraTemplateExpression()))
         .build();
   }
 
   public static Workflow constructLinkedTemplate(GraphNode step) {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withUuid(WORKFLOW_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .uuid(WORKFLOW_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(step).build())
                 .addWorkflowPhase(

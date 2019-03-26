@@ -15,7 +15,7 @@ public class InfrastructureMappingServiceDBTest extends WingsBaseTest {
   //  public void shouldUpdateProvisioner() {
   //    Randomizer.Seed seed = Randomizer.seed();
   //    Owners owners = ownerManager.create();
-  //    owners.add(anAccount().withUuid(generateUuid()).build());
+  //    owners.add(anAccount().uuid(generateUuid()).build());
   //
   //    InfrastructureMapping infra = infrastructureMappingGenerator.ensureRandom(seed, owners);
   //    infra.setProvisionerId(generateUuid());

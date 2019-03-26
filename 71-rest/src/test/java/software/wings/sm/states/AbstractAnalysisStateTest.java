@@ -127,7 +127,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
 
-    Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).withEnvId(envId).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().appId(appId).uuid(workflowId).envId(envId).build();
 
     wingsPersistence.save(workflow);
     wingsPersistence.save(workflowExecution);
@@ -198,7 +198,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
 
-    Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).withEnvId(envId).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().appId(appId).uuid(workflowId).envId(envId).build();
 
     wingsPersistence.save(workflow);
     wingsPersistence.save(workflowExecution);

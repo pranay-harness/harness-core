@@ -125,7 +125,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //            .workflowType(WorkflowType.ORCHESTRATION)
   //            .serviceId(infrastructureMapping.getServiceId())
   //            .infraMappingId(infrastructureMapping.getUuid())
-  //            .withOrchestrationWorkflow(
+  //            .orchestrationWorkflow(
   //                aBasicOrchestrationWorkflow()
   //                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
   //                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())

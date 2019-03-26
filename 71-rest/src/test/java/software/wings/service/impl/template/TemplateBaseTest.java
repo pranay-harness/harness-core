@@ -40,11 +40,11 @@ public class TemplateBaseTest extends WingsBaseTest {
 
   protected Workflow generateWorkflow(Template savedTemplate, GraphNode step) {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withUuid(WORKFLOW_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .uuid(WORKFLOW_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(step).build())
                 .addWorkflowPhase(
@@ -56,7 +56,7 @@ public class TemplateBaseTest extends WingsBaseTest {
                         .build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(step).build())
                 .build())
-        .withLinkedTemplateUuids(asList(savedTemplate.getUuid()))
+        .linkedTemplateUuids(asList(savedTemplate.getUuid()))
         .build();
   }
 }

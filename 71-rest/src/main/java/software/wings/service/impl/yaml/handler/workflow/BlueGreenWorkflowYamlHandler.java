@@ -22,7 +22,7 @@ public class BlueGreenWorkflowYamlHandler extends WorkflowYamlHandler<BlueGreenW
     List<WorkflowPhase> phaseList = workflowInfo.getPhaseList();
     if (isNotEmpty(phaseList)) {
       WorkflowPhase workflowPhase = phaseList.get(0);
-      workflow.withInfraMappingId(workflowPhase.getInfraMappingId()).withServiceId(workflowPhase.getServiceId());
+      workflow.infraMappingId(workflowPhase.getInfraMappingId()).serviceId(workflowPhase.getServiceId());
     }
 
     blueGreenOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
@@ -32,7 +32,7 @@ public class BlueGreenWorkflowYamlHandler extends WorkflowYamlHandler<BlueGreenW
         .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
         .withUserVariables(workflowInfo.getUserVariables())
         .withWorkflowPhases(phaseList);
-    workflow.withOrchestrationWorkflow(blueGreenOrchestrationWorkflowBuilder.build());
+    workflow.orchestrationWorkflow(blueGreenOrchestrationWorkflowBuilder.build());
   }
 
   @Override

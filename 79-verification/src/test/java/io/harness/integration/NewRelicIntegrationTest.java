@@ -212,7 +212,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
-    String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
+    String workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
     String workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()

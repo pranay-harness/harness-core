@@ -146,10 +146,10 @@ public class TerraformTest extends AbstractFunctionalTest {
   private Workflow buildWorkflow(TerraformInfrastructureProvisioner terraformInfrastructureProvisioner)
       throws Exception {
     return aWorkflow()
-        .withName("Terraform Test")
-        .withEnvId(environment.getUuid())
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name("Terraform Test")
+        .envId(environment.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(
                     aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)

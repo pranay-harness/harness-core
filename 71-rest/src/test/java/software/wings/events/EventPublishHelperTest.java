@@ -106,13 +106,13 @@ public class EventPublishHelperTest extends WingsBaseTest {
       eventPublishHelper.publishWorkflowCreatedEvent(WORKFLOW_ID, ACCOUNT_ID);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
-      Workflow workflow = WorkflowBuilder.aWorkflow().withUuid("invalid").build();
+      Workflow workflow = WorkflowBuilder.aWorkflow().uuid("invalid").build();
       when(workflowService.listWorkflows(any(PageRequest.class)))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflow)).withTotal(1).build());
       eventPublishHelper.publishWorkflowCreatedEvent(WORKFLOW_ID, ACCOUNT_ID);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
-      workflow = WorkflowBuilder.aWorkflow().withUuid(WORKFLOW_ID).build();
+      workflow = WorkflowBuilder.aWorkflow().uuid(WORKFLOW_ID).build();
       when(workflowService.listWorkflows(any(PageRequest.class)))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflow)).withTotal(1).build());
       eventPublishHelper.publishWorkflowCreatedEvent(WORKFLOW_ID, ACCOUNT_ID);

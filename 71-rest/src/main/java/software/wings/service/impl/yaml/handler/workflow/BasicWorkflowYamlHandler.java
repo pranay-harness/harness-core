@@ -24,7 +24,7 @@ public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowY
     List<WorkflowPhase> phaseList = workflowInfo.getPhaseList();
     if (isNotEmpty(phaseList)) {
       WorkflowPhase workflowPhase = phaseList.get(0);
-      workflow.withInfraMappingId(workflowPhase.getInfraMappingId()).withServiceId(workflowPhase.getServiceId());
+      workflow.infraMappingId(workflowPhase.getInfraMappingId()).serviceId(workflowPhase.getServiceId());
     }
 
     basicOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
@@ -34,7 +34,7 @@ public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowY
         .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
         .withUserVariables(workflowInfo.getUserVariables())
         .withWorkflowPhases(phaseList);
-    workflow.withOrchestrationWorkflow(basicOrchestrationWorkflowBuilder.build());
+    workflow.orchestrationWorkflow(basicOrchestrationWorkflowBuilder.build());
   }
 
   @Override

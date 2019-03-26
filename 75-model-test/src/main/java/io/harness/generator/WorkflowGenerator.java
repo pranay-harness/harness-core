@@ -129,10 +129,10 @@ public class WorkflowGenerator {
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
-            .withName("Basic - simple")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
+            .name("Basic - simple")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .orchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -146,10 +146,10 @@ public class WorkflowGenerator {
 
     Workflow workflow = ensureWorkflow(seed, owners,
         aWorkflow()
-            .withName("Basic - 10 nodes")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
+            .name("Basic - 10 nodes")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .orchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -186,10 +186,10 @@ public class WorkflowGenerator {
 
     return workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
-            .withName("Terraform provision")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
+            .name("Terraform provision")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(
                         aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
@@ -231,10 +231,10 @@ public class WorkflowGenerator {
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
-            .withName("Resource constraint")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
+            .name("Resource constraint")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .orchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(
                         aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
@@ -272,9 +272,9 @@ public class WorkflowGenerator {
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
-            .withName("Build Jenkins")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .name("Build Jenkins")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aBuildOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
@@ -362,9 +362,9 @@ public class WorkflowGenerator {
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
-            .withName("Shell Script Build Workflow")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .name("Shell Script Build Workflow")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aBuildOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -395,14 +395,14 @@ public class WorkflowGenerator {
     WorkflowBuilder builder = aWorkflow();
 
     if (workflow != null && workflow.getAppId() != null) {
-      builder.withAppId(workflow.getAppId());
+      builder.appId(workflow.getAppId());
     } else {
       final Application application = owners.obtainApplication();
-      builder.withAppId(application.getUuid());
+      builder.appId(application.getUuid());
     }
 
     if (workflow != null && workflow.getName() != null) {
-      builder.withName(workflow.getName());
+      builder.name(workflow.getName());
     } else {
       throw new UnsupportedOperationException();
     }
@@ -413,41 +413,41 @@ public class WorkflowGenerator {
     }
 
     if (workflow.getEnvId() != null) {
-      builder.withEnvId(workflow.getEnvId());
+      builder.envId(workflow.getEnvId());
     } else {
       OrchestrationWorkflowType orchestrationWorkflowType =
           workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
       if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
         Environment environment = owners.obtainEnvironment();
-        builder.withEnvId(environment.getUuid());
+        builder.envId(environment.getUuid());
       }
     }
 
     if (workflow.getServiceId() != null) {
-      builder.withServiceId(workflow.getServiceId());
+      builder.serviceId(workflow.getServiceId());
     } else {
       OrchestrationWorkflowType orchestrationWorkflowType =
           workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
       if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
         Service service = owners.obtainService();
-        builder.withServiceId(service.getUuid());
+        builder.serviceId(service.getUuid());
       }
     }
 
     if (workflow.getWorkflowType() != null) {
-      builder.withWorkflowType(workflow.getWorkflowType());
+      builder.workflowType(workflow.getWorkflowType());
     } else {
       throw new UnsupportedOperationException();
     }
 
     if (workflow.getOrchestrationWorkflow() != null) {
-      builder.withOrchestrationWorkflow(workflow.getOrchestrationWorkflow());
+      builder.orchestrationWorkflow(workflow.getOrchestrationWorkflow());
     } else {
       throw new UnsupportedOperationException();
     }
 
     if (workflow.getInfraMappingId() != null) {
-      builder.withInfraMappingId(workflow.getInfraMappingId());
+      builder.infraMappingId(workflow.getInfraMappingId());
     } else {
       if (!OrchestrationWorkflowType.BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
         throw new UnsupportedOperationException();

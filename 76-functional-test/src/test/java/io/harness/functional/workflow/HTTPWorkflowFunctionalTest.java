@@ -72,10 +72,10 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
     assertThat(environment).isNotNull();
     Workflow workflow =
         aWorkflow()
-            .withName("HTTP Workflow")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withEnvId(environment.getUuid())
-            .withOrchestrationWorkflow(
+            .name("HTTP Workflow")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .envId(environment.getUuid())
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(

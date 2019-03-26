@@ -1426,10 +1426,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     return aPageResponse()
         .withResponse(asList(
             WorkflowBuilder.aWorkflow()
-                .withName(WORKFLOW_NAME)
-                .withServices(asList(
+                .name(WORKFLOW_NAME)
+                .services(asList(
                     Service.builder().uuid(SERVICE_ID).appId(APP_ID).serviceCommands(asList(serviceCommand)).build()))
-                .withOrchestrationWorkflow(
+                .orchestrationWorkflow(
                     aCanaryOrchestrationWorkflow()
                         .withWorkflowPhases(asList(
                             aWorkflowPhase()

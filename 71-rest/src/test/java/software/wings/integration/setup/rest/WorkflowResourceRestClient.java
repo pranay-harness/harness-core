@@ -74,14 +74,14 @@ public class WorkflowResourceRestClient {
       InfrastructureMapping infraMapping = envResourceRestClient.getSeedFakeHostsDcInfra(client);
 
       workflow = aWorkflow()
-                     .withName(workflowName)
-                     .withAppId(appId)
-                     .withWorkflowType(WorkflowType.ORCHESTRATION)
-                     .withDescription(randomText(40))
-                     .withServiceId(infraMapping.getServiceId())
-                     .withEnvId(infraMapping.getEnvId())
-                     .withInfraMappingId(infraMapping.getUuid())
-                     .withOrchestrationWorkflow(orchestrationWorkflow)
+                     .name(workflowName)
+                     .appId(appId)
+                     .workflowType(WorkflowType.ORCHESTRATION)
+                     .description(randomText(40))
+                     .serviceId(infraMapping.getServiceId())
+                     .envId(infraMapping.getEnvId())
+                     .infraMappingId(infraMapping.getUuid())
+                     .orchestrationWorkflow(orchestrationWorkflow)
                      .build();
       workflow = createWorkflow(client, userResourceRestClient.getUserToken(client), appId, workflow);
       updateWithHttpSteps(client, userResourceRestClient.getUserToken(client), appId, workflow);

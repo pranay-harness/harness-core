@@ -209,13 +209,13 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
 
     return aWorkflow()
-        .withName("Daemon ECS" + System.currentTimeMillis())
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withAppId(service.getAppId())
-        .withEnvId(infrastructureMapping.getEnvId())
-        .withInfraMappingId(infrastructureMapping.getUuid())
-        .withServiceId(service.getUuid())
-        .withOrchestrationWorkflow(
+        .name("Daemon ECS" + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureMapping.getEnvId())
+        .infraMappingId(infrastructureMapping.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(
             aBuildOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, PRE_DEPLOYMENT_CONSTANT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, POST_DEPLOYMENT_CONSTANT).build())
@@ -285,13 +285,13 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     phaseSteps2.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
 
     return aWorkflow()
-        .withName("Canary ECS" + System.currentTimeMillis())
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withAppId(service.getAppId())
-        .withEnvId(infrastructureMapping.getEnvId())
-        .withInfraMappingId(infrastructureMapping.getUuid())
-        .withServiceId(service.getUuid())
-        .withOrchestrationWorkflow(
+        .name("Canary ECS" + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureMapping.getEnvId())
+        .infraMappingId(infrastructureMapping.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(
             aBuildOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, PRE_DEPLOYMENT_CONSTANT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, POST_DEPLOYMENT_CONSTANT).build())
@@ -354,13 +354,13 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
 
     return aWorkflow()
-        .withName("Basic ECS" + System.currentTimeMillis())
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withAppId(service.getAppId())
-        .withEnvId(infrastructureMapping.getEnvId())
-        .withInfraMappingId(infrastructureMapping.getUuid())
-        .withServiceId(service.getUuid())
-        .withOrchestrationWorkflow(
+        .name("Basic ECS" + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureMapping.getEnvId())
+        .infraMappingId(infrastructureMapping.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(
             aBuildOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, PRE_DEPLOYMENT_CONSTANT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, POST_DEPLOYMENT_CONSTANT).build())

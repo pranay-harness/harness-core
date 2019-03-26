@@ -280,12 +280,12 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     PageResponse<Workflow> workflowsResponse = aPageResponse()
                                                    .withResponse(Arrays.asList(aWorkflow()
-                                                                                   .withAppId(APP_ID)
-                                                                                   .withName(WORKFLOW_NAME)
-                                                                                   .withEnvId(ENV_ID)
-                                                                                   .withServiceId(SERVICE_ID)
-                                                                                   .withInfraMappingId(INFRA_MAPPING_ID)
-                                                                                   .withUuid(WORKFLOW_ID)
+                                                                                   .appId(APP_ID)
+                                                                                   .name(WORKFLOW_NAME)
+                                                                                   .envId(ENV_ID)
+                                                                                   .serviceId(SERVICE_ID)
+                                                                                   .infraMappingId(INFRA_MAPPING_ID)
+                                                                                   .uuid(WORKFLOW_ID)
                                                                                    .build()))
                                                    .build();
     doReturn(workflowsResponse).when(workflowService).listWorkflows(any());

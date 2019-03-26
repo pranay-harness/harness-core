@@ -1175,7 +1175,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
     String name2 = "Name2";
 
-    Workflow workflow2 = aWorkflow().withAppId(APP_ID).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).uuid(workflow1.getUuid()).name(name2).build();
 
     workflowService.updateWorkflow(workflow2, null);
 
@@ -1196,8 +1196,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createBasicWorkflow();
     String name2 = "Name2";
 
-    Workflow workflow2 =
-        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID_CHANGED).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
     workflowService.updateWorkflow(workflow2, null);
 
@@ -1242,12 +1241,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .build());
 
     Workflow workflow2 = aWorkflow()
-                             .withAppId(APP_ID)
-                             .withEnvId(ENV_ID_CHANGED)
-                             .withInfraMappingId(INFRA_MAPPING_ID_CHANGED)
-                             .withServiceId(SERVICE_ID_CHANGED)
-                             .withUuid(workflow1.getUuid())
-                             .withName(name2)
+                             .appId(APP_ID)
+                             .envId(ENV_ID_CHANGED)
+                             .infraMappingId(INFRA_MAPPING_ID_CHANGED)
+                             .serviceId(SERVICE_ID_CHANGED)
+                             .uuid(workflow1.getUuid())
+                             .name(name2)
                              .build();
 
     workflowService.updateWorkflow(workflow2, null);
@@ -1289,12 +1288,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
     Workflow workflow2 = aWorkflow()
-                             .withAppId(APP_ID)
-                             .withEnvId(ENV_ID_CHANGED)
-                             .withInfraMappingId(INFRA_MAPPING_ID_CHANGED)
-                             .withServiceId(SERVICE_ID_CHANGED)
-                             .withUuid(workflow1.getUuid())
-                             .withName(name2)
+                             .appId(APP_ID)
+                             .envId(ENV_ID_CHANGED)
+                             .infraMappingId(INFRA_MAPPING_ID_CHANGED)
+                             .serviceId(SERVICE_ID_CHANGED)
+                             .uuid(workflow1.getUuid())
+                             .name(name2)
                              .build();
 
     workflowService.updateWorkflow(workflow2, null);
@@ -1313,12 +1312,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     mockAwsInfraMappingChanged();
     Workflow workflow2 = aWorkflow()
-                             .withAppId(APP_ID)
-                             .withEnvId(ENV_ID_CHANGED)
-                             .withInfraMappingId(INFRA_MAPPING_ID_CHANGED)
-                             .withServiceId(SERVICE_ID_CHANGED)
-                             .withUuid(workflow1.getUuid())
-                             .withName(name2)
+                             .appId(APP_ID)
+                             .envId(ENV_ID_CHANGED)
+                             .infraMappingId(INFRA_MAPPING_ID_CHANGED)
+                             .serviceId(SERVICE_ID_CHANGED)
+                             .uuid(workflow1.getUuid())
+                             .name(name2)
                              .build();
 
     try {
@@ -1348,8 +1347,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     String name2 = "Name2";
 
-    Workflow workflow2 =
-        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID_CHANGED).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
     workflowService.updateWorkflow(workflow2, null);
 
@@ -1459,8 +1457,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
     String name2 = "Name2";
 
-    Workflow workflow2 =
-        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID_CHANGED).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
     workflowService.updateWorkflow(workflow2, null);
 
@@ -1477,8 +1474,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     String name2 = "Name2";
 
-    Workflow workflow2 =
-        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID_CHANGED).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
     workflowService.updateWorkflow(workflow2, null);
 
@@ -2230,8 +2226,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createBasicWorkflow();
     String name2 = "Name2";
 
-    Workflow workflow2 =
-        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID).uuid(workflow1.getUuid()).name(name2).build();
 
     workflow2.setTemplateExpressions(
         asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
@@ -2376,8 +2371,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createBasicWorkflow();
     String name2 = "Name2";
 
-    Workflow workflow2 =
-        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID).uuid(workflow1.getUuid()).name(name2).build();
 
     workflow2.setTemplateExpressions(
         asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
@@ -2579,8 +2573,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createBasicWorkflow();
     String name2 = "Name2";
 
-    Workflow workflow2 =
-        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(workflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID).uuid(workflow1.getUuid()).name(name2).build();
 
     workflow2.setTemplateExpressions(
         asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));

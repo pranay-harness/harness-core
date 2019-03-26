@@ -80,10 +80,10 @@ public class PipelineGenerator {
       for (int j = 0; j < 2; j++) {
         workflows[i][j] = workflowGenerator.ensureWorkflow(seed, owners,
             aWorkflow()
-                .withName(format("Barrier Parallel Section %d-%d", i + 1, j + 1))
-                .withWorkflowType(WorkflowType.ORCHESTRATION)
-                .withInfraMappingId(infrastructureMapping.getUuid())
-                .withOrchestrationWorkflow(
+                .name(format("Barrier Parallel Section %d-%d", i + 1, j + 1))
+                .workflowType(WorkflowType.ORCHESTRATION)
+                .infraMappingId(infrastructureMapping.getUuid())
+                .orchestrationWorkflow(
                     aBasicOrchestrationWorkflow()
                         .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                         .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
@@ -159,10 +159,10 @@ public class PipelineGenerator {
     for (int i = 0; i < 3; i++) {
       workflows[i] = workflowGenerator.ensureWorkflow(seed, owners,
           aWorkflow()
-              .withName(format("Resource Constraint %d", i + 1))
-              .withWorkflowType(WorkflowType.ORCHESTRATION)
-              .withInfraMappingId(infrastructureMapping.getUuid())
-              .withOrchestrationWorkflow(
+              .name(format("Resource Constraint %d", i + 1))
+              .workflowType(WorkflowType.ORCHESTRATION)
+              .infraMappingId(infrastructureMapping.getUuid())
+              .orchestrationWorkflow(
                   aBasicOrchestrationWorkflow()
                       .withPreDeploymentSteps(
                           aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
