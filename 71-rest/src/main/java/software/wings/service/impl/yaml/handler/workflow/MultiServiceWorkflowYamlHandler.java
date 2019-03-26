@@ -27,7 +27,7 @@ public class MultiServiceWorkflowYamlHandler extends WorkflowYamlHandler<MultiSe
             .withUserVariables(workflowInfo.getUserVariables())
             .withWorkflowPhases(workflowInfo.getPhaseList())
             .build();
-    workflow.withOrchestrationWorkflow(orchestrationWorkflow);
+    workflow.orchestrationWorkflow(orchestrationWorkflow);
   }
 
   @Override

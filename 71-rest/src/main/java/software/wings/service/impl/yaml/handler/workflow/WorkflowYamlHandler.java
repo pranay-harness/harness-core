@@ -72,11 +72,11 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     WorkflowBuilder workflowBuilder = WorkflowBuilder.aWorkflow();
     toBean(changeContext, changeSetContext, workflowBuilder, previous);
 
-    workflowBuilder.withSyncFromGit(changeContext.getChange().isSyncFromGit());
+    workflowBuilder.syncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (previous != null) {
       previous.setSyncFromGit(changeContext.getChange().isSyncFromGit());
-      workflowBuilder.withUuid(previous.getUuid());
+      workflowBuilder.uuid(previous.getUuid());
       return workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous, true);
     } else {
       return workflowService.createWorkflow(workflowBuilder.build());
@@ -294,13 +294,13 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       setOrchestrationWorkflow(workflowInfo, workflow);
 
       String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
-      workflow.withAppId(appId)
-          .withDescription(yaml.getDescription())
-          .withEnvId(envId)
-          .withName(name)
-          .withTemplateExpressions(templateExpressions)
-          .withTemplatized(yaml.isTemplatized())
-          .withWorkflowType(WorkflowType.ORCHESTRATION);
+      workflow.appId(appId)
+          .description(yaml.getDescription())
+          .envId(envId)
+          .name(name)
+          .templateExpressions(templateExpressions)
+          .templatized(yaml.isTemplatized())
+          .workflowType(WorkflowType.ORCHESTRATION);
 
     } catch (WingsException ex) {
       throw new HarnessException(ex);

@@ -128,11 +128,11 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withUuid(WORKFLOW_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .name(WORKFLOW_NAME)
+            .appId(APP_ID)
+            .uuid(WORKFLOW_ID)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
@@ -142,7 +142,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
                                           .build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                     .build())
-            .withLinkedTemplateUuids(asList(savedTemplate.getUuid()))
+            .linkedTemplateUuids(asList(savedTemplate.getUuid()))
             .build();
 
     on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);

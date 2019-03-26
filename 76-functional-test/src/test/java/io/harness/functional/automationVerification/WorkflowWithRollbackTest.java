@@ -179,13 +179,13 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
 
     Workflow variableTestWorkflow =
         aWorkflow()
-            .withName("Echo deployment with rollback")
-            .withDescription("Echo deployment with Rollback")
-            .withServiceId(service.getUuid())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withEnvId(environment.getUuid())
-            .withOrchestrationWorkflow(
+            .name("Echo deployment with rollback")
+            .description("Echo deployment with Rollback")
+            .serviceId(service.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .envId(environment.getUuid())
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1, phase2)).build())
             .build();
 

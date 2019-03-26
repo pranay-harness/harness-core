@@ -121,12 +121,12 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   public void t4_testWorkflowCreation() throws Exception {
     Workflow workflow =
         aWorkflow()
-            .withName("SampleWF")
-            .withEnvId(sampleEnvironment.getUuid())
-            .withServiceId(sampleService.getUuid())
-            .withInfraMappingId(gcpInfra.getUuid())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .name("SampleWF")
+            .envId(sampleEnvironment.getUuid())
+            .serviceId(sampleService.getUuid())
+            .infraMappingId(gcpInfra.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())

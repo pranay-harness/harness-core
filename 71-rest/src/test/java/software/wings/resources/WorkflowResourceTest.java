@@ -58,11 +58,8 @@ public class WorkflowResourceTest extends WingsBaseTest {
 
   private static String APP_ID = "APP_ID";
   private static String WORKFLOW_ID = "WORKFLOW_ID";
-  private static final Workflow WORKFLOW = aWorkflow()
-                                               .withAppId(APP_ID)
-                                               .withUuid(WORKFLOW_ID)
-                                               .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
-                                               .build();
+  private static final Workflow WORKFLOW =
+      aWorkflow().appId(APP_ID).uuid(WORKFLOW_ID).orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
 
   /**
    * Should create workflow.
@@ -71,9 +68,9 @@ public class WorkflowResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateWorkflow() {
     Workflow workflow2 = aWorkflow()
-                             .withAppId(APP_ID)
-                             .withUuid(generateUuid())
-                             .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                             .appId(APP_ID)
+                             .uuid(generateUuid())
+                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                              .build();
     when(WORKFLOW_SERVICE.createWorkflow(WORKFLOW)).thenReturn(workflow2);
 
@@ -94,9 +91,9 @@ public class WorkflowResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCloneWorkflow() {
     Workflow workflow2 = aWorkflow()
-                             .withAppId(APP_ID)
-                             .withUuid(generateUuid())
-                             .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                             .appId(APP_ID)
+                             .uuid(generateUuid())
+                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                              .build();
     CloneMetadata cloneMetadata = CloneMetadata.builder().workflow(WORKFLOW).build();
     when(WORKFLOW_SERVICE.cloneWorkflow(APP_ID, workflow2, cloneMetadata)).thenReturn(workflow2);

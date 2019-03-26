@@ -115,7 +115,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   public void shouldListDeployedNodes() {
     String appId = generateUuid();
     String envId = generateUuid();
-    String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withEnvId(envId).build());
+    String workflowId = wingsPersistence.save(aWorkflow().appId(appId).envId(envId).build());
     int numOfExecutionSummaries = 2;
     int numOfHosts = 3;
     List<ElementExecutionSummary> executionSummaries = new ArrayList<>();

@@ -40,13 +40,13 @@ public class WorkflowSampleDataProvider {
 
   public String createK8sBasicWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
     Workflow workflow = aWorkflow()
-                            .withName(K8S_BASIC_WORKFLOW_NAME)
-                            .withAppId(appId)
-                            .withEnvId(envId)
-                            .withServiceId(serviceId)
-                            .withInfraMappingId(infraMappingId)
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(aBasicOrchestrationWorkflow().build())
+                            .name(K8S_BASIC_WORKFLOW_NAME)
+                            .appId(appId)
+                            .envId(envId)
+                            .serviceId(serviceId)
+                            .infraMappingId(infraMappingId)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aBasicOrchestrationWorkflow().build())
                             .build();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -67,13 +67,13 @@ public class WorkflowSampleDataProvider {
 
   public String createK8sCanaryWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
     Workflow workflow = aWorkflow()
-                            .withName(K8S_CANARY_WORKFLOW_NAME)
-                            .withAppId(appId)
-                            .withEnvId(envId)
-                            .withServiceId(serviceId)
-                            .withInfraMappingId(infraMappingId)
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .name(K8S_CANARY_WORKFLOW_NAME)
+                            .appId(appId)
+                            .envId(envId)
+                            .serviceId(serviceId)
+                            .infraMappingId(infraMappingId)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -102,13 +102,13 @@ public class WorkflowSampleDataProvider {
 
   public String createK8sV2RollingWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
     Workflow workflow = aWorkflow()
-                            .withName(K8S_ROLLING_WORKFLOW_NAME)
-                            .withAppId(appId)
-                            .withEnvId(envId)
-                            .withServiceId(serviceId)
-                            .withInfraMappingId(infraMappingId)
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .name(K8S_ROLLING_WORKFLOW_NAME)
+                            .appId(appId)
+                            .envId(envId)
+                            .serviceId(serviceId)
+                            .infraMappingId(infraMappingId)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
 
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING);
@@ -122,13 +122,13 @@ public class WorkflowSampleDataProvider {
 
   public String createK8sV2CanaryWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
     Workflow workflow = aWorkflow()
-                            .withName(K8S_CANARY_WORKFLOW_NAME)
-                            .withAppId(appId)
-                            .withEnvId(envId)
-                            .withServiceId(serviceId)
-                            .withInfraMappingId(infraMappingId)
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .name(K8S_CANARY_WORKFLOW_NAME)
+                            .appId(appId)
+                            .envId(envId)
+                            .serviceId(serviceId)
+                            .infraMappingId(infraMappingId)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
 
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.CANARY);

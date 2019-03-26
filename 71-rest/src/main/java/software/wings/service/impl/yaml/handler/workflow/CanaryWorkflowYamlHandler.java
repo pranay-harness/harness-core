@@ -27,7 +27,7 @@ public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflo
             .withUserVariables(workflowInfo.getUserVariables())
             .withWorkflowPhases(workflowInfo.getPhaseList())
             .build();
-    workflow.withOrchestrationWorkflow(orchestrationWorkflow);
+    workflow.orchestrationWorkflow(orchestrationWorkflow);
   }
 
   @Override

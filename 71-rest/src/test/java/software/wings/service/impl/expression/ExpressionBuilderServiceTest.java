@@ -350,11 +350,11 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
         aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
     Workflow workflow =
         aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withEnvId(ENV_ID)
-            .withOrchestrationWorkflow(
+            .name(WORKFLOW_NAME)
+            .appId(APP_ID)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .envId(ENV_ID)
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withUserVariables(userVariables)
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
@@ -393,11 +393,11 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
         aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
     Workflow workflow =
         aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withEnvId(ENV_ID)
-            .withOrchestrationWorkflow(
+            .name(WORKFLOW_NAME)
+            .appId(APP_ID)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .envId(ENV_ID)
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withUserVariables(userVariables)
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
@@ -444,10 +444,10 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
     Workflow workflow =
         aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .name(WORKFLOW_NAME)
+            .appId(APP_ID)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withUserVariables(userVariables)
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
@@ -516,10 +516,10 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   private Workflow buildCanaryWorkflow(List<Variable> userVariables) {
     return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withUserVariables(userVariables)
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())

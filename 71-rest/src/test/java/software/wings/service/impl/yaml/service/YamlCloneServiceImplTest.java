@@ -150,7 +150,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCloneEntityUsingYaml_Workflow() throws Exception {
     doReturn(null).when(workflowService).readWorkflowByName(anyString(), anyString());
-    doReturn(aWorkflow().withAppId(APP_ID).withUuid(WORKFLOW_ID).build())
+    doReturn(aWorkflow().appId(APP_ID).uuid(WORKFLOW_ID).build())
         .when(workflowService)
         .readWorkflow(anyString(), anyString());
 

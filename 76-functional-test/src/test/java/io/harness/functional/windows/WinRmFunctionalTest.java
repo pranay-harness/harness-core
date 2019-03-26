@@ -262,13 +262,13 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
     Workflow iisAppWorkflow =
         aWorkflow()
-            .withName(commandName + "Test Workflow")
-            .withDescription("To Test " + commandName)
-            .withServiceId(serviceId)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infraMappingId)
-            .withEnvId(envId)
-            .withOrchestrationWorkflow(
+            .name(commandName + "Test Workflow")
+            .description("To Test " + commandName)
+            .serviceId(serviceId)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infraMappingId)
+            .envId(envId)
+            .orchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()

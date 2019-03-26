@@ -122,16 +122,16 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
         aWorkflowPhase().serviceId(service.getUuid()).infraMappingId(infrastructureMapping.getUuid()).build();
 
     logger.info("Creating workflow with canary orchestration : " + dummyWorkflow);
-    Workflow workflow = aWorkflow()
-                            .withName(dummyWorkflow)
-                            .withDescription(dummyWorkflow)
-                            .withServiceId(service.getUuid())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withInfraMappingId(infrastructureMapping.getUuid())
-                            .withEnvId(environment.getUuid())
-                            .withOrchestrationWorkflow(
-                                aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .name(dummyWorkflow)
+            .description(dummyWorkflow)
+            .serviceId(service.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .envId(environment.getUuid())
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
+            .build();
 
     savedWorkflow = workflowRestUtil.createWorkflow(AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);
 

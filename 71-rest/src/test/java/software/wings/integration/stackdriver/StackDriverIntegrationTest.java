@@ -56,7 +56,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
     super.setUp();
     loginAdminUser();
     appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
-    workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
+    workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()

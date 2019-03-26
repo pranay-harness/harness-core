@@ -1276,9 +1276,9 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void shouldTriggerScheduledExecutionForBuildWorkflow() {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow()
-                        .withName(WORKFLOW_NAME)
-                        .withUuid(WORKFLOW_ID)
-                        .withOrchestrationWorkflow(aBuildOrchestrationWorkflow().build())
+                        .name(WORKFLOW_NAME)
+                        .uuid(WORKFLOW_ID)
+                        .orchestrationWorkflow(aBuildOrchestrationWorkflow().build())
                         .build());
 
     triggerService.save(workflowScheduledConditionTrigger);

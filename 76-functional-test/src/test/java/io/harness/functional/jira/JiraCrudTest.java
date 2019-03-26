@@ -85,10 +85,10 @@ public class JiraCrudTest extends AbstractFunctionalTest {
     assertThat(environment).isNotNull();
     Workflow jiraWorkflow =
         aWorkflow()
-            .withName("Create Jira")
-            .withEnvId(environment.getUuid())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .name("Create Jira")
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(

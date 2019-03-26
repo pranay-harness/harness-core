@@ -251,13 +251,13 @@ public class Workflow extends Base implements KeywordsAware {
 
   public Workflow cloneInternal() {
     return aWorkflow()
-        .withAppId(getAppId())
-        .withAccountId(getAccountId())
-        .withEnvId(getEnvId())
-        .withWorkflowType(getWorkflowType())
-        .withName(getName())
-        .withTemplatized(isTemplatized())
-        .withTemplateExpressions(getTemplateExpressions())
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .envId(getEnvId())
+        .workflowType(getWorkflowType())
+        .name(getName())
+        .templatized(isTemplatized())
+        .templateExpressions(getTemplateExpressions())
         .build();
   }
 
@@ -326,112 +326,112 @@ public class Workflow extends Base implements KeywordsAware {
       return new WorkflowBuilder();
     }
 
-    public WorkflowBuilder withECSBGType(String ecsBGType) {
+    public WorkflowBuilder ecsBGType(String ecsBGType) {
       this.ecsBGType = ecsBGType;
       return this;
     }
 
-    public WorkflowBuilder withName(String name) {
+    public WorkflowBuilder name(String name) {
       this.name = name;
       return this;
     }
 
-    public WorkflowBuilder withDescription(String description) {
+    public WorkflowBuilder description(String description) {
       this.description = description;
       return this;
     }
 
-    public WorkflowBuilder withWorkflowType(WorkflowType workflowType) {
+    public WorkflowBuilder workflowType(WorkflowType workflowType) {
       this.workflowType = workflowType;
       return this;
     }
 
-    public WorkflowBuilder withEnvId(String envId) {
+    public WorkflowBuilder envId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    public WorkflowBuilder withDefaultVersion(Integer defaultVersion) {
+    public WorkflowBuilder defaultVersion(Integer defaultVersion) {
       this.defaultVersion = defaultVersion;
       return this;
     }
 
-    public WorkflowBuilder withOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
+    public WorkflowBuilder orchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
       this.orchestrationWorkflow = orchestrationWorkflow;
       return this;
     }
 
-    public WorkflowBuilder withServices(List<Service> services) {
+    public WorkflowBuilder services(List<Service> services) {
       this.services = services;
       return this;
     }
 
-    public WorkflowBuilder withUuid(String uuid) {
+    public WorkflowBuilder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public WorkflowBuilder withAppId(String appId) {
+    public WorkflowBuilder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public WorkflowBuilder withAccountId(String accountId) {
+    public WorkflowBuilder accountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public WorkflowBuilder withCreatedBy(EmbeddedUser createdBy) {
+    public WorkflowBuilder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public WorkflowBuilder withCreatedAt(long createdAt) {
+    public WorkflowBuilder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public WorkflowBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public WorkflowBuilder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public WorkflowBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public WorkflowBuilder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public WorkflowBuilder withServiceId(String serviceId) {
+    public WorkflowBuilder serviceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
-    public WorkflowBuilder withInfraMappingId(String infraMappingId) {
+    public WorkflowBuilder infraMappingId(String infraMappingId) {
       this.infraMappingId = infraMappingId;
       return this;
     }
 
-    public WorkflowBuilder withTemplatized(boolean templatized) {
+    public WorkflowBuilder templatized(boolean templatized) {
       this.templatized = templatized;
       return this;
     }
 
-    public WorkflowBuilder withTemplateExpressions(List<TemplateExpression> templateExpressions) {
+    public WorkflowBuilder templateExpressions(List<TemplateExpression> templateExpressions) {
       this.templateExpressions = templateExpressions;
       return this;
     }
 
-    public WorkflowBuilder withLinkedTemplateUuids(List<String> templateUuids) {
+    public WorkflowBuilder linkedTemplateUuids(List<String> templateUuids) {
       this.linkedTemplateUuids = templateUuids;
       return this;
     }
 
-    public WorkflowBuilder withNotes(String notes) {
+    public WorkflowBuilder notes(String notes) {
       this.notes = notes;
       return this;
     }
 
-    public WorkflowBuilder withSyncFromGit(boolean syncFromGit) {
+    public WorkflowBuilder syncFromGit(boolean syncFromGit) {
       this.syncFromGit = syncFromGit;
       return this;
     }

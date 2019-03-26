@@ -55,7 +55,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
                                           .withValue(new PrometheusConfig("http://104.154.216.249", accountId))
                                           .build());
 
-    workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
+    workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()

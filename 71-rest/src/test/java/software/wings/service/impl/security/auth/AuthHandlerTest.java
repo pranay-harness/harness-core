@@ -104,10 +104,10 @@ public class AuthHandlerTest extends WingsBaseTest {
   private Environment dr =
       anEnvironment().withUuid(generateUuid()).withAppId(APP_ID).withEnvironmentType(EnvironmentType.PROD).build();
 
-  private Workflow workflow1 = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(dev.getUuid()).build();
-  private Workflow workflow2 = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(qa.getUuid()).build();
-  private Workflow workflow3 = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(prod.getUuid()).build();
-  private Workflow buildWorkflow = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(null).build();
+  private Workflow workflow1 = aWorkflow().uuid(generateUuid()).appId(APP_ID).envId(dev.getUuid()).build();
+  private Workflow workflow2 = aWorkflow().uuid(generateUuid()).appId(APP_ID).envId(qa.getUuid()).build();
+  private Workflow workflow3 = aWorkflow().uuid(generateUuid()).appId(APP_ID).envId(prod.getUuid()).build();
+  private Workflow buildWorkflow = aWorkflow().uuid(generateUuid()).appId(APP_ID).envId(null).build();
 
   private Pipeline pipeline1 =
       Pipeline.builder()

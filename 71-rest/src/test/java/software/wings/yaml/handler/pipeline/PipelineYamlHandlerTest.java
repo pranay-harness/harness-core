@@ -189,11 +189,11 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
                    .build();
     Workflow workflow1 =
         aWorkflow()
-            .withEnvId(ENV_ID)
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .envId(ENV_ID)
+            .name(WORKFLOW_NAME)
+            .appId(APP_ID)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()

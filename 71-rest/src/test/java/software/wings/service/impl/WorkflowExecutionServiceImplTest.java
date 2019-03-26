@@ -296,12 +296,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -446,12 +446,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -770,12 +770,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(appId)
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(env.getUuid())
+            .appId(appId)
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -815,12 +815,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -902,12 +902,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(ENV_ID)
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -1065,12 +1065,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -1160,12 +1160,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -1263,12 +1263,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -1426,12 +1426,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(env.getUuid())
-            .withAppId(app.getUuid())
-            .withName("workflow1")
-            .withDescription("Sample Workflow")
-            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
             .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
@@ -1715,11 +1715,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       String appId, Environment env, Service service, InfrastructureMapping infrastructureMapping) {
     Workflow orchestrationWorkflow =
         aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(appId)
-            .withEnvId(env.getUuid())
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
+            .name(WORKFLOW_NAME)
+            .appId(appId)
+            .envId(env.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
@@ -1799,10 +1799,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow orchestrationWorkflow =
         aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(appId)
-            .withEnvId(env.getUuid())
-            .withOrchestrationWorkflow(
+            .name(WORKFLOW_NAME)
+            .appId(appId)
+            .envId(env.getUuid())
+            .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()

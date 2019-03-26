@@ -55,7 +55,7 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
                                                                      , @Field("status") }))
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware {
+public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware {
   public static final String APP_ID_KEY = "appId";
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
   public static final String ARTIFACTS_KEY = "artifacts";

@@ -109,11 +109,11 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
   private Workflow workflow =
       aWorkflow()
-          .withUuid(WORKFLOW_ID)
-          .withAppId(APP_ID)
-          .withName(WORKFLOW_NAME)
-          .withDefaultVersion(DEFAULT_VERSION)
-          .withOrchestrationWorkflow(
+          .uuid(WORKFLOW_ID)
+          .appId(APP_ID)
+          .name(WORKFLOW_NAME)
+          .defaultVersion(DEFAULT_VERSION)
+          .orchestrationWorkflow(
               aCanaryOrchestrationWorkflow()
                   .withRequiredEntityTypes(Sets.newHashSet(EntityType.SSH_USER, EntityType.SSH_PASSWORD))
                   .build())

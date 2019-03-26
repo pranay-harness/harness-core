@@ -172,18 +172,18 @@ public class TriggerServiceTestHelper {
     List<Variable> userVariables = new ArrayList<>();
     userVariables.add(aVariable().withName("MyVar").withValue("MyVal").build());
     return aWorkflow()
-        .withEnvId(ENV_ID)
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withServiceId(SERVICE_ID)
-        .withInfraMappingId(INFRA_MAPPING_ID)
-        .withOrchestrationWorkflow(
+        .envId(ENV_ID)
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .orchestrationWorkflow(
             aBasicOrchestrationWorkflow()
                 .withUserVariables(userVariables)
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                 .build())
-        .withServices(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build(),
+        .services(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build(),
             Service.builder().uuid(SERVICE_ID_CHANGED).name("Order").build()))
         .build();
   }
