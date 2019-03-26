@@ -15,6 +15,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.MapUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -249,7 +250,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
     Map<String, Object> properties = pipelineStageElement.getProperties();
 
-    properties.put("pipelineId", pipeline.getUuid());
+    properties = MapUtils.putToImmutable("pipelineId", pipeline.getUuid(), properties);
     properties.put("pipelineStateElementId", pipelineStageElement.getUuid());
     properties.put("disable", pipelineStageElement.isDisable());
 

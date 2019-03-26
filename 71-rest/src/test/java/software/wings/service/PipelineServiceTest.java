@@ -177,20 +177,13 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(appId, workflowId))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
 
-    when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
     when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap(), any(), any(), any()))
         .thenReturn(DeploymentMetadata.builder().build());
     pipelineService.save(pipeline);
 
-    verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
+    verify(wingsPersistence).save(pipelineArgumentCaptor.capture());
     assertThat(pipelineArgumentCaptor.getValue()).isNotNull();
-
-    verify(wingsPersistence).save(stateMachineArgumentCaptor.capture());
-    StateMachine stateMachine = stateMachineArgumentCaptor.getValue();
-    assertThat(stateMachine).isNotNull();
-    assertThat(stateMachine.getStates()).isNotNull();
-    assertThat(stateMachine.getStates().size()).isGreaterThan(60);
   }
 
   @Test
@@ -228,18 +221,12 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipeline =
         Pipeline.builder().name("pipeline1").appId(APP_ID).uuid(PIPELINE_ID).pipelineStages(pipelineStages).build();
 
-    when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
     pipelineService.save(pipeline);
 
-    verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
+    verify(wingsPersistence).save(pipelineArgumentCaptor.capture());
     assertThat(pipelineArgumentCaptor.getValue()).isNotNull();
-
-    verify(wingsPersistence).save(stateMachineArgumentCaptor.capture());
-    StateMachine stateMachine = stateMachineArgumentCaptor.getValue();
-    assertThat(stateMachine).isNotNull();
-    assertThat(stateMachine.getStates().size()).isGreaterThan(60);
   }
 
   @Test
@@ -260,14 +247,13 @@ public class PipelineServiceTest extends WingsBaseTest {
                             .failureStrategies(asList(failureStrategy))
                             .build();
 
-    when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
     pipelineService.save(pipeline);
 
-    verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
+    verify(wingsPersistence).save(pipelineArgumentCaptor.capture());
     Pipeline argumentCaptorValue = pipelineArgumentCaptor.getValue();
     assertThat(argumentCaptorValue)
         .isNotNull()
