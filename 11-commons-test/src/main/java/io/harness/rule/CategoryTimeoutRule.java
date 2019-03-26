@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static java.util.Arrays.asList;
+
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
@@ -15,6 +17,7 @@ import org.junit.runners.model.Statement;
 
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CategoryTimeoutRule extends Timeout {
@@ -22,6 +25,27 @@ public class CategoryTimeoutRule extends Timeout {
 
   public CategoryTimeoutRule() {
     super(Timeout.builder());
+  }
+
+  public static Class fetchCategoryElement(Category category) {
+    List<Class> classes = asList(UnitTests.class, IntegrationTests.class, FunctionalTests.class);
+
+    Class element = null;
+    for (Class clz : classes) {
+      final boolean match = Arrays.stream(category.value()).anyMatch(clz ::isAssignableFrom);
+      if (match) {
+        if (element != null) {
+          throw new RuntimeException("More than one category element");
+        }
+        element = clz;
+      }
+    }
+
+    if (element == null) {
+      throw new RuntimeException("Category element is not specified");
+    }
+
+    return element;
   }
 
   public Statement apply(Statement statement, Description description) {
@@ -49,13 +73,7 @@ public class CategoryTimeoutRule extends Timeout {
       throw new CategoryConfigException("A test cannot be fast and slow at the same time");
     }
 
-    boolean unit = Arrays.stream(category.value()).anyMatch(UnitTests.class ::isAssignableFrom);
-    boolean integration = Arrays.stream(category.value()).anyMatch(IntegrationTests.class ::isAssignableFrom);
-    boolean functional = Arrays.stream(category.value()).anyMatch(FunctionalTests.class ::isAssignableFrom);
-
-    if (!unit && !integration && !functional) {
-      throw new CategoryConfigException("A test should belong to at least one type category");
-    }
+    final Class categoryElement = fetchCategoryElement(category);
 
     // There should not be categorized test to exceed execution of 10 minutes.
     long timeoutMS = TimeUnit.MINUTES.toMillis(10);
@@ -63,19 +81,19 @@ public class CategoryTimeoutRule extends Timeout {
     // Start from the most time restricting group. Unit tests should take way less than
     // integration tests. If tests belongs to more than one group we would like to apply
     // the most restrictive pattern.
-    if (unit) {
+    if (categoryElement == UnitTests.class) {
       if (fast) {
         timeoutMS = 300;
       } else if (slow) {
         timeoutMS = TimeUnit.SECONDS.toMillis(2);
       }
-    } else if (integration) {
+    } else if (categoryElement == IntegrationTests.class) {
       if (fast) {
         timeoutMS = TimeUnit.SECONDS.toMillis(10);
       } else if (slow) {
         timeoutMS = TimeUnit.MINUTES.toMillis(5);
       }
-    } else if (functional) {
+    } else if (categoryElement == FunctionalTests.class) {
       if (fast) {
         timeoutMS = TimeUnit.MINUTES.toMillis(1);
       } else if (slow) {
