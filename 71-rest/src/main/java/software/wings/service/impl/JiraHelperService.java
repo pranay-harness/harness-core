@@ -313,6 +313,8 @@ public class JiraHelperService {
     if (user != null) {
       executionData.setApprovedBy(user);
     }
+
+    logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     waitNotifyEngine.notify(approvalId, executionData);
   }
 

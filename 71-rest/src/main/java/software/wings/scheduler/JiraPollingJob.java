@@ -92,6 +92,9 @@ public class JiraPollingJob implements Job {
       // TODO:: Swagat: What if ticket not found or rejected. Also, there should be window till we should poll after
       // than it should delete
 
+      logger.info("Jira Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
+          workflowExecutionId);
+
       if (approval == ExecutionStatus.SUCCESS || approval == ExecutionStatus.REJECTED) {
         isTerminalState = true;
 
@@ -108,6 +111,7 @@ public class JiraPollingJob implements Job {
     }
 
     if (isTerminalState) {
+      logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
       jobScheduler.deleteJob(approvalId, GROUP);
     }
   }
