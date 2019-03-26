@@ -18,7 +18,6 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Reservation;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -418,7 +417,6 @@ public class InstanceHelper {
     builder.instanceInfo(instanceInfo);
   }
 
-  @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
   public void processDeploymentEvent(DeploymentEvent deploymentEvent) {
     try {
       List<DeploymentSummary> deploymentSummaries = deploymentEvent.getDeploymentSummaries();

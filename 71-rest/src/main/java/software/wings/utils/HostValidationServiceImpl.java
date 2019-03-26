@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.govern.Switch.noop;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
@@ -13,7 +14,6 @@ import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
@@ -113,7 +113,6 @@ public class HostValidationServiceImpl implements HostValidationService {
     return response;
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE")
   private HostValidationResponse validateHostWinRm(String hostName, WinRmConnectionAttributes connectionAttributes) {
     HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
                                           .withHostName(hostName)
@@ -135,6 +134,7 @@ public class HostValidationServiceImpl implements HostValidationService {
                                     .build();
 
     try (WinRmSession ignore = new WinRmSession(config)) {
+      noop();
     } catch (Exception e) {
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       response.setStatus(ExecutionStatus.FAILED.name());
