@@ -75,6 +75,8 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   public static final String UUID_KEY = "uuid";
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
+  public static final String WORKFLOW_SERVICE_IDS_KEY = "serviceIds";
+  public static final String WORKFLOW_ENV_IDS_KEY = "envIds";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);

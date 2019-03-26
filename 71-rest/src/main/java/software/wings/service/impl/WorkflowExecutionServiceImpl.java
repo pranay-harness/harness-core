@@ -78,6 +78,8 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.WorkflowType;
 import io.harness.cache.Distributable;
@@ -2608,24 +2610,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public WorkflowExecution fetchLastWorkflowExecution(String appId, String workflowId, String serviceId, String envId) {
-    Query<WorkflowExecution> workflowExecutionQuery = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                          .filter("workflowType", ORCHESTRATION)
-                                                          .filter("workflowId", workflowId)
-                                                          .filter("appId", appId);
-
-    if (StringUtils.isNotBlank(serviceId)) {
-      workflowExecutionQuery.field("serviceIds").in(Arrays.asList(serviceId));
-    }
-
-    if (StringUtils.isNotBlank(envId)) {
-      workflowExecutionQuery.field("envIds").in(Arrays.asList(envId));
-    }
-
-    return workflowExecutionQuery.order(Sort.descending(WorkflowExecution.CREATED_AT_KEY)).get();
-  }
-
-  @Override
   public boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, List<String> appIds, String workflowId) {
     User user = UserThreadLocal.get();
     if (user == null) {
@@ -2783,5 +2767,40 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     logger.warn(String.format("Workflow execution %s do not have inline state machine", workflowExecution.getUuid()));
     return wingsPersistence.getWithAppId(
         StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+  }
+
+  @Override
+  public WorkflowExecution fetchLastWorkflowExecution(String appId, String workflowId, String serviceId, String envId) {
+    Query<WorkflowExecution> workflowExecutionQuery = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                          .filter(WorkflowExecution.WORKFLOW_TYPE_ID_KEY, ORCHESTRATION)
+                                                          .filter(WorkflowExecution.WORKFLOW_ID_KEY, workflowId)
+                                                          .filter(WorkflowExecution.APP_ID_KEY, appId);
+
+    if (StringUtils.isNotBlank(serviceId)) {
+      workflowExecutionQuery.field(WorkflowExecution.WORKFLOW_SERVICE_IDS_KEY).in(Arrays.asList(serviceId));
+    }
+
+    if (StringUtils.isNotBlank(envId)) {
+      workflowExecutionQuery.field(WorkflowExecution.WORKFLOW_ENV_IDS_KEY).in(Arrays.asList(envId));
+    }
+
+    return workflowExecutionQuery.order(Sort.descending(WorkflowExecution.CREATED_AT_KEY)).get();
+  }
+
+  @Override
+  public PageResponse<WorkflowExecution> fetchWorkflowExecutionList(
+      String appId, String workflowId, String envId, String pageOffset, String pageLimit) {
+    PageRequest<WorkflowExecution> pageRequest =
+        aPageRequest()
+            .addFilter(WorkflowExecution.WORKFLOW_TYPE_ID_KEY, Operator.EQ, ORCHESTRATION)
+            .addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, appId)
+            .addFilter(WorkflowExecution.WORKFLOW_ENV_IDS_KEY, Operator.IN, Arrays.asList(envId))
+            .withLimit(pageLimit)
+            .withOffset(pageOffset)
+            .addOrder(
+                SortOrder.Builder.aSortOrder().withField(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC).build())
+            .build();
+
+    return wingsPersistence.query(WorkflowExecution.class, pageRequest);
   }
 }
