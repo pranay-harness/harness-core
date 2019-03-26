@@ -12,4 +12,9 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   public String getGoTemplateClientPath() {
     return InstallUtils.getGoTemplateToolPath();
   }
+
+  @Override
+  public String getHelmPath() {
+    return InstallUtils.getHelmPath();
+  }
 }

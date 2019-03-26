@@ -52,6 +52,7 @@ import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.delegate.service.InstallUtils.installGoTemplateTool;
+import static software.wings.delegate.service.InstallUtils.installHelm;
 import static software.wings.delegate.service.InstallUtils.installKubectl;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.utils.Misc.getDurationString;
@@ -286,6 +287,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       boolean kubectlInstalled = installKubectl(delegateConfiguration);
       boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
+      boolean helmInstalled = installHelm(delegateConfiguration);
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -421,18 +423,23 @@ public class DelegateServiceImpl implements DelegateService {
 
       startProfileCheck();
 
-      if (!kubectlInstalled || !goTemplateInstalled) {
+      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled) {
         systemExecutorService.submit(() -> {
           boolean kubectl = kubectlInstalled;
           boolean goTemplate = goTemplateInstalled;
+          boolean helm = helmInstalled;
+
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate) && retries > 0) {
+          while ((!kubectl || !goTemplate || !helm) && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectl) {
               kubectl = installKubectl(delegateConfiguration);
             }
             if (!goTemplate) {
               goTemplate = installGoTemplateTool(delegateConfiguration);
+            }
+            if (!helm) {
+              helm = installHelm(delegateConfiguration);
             }
             retries--;
           }
@@ -442,6 +449,9 @@ public class DelegateServiceImpl implements DelegateService {
           }
           if (!goTemplate) {
             logger.error("Failed to install go-template after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!helm) {
+            logger.error("Failed to install helm after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
       }
