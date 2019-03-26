@@ -16,6 +16,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptionConfig;
@@ -415,8 +416,18 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     String secretUuid = null;
     try {
       secretUuid = createEncryptedFile("FooBarEncryptedFile", "configfiles/config1.txt");
+      // Old encrypted data referred to an old path in Vault.
+      EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
       updateEncryptedFileWithNoContent("FooBarEncryptedFile", secretUuid);
       verifyEncryptedFileValue(secretUuid, "Config file 1", savedVaultConfig);
+
+      try {
+        secretManagementDelegateService.decrypt(oldEncryptedData, savedVaultConfig);
+        fail("Secrets with the old path should no longer exist after updating the name.");
+      } catch (WingsException e) {
+        // Exception expected, ignore.
+      }
+
     } finally {
       // Clean up.
       if (secretUuid != null) {
@@ -443,8 +454,17 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     String secretUuid = null;
     try {
       secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
+      // Old encrypted data referred to an old path in Vault.
+      EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
       updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
       verifySecretValue(secretUuid, "MySecretValue_Modified", savedVaultConfig);
+
+      try {
+        secretManagementDelegateService.decrypt(oldEncryptedData, savedVaultConfig);
+        fail("Secrets with the old path should no longer exist after updating the name.");
+      } catch (WingsException e) {
+        // Exception expected, ignore.
+      }
     } finally {
       // Clean up.
       if (secretUuid != null) {
@@ -792,10 +812,10 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(expectedValue, new String(decrypted));
   }
 
-  private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, VaultConfig savedVaultConfig)
-      throws IOException {
+  private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, VaultConfig savedVaultConfig) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
     assertNotNull(encryptedData);
+    assertTrue(encryptedData.getFileSize() > 0);
 
     savedVaultConfig.setAuthToken(vaultConfig.getAuthToken());
     char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, savedVaultConfig);
@@ -810,6 +830,8 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       throws IOException {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
     assertNotNull(encryptedData);
+    assertTrue(encryptedData.getFileSize() > 0);
+
     String fileId = new String(encryptedData.getEncryptedValue());
     InputStream inputStream = fileService.openDownloadStream(fileId, FileBucket.CONFIGS);
     char[] fileContent = IOUtils.toString(inputStream, Charset.defaultCharset()).toCharArray();
