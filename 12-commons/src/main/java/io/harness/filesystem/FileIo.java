@@ -1,5 +1,6 @@
 package io.harness.filesystem;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.threading.Morpheus.sleep;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -187,5 +188,36 @@ public class FileIo {
       }
       return builder.toString();
     }
+  }
+
+  public static String getHomeDir() {
+    String osName = System.getProperty("os.name").toLowerCase();
+    if (osName.startsWith("win")) {
+      String homeDrive = System.getenv("HOMEDRIVE");
+      String homePath = System.getenv("HOMEPATH");
+      if (isNotEmpty(homeDrive) && isNotEmpty(homePath)) {
+        String homeDir = homeDrive + homePath;
+        File f = new File(homeDir);
+        if (f.exists() && f.isDirectory()) {
+          return homeDir;
+        }
+      }
+      String userProfile = System.getenv("USERPROFILE");
+      if (isNotEmpty(userProfile)) {
+        File f = new File(userProfile);
+        if (f.exists() && f.isDirectory()) {
+          return userProfile;
+        }
+      }
+    }
+    String home = System.getenv("HOME");
+    if (isNotEmpty(home)) {
+      File f = new File(home);
+      if (f.exists() && f.isDirectory()) {
+        return home;
+      }
+    }
+
+    return System.getProperty("user.home", ".");
   }
 }
