@@ -30,6 +30,7 @@ export MEMORY=1024
 export JAVA_OPTS_MANAGER="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:managergclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8"
 export JAVA_OPTS_VERIFICATION="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:verificationgclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8"
 export LICENSE_INFO=$(getProperty $CONFIG_PROPERTY_FILE licenseInfo)
+export learning_env="on_prem"
 
 function replaceconfigs(){
     mongoUrl=$(getProperty "$runtime_dir/savedState" "mongoUrl")
