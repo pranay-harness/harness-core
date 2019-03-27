@@ -72,18 +72,15 @@ public class AuthenticationManager {
   }
 
   private AuthenticationMechanism getAuthenticationMechanism(User user) {
-    AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
     /*
-     * If the number of accounts > 1, by default assume it to be USER_PASSWORD.
-     * Typically this should only be for Harness users.
-     * All other customers should have only 1 account mapped to their users
+     * Choose the first account as primary account, use its auth mechanism for login purpose if the user is
+     * associated with multiple accounts. As the UI will always pick the first account to start with after the logged
+     * in user is having a list of associated accounts.
      */
-    if (user.getAccounts().size() == 1) {
-      Account account = user.getAccounts().get(0);
-      authenticationMechanism = account.getAuthenticationMechanism();
-      if (authenticationMechanism == null) {
-        authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
-      }
+    Account account = user.getAccounts().get(0);
+    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    if (authenticationMechanism == null) {
+      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
     }
     return authenticationMechanism;
   }
