@@ -41,16 +41,17 @@ public class AddStateMachineToWorkflowExecutions implements Migration {
         WorkflowExecution workflowExecution = workflowExecutionIterator.next();
         try {
           StateMachine stateMachine = workflowExecutionService.obtainStateMachine(workflowExecution);
+          if (stateMachine != null) {
+            final Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                       .filter(WorkflowExecution.ID_KEY, workflowExecution.getUuid());
 
-          final Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                     .filter(WorkflowExecution.ID_KEY, workflowExecution.getUuid());
+            final UpdateOperations<WorkflowExecution> updateOperations =
+                wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                    .set(WorkflowExecution.STATE_MACHINE_KEY, stateMachine)
+                    .unset(WorkflowExecution.STATE_MACHINE_ID_KEY);
 
-          final UpdateOperations<WorkflowExecution> updateOperations =
-              wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                  .set(WorkflowExecution.STATE_MACHINE_KEY, stateMachine)
-                  .unset(WorkflowExecution.STATE_MACHINE_ID_KEY);
-
-          wingsPersistence.update(query, updateOperations);
+            wingsPersistence.update(query, updateOperations);
+          }
 
         } catch (Throwable exception) {
           logger.error(String.format("Exception while migrating workflowExecution for %s", workflowExecution.getUuid()),
