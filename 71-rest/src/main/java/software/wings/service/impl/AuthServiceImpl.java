@@ -880,7 +880,6 @@ public class AuthServiceImpl implements AuthService {
           .withIssuedAt(new Date())
           .withExpiresAt(new Date(System.currentTimeMillis() + duration))
           .withClaim("authToken", authToken.getUuid())
-          .withClaim("acctId", authToken.getAccountId())
           .withClaim("usrId", authToken.getUserId())
           .withClaim("env", configuration.getEnvPath())
           .sign(algorithm);
