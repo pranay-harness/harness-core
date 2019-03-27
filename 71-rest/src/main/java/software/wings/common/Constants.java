@@ -1,9 +1,5 @@
 package software.wings.common;
 
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-
-import software.wings.beans.HttpMethod;
-
 import java.util.regex.Pattern;
 
 /**
@@ -20,54 +16,13 @@ public interface Constants {
   String DEFAULT_WORKFLOW_NAME = "MAIN";
 
   /**
-   * The constant AWS_LAMBDA_REQUEST_PARAM.
-   */
-  String AWS_LAMBDA_FUNCTION_PARAM = "AWS_LAMBDA_FUNCTION_PARAM";
-
-  /**
-   * The constant INSTANCE_LIST_PARAMS.
-   */
-  String INSTANCE_LIST_PARAMS = "INSTANCE_LIST_PARAMS";
-  /**
    * The constant PHASE_PARAM.
    */
   String PHASE_PARAM = "PHASE_PARAM";
   /**
-   * The constant SHELL.
-   */
-  String SHELL_PARAM = "SHELL_PARAM";
-  /**
-   * The constant SIMPLE_ORCHESTRATION_NAME.
-   */
-  String SIMPLE_ORCHESTRATION_NAME = "Default Adhoc Workflow";
-  /**
-   * The constant SIMPLE_ORCHESTRATION_DESC.
-   */
-  String SIMPLE_ORCHESTRATION_DESC = "This is a simple workflow designed to trigger multiple instances";
-  /**
-   * The constant SIMPLE_WORKFLOW_REPEAT_STRATEGY.
-   */
-  String SIMPLE_WORKFLOW_REPEAT_STRATEGY = "SIMPLE_WORKFLOW_REPEAT_STRATEGY";
-
-  /**
-   * The constant SIMPLE_WORKFLOW_COMMAND_NAME.
-   */
-  String SIMPLE_WORKFLOW_COMMAND_NAME = "SIMPLE_WORKFLOW_COMMAND_NAME";
-  /**
    * The constant SUMMARY_PAYLOAD_LIMIT.
    */
   int SUMMARY_PAYLOAD_LIMIT = 1024;
-
-  /**
-   * The constant WINGS_VARIABLE_PREFIX.
-   */
-  String WINGS_VARIABLE_PREFIX = "${";
-  /**
-   * The constant WINGS_VARIABLE_SUFFIX.
-   */
-  String WINGS_VARIABLE_SUFFIX = "}";
-
-  String ROLLING_PHASE_PREFIX = "Rolling Phase ";
 
   /**
    * The constant PRE_DEPLOYMENT.
@@ -737,32 +692,10 @@ public interface Constants {
   String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName.split('\\.')[0]}";
 
   /**
-   * The constant APP_ID.
-   */
-  String APP_ID = "appId";
-  /**
-   * The constant UUID.
-   */
-  String UUID = ID_KEY;
-
-  /**
    * The constant SECRET_MASK.
    */
   String SECRET_MASK = "**************";
 
-  /**
-   * The constant CORRELATION_ID.
-   */
-  String CORRELATION_ID = "correlationId";
-
-  /**
-   * The constant DEPLOYMENT.
-   */
-  String DEPLOYMENT = "DEPLOYMENT";
-  /**
-   * The constant DEFAULT_OLD_USER_GROUP_NAME.
-   */
-  String DEFAULT_OLD_USER_GROUP_NAME = "ADMIN";
   /**
    * The constant DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME.
    */
@@ -877,10 +810,6 @@ public interface Constants {
 
   int DEFAULT_PAID_LICENSE_UNITS = 100;
 
-  long DAY = 24 * 60 * 60 * 1000L;
-  long MONTH = 30 * DAY;
-  long WEEK = 7 * 24 * 60 * 60 * 1000L;
-
   String EMAIL_SUBJECT_ACCOUNT_EXPIRED = "Harness License Expired!";
   String EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE = "Harness License about to Expire!";
 
@@ -938,8 +867,4 @@ public interface Constants {
 
   String RESOURCE_URI_DELETE_APP = "/api/apps/[^/]+";
   String RESOURCE_URI_DELETE_ENVIRONMENT = "/api/environments/[^/]+";
-
-  String HTTP_PUT = HttpMethod.PUT.name();
-  String HTTP_POST = HttpMethod.POST.name();
-  String HTTP_DELETE = HttpMethod.DELETE.name();
 }

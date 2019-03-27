@@ -70,7 +70,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   public SamlSettings getSamlSettingsByAccountId(String accountId) {
     return wingsPersistence.createQuery(SamlSettings.class)
-        .field(ACCOUNT_ID)
+        .field(SamlSettings.ACCOUNT_ID_KEY)
         .equal(accountId)
         .field("type")
         .equal(SSOType.SAML)
@@ -216,7 +216,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId) {
     return wingsPersistence.createQuery(LdapSettings.class)
-        .field(ACCOUNT_ID)
+        .field(LdapSettings.ACCOUNT_ID_KEY)
         .equal(accountId)
         .field("type")
         .equal(SSOType.LDAP)
@@ -264,8 +264,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public void sendSSONotReachableNotification(String accountId, SSOSettings settings) {
-    List<Delegate> delegates =
-        delegateService.list(PageRequestBuilder.aPageRequest().addFilter(ACCOUNT_ID, Operator.EQ, accountId).build());
+    List<Delegate> delegates = delegateService.list(
+        PageRequestBuilder.aPageRequest().addFilter(Delegate.ACCOUNT_ID_KEY, Operator.EQ, accountId).build());
     String hostNamesForDelegates = "\n" + delegates.stream().map(Delegate::getHostName).collect(joining("\n"));
 
     String hostNamesForDelegatesHtml =
@@ -311,6 +311,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(SSOSettings.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(SSOSettings.class).filter(SSOSettings.ACCOUNT_ID_KEY, accountId));
   }
 }

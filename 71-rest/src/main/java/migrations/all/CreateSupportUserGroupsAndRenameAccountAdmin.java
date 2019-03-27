@@ -6,7 +6,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
-import static software.wings.common.Constants.DEFAULT_OLD_USER_GROUP_NAME;
 import static software.wings.common.Constants.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 
 import com.google.inject.Inject;
@@ -34,6 +33,8 @@ import java.util.Set;
  */
 public class CreateSupportUserGroupsAndRenameAccountAdmin implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(CreateSupportUserGroupsAndRenameAccountAdmin.class);
+
+  private static final String DEFAULT_OLD_USER_GROUP_NAME = "ADMIN";
 
   @Inject private AuthHandler authHandler;
   @Inject private AccountService accountService;

@@ -5,7 +5,6 @@
 package software.wings.api;
 
 import software.wings.beans.ExecutionStrategy;
-import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
@@ -18,6 +17,9 @@ import java.util.Map;
  * @author Rishi
  */
 public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
+  private static final String SIMPLE_WORKFLOW_COMMAND_NAME = "SIMPLE_WORKFLOW_COMMAND_NAME";
+  private static final String SIMPLE_WORKFLOW_REPEAT_STRATEGY = "SIMPLE_WORKFLOW_REPEAT_STRATEGY";
+
   private ExecutionStrategy executionStrategy;
   private String commandName;
 
@@ -63,8 +65,8 @@ public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
     if (map == null) {
       map = new HashMap<>();
     }
-    map.put(Constants.SIMPLE_WORKFLOW_COMMAND_NAME, commandName);
-    map.put(Constants.SIMPLE_WORKFLOW_REPEAT_STRATEGY, executionStrategy);
+    map.put(SIMPLE_WORKFLOW_COMMAND_NAME, commandName);
+    map.put(SIMPLE_WORKFLOW_REPEAT_STRATEGY, executionStrategy);
     return map;
   }
 

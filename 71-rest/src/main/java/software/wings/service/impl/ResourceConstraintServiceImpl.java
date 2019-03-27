@@ -136,7 +136,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ResourceConstraint.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ResourceConstraint.class).filter(ResourceConstraint.ACCOUNT_ID_KEY, accountId));
   }
 
   @Override

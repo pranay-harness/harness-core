@@ -8,9 +8,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
-import static software.wings.common.Constants.UUID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -64,7 +64,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     InfrastructureProvisioner infrastructureProvisioner =
         CloudFormationInfrastructureProvisioner.builder()
             .appId(APP_ID)
-            .uuid(UUID)
+            .uuid(ID_KEY)
             .mappingBlueprints(Arrays.asList(
                 InfrastructureMappingBlueprint.builder()
                     .cloudProviderType(CloudProviderType.AWS)
@@ -88,7 +88,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     doReturn(true).doReturn(false).when(infrastructureMappings).hasNext();
     InfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()
                                                       .withAppId(APP_ID)
-                                                      .withProvisionerId(UUID)
+                                                      .withProvisionerId(ID_KEY)
                                                       .withServiceId(SERVICE_ID)
                                                       .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
                                                       .build();
@@ -110,7 +110,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .build();
 
     doReturn(infrastructureMapping).when(infrastructureMappingService).update(any());
-    infrastructureProvisionerService.regenerateInfrastructureMappings(UUID, executionContext, objectMap);
+    infrastructureProvisionerService.regenerateInfrastructureMappings(ID_KEY, executionContext, objectMap);
 
     ArgumentCaptor<InfrastructureMapping> captor = ArgumentCaptor.forClass(InfrastructureMapping.class);
     verify(infrastructureMappingService).update(captor.capture());
