@@ -54,8 +54,6 @@ import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.intfc.GitService;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -70,8 +68,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(K8sRollingDeployTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Inject private GitService gitService;
-  @Inject private EncryptionService encryptionService;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
 
   private KubernetesConfig kubernetesConfig;
@@ -95,8 +91,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     List<ManifestFile> manifestFiles =
         k8sTaskHelper.fetchManifestFiles(k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig(),
-            k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles), gitService,
-            encryptionService);
+            k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles));
     if (manifestFiles == null) {
       return getFailureResponse();
     }
@@ -209,8 +204,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);
 
-      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          request.getK8sDelegateManifestConfig().getManifestFiles(), request.getValuesYamlList(), executionLogCallback);
+      List<ManifestFile> manifestFiles =
+          k8sTaskHelper.renderTemplate(k8sDelegateTaskParams, request.getK8sDelegateManifestConfig(),
+              request.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
 

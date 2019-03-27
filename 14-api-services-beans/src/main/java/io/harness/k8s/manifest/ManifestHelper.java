@@ -40,6 +40,9 @@ public class ManifestHelper {
     try {
       YamlReader reader = new YamlReader(spec);
       Object o = reader.read();
+      if (o == null) {
+        return null;
+      }
       if (o instanceof Map) {
         map = (Map) o;
       } else {
@@ -84,7 +87,10 @@ public class ManifestHelper {
     List<KubernetesResource> resources = new ArrayList<>();
 
     for (String spec : specs) {
-      resources.add(getKubernetesResourceFromSpec(spec));
+      KubernetesResource resourceFromSpec = getKubernetesResourceFromSpec(spec);
+      if (resourceFromSpec != null) {
+        resources.add(resourceFromSpec);
+      }
     }
 
     return resources;
