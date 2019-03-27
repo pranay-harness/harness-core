@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 
@@ -89,7 +88,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     K8sTaskParameters k8sTaskParameters =
         K8sBlueGreenDeployTaskParameters.builder()
             .activityId(activityId)
-            .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+            .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY)
             .timeoutIntervalInMin(10)

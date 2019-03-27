@@ -26,6 +26,7 @@ public class GcpKubernetesInfraMappingYamlHandler
     yaml.setType(InfrastructureMappingType.GCP_KUBERNETES.name());
     yaml.setNamespace(bean.getNamespace());
     yaml.setCluster(bean.getClusterName());
+    yaml.setReleaseName(bean.getReleaseName());
     return yaml;
   }
 
@@ -60,6 +61,7 @@ public class GcpKubernetesInfraMappingYamlHandler
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setNamespace(yaml.getNamespace());
     bean.setClusterName(yaml.getCluster());
+    bean.setReleaseName(yaml.getReleaseName());
   }
 
   @Override

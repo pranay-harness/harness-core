@@ -363,6 +363,14 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     return null;
   }
 
+  @Override
+  public String getReleaseName() {
+    return null;
+  }
+
+  @Override
+  public void setReleaseName(String releaseName) {}
+
   public static final class Builder {
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;

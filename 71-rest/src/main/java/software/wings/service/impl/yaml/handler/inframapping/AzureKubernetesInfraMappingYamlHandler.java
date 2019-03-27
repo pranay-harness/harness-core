@@ -25,6 +25,7 @@ public class AzureKubernetesInfraMappingYamlHandler
     yaml.setSubscriptionId(bean.getSubscriptionId());
     yaml.setResourceGroup(bean.getResourceGroup());
     yaml.setNamespace(bean.getNamespace());
+    yaml.setReleaseName(bean.getReleaseName());
     return yaml;
   }
 
@@ -61,6 +62,7 @@ public class AzureKubernetesInfraMappingYamlHandler
     bean.setResourceGroup(yaml.getResourceGroup());
     bean.setClusterName(yaml.getCluster());
     bean.setNamespace(yaml.getNamespace());
+    bean.setReleaseName(yaml.getReleaseName());
   }
 
   @Override

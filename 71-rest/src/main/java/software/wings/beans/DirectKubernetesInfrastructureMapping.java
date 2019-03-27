@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.Trimmed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Namespace") private String namespace;
+  @Trimmed private String releaseName;
 
   public DirectKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.DIRECT_KUBERNETES.name());
@@ -62,6 +64,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String accountId;
     private String clusterName;
     private String namespace;
+    private String releaseName;
     private String uuid;
     private EmbeddedUser createdBy;
     private long createdAt;
@@ -92,6 +95,11 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
     public Builder withNamespace(String namespace) {
       this.namespace = namespace;
+      return this;
+    }
+
+    public Builder withReleaseName(String releaseName) {
+      this.releaseName = releaseName;
       return this;
     }
 
@@ -190,6 +198,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
           new DirectKubernetesInfrastructureMapping();
       directKubernetesInfrastructureMapping.setClusterName(clusterName);
       directKubernetesInfrastructureMapping.setNamespace(namespace);
+      directKubernetesInfrastructureMapping.setReleaseName(releaseName);
       directKubernetesInfrastructureMapping.setUuid(uuid);
       directKubernetesInfrastructureMapping.setAppId(appId);
       directKubernetesInfrastructureMapping.setCreatedBy(createdBy);
@@ -226,12 +235,14 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String serviceAccountToken;
     private String clientKeyAlgo;
     private String namespace;
+    private String releaseName;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
         String username, String password, String caCert, String clientCert, String clientKey,
-        String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, String namespace) {
+        String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, String namespace,
+        String releaseName) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, cluster);
       this.masterUrl = masterUrl;
@@ -244,6 +255,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       this.serviceAccountToken = serviceAccountToken;
       this.clientKeyAlgo = clientKeyAlgo;
       this.namespace = namespace;
+      this.releaseName = releaseName;
     }
   }
 }

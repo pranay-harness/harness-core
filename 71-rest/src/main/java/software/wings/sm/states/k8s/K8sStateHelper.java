@@ -2,12 +2,14 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.contains;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -664,5 +666,15 @@ public class K8sStateHelper {
 
     ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
     return StoreType.Local.equals(applicationManifest.getStoreType());
+  }
+
+  public String getReleaseName(ExecutionContext context, ContainerInfrastructureMapping infraMapping) {
+    String releaseName = infraMapping.getReleaseName();
+
+    if (isBlank(releaseName)) {
+      releaseName = convertBase64UuidToCanonicalForm(infraMapping.getUuid());
+    }
+
+    return context.renderExpression(releaseName);
   }
 }

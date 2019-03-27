@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 
@@ -96,7 +95,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     K8sTaskParameters k8sTaskParameters =
         K8sRollingDeployTaskParameters.builder()
             .activityId(activityId)
-            .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+            .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
             .isInCanaryWorkflow(inCanaryFlow)
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)

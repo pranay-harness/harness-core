@@ -50,6 +50,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   public static final String NAME_KEY = "name";
   public static final String PROVISIONER_ID_KEY = "provisionerId";
   public static final String SERVICE_ID_KEY = "serviceId";
+  public static final String INFRA_MAPPING_TYPE_KEY = "infraMappingType";
 
   @NotEmpty private String computeProviderSettingId;
   @NotEmpty private String envId;

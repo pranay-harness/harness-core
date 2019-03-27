@@ -50,6 +50,7 @@ import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
 import migrations.all.InitUserCounters;
 import migrations.all.InitWorkflowCounters;
+import migrations.all.K8sV2ServiceInfraReleaseNameMigration;
 import migrations.all.LdapSettingsMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LicenseDataMigration;
@@ -207,6 +208,7 @@ public class MigrationList {
         .add(Pair.of(234, VerificationMetricJobMigration.class))
         .add(Pair.of(235, NexusDockerArtifactStreamMigration.class))
         .add(Pair.of(236, LogAnalysisDeprecatedRecordMigration.class))
+        .add(Pair.of(237, K8sV2ServiceInfraReleaseNameMigration.class))
         .build();
   }
 }

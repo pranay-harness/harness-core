@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.Trimmed;
 import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Namespace") private String namespace;
+  @Trimmed private String releaseName;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -76,6 +78,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     private String accountId;
     private String clusterName;
     private String namespace;
+    private String releaseName;
     private String uuid;
     private EmbeddedUser createdBy;
     private long createdAt;
@@ -123,6 +126,11 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
      */
     public Builder withNamespace(String namespace) {
       this.namespace = namespace;
+      return this;
+    }
+
+    public Builder withReleaseName(String releaseName) {
+      this.releaseName = releaseName;
       return this;
     }
 
@@ -327,6 +335,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping = new GcpKubernetesInfrastructureMapping();
       gcpKubernetesInfrastructureMapping.setClusterName(clusterName);
       gcpKubernetesInfrastructureMapping.setNamespace(namespace);
+      gcpKubernetesInfrastructureMapping.setReleaseName(releaseName);
       gcpKubernetesInfrastructureMapping.setUuid(uuid);
       gcpKubernetesInfrastructureMapping.setAppId(appId);
       gcpKubernetesInfrastructureMapping.setCreatedBy(createdBy);
@@ -357,13 +366,16 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
     private String namespace;
+    private String releaseName;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String namespace) {
+        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String namespace,
+        String releaseName) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, cluster);
       this.namespace = namespace;
+      this.releaseName = releaseName;
     }
   }
 }
