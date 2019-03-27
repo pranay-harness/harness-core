@@ -116,6 +116,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
+  @Ignore
   public void shouldSaveNexusConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
@@ -141,6 +142,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
+  @Ignore
   public void shouldSaveBambooConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
