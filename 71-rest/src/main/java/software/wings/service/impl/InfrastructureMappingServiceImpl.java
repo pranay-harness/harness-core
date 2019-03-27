@@ -165,6 +165,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private static final Logger logger = LoggerFactory.getLogger(InfrastructureMappingServiceImpl.class);
 
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
+  private static final String INFRA_KUBERNETES_INFRAID_EXPRESSION = "${infra.kubernetes.infraId}";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
@@ -291,6 +292,27 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  private String fetchReleaseName(InfrastructureMapping infraMapping) {
+    Service service = serviceResourceService.get(infraMapping.getAppId(), infraMapping.getServiceId(), false);
+    if (service == null || !service.isK8sV2()) {
+      return null;
+    }
+
+    String releaseName = null;
+
+    if (infraMapping instanceof AzureKubernetesInfrastructureMapping
+        || infraMapping instanceof DirectKubernetesInfrastructureMapping
+        || infraMapping instanceof GcpKubernetesInfrastructureMapping) {
+      releaseName = ((ContainerInfrastructureMapping) infraMapping).getReleaseName();
+
+      if (isBlank(releaseName)) {
+        releaseName = INFRA_KUBERNETES_INFRAID_EXPRESSION;
+      }
+    }
+
+    return releaseName;
+  }
+
   @Override
   @ValidationGroups(Create.class)
   public InfrastructureMapping save(@Valid InfrastructureMapping infraMapping) {
@@ -314,6 +336,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraMapping.setServiceId(serviceTemplate.getServiceId());
     if (computeProviderSetting != null) {
       infraMapping.setComputeProviderName(computeProviderSetting.getName());
+    }
+
+    if (infraMapping instanceof ContainerInfrastructureMapping) {
+      ((ContainerInfrastructureMapping) infraMapping).setReleaseName(fetchReleaseName(infraMapping));
     }
 
     validateInfraMapping(infraMapping, fromYaml);
@@ -569,6 +595,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (computeProviderSetting != null) {
       keyValuePairs.put("computeProviderName", computeProviderSetting.getName());
     }
+
+    if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
+      String releaseName = fetchReleaseName(infrastructureMapping);
+      if (isNotBlank(releaseName)) {
+        keyValuePairs.put("releaseName", releaseName);
+      }
+    }
+
     wingsPersistence.updateFields(
         infrastructureMapping.getClass(), infrastructureMapping.getUuid(), keyValuePairs, fieldsToRemove);
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());

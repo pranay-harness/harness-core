@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_DELETE;
 
@@ -80,7 +79,7 @@ public class K8sDelete extends State {
 
       K8sTaskParameters k8sTaskParameters = K8sDeleteTaskParameters.builder()
                                                 .activityId(activity.getUuid())
-                                                .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+                                                .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
                                                 .commandName(K8S_DELETE_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.DELETE)
                                                 .resources(context.renderExpression(this.resources))

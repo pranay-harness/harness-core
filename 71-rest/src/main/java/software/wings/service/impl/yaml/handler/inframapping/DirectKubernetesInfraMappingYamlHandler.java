@@ -29,6 +29,7 @@ public class DirectKubernetesInfraMappingYamlHandler
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.DIRECT_KUBERNETES.name());
     yaml.setNamespace(bean.getNamespace());
+    yaml.setReleaseName(bean.getReleaseName());
     return yaml;
   }
 
@@ -64,6 +65,7 @@ public class DirectKubernetesInfraMappingYamlHandler
     super.toBean(changeContext, bean, appId, envId, serviceId, null);
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setNamespace(infraMappingYaml.getNamespace());
+    bean.setReleaseName(infraMappingYaml.getReleaseName());
 
     // Hardcoding it to some value since its a not null field in db. This field was used in name generation logic, but
     // no more.

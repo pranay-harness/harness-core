@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.Trimmed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   @Attributes(title = "SubscriptionId") private String subscriptionId;
   @Attributes(title = "Resource Group") private String resourceGroup;
   @Attributes(title = "Namespace") private String namespace;
+  @Trimmed private String releaseName;
 
   public AzureKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.AZURE_KUBERNETES.name());
@@ -48,6 +50,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
     private String subscriptionId;
     private String resourceGroup;
     private String namespace;
+    private String releaseName;
     private String uuid;
     private EmbeddedUser createdBy;
     private long createdAt;
@@ -88,6 +91,11 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
 
     public Builder withNamespace(String namespace) {
       this.namespace = namespace;
+      return this;
+    }
+
+    public Builder withReleaseName(String releaseName) {
+      this.releaseName = releaseName;
       return this;
     }
 
@@ -188,6 +196,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
       azureKubernetesInfrastructureMapping.setSubscriptionId(subscriptionId);
       azureKubernetesInfrastructureMapping.setResourceGroup(resourceGroup);
       azureKubernetesInfrastructureMapping.setNamespace(namespace);
+      azureKubernetesInfrastructureMapping.setReleaseName(releaseName);
       azureKubernetesInfrastructureMapping.setUuid(uuid);
       azureKubernetesInfrastructureMapping.setAppId(appId);
       azureKubernetesInfrastructureMapping.setCreatedBy(createdBy);
@@ -217,16 +226,18 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
     private String subscriptionId;
     private String resourceGroup;
     private String namespace;
+    private String releaseName;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String cluster,
-        String subscriptionId, String resourceGroup, String namespace) {
+        String subscriptionId, String resourceGroup, String namespace, String releaseName) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, cluster);
       this.subscriptionId = subscriptionId;
       this.resourceGroup = resourceGroup;
       this.namespace = namespace;
+      this.releaseName = releaseName;
     }
   }
 }

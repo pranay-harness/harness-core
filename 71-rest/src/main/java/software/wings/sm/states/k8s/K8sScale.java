@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_SCALE;
 
@@ -93,7 +92,7 @@ public class K8sScale extends State {
 
       K8sTaskParameters k8sTaskParameters = K8sScaleTaskParameters.builder()
                                                 .activityId(activity.getUuid())
-                                                .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+                                                .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
                                                 .commandName(K8S_SCALE_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.SCALE)
                                                 .workload(context.renderExpression(this.workload))

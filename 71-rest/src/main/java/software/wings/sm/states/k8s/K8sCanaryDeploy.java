@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static java.lang.Integer.parseInt;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
@@ -101,7 +100,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     K8sTaskParameters k8sTaskParameters =
         K8sCanaryDeployTaskParameters.builder()
             .activityId(activityId)
-            .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+            .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
             .commandName(K8S_CANARY_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.CANARY_DEPLOY)
             .instances(Integer.valueOf(context.renderExpression(this.instances)))

@@ -46,6 +46,7 @@ import java.util.List;
 public class Service extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String ARTIFACT_TYPE = "artifactType";
+  public static final String IS_K8S_V2_KEY = "isK8sV2";
 
   @Trimmed @EntityName private String name;
   private String description;
