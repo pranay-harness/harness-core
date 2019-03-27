@@ -137,6 +137,7 @@ import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -1019,15 +1020,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
     }
 
-    StateMachine stateMachine = workflowService.readStateMachine(appId, workflowId, workflow.getDefaultVersion());
-    if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + workflowId);
-    }
+    StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
+        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), workflowService.stencilMap());
 
-    // TODO switch to this when it is safe
-    //    StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
-    //        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
-    //        workflowService.stencilMap());
+    // TODO: this is workaround for a side effect in the state machine generation that mangles with the original
+    //       workflow object.
+    workflow = workflowService.readWorkflow(appId, workflowId);
 
     stateMachine.setOrchestrationWorkflow(null);
 
