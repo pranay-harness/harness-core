@@ -34,6 +34,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String APP_ID_KEY = "appId";
   public static final String ASYNC_KEY = "async";
   public static final String DATA_PARAMETERS_KEY = "data.parameters";

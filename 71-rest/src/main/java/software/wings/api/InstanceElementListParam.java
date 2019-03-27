@@ -5,7 +5,6 @@
 package software.wings.api;
 
 import io.harness.context.ContextElementType;
-import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
@@ -18,6 +17,8 @@ import java.util.Map;
  * @author Rishi
  */
 public class InstanceElementListParam implements ContextElement {
+  public static final String INSTANCE_LIST_PARAMS = "INSTANCE_LIST_PARAMS";
+
   private List<InstanceElement> instanceElements;
   private List<PcfInstanceElement> pcfInstanceElements;
 
@@ -33,7 +34,7 @@ public class InstanceElementListParam implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.INSTANCE_LIST_PARAMS;
+    return INSTANCE_LIST_PARAMS;
   }
 
   @Override

@@ -3,7 +3,6 @@ package software.wings.service.impl.instance;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.mongo.MongoUtils.setUnset;
-import static software.wings.common.Constants.WEEK;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -306,7 +305,7 @@ public class InstanceServiceImpl implements InstanceService {
       String infraMappingName, long timestamp, String errorMsg) {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
     if (syncStatus != null) {
-      if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= WEEK) {
+      if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
         logger.info("Deleting the instances for inframapping {} since sync has been failing for more than a week",
             infraMappingId);
         wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());

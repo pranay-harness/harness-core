@@ -8,8 +8,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.Constants.DEFAULT_FREE_LICENSE_UNITS;
 import static software.wings.common.Constants.DEFAULT_TRIAL_LICENSE_UNITS;
-import static software.wings.common.Constants.MONTH;
-import static software.wings.common.Constants.WEEK;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -43,6 +41,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.utils.Validator;
 
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -121,12 +120,12 @@ public class LicenseServiceImpl implements LicenseService {
           long currentTime = System.currentTimeMillis();
           if (currentTime < expiryTime) {
             if (accountType.equals(AccountType.PAID)) {
-              if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= MONTH)) {
+              if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= Duration.ofDays(30).toMillis())) {
                 sendEmail(account, expiryTime, accountType, Constants.EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
                     Constants.EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, paidDefaultContacts);
               }
             } else if (accountType.equals(AccountType.TRIAL)) {
-              if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= WEEK)) {
+              if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= Duration.ofDays(7).toMillis())) {
                 sendEmail(account, expiryTime, accountType, Constants.EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
                     Constants.EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
               }

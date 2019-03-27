@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
-import software.wings.common.Constants;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -225,7 +225,7 @@ public class MarketoHelper {
       return "0";
     }
 
-    return "" + delta / Constants.DAY;
+    return "" + delta / Duration.ofDays(1).toMillis();
   }
 
   public String getErrorMsg(List<Error> errors) {

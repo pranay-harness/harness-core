@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
-import static software.wings.service.intfc.ownership.OwnedByAccount.ACCOUNT_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -156,7 +155,7 @@ public class AlertCheckJob implements Job {
    */
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
     Query<DelegateConnection> query =
-        wingsPersistence.createQuery(DelegateConnection.class).filter(ACCOUNT_ID, accountId);
+        wingsPersistence.createQuery(DelegateConnection.class).filter(DelegateConnection.ACCOUNT_ID_KEY, accountId);
     String primaryVersion = wingsPersistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
     if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
       query.filter("version", primaryVersion);

@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.InstanceElementListParam.INSTANCE_LIST_PARAMS;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 
 import com.google.common.collect.Lists;
@@ -393,7 +394,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       return null;
     }
     for (ContextElement param : params) {
-      if (Constants.INSTANCE_LIST_PARAMS.equals(param.getName())) {
+      if (INSTANCE_LIST_PARAMS.equals(param.getName())) {
         return (InstanceElementListParam) param;
       }
     }

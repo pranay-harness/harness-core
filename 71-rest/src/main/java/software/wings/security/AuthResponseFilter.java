@@ -1,9 +1,6 @@
 package software.wings.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.Constants.HTTP_DELETE;
-import static software.wings.common.Constants.HTTP_POST;
-import static software.wings.common.Constants.HTTP_PUT;
 import static software.wings.common.Constants.RESOURCE_URI_CLONE_APP;
 import static software.wings.common.Constants.RESOURCE_URI_CLONE_ENVIRONMENT;
 import static software.wings.common.Constants.RESOURCE_URI_CLONE_PIPELINE;
@@ -29,6 +26,7 @@ import com.google.inject.Singleton;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.HttpMethod;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 
@@ -66,14 +64,14 @@ public class AuthResponseFilter implements ContainerResponseFilter {
     String httpMethod = requestContext.getMethod();
     String resourcePath = requestContext.getUriInfo().getAbsolutePath().getPath();
 
-    if (HTTP_PUT.equals(httpMethod)
+    if (HttpMethod.PUT.name().equals(httpMethod)
         && restResourcesUpdateURIs.stream().anyMatch(pattern -> resourcePath.matches(pattern))) {
       if (resourcePath.matches(RESOURCE_URI_UPDATE_ENVIRONMENT)) {
         evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);
       } else {
         evictPermissions(requestContext, resourcePath, true);
       }
-    } else if (HTTP_POST.equals(httpMethod)
+    } else if (HttpMethod.POST.name().equals(httpMethod)
         && (restResourcesCreateURIs.contains(resourcePath)
                || restResourcesCloneURIs.stream().anyMatch(pattern -> resourcePath.matches(pattern)))) {
       if (resourcePath.equals(RESOURCE_URI_CREATE_APP) || resourcePath.equals(RESOURCE_URI_CREATE_ENVIRONMENT)
@@ -82,7 +80,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       } else {
         evictPermissions(requestContext, resourcePath, true);
       }
-    } else if (HTTP_DELETE.equals(httpMethod)
+    } else if (HttpMethod.DELETE.name().equals(httpMethod)
         && (resourcePath.matches(RESOURCE_URI_DELETE_APP) || resourcePath.matches(RESOURCE_URI_DELETE_ENVIRONMENT))) {
       evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);
     }

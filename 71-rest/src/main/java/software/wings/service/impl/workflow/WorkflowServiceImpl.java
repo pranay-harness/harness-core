@@ -975,8 +975,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     List<String> keywords = workflowServiceHelper.getKeywords(workflow);
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
-                                .filter(Constants.APP_ID, workflow.getAppId())
-                                .filter(Constants.UUID, workflow.getUuid()),
+                                .filter(Workflow.APP_ID_KEY, workflow.getAppId())
+                                .filter(Workflow.ID_KEY, workflow.getUuid()),
         wingsPersistence.createUpdateOperations(Workflow.class)
             .set("keywords", keywords)
             .set("linkedTemplateUuids", linkedTemplateUuids));

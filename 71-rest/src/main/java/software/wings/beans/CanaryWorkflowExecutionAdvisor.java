@@ -10,7 +10,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
-import static software.wings.common.Constants.ROLLING_PHASE_PREFIX;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
@@ -61,6 +60,8 @@ import java.util.Optional;
  */
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   private static final Logger logger = LoggerFactory.getLogger(CanaryWorkflowExecutionAdvisor.class);
+
+  private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
