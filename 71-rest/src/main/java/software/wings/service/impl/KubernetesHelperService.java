@@ -2,11 +2,17 @@ package software.wings.service.impl;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER;
+import static io.fabric8.kubernetes.client.Config.KUBERNETES_KUBECONFIG_FILE;
+import static io.fabric8.kubernetes.client.Config.KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH;
+import static io.fabric8.kubernetes.client.Config.KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH;
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.filesystem.FileIo.getHomeDir;
+import static io.harness.govern.Switch.noop;
 import static io.harness.network.Http.getOkHttpClientBuilder;
+import static io.harness.network.Http.joinHostPort;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
@@ -35,6 +41,7 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
+import io.fabric8.kubernetes.client.utils.Utils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
@@ -58,17 +65,21 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlRepresenter;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -419,5 +430,80 @@ public class KubernetesHelperService {
       String[] versionParts = apiVersion.split("/");
       return versionParts[versionParts.length - 1];
     }
+  }
+
+  @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
+  public static KubernetesConfig getKubernetesConfigFromServiceAccount(String namespace) {
+    KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder().namespace(namespace);
+
+    String masterHost = Utils.getSystemPropertyOrEnvVar("KUBERNETES_SERVICE_HOST", (String) null);
+    String masterPort = Utils.getSystemPropertyOrEnvVar("KUBERNETES_SERVICE_PORT", (String) null);
+    if (masterHost != null && masterPort != null) {
+      String hostPort = joinHostPort(masterHost, masterPort);
+      kubernetesConfigBuilder.masterUrl("https://" + hostPort);
+    }
+
+    String caCert = getFileContent(KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH);
+    if (isNotBlank(caCert)) {
+      kubernetesConfigBuilder.caCert(caCert.toCharArray());
+    }
+
+    String serviceAccountToken = getFileContent(KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH);
+    if (isNotBlank(serviceAccountToken)) {
+      kubernetesConfigBuilder.serviceAccountToken(serviceAccountToken.toCharArray());
+    }
+
+    return kubernetesConfigBuilder.build();
+  }
+
+  public static KubernetesConfig getKubernetesConfigFromDefaultKubeConfigFile(String namespace) {
+    KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder().namespace(namespace);
+
+    File kubeConfigFile = new File(Utils.getSystemPropertyOrEnvVar(
+        KUBERNETES_KUBECONFIG_FILE, new File(getHomeDir(), ".kube" + File.separator + "config").toString()));
+    boolean kubeConfigFileExists = Files.isRegularFile(kubeConfigFile.toPath());
+
+    if (kubeConfigFileExists) {
+      String kubeconfigContents;
+      try {
+        kubeconfigContents = new String(Files.readAllBytes(kubeConfigFile.toPath()), StandardCharsets.UTF_8);
+        Config config = Config.fromKubeconfig(null, kubeconfigContents, kubeConfigFile.getPath());
+        return kubernetesConfigBuilder.masterUrl(config.getMasterUrl())
+            .username(config.getUsername())
+            .password(getCharArray(config.getPassword()))
+            .caCert(getCharArray(config.getCaCertData()))
+            .clientCert(getCharArray(config.getClientCertData()))
+            .clientKey(getCharArray(config.getClientKeyData()))
+            .clientKeyPassphrase(getCharArray(config.getClientKeyPassphrase()))
+            .serviceAccountToken(getCharArray(config.getOauthToken()))
+            .clientKeyAlgo(config.getClientKeyAlgo())
+            .build();
+      } catch (IOException e) {
+        logger.error("Could not load Kubernetes config file from {}", kubeConfigFile.getPath(), e);
+      }
+    }
+    return kubernetesConfigBuilder.build();
+  }
+
+  private static char[] getCharArray(String input) {
+    if (input == null) {
+      return null;
+    }
+    return input.toCharArray();
+  }
+
+  public static boolean isRunningInCluster() {
+    return Utils.getSystemPropertyOrEnvVar("KUBERNETES_SERVICE_HOST", (String) null) != null;
+  }
+
+  private static String getFileContent(String filename) {
+    try {
+      if (Files.isRegularFile(new File(filename).toPath())) {
+        return new String(Files.readAllBytes(new File(filename).toPath()), StandardCharsets.UTF_8);
+      }
+    } catch (IOException e) {
+      noop(); // Ignore
+    }
+    return "";
   }
 }

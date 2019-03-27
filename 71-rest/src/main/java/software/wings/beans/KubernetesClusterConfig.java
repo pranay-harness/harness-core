@@ -1,10 +1,9 @@
 package software.wings.beans;
 
-import static io.fabric8.kubernetes.client.Config.KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH;
-import static io.fabric8.kubernetes.client.Config.KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH;
-import static io.harness.govern.Switch.noop;
-import static io.harness.network.Http.joinHostPort;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
+import static software.wings.service.impl.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
+import static software.wings.service.impl.KubernetesHelperService.isRunningInCluster;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.fabric8.kubernetes.client.utils.Utils;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -28,11 +26,6 @@ import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 
 @JsonTypeName("KUBERNETES_CLUSTER")
 @JsonInclude(Include.NON_NULL)
@@ -105,46 +98,15 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     return decrypted || isNotBlank(delegateName);
   }
 
-  @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
-  private static KubernetesConfig getKubernetesConfigFromServiceAccount(String namespace) {
-    KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder().namespace(namespace);
-
-    String masterHost = Utils.getSystemPropertyOrEnvVar("KUBERNETES_SERVICE_HOST", (String) null);
-    String masterPort = Utils.getSystemPropertyOrEnvVar("KUBERNETES_SERVICE_PORT", (String) null);
-    if (masterHost != null && masterPort != null) {
-      String hostPort = joinHostPort(masterHost, masterPort);
-      kubernetesConfigBuilder.masterUrl("https://" + hostPort);
-    }
-
-    String caCert = getFileContent(KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH);
-    if (isNotBlank(caCert)) {
-      kubernetesConfigBuilder.caCert(caCert.toCharArray());
-    }
-
-    String serviceAccountToken = getFileContent(KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH);
-    if (isNotBlank(serviceAccountToken)) {
-      kubernetesConfigBuilder.serviceAccountToken(serviceAccountToken.toCharArray());
-    }
-
-    return kubernetesConfigBuilder.build();
-  }
-
-  private static String getFileContent(String filename) {
-    try {
-      if (Files.isRegularFile(new File(filename).toPath())) {
-        return new String(Files.readAllBytes(new File(filename).toPath()), StandardCharsets.UTF_8);
-      }
-    } catch (IOException e) {
-      noop(); // Ignore
-    }
-    return "";
-  }
-
   public KubernetesConfig createKubernetesConfig(String namespace) {
     String namespaceNotBlank = isNotBlank(namespace) ? namespace : "default";
 
     if (isUseKubernetesDelegate()) {
-      return getKubernetesConfigFromServiceAccount(namespaceNotBlank);
+      if (isRunningInCluster()) {
+        return getKubernetesConfigFromServiceAccount(namespaceNotBlank);
+      } else {
+        return getKubernetesConfigFromDefaultKubeConfigFile(namespaceNotBlank);
+      }
     }
 
     KubernetesConfigBuilder kubernetesConfig = KubernetesConfig.builder()
