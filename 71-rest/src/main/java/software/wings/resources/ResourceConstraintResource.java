@@ -5,6 +5,7 @@
 package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -48,7 +49,7 @@ public class ResourceConstraintResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SETTING)
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<PageResponse<ResourceConstraint>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<ResourceConstraint> pageRequest) {
     return new RestResponse<>(resourceConstraintService.list(pageRequest));
@@ -96,7 +97,7 @@ public class ResourceConstraintResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SETTING)
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<List<ResourceConstraintUsage>> usage(
       @QueryParam("accountId") String accountId, List<String> resourceConstraintIds) {
     return new RestResponse<>(resourceConstraintService.usage(accountId, resourceConstraintIds));
