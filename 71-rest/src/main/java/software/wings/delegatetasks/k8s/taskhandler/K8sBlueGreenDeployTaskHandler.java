@@ -63,8 +63,6 @@ import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.intfc.GitService;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -76,8 +74,6 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(K8sBlueGreenDeployTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Inject private GitService gitService;
-  @Inject private EncryptionService encryptionService;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
 
   private KubernetesConfig kubernetesConfig;
@@ -106,8 +102,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     List<ManifestFile> manifestFiles =
         k8sTaskHelper.fetchManifestFiles(k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(),
-            k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, FetchFiles), gitService,
-            encryptionService);
+            k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, FetchFiles));
     if (manifestFiles == null) {
       return getFailureResponse();
     }
@@ -192,8 +187,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     try {
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles(),
-          k8sBlueGreenDeployTaskParameters.getValuesYamlList(), executionLogCallback);
+          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(),
+          k8sBlueGreenDeployTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
+          executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {

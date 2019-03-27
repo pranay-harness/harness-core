@@ -225,7 +225,8 @@ public class K8sStateHelper {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
       ApplicationManifest applicationManifest = entry.getValue();
 
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Remote.equals(applicationManifest.getStoreType())
+          || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
         GitFileConfig gitFileConfig =
             gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
@@ -476,12 +477,12 @@ public class K8sStateHelper {
       k8sStateExecutor.validateParameters(context);
 
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap = getApplicationManifests(context);
-      boolean remoteStoreType = anyRemoteStoreType(appManifestMap);
+      boolean valuesInGit = isValuesInGit(appManifestMap);
 
       Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
-          activityService, k8sStateExecutor.commandUnitList(remoteStoreType));
+          activityService, k8sStateExecutor.commandUnitList(valuesInGit));
 
-      if (remoteStoreType) {
+      if (isValuesInGit(appManifestMap)) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
       } else {
         Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
@@ -605,10 +606,11 @@ public class K8sStateHelper {
         .collect(Collectors.toList());
   }
 
-  private boolean anyRemoteStoreType(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+  private boolean isValuesInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       ApplicationManifest applicationManifest = entry.getValue();
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
+      if (StoreType.Remote.equals(applicationManifest.getStoreType())
+          || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
         return true;
       }
     }

@@ -2,6 +2,9 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
@@ -70,6 +73,8 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.helpers.ext.helm.HelmClient;
+import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -92,6 +97,9 @@ public class K8sTaskHelper {
   @Inject protected DelegateLogService delegateLogService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject HelmClient helmClient;
+  @Inject private GitService gitService;
+  @Inject private EncryptionService encryptionService;
 
   private static final Logger logger = LoggerFactory.getLogger(K8sTaskHelper.class);
 
@@ -345,7 +353,50 @@ public class K8sTaskHelper {
     }
   }
 
-  public List<ManifestFile> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
+  private List<ManifestFile> getManifestFilesFromHelmTemplateCommandResponse(HelmCliResponse helmCliResponse) {
+    if (!CommandExecutionStatus.SUCCESS.equals(helmCliResponse.getCommandExecutionStatus())) {
+      throw new WingsException("Failed to render helm chart files with error: " + helmCliResponse.getOutput(), USER);
+    }
+
+    return asList(ManifestFile.builder().fileName("manifest.yaml").fileContent(helmCliResponse.getOutput()).build());
+  }
+
+  private List<ManifestFile> renderTemplateForHelmStoreType(K8sDelegateTaskParams k8sDelegateTaskParams,
+      List<ManifestFile> manifestFiles, List<String> valuesFiles, String releaseName, String namespace,
+      ExecutionLogCallback executionLogCallback) throws Exception {
+    try {
+      for (int i = 0; i < valuesFiles.size(); i++) {
+        validateValuesFileContents(valuesFiles.get(i));
+      }
+
+      String directoryPath = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), generateUuid()).toString();
+      for (int i = 0; i < manifestFiles.size(); i++) {
+        ManifestFile manifestFile = manifestFiles.get(i);
+        if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
+          continue;
+        }
+
+        Path filePath = Paths.get(directoryPath, manifestFile.getFileName());
+        Path parent = filePath.getParent();
+        if (parent == null) {
+          throw new WingsException("Failed to create file at path " + filePath.toString());
+        }
+
+        createDirectoryIfDoesNotExist(parent.toString());
+        FileIo.writeUtf8StringToFile(filePath.toString(), manifestFile.getFileContent());
+      }
+
+      executionLogCallback.saveExecutionLog("Rendering helm chart files");
+      HelmCliResponse helmCliResponse = helmClient.templateForK8sV2(releaseName, namespace, directoryPath, valuesFiles);
+
+      return getManifestFilesFromHelmTemplateCommandResponse(helmCliResponse);
+    } catch (Exception e) {
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
+      throw e;
+    }
+  }
+
+  private List<ManifestFile> renderTemplateForNonHelmStoreType(K8sDelegateTaskParams k8sDelegateTaskParams,
       List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
       throws Exception {
     if (isEmpty(valuesFiles)) {
@@ -400,6 +451,28 @@ public class K8sTaskHelper {
     }
 
     return result;
+  }
+
+  public List<ManifestFile> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
+      K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesFiles, String releaseName,
+      String namespace, ExecutionLogCallback executionLogCallback) throws Exception {
+    StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
+
+    switch (storeType) {
+      case Local:
+      case Remote:
+        return renderTemplateForNonHelmStoreType(
+            k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(), valuesFiles, executionLogCallback);
+
+      case HelmSourceRepo:
+        return renderTemplateForHelmStoreType(k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(),
+            valuesFiles, releaseName, namespace, executionLogCallback);
+
+      default:
+        unhandled(storeType);
+    }
+
+    return new ArrayList<>();
   }
 
   private static boolean isValidManifestFile(String filename) {
@@ -471,20 +544,6 @@ public class K8sTaskHelper {
     return sb.toString();
   }
 
-  private List<ManifestFile> getManifestFilesFromGit(
-      K8sDelegateManifestConfig delegateManifestConfig, GitService gitService, EncryptionService encryptionService) {
-    GitFileConfig gitFileConfig = delegateManifestConfig.getGitFileConfig();
-    GitConfig gitConfig = delegateManifestConfig.getGitConfig();
-
-    encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails());
-
-    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(delegateManifestConfig.getGitConfig(),
-        gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
-        asList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
-
-    return manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, gitFileConfig.getFilePath());
-  }
-
   private String getManifestFileNamesInLogFormat(List<ManifestFile> manifestFiles) {
     StringBuilder sb = new StringBuilder(1024);
     for (ManifestFile manifestFile : manifestFiles) {
@@ -495,19 +554,41 @@ public class K8sTaskHelper {
     return sb.toString();
   }
 
-  private List<ManifestFile> fetchManifestFilesForRemoteStore(K8sDelegateManifestConfig delegateManifestConfig,
-      ExecutionLogCallback executionLogCallback, GitService gitService, EncryptionService encryptionService) {
+  private void printGitConfigInExecutionLogs(
+      GitConfig gitConfig, GitFileConfig gitFileConfig, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("\nFetching manifest files");
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getRepoUrl());
+    if (gitFileConfig.isUseBranch()) {
+      executionLogCallback.saveExecutionLog("Branch: " + gitFileConfig.getBranch());
+    } else {
+      executionLogCallback.saveExecutionLog("CommitId: " + gitFileConfig.getCommitId());
+    }
+    executionLogCallback.saveExecutionLog("\nFetching manifest files at path: "
+        + (isBlank(gitFileConfig.getFilePath()) ? "." : gitFileConfig.getFilePath()));
+  }
+
+  private List<ManifestFile> fetchManifestFilesFromGit(
+      K8sDelegateManifestConfig delegateManifestConfig, ExecutionLogCallback executionLogCallback) {
     if (isBlank(delegateManifestConfig.getGitFileConfig().getFilePath())) {
       delegateManifestConfig.getGitFileConfig().setFilePath(StringUtils.EMPTY);
     }
-    String filePath = delegateManifestConfig.getGitFileConfig().getFilePath();
-    executionLogCallback.saveExecutionLog("\nFetching manifest files at path: " + (isBlank(filePath) ? "." : filePath));
 
     try {
+      GitFileConfig gitFileConfig = delegateManifestConfig.getGitFileConfig();
+      GitConfig gitConfig = delegateManifestConfig.getGitConfig();
+      printGitConfigInExecutionLogs(gitConfig, gitFileConfig, executionLogCallback);
+
+      encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails());
+
+      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(delegateManifestConfig.getGitConfig(),
+          gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
+          asList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
+
       List<ManifestFile> manifestFilesFromGit =
-          getManifestFilesFromGit(delegateManifestConfig, gitService, encryptionService);
+          manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, gitFileConfig.getFilePath());
+
       executionLogCallback.saveExecutionLog(
-          color("\nSuccessfully fetched following manifest [.yaml] files:", White, Bold));
+          color("Successfully fetched following manifest [.yaml] files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesFromGit));
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
       return manifestFilesFromGit;
@@ -517,16 +598,16 @@ public class K8sTaskHelper {
     }
   }
 
-  public List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
-      ExecutionLogCallback executionLogCallback, GitService gitService, EncryptionService encryptionService) {
+  public List<ManifestFile> fetchManifestFiles(
+      K8sDelegateManifestConfig delegateManifestConfig, ExecutionLogCallback executionLogCallback) {
     StoreType storeType = delegateManifestConfig.getManifestStoreTypes();
     switch (storeType) {
       case Local:
         return delegateManifestConfig.getManifestFiles();
 
       case Remote:
-        return fetchManifestFilesForRemoteStore(
-            delegateManifestConfig, executionLogCallback, gitService, encryptionService);
+      case HelmSourceRepo:
+        return fetchManifestFilesFromGit(delegateManifestConfig, executionLogCallback);
 
       default:
         unhandled(storeType);
