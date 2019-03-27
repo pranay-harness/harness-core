@@ -13,7 +13,6 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -52,7 +51,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
     settingId = wingsPersistence.save(Builder.aSettingAttribute()
                                           .withName(generateUuid())
                                           .withAccountId(accountId)
-                                          .withValue(new PrometheusConfig("http://104.154.216.249", accountId))
+                                          .withValue(new PrometheusConfig("http://35.247.2.110:8080", accountId))
                                           .build());
 
     workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
@@ -67,11 +66,33 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNode() {
     PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();
+    WebTarget target = client.target(API_BASE + "/"
+        + "prometheus"
+        + "/node-data"
+        + "?accountId=" + accountId);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(setupTestNodeData, MediaType.APPLICATION_JSON));
+    String responseString = restResponse.readEntity(String.class);
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    JSONObject response = jsonResponseObject.getJSONObject("resource");
+    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  @Test
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
+  public void testGetMetricsWithDataForNodeServiceLevel() {
+    PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();
+    setupTestNodeData.getTimeSeriesToCollect().iterator().next().setUrl(
+        "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_cpu_usage_seconds_total");
+    setupTestNodeData.setServiceLevel(true);
+
     WebTarget target = client.target(API_BASE + "/"
         + "prometheus"
         + "/node-data"

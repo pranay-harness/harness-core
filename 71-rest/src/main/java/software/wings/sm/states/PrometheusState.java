@@ -17,7 +17,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
-import software.wings.beans.Account;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -152,7 +151,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
 
   @Override
   public Map<String, String> validateFields() {
-    return PrometheusResource.validateTransactions(Account.GLOBAL_ACCOUNT_ID, timeSeriesToAnalyze);
+    return PrometheusResource.validateTransactions(timeSeriesToAnalyze, false);
   }
 
   public static Map<String, TimeSeriesMetricDefinition> createMetricTemplates(List<TimeSeries> timeSeriesToAnalyze) {
