@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -154,6 +155,15 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
 
     List<Service> services = serviceResourceService.findServicesByApp(appId);
+    if (isNotEmpty(services)) {
+      for (Service service : services) {
+        if (isBlank(service.getUuid())) {
+          logger.info(format("Null Service name %s uuid %s appId %s accountId %s", service.getName(), service.getUuid(),
+              service.getAppId(), service.getAccountId()));
+        }
+      }
+    }
+
     ImmutableMap<String, Service> serviceMap;
     try {
       serviceMap = Maps.uniqueIndex(services, Service::getUuid);
