@@ -47,10 +47,10 @@ public class PrometheusResource implements LogAnalysisResource {
   @Path("validate-metrics")
   public RestResponse<Map<String, String>> validateMetrics(
       @QueryParam("accountId") final String accountId, @NotEmpty List<TimeSeries> timeSeriesToAnalyze) {
-    return new RestResponse<>(validateTransactions(accountId, timeSeriesToAnalyze));
+    return new RestResponse<>(validateTransactions(timeSeriesToAnalyze, false));
   }
 
-  public static Map<String, String> validateTransactions(final String accountId, List<TimeSeries> timeSeriesToAnalyze) {
+  public static Map<String, String> validateTransactions(List<TimeSeries> timeSeriesToAnalyze, boolean serviceLevel) {
     Map<String, String> invalidFields = new HashMap<>();
     if (isEmpty(timeSeriesToAnalyze)) {
       invalidFields.put("timeSeriesToAnalyze", "No metrics given to analyze.");
@@ -59,7 +59,8 @@ public class PrometheusResource implements LogAnalysisResource {
     Map<String, MetricType> metricNameToType = new HashMap<>();
     timeSeriesToAnalyze.forEach(timeSeries -> {
       List<String> missingPlaceHolders = new ArrayList<>();
-      if (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(HOST_NAME_PLACE_HOLDER)) {
+
+      if (!serviceLevel && (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(HOST_NAME_PLACE_HOLDER))) {
         missingPlaceHolders.add(HOST_NAME_PLACE_HOLDER);
       }
 
@@ -102,6 +103,7 @@ public class PrometheusResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @Valid PrometheusSetupTestNodeData setupTestNodeData) {
+    validateTransactions(setupTestNodeData.getTimeSeriesToCollect(), setupTestNodeData.isServiceLevel());
     return new RestResponse<>(analysisService.getMetricsWithDataForNode(setupTestNodeData));
   }
 }

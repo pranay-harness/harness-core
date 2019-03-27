@@ -53,7 +53,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
         createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid());
 
     String hostName = null;
-    if (!isEmpty(setupTestNodeData.getInstanceElement().getHostName())) {
+    if (!setupTestNodeData.isServiceLevel()) {
       hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
     }
 
@@ -64,16 +64,18 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeriesWithoutHost =
         getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, null);
 
-    if (!metricDataResponseByTimeSeriesWithoutHost.isEmpty()) {
-      setupResponse = VerificationNodeDataSetupResponse.builder()
-                          .providerReachable(true)
-                          .loadResponse(VerificationLoadResponse.builder()
-                                            .isLoadPresent(metricDataResponseByTimeSeriesWithoutHost.isEmpty())
-                                            .loadResponse(metricDataResponseByTimeSeriesWithoutHost)
-                                            .build())
-                          .build();
-    } else {
-      // No need to make a call with host if no data is present for without host.
+    if (setupTestNodeData.isServiceLevel() || !metricDataResponseByTimeSeriesWithoutHost.isEmpty()) {
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .loadResponse(VerificationLoadResponse.builder()
+                            .isLoadPresent(metricDataResponseByTimeSeriesWithoutHost.isEmpty())
+                            .loadResponse(metricDataResponseByTimeSeriesWithoutHost)
+                            .build())
+          .build();
+    }
+
+    // No need to make a call with host if no data is present for without host.
+    if (metricDataResponseByTimeSeriesWithoutHost.isEmpty()) {
       return setupResponse;
     }
 
@@ -110,11 +112,13 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
       String url = timeSeries.getUrl();
       Preconditions.checkState(url.contains(START_TIME_PLACE_HOLDER));
       Preconditions.checkState(url.contains(END_TIME_PLACE_HOLDER));
-      Preconditions.checkState(url.contains(HOST_NAME_PLACE_HOLDER));
       url = url.replace(START_TIME_PLACE_HOLDER, String.valueOf(setupTestNodeData.getFromTime()));
       url = url.replace(END_TIME_PLACE_HOLDER, String.valueOf(setupTestNodeData.getToTime()));
-      url = updateUrlByHostName(url, hostName);
 
+      if (!setupTestNodeData.isServiceLevel()) {
+        Preconditions.checkState(url.contains(HOST_NAME_PLACE_HOLDER));
+        url = updateUrlByHostName(url, hostName);
+      }
       SyncTaskContext taskContext = SyncTaskContext.builder()
                                         .accountId(settingAttribute.getAccountId())
                                         .appId(GLOBAL_APP_ID)
