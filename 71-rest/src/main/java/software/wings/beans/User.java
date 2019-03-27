@@ -85,7 +85,7 @@ public class User extends Base implements Principal {
   private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
   @JsonIgnore private String totpSecretKey;
   @JsonIgnore private long marketoLeadId;
-  @JsonIgnore private String oauthProvider;
+  private String oauthProvider;
   @JsonIgnore private Set<String> reportedMarketoCampaigns = new HashSet<>();
 
   /**
@@ -447,12 +447,10 @@ public class User extends Base implements Principal {
     this.reportedMarketoCampaigns = reportedMarketoCampaigns;
   }
 
-  @JsonIgnore
   public String getOauthProvider() {
     return oauthProvider;
   }
 
-  @JsonIgnore
   public void setOauthProvider(String oauthProvider) {
     this.oauthProvider = oauthProvider;
   }
