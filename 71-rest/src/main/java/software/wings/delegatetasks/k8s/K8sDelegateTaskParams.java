@@ -10,4 +10,5 @@ public class K8sDelegateTaskParams {
   String kubeconfigPath;
   String workingDirectory;
   String goTemplateClientPath;
+  String helmPath;
 }

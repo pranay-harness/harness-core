@@ -2,8 +2,6 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
@@ -73,8 +71,6 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.helpers.ext.helm.HelmClient;
-import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -97,7 +93,6 @@ public class K8sTaskHelper {
   @Inject protected DelegateLogService delegateLogService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private TimeLimiter timeLimiter;
-  @Inject HelmClient helmClient;
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
 
@@ -353,50 +348,69 @@ public class K8sTaskHelper {
     }
   }
 
-  private List<ManifestFile> getManifestFilesFromHelmTemplateCommandResponse(HelmCliResponse helmCliResponse) {
-    if (!CommandExecutionStatus.SUCCESS.equals(helmCliResponse.getCommandExecutionStatus())) {
-      throw new WingsException("Failed to render helm chart files with error: " + helmCliResponse.getOutput(), USER);
+  private String writeValuesToFile(String directoryPath, List<String> valuesFiles) throws Exception {
+    StringBuilder valuesFilesOptionsBuilder = new StringBuilder(128);
+
+    for (int i = 0; i < valuesFiles.size(); i++) {
+      validateValuesFileContents(valuesFiles.get(i));
+      String valuesFileName = format("values-%d.yaml", i);
+      FileIo.writeUtf8StringToFile(directoryPath + '/' + valuesFileName, valuesFiles.get(i));
+      valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
     }
 
-    return asList(ManifestFile.builder().fileName("manifest.yaml").fileContent(helmCliResponse.getOutput()).build());
+    return valuesFilesOptionsBuilder.toString();
   }
 
-  private List<ManifestFile> renderTemplateForHelmStoreType(K8sDelegateTaskParams k8sDelegateTaskParams,
+  private List<ManifestFile> renderTemplateForHelm(K8sDelegateTaskParams k8sDelegateTaskParams,
       List<ManifestFile> manifestFiles, List<String> valuesFiles, String releaseName, String namespace,
       ExecutionLogCallback executionLogCallback) throws Exception {
-    try {
-      for (int i = 0; i < valuesFiles.size(); i++) {
-        validateValuesFileContents(valuesFiles.get(i));
+    String directoryPath = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), "helm-chart").toString();
+    createDirectoryIfDoesNotExist(directoryPath);
+
+    String valuesFileOptions = writeValuesToFile(directoryPath, valuesFiles);
+    logger.info("Values file options: " + valuesFileOptions);
+
+    for (int i = 0; i < manifestFiles.size(); i++) {
+      ManifestFile manifestFile = manifestFiles.get(i);
+      if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
+        continue;
       }
 
-      String directoryPath = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), generateUuid()).toString();
-      for (int i = 0; i < manifestFiles.size(); i++) {
-        ManifestFile manifestFile = manifestFiles.get(i);
-        if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
-          continue;
-        }
-
-        Path filePath = Paths.get(directoryPath, manifestFile.getFileName());
-        Path parent = filePath.getParent();
-        if (parent == null) {
-          throw new WingsException("Failed to create file at path " + filePath.toString());
-        }
-
-        createDirectoryIfDoesNotExist(parent.toString());
-        FileIo.writeUtf8StringToFile(filePath.toString(), manifestFile.getFileContent());
+      Path filePath = Paths.get(directoryPath, manifestFile.getFileName());
+      Path parent = filePath.getParent();
+      if (parent == null) {
+        throw new WingsException("Failed to create file at path " + filePath.toString());
       }
 
-      executionLogCallback.saveExecutionLog("Rendering helm chart files");
-      HelmCliResponse helmCliResponse = helmClient.templateForK8sV2(releaseName, namespace, directoryPath, valuesFiles);
-
-      return getManifestFilesFromHelmTemplateCommandResponse(helmCliResponse);
-    } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
-      throw e;
+      createDirectoryIfDoesNotExist(parent.toString());
+      FileIo.writeUtf8StringToFile(filePath.toString(), manifestFile.getFileContent());
     }
+
+    executionLogCallback.saveExecutionLog("Rendering chart files using helm");
+
+    List<ManifestFile> result = new ArrayList<>();
+    try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+      ProcessExecutor processExecutor =
+          new ProcessExecutor()
+              .timeout(10, TimeUnit.SECONDS)
+              .directory(new File(directoryPath))
+              .commandSplit(encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getHelmPath()) + " template "
+                  + directoryPath + " --name " + releaseName + " --namespace " + namespace + valuesFileOptions)
+              .readOutput(true)
+              .redirectError(logErrorStream);
+
+      ProcessResult processResult = processExecutor.execute();
+      if (processResult.getExitValue() != 0) {
+        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
+      }
+
+      result.add(ManifestFile.builder().fileName("manifest.yaml").fileContent(processResult.outputString()).build());
+    }
+
+    return result;
   }
 
-  private List<ManifestFile> renderTemplateForNonHelmStoreType(K8sDelegateTaskParams k8sDelegateTaskParams,
+  private List<ManifestFile> renderTemplateForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
       List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
       throws Exception {
     if (isEmpty(valuesFiles)) {
@@ -404,16 +418,7 @@ public class K8sTaskHelper {
       return manifestFiles;
     }
 
-    StringBuilder valuesFilesOptionsBuilder = new StringBuilder(128);
-    for (int i = 0; i < valuesFiles.size(); i++) {
-      String item = valuesFiles.get(i);
-      validateValuesFileContents(item);
-      String valuesFileName = format("values-%d.yaml", i);
-      FileIo.writeUtf8StringToFile(k8sDelegateTaskParams.getWorkingDirectory() + '/' + valuesFileName, item);
-      valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
-    }
-
-    String valuesFileOptions = valuesFilesOptionsBuilder.toString();
+    String valuesFileOptions = writeValuesToFile(k8sDelegateTaskParams.getWorkingDirectory(), valuesFiles);
 
     logger.info("Values file options: " + valuesFileOptions);
 
@@ -461,12 +466,12 @@ public class K8sTaskHelper {
     switch (storeType) {
       case Local:
       case Remote:
-        return renderTemplateForNonHelmStoreType(
+        return renderTemplateForGoTemplate(
             k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(), valuesFiles, executionLogCallback);
 
       case HelmSourceRepo:
-        return renderTemplateForHelmStoreType(k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(),
-            valuesFiles, releaseName, namespace, executionLogCallback);
+        return renderTemplateForHelm(k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(), valuesFiles,
+            releaseName, namespace, executionLogCallback);
 
       default:
         unhandled(storeType);
