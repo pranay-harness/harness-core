@@ -1,13 +1,17 @@
 package software.wings.helpers.ext.ecs.request;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.AwsConfig;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
-public class EcsCommandRequest {
+public class EcsCommandRequest implements ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
   private String commandName;
@@ -16,6 +20,11 @@ public class EcsCommandRequest {
   private String cluster;
   private AwsConfig AwsConfig;
   @NotEmpty private EcsCommandType EcsCommandType;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return AwsConfig.fetchRequiredExecutionCapabilities();
+  }
 
   public enum EcsCommandType {
     LISTENER_UPDATE_BG,

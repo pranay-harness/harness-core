@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +21,9 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by anubhaw on 12/27/16.
  */
@@ -26,7 +32,8 @@ import software.wings.yaml.setting.CloudProviderYaml;
 @Builder
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
-public class AwsConfig extends SettingValue implements EncryptableSetting {
+public class AwsConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+  private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") private String accessKey;
   @Attributes(title = "Secret Key") @Encrypted private char[] secretKey;
   @SchemaIgnore @NotEmpty private String accountId; // internal
@@ -52,6 +59,11 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
     this.encryptedSecretKey = encryptedSecretKey;
     this.useEc2IamCredentials = useEc2IamCredentials;
     this.tag = tag;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL));
   }
 
   @Data
