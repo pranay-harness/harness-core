@@ -46,6 +46,7 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPORARY_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_INVITE_ID;
@@ -211,6 +212,8 @@ public class UserServiceTest extends WingsBaseTest {
     when(userInviteQuery.filter(any(), any())).thenReturn(userInviteQuery);
     when(limitCheckerFactory.getInstance(Mockito.any(io.harness.limits.Action.class)))
         .thenReturn(WingsTestConstants.mockChecker());
+
+    when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(true);
   }
 
   @Test
@@ -357,6 +360,37 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(templateUrl.endsWith("e=" + FREEMIUM_ENV_PATH));
     assertThat(templateUrl.contains("inviteId=" + inviteId));
     assertThat(templateUrl.contains("email=" + USER_EMAIL));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testBlockBlacklistedEmailRegistration() {
+    when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(false);
+    when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
+
+    try {
+      userService.trialSignup(TEMPORARY_EMAIL);
+      fail("Temporary is not allowed for trial signup");
+    } catch (WingsException e) {
+      // Exception is expected as temporary emails is not allowed.
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateTrialSignupEmailWithIllegalChars() {
+    when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(false);
+    when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
+
+    for (Character illegalChar : userService.ILLEGAL_CHARACTERS) {
+      try {
+        String email = "test" + illegalChar + "User@abc.com";
+        userService.trialSignup(email);
+        fail("Email with illegal character is not allowed for trial signup");
+      } catch (WingsException e) {
+        // Exception is expected as temporary emails is not allowed.
+      }
+    }
   }
 
   /**

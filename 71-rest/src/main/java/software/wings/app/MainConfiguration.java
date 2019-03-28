@@ -78,6 +78,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
+  @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;

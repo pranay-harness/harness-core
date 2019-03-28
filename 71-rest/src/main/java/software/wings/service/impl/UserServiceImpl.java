@@ -142,15 +142,21 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -173,6 +179,8 @@ public class UserServiceImpl implements UserService {
   public static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
   public static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   public static final int REGISTRATION_SPAM_THRESHOLD = 3;
+
+  private static final String BLACKLISTED_DOMAINS_FILE = "trial/blacklisted-email-domains.txt";
 
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
@@ -201,6 +209,8 @@ public class UserServiceImpl implements UserService {
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AuthenticationManager authenticationManager;
   @Inject private SSOService ssoService;
+
+  private volatile Set<String> blacklistedDomains = new HashSet<>();
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -250,15 +260,8 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public boolean trialSignup(String email) {
-    if (!configuration.isTrialRegistrationAllowed()) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Trial registration is not allowed in this cluster.");
-    }
-
     final String emailAddress = email.trim().toLowerCase();
-
-    // Only validate if the email address is valid. Won't check if the email has been registered already.
-    checkIfEmailIsValid(emailAddress);
+    validateTrialSignup(emailAddress);
 
     UserInvite userInvite = getUserInviteByEmail(emailAddress);
     if (userInvite == null) {
@@ -290,6 +293,66 @@ public class UserServiceImpl implements UserService {
     }
 
     return true;
+  }
+
+  private void validateTrialSignup(String email) {
+    if (!configuration.isTrialRegistrationAllowed()) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "Trial registration is not allowed in this cluster.");
+    }
+
+    // Only validate if the email address is valid. Won't check if the email has been registered already.
+    checkIfEmailIsValid(email);
+
+    if (containsIllegalCharacters(email)) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "The email used for trial registration contains illegal characters.");
+    }
+
+    if (!configuration.isBlacklistedEmailDomainsAllowed()) {
+      // lazily populate blacklisted temporary email domains from file.
+      populateBlacklistedDomains();
+
+      if (blacklistedDomains.contains(getEmailDomain(email))) {
+        throw new WingsException(GENERAL_ERROR, USER)
+            .addParam("message", "The domain of the email used for trial registration is not allowed.");
+      }
+    }
+  }
+
+  private String getEmailDomain(String email) {
+    return email.substring(email.indexOf('@') + 1);
+  }
+
+  private void populateBlacklistedDomains() {
+    if (blacklistedDomains.isEmpty()) {
+      synchronized (this) {
+        if (blacklistedDomains.isEmpty()) {
+          try (InputStream inputStream =
+                   Thread.currentThread().getContextClassLoader().getResourceAsStream(BLACKLISTED_DOMAINS_FILE);
+               BufferedReader bufferedReader =
+                   new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line = bufferedReader.readLine();
+            while (isNotEmpty(line)) {
+              blacklistedDomains.add(line.trim().toLowerCase());
+              line = bufferedReader.readLine();
+            }
+            logger.info("Loaded {} temporary email domains into the blacklist.", blacklistedDomains.size());
+          } catch (IOException e) {
+            logger.error("Failed to read blacklisted temporary email domains from file.", e);
+          }
+        }
+      }
+    }
+  }
+
+  private boolean containsIllegalCharacters(String email) {
+    for (Character illegalChar : ILLEGAL_CHARACTERS) {
+      if (email.indexOf(illegalChar) >= 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean isTrialRegistrationSpam(UserInvite userInvite) {

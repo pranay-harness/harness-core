@@ -21,6 +21,8 @@ import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -29,6 +31,12 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 3/28/16.
  */
 public interface UserService extends OwnedByAccount {
+  /**
+   * Consider the following characters in email as illegal and prohibit trial signup with the following characters
+   */
+  List<Character> ILLEGAL_CHARACTERS = Collections.unmodifiableList(Arrays.asList('$', '&', '+', ',', '/', ':', ';',
+      '=', '?', '<', '>', '#', '{', '}', '|', '^', '~', '(', ')', ']', '`', '\'', '\"'));
+
   /**
    * Register a new user with basic account information. Create the account if that
    * account did not exist.
@@ -333,7 +341,7 @@ public interface UserService extends OwnedByAccount {
    * as part of this operation. Also a default SSO settings corresponding to the identity provider will be created
    * and will set up as the default login mechanism.
    *
-   * @param user The user to be signed up for a free trial
+   * @param userInfo The user to be signed up for a free trial
    * @param oauthClient The oauthClient being used for the signup process.
    * @return the new User
    */
