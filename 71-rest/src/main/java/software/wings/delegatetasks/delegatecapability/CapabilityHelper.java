@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -30,10 +30,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
-public class DelegateServiceHelper {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateServiceHelper.class);
+public class CapabilityHelper {
+  private static final Logger logger = LoggerFactory.getLogger(CapabilityHelper.class);
 
-  public void embedCapabilitiesInDelegateTask(DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {
+  public static void embedCapabilitiesInDelegateTask(
+      DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {
     if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {
       return;
     }
@@ -55,7 +56,34 @@ public class DelegateServiceHelper {
     }
   }
 
-  public HttpConnectionExecutionCapability getHttpCapabilityForDecryption(EncryptionConfig encryptionConfig) {
+  public static List<ExecutionCapability> generateDelegateCapabilities(
+      ExecutionCapabilityDemander capabilityDemander, List<EncryptedDataDetail> encryptedDataDetails) {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+
+    if (capabilityDemander != null) {
+      executionCapabilities.addAll(capabilityDemander.fetchRequiredExecutionCapabilities());
+    }
+    if (isEmpty(encryptedDataDetails)) {
+      return executionCapabilities;
+    }
+
+    executionCapabilities.addAll(generateVaultHttpCapabilities(encryptedDataDetails));
+    return executionCapabilities;
+  }
+
+  public static List<ExecutionCapability> generateVaultHttpCapabilities(
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+
+    if (isEmpty(encryptedDataDetails)) {
+      return executionCapabilities;
+    }
+
+    EncryptedDataDetail encryptedDataDetail = encryptedDataDetails.get(0);
+    return Arrays.asList(getHttpCapabilityForDecryption(encryptedDataDetail.getEncryptionConfig()));
+  }
+
+  public static HttpConnectionExecutionCapability getHttpCapabilityForDecryption(EncryptionConfig encryptionConfig) {
     if (encryptionConfig instanceof KmsConfig) {
       return HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
           ((KmsConfig) encryptionConfig).getRegion());
@@ -67,7 +95,7 @@ public class DelegateServiceHelper {
     return null;
   }
 
-  public Map<String, EncryptionConfig> fetchEncryptionDetailsListFromParameters(TaskData taskData) {
+  public static Map<String, EncryptionConfig> fetchEncryptionDetailsListFromParameters(TaskData taskData) {
     Map<String, EncryptionConfig> encryptionConfigsMap = new HashMap<>();
     // TODO: Remove this when jenkins/bambooConfig etc are integrated with new framework
     try {
@@ -99,11 +127,11 @@ public class DelegateServiceHelper {
     return encryptionConfigsMap;
   }
 
-  public boolean isTaskParameterType(TaskData taskData) {
+  public static boolean isTaskParameterType(TaskData taskData) {
     return taskData.getParameters().length == 1 && taskData.getParameters()[0] instanceof TaskParameters;
   }
 
-  private boolean isEncryptionDetailsList(Object argument) {
+  private static boolean isEncryptionDetailsList(Object argument) {
     // TODO: Remove this when jenkins/bamoConfig etc are integrated with new framework
     try {
       if (!(argument instanceof List)) {
@@ -121,7 +149,7 @@ public class DelegateServiceHelper {
     return false;
   }
 
-  public String generateLogStringWithCapabilitiesGenerated(DelegateTask task) {
+  public static String generateLogStringWithCapabilitiesGenerated(DelegateTask task) {
     StringBuilder builder =
         new StringBuilder(128).append("Capabilities Generate for Task: ").append(task.getUuid()).append(" are: ");
 

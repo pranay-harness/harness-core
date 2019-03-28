@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.delegatetasks.delegatecapability;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -26,12 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DelegateServiceHelperTest extends WingsBaseTest {
+public class CapabilityHelperTest extends WingsBaseTest {
   public static final String HTTP_VAUTL_URL = "http://vautl.com";
   public static final String GOOGLE_COM = "http://google.com";
   public static final String US_EAST_2 = "us-east-2";
   public static final String AWS_KMS_URL = "https://apigateway.us-east-2.amazonaws.com";
-  private DelegateServiceHelper delegateServiceHelper = new DelegateServiceHelper();
 
   @Test
   @Category(UnitTests.class)
@@ -44,7 +43,7 @@ public class DelegateServiceHelperTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
     encryptionConfigs.add(encryptionConfig);
 
-    delegateServiceHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
     assertNotNull(task.getExecutionCapabilities());
     assertEquals(2, task.getExecutionCapabilities().size());
 
@@ -67,7 +66,7 @@ public class DelegateServiceHelperTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     encryptionConfigs.add(encryptionConfig);
 
-    delegateServiceHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
     assertNotNull(task.getExecutionCapabilities());
     assertEquals(2, task.getExecutionCapabilities().size());
 
@@ -88,7 +87,7 @@ public class DelegateServiceHelperTest extends WingsBaseTest {
     TaskData taskData =
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
 
-    Map encryptionMap = delegateServiceHelper.fetchEncryptionDetailsListFromParameters(taskData);
+    Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
     assertNotNull(encryptionMap);
     assertEquals(0, encryptionMap.size());
   }
@@ -107,7 +106,7 @@ public class DelegateServiceHelperTest extends WingsBaseTest {
     TaskData taskData =
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
 
-    Map encryptionMap = delegateServiceHelper.fetchEncryptionDetailsListFromParameters(taskData);
+    Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
     assertNotNull(encryptionMap);
     assertEquals(1, encryptionMap.size());
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
@@ -130,7 +129,7 @@ public class DelegateServiceHelperTest extends WingsBaseTest {
     TaskData taskData =
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
 
-    Map encryptionMap = delegateServiceHelper.fetchEncryptionDetailsListFromParameters(taskData);
+    Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
     assertNotNull(encryptionMap);
     assertEquals(1, encryptionMap.size());
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
@@ -143,8 +142,7 @@ public class DelegateServiceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
-    HttpConnectionExecutionCapability capability =
-        delegateServiceHelper.getHttpCapabilityForDecryption(encryptionConfig);
+    HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
     capability.fetchCapabilityBasis().equals(HTTP_VAUTL_URL);
   }
 
@@ -152,8 +150,7 @@ public class DelegateServiceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
-    HttpConnectionExecutionCapability capability =
-        delegateServiceHelper.getHttpCapabilityForDecryption(encryptionConfig);
+    HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
     capability.fetchCapabilityBasis().equals(AWS_KMS_URL);
   }
 }

@@ -151,6 +151,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
@@ -246,7 +247,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
-  @Inject private DelegateServiceHelper delegateServiceHelper;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -1408,11 +1408,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     DelegatePackage delegatePackage = getDelegataePackgeWithEncryptionConfig(task, task.getDelegateId());
-    delegateServiceHelper.embedCapabilitiesInDelegateTask(task,
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task,
         isEmpty(delegatePackage.getEncryptionConfigs()) ? EMPTY_LIST : delegatePackage.getEncryptionConfigs().values());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
-      logger.info(delegateServiceHelper.generateLogStringWithCapabilitiesGenerated(task));
+      logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
     }
   }
 
@@ -1691,13 +1691,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private DelegatePackage getDelegataePackgeWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
     try {
-      if (delegateServiceHelper.isTaskParameterType(delegateTask.getData())) {
+      if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
         return resolvePreAssignmentExpressions(delegateTask, delegateId);
       } else {
         // TODO: Ideally we should not land here, as we should always be passing TaskParameter only for
         // TODO: delegate task. But for now, this is needed. (e.g. Tasks containing Jenkinsonfig, BambooConfig etc.)
         Map<String, EncryptionConfig> encryptionConfigMap =
-            delegateServiceHelper.fetchEncryptionDetailsListFromParameters(delegateTask.getData());
+            CapabilityHelper.fetchEncryptionDetailsListFromParameters(delegateTask.getData());
 
         return DelegatePackage.builder().delegateTask(delegateTask).encryptionConfigs(encryptionConfigMap).build();
       }
