@@ -107,6 +107,7 @@ import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.DatadogState;
@@ -1348,10 +1349,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logger.error("Calling collect 24x7 data for an unsupported state");
         return false;
     }
-    waitNotifyEngine.waitForAll(
-        new DataCollectionCallback(cvConfiguration.getAppId(),
-            getExecutionData(cvConfiguration, waitId, (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime)),
-            isLogCollection),
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(cvConfiguration.getAppId(),
+                                    getExecutionData(cvConfiguration, waitId,
+                                        (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), isLogCollection),
+                                    isLogCollection),
         waitId);
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
     delegateService.queueTask(task);
@@ -1372,18 +1373,30 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
-  private MetricAnalysisExecutionData getExecutionData(
-      CVConfiguration cvConfiguration, String waitId, int timeDuration) {
-    return MetricAnalysisExecutionData.builder()
-        .appId(cvConfiguration.getAppId())
-        .workflowExecutionId(null)
-        .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
-        .serverConfigId(cvConfiguration.getConnectorId())
-        .timeDuration(timeDuration)
-        .canaryNewHostNames(new HashSet<>())
-        .lastExecutionNodes(new HashSet<>())
-        .correlationId(waitId)
-        .build();
+  private StateExecutionData getExecutionData(
+      CVConfiguration cvConfiguration, String waitId, int timeDuration, boolean isLogCollection) {
+    if (isLogCollection) {
+      return LogAnalysisExecutionData.builder()
+          .appId(cvConfiguration.getAppId())
+          .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
+          .serverConfigId(cvConfiguration.getConnectorId())
+          .timeDuration(timeDuration)
+          .canaryNewHostNames(new HashSet<>())
+          .lastExecutionNodes(new HashSet<>())
+          .correlationId(waitId)
+          .build();
+    } else {
+      return MetricAnalysisExecutionData.builder()
+          .appId(cvConfiguration.getAppId())
+          .workflowExecutionId(null)
+          .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
+          .serverConfigId(cvConfiguration.getConnectorId())
+          .timeDuration(timeDuration)
+          .canaryNewHostNames(new HashSet<>())
+          .lastExecutionNodes(new HashSet<>())
+          .correlationId(waitId)
+          .build();
+    }
   }
 
   private DelegateTask createDynaTraceDelegateTask(
