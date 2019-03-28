@@ -168,42 +168,45 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     String originStateName = null;
     State prevState = null;
 
-    for (int i = 0; i < pipeline.getPipelineStages().size(); i++) {
-      PipelineStage pipelineStage = pipeline.getPipelineStages().get(i);
-      State state = convertToState(pipelineStage, pipeline, stencilMap);
+    if (isNotEmpty(pipeline.getPipelineStages())) {
+      for (int i = 0; i < pipeline.getPipelineStages().size(); i++) {
+        PipelineStage pipelineStage = pipeline.getPipelineStages().get(i);
+        State state = convertToState(pipelineStage, pipeline, stencilMap);
 
-      if (i > 0 && pipelineStage.isParallel()) {
-        // part of fork - 2nd, 3rd stage in parallel
-        ((ForkState) prevState).addForkState(state);
-      } else if (i < pipeline.getPipelineStages().size() - 1 && pipeline.getPipelineStages().get(i + 1).isParallel()) {
-        // start of a fork - not a parallel, but following stage has parallel flag
-        String forkName = getForkStateName(pipelineStage);
-        forkName += "-" + i;
-        ForkState forkState = new ForkState(forkName);
-        forkState.addForkState(state);
-        addState(forkState);
-        if (prevState != null) {
-          addTransition(aTransition()
-                            .withTransitionType(TransitionType.SUCCESS)
-                            .withFromState(prevState)
-                            .withToState(forkState)
-                            .build());
-        }
-        prevState = forkState;
-        if (originStateName == null) {
-          originStateName = forkState.getName();
-        }
-      } else {
-        if (prevState != null) {
-          addTransition(aTransition()
-                            .withTransitionType(TransitionType.SUCCESS)
-                            .withFromState(prevState)
-                            .withToState(state)
-                            .build());
-        }
-        prevState = state;
-        if (originStateName == null) {
-          originStateName = state.getName();
+        if (i > 0 && pipelineStage.isParallel()) {
+          // part of fork - 2nd, 3rd stage in parallel
+          ((ForkState) prevState).addForkState(state);
+        } else if (i < pipeline.getPipelineStages().size() - 1
+            && pipeline.getPipelineStages().get(i + 1).isParallel()) {
+          // start of a fork - not a parallel, but following stage has parallel flag
+          String forkName = getForkStateName(pipelineStage);
+          forkName += "-" + i;
+          ForkState forkState = new ForkState(forkName);
+          forkState.addForkState(state);
+          addState(forkState);
+          if (prevState != null) {
+            addTransition(aTransition()
+                              .withTransitionType(TransitionType.SUCCESS)
+                              .withFromState(prevState)
+                              .withToState(forkState)
+                              .build());
+          }
+          prevState = forkState;
+          if (originStateName == null) {
+            originStateName = forkState.getName();
+          }
+        } else {
+          if (prevState != null) {
+            addTransition(aTransition()
+                              .withTransitionType(TransitionType.SUCCESS)
+                              .withFromState(prevState)
+                              .withToState(state)
+                              .build());
+          }
+          prevState = state;
+          if (originStateName == null) {
+            originStateName = state.getName();
+          }
         }
       }
     }
