@@ -52,6 +52,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.peronalization.PersonalizationStep;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
@@ -176,5 +177,5 @@ public class ManagerMorphiaClasses {
       LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
       AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class,
       DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class, GlobalApiKey.class,
-      ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class);
+      ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class, PersonalizationStep.class);
 }
