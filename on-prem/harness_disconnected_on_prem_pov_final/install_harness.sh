@@ -186,6 +186,7 @@ function setUpMongoDBFirstTime(){
 function setUpMongoDB(){
 
     echo "################################Starting up MongoDB################################"
+    mv config/mongo/mongod.conf $runtime_dir/mongo
 
     docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm mongo:$MONGO_VERSION -f /etc/mongod.conf
 
