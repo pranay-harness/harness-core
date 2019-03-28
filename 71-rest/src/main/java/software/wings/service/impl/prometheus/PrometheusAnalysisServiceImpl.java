@@ -68,7 +68,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder()
-                            .isLoadPresent(metricDataResponseByTimeSeriesWithoutHost.isEmpty())
+                            .isLoadPresent(!metricDataResponseByTimeSeriesWithoutHost.isEmpty())
                             .loadResponse(metricDataResponseByTimeSeriesWithoutHost)
                             .build())
           .build();
@@ -87,7 +87,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
       setupResponse = VerificationNodeDataSetupResponse.builder()
                           .providerReachable(true)
                           .loadResponse(VerificationLoadResponse.builder()
-                                            .isLoadPresent(metricDataResponseByTimeSeriesWithoutHost.isEmpty())
+                                            .isLoadPresent(!metricDataResponseByTimeSeriesWithoutHost.isEmpty())
                                             .loadResponse(metricDataResponseByTimeSeriesWithHost)
                                             .build())
                           .dataForNode(metricDataResponseByTimeSeriesWithHost)
@@ -108,7 +108,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
       PrometheusSetupTestNodeData setupTestNodeData, SettingAttribute settingAttribute, ThirdPartyApiCallLog apiCallLog,
       String hostName) {
     Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeries = new HashMap<>();
-    for (TimeSeries timeSeries : setupTestNodeData.getTimeSeriesToCollect()) {
+    for (TimeSeries timeSeries : setupTestNodeData.getTimeSeriesToAnalyze()) {
       String url = timeSeries.getUrl();
       Preconditions.checkState(url.contains(START_TIME_PLACE_HOLDER));
       Preconditions.checkState(url.contains(END_TIME_PLACE_HOLDER));

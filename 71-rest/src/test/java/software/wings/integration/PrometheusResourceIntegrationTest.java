@@ -89,7 +89,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNodeServiceLevel() {
     PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();
-    setupTestNodeData.getTimeSeriesToCollect().iterator().next().setUrl(
+    setupTestNodeData.getTimeSeriesToAnalyze().iterator().next().setUrl(
         "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_cpu_usage_seconds_total");
     setupTestNodeData.setServiceLevel(true);
 
@@ -111,7 +111,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
     long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
     long fromTime = toTime - TimeUnit.MINUTES.toMillis(15) / TimeUnit.SECONDS.toMillis(1);
     return PrometheusSetupTestNodeData.builder()
-        .timeSeriesToCollect(getMockTimeSeriesData())
+        .timeSeriesToAnalyze(getMockTimeSeriesData())
         .appId(appId)
         .settingId(settingId)
         .instanceName("testHost")

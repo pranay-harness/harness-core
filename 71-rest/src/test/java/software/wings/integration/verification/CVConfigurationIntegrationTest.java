@@ -44,6 +44,7 @@ import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -206,6 +207,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         TimeSeries.builder()
             .txnName("Hardware")
             .metricName("CPU")
+            .metricType(MetricType.ERROR.name())
             .url(
                 "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_cpu_usage_seconds_total{pod_name=\"$hostName\"}")
             .build());
@@ -866,6 +868,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String otherEnvId = generateUuid();
+    String appId = generateUuid();
 
     String newRelicApplicationId = generateUuid();
     newRelicCVServiceConfiguration = new NewRelicCVServiceConfiguration();
@@ -881,7 +884,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
     appDynamicsCVServiceConfiguration.setAppId(appId);
-    appDynamicsCVServiceConfiguration.setEnvId(envId);
+    appDynamicsCVServiceConfiguration.setEnvId(otherEnvId);
     appDynamicsCVServiceConfiguration.setServiceId(serviceId);
     appDynamicsCVServiceConfiguration.setEnabled24x7(true);
     appDynamicsCVServiceConfiguration.setAppDynamicsApplicationId(appDynamicsApplicationId);
@@ -939,9 +942,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     AppDynamicsCVServiceConfiguration appDObject =
         JsonUtils.asObject(JsonUtils.asJson(allConfigs.get(1)), AppDynamicsCVServiceConfiguration.class);
     assertEquals(appId, appDObject.getAppId());
-    assertEquals(envId, appDObject.getEnvId());
+    assertEquals(otherEnvId, appDObject.getEnvId());
 
-    // This call to list configs should fetch only the new relic config
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&envId=" + otherEnvId;
     target = client.target(url);
 
@@ -949,26 +951,25 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
 
-    assertEquals(1, listOfConfigsByEnv.size());
+    assertEquals(2, listOfConfigsByEnv.size());
 
     obj = JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), NewRelicCVServiceConfiguration.class);
     assertEquals(appId, obj.getAppId());
     assertEquals(otherEnvId, obj.getEnvId());
 
-    // This call to list configs should fetch only the app dynamics config
-    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&envId=" + envId;
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&envId=" + otherEnvId;
     target = client.target(url);
 
     listOfConfigsByEnvResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
 
-    assertEquals(1, listOfConfigsByEnv.size());
+    assertEquals(2, listOfConfigsByEnv.size());
 
     appDObject =
         JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), AppDynamicsCVServiceConfiguration.class);
     assertEquals(appId, appDObject.getAppId());
-    assertEquals(envId, appDObject.getEnvId());
+    assertEquals(otherEnvId, appDObject.getEnvId());
 
     // This call to list configs should fetch only the app dynamics config
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
@@ -983,7 +984,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDObject =
         JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), AppDynamicsCVServiceConfiguration.class);
     assertEquals(appId, appDObject.getAppId());
-    assertEquals(envId, appDObject.getEnvId());
+    assertEquals(otherEnvId, appDObject.getEnvId());
     assertEquals(APP_DYNAMICS, appDObject.getStateType());
   }
 
