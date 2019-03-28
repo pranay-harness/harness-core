@@ -244,3 +244,6 @@ if [[ -v "AWS_MARKETPLACE_PRODUCTCODE" ]]; then
     sed -i "s|awsMktPlaceProductCodePlaceHolder|${AWS_MARKETPLACE_PRODUCTCODE}|" /opt/harness/config.yml
 fi
 
+if [[ -v "ALLOW_BLACKLISTED_EMAIL_DOMAINS" ]]; then
+    sed -i "s|blacklistedEmailDomainsAllowed: true|blacklistedEmailDomainsAllowed: ${ALLOW_BLACKLISTED_EMAIL_DOMAINS}|" /opt/harness/config.yml
+fi
