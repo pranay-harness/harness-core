@@ -251,7 +251,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   private Map<String, String> listAccountOrAppDefaults(String accountId, String appId) {
     List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class)
-                                                   .filter(ACCOUNT_ID, accountId)
+                                                   .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
                                                    .filter(APP_ID_KEY, appId)
                                                    .filter(VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())
                                                    .asList();
@@ -684,7 +684,7 @@ public class SettingsServiceImpl implements SettingsService {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
 
     try (HIterator<SettingAttribute> iterator = new HIterator(wingsPersistence.createQuery(SettingAttribute.class)
-                                                                  .filter(ACCOUNT_ID, accountId)
+                                                                  .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
                                                                   .filter(APP_ID_KEY, appId)
                                                                   .filter(ENV_ID_KEY, envId)
                                                                   .filter(VALUE_TYPE_KEY, type)

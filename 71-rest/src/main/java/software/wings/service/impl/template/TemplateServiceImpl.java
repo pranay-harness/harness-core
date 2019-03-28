@@ -233,8 +233,9 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public Template get(String accountId, String templateId, String version) {
-    Query<Template> templateQuery =
-        wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, templateId);
+    Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
+                                        .filter(Template.ACCOUNT_ID_KEY, accountId)
+                                        .filter(ID_KEY, templateId);
     return getTemplate(version, templateQuery);
   }
 
@@ -265,7 +266,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public VersionedTemplate getVersionedTemplate(String accountId, String templateUuid, Long templateVersion) {
     return wingsPersistence.createQuery(VersionedTemplate.class)
-        .filter(ACCOUNT_ID, accountId)
+        .filter(VersionedTemplate.ACCOUNT_ID_KEY, accountId)
         .filter(TEMPLATE_ID_KEY, templateUuid)
         .filter(VERSION_KEY, templateVersion)
         .get();
@@ -273,8 +274,10 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public boolean delete(String accountId, String templateUuid) {
-    Template template =
-        wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, templateUuid).get();
+    Template template = wingsPersistence.createQuery(Template.class)
+                            .filter(Template.ACCOUNT_ID_KEY, accountId)
+                            .filter(ID_KEY, templateUuid)
+                            .get();
 
     TemplateType templateType = TemplateType.valueOf(template.getType());
     if (templateHelper.templatesLinked(templateType, Collections.singletonList(templateUuid))) {
@@ -286,10 +289,10 @@ public class TemplateServiceImpl implements TemplateService {
     boolean templateDeleted = wingsPersistence.delete(template);
     if (templateDeleted) {
       wingsPersistence.delete(wingsPersistence.createQuery(VersionedTemplate.class)
-                                  .filter(ACCOUNT_ID, accountId)
+                                  .filter(VersionedTemplate.ACCOUNT_ID_KEY, accountId)
                                   .filter(TEMPLATE_ID_KEY, templateUuid));
       wingsPersistence.delete(wingsPersistence.createQuery(TemplateVersion.class)
-                                  .filter(ACCOUNT_ID, accountId)
+                                  .filter(TemplateVersion.ACCOUNT_ID_KEY, accountId)
                                   .filter(TEMPLATE_UUID_KEY, templateUuid));
     }
 
@@ -328,7 +331,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public boolean deleteByFolder(TemplateFolder templateFolder) {
     List<Key<Template>> templateKeys = wingsPersistence.createQuery(Template.class)
-                                           .filter(ACCOUNT_ID, templateFolder.getAccountId())
+                                           .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
                                            .field(FOLDER_PATH_ID_KEY)
                                            .contains(templateFolder.getUuid())
                                            .asKeyList();
@@ -354,7 +357,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
     // Delete templates
     return wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
-                                       .filter(ACCOUNT_ID, templateFolder.getAccountId())
+                                       .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
                                        .field(Template.ID_KEY)
                                        .in(templateUuids));
   }
@@ -475,7 +478,7 @@ public class TemplateServiceImpl implements TemplateService {
     Template template = null;
     if (isNotEmpty(keyword)) {
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
-                                          .filter(ACCOUNT_ID, accountId)
+                                          .filter(Template.ACCOUNT_ID_KEY, accountId)
                                           .field(Template.KEYWORDS_KEY)
                                           .in(asList(keyword.toLowerCase()));
       List<Template> templates = templateQuery.asList();
@@ -537,7 +540,8 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<Template> templates = wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID, accountId).asList();
+    List<Template> templates =
+        wingsPersistence.createQuery(Template.class).filter(Template.ACCOUNT_ID_KEY, accountId).asList();
     for (Template template : templates) {
       delete(accountId, template.getUuid());
     }

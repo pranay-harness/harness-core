@@ -170,7 +170,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public <T extends CVConfiguration> List<T> listConfigurations(
       String accountId, String appId, String envId, StateType stateType) {
     Query<T> configurationQuery = (Query<T>) wingsPersistence.createQuery(CVConfiguration.class)
-                                      .filter(ACCOUNT_ID, accountId)
+                                      .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
                                       .filter("appId", appId);
     if (isNotEmpty(envId)) {
       configurationQuery = configurationQuery.filter("envId", envId);
@@ -229,7 +229,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
-            .addParam(ACCOUNT_ID, accountId)
+            .addParam(CVConfiguration.ACCOUNT_ID_KEY, accountId)
             .addParam("appId", appId)
             .addParam("serviceConfigurationId", serviceConfigurationId)
             .addParam("stateType", String.valueOf(stateType));
@@ -306,7 +306,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       TimeSeriesMetricTemplates timeSeriesMetricTemplates =
           wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
               .filter("cvConfigId", serviceConfigurationId)
-              .filter(ACCOUNT_ID, accountId)
+              .filter(TimeSeriesMetricTemplates.ACCOUNT_ID_KEY, accountId)
               .get();
       if (timeSeriesMetricTemplates != null) {
         wingsPersistence.delete(TimeSeriesMetricTemplates.class, timeSeriesMetricTemplates.getUuid());
@@ -316,12 +316,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Override
   public <T extends CVConfiguration> List<T> listConfigurations(String accountId) {
-    return (List<T>) wingsPersistence.createQuery(CVConfiguration.class).filter(ACCOUNT_ID, accountId).asList();
+    return (List<T>) wingsPersistence.createQuery(CVConfiguration.class)
+        .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+        .asList();
   }
 
   @Override
   public List<CVConfiguration> listConfigurations(String accountId, PageRequest<CVConfiguration> pageRequest) {
-    pageRequest.addFilter(ACCOUNT_ID, Operator.EQ, accountId);
+    pageRequest.addFilter(CVConfiguration.ACCOUNT_ID_KEY, Operator.EQ, accountId);
     return wingsPersistence.query(CVConfiguration.class, pageRequest).getResponse();
   }
 
@@ -530,6 +532,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(CVConfiguration.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfiguration.ACCOUNT_ID_KEY, accountId));
   }
 }

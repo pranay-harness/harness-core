@@ -14,7 +14,6 @@ import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -546,16 +545,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public String getDisplayName() {
       return displayName;
-    }
-
-    /**
-     * Sets display name.
-     *
-     * @param displayName the display name
-     */
-    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
-    public void setDisplayName(String displayName) {
-      this.displayName = displayName;
     }
   }
 

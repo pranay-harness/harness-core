@@ -64,6 +64,8 @@ import java.util.Map;
 public abstract class NodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(NodeSelectState.class);
 
+  private static final int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
+
   private int instanceCount;
   private InstanceUnitType instanceUnitType = COUNT;
   private boolean specificHosts;
@@ -257,13 +259,13 @@ public abstract class NodeSelectState extends State {
     } else if (serviceInstances.size() > totalAvailableInstances) {
       errorMessage =
           "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
-    } else if (serviceInstances.size() > Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
+    } else if (serviceInstances.size() > DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
       Account account = accountService.get(((ExecutionContextImpl) context).getApp().getAccountId());
       if (account == null
           || (account.getLicenseInfo() != null && isNotEmpty(account.getLicenseInfo().getAccountType())
                  && AccountType.FREE.equals(account.getLicenseInfo().getAccountType()))) {
         errorMessage = "The license for this account does not allow more than "
-            + Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
+            + DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
             + " concurrent instance deployments. Please contact Harness Support.";
       }
     }

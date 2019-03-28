@@ -48,7 +48,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.concurrent.TimeUnit;
 
@@ -230,8 +229,7 @@ public class AccountGenerator {
     UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
     roleUpdateOperations.set("accountId", ACCOUNT_ID);
     wingsPersistence.update(
-        wingsPersistence.createQuery(Role.class).filter(OwnedByAccount.ACCOUNT_ID, account.getUuid()),
-        roleUpdateOperations);
+        wingsPersistence.createQuery(Role.class).filter(Role.ACCOUNT_ID_KEY, account.getUuid()), roleUpdateOperations);
 
     User adminUser =
         ensureUser(adminUserUuid, adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);
