@@ -77,4 +77,23 @@ public class TestUtils {
 
     return referredUrl;
   }
+
+  public static String getResetTokenFromUrl(String url) {
+    URLConnection connection = null;
+    String resetToken = "";
+    String referredUrl = "";
+    try {
+      connection = new URL(url).openConnection();
+      InputStream inputStream = connection.getInputStream();
+    } catch (IOException ie) {
+      if (connection.getURL().toString().contains("reset-password")) {
+        referredUrl = connection.getURL().toString();
+      }
+    }
+    if (referredUrl.contains("reset-password")) {
+      resetToken = referredUrl.split("reset-password/")[1];
+      return resetToken;
+    }
+    return resetToken;
+  }
 }
