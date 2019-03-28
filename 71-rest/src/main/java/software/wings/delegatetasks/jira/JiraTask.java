@@ -79,8 +79,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     ResponseData responseData = null;
 
-    logger.info("Executing JiraTask. Action: {}, IssueId: {} ApprovalId: {}", jiraAction, parameters.getIssueId(),
-        parameters.getApprovalId());
+    logger.info("Executing JiraTask. Action: {}, IssueId: {}", jiraAction, parameters.getIssueId());
 
     switch (jiraAction) {
       case AUTH:
@@ -128,11 +127,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
 
     if (responseData != null) {
-      logger.info("Done executing JiraTask. Action: {}, IssueId: {} ApprovalId: {}, Status: {}", jiraAction,
-          parameters.getIssueId(), parameters.getApprovalId(), ((JiraExecutionData) responseData).getStatus());
+      logger.info("Done executing JiraTask. Action: {}, IssueId: {}, ExecutionStatus: {}", jiraAction,
+          parameters.getIssueId(), ((JiraExecutionData) responseData).getExecutionStatus());
     } else {
-      logger.error("JiraTask Action: {}. IssueId: {} ApprovalId: {}. null response.", jiraAction,
-          parameters.getIssueId(), parameters.getApprovalId());
+      logger.error("JiraTask Action: {}. IssueId: {}. null response.", jiraAction, parameters.getIssueId());
     }
 
     return responseData;
@@ -426,6 +424,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
     }
 
+    logger.info("Issue fetched successfully");
     String approvalFieldValue = null;
     if (EmptyPredicate.isNotEmpty(parameters.getApprovalField())) {
       Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getApprovalField());
@@ -443,13 +442,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         rejectionFieldValue);
 
     if (EmptyPredicate.isNotEmpty(approvalFieldValue)
-        && StringUtils.equals(approvalFieldValue, parameters.getApprovalValue())) {
+        && StringUtils.equalsIgnoreCase(approvalFieldValue, parameters.getApprovalValue())) {
       logger.info("IssueId: {} Approved", parameters.getIssueId());
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     }
 
     if (EmptyPredicate.isNotEmpty(rejectionFieldValue)
-        && StringUtils.equals(rejectionFieldValue, parameters.getRejectionValue())) {
+        && StringUtils.equalsIgnoreCase(rejectionFieldValue, parameters.getRejectionValue())) {
       logger.info("IssueId: {} Rejected", parameters.getIssueId());
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.REJECTED).build();
     }
