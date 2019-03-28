@@ -22,6 +22,7 @@ import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
+import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.resources.PrometheusResource;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -160,7 +161,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
         -> rv.put(timeSeries.getMetricName(),
             TimeSeriesMetricDefinition.builder()
                 .metricName(timeSeries.getMetricName())
-                .metricType(timeSeries.getMetricType())
+                .metricType(MetricType.valueOf(timeSeries.getMetricType()))
                 .build()));
     return rv;
   }

@@ -29,7 +29,7 @@ public class SetupTestNodeData {
   private String guid;
   private StateType stateType;
   private long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
-  private long fromTime = toTime - TimeUnit.MINUTES.toMillis(15) / TimeUnit.SECONDS.toMillis(1);
+  private long fromTime = toTime - TimeUnit.MINUTES.toMillis(20) / TimeUnit.SECONDS.toMillis(1);
 
   public SetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, String guid, StateType stateType,

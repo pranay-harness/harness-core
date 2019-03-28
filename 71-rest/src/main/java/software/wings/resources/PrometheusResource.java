@@ -13,7 +13,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.metrics.MetricType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
@@ -56,7 +55,7 @@ public class PrometheusResource implements LogAnalysisResource {
       invalidFields.put("timeSeriesToAnalyze", "No metrics given to analyze.");
       return invalidFields;
     }
-    Map<String, MetricType> metricNameToType = new HashMap<>();
+    Map<String, String> metricNameToType = new HashMap<>();
     timeSeriesToAnalyze.forEach(timeSeries -> {
       List<String> missingPlaceHolders = new ArrayList<>();
 
@@ -103,7 +102,7 @@ public class PrometheusResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @Valid PrometheusSetupTestNodeData setupTestNodeData) {
-    validateTransactions(setupTestNodeData.getTimeSeriesToCollect(), setupTestNodeData.isServiceLevel());
+    validateTransactions(setupTestNodeData.getTimeSeriesToAnalyze(), setupTestNodeData.isServiceLevel());
     return new RestResponse<>(analysisService.getMetricsWithDataForNode(setupTestNodeData));
   }
 }

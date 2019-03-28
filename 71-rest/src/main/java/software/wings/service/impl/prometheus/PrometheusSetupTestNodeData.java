@@ -21,14 +21,14 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class PrometheusSetupTestNodeData extends SetupTestNodeData {
-  private List<TimeSeries> timeSeriesToCollect;
+  private List<TimeSeries> timeSeriesToAnalyze;
 
   @Builder
   public PrometheusSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      List<TimeSeries> timeSeriesToCollect, String guid) {
+      List<TimeSeries> timeSeriesToAnalyze, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.PROMETHEUS, fromTime, toTime);
-    this.timeSeriesToCollect = timeSeriesToCollect;
+    this.timeSeriesToAnalyze = timeSeriesToAnalyze;
   }
 }

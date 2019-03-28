@@ -4,7 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.metrics.MetricType;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 3/14/18.
@@ -14,8 +15,8 @@ import software.wings.metrics.MetricType;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TimeSeries {
-  private String txnName;
-  private String url;
-  private String metricName;
-  private MetricType metricType;
+  @NotNull private String txnName;
+  @NotNull private String url;
+  @NotNull private String metricName;
+  @NotNull private String metricType;
 }
