@@ -48,6 +48,7 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   final String EXPECTED_SUBJECT = "Verify Your Email for Harness Trial";
+  final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
   UserRestUtil urUtil = new UserRestUtil();
   MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
   HTMLUtils htmlUtils = new HTMLUtils();
@@ -118,5 +119,27 @@ public class TrialUsersTest extends AbstractFunctionalTest {
     assertTrue(statusCode == HttpStatus.SC_OK);
     logger.info("Logged out of trial user");
     logger.info("Looking for the delegate not available Alert");
+
+    // Verify the reset password.
+    urUtil.sendResetPasswordMail(fullEmailId);
+    logger.info("Attempting to retrieve reset password mail from inbox : " + fullEmailId);
+    message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_RESET_PWD_SUBJECT);
+    logger.info("Reset password mail retrieved");
+    logger.info("Reading the retrieved email");
+    emailFetchId = message.getId();
+    messageDetails = mailinatorRestUtils.readEmail(fullEmailId, emailFetchId);
+    assertNotNull(messageDetails);
+    String resetUrl =
+        htmlUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
+    assertTrue(StringUtils.isNotBlank(resetUrl));
+    logger.info("Email read and Reset password URL is available for user password reset");
+    urUtil.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
+    // Verify if the user can login through the reset password
+    bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.RESET_PASSWORD);
+    assertNotNull("Bearer Token not successfully provided", bearerToken);
+    statusCode = Setup.signOut(completed.getUuid(), bearerToken);
+    assertTrue(statusCode == org.apache.http.HttpStatus.SC_OK);
+    logger.info("All validation completed");
+    logger.info("All validation for reset also done");
   }
 }

@@ -13,6 +13,11 @@ public class HTMLUtils {
     return getUrlFromTable(Jsoup.parse(emailBody).select("table"), verificationElement);
   }
 
+  public String retrieveResetUrlFromEmail(String emailBody, String verificationElement)
+      throws IOException, MessagingException {
+    return getUrlFromTable(Jsoup.parse(emailBody).select("table"), verificationElement);
+  }
+
   private static String getUrlFromTable(Elements table, String verificationElement) {
     if (table.isEmpty()) {
       return null;

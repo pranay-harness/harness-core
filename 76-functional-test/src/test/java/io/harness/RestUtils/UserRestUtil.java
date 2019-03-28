@@ -13,7 +13,9 @@ import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.resources.UserResource;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
@@ -51,6 +53,21 @@ public class UserRestUtil extends AbstractFunctionalTest {
     List<UserInvite> inviteList = inviteListResponse.getResource();
     assertNotNull(inviteList);
     return inviteList;
+  }
+
+  public void sendResetPasswordMail(String emailId) {
+    UserResource.ResetPasswordRequest resetPasswordRequest = new UserResource.ResetPasswordRequest();
+    resetPasswordRequest.setEmail(emailId);
+    Setup.portal().body(resetPasswordRequest, ObjectMapperType.GSON).post("/users/reset-password");
+  }
+
+  public void resetPasswordWith(String token, String password) throws UnsupportedEncodingException {
+    UserResource.UpdatePasswordRequest updatePasswordRequest = new UserResource.UpdatePasswordRequest();
+    updatePasswordRequest.setPassword(password);
+    Setup.portal()
+        .pathParams("token", token)
+        .body(updatePasswordRequest, ObjectMapperType.GSON)
+        .post("/users/reset-password/{token}");
   }
 
   public UserInvite completeUserRegistration(Account account, UserInvite invite) {

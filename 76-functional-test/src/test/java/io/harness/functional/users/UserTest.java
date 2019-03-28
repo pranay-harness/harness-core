@@ -56,6 +56,7 @@ public class UserTest extends AbstractFunctionalTest {
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   final String EXPECTED_SUBJECT = "You are invited to join Harness at Harness platform";
+  final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
   UserRestUtil urUtil = new UserRestUtil();
   GuerillaMailUtil gmailUtil = new GuerillaMailUtil();
   MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
@@ -182,6 +183,29 @@ public class UserTest extends AbstractFunctionalTest {
     assertNotNull("Bearer Token not successfully provided", bearerToken);
     int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertTrue(statusCode == HttpStatus.SC_OK);
+
+    // Verify user can reset the password
+    emailId = emailId + domainName;
+    urUtil.sendResetPasswordMail(emailId);
+    logger.info("Attempting to retrieve reset password mail from inbox : " + emailId);
+    message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_RESET_PWD_SUBJECT);
+    logger.info("Reset password mail retrieved");
+    logger.info("Reading the retrieved email");
+    emailFetchId = message.getId();
+    messageDetails = mailinatorRestUtils.readEmail(emailId, emailFetchId);
+    assertNotNull(messageDetails);
+    String resetUrl =
+        htmlUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
+    assertTrue(StringUtils.isNotBlank(resetUrl));
+    logger.info(""
+        + " URL is available for user password reset");
+    urUtil.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
+    // Verify if the user can login through the reset password
+    bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.RESET_PASSWORD);
+    assertNotNull("Bearer Token not successfully provided", bearerToken);
+    statusCode = Setup.signOut(completed.getUuid(), bearerToken);
+    assertTrue(statusCode == HttpStatus.SC_OK);
     logger.info("All validation completed");
+    logger.info("All validation for reset also done");
   }
 }
