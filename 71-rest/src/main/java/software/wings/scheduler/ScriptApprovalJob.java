@@ -172,7 +172,7 @@ public class ScriptApprovalJob implements Job {
                                                    .approvedOn(System.currentTimeMillis())
                                                    .build();
 
-    if (approvalStatus == ExecutionStatus.SUCCESS || approvalStatus == approvalStatus.REJECTED) {
+    if (approvalStatus == ExecutionStatus.SUCCESS || approvalStatus == ExecutionStatus.REJECTED) {
       executionData.setApprovedOn(System.currentTimeMillis());
     }
 
