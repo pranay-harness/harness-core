@@ -556,30 +556,6 @@ public interface Constants {
    * The constant HTTP_RESPONSE_METHOD.
    */
   String HTTP_RESPONSE_METHOD = "httpResponseMethod";
-  /**
-   * The constant HTTP_RESPONSE_CODE.
-   */
-  String HTTP_RESPONSE_CODE = "httpResponseCode";
-  /**
-   * The constant HTTP_RESPONSE_BODY.
-   */
-  String HTTP_RESPONSE_BODY = "httpResponseBody";
-  /**
-   * The constant ASSERTION_STATEMENT.
-   */
-  String ASSERTION_STATEMENT = "assertionStatement";
-  /**
-   * The constant ASSERTION_STATUS.
-   */
-  String ASSERTION_STATUS = "assertionStatus";
-  /**
-   * The constant XPATH.
-   */
-  String XPATH = "xpath('//status/text()')";
-  /**
-   * The constant JSONPATH.
-   */
-  String JSONPATH = "jsonpath('health.status')";
 
   /**
    * Constants for expression
@@ -594,10 +570,6 @@ public interface Constants {
    * The constant EXECUTE_WITH_PREVIOUS_STEPS.
    */
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
-  /**
-   * The constant DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT.
-   */
-  int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
 
   /**
    * The constant DEFAULT_RUNTIME_ENTITY_PAGESIZE.

@@ -35,7 +35,6 @@ import static software.wings.beans.Delegate.DELEGATE_TYPE_KEY;
 import static software.wings.beans.Delegate.HOST_NAME_KEY;
 import static software.wings.beans.Delegate.SEQUENCE_NUM_KEY;
 import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
-import static software.wings.beans.DelegateSequenceConfig.ACCOUNT_ID_KEY;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.DelegateSequenceConfig.DELEGATE_TOKEN;
 import static software.wings.beans.DelegateSequenceConfig.SEQUENCE_NUM;
@@ -1189,14 +1188,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @VisibleForTesting
   DelegateSequenceConfig getDelegateSequenceConfig(String accountId, String hostName, Integer seqNum) {
     Query<DelegateSequenceConfig> delegateSequenceQuery = wingsPersistence.createQuery(DelegateSequenceConfig.class)
-                                                              .filter(ACCOUNT_ID_KEY, accountId)
+                                                              .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY, accountId)
                                                               .filter(DelegateSequenceConfig.HOST_NAME_KEY, hostName);
 
     if (seqNum != null) {
       delegateSequenceQuery.filter(SEQUENCE_NUM, seqNum);
     }
 
-    return delegateSequenceQuery.project(ACCOUNT_ID_KEY, true)
+    return delegateSequenceQuery.project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
         .project(SEQUENCE_NUM_KEY, true)
         .project(HOST_NAME_KEY, true)
         .project(DELEGATE_TOKEN, true)
@@ -2255,7 +2254,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate existingDelegate;
     Query<Delegate> delegateQuery =
         wingsPersistence.createQuery(Delegate.class)
-            .filter(ACCOUNT_ID_KEY, accountId)
+            .filter(Delegate.ACCOUNT_ID_KEY, accountId)
             .filter(DelegateSequenceConfig.HOST_NAME_KEY, getHostNameToBeUsedForECSDelegate(hostName, seqNum));
 
     existingDelegate = delegateQuery.get();
@@ -2341,13 +2340,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   List<DelegateSequenceConfig> getDelegateSequenceConfigs(Delegate delegate) {
     Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
         wingsPersistence.createQuery(DelegateSequenceConfig.class)
-            .filter(ACCOUNT_ID_KEY, delegate.getAccountId())
+            .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY, delegate.getAccountId())
             .filter(DelegateSequenceConfig.HOST_NAME_KEY, delegate.getHostName());
 
     return delegateSequenceConfigQuery.project(ID_KEY, true)
         .project(SEQUENCE_NUM, true)
         .project(LAST_UPDATED_AT_KEY, true)
-        .project(ACCOUNT_ID_KEY, true)
+        .project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
         .project(DelegateSequenceConfig.HOST_NAME_KEY, true)
         .project(DELEGATE_TOKEN, true)
         .asList();
@@ -2357,13 +2356,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   DelegateSequenceConfig addNewDelegateSequenceConfigRecord(Delegate delegate) {
     Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
         wingsPersistence.createQuery(DelegateSequenceConfig.class)
-            .filter(ACCOUNT_ID_KEY, delegate.getAccountId())
+            .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY, delegate.getAccountId())
             .filter(DelegateSequenceConfig.HOST_NAME_KEY, delegate.getHostName());
 
     List<DelegateSequenceConfig> existingDelegateSequenceConfigs =
         delegateSequenceConfigQuery.project(SEQUENCE_NUM, true)
             .project("lastUpdatedAt", true)
-            .project(ACCOUNT_ID_KEY, true)
+            .project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
             .project(DelegateSequenceConfig.HOST_NAME_KEY, true)
             .project(DELEGATE_TOKEN, true)
             .asList();
@@ -2520,7 +2519,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    */
   private List<Delegate> getAllDelegatesMatchingGroupName(Delegate delegate) {
     return wingsPersistence.createQuery(Delegate.class, excludeAuthority)
-        .filter(ACCOUNT_ID_KEY, delegate.getAccountId())
+        .filter(Delegate.ACCOUNT_ID_KEY, delegate.getAccountId())
         .filter(DELEGATE_TYPE_KEY, delegate.getDelegateType())
         .filter(DELEGATE_GROUP_NAME_KEY, delegate.getDelegateGroupName())
         .asList();

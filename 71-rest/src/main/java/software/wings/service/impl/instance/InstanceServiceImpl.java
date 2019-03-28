@@ -361,7 +361,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet) {
     List<Key<ManualSyncJob>> keyList = wingsPersistence.createQuery(ManualSyncJob.class)
-                                           .filter(ACCOUNT_ID, accountId)
+                                           .filter(ManualSyncJob.ACCOUNT_ID_KEY, accountId)
                                            .field("_id")
                                            .in(manualJobIdSet)
                                            .asKeyList();

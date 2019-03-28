@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.atmosphere.cpr.BroadcasterFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Event;
@@ -111,16 +110,6 @@ public class EventEmitter {
      */
     public ResourceType getPermission() {
       return permission;
-    }
-
-    /**
-     * Sets permission.
-     *
-     * @param permission the permission
-     */
-    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
-    public void setPermission(ResourceType permission) {
-      this.permission = permission;
     }
 
     /**

@@ -189,7 +189,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
-  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   private Callable<HasMetadata> getControllerInternal(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String name, String namespace) {
     return () -> {
@@ -327,7 +326,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   @SuppressWarnings("unchecked")
   public List<? extends HasMetadata> listControllers(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -338,7 +336,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                              .list()
                              .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -347,7 +345,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -356,7 +354,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -365,7 +363,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -374,7 +372,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     if (allFailed) {

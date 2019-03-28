@@ -13,23 +13,17 @@ import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
-import static software.wings.common.Constants.ASSERTION_STATEMENT;
-import static software.wings.common.Constants.ASSERTION_STATUS;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
-import static software.wings.common.Constants.HTTP_RESPONSE_BODY;
-import static software.wings.common.Constants.HTTP_RESPONSE_CODE;
 import static software.wings.common.Constants.HTTP_RESPONSE_METHOD;
 import static software.wings.common.Constants.HTTP_URL;
 import static software.wings.common.Constants.INFRA_ROUTE_PCF;
 import static software.wings.common.Constants.INFRA_TEMP_ROUTE_PCF;
-import static software.wings.common.Constants.JSONPATH;
 import static software.wings.common.Constants.PCF_APP_NAME;
 import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
-import static software.wings.common.Constants.XPATH;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
@@ -110,6 +104,15 @@ public abstract class ExpressionBuilder {
   protected static final String EMAIL_CC_ADDRESS = "ccAddress";
   protected static final String EMAIL_SUBJECT = "subject";
   protected static final String EMAIL_BODY = "body";
+
+  protected static final String ASSERTION_STATEMENT = "assertionStatement";
+  protected static final String ASSERTION_STATUS = "assertionStatus";
+
+  protected static final String XPATH = "xpath('//status/text()')";
+  protected static final String JSONPATH = "jsonpath('health.status')";
+
+  protected static final String HTTP_RESPONSE_CODE = "httpResponseCode";
+  protected static final String HTTP_RESPONSE_BODY = "httpResponseBody";
 
   @Inject private ServiceVariableService serviceVariablesService;
   @Inject private ServiceTemplateService serviceTemplateService;

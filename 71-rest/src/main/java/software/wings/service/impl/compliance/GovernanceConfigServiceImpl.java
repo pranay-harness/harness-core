@@ -51,7 +51,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    Query<GovernanceConfig> query = wingsPersistence.createQuery(GovernanceConfig.class).filter(ACCOUNT_ID, accountId);
+    Query<GovernanceConfig> query =
+        wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfig.ACCOUNT_ID_KEY, accountId);
     wingsPersistence.delete(query);
   }
 }

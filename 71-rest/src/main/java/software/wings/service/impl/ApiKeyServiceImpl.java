@@ -59,8 +59,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public String get(String uuid, String accountId) {
-    ApiKeyEntry entry =
-        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, uuid).get();
+    ApiKeyEntry entry = wingsPersistence.createQuery(ApiKeyEntry.class)
+                            .filter(ApiKeyEntry.ACCOUNT_ID_KEY, accountId)
+                            .filter(ID_KEY, uuid)
+                            .get();
     Validator.notNullCheck("apiKeyEntry", entry);
     return new String(getSimpleEncryption(accountId).decryptChars(entry.getEncryptedKey()));
   }
@@ -72,7 +74,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void validate(String key, String accountId) {
-    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ACCOUNT_ID, EQ, accountId).build();
+    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId).build();
     if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
              .getResponse()
              .stream()
@@ -85,6 +87,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ApiKeyEntry.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntry.ACCOUNT_ID_KEY, accountId));
   }
 }

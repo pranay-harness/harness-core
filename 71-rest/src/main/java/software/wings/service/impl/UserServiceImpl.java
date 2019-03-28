@@ -653,8 +653,10 @@ public class UserServiceImpl implements UserService {
     List<UserGroup> userGroups = userInvite.getUserGroups();
     if (isNotEmpty(userGroups)) {
       Set<String> userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toSet());
-      PageRequest<UserGroup> pageRequest =
-          aPageRequest().addFilter(ACCOUNT_ID, EQ, accountId).addFilter("_id", IN, userGroupIds.toArray()).build();
+      PageRequest<UserGroup> pageRequest = aPageRequest()
+                                               .addFilter(UserGroup.ACCOUNT_ID_KEY, EQ, accountId)
+                                               .addFilter("_id", IN, userGroupIds.toArray())
+                                               .build();
       PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
       userGroups = pageResponse.getResponse();
       addUserToUserGroups(accountId, user, userGroups, sendNotification);
@@ -720,8 +722,10 @@ public class UserServiceImpl implements UserService {
   }
 
   private void removeRelatedUserInvite(String accountId, String email) {
-    UserInvite userInvite =
-        wingsPersistence.createQuery(UserInvite.class).filter("email", email).filter(ACCOUNT_ID, accountId).get();
+    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class)
+                                .filter("email", email)
+                                .filter(UserInvite.ACCOUNT_ID_KEY, accountId)
+                                .get();
     if (userInvite != null) {
       wingsPersistence.delete(userInvite);
     }
@@ -729,14 +733,16 @@ public class UserServiceImpl implements UserService {
 
   private List<UserGroup> getUserGroupsOfUser(String accountId, String userId, boolean loadUsers) {
     PageRequest<UserGroup> pageRequest =
-        aPageRequest().addFilter(ACCOUNT_ID, EQ, accountId).addFilter("memberIds", EQ, userId).build();
+        aPageRequest().addFilter(UserGroup.ACCOUNT_ID_KEY, EQ, accountId).addFilter("memberIds", EQ, userId).build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, loadUsers);
     return pageResponse.getResponse();
   }
 
   private List<UserGroup> getUserGroups(String accountId, SetView<String> userGroupIds) {
-    PageRequest<UserGroup> pageRequest =
-        aPageRequest().addFilter("_id", IN, userGroupIds.toArray()).addFilter(ACCOUNT_ID, EQ, accountId).build();
+    PageRequest<UserGroup> pageRequest = aPageRequest()
+                                             .addFilter("_id", IN, userGroupIds.toArray())
+                                             .addFilter(UserGroup.ACCOUNT_ID_KEY, EQ, accountId)
+                                             .build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     return pageResponse.getResponse();
   }
@@ -1194,8 +1200,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserInvite deleteInvite(String accountId, String inviteId) {
-    UserInvite userInvite =
-        wingsPersistence.createQuery(UserInvite.class).filter(ID_KEY, inviteId).filter(ACCOUNT_ID, accountId).get();
+    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class)
+                                .filter(ID_KEY, inviteId)
+                                .filter(UserInvite.ACCOUNT_ID_KEY, accountId)
+                                .get();
     if (userInvite != null) {
       wingsPersistence.delete(userInvite);
     }
@@ -1204,8 +1212,9 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean deleteInvites(String accountId, String email) {
-    Query userInvitesQuery =
-        wingsPersistence.createQuery(UserInvite.class).filter(ACCOUNT_ID, accountId).filter("email", email);
+    Query userInvitesQuery = wingsPersistence.createQuery(UserInvite.class)
+                                 .filter(UserInvite.ACCOUNT_ID_KEY, accountId)
+                                 .filter("email", email);
     return wingsPersistence.delete(userInvitesQuery);
   }
 
@@ -1837,7 +1846,7 @@ public class UserServiceImpl implements UserService {
 
   private List<UserGroup> getAccountAdminGroup(String accountId) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
-                                             .addFilter(ACCOUNT_ID, EQ, accountId)
+                                             .addFilter(UserGroup.ACCOUNT_ID_KEY, EQ, accountId)
                                              .addFilter("name", EQ, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
                                              .build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
@@ -1932,7 +1941,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<User> users = wingsPersistence.createQuery(User.class).filter(ACCOUNT_ID, accountId).asList();
+    List<User> users = wingsPersistence.createQuery(User.class).filter(User.ACCOUNT_ID_KEY, accountId).asList();
     for (User user : users) {
       wingsPersistence.delete(User.class, user.getUuid());
       evictUserFromCache(user.getUuid());
