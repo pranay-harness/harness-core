@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -23,6 +24,9 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
@@ -63,6 +67,7 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -83,13 +88,16 @@ import software.wings.verification.log.LogsCVConfiguration;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -107,6 +115,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
 
   @Inject protected WingsPersistence wingsPersistence;
+  @Inject DataStoreService dataStoreService;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject protected SettingsService settingsService;
   @Inject protected WorkflowExecutionService workflowExecutionService;
@@ -149,10 +158,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   private boolean deleteFeedbackHelper(String feedbackId) {
-    Query<LogMLFeedbackRecord> query =
-        wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("_id", feedbackId);
-
-    wingsPersistence.delete(query);
+    dataStoreService.delete(LogMLFeedbackRecord.class, feedbackId);
     return true;
   }
 
@@ -195,27 +201,45 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public List<LogMLFeedbackRecord> getMLFeedback(
       String appId, String serviceId, String workflowId, String workflowExecutionId) {
-    Query<LogMLFeedbackRecord> query = wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("appId", appId);
-    query.or(query.criteria("serviceId").equal(serviceId), query.criteria("workflowId").equal(workflowId),
-        query.criteria("workflowExecutionId").equal(workflowExecutionId));
+    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).build();
 
-    return query.asList();
+    feedbackRecordPageRequest.addFilter("serviceId", Operator.EQ, serviceId);
+    feedbackRecordPageRequest.addFilter("workflowId", Operator.EQ, workflowId);
+    feedbackRecordPageRequest.addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId);
+
+    List<LogMLFeedbackRecord> records = dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequest);
+
+    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequestServiceOnly =
+        PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).addFilter("serviceId", Operator.EQ, serviceId).build();
+
+    List<LogMLFeedbackRecord> recordsServiceOnlyFilter =
+        dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequestServiceOnly);
+
+    Set<LogMLFeedbackRecord> recordSet = new HashSet<>();
+
+    records.forEach(record -> recordSet.add(record));
+    recordsServiceOnlyFilter.forEach(record -> recordSet.add(record));
+
+    return new ArrayList<>(recordSet);
   }
 
   @Override
   public List<LogMLFeedbackRecord> get24x7MLFeedback(String cvConfigId) {
-    Query<LogMLFeedbackRecord> query =
-        wingsPersistence.createQuery(LogMLFeedbackRecord.class, excludeAuthority).filter("cvConfigId", cvConfigId);
-    return query.asList();
+    PageRequest<LogMLFeedbackRecord> feedbackPageRequest =
+        PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).addFilter("cvConfigId", Operator.EQ, cvConfigId).build();
+    return dataStoreService.list(LogMLFeedbackRecord.class, feedbackPageRequest);
   }
 
   @Override
   public List<LogMLFeedbackRecord> getMLFeedback(String accountId, String workflowId) {
     List<LogMLFeedbackRecord> feedbackRecords = null;
     if (accountResource.isFeatureEnabled(FeatureName.GLOBAL_CV_DASH.name(), accountId).getResource()) {
-      Query<LogMLFeedbackRecord> query =
-          wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("workflowId", workflowId);
-      feedbackRecords = query.asList();
+      PageRequest<LogMLFeedbackRecord> feedbackPageRequest = PageRequestBuilder.aPageRequest()
+                                                                 .withLimit(UNLIMITED)
+                                                                 .addFilter("workflowId", Operator.EQ, workflowId)
+                                                                 .build();
+      feedbackRecords = dataStoreService.list(LogMLFeedbackRecord.class, feedbackPageRequest);
     }
     return feedbackRecords;
   }
@@ -266,7 +290,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                .comment(feedback.getComment())
                                                .build();
 
-    wingsPersistence.save(mlFeedbackRecord);
+    dataStoreService.save(LogMLFeedbackRecord.class, Arrays.asList(mlFeedbackRecord), true);
+
     metricRegistry.recordGaugeInc(IGNORED_ERRORS_METRIC_NAME,
         new String[] {feedback.getLogMLFeedbackType().toString(), stateType.toString(), feedback.getAppId(),
             stateExecutionInstance.getWorkflowId()});
@@ -297,7 +322,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                .cvConfigId(cvConfigId)
                                                .build();
 
-    wingsPersistence.save(mlFeedbackRecord);
+    dataStoreService.save(LogMLFeedbackRecord.class, Arrays.asList(mlFeedbackRecord), true);
+
     return true;
   }
 
@@ -398,11 +424,10 @@ public class AnalysisServiceImpl implements AnalysisService {
     userFeedbackMap.put(CLUSTER_TYPE.TEST, new HashMap<>());
     userFeedbackMap.put(CLUSTER_TYPE.UNKNOWN, new HashMap<>());
 
+    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).addFilter("cvConfigId", Operator.EQ, cvConfigId).build();
     List<LogMLFeedbackRecord> logMLFeedbackRecords =
-        wingsPersistence.createQuery(LogMLFeedbackRecord.class, excludeCount)
-            .filter("cvConfigId", cvConfigId)
-            .filter("appId", appId)
-            .asList();
+        dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequest);
 
     if (logMLFeedbackRecords == null) {
       return userFeedbackMap;
@@ -423,11 +448,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     userFeedbackMap.put(CLUSTER_TYPE.TEST, new HashMap<>());
     userFeedbackMap.put(CLUSTER_TYPE.UNKNOWN, new HashMap<>());
 
+    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter("stateExecutionId", Operator.EQ, stateExecutionId)
+            .build();
     List<LogMLFeedbackRecord> logMLFeedbackRecords =
-        wingsPersistence.createQuery(LogMLFeedbackRecord.class, excludeCount)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("appId", appId)
-            .asList();
+        dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequest);
 
     if (logMLFeedbackRecords == null) {
       return userFeedbackMap;

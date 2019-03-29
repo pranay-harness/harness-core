@@ -61,6 +61,7 @@ import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
 import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.MigrateCVMetadataApplicationId;
+import migrations.all.MigrateLogFeedbackRecordsToGoogle;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataBaselineMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
@@ -209,6 +210,7 @@ public class MigrationList {
         .add(Pair.of(235, NexusDockerArtifactStreamMigration.class))
         .add(Pair.of(236, LogAnalysisDeprecatedRecordMigration.class))
         .add(Pair.of(237, K8sV2ServiceInfraReleaseNameMigration.class))
+        .add(Pair.of(238, MigrateLogFeedbackRecordsToGoogle.class))
         .build();
   }
 }

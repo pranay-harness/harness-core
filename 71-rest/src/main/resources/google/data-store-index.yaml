@@ -57,3 +57,25 @@ indexes:
   - name: tag
   - name: dataCollectionMinute
     direction: desc
+
+- kind: logMlFeedbackRecords
+  properties:
+  - name: stateExecutionId
+  - name: groupName
+  - name: level
+  - name: dataCollectionMinute
+    direction: desc
+
+
+- kind: logMlFeedbackRecords
+  properties:
+  - name: stateExecutionId
+    direction: desc
+
+
+- kind: logMlFeedbackRecords
+  properties:
+  - name: serviceId
+  - name: workflowId
+  - name: workflowExecutionId
+    direction: desc
