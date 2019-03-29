@@ -211,8 +211,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
-    elkAnalysisService.validateQuery(context.getAccountId(), context.getAppId(), analysisServerConfigId, query, indices,
-        context.getStateExecutionInstanceId());
     final String timestampField = getTimestampField();
     final String accountId = appService.get(context.getAppId()).getAccountId();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -220,7 +218,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
     SettingAttribute settingAttribute = null;
     String finalAnalysisServerConfigId = analysisServerConfigId;
-    String finalIndices = context.renderExpression(indices);
+    String finalIndices = indices;
 
     if (!isEmpty(getTemplateExpressions())) {
       TemplateExpression configIdExpression =
@@ -241,6 +239,10 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     if (settingAttribute == null) {
       throw new WingsException("No elk setting with id: " + finalAnalysisServerConfigId + " found");
     }
+
+    elkAnalysisService.validateQuery(context.getAccountId(), context.getAppId(), finalAnalysisServerConfigId, query,
+        finalIndices, context.getStateExecutionInstanceId());
+
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
 
     final String timestampFieldFormat = getTimestampFormat();

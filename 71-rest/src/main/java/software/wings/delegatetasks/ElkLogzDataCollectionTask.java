@@ -30,8 +30,8 @@ import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.sm.StateType;
 
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -271,7 +271,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       return logElements;
     }
 
-    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern(timestampFieldFormat);
+    SimpleDateFormat timeFormatter = new SimpleDateFormat(timestampFieldFormat);
     JSONArray logHits = hits.getJSONArray("hits");
 
     for (int i = 0; i < logHits.length(); i++) {
@@ -293,11 +293,12 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       final String timeStamp = parseAndGetValue(source, timestampField);
       long timeStampValue;
       try {
-        timeStampValue = Instant.from(timeFormatter.parse(timeStamp)).toEpochMilli();
-      } catch (Exception pe) {
+        timeStampValue = timeFormatter.parse(timeStamp).getTime();
+      } catch (ParseException pe) {
         throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR,
             "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat, WingsException.USER,
-            pe);
+            pe)
+            .addParam("reason", "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat);
       }
 
       if (is24x7Task && (timeStampValue < collectionStartTime || timeStampValue > collectionEndTime)) {
