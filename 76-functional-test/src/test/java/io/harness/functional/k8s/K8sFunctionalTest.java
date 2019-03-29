@@ -30,7 +30,6 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
-import io.harness.rule.OwnerRule.Owner;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +67,8 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Inject private TestConstants testConstants;
   @Inject private ArtifactStreamRestUtil artifactStreamRestUtil;
 
+  private static final long TIMEOUT = 1200000; // 20 minutes
+
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
   Application application;
@@ -79,22 +80,19 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
     assertThat(application).isNotNull();
   }
 
-  @Test
-  @Owner(emails = "puneet.saraswat@harness.io")
+  @Test(timeout = TIMEOUT)
   @Category(FunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
-  @Test
-  @Owner(emails = "puneet.saraswat@harness.io")
+  @Test(timeout = TIMEOUT)
   @Category(FunctionalTests.class)
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
-  @Test
-  @Owner(emails = "puneet.saraswat@harness.io")
+  @Test(timeout = TIMEOUT)
   @Category(FunctionalTests.class)
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);
@@ -147,7 +145,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()
-        .atMost(300, TimeUnit.SECONDS)
+        .atMost(10, TimeUnit.MINUTES)
         .pollInterval(5, TimeUnit.SECONDS)
         .until(()
                    -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
@@ -164,7 +162,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
     assertThat(cleanupWorkflowExecution).isNotNull();
 
     Awaitility.await()
-        .atMost(120, TimeUnit.SECONDS)
+        .atMost(5, TimeUnit.MINUTES)
         .pollInterval(5, TimeUnit.SECONDS)
         .until(()
                    -> workflowExecutionService
