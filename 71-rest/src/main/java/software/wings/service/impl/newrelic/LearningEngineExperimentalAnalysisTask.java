@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;
@@ -74,6 +75,15 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private String experiment_name;
   private String feedback_url;
   private String feature_name;
+  private String cvConfigId;
+  private int prediction_start_time;
+  private String previous_analysis_url;
+  private String historical_analysis_url;
+  private String previous_anomalies_url;
+  private String cumulative_sums_url;
+  private boolean is24x7Task;
+  private String tag;
+  private AnalysisComparisonStrategy analysis_comparison_strategy;
   @Indexed private ExecutionStatus executionStatus;
 
   @Builder.Default

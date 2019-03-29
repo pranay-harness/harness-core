@@ -23,4 +23,5 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 public class MLExperiments extends Base {
   private MLAnalysisType ml_analysis_type;
   private String experimentName;
+  private boolean is24x7;
 }
