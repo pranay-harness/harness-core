@@ -166,6 +166,8 @@ import java.util.stream.Collectors;
 public class WorkflowServiceHelper {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceHelper.class);
 
+  private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
+
   private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
   private static final String MAX_REPLICAS = "\\$\\{MAX_REPLICAS}";
   private static final String UTILIZATION = "\\$\\{UTILIZATION}";
@@ -398,7 +400,7 @@ public class WorkflowServiceHelper {
         defaultData.put("maxInstances", 10);
         defaultData.put("autoScalingSteadyStateTimeout", 10);
         defaultData.put("blueGreen", true);
-        phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
+        phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, SETUP_AUTOSCALING_GROUP)
                            .addStep(GraphNode.builder()
                                         .id(generateUuid())
                                         .type(AWS_AMI_SERVICE_SETUP.name())
@@ -447,7 +449,7 @@ public class WorkflowServiceHelper {
         defaultData.put("maxInstances", 10);
         defaultData.put("autoScalingSteadyStateTimeout", 10);
         defaultData.put("blueGreen", false);
-        phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
+        phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, SETUP_AUTOSCALING_GROUP)
                            .addStep(GraphNode.builder()
                                         .id(generateUuid())
                                         .type(AWS_AMI_SERVICE_SETUP.name())
