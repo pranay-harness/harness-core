@@ -32,13 +32,15 @@ public class PersonalizationServiceTest extends WingsBaseTest {
 
     final Personalization addToMissingEntity =
         PersonalizationService.addFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
-    assertThat(addToMissingEntity.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name());
+    assertThat(addToMissingEntity.getSteps().getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name());
 
     final Personalization addToExisting = PersonalizationService.addFavoriteStep(StateType.HTTP, accountId, userId);
-    assertThat(addToExisting.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
+    assertThat(addToExisting.getSteps().getFavorites())
+        .containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
 
     final Personalization addSecond = PersonalizationService.addFavoriteStep(StateType.HTTP, accountId, userId);
-    assertThat(addSecond.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
+    assertThat(addSecond.getSteps().getFavorites())
+        .containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
   }
 
   @Test
@@ -49,24 +51,25 @@ public class PersonalizationServiceTest extends WingsBaseTest {
 
     final Personalization removeFromMissingEntity =
         PersonalizationService.removeFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
-    assertTrue(isEmpty(removeFromMissingEntity.getFavorites()));
+    assertThat(removeFromMissingEntity.getSteps()).isNull();
 
     PersonalizationService.addFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
     PersonalizationService.addFavoriteStep(StateType.HTTP, accountId, userId);
 
     final Personalization removeMissing =
         PersonalizationService.removeFavoriteStep(StateType.COMMAND, accountId, userId);
-    assertThat(removeMissing.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
+    assertThat(removeMissing.getSteps().getFavorites())
+        .containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
 
     final Personalization remove = PersonalizationService.removeFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
-    assertThat(remove.getFavorites()).containsExactly(StateType.HTTP.name());
+    assertThat(remove.getSteps().getFavorites()).containsExactly(StateType.HTTP.name());
 
     final Personalization removeLast = PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
-    assertTrue(isEmpty(removeLast.getFavorites()));
+    assertTrue(isEmpty(removeLast.getSteps().getFavorites()));
 
     final Personalization removeFromEmpty =
         PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
-    assertTrue(isEmpty(removeLast.getFavorites()));
+    assertTrue(isEmpty(removeLast.getSteps().getFavorites()));
   }
 
   @Test
@@ -109,13 +112,14 @@ public class PersonalizationServiceTest extends WingsBaseTest {
 
     final Personalization addToMissingEntity =
         PersonalizationService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
-    assertThat(addToMissingEntity.getRecent()).containsExactly(StateType.SHELL_SCRIPT.name());
+    assertThat(addToMissingEntity.getSteps().getRecent()).containsExactly(StateType.SHELL_SCRIPT.name());
 
     final Personalization addToExisting = PersonalizationService.addRecentStep(StateType.HTTP, accountId, userId);
-    assertThat(addToExisting.getRecent()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
+    assertThat(addToExisting.getSteps().getRecent())
+        .containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
 
     final Personalization addSecond = PersonalizationService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
-    assertThat(addSecond.getRecent())
+    assertThat(addSecond.getSteps().getRecent())
         .containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name(), StateType.SHELL_SCRIPT.name());
 
     for (int i = 0; i < 100; ++i) {
@@ -124,6 +128,6 @@ public class PersonalizationServiceTest extends WingsBaseTest {
 
     final Personalization shorten = PersonalizationService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
 
-    assertThat(shorten.getRecent().size()).isLessThan(100);
+    assertThat(shorten.getSteps().getRecent().size()).isLessThan(100);
   }
 }

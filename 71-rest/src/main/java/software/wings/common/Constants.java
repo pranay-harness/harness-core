@@ -156,11 +156,6 @@ public interface Constants {
   String PREPARE_STEPS = "Prepare Steps";
 
   /**
-   * The constant SETUP_AUTOSCALING_GROUP.
-   */
-  String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
-
-  /**
    * The constant UPGRADE_AUTOSCALING_GROUP.
    */
   String UPGRADE_AUTOSCALING_GROUP = "Upgrade AutoScaling Group";
