@@ -895,7 +895,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           throw new WingsException(e);
         }
         String url = ((PrometheusConfig) connectorConfig).getUrl();
-        return PROMETHEUS_DEEPLINK_FORMAT.replace("{baseUrl", url)
+        return PROMETHEUS_DEEPLINK_FORMAT.replace("{baseUrl}", url)
             .replace("{rangeInput}", String.valueOf(durationInMinutes))
             .replace("{endTime}", endDate)
             .replace("{metricString}", String.valueOf(metricString));
