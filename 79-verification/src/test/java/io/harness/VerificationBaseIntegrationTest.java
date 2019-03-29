@@ -145,12 +145,13 @@ public abstract class VerificationBaseIntegrationTest
     return target.request().header("Authorization", "LearningEngine " + getLearningToken());
   }
 
-  private String getLearningToken() {
+  public String getLearningToken() {
     try {
       String learningServiceSecret = wingsPersistence.createQuery(ServiceSecretKey.class)
                                          .filter("serviceType", ServiceType.LEARNING_ENGINE)
                                          .get()
                                          .getServiceSecret();
+
       Algorithm algorithm = Algorithm.HMAC256(learningServiceSecret);
       return JWT.create()
           .withIssuer("Harness Inc")

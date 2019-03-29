@@ -50,6 +50,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
@@ -80,6 +81,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -133,6 +135,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     delegateTaskId = UUID.randomUUID().toString();
     r = new Random(System.currentTimeMillis());
     setInternalState(mgrAnalysisService, "wingsPersistence", wingsPersistence);
+    setInternalState(mgrAnalysisService, "dataStoreService", new MongoDataStoreServiceImpl(wingsPersistence));
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
@@ -1464,7 +1467,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
                                                .comment("None")
                                                .build();
 
-    wingsPersistence.save(mlFeedbackRecord);
+    dataStoreService.save(LogMLFeedbackRecord.class, Arrays.asList(mlFeedbackRecord), false);
 
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);

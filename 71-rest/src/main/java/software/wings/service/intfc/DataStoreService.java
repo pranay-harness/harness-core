@@ -11,6 +11,8 @@ public interface DataStoreService {
 
   <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest);
 
+  void delete(Class<? extends GoogleDataStoreAware> clazz, String id);
+
   void purgeByActivity(String appId, String activityId);
 
   void purgeOlderRecords();

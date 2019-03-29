@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
@@ -345,7 +346,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     pageRequest.addOrder("workflowStartTs", OrderType.DESC);
     pageRequest.addOrder("stateStartTs", OrderType.DESC);
 
-    return wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, pageRequest);
+    return wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, pageRequest, excludeAuthority);
   }
 
   @Override

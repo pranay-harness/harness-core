@@ -41,6 +41,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
@@ -61,6 +62,7 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -108,6 +110,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Mock private HarnessMetricRegistry metricRegistry;
   @Inject private LogAnalysisService analysisService;
   @Inject private WingsPersistence wingsPersistence;
+  private DataStoreService dataStoreService;
   private CV24x7DashboardService cv24x7DashboardService;
   private AnalysisService managerAnalysisService;
   private CVConfigurationService cvConfigurationService;
@@ -132,11 +135,14 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
     setInternalState(analysisService, "managerClient", verificationManagerClient);
 
+    dataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
     managerAnalysisService = new AnalysisServiceImpl();
     cv24x7DashboardService = new CV24x7DashboardServiceImpl();
     cvConfigurationService = new CVConfigurationServiceImpl();
     WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
     setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
+    setInternalState(managerAnalysisService, "dataStoreService", dataStoreService);
+    setInternalState(analysisService, "dataStoreService", dataStoreService);
 
     setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
     setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
