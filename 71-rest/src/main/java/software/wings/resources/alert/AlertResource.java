@@ -13,11 +13,15 @@ import io.harness.exception.WingsException;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import retrofit2.http.Body;
 import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.AlertServiceImpl;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.intfc.AlertService;
 
 import java.util.Arrays;
@@ -25,6 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -37,14 +42,9 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ROLE)
 public class AlertResource {
-  private AlertService alertService;
-  private AlertVisibilityChecker alertVisibilityChecker;
-
-  @Inject
-  public AlertResource(AlertService alertService, AlertVisibilityChecker alertVisibilityChecker) {
-    this.alertService = alertService;
-    this.alertVisibilityChecker = alertVisibilityChecker;
-  }
+  @Inject private AlertService alertService;
+  @Inject private AlertVisibilityChecker alertVisibilityChecker;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
   @GET
   @Timed
@@ -75,5 +75,13 @@ public class AlertResource {
                                 .collect(Collectors.toList());
 
     return new RestResponse<>(types);
+  }
+
+  @POST
+  @Path("/open-cv-alert")
+  @LearningEngineAuth
+  public RestResponse<Boolean> openCVAlert(
+      @QueryParam("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData) {
+    return new RestResponse<>(continuousVerificationService.openAlert(cvConfigId, alertData));
   }
 }

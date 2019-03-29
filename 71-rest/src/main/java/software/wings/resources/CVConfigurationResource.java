@@ -98,4 +98,22 @@ public class CVConfigurationResource {
       @Body LogsCVConfiguration logsCVConfiguration) {
     return new RestResponse<>(cvConfigurationService.resetBaseline(appId, cvConfigId, logsCVConfiguration));
   }
+
+  @POST
+  @Path("/update-alert-setting")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateAlertSettings(@QueryParam("accountId") @Valid final String accountId,
+      final @Valid @QueryParam("cvConfigId") String cvConfigId, @Body CVConfiguration cvConfiguration) {
+    return new RestResponse<>(cvConfigurationService.updateAlertSettings(cvConfigId, cvConfiguration));
+  }
+
+  @POST
+  @Path("/update-snooze")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateSnooze(@QueryParam("accountId") @Valid final String accountId,
+      final @Valid @QueryParam("cvConfigId") String cvConfigId, @Body CVConfiguration cvConfiguration) {
+    return new RestResponse<>(cvConfigurationService.updateSnooze(cvConfigId, cvConfiguration));
+  }
 }

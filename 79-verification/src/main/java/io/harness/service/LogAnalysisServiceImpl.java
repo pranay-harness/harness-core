@@ -34,6 +34,7 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
+import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.mongodb.morphia.query.CountOptions;
@@ -96,6 +97,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Inject private VerificationManagerClient managerClient;
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private UsageMetricsHelper usageMetricsHelper;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -564,6 +566,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }
+    continuousVerificationService.triggerAlertIfNecessary(cvConfigId, mlAnalysisResponse.getScore(), analysisMinute);
     return true;
   }
 

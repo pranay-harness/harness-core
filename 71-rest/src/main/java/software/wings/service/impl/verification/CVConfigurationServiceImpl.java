@@ -8,6 +8,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -49,6 +50,7 @@ import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -534,5 +536,29 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfiguration.ACCOUNT_ID_KEY, accountId));
+  }
+
+  @Override
+  public boolean updateAlertSettings(String cvConfigId, CVConfiguration cvConfiguration) {
+    Map<String, Object> updatePairs = new HashMap<>();
+    updatePairs.put("alertEnabled", cvConfiguration.isAlertEnabled());
+    updatePairs.put("alertThreshold", cvConfiguration.getAlertThreshold());
+    wingsPersistence.updateFields(CVConfiguration.class, cvConfigId, updatePairs);
+    return true;
+  }
+
+  @Override
+  public boolean updateSnooze(String cvConfigId, CVConfiguration cvConfiguration) {
+    if (cvConfiguration.getSnoozeStartTime() > 0 && cvConfiguration.getSnoozeEndTime() > 0) {
+      Preconditions.checkState(cvConfiguration.getSnoozeEndTime() > cvConfiguration.getSnoozeStartTime(),
+          "end time should be later than start time, start time:  " + cvConfiguration.getSnoozeStartTime()
+              + " endTime: " + cvConfiguration.getSnoozeEndTime());
+      Map<String, Object> updatePairs = new HashMap<>();
+      updatePairs.put("snoozeStartTime", cvConfiguration.getSnoozeStartTime());
+      updatePairs.put("snoozeEndTime", cvConfiguration.getSnoozeEndTime());
+      wingsPersistence.updateFields(CVConfiguration.class, cvConfigId, updatePairs);
+      return true;
+    }
+    return false;
   }
 }

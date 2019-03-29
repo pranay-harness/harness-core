@@ -12,6 +12,7 @@ import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
+import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
@@ -70,6 +71,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -95,6 +97,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.CloudWatchService;
@@ -172,6 +175,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private CloudWatchService cloudWatchService;
   @Inject private CV24x7DashboardService cv24x7DashboardService;
   @Inject private DataCollectionExecutorService dataCollectionService;
+  @Inject private AlertService alertService;
 
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
@@ -1715,5 +1719,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .loadResponse(loadResponse)
         .dataForNode(apmResponse)
         .build();
+  }
+
+  @Override
+  public boolean openAlert(String cvConfigId, ContinuousVerificationAlertData alertData) {
+    final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    Preconditions.checkNotNull(cvConfiguration, "No config found with id " + cvConfigId);
+    Preconditions.checkNotNull(alertData, "Invalid alert data");
+    alertData.setCvConfiguration(cvConfiguration);
+
+    logger.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
+    alertService.openAlert(appService.getAccountIdByAppId(cvConfiguration.getAppId()), cvConfiguration.getAppId(),
+        CONTINUOUS_VERIFICATION_ALERT, alertData);
+    return true;
   }
 }

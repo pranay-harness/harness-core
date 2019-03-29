@@ -36,14 +36,5 @@ public class DatadogCVServiceConfiguration extends CVConfiguration {
     private String datadogServiceName;
     private String metrics;
     private String applicationFilter;
-
-    public DatadogCVConfigurationYaml(String type, String harnessApiVersion, String name, String accountId,
-        String connectorId, String envId, String serviceId, String stateType, String analysisTolerance,
-        String datadogServiceName, String metrics, String applicationFilter) {
-      super(type, harnessApiVersion, name, accountId, connectorId, envId, serviceId, analysisTolerance);
-      this.datadogServiceName = datadogServiceName;
-      this.metrics = metrics;
-      this.applicationFilter = applicationFilter;
-    }
   }
 }

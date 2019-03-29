@@ -8,7 +8,6 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.Integer.max;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
-import static software.wings.common.VerificationConstants.MEDIUM_RISK_CUTOFF;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
@@ -29,6 +28,7 @@ import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.mongodb.morphia.query.FindOptions;
@@ -36,7 +36,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -67,7 +66,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
-import software.wings.verification.CVConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -97,6 +95,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private DataStoreService dataStoreService;
   @Inject private VerificationServiceConfiguration verificationServiceConfiguration;
   @Inject private UsageMetricsHelper usageMetricsHelper;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
   @Override
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
@@ -300,20 +299,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     wingsPersistence.save(mlAnalysisResponse);
     wingsPersistence.save(riskSummary);
 
-    Map<String, Double> overAllScoreByMetricName = mlAnalysisResponse.getOverallMetricScores();
-    if (!isEmpty(overAllScoreByMetricName) && !isEmpty(cvConfigId)) {
-      String metricName = Collections.max(overAllScoreByMetricName.entrySet(), Map.Entry.comparingByValue()).getKey();
-      Double finalOverallScore = overAllScoreByMetricName.get(metricName);
-      if (finalOverallScore >= MEDIUM_RISK_CUTOFF) {
-        Application application = usageMetricsHelper.getApplication(appId);
-        CVConfiguration cvConfig = usageMetricsHelper.getCVConfig(cvConfigId);
-        String url = "/account/" + accountId + "/continuous-verification2/" + cvConfig.getServiceId() + "/details";
-        logger.warn(String.format("Risk detected for cvConfigId %S, cvConfigName %S, stateType %S, "
-                + "metricName %S, serviceName %S, URL %S, ApplicationName %S, finalOverallScore %S",
-            cvConfigId, cvConfig.getName(), stateType, metricName, cvConfig.getServiceName(), url,
-            application.getName(), finalOverallScore));
-      }
+    if (mlAnalysisResponse.getOverallMetricScores() == null) {
+      mlAnalysisResponse.setOverallMetricScores(new HashMap<>());
     }
+    double riskSocre =
+        mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).average().orElse(0.0);
+    continuousVerificationService.triggerAlertIfNecessary(
+        cvConfigId, riskSocre, mlAnalysisResponse.getAnalysisMinute());
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
         stateType, workflowExecutionId, stateExecutionId);

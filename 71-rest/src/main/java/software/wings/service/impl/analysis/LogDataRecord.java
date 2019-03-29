@@ -68,7 +68,7 @@ public class LogDataRecord extends Base {
   @NotEmpty private int count;
   @NotEmpty private String logMessage;
   @NotEmpty private String logMD5Hash;
-  @NotEmpty @Indexed private ClusterLevel clusterLevel;
+  @NotEmpty private ClusterLevel clusterLevel;
   @NotEmpty private long logCollectionMinute;
 
   @JsonIgnore

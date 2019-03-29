@@ -24,6 +24,7 @@ import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,6 +78,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TimeSeriesAnalysisService metricDataAnalysisService;
+  @Inject private ContinuousVerificationService continuousVerificationService;
   private MetricDataAnalysisService managerAnalysisService;
 
   @Before
@@ -92,11 +94,13 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionId = generateUuid();
     workflowExecutionId = generateUuid();
     serviceId = generateUuid();
-    cvConfigId = generateUuid();
+    cvConfigId = wingsPersistence.save(new CVConfiguration());
     groupName = "groupName-";
     delegateTaskId = UUID.randomUUID().toString();
     managerAnalysisService = new MetricDataAnalysisServiceImpl();
     setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
+    setInternalState(continuousVerificationService, "verificationManagerClientHelper", managerClientHelper);
+    setInternalState(metricDataAnalysisService, "continuousVerificationService", continuousVerificationService);
   }
 
   @Test
@@ -230,7 +234,9 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testCompression() throws IOException {
     long analysisMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
-    String cvConfigId = generateUuid();
+    final CVConfiguration cvConfiguration = new CVConfiguration();
+    cvConfiguration.setAppId(appId);
+    String cvConfigId = wingsPersistence.save(cvConfiguration);
     final Gson gson = new Gson();
     File file = new File(getClass().getClassLoader().getResource("./ts_analysis_record.json").getFile());
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;

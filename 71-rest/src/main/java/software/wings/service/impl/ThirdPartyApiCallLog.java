@@ -6,8 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
-import static software.wings.common.Constants.RESPONSE_BODY;
-import static software.wings.common.Constants.STATUS_CODE;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
@@ -60,6 +58,10 @@ import java.util.List;
 public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
+  public static final String PAYLOAD = "Payload";
+  public static final String RESPONSE_BODY = "Response Body";
+  public static final String STATUS_CODE = "Status Code";
+
   @NotEmpty @Indexed private String stateExecutionId;
   @NotEmpty private String accountId;
   @NotEmpty private String delegateId;

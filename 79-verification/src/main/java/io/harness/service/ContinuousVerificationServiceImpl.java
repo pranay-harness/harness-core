@@ -25,6 +25,7 @@ import static software.wings.sm.states.AbstractMetricAnalysisState.MIN_REQUESTS_
 import static software.wings.sm.states.AbstractMetricAnalysisState.PARALLEL_PROCESSES;
 import static software.wings.sm.states.AbstractMetricAnalysisState.SMOOTH_WINDOW;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -49,6 +50,7 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -996,5 +998,41 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
       verificationManagerClientHelper.notifyManagerForLogAnalysis(context, response);
     }
+  }
+
+  @Override
+  public void triggerAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute) {
+    if (isEmpty(cvConfigId)) {
+      return;
+    }
+    final CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    Preconditions.checkNotNull(cvConfiguration, "no config found with id " + cvConfigId);
+
+    if (!cvConfiguration.isAlertEnabled()) {
+      logger.info("for {} the alert is not enabled. Returning", cvConfigId);
+      return;
+    }
+
+    if (riskScore <= cvConfiguration.getAlertThreshold()) {
+      logger.info("for {} the risk {} is lower than the threshold {}. No alerts will be triggered.", cvConfigId,
+          riskScore, cvConfiguration.getAlertThreshold());
+      return;
+    }
+
+    final long currentTime = System.currentTimeMillis();
+    if (cvConfiguration.getSnoozeStartTime() > 0 && cvConfiguration.getSnoozeEndTime() > 0
+        && currentTime >= cvConfiguration.getSnoozeStartTime() && currentTime <= cvConfiguration.getSnoozeEndTime()) {
+      logger.info("for {} the current time is in the range of snooze time {} to {}. No alerts will be triggered.",
+          cvConfigId, cvConfiguration.getSnoozeStartTime(), cvConfiguration.getSnoozeEndTime());
+      return;
+    }
+
+    logger.info("triggering alert for {} with risk score {}", cvConfigId, riskScore);
+    verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
+        ContinuousVerificationAlertData.builder()
+            .riskScore(riskScore)
+            .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES))
+            .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+            .build()));
   }
 }

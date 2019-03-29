@@ -751,9 +751,6 @@ public interface Constants {
   String HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY = "harness.io/service-infra-id";
 
   String URL_STRING = "Url";
-  String STATUS_CODE = "Status Code";
-  String PAYLOAD = "Payload";
-  String RESPONSE_BODY = "Response Body";
 
   String PRIMARY_SERVICE_NAME_EXPRESSION = "${PRIMARY_SERVICE_NAME}";
   String STAGE_SERVICE_NAME_EXPRESSION = "${STAGE_SERVICE_NAME}";

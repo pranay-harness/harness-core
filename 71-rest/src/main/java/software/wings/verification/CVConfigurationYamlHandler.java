@@ -17,6 +17,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration.CVConfigurationYaml;
 
+import java.util.Date;
+
 public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, B extends CVConfiguration>
     extends BaseYamlHandler<Y, B> {
   @Inject YamlHelper yamlHelper;
@@ -43,6 +45,14 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     yaml.setHarnessApplicationName(application.getName());
     yaml.setEnvName(environment.getName());
     yaml.setServiceName(service.getName());
+    yaml.setAlertThreshold(bean.getAlertThreshold());
+    if (bean.getSnoozeStartTime() > 0) {
+      yaml.setSnoozeStartTime(new Date(bean.getSnoozeStartTime()));
+    }
+
+    if (bean.getSnoozeEndTime() > 0) {
+      yaml.setSnoozeEndTime(new Date(bean.getSnoozeEndTime()));
+    }
   }
 
   public void toBean(ChangeContext<Y> changeContext, B bean, String appId, String yamlPath) {
@@ -69,6 +79,13 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     bean.setEnabled24x7(yaml.isEnabled24x7());
     bean.setAnalysisTolerance(yaml.getAnalysisTolerance());
     bean.setServiceId(service.getUuid());
+    bean.setAlertThreshold(yaml.getAlertThreshold());
+    if (yaml.getSnoozeStartTime() != null) {
+      bean.setSnoozeStartTime(yaml.getSnoozeStartTime().getTime());
+    }
+    if (yaml.getSnoozeEndTime() != null) {
+      bean.setSnoozeEndTime(yaml.getSnoozeEndTime().getTime());
+    }
     SettingAttribute connector = getConnector(yaml);
     if (connector == null) {
       throw new WingsException("Invalid connector name specified in yaml: " + yaml.getConnectorName());

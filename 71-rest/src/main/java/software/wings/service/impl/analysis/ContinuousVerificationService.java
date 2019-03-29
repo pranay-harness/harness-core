@@ -6,6 +6,7 @@ import io.harness.beans.PageResponse;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
@@ -52,4 +53,6 @@ public interface ContinuousVerificationService {
   boolean collect247Data(String cvConfigId, StateType stateType, long startTime, long endTime);
 
   boolean collectCVDataForWorkflow(String contextId, long collectionMinute);
+
+  boolean openAlert(String cvConfigId, ContinuousVerificationAlertData alertData);
 }

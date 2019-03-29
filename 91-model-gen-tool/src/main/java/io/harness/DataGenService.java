@@ -223,7 +223,6 @@ public class DataGenService {
         wingsPersistence.createUpdateOperations(ServiceSecretKey.class)
             .set("serviceSecret", "67d9b94d9856665afc21acd3aa745401"),
         new FindAndModifyOptions().upsert(true));
-    learningEngineService.initializeServiceSecretKeys();
   }
 
   protected void dropDBAndEnsureIndexes() {

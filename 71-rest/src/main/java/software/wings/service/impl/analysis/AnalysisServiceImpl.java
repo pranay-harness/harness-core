@@ -29,6 +29,7 @@ import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
@@ -995,31 +996,30 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
-    final Query<ExperimentalLogMLAnalysisRecord> analysisRecords =
-        wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
-            .project("stateExecutionId", true)
-            .project("appId", true)
-            .project("stateType", true)
-            .project("experiment_name", true)
-            .project("createdAt", true)
-            .project("envId", true)
-            .project("workflowExecutionId", true);
-
-    List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords = analysisRecords.asList();
-
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
-    experimentalLogMLAnalysisRecords.forEach(record -> {
-      result.add(LogMLExpAnalysisInfo.builder()
-                     .stateExecutionId(record.getStateExecutionId())
-                     .appId(record.getAppId())
-                     .stateType(record.getStateType())
-                     .createdAt(record.getCreatedAt())
-                     .expName(record.getExperiment_name())
-                     .envId(record.getEnvId())
-                     .workflowExecutionId(record.getWorkflowExecutionId())
-                     .build());
-    });
-
+    try (HIterator<ExperimentalLogMLAnalysisRecord> analysisRecords =
+             new HIterator<>(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
+                                 .project("stateExecutionId", true)
+                                 .project("appId", true)
+                                 .project("stateType", true)
+                                 .project("experiment_name", true)
+                                 .project("createdAt", true)
+                                 .project("envId", true)
+                                 .project("workflowExecutionId", true)
+                                 .fetch())) {
+      while (analysisRecords.hasNext()) {
+        final ExperimentalLogMLAnalysisRecord record = analysisRecords.next();
+        result.add(LogMLExpAnalysisInfo.builder()
+                       .stateExecutionId(record.getStateExecutionId())
+                       .appId(record.getAppId())
+                       .stateType(record.getStateType())
+                       .createdAt(record.getCreatedAt())
+                       .expName(record.getExperiment_name())
+                       .envId(record.getEnvId())
+                       .workflowExecutionId(record.getWorkflowExecutionId())
+                       .build());
+      }
+    }
     return result;
   }
 
