@@ -11,18 +11,18 @@ import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.beans.peronalization.PersonalizationStep;
-import software.wings.service.intfc.personalization.PersonalizationStepService;
+import software.wings.beans.peronalization.Personalization;
+import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.sm.StateType;
 
 import java.util.LinkedList;
 
-public class PersonalizationStepServiceTest extends WingsBaseTest {
+public class PersonalizationServiceTest extends WingsBaseTest {
   public static final String FOO = "FOO";
   public static final String BAR = "BAR";
   public static final String BAZ = "BAZ";
 
-  @Inject PersonalizationStepService personalizationStepService;
+  @Inject PersonalizationService PersonalizationService;
 
   @Test
   @Category(UnitTests.class)
@@ -30,15 +30,14 @@ public class PersonalizationStepServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String userId = generateUuid();
 
-    final PersonalizationStep addToMissingEntity =
-        personalizationStepService.addFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
+    final Personalization addToMissingEntity =
+        PersonalizationService.addFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
     assertThat(addToMissingEntity.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name());
 
-    final PersonalizationStep addToExisting =
-        personalizationStepService.addFavoriteStep(StateType.HTTP, accountId, userId);
+    final Personalization addToExisting = PersonalizationService.addFavoriteStep(StateType.HTTP, accountId, userId);
     assertThat(addToExisting.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
 
-    final PersonalizationStep addSecond = personalizationStepService.addFavoriteStep(StateType.HTTP, accountId, userId);
+    final Personalization addSecond = PersonalizationService.addFavoriteStep(StateType.HTTP, accountId, userId);
     assertThat(addSecond.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
   }
 
@@ -48,27 +47,25 @@ public class PersonalizationStepServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String userId = generateUuid();
 
-    final PersonalizationStep removeFromMissingEntity =
-        personalizationStepService.removeFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
+    final Personalization removeFromMissingEntity =
+        PersonalizationService.removeFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
     assertTrue(isEmpty(removeFromMissingEntity.getFavorites()));
 
-    personalizationStepService.addFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
-    personalizationStepService.addFavoriteStep(StateType.HTTP, accountId, userId);
+    PersonalizationService.addFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
+    PersonalizationService.addFavoriteStep(StateType.HTTP, accountId, userId);
 
-    final PersonalizationStep removeMissing =
-        personalizationStepService.removeFavoriteStep(StateType.COMMAND, accountId, userId);
+    final Personalization removeMissing =
+        PersonalizationService.removeFavoriteStep(StateType.COMMAND, accountId, userId);
     assertThat(removeMissing.getFavorites()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
 
-    final PersonalizationStep remove =
-        personalizationStepService.removeFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
+    final Personalization remove = PersonalizationService.removeFavoriteStep(StateType.SHELL_SCRIPT, accountId, userId);
     assertThat(remove.getFavorites()).containsExactly(StateType.HTTP.name());
 
-    final PersonalizationStep removeLast =
-        personalizationStepService.removeFavoriteStep(StateType.HTTP, accountId, userId);
+    final Personalization removeLast = PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
     assertTrue(isEmpty(removeLast.getFavorites()));
 
-    final PersonalizationStep removeFromEmpty =
-        personalizationStepService.removeFavoriteStep(StateType.HTTP, accountId, userId);
+    final Personalization removeFromEmpty =
+        PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
     assertTrue(isEmpty(removeLast.getFavorites()));
   }
 
@@ -76,11 +73,11 @@ public class PersonalizationStepServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNormalizeRecent() {
     LinkedList<String> recent = null;
-    PersonalizationStepServiceImpl.normalizeRecent(recent);
+    PersonalizationServiceImpl.normalizeRecent(recent);
     assertTrue(isEmpty(recent));
 
     recent = new LinkedList<>();
-    PersonalizationStepServiceImpl.normalizeRecent(recent);
+    PersonalizationServiceImpl.normalizeRecent(recent);
     assertTrue(isEmpty(recent));
 
     recent = new LinkedList<>();
@@ -92,7 +89,7 @@ public class PersonalizationStepServiceTest extends WingsBaseTest {
     recent.add(FOO);
     recent.add(BAR);
 
-    PersonalizationStepServiceImpl.normalizeRecent(recent);
+    PersonalizationServiceImpl.normalizeRecent(recent);
     assertThat(recent).containsExactly(BAZ, FOO, BAR);
 
     recent = new LinkedList<>();
@@ -100,8 +97,8 @@ public class PersonalizationStepServiceTest extends WingsBaseTest {
       recent.add(FOO + i);
     }
 
-    PersonalizationStepServiceImpl.normalizeRecent(recent);
-    assertThat(recent.size()).isEqualTo(PersonalizationStepService.MAX_ALLOWED_RECENT);
+    PersonalizationServiceImpl.normalizeRecent(recent);
+    assertThat(recent.size()).isEqualTo(PersonalizationService.MAX_ALLOWED_RECENT);
   }
 
   @Test
@@ -110,25 +107,22 @@ public class PersonalizationStepServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String userId = generateUuid();
 
-    final PersonalizationStep addToMissingEntity =
-        personalizationStepService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
+    final Personalization addToMissingEntity =
+        PersonalizationService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
     assertThat(addToMissingEntity.getRecent()).containsExactly(StateType.SHELL_SCRIPT.name());
 
-    final PersonalizationStep addToExisting =
-        personalizationStepService.addRecentStep(StateType.HTTP, accountId, userId);
+    final Personalization addToExisting = PersonalizationService.addRecentStep(StateType.HTTP, accountId, userId);
     assertThat(addToExisting.getRecent()).containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name());
 
-    final PersonalizationStep addSecond =
-        personalizationStepService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
+    final Personalization addSecond = PersonalizationService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
     assertThat(addSecond.getRecent())
         .containsExactly(StateType.SHELL_SCRIPT.name(), StateType.HTTP.name(), StateType.SHELL_SCRIPT.name());
 
     for (int i = 0; i < 100; ++i) {
-      personalizationStepService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
+      PersonalizationService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
     }
 
-    final PersonalizationStep shorten =
-        personalizationStepService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
+    final Personalization shorten = PersonalizationService.addRecentStep(StateType.SHELL_SCRIPT, accountId, userId);
 
     assertThat(shorten.getRecent().size()).isLessThan(100);
   }
