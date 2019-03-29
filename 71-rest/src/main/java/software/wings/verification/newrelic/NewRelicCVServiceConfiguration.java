@@ -35,13 +35,5 @@ public class NewRelicCVServiceConfiguration extends CVConfiguration {
   public static final class NewRelicCVConfigurationYaml extends CVConfigurationYaml {
     private String newRelicApplicationName;
     private List<String> metrics;
-
-    public NewRelicCVConfigurationYaml(String type, String harnessApiVersion, String name, String accountId,
-        String connectorId, String envId, String serviceId, String stateType, String analysisTolerance,
-        String newRelicApplicationName, List<String> metrics) {
-      super(type, harnessApiVersion, name, accountId, connectorId, envId, serviceId, analysisTolerance);
-      this.newRelicApplicationName = newRelicApplicationName;
-      this.metrics = metrics;
-    }
   }
 }

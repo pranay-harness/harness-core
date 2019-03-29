@@ -25,4 +25,6 @@ public interface ContinuousVerificationService {
   void cleanupStuckLocks();
 
   boolean triggerLogDataCollection(AnalysisContext context);
+
+  void triggerAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute);
 }

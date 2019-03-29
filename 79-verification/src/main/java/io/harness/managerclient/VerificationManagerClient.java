@@ -16,6 +16,7 @@ import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.sm.StateType;
@@ -64,4 +65,8 @@ public interface VerificationManagerClient {
   @GET("apm" + VerificationConstants.COLLECT_DATA)
   Call<RestResponse<Boolean>> triggerWorkflowDataCollection(
       @Query("analysisContextId") String contextId, @Query("startDataCollectionMinute") long collectionMinute);
+
+  @POST("alerts/open-cv-alert")
+  Call<RestResponse<Boolean>> triggerCVAlert(
+      @Query("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData);
 }

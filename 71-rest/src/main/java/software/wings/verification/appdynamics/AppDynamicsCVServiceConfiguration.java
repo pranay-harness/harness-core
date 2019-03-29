@@ -28,13 +28,5 @@ public class AppDynamicsCVServiceConfiguration extends CVConfiguration {
   public static final class AppDynamicsCVConfigurationYaml extends CVConfigurationYaml {
     private String appDynamicsApplicationName;
     private String tierName;
-
-    public AppDynamicsCVConfigurationYaml(String type, String harnessApiVersion, String name, String accountId,
-        String connectorId, String envId, String serviceId, String stateType, String analysisTolerance,
-        String appDynamicsApplicationId, String tierId) {
-      super(type, harnessApiVersion, name, accountId, connectorId, envId, serviceId, analysisTolerance);
-      this.appDynamicsApplicationName = appDynamicsApplicationId;
-      this.tierName = tierId;
-    }
   }
 }

@@ -52,6 +52,10 @@ public class CVConfiguration extends Base {
   private AnalysisComparisonStrategy comparisonStrategy;
   private String contextId;
   private boolean isWorkflowConfig;
+  private boolean alertEnabled;
+  private double alertThreshold = 0.5;
+  private long snoozeStartTime;
+  private long snoozeEndTime;
 
   @Transient @SchemaIgnore private String connectorName;
   @Transient @SchemaIgnore private String serviceName;
@@ -76,8 +80,8 @@ public class CVConfiguration extends Base {
     private String harnessApplicationName;
     private AnalysisTolerance analysisTolerance;
     private boolean enabled24x7;
-
-    public CVConfigurationYaml(String type, String harnessApiVersion, String name, String accountId, String connectorId,
-        String envId, String serviceId, String analysisTolerance) {}
+    private double alertThreshold;
+    private Date snoozeStartTime;
+    private Date snoozeEndTime;
   }
 }

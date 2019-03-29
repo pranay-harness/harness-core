@@ -72,6 +72,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -277,6 +278,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     logsCVConfiguration.setBaselineStartMinute(100);
     logsCVConfiguration.setBaselineEndMinute(200);
+    logsCVConfiguration.setAlertEnabled(false);
+    logsCVConfiguration.setAlertThreshold(0.1);
 
     logsCVConfiguration.setQuery("query1");
   }
@@ -990,7 +993,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
+  public void testLogsConfigurationResetBaseline() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
@@ -1133,5 +1136,69 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         .filter("appId", appId)
         .asList()
         .forEach(logMLAnalysisRecord -> assertTrue(logMLAnalysisRecord.isDeprecated()));
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testLogsConfigurationUpdateAlert() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    RestResponse<LogsCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    LogsCVConfiguration fetchedObject = getRequestResponse.getResource();
+    assertFalse(fetchedObject.isAlertEnabled());
+    assertEquals(0.1, fetchedObject.getAlertThreshold(), 0.0);
+    assertEquals(0, fetchedObject.getSnoozeStartTime());
+    assertEquals(0, fetchedObject.getSnoozeEndTime());
+
+    CVConfiguration cvConfiguration = new CVConfiguration();
+    cvConfiguration.setAlertThreshold(0.5);
+    cvConfiguration.setAlertEnabled(true);
+    cvConfiguration.setSnoozeStartTime(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5));
+    cvConfiguration.setSnoozeEndTime(System.currentTimeMillis());
+
+    url = API_BASE + "/cv-configuration/update-alert-setting?accountId=" + accountId + "&cvConfigId=" + savedObjectUuid;
+    target = client.target(url);
+    RestResponse<Boolean> updateResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(cvConfiguration, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertTrue(updateResponse.getResource());
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    fetchedObject = getRequestResponse.getResource();
+    assertTrue(fetchedObject.isAlertEnabled());
+    assertEquals(0.5, fetchedObject.getAlertThreshold(), 0.0);
+    assertEquals(0, fetchedObject.getSnoozeStartTime());
+    assertEquals(0, fetchedObject.getSnoozeEndTime());
+
+    url = API_BASE + "/cv-configuration/update-snooze?accountId=" + accountId + "&cvConfigId=" + savedObjectUuid;
+    target = client.target(url);
+    updateResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(cvConfiguration, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertTrue(updateResponse.getResource());
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    fetchedObject = getRequestResponse.getResource();
+    assertTrue(fetchedObject.isAlertEnabled());
+    assertEquals(0.5, fetchedObject.getAlertThreshold(), 0.0);
+    assertEquals(cvConfiguration.getSnoozeStartTime(), fetchedObject.getSnoozeStartTime());
+    assertEquals(cvConfiguration.getSnoozeEndTime(), fetchedObject.getSnoozeEndTime());
   }
 }

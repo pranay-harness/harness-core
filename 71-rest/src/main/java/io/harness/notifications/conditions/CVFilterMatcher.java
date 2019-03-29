@@ -28,8 +28,8 @@ public class CVFilterMatcher implements FilterMatcher {
     CVFilters cvAlertFilters = filterConditions.getCvAlertFilters();
 
     if (null == cvAlertFilters) {
-      log.error("No cvAlertFilters specified. Alert will be considered to not match filter.");
-      return false;
+      log.info("No cvAlertFilters specified. Alert will be considered to match filter.");
+      return true;
     }
 
     ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
@@ -45,10 +45,10 @@ public class CVFilterMatcher implements FilterMatcher {
     conditions.add(() -> appIds.contains(alert.getAppId()));
 
     List<String> envIds = cvAlertFilters.getEnvIds();
-    conditions.add(() -> envIds.contains(alertData.getCvParams().getEnvId()));
+    conditions.add(() -> envIds.contains(alertData.getCvConfiguration().getEnvId()));
 
     List<String> cvConfigIds = cvAlertFilters.getCVConfigurationIds();
-    conditions.add(() -> cvConfigIds.contains(alertData.getCvParams().getCvConfigurationId()));
+    conditions.add(() -> cvConfigIds.contains(alertData.getCvConfiguration().getUuid()));
 
     boolean matches = allTrue(conditions);
 

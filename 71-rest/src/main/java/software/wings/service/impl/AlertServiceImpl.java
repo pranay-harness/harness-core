@@ -8,6 +8,7 @@ import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
+import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.beans.alert.AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.DelegateProfileError;
 import static software.wings.beans.alert.AlertType.DelegatesDown;
@@ -64,10 +65,10 @@ import java.util.concurrent.Future;
 @Singleton
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
-  public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(
-      Arrays.asList(NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError,
-          DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED,
-          USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError, InvalidKMS));
+  public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(Arrays.asList(
+      NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT,
+      INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT,
+      GitSyncError, GitConnectionError, InvalidKMS, CONTINUOUS_VERIFICATION_ALERT));
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -126,7 +127,8 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
+    if (!AlertType.CONTINUOUS_VERIFICATION_ALERT.equals(alertType)
+        && findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
       return;
     }
     injector.injectMembers(alertData);
