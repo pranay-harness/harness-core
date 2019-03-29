@@ -210,4 +210,14 @@ public class TimeSeriesResource {
     return new RestResponse<>(
         timeSeriesAnalysisService.getCumulativeSumsForRange(appId, cvConfigId, startMinute, endMinute, tag));
   }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/save-dummy-experimental-247")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<Boolean> saveDummy247ExperimentalAnalysis() {
+    return new RestResponse<>(true);
+  }
 }

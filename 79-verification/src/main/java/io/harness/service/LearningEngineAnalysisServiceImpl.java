@@ -285,6 +285,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public List<MLExperiments> getExperiments(MLAnalysisType ml_analysis_type) {
     return wingsPersistence.createQuery(MLExperiments.class, excludeAuthority)
         .filter("ml_analysis_type", ml_analysis_type)
+        .field("is24x7")
+        .doesNotExist()
         .asList();
   }
 
