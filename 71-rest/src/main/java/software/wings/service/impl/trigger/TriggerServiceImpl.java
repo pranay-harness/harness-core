@@ -60,7 +60,6 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.InfrastructureMapping;
@@ -74,6 +73,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
+import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
@@ -114,6 +114,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -249,13 +250,14 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
-      Map<String, String> serviceBuildNumbers, Map<String, String> parameters, TriggerExecution triggerExecution) {
+      Map<String, ArtifactSummary> serviceArtifactMapping, Map<String, String> parameters,
+      TriggerExecution triggerExecution) {
     List<Artifact> artifacts = new ArrayList<>();
     Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
     logger.info("Received WebHook request  for the Trigger {} with Service Build Numbers {}  and parameters {}",
-        trigger.getPipelineId(), String.valueOf(serviceBuildNumbers), String.valueOf(parameters));
-    if (isNotEmpty(serviceBuildNumbers)) {
-      addArtifactsFromVersionsOfWebHook(trigger, serviceBuildNumbers, artifacts);
+        trigger.getPipelineId(), String.valueOf(serviceArtifactMapping), String.valueOf(parameters));
+    if (isNotEmpty(serviceArtifactMapping)) {
+      addArtifactsFromVersionsOfWebHook(trigger, serviceArtifactMapping, artifacts);
     }
     addArtifactsFromSelections(appId, trigger, artifacts);
     return triggerDeployment(artifacts, trigger, parameters, triggerExecution);
@@ -507,7 +509,7 @@ public class TriggerServiceImpl implements TriggerService {
 
     if (isNotEmpty(artifacts)) {
       executionArgs.setArtifacts(
-          artifacts.stream().filter(triggerServiceHelper.distinctByKey(Base::getUuid)).collect(toList()));
+          artifacts.stream().filter(triggerServiceHelper.distinctByKey(Artifact::getUuid)).collect(toList()));
     }
     executionArgs.setOrchestrationId(trigger.getWorkflowId());
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
@@ -968,13 +970,13 @@ public class TriggerServiceImpl implements TriggerService {
           validateAndSetLastDeployedArtifactSelection(trigger, artifactSelection);
           break;
         case LAST_COLLECTED:
-          validateAndSetLastCollectedArifactSelection(
+          validateAndSetLastCollectedArtifactSelection(
               trigger, artifactSelection, "Artifact Source cannot be empty for Last collected type");
           break;
         case WEBHOOK_VARIABLE:
           WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
           if (webHookTriggerCondition.getWebhookSource() == null) {
-            validateAndSetLastCollectedArifactSelection(
+            validateAndSetLastCollectedArtifactSelection(
                 trigger, artifactSelection, "Artifact Source cannot be empty for Webhook Variable type");
           }
           break;
@@ -1000,17 +1002,16 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void validateAndSetLastCollectedArifactSelection(
+  private void validateAndSetLastCollectedArtifactSelection(
       Trigger trigger, ArtifactSelection artifactSelection, String s) {
-    if (isBlank(artifactSelection.getArtifactStreamId())) {
-      throw new InvalidRequestException(s, USER);
+    if (isNotEmpty(artifactSelection.getArtifactStreamId())) {
+      ArtifactStream artifactStream =
+          artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
+      notNullCheck("Artifact Source does not exist", artifactStream, USER);
+      Service service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
+      notNullCheck("Service might have been deleted", service, USER);
+      artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
     }
-    ArtifactStream artifactStream =
-        artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
-    notNullCheck("Artifact Source does not exist", artifactStream, USER);
-    Service service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
-    notNullCheck("Service might have been deleted", service, USER);
-    artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
   }
 
   private void validateAndSetLastDeployedArtifactSelection(Trigger trigger, ArtifactSelection artifactSelection) {
@@ -1118,32 +1119,80 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void collectArtifacts(Trigger trigger, Map<String, String> serviceBuildNumbers, List<Artifact> artifacts,
-      Map<String, String> services) {
-    trigger.getArtifactSelections()
-        .stream()
-        .filter(artifactSelection -> artifactSelection.getType().equals(WEBHOOK_VARIABLE))
-        .forEach((ArtifactSelection artifactSelection) -> {
-          Artifact artifact;
-          String serviceName = services.get(artifactSelection.getServiceId());
-          String buildNumber = serviceBuildNumbers.get(serviceName);
+  private void collectArtifacts(Trigger trigger, Map<String, ArtifactSummary> serviceArtifactMapping,
+      List<Artifact> artifacts, Map<String, String> services) {
+    boolean collectedArtifactsFromPayload = false;
+    for (ArtifactSelection artifactSelection : trigger.getArtifactSelections()) {
+      if (artifactSelection.getType().equals(WEBHOOK_VARIABLE)) {
+        if (isNotEmpty(artifactSelection.getArtifactStreamId())) {
+          ArtifactSummary artifactSummary = serviceArtifactMapping.get(artifactSelection.getServiceId());
+          if (artifactSummary == null) {
+            throw new InvalidRequestException("Artifact Service not matching with Trigger Service ["
+                + services.get(artifactSelection.getServiceId()) + "]");
+          }
+          String buildNumber = artifactSummary.getBuildNo();
           if (isBlank(buildNumber)) {
-            throw new WingsException("Webhook services " + serviceBuildNumbers.keySet()
-                    + " do not match with the trigger services " + services.values(),
-                USER);
+            throw new InvalidRequestException("Build Number is Mandatory", USER);
           } else {
-            artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
-                trigger.getAppId(), artifactSelection, buildNumber);
+            Artifact artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
+                trigger.getAppId(), artifactSelection.getArtifactStreamId(), buildNumber);
             if (artifact != null) {
               artifacts.add(artifact);
             }
           }
-        });
+        } else {
+          // Prepare artifact Stream BuildNumber Mapping
+          if (!collectedArtifactsFromPayload) {
+            List<Artifact> artifactList =
+                collectArtifactsFromPayload(trigger.getAppId(), serviceArtifactMapping, services);
+            collectedArtifactsFromPayload = true;
+            artifacts.addAll(artifactList);
+          }
+        }
+      }
+    }
+  }
+
+  private List<Artifact> collectArtifactsFromPayload(
+      String appId, Map<String, ArtifactSummary> serviceArtifactMapping, Map<String, String> services) {
+    ArtifactStream artifactStream;
+    List<Artifact> artifacts = new ArrayList<>();
+    for (Entry<String, ArtifactSummary> serviceArtifactSummaryEntry : serviceArtifactMapping.entrySet()) {
+      ArtifactSummary artifactSummary = serviceArtifactSummaryEntry.getValue();
+      if (isNotEmpty(artifactSummary.getName())) {
+        artifactStream = artifactStreamService.getArtifactStreamByName(
+            appId, serviceArtifactSummaryEntry.getKey(), artifactSummary.getName());
+      } else {
+        final List<String> artifactStreamIds =
+            artifactStreamService.fetchArtifactStreamIdsForService(appId, serviceArtifactSummaryEntry.getKey());
+        if (isEmpty(artifactStreamIds)) {
+          throw new InvalidRequestException("No artifact sources defined for the service ["
+              + services.get(serviceArtifactSummaryEntry.getKey()) + "]");
+        }
+        if (artifactStreamIds.size() > 1) {
+          throw new InvalidRequestException("More than one artifact source defined for the service ["
+              + serviceArtifactSummaryEntry.getKey() + "]. Please provide artifact source name");
+        }
+        artifactStream = artifactStreamService.get(appId, artifactStreamIds.get(0));
+      }
+      if (artifactStream == null) {
+        throw new InvalidRequestException("Artifact Source [" + artifactSummary.getName()
+                + "] does not exist for the Service +[" + services.get(serviceArtifactSummaryEntry.getKey()) + "]",
+            USER);
+      }
+      Artifact artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
+          appId, artifactStream.getUuid(), artifactSummary.getBuildNo());
+      if (artifact != null) {
+        artifacts.add(artifact);
+      }
+    }
+
+    return artifacts;
   }
 
   private Artifact getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
-      String appId, ArtifactSelection artifactSelection, String buildNumber) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactSelection.getArtifactStreamId());
+      String appId, String artifactStreamId, String buildNumber) {
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     Validator.notNullCheck("Artifact Source doesn't exist", artifactStream, USER);
     Artifact collectedArtifactForBuildNumber =
         artifactService.getArtifactByBuildNumber(artifactStream, buildNumber, false);
@@ -1167,15 +1216,15 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void addArtifactsFromVersionsOfWebHook(
-      Trigger trigger, Map<String, String> serviceBuildNumbers, List<Artifact> artifacts) {
+      Trigger trigger, Map<String, ArtifactSummary> serviceArtifactMapping, List<Artifact> artifacts) {
     Map<String, String> services;
     if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
       services = resolveWorkflowServices(trigger);
     } else {
       Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
-      services = pipeline.getServices().stream().collect(toMap(Base::getUuid, Service::getName));
+      services = pipeline.getServices().stream().collect(toMap(Service::getUuid, Service::getName));
     }
-    collectArtifacts(trigger, serviceBuildNumbers, artifacts, services);
+    collectArtifacts(trigger, serviceArtifactMapping, artifacts, services);
   }
 
   private Map<String, String> resolveWorkflowServices(Trigger trigger) {
@@ -1189,6 +1238,6 @@ public class TriggerServiceImpl implements TriggerService {
       workflowServices = workflowService.getResolvedServices(workflow, trigger.getWorkflowVariables());
     }
     return isEmpty(workflowServices) ? new HashMap<>()
-                                     : workflowServices.stream().collect(toMap(Base::getUuid, Service::getName));
+                                     : workflowServices.stream().collect(toMap(Service::getUuid, Service::getName));
   }
 }

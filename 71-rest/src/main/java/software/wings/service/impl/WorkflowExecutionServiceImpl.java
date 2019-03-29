@@ -2189,8 +2189,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (isEmpty(resolvedInfraMappings)) {
       return 0;
     }
-    return infrastructureMappingService.listHosts(workflowExecution.getAppId(), resolvedInfraMappings.get(0).getUuid())
-        .size();
+    try {
+      return infrastructureMappingService
+          .listHosts(workflowExecution.getAppId(), resolvedInfraMappings.get(0).getUuid())
+          .size();
+    } catch (Exception e) {
+      logger.error(
+          "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
+    }
+    return 0;
   }
 
   // @TODO_PCF

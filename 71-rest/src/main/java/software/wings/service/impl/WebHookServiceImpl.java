@@ -16,7 +16,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.serializer.JsonUtils;
-import org.mongodb.morphia.query.CountOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -25,6 +24,7 @@ import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.PrAction;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerExecution;
@@ -39,6 +39,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.trigger.WebhookTriggerProcessor;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
@@ -67,6 +68,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private WebhookEventUtils webhookEventUtils;
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
   @Inject private TriggerExecutionService triggerExecutionService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 
@@ -111,7 +113,8 @@ public class WebHookServiceImpl implements WebHookService {
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
-      Map<String, String> serviceBuildNumbers = new HashMap<>();
+      Map<String, ArtifactSummary> serviceBuildNumbers = new HashMap<>();
+
       Response response = resolveServiceBuildNumbers(appId, webHookRequest, serviceBuildNumbers);
       if (response != null) {
         return response;
@@ -221,24 +224,24 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private Response resolveServiceBuildNumbers(
-      String appId, WebHookRequest webHookRequest, Map<String, String> serviceBuildNumbers) {
+      String appId, WebHookRequest webHookRequest, Map<String, ArtifactSummary> serviceArtifactMapping) {
     List<Map<String, String>> artifacts = webHookRequest.getArtifacts();
     if (artifacts != null) {
       for (Map<String, String> artifact : artifacts) {
         String serviceName = artifact.get("service");
         String buildNumber = artifact.get("buildNumber");
-        logger.info("Service name {} and Build Number {}", serviceName, buildNumber);
+        String artifactStreamName = artifact.get("artifactSourceName");
+        logger.info("WebHook params Service name {}, Build Number {} and Artifact Source Name {}", serviceName,
+            buildNumber, artifactStreamName);
         if (serviceName != null) {
-          if (wingsPersistence.createQuery(Service.class)
-                  .filter("appId", appId)
-                  .filter("name", serviceName)
-                  .count(new CountOptions().limit(1))
-              == 0) {
+          Service service = serviceResourceService.getServiceByName(appId, serviceName, false);
+          if (service == null) {
             return prepareResponse(
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
                 Response.Status.BAD_REQUEST);
           }
-          serviceBuildNumbers.put(serviceName, buildNumber);
+          serviceArtifactMapping.put(
+              service.getUuid(), ArtifactSummary.builder().name(artifactStreamName).buildNo(buildNumber).build());
         }
       }
     }

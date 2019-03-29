@@ -47,7 +47,6 @@ import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
-import software.wings.common.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -177,12 +176,11 @@ public class TriggerServiceTestHelper {
         .appId(APP_ID)
         .serviceId(SERVICE_ID)
         .infraMappingId(INFRA_MAPPING_ID)
-        .orchestrationWorkflow(
-            aBasicOrchestrationWorkflow()
-                .withUserVariables(userVariables)
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                .build())
+        .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                   .withUserVariables(userVariables)
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, "Pre-Deployment").build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, "Post-Deployment").build())
+                                   .build())
         .services(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build(),
             Service.builder().uuid(SERVICE_ID_CHANGED).name("Order").build()))
         .build();

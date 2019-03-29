@@ -10,6 +10,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.WebhookEventType;
@@ -98,18 +99,9 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    */
   void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime);
 
-  /**
-   * Trigger execution by webhook with the given service build numbers
-   *
-   * @param appId
-   * @param webHookToken
-   * @param serviceBuildNumbers
-   * @param parameters
-   * @param triggerExecution
-   * @return
-   */
   WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
-      Map<String, String> serviceBuildNumbers, Map<String, String> parameters, TriggerExecution triggerExecution);
+      Map<String, ArtifactSummary> serviceBuildNumbers, Map<String, String> parameters,
+      TriggerExecution triggerExecution);
 
   /**
    * Triggers that have actions on Pipeline
