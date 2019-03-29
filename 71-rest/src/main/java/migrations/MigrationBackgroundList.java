@@ -9,6 +9,7 @@ import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
+import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SendInviteUrlForAllUserInvites;
 import migrations.all.SetLastLoginTimeToAllUsers;
@@ -44,6 +45,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(17, CleanupOrphanInstances.class))
         .add(Pair.of(18, CleanupSyncStatusForDeletedEntities.class))
         .add(Pair.of(19, AddStateMachineToWorkflowExecutions.class))
+        .add(Pair.of(20, DeleteOrphanNotificationGroups.class))
         .build();
   }
 }

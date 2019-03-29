@@ -159,6 +159,7 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataBuilder;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
@@ -180,6 +181,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByWorkflow;
@@ -202,6 +204,7 @@ import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -226,7 +229,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
-
   private static final List<String> kubernetesArtifactNeededStateTypes =
       Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name());
 
@@ -260,6 +262,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private StaticConfiguration staticConfiguration;
+  @Inject private UserGroupService userGroupService;
 
   @Inject private AccountService accountService;
   @Inject private AppService appService;
@@ -2276,18 +2279,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void createDefaultNotificationRule(Workflow workflow) {
     Application app = appService.get(workflow.getAppId());
     Account account = accountService.get(app.getAccountId());
-    List<NotificationGroup> notificationGroups = getNotificationGroupForDefaultNotificationRule(app.getAccountId());
+    UserGroup userGroup = userGroupService.getDefaultUserGroup(app.getAccountId());
 
-    if (isEmpty(notificationGroups)) {
-      logger.warn("Default notification group not created for account {}. Ignoring adding notification group",
-          account.getAccountName());
+    if (null == userGroup) {
+      logger.warn(
+          "Default user group not created for account {}. Ignoring adding user group", account.getAccountName());
       return;
     }
+
     List<ExecutionStatus> conditions = asList(ExecutionStatus.FAILED);
     NotificationRule notificationRule = aNotificationRule()
                                             .withConditions(conditions)
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
-                                            .withNotificationGroups(notificationGroups)
+                                            .withUserGroupIds(Collections.singletonList(userGroup.getUuid()))
                                             .build();
 
     List<NotificationRule> notificationRules = asList(notificationRule);

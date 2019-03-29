@@ -228,6 +228,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.template.TemplateType;
 import software.wings.common.Constants;
@@ -245,6 +246,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
@@ -298,6 +300,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Mock private TemplateService templateService;
+  @Mock private UserGroupService userGroupService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
@@ -354,7 +357,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
-
+    when(userGroupService.getDefaultUserGroup(Mockito.anyString()))
+        .thenReturn(UserGroup.builder().uuid("some-user-group-id").build());
     Role role = aRole()
                     .withRoleType(RoleType.ACCOUNT_ADMIN)
                     .withUuid(ROLE_ID)
