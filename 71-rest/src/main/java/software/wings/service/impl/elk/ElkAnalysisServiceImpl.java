@@ -223,7 +223,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Valid query passed with query {} and index {}", query, index);
       return true;
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", ExceptionUtils.getMessage(ex));
+      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, ex).addParam("reason", ExceptionUtils.getMessage(ex));
     }
   }
 }
