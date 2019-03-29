@@ -32,6 +32,8 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
   private String sourceRepoReference;
   private List<String> targets;
 
+  private String planLogFileId;
+
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "activityId", ExecutionDataValue.builder().displayName("").value(activityId).build());

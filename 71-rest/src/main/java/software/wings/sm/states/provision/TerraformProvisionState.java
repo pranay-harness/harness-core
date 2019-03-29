@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -33,13 +34,13 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
+import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -83,7 +84,6 @@ import software.wings.utils.Validator;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -91,9 +91,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public abstract class TerraformProvisionState extends State {
+  public static final String RUN_PLAN_ONLY_KEY = "runPlanOnly";
+
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionState.class);
 
   private static final String VARIABLES_KEY = "variables";
@@ -103,26 +106,29 @@ public abstract class TerraformProvisionState extends State {
   private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
   private static final int DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT = 30 * 60 * 1000; // 10 minutes
 
-  @Inject @Transient private transient AppService appService;
-  @Inject @Transient private transient ActivityService activityService;
-  @Inject @Transient protected transient InfrastructureProvisionerService infrastructureProvisionerService;
-  @Inject @Transient private transient SettingsService settingsService;
-  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient AppService appService;
+  @Inject private transient ActivityService activityService;
+  @Inject protected transient InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
 
-  @Inject @Transient private transient ServiceVariableService serviceVariableService;
-  @Inject @Transient private transient EncryptionService encryptionService;
+  @Inject private transient ServiceVariableService serviceVariableService;
+  @Inject private transient EncryptionService encryptionService;
 
-  @Inject @Transient protected transient WingsPersistence wingsPersistence;
-  @Inject @Transient protected transient DelegateService delegateService;
-  @Inject @Transient protected transient FileService fileService;
-  @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient GitConfigHelperService gitConfigHelperService;
+  @Inject protected transient WingsPersistence wingsPersistence;
+  @Inject protected transient DelegateService delegateService;
+  @Inject protected transient FileService fileService;
+  @Inject protected transient SecretManager secretManager;
+  @Inject private transient GitConfigHelperService gitConfigHelperService;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
   @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
   @Getter @Setter private List<String> targets;
+
+  @Getter @Setter private boolean runPlanOnly;
+  @Getter @Setter private boolean inheritApprovedPlan;
 
   /**
    * Instantiates a new state.
@@ -175,6 +181,44 @@ public abstract class TerraformProvisionState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    if (runPlanOnly) {
+      return handleAsyncResponseInternalRunPlanOnly(context, response);
+    } else {
+      return handleAsyncResponseInternalRegular(context, response);
+    }
+  }
+
+  private ExecutionResponse handleAsyncResponseInternalRunPlanOnly(
+      ExecutionContext context, Map<String, ResponseData> response) {
+    Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
+    String activityId = responseEntry.getKey();
+    TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
+    terraformExecutionData.setActivityId(activityId);
+    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+    updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
+
+    TerraformProvisionInheritPlanElement inheritPlanElement =
+        TerraformProvisionInheritPlanElement.builder()
+            .entityId(generateEntityId(context))
+            .provisionerId(provisionerId)
+            .targets(terraformExecutionData.getTargets())
+            .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
+            .sourceRepoReference(terraformExecutionData.getSourceRepoReference())
+            .variables(terraformExecutionData.getVariables())
+            .backendConfigs(terraformExecutionData.getBackendConfigs())
+            .build();
+
+    return anExecutionResponse()
+        .withStateExecutionData(terraformExecutionData)
+        .addContextElement(inheritPlanElement)
+        .addNotifyElement(inheritPlanElement)
+        .withExecutionStatus(terraformExecutionData.getExecutionStatus())
+        .withErrorMessage(terraformExecutionData.getErrorMessage())
+        .build();
+  }
+
+  private ExecutionResponse handleAsyncResponseInternalRegular(
+      ExecutionContext context, Map<String, ResponseData> response) {
     Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
     String activityId = responseEntry.getKey();
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
@@ -184,9 +228,8 @@ public abstract class TerraformProvisionState extends State {
 
     Map<String, Object> others = Maps.newHashMap();
     if (!(this instanceof DestroyTerraformProvisionState)) {
-      final Collection<NameValuePair> variables =
-          validateAndFilterVariables(getVariables(), terraformProvisioner.getVariables());
-      Collection<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
+      List<NameValuePair> variables = terraformExecutionData.getVariables();
+      List<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
       List<String> targets = terraformExecutionData.getTargets();
 
       if (isNotEmpty(variables)) {
@@ -315,6 +358,102 @@ public abstract class TerraformProvisionState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    if (inheritApprovedPlan) {
+      return executeInternalInherited(context, activityId);
+    } else {
+      return executeInternalRegular(context, activityId);
+    }
+  }
+
+  private ExecutionResponse executeInternalInherited(ExecutionContext context, String activityId) {
+    List<TerraformProvisionInheritPlanElement> allPlanElements = context.getContextElementList(TERRAFORM_INHERIT_PLAN);
+    if (isEmpty(allPlanElements)) {
+      throw new InvalidRequestException("No Terraform provision command with dry run found");
+    }
+    Optional<TerraformProvisionInheritPlanElement> elementOptional =
+        allPlanElements.stream().filter(element -> element.getProvisionerId().equals(provisionerId)).findFirst();
+    if (!elementOptional.isPresent()) {
+      throw new InvalidRequestException("No Terraform provision command found with current provisioner");
+    }
+    TerraformProvisionInheritPlanElement element = elementOptional.get();
+
+    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+    String path = context.renderExpression(terraformProvisioner.getPath());
+
+    String entityId = generateEntityId(context);
+    String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+    GitConfig gitConfig = getGitConfig(element.getSourceRepoSettingId());
+    if (isNotEmpty(element.getSourceRepoReference())) {
+      gitConfig.setReference(element.getSourceRepoReference());
+    } else {
+      throw new InvalidRequestException("No commit id found in context inherit tf plan element.");
+    }
+
+    List<NameValuePair> allBackendConfigs = element.getBackendConfigs();
+    Map<String, String> backendConfigs = null;
+    Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
+    if (isNotEmpty(allBackendConfigs)) {
+      backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
+      encryptedBackendConfigs =
+          infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
+    }
+
+    List<NameValuePair> allVariables = element.getVariables();
+    Map<String, String> textVariables = null;
+    Map<String, EncryptedDataDetail> encryptedTextVariables = null;
+    if (isNotEmpty(allVariables)) {
+      textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
+      encryptedTextVariables =
+          infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
+    }
+
+    List<String> targets = element.getTargets();
+    targets = resolveTargets(targets, context);
+
+    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+    TerraformProvisionParameters parameters =
+        TerraformProvisionParameters.builder()
+            .accountId(executionContext.getApp().getAccountId())
+            .activityId(activityId)
+            .appId(executionContext.getAppId())
+            .currentStateFileId(fileId)
+            .entityId(entityId)
+            .command(command())
+            .commandUnit(commandUnit())
+            .sourceRepo(gitConfig)
+            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+            .scriptPath(path)
+            .variables(textVariables)
+            .encryptedVariables(encryptedTextVariables)
+            .backendConfigs(backendConfigs)
+            .encryptedBackendConfigs(encryptedBackendConfigs)
+            .targets(targets)
+            .runPlanOnly(false)
+            .build();
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(executionContext.getApp().getAccountId())
+                                    .waitId(activityId)
+                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .data(TaskData.builder()
+                                              .taskType(TERRAFORM_PROVISION_TASK.name())
+                                              .parameters(new Object[] {parameters})
+                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                              .build())
+                                    .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(activityId))
+        .withDelegateTaskId(delegateTaskId)
+        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .build();
+  }
+
+  private ExecutionResponse executeInternalRegular(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     GitConfig gitConfig = getGitConfig(terraformProvisioner.getSourceRepoSettingId());
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
@@ -434,6 +573,7 @@ public abstract class TerraformProvisionState extends State {
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)
             .targets(targets)
+            .runPlanOnly(runPlanOnly)
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()

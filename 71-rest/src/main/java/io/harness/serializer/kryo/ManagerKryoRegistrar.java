@@ -12,6 +12,7 @@ import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.DelegatePackage;
 import software.wings.beans.NotificationChannelType;
@@ -110,5 +111,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DelegatePackage.class, 7150);
     kryo.register(ShellScriptProvisionParameters.class, 7151);
     kryo.register(ShellScriptProvisionExecutionData.class, 7152);
+    kryo.register(TerraformProvisionInheritPlanElement.class, 7153);
   }
 }

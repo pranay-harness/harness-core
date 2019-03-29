@@ -149,6 +149,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)
             .targets(targets)
+            .runPlanOnly(false)
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()
