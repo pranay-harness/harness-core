@@ -22,7 +22,7 @@ public class OwnerRule extends RepeatRule {
   private static final Logger logger = LoggerFactory.getLogger(OwnerRule.class);
 
   private static List<String> active = asList("aaditi.joag@harness.io", "anshul@harness.io", "anubhaw@harness.io",
-      "george@harness.io", "jatin@harness.io", "mark.lu@harness.io", "raghu@harness.io",
+      "sunil@harness.io", "george@harness.io", "jatin@harness.io", "mark.lu@harness.io", "raghu@harness.io",
       "rathnakara.malatesha@harness.io", "pooja@harness.io", "pranjal@harness.io", "praveen.sugavanam@harness.io",
       "puneet.saraswat@harness.io", "srinivas@harness.io", "sriram@harness.io", "swamy@harness.io",
       "vaibhav.si@harness.io", "vaibhav.tulsyan@harness.io", "adwait.bhandare@harness.io");
