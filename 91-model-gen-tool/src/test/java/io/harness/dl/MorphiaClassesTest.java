@@ -30,7 +30,6 @@ public class MorphiaClassesTest {
 
     Set<Class> classes = new HashSet();
     classes.addAll(DataGenApplication.morphiaClasses);
-
     classes.addAll(OrchestrationMorphiaClasses.classes);
 
     boolean success = true;

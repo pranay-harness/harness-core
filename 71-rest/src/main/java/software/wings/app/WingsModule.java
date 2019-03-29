@@ -222,7 +222,7 @@ import software.wings.service.impl.notifications.NotificationGroupBasedDispatche
 import software.wings.service.impl.notifications.UseNotificationGroup;
 import software.wings.service.impl.notifications.UseUserGroup;
 import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
-import software.wings.service.impl.personalization.PersonalizationStepServiceImpl;
+import software.wings.service.impl.personalization.PersonalizationServiceImpl;
 import software.wings.service.impl.prometheus.PrometheusAnalysisServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
@@ -372,7 +372,7 @@ import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.service.intfc.personalization.PersonalizationStepService;
+import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
@@ -500,7 +500,7 @@ public class WingsModule extends DependencyModule {
     bind(LicenseService.class).to(LicenseServiceImpl.class);
     bind(LicenseProvider.class).to(DatabaseLicenseProviderImpl.class);
     bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
-    bind(PersonalizationStepService.class).to(PersonalizationStepServiceImpl.class);
+    bind(PersonalizationService.class).to(PersonalizationServiceImpl.class);
     bind(StackDriverService.class).to(StackDriverServiceImpl.class);
     bind(NewRelicService.class).to(NewRelicServiceImpl.class);
     bind(DynaTraceService.class).to(DynaTraceServiceImpl.class);
