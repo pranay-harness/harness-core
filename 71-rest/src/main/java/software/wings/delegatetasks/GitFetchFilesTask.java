@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogLevel.WARN;
 import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
@@ -30,6 +31,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +84,17 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
           .gitCommandStatus(GitCommandStatus.SUCCESS)
           .build();
     } catch (Exception ex) {
+      String exceptionMsg = ExceptionUtils.getMessage(ex);
+
+      if (ex.getCause() instanceof NoSuchFileException) {
+        logger.info(exceptionMsg);
+        executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
+        return GitCommandExecutionResponse.builder()
+            .errorMessage(exceptionMsg)
+            .gitCommandStatus(GitCommandStatus.SUCCESS)
+            .build();
+      }
+
       String msg = "Exception in processing GitFetchFilesTask. " + ExceptionUtils.getMessage(ex);
       logger.error(msg, ex);
       executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);

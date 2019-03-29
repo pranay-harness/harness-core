@@ -386,7 +386,7 @@ public class K8sTaskHelper {
       FileIo.writeUtf8StringToFile(filePath.toString(), manifestFile.getFileContent());
     }
 
-    executionLogCallback.saveExecutionLog("Rendering chart files using helm");
+    executionLogCallback.saveExecutionLog(color("Rendering chart using Helm", White, Bold));
 
     List<ManifestFile> result = new ArrayList<>();
     try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
@@ -423,6 +423,10 @@ public class K8sTaskHelper {
     logger.info("Values file options: " + valuesFileOptions);
 
     List<ManifestFile> result = new ArrayList<>();
+
+    executionLogCallback.saveExecutionLog(color("Rendering manifest files using go template", White, Bold));
+    executionLogCallback.saveExecutionLog(
+        color("Only manifest files with [.yaml] extension will be processed", White, Bold));
 
     for (ManifestFile manifestFile : manifestFiles) {
       if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
@@ -552,9 +556,7 @@ public class K8sTaskHelper {
   private String getManifestFileNamesInLogFormat(List<ManifestFile> manifestFiles) {
     StringBuilder sb = new StringBuilder(1024);
     for (ManifestFile manifestFile : manifestFiles) {
-      if (isValidManifestFile(manifestFile.getFileName())) {
-        sb.append(color(format("- %s", manifestFile.getFileName()), Gray)).append(System.lineSeparator());
-      }
+      sb.append(color(format("- %s", manifestFile.getFileName()), Gray)).append(System.lineSeparator());
     }
     return sb.toString();
   }
@@ -592,8 +594,7 @@ public class K8sTaskHelper {
       List<ManifestFile> manifestFilesFromGit =
           manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, gitFileConfig.getFilePath());
 
-      executionLogCallback.saveExecutionLog(
-          color("Successfully fetched following manifest [.yaml] files:", White, Bold));
+      executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesFromGit));
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
       return manifestFilesFromGit;

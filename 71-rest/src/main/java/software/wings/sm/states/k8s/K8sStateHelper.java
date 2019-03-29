@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
@@ -21,16 +22,20 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
 import io.harness.serializer.KryoUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
@@ -646,6 +651,10 @@ public class K8sStateHelper {
         (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult();
 
     Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    if (gitCommandResult == null) {
+      return valuesFiles;
+    }
+
     for (Entry<String, GitFetchFilesResult> entry : gitCommandResult.getFilesFromMultipleRepo().entrySet()) {
       GitFetchFilesResult gitFetchFilesResult = entry.getValue();
 
@@ -675,6 +684,23 @@ public class K8sStateHelper {
       releaseName = convertBase64UuidToCanonicalForm(infraMapping.getUuid());
     }
 
-    return context.renderExpression(releaseName);
+    releaseName = context.renderExpression(releaseName);
+    validateReleaseName(releaseName);
+
+    return releaseName;
+  }
+
+  private void validateReleaseName(String releaseName) {
+    if (!ExpressionEvaluator.containsVariablePattern(releaseName)) {
+      try {
+        new ConfigMapBuilder().withNewMetadata().withName(releaseName).endMetadata().build();
+      } catch (Exception e) {
+        throw new InvalidArgumentsException(
+            Pair.of("Release name",
+                "\"" + releaseName
+                    + "\" is an invalid name. Release name may only contain lowercase letters, numbers, and '-'."),
+            e, USER);
+      }
+    }
   }
 }
