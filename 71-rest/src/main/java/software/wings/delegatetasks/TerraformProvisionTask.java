@@ -1,16 +1,17 @@
 package software.wings.delegatetasks;
 
+import static com.google.common.base.Joiner.on;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand.APPLY;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
@@ -21,6 +22,8 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.jgit.api.Git;
@@ -48,12 +51,14 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -62,7 +67,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -72,10 +76,12 @@ import java.util.regex.Pattern;
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionTask.class);
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
+  private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform.tfvars";
   private static final String TERRAFORM_SCRIPT_FILE_EXTENSION = "tf";
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
   private static final String REMOTE_STATE_FILE_PATH = ".terraform/terraform.tfstate";
+  private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
@@ -103,11 +109,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private void saveVariable(BufferedWriter writer, String key, String value) throws IOException {
     // If the variable is wrapped with [] square brackets, we assume it is a list and we keep it as is.
     if (varList.matcher(value).matches()) {
-      writer.write(String.format("%s = %s%n", key, value));
+      writer.write(format("%s = %s%n", key, value));
       return;
     }
 
-    writer.write(String.format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
+    writer.write(format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
@@ -115,6 +121,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     saveExecutionLog(parameters, "Branch: " + gitConfig.getBranch() + "\nPath: " + parameters.getScriptPath(),
         CommandExecutionStatus.RUNNING);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
+
+    if (isNotEmpty(gitConfig.getReference())) {
+      saveExecutionLog(parameters, format("Inheriting git state at commit id: [%s]", gitConfig.getReference()),
+          CommandExecutionStatus.RUNNING);
+    }
 
     try {
       encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails());
@@ -190,62 +201,71 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
 
       File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
-
       String targetArgs = getTargetArgs(parameters.getTargets());
 
-      String joinedCommands;
+      int code;
+      ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters);
+      PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>());
       switch (parameters.getCommand()) {
-        case APPLY:
-          joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
-              "echo \"yes\" | terraform init -force-copy "
-                  + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
-              "echo \"terraform init ... Done\"", "terraform refresh -input=false " + targetArgs,
-              "terraform plan -out=tfplan -input=false " + targetArgs, "echo \"terraform plan ... Done\"",
-              "terraform apply -input=false tfplan", "echo \"terraform apply ... Done\"",
-              "terraform output --json > " + tfOutputsFile.toString()));
+        case APPLY: {
+          /**
+           * The "echo yes" in the terraform init command below is required as a workaround for a Tf bug.
+           * In some versions of Tf, we have seen that -force-copy flag was not honoured by Tf.
+           * Please do not remove.
+           */
+          code = executeShellCommand(
+              format("echo \"yes\" | terraform init -force-copy %s && echo \"Terraform init... done\"",
+                  tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
+                                                : ""),
+              scriptDirectory, parameters, activityLogOutputStream);
+          if (code == 0) {
+            code = executeShellCommand(
+                format("terraform refresh -input=false %s && echo \"Terraform refresh... done\"", targetArgs),
+                scriptDirectory, parameters, activityLogOutputStream);
+          }
+          if (code == 0) {
+            code = executeShellCommand(
+                format("terraform plan -out=tfplan -input=false %s && echo \"Terraform plan ... done\"", targetArgs),
+                scriptDirectory, parameters, planLogOutputStream);
+          }
+          if (code == 0 && !parameters.isRunPlanOnly()) {
+            code = executeShellCommand("terraform apply -input=false tfplan && echo \"Terraform apply... done\"",
+                scriptDirectory, parameters, activityLogOutputStream);
+          }
+          if (code == 0 && !parameters.isRunPlanOnly()) {
+            code = executeShellCommand(format("terraform output --json > %s", tfOutputsFile.toString()),
+                scriptDirectory, parameters, activityLogOutputStream);
+          }
           break;
-        case DESTROY:
-          joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
-              "terraform init -input=false "
-                  + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
-              "echo \"terraform init ... Done\"", "terraform refresh -input=false " + targetArgs,
-              "terraform destroy -force " + targetArgs, "echo \"terraform destroy ... Done\""));
+        }
+        case DESTROY: {
+          code = executeShellCommand(
+              format("terraform init -input=false %s && echo \"Terraform init... done\"",
+                  tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
+                                                : ""),
+              scriptDirectory, parameters, activityLogOutputStream);
+          if (code == 0) {
+            code = executeShellCommand(
+                format("terraform refresh -input=false %s && echo \"Terraform refresh... done\"", targetArgs),
+                scriptDirectory, parameters, activityLogOutputStream);
+          }
+          if (code == 0) {
+            code = executeShellCommand(
+                format("terraform destroy -force %s && echo \"Terraform destroy... done\"", targetArgs),
+                scriptDirectory, parameters, activityLogOutputStream);
+          }
           break;
-        default:
+        }
+        default: {
           throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
+        }
       }
 
-      List<Boolean> instances = asList(false);
-      Pattern detectChange =
-          Pattern.compile("Apply complete! Resources: [1-9][0-9]* added, [0-9]+ changed, [0-9]+ destroyed.");
-
-      ProcessExecutor processExecutor = new ProcessExecutor()
-                                            .timeout(parameters.getTimeoutInMillis(), TimeUnit.MILLISECONDS)
-                                            .command("/bin/sh", "-c", joinedCommands)
-                                            .readOutput(true)
-                                            .redirectOutput(new LogOutputStream() {
-                                              @Override
-                                              protected void processLine(String line) {
-                                                if (detectChange.matcher(line).find()) {
-                                                  instances.set(0, true);
-                                                }
-                                                saveExecutionLog(parameters, line, CommandExecutionStatus.RUNNING);
-                                              }
-                                            });
-
-      ProcessResult processResult = processExecutor.execute();
-      int code = processResult.getExitValue();
-
-      if (code == 0 && instances.get(0)) {
-        // This might seem strange, but we would like to give the cloud an extra time to initialize the
-        // instances, while letting the customers to believe that we are doing something smart about it, we just sleep.
-        int i = 0;
-        while (i < 15) {
-          saveExecutionLog(parameters, "Test instances for readiness...", CommandExecutionStatus.RUNNING);
-          final int s = new Random().nextInt(5);
-          sleep(ofSeconds(s));
-          i += s;
-        }
+      if (code == 0 && !parameters.isRunPlanOnly()) {
+        saveExecutionLog(parameters,
+            format("Waiting: [%s] seconds for resources to be ready", String.valueOf(RESOURCE_READY_WAIT_TIME_SECONDS)),
+            CommandExecutionStatus.RUNNING);
+        sleep(ofSeconds(RESOURCE_READY_WAIT_TIME_SECONDS));
       }
 
       CommandExecutionStatus commandExecutionStatus =
@@ -268,6 +288,20 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         try (InputStream initialStream = new FileInputStream(tfStateFile)) {
           delegateFileManager.upload(delegateFile, initialStream);
         }
+      }
+
+      DelegateFile planLogFile = null;
+      if (APPLY.equals(parameters.getCommand())) {
+        planLogFile = aDelegateFile()
+                          .withAccountId(parameters.getAccountId())
+                          .withDelegateId(getDelegateId())
+                          .withTaskId(getTaskId())
+                          .withEntityId(parameters.getEntityId())
+                          .withBucket(FileBucket.TERRAFORM_PLAN)
+                          .withFileName(TERRAFORM_PLAN_FILE_NAME)
+                          .build();
+        planLogFile = delegateFileManager.upload(
+            planLogFile, new ByteArrayInputStream(planLogOutputStream.getPlanLog().getBytes(StandardCharsets.UTF_8)));
       }
 
       List<NameValuePair> variableList = new ArrayList<>();
@@ -302,6 +336,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           TerraformExecutionData.builder()
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
+              .planLogFileId(APPLY.equals(parameters.getCommand()) ? planLogFile.getFileId() : null)
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(variableList)
@@ -311,7 +346,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
       if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy
-          && commandExecutionStatus == CommandExecutionStatus.SUCCESS) {
+          && commandExecutionStatus == CommandExecutionStatus.SUCCESS && !parameters.isRunPlanOnly()) {
         terraformExecutionDataBuilder.outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8));
       }
 
@@ -331,6 +366,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(tfVariablesFile);
       FileUtils.deleteQuietly(tfBackendConfigsFile);
     }
+  }
+
+  private int executeShellCommand(String command, String directory, TerraformProvisionParameters parameters,
+      LogOutputStream logOutputStream) throws RuntimeException, IOException, InterruptedException, TimeoutException {
+    String joinedCommands = format("cd \"%s\" && %s", directory, command);
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .timeout(parameters.getTimeoutInMillis(), TimeUnit.MILLISECONDS)
+                                          .command("/bin/sh", "-c", joinedCommands)
+                                          .readOutput(true)
+                                          .redirectOutput(logOutputStream);
+
+    ProcessResult processResult = processExecutor.execute();
+    return processResult.getExitValue();
   }
 
   private void ensureLocalCleanup(String scriptDirectory) {
@@ -437,5 +485,39 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .withLogLine(line)
             .withExecutionResult(commandExecutionStatus)
             .build());
+  }
+
+  @AllArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
+  private class ActivityLogOutputStream extends LogOutputStream {
+    private TerraformProvisionParameters parameters;
+
+    @Override
+    protected void processLine(String line) {
+      saveExecutionLog(parameters, line, CommandExecutionStatus.RUNNING);
+    }
+  }
+
+  @AllArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
+  private class PlanLogOutputStream extends LogOutputStream {
+    private TerraformProvisionParameters parameters;
+    private List<String> logs;
+
+    @Override
+    protected void processLine(String line) {
+      saveExecutionLog(parameters, line, CommandExecutionStatus.RUNNING);
+      if (logs == null) {
+        logs = new ArrayList<>();
+      }
+      logs.add(line);
+    }
+
+    String getPlanLog() {
+      if (isNotEmpty(logs)) {
+        return on("\n").join(logs);
+      }
+      return "";
+    }
   }
 }

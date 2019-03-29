@@ -77,6 +77,7 @@ import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
+import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
@@ -1296,9 +1297,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
+      Map<String, Object> properties = step.getProperties();
+      Object o = properties.get(RUN_PLAN_ONLY_KEY);
+      if ((o instanceof Boolean) && ((Boolean) o)) {
+        // We are only running plan in the TF state
+        return null;
+      }
       return TERRAFORM_ROLLBACK;
     }
-
     return null;
   }
 
@@ -1317,15 +1323,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     PhaseStep rollbackProvisionerStep = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
     rollbackProvisionerStep.setUuid(generateUuid());
     provisionerSteps.forEach(step -> {
-      Map<String, Object> propertiesMap = Maps.newHashMap();
-      propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
-      propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
-      rollbackProvisionerNodes.add(GraphNode.builder()
-                                       .type(getCorrespondingRollbackState(step).name())
-                                       .rollback(true)
-                                       .name("Rollback " + step.getName())
-                                       .properties(propertiesMap)
-                                       .build());
+      StateType stateType = getCorrespondingRollbackState(step);
+      if (stateType != null) {
+        Map<String, Object> propertiesMap = Maps.newHashMap();
+        propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
+        propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
+        rollbackProvisionerNodes.add(GraphNode.builder()
+                                         .type(stateType.name())
+                                         .rollback(true)
+                                         .name("Rollback " + step.getName())
+                                         .properties(propertiesMap)
+                                         .build());
+      }
     });
     rollbackProvisionerStep.setRollback(true);
     rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);

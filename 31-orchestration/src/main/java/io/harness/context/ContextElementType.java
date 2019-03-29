@@ -114,5 +114,7 @@ public enum ContextElementType {
 
   TERRAFORM_PROVISION,
 
-  K8S
+  K8S,
+
+  TERRAFORM_INHERIT_PLAN
 }
