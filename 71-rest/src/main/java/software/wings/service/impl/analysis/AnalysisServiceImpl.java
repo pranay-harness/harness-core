@@ -37,7 +37,6 @@ import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
