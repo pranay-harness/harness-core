@@ -74,6 +74,8 @@ public class User extends Base implements Principal {
 
   private String lastAccountId;
 
+  private String defaultAccountId;
+
   private String lastAppId;
 
   @JsonIgnore private long passwordChangedAt;
@@ -99,6 +101,7 @@ public class User extends Base implements Principal {
     publicUser.setUuid(getUuid());
     publicUser.setName(getName());
     publicUser.setEmail(getEmail());
+    publicUser.setDefaultAccountId(getDefaultAccountId());
     publicUser.setAccounts(getAccounts());
     publicUser.setSupportAccounts(getSupportAccounts());
     publicUser.setTwoFactorAuthenticationEnabled(isTwoFactorAuthenticationEnabled());
@@ -395,6 +398,17 @@ public class User extends Base implements Principal {
     this.lastAccountId = lastAccountId;
   }
 
+  public String getDefaultAccountId() {
+    if (defaultAccountId == null && isNotEmpty(accounts)) {
+      defaultAccountId = accounts.get(0).getUuid();
+    }
+    return defaultAccountId;
+  }
+
+  public void setDefaultAccountId(String accountId) {
+    this.defaultAccountId = accountId;
+  }
+
   public String getLastAppId() {
     return lastAppId;
   }
@@ -557,6 +571,7 @@ public class User extends Base implements Principal {
     private List<UserGroup> userGroups = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
     private List<Account> supportAccounts = new ArrayList<>();
+    private String defaultAccountId;
     private long lastLogin;
     private boolean firstLogin;
     private char[] password;
@@ -623,6 +638,11 @@ public class User extends Base implements Principal {
 
     public Builder withSupportAccounts(List<Account> supportAccounts) {
       this.supportAccounts = supportAccounts;
+      return this;
+    }
+
+    public Builder withDefaultAccountId(String accountId) {
+      this.defaultAccountId = accountId;
       return this;
     }
 
@@ -723,6 +743,7 @@ public class User extends Base implements Principal {
           .withUserGroups(userGroups)
           .withAccounts(accounts)
           .withSupportAccounts(supportAccounts)
+          .withDefaultAccountId(defaultAccountId)
           .withLastLogin(lastLogin)
           .withPassword(password)
           .withToken(token)
@@ -754,6 +775,7 @@ public class User extends Base implements Principal {
       user.setUserGroups(userGroups);
       user.setAccounts(accounts);
       user.setSupportAccounts(supportAccounts);
+      user.setDefaultAccountId(defaultAccountId);
       user.setLastLogin(lastLogin);
       user.setPassword(password);
       user.setToken(token);

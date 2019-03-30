@@ -464,6 +464,23 @@ public class UserResource {
   }
 
   /**
+   * Explicitly set default account for a logged in user. This means the user will be landed in the default account
+   * after logged in next time.
+   */
+  @PUT
+  @Path("set-default-account/{accountId}")
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> setDefaultAccountForCurrentUser(@PathParam("accountId") @NotBlank String accountId) {
+    User currentUser = UserThreadLocal.get();
+    if (currentUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+    return new RestResponse<>(userService.setDefaultAccount(currentUser, accountId));
+  }
+
+  /**
    * Login.
    *
    * @return the rest response

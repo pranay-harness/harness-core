@@ -162,6 +162,18 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
+  public void testSetDefaultAccount() {
+    WebTarget target = client.target(API_BASE + "/users/set-default-account/" + accountId);
+    RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).put(
+        entity(accountId, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertEquals(0, restResponse.getResponseMessages().size());
+    Boolean result = restResponse.getResource();
+    assertNotNull(result);
+    assertTrue(result);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
   public void testLoginUserUsingIdentityServiceAuth() {
     WebTarget target = client.target(API_BASE + "/users/user/login?email=" + adminUserEmail);
 
