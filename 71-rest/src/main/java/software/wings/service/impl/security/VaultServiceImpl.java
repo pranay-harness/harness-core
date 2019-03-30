@@ -264,7 +264,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     if (count > 0) {
       String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", message);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", message);
     }
 
     VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
