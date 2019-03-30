@@ -2003,6 +2003,19 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public boolean setDefaultAccount(User user, String accountId) {
+    // First we have to make sure the user is assigned to the account
+    boolean userAssignedToAccount = isUserAssignedToAccount(user, accountId);
+    if (userAssignedToAccount) {
+      user.setDefaultAccountId(accountId);
+      wingsPersistence.save(user);
+      return true;
+    } else {
+      throw new InvalidRequestException("Can't set default account if the user is not associated with the account");
+    }
+  }
+
+  @Override
   public void deleteByAccountId(String accountId) {
     List<User> users = wingsPersistence.createQuery(User.class).filter(User.ACCOUNT_ID_KEY, accountId).asList();
     for (User user : users) {

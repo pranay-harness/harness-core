@@ -40,6 +40,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.ws.rs.core.Response;
 
 @Singleton
@@ -77,7 +78,9 @@ public class AuthenticationManager {
      * associated with multiple accounts. As the UI will always pick the first account to start with after the logged
      * in user is having a list of associated accounts.
      */
-    Account account = user.getAccounts().get(0);
+    String defaultAccountId = user.getDefaultAccountId();
+    Account account =
+        user.getAccounts().stream().filter(acct -> Objects.equals(defaultAccountId, acct.getUuid())).findFirst().get();
     AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
     if (authenticationMechanism == null) {
       authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
@@ -145,11 +148,15 @@ public class AuthenticationManager {
   private User generate2faJWTToken(User user) {
     String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.MULTIFACTOR_AUTH);
     return User.Builder.anUser()
+        .withUuid(user.getUuid())
         .withEmail(user.getEmail())
         .withName(user.getName())
         .withTwoFactorAuthenticationMechanism(user.getTwoFactorAuthenticationMechanism())
         .withTwoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .withTwoFactorJwtToken(jwtToken)
+        .withAccounts(user.getAccounts())
+        .withSupportAccounts(user.getSupportAccounts())
+        .withDefaultAccountId(user.getDefaultAccountId())
         .build();
   }
 

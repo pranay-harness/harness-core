@@ -444,4 +444,9 @@ public interface UserService extends OwnedByAccount {
   List<User> getUsersOfAccount(@NotEmpty String accountId);
 
   AuthenticationMechanism getAuthenticationMechanism(User user);
+
+  /**
+   * Set the default account for a user. It means the user will land on the default account next time logging in.
+   */
+  boolean setDefaultAccount(User user, @NotEmpty String accountId);
 }
