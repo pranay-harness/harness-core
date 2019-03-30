@@ -16,6 +16,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextFactory;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
@@ -56,8 +57,10 @@ public class MLServiceUtil {
       ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
       String hostName = isEmpty(nodeData.getHostExpression())
           ? nodeData.getInstanceName()
-          : executionContext.renderExpression(
-                nodeData.getHostExpression(), Lists.newArrayList(nodeData.getInstanceElement()));
+          : executionContext.renderExpression(nodeData.getHostExpression(),
+                StateExecutionContext.builder()
+                    .contextElements(Lists.newArrayList(nodeData.getInstanceElement()))
+                    .build());
       logger.info("rendered host is {}", hostName);
       return hostName;
     } catch (RuntimeException e) {

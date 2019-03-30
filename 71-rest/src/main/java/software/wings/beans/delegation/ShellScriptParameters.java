@@ -32,7 +32,7 @@ public class ShellScriptParameters implements TaskParameters {
   @Setter private String accountId;
   private final String appId;
   private final String activityId;
-  private final String host;
+  @Expression final String host;
   private final String userName;
   private final ShellScriptState.ConnectionType connectionType;
   private final List<EncryptedDataDetail> keyEncryptedDataDetails;

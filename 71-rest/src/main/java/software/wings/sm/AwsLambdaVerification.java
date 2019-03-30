@@ -182,8 +182,8 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setAssertionStatement(functionResponse.getLambdaTestEvent().getAssertion());
 
       if (isNotBlank(functionResponse.getLambdaTestEvent().getAssertion())) {
-        assertionStatus = (boolean) context.evaluateExpression(
-            functionResponse.getLambdaTestEvent().getAssertion(), awsLambdaExecutionData);
+        assertionStatus = (boolean) context.evaluateExpression(functionResponse.getLambdaTestEvent().getAssertion(),
+            StateExecutionContext.builder().stateExecutionData(awsLambdaExecutionData).build());
       }
 
       if (!assertionStatus || awsLambdaExecutionData.getStatusCode() < 200

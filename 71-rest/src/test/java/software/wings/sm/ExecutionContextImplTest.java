@@ -296,7 +296,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     String expr = "${httpResponseBody}.contains(${serviceVariable.REV})";
     HttpStateExecutionData httpStateExecutionData =
         HttpStateExecutionData.builder().httpResponseBody("abcabcabcabcabc-123-SNAPSHOT-23423sadf").build();
-    boolean assertion = (boolean) context.evaluateExpression(expr, httpStateExecutionData);
+    boolean assertion = (boolean) context.evaluateExpression(
+        expr, StateExecutionContext.builder().stateExecutionData(httpStateExecutionData).build());
     assertThat(assertion).isTrue();
   }
 
@@ -326,7 +327,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
                                                               .build();
     String expr = "echo ${MyVar}-${artifact.buildNo}";
 
-    String evaluatedExpression = context.renderExpression(expr, commandStateExecutionData, artifact);
+    String evaluatedExpression = context.renderExpression(
+        expr, StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build());
     assertThat(evaluatedExpression).isNotEmpty();
     assertThat(evaluatedExpression).isEqualTo("echo MyValue-123-SNAPSHOT");
   }
