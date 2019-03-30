@@ -82,6 +82,20 @@ public enum MetricType {
           .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
           .comparisonType(ThresholdComparisonType.DELTA)
           .ml(0.01)
+          .build())),
+  /**
+   * Metric that represents any observation between 0 and 1 with lower being bad
+   * EXAMPLE : APDEX
+   */
+  APDEX(Lists.newArrayList(Threshold.builder()
+                               .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                               .comparisonType(ThresholdComparisonType.RATIO)
+                               .ml(0.5)
+                               .build(),
+      Threshold.builder()
+          .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+          .comparisonType(ThresholdComparisonType.DELTA)
+          .ml(0.3)
           .build()));
 
   private List<Threshold> thresholds;

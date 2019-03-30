@@ -13,5 +13,5 @@ WebTransactions:
   displayName: ERROR
 -
   metricName: apdexScore
-  mlMetricType: VALUE
+  mlMetricType: APDEX
   displayName: Apdex Score

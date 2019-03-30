@@ -71,7 +71,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
                       .build();
     apdexScoreMetric = NewRelicState.Metric.builder()
                            .metricName(NewRelicMetricValueDefinition.APDEX_SCORE)
-                           .mlMetricType(MetricType.VALUE)
+                           .mlMetricType(MetricType.APDEX)
                            .displayName("Apdex Score")
                            .build();
 

@@ -67,7 +67,7 @@ public class NewRelicMetricValueDefinition {
         ERROR, TimeSeriesMetricDefinition.builder().metricName(ERROR).metricType(MetricType.ERROR).build());
 
     NEW_RELIC_VALUES_TO_ANALYZE.put(
-        APDEX_SCORE, TimeSeriesMetricDefinition.builder().metricName(APDEX_SCORE).metricType(MetricType.VALUE).build());
+        APDEX_SCORE, TimeSeriesMetricDefinition.builder().metricName(APDEX_SCORE).metricType(MetricType.APDEX).build());
   }
 
   public static Map<String, TimeSeriesMetricDefinition> APP_DYNAMICS_VALUES_TO_ANALYZE = new HashMap<>();
