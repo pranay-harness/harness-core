@@ -1,9 +1,11 @@
 package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -47,6 +49,8 @@ import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
@@ -158,6 +162,33 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertNotNull(user);
     String newJwtToken = user.getToken();
     assertNotEquals(jwtToken, newJwtToken);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testGetLoginTypeWithAccountId() {
+    WebTarget target =
+        client.target(API_BASE + "/users/logintype?userName=" + adminUserEmail + "&accountId=" + accountId);
+    RestResponse<LoginTypeResponse> restResponse =
+        target.request().get(new GenericType<RestResponse<LoginTypeResponse>>() {});
+    assertEquals(0, restResponse.getResponseMessages().size());
+    LoginTypeResponse loginTypeResponse = restResponse.getResource();
+    assertNotNull(loginTypeResponse);
+    assertEquals(AuthenticationMechanism.USER_PASSWORD, loginTypeResponse.getAuthenticationMechanism());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testDefaultLoginWithAccountId() {
+    WebTarget target = client.target(API_BASE + "/users/login?accountId=" + defaultAccountId);
+    String basicAuthValue =
+        "Basic " + encodeBase64String(format("%s:%s", adminUserEmail, new String(adminPassword)).getBytes());
+    RestResponse<User> restResponse =
+        target.request().header("Authorization", basicAuthValue).get(new GenericType<RestResponse<User>>() {});
+    assertEquals(0, restResponse.getResponseMessages().size());
+    User user = restResponse.getResource();
+    assertNotNull(user);
+    assertNotNull(user.getToken());
   }
 
   @Test

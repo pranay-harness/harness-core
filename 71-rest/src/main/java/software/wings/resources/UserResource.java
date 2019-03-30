@@ -481,7 +481,10 @@ public class UserResource {
   }
 
   /**
-   * Login.
+   * Login a user through basic auth.
+   *
+   * If accountId is specified, it will authenticate using the specified account's auth mechanism. Otherwise
+   * it will authenticate using the user's default/primary account's auth mechanism.
    *
    * @return the rest response
    */
@@ -490,9 +493,11 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> login(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
-    return new RestResponse<>(
-        authenticationManager.defaultLogin(authenticationManager.extractToken(authorization, "Basic")));
+  public RestResponse<User> login(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, @QueryParam("accountId") String accountId) {
+    // accountId field is optional, it could be null.
+    return new RestResponse<>(authenticationManager.defaultLoginAccount(
+        authenticationManager.extractToken(authorization, "Basic"), accountId));
   }
 
   /**
@@ -510,13 +515,23 @@ public class UserResource {
         twoFactorAuthenticationManager.authenticate(authenticationManager.extractToken(authorization, "JWT")));
   }
 
+  /**
+   * Return the specified user's login types (including auth mechanism and redirect request if SSO).
+   *
+   * If accountId is specified, it will return using the specified account's login type. Otherwise
+   * it will authenticate using the user's default/primary account's auth mechanism.
+   *
+   * @return the rest response
+   */
   @GET
   @Path("logintype")
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<LoginTypeResponse> getLoginType(@QueryParam("userName") String userName) {
-    return new RestResponse(authenticationManager.getLoginTypeResponse(urlDecode(userName)));
+  public RestResponse<LoginTypeResponse> getLoginType(
+      @QueryParam("userName") String userName, @QueryParam("accountId") String accountId) {
+    // accountId field is optional, it could be null.
+    return new RestResponse<>(authenticationManager.getLoginTypeResponse(urlDecode(userName), accountId));
   }
 
   @GET
@@ -818,7 +833,7 @@ public class UserResource {
   /**
    * Complete invite rest response.
    *
-   * @param accountId  the account id
+   * @param accountName the account name
    * @param inviteId   the invite id
    * @param userInvite the user invite
    * @return the rest response

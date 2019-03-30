@@ -34,8 +34,8 @@ public interface UserService extends OwnedByAccount {
   /**
    * Consider the following characters in email as illegal and prohibit trial signup with the following characters
    */
-  List<Character> ILLEGAL_CHARACTERS = Collections.unmodifiableList(Arrays.asList('$', '&', '+', ',', '/', ':', ';',
-      '=', '?', '<', '>', '#', '{', '}', '|', '^', '~', '(', ')', ']', '`', '\'', '\"'));
+  List<Character> ILLEGAL_CHARACTERS = Collections.unmodifiableList(Arrays.asList(
+      '$', '&', ',', '/', ':', ';', '=', '?', '<', '>', '#', '{', '}', '|', '^', '~', '(', ')', ']', '`', '\'', '\"'));
 
   /**
    * Register a new user with basic account information. Create the account if that

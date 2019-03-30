@@ -2,6 +2,7 @@ package software.wings.security.authentication;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -32,6 +33,7 @@ import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
@@ -41,6 +43,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import javax.ws.rs.core.Response;
 
 @Singleton
@@ -52,6 +55,7 @@ public class AuthenticationManager {
   @Inject private SamlClientService samlClientService;
   @Inject private MainConfiguration configuration;
   @Inject private UserService userService;
+  @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private OauthBasedAuthHandler oauthBasedAuthHandler;
@@ -72,16 +76,32 @@ public class AuthenticationManager {
     }
   }
 
-  private AuthenticationMechanism getAuthenticationMechanism(User user) {
-    /*
-     * Choose the first account as primary account, use its auth mechanism for login purpose if the user is
-     * associated with multiple accounts. As the UI will always pick the first account to start with after the logged
-     * in user is having a list of associated accounts.
-     */
-    String defaultAccountId = user.getDefaultAccountId();
-    Account account =
-        user.getAccounts().stream().filter(acct -> Objects.equals(defaultAccountId, acct.getUuid())).findFirst().get();
-    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+  private AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
+    AuthenticationMechanism authenticationMechanism;
+    if (isNotEmpty(accountId)) {
+      // First check if the user is associated with the account.
+      if (!userService.isUserAssignedToAccount(user, accountId)) {
+        throw new InvalidRequestException("User is not assigned to account", USER);
+      }
+      // If account is specified, using the specified account's auth mechanism
+      Account account = accountService.get(accountId);
+      authenticationMechanism = account.getAuthenticationMechanism();
+    } else {
+      /*
+       * Choose the first account as primary account, use its auth mechanism for login purpose if the user is
+       * associated with multiple accounts. As the UI will always pick the first account to start with after the logged
+       * in user is having a list of associated accounts.
+       */
+      String defaultAccountId = user.getDefaultAccountId();
+      Optional<Account> account =
+          user.getAccounts().stream().filter(acct -> Objects.equals(defaultAccountId, acct.getUuid())).findFirst();
+      if (account.isPresent()) {
+        authenticationMechanism = account.get().getAuthenticationMechanism();
+      } else {
+        authenticationMechanism = user.getAccounts().get(0).getAuthenticationMechanism();
+      }
+    }
+
     if (authenticationMechanism == null) {
       authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
     }
@@ -89,10 +109,14 @@ public class AuthenticationManager {
   }
 
   public AuthenticationMechanism getAuthenticationMechanism(String userName) {
-    return getAuthenticationMechanism(authenticationUtil.getUser(userName, USER));
+    return getAuthenticationMechanism(authenticationUtil.getUser(userName, USER), null);
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
+    return getLoginTypeResponse(userName, null);
+  }
+
+  public LoginTypeResponse getLoginTypeResponse(String userName, String accountId) {
     LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
 
     /*
@@ -103,7 +127,8 @@ public class AuthenticationManager {
      */
     try {
       User user = authenticationUtil.getUser(userName, USER);
-      AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
+      AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
+
       SSORequest SSORequest;
       switch (authenticationMechanism) {
         case USER_PASSWORD:
@@ -160,7 +185,7 @@ public class AuthenticationManager {
         .build();
   }
 
-  public User defaultLogin(String basicToken) {
+  public User defaultLoginAccount(String basicToken, String accountId) {
     try {
       String[] decryptedData = decodeBase64ToString(basicToken).split(":");
       if (decryptedData.length < 2) {
@@ -168,16 +193,31 @@ public class AuthenticationManager {
       }
       String userName = decryptedData[0];
       String password = decryptedData[1];
-      return defaultLogin(userName, password);
+
+      if (isNotEmpty(accountId)) {
+        User user = authenticationUtil.getUser(userName, USER);
+        AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
+        return defaultLoginInternal(userName, password, authenticationMechanism);
+      } else {
+        return defaultLogin(userName, password);
+      }
     } catch (Exception e) {
       logger.warn("Failed to login via default mechanism", e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
 
+  public User defaultLogin(String basicToken) {
+    return defaultLoginAccount(basicToken, null);
+  }
+
   public User defaultLogin(String userName, String password) {
+    return defaultLoginInternal(userName, password, getAuthenticationMechanism(userName));
+  }
+
+  private User defaultLoginInternal(String userName, String password, AuthenticationMechanism authenticationMechanism) {
     try {
-      AuthHandler authHandler = getAuthHandler(getAuthenticationMechanism(userName));
+      AuthHandler authHandler = getAuthHandler(authenticationMechanism);
       User user = authHandler.authenticate(userName, password).getUser();
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
