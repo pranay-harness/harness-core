@@ -312,8 +312,14 @@ public abstract class State {
 
   protected void renderTaskParameters(ExecutionContext context, StateExecutionData stateExecutionData,
       TaskParameters parameters, int expressionFunctorToken) {
-    ExpressionReflectionUtils.applyExpression(
-        parameters, value -> context.renderExpression(value, stateExecutionData, null, true, expressionFunctorToken));
+    ExpressionReflectionUtils.applyExpression(parameters,
+        value
+        -> context.renderExpression(value,
+            StateExecutionContext.builder()
+                .stateExecutionData(stateExecutionData)
+                .adoptDelegateDecryption(true)
+                .expressionFunctorToken(expressionFunctorToken)
+                .build()));
   }
 
   protected String scheduleDelegateTask(DelegateTask task) {
@@ -321,11 +327,11 @@ public abstract class State {
   }
 
   protected String renderAndScheduleDelegateTask(
-      ExecutionContext context, DelegateTask task, StateExecutionData stateExecutionData) {
+      ExecutionContext context, DelegateTask task, StateExecutionContext stateExecutionContext) {
     if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
-          value -> context.renderExpression(value, stateExecutionData, null, false, 0));
+      ExpressionReflectionUtils.applyExpression(
+          task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
     }
     return delegateService.queueTask(task);
   }

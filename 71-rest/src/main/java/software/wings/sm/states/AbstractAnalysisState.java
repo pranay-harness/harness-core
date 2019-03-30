@@ -92,6 +92,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -303,9 +304,11 @@ public abstract class AbstractAnalysisState extends State {
             if (isEmpty(hostnameTemplate)) {
               hosts.put(pod.getName(), DEFAULT_GROUP_NAME);
             } else {
-              hosts.put(
-                  context.renderExpression(hostnameTemplate,
-                      Lists.newArrayList(aHostElement().withHostName(pod.getName()).withIp(pod.getPodIP()).build())),
+              hosts.put(context.renderExpression(hostnameTemplate,
+                            StateExecutionContext.builder()
+                                .contextElements(Lists.newArrayList(
+                                    aHostElement().withHostName(pod.getName()).withIp(pod.getPodIP()).build()))
+                                .build()),
                   DEFAULT_GROUP_NAME);
             }
           });
@@ -354,8 +357,10 @@ public abstract class AbstractAnalysisState extends State {
           hosts.put(serviceHost, DEFAULT_GROUP_NAME);
         } else {
           hosts.put(context.renderExpression(hostnameTemplate,
-                        Lists.newArrayList(
-                            aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build())),
+                        StateExecutionContext.builder()
+                            .contextElements(Lists.newArrayList(
+                                aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build()))
+                            .build()),
               DEFAULT_GROUP_NAME);
         }
       });
@@ -407,8 +412,10 @@ public abstract class AbstractAnalysisState extends State {
               hosts.put(instanceStatusSummary.getInstanceElement().getHostName(), DEFAULT_GROUP_NAME);
             } else {
               fillHostDetail(instanceStatusSummary.getInstanceElement(), context);
-              hosts.put(context.renderExpression(
-                            getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())),
+              hosts.put(context.renderExpression(getHostnameTemplate(),
+                            StateExecutionContext.builder()
+                                .contextElements(Lists.newArrayList(instanceStatusSummary.getInstanceElement()))
+                                .build()),
                   DEFAULT_GROUP_NAME);
             }
           }
@@ -505,8 +512,10 @@ public abstract class AbstractAnalysisState extends State {
                 hosts.put(instanceStatusSummary.getInstanceElement().getHostName(),
                     getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
               } else {
-                hosts.put(context.renderExpression(
-                              getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())),
+                hosts.put(context.renderExpression(getHostnameTemplate(),
+                              StateExecutionContext.builder()
+                                  .contextElements(Lists.newArrayList(instanceStatusSummary.getInstanceElement()))
+                                  .build()),
                     getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
               }
             });
@@ -547,7 +556,8 @@ public abstract class AbstractAnalysisState extends State {
       if (isEmpty(getHostnameTemplate())) {
         rv.put(instanceElement.getHostName(), getGroupName(instanceElement, deploymentType));
       } else {
-        rv.put(context.renderExpression(getHostnameTemplate(), Lists.newArrayList(instanceElement)),
+        rv.put(context.renderExpression(getHostnameTemplate(),
+                   StateExecutionContext.builder().contextElements(Lists.newArrayList(instanceElement)).build()),
             getGroupName(instanceElement, deploymentType));
       }
     }

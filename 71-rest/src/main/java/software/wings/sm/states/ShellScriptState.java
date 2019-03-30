@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -51,6 +52,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParametersBuilder;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -59,6 +61,7 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -68,6 +71,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
@@ -127,6 +131,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Getter @Setter private String outputVars;
   @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
+
+  @Inject private FeatureFlagService featureFlagService;
 
   /**
    * Create a new Script State with given name.
@@ -236,18 +242,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
     String serviceTemplateId = infrastructureMapping == null ? null : infrastructureMapping.getServiceTemplateId();
 
-    Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
-        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
-    Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
-
-    if (serviceVariables != null) {
-      serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
-    }
-
-    if (safeDisplayServiceVariables != null) {
-      safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
-    }
-
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     String username = null;
@@ -333,48 +327,65 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       allTags.addAll(tags);
     }
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(executionContext.getApp().getAccountId())
-            .waitId(activityId)
-            .tags(allTags)
-            .appId(((ExecutionContextImpl) context).getApp().getAppId())
-            .data(TaskData.builder()
-                      .taskType(TaskType.SCRIPT.name())
-                      .parameters(new Object[] {ShellScriptParameters.builder()
-                                                    .accountId(executionContext.getApp().getAccountId())
-                                                    .appId(executionContext.getAppId())
-                                                    .activityId(activityId)
-                                                    .host(context.renderExpression(host))
-                                                    .connectionType(connectionType)
-                                                    .winrmConnectionAttributes(winRmConnectionAttributes)
-                                                    .winrmConnectionEncryptedDataDetails(winrmEdd)
-                                                    .userName(username)
-                                                    .keyEncryptedDataDetails(keyEncryptionDetails)
-                                                    .containerServiceParams(containerServiceParams)
-                                                    .serviceVariables(serviceVariables)
-                                                    .safeDisplayServiceVariables(safeDisplayServiceVariables)
-                                                    .workingDirectory(commandPath)
-                                                    .scriptType(scriptType)
-                                                    .script(scriptString)
-                                                    .executeOnDelegate(executeOnDelegate)
-                                                    .outputVars(outputVars)
-                                                    .hostConnectionAttributes(hostConnectionAttributes)
-                                                    .keyless(keyless)
-                                                    .keyPath(keyPath)
-                                                    .port(port)
-                                                    .accessType(accessType)
-                                                    .keyName(keyName)
-                                                    .build()})
-                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                      .build())
-            .envId(envId)
-            .infrastructureMappingId(infrastructureMappingId)
-            .serviceTemplateId(serviceTemplateId)
-            .build();
+    final ShellScriptParametersBuilder shellScriptParameters = ShellScriptParameters.builder()
+                                                                   .accountId(executionContext.getApp().getAccountId())
+                                                                   .appId(executionContext.getAppId())
+                                                                   .activityId(activityId)
+                                                                   .host(host)
+                                                                   .connectionType(connectionType)
+                                                                   .winrmConnectionAttributes(winRmConnectionAttributes)
+                                                                   .winrmConnectionEncryptedDataDetails(winrmEdd)
+                                                                   .userName(username)
+                                                                   .keyEncryptedDataDetails(keyEncryptionDetails)
+                                                                   .containerServiceParams(containerServiceParams)
+                                                                   .workingDirectory(commandPath)
+                                                                   .scriptType(scriptType)
+                                                                   .script(scriptString)
+                                                                   .executeOnDelegate(executeOnDelegate)
+                                                                   .outputVars(outputVars)
+                                                                   .hostConnectionAttributes(hostConnectionAttributes)
+                                                                   .keyless(keyless)
+                                                                   .keyPath(keyPath)
+                                                                   .port(port)
+                                                                   .accessType(accessType)
+                                                                   .keyName(keyName);
+    // TODO: This has to be enabled once CS team gives go ahead
+    //    if (featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_ENV,
+    //    workflowStandardParams.getApp().getAccountId())) {
+    Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
+        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
+    Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
-    String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask, scriptStateExecutionData);
+    if (serviceVariables != null) {
+      serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
+    }
+
+    if (safeDisplayServiceVariables != null) {
+      safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
+    }
+    shellScriptParameters.serviceVariables(serviceVariables).safeDisplayServiceVariables(safeDisplayServiceVariables);
+    //    }
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+
+                                    .accountId(executionContext.getApp().getAccountId())
+                                    .waitId(activityId)
+                                    .tags(allTags)
+                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.SCRIPT.name())
+                                              .parameters(new Object[] {shellScriptParameters.build()})
+                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                              .build())
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .serviceTemplateId(serviceTemplateId)
+                                    .build();
+
+    String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
+        StateExecutionContext.builder().stateExecutionData(scriptStateExecutionData).scriptType(scriptType).build());
+
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(scriptStateExecutionData)
@@ -395,8 +406,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   }
 
   private String createActivity(ExecutionContext executionContext) {
-    List<CommandUnit> commandUnits = asList(
-        Builder.aCommand().withName(ShellScriptParameters.CommandUnit).withCommandType(CommandType.OTHER).build());
+    List<CommandUnit> commandUnits =
+        asList(Builder.aCommand().withName(CommandUnit).withCommandType(CommandType.OTHER).build());
     return activityHelperService
         .createAndSaveActivity(executionContext, Type.Verification, getName(), getStateType(), commandUnits)
         .getUuid();

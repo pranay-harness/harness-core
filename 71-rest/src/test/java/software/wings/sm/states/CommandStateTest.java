@@ -130,6 +130,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
@@ -690,8 +691,12 @@ public class CommandStateTest extends WingsBaseTest {
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
     CommandState.renderCommandString(command, context, commandStateExecutionData, null);
-    verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);
-    verify(context, times(1)).renderExpression("${var2}", commandStateExecutionData, null);
+    verify(context, times(1))
+        .renderExpression(
+            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+    verify(context, times(1))
+        .renderExpression(
+            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
   }
 
   @Test
@@ -707,8 +712,12 @@ public class CommandStateTest extends WingsBaseTest {
                                                                        .build()))
                                           .build();
     CommandState.renderTailFilePattern(context, commandStateExecutionData, null, execCommandUnit);
-    verify(context, times(1)).renderExpression("${serviceVariable.testfile}", commandStateExecutionData, null);
-    verify(context, times(1)).renderExpression("${serviceVariable.filepattern}", commandStateExecutionData, null);
+    verify(context, times(1))
+        .renderExpression("${serviceVariable.testfile}",
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+    verify(context, times(1))
+        .renderExpression("${serviceVariable.filepattern}",
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
   }
 
   @Test
@@ -728,8 +737,12 @@ public class CommandStateTest extends WingsBaseTest {
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
     CommandState.renderCommandString(command, context, commandStateExecutionData, null);
-    verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);
-    verify(context, times(1)).renderExpression("${var2}", commandStateExecutionData, null);
+    verify(context, times(1))
+        .renderExpression(
+            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+    verify(context, times(1))
+        .renderExpression(
+            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
   }
 
   @Test
@@ -751,7 +764,11 @@ public class CommandStateTest extends WingsBaseTest {
                                  .build())
             .build();
     CommandState.renderCommandString(command, context, commandStateExecutionData, null);
-    verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);
-    verify(context, times(1)).renderExpression("${var2}", commandStateExecutionData, null);
+    verify(context, times(1))
+        .renderExpression(
+            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+    verify(context, times(1))
+        .renderExpression(
+            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
   }
 }

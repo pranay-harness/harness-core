@@ -146,18 +146,4 @@ public class ShellScriptStateTest {
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testEscapifyBash() {
-    assertThat(shellScriptFunctor.escapeString("a'b\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y")
-                   .equals("a\\'b\\\"c\\`d\\$e~f!g@h#i%j^k\\&l*m\\(n\\)o-p_r{s}t[]\\|\\;:u,v.w/x?y"));
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testEscapifyPowershell() {
-    assertThat(shellScriptFunctor.escapeString("a'b\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y")
-                   .equals("a\\'b\\\"c\\`d\\$e~f!g@h#i%j^k\\&l*m\\(n\\)o-p_r{s}t[]\\|\\;:u,v.w/x?y"));
-  }
 }

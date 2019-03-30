@@ -57,6 +57,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
@@ -415,7 +416,9 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         Map<String, Object> output = new HashMap<>();
 
         responseProcessingExpressions.forEach(expression -> {
-          output.put(expression.getName(), context.renderExpression(expression.getValue(), executionData));
+          output.put(expression.getName(),
+              context.renderExpression(
+                  expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
         });
 
         handleSweepingOutput(sweepingOutputService, context, output);
@@ -444,7 +447,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     try {
       // check if the request failed
-      boolean assertionStatus = (boolean) context.evaluateExpression(assertion, executionData);
+      boolean assertionStatus = (boolean) context.evaluateExpression(
+          assertion, StateExecutionContext.builder().stateExecutionData(executionData).build());
       logger.info("assertion status: {}", assertionStatus);
       return assertionStatus;
     } catch (ClassCastException e) {

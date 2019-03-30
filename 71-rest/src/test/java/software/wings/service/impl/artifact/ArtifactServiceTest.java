@@ -66,7 +66,6 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.collect.CollectEvent;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AppService;
@@ -93,7 +92,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
 
   @InjectMocks @Inject private ArtifactService artifactService;
-
+  String BUILD_NO = "buildNo";
   private Builder artifactBuilder = anArtifact()
                                         .withAppId(APP_ID)
                                         .withMetadata(ImmutableMap.of("buildNo", "200"))
@@ -338,15 +337,15 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   private void constructArtifacts() {
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
 
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build());
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build());
 
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
   }
 
   @Test
@@ -950,7 +949,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
     Artifact savedArtifact = artifactService.create(jenkinsArtifact);
     assertThat(savedArtifact).isNotNull();
+
     artifactService.deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+
     assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
         .hasSize(0);
   }

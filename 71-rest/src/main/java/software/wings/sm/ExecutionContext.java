@@ -23,7 +23,7 @@ import java.util.Map;
 public interface ExecutionContext {
   Object evaluateExpression(String expression);
 
-  Object evaluateExpression(String expression, Object stateExecutionData);
+  Object evaluateExpression(String expression, StateExecutionContext stateExecutionContext);
 
   StateExecutionData getStateExecutionData();
 
@@ -31,12 +31,7 @@ public interface ExecutionContext {
 
   String renderExpression(String expression);
 
-  String renderExpression(String expression, Object addition);
-
-  String renderExpression(String expression, Object stateExecutionData, Object addition);
-
-  String renderExpression(String expression, Object stateExecutionData, Object addition,
-      boolean adoptDelegateDecryption, int expressionFunctorToken);
+  String renderExpression(String expression, StateExecutionContext stateExecutionContext);
 
   List<String> renderExpressionList(List<String> expressions);
 
@@ -77,10 +72,6 @@ public interface ExecutionContext {
   Map<String, String> getSafeDisplayServiceVariables();
 
   SettingValue getGlobalSettingValue(String accountId, String settingId);
-
-  Object evaluateExpression(String expression, Map<String, Object> context);
-
-  String renderExpression(String expression, Map<String, Object> context);
 
   SweepingOutputBuilder prepareSweepingOutputBuilder(SweepingOutput.Scope sweepingOutputScope);
 }

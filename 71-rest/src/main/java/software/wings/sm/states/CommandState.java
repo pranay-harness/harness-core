@@ -95,6 +95,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
@@ -433,8 +434,12 @@ public class CommandState extends State {
       if (commandUnit instanceof ScpCommandUnit) {
         ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
         if (isNotEmpty(scpCommandUnit.getDestinationDirectoryPath())) {
-          scpCommandUnit.setDestinationDirectoryPath(context.renderExpression(
-              scpCommandUnit.getDestinationDirectoryPath(), commandStateExecutionData, artifact));
+          scpCommandUnit.setDestinationDirectoryPath(
+              context.renderExpression(scpCommandUnit.getDestinationDirectoryPath(),
+                  StateExecutionContext.builder()
+                      .stateExecutionData(commandStateExecutionData)
+                      .artifact(artifact)
+                      .build()));
         }
       }
 
@@ -443,12 +448,12 @@ public class CommandState extends State {
       }
       ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
       if (isNotEmpty(execCommandUnit.getCommandPath())) {
-        execCommandUnit.setCommandPath(
-            context.renderExpression(execCommandUnit.getCommandPath(), commandStateExecutionData, artifact));
+        execCommandUnit.setCommandPath(context.renderExpression(execCommandUnit.getCommandPath(),
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
       if (isNotEmpty(execCommandUnit.getCommandString())) {
-        execCommandUnit.setCommandString(
-            context.renderExpression(execCommandUnit.getCommandString(), commandStateExecutionData, artifact));
+        execCommandUnit.setCommandString(context.renderExpression(execCommandUnit.getCommandString(),
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
       if (isNotEmpty(execCommandUnit.getTailPatterns())) {
         renderTailFilePattern(context, commandStateExecutionData, artifact, execCommandUnit);
@@ -461,12 +466,12 @@ public class CommandState extends State {
     List<TailFilePatternEntry> filePatternEntries = execCommandUnit.getTailPatterns();
     for (TailFilePatternEntry filePatternEntry : filePatternEntries) {
       if (isNotEmpty(filePatternEntry.getFilePath())) {
-        filePatternEntry.setFilePath(
-            context.renderExpression(filePatternEntry.getFilePath(), commandStateExecutionData, artifact));
+        filePatternEntry.setFilePath(context.renderExpression(filePatternEntry.getFilePath(),
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
       if (isNotEmpty(filePatternEntry.getPattern())) {
-        filePatternEntry.setPattern(
-            context.renderExpression(filePatternEntry.getPattern(), commandStateExecutionData, artifact));
+        filePatternEntry.setPattern(context.renderExpression(filePatternEntry.getPattern(),
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
     }
     execCommandUnit.setTailPatterns(filePatternEntries);

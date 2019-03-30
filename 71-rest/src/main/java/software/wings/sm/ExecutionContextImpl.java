@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
-import software.wings.api.ShellElement;
 import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
@@ -51,7 +50,6 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.expression.SubstitutionFunctor;
 import software.wings.expression.SweepingOutputFunctor;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -78,17 +76,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Describes execution context for a state machine execution.
- *
- * @author Rishi
- */
 public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final Pattern wildCharPattern = Pattern.compile("[+*/\\\\ &$\"'.|]");
   private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
   private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
 
-  @Inject private transient AppService appService;
   @Inject private transient ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient ExpressionProcessorFactory expressionProcessorFactory;
@@ -163,51 +155,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String renderExpression(String expression) {
-    Map<String, Object> context = prepareContext(false, 0);
+    Map<String, Object> context = prepareContext(null);
     return renderExpression(expression, context);
   }
 
   @Override
-  public String renderExpression(String expression, Object addition) {
-    Map<String, Object> context;
-    if (addition instanceof List) {
-      List<ContextElement> contextElements = (List<ContextElement>) addition;
-      context = new HashMap<>();
-      context.putAll(prepareContext(false, 0));
-      for (ContextElement contextElement : contextElements) {
-        context.putAll(contextElement.paramMap(this));
-      }
-    } else if (addition instanceof StateExecutionData) {
-      context = prepareContext(addition, false, 0);
-    } else if (addition instanceof Artifact) {
-      context = prepareContext(false, 0);
-      Artifact artifact = (Artifact) addition;
-      addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
-    } else {
-      context = prepareContext(false, 0);
-    }
-    return renderExpression(expression, context);
-  }
-
-  @Override
-  public String renderExpression(String expression, Object stateExecutionData, Object addition) {
-    Map<String, Object> context = prepareContext(stateExecutionData, false, 0);
-    if (addition instanceof Artifact) {
-      Artifact artifact = (Artifact) addition;
-      addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
-    }
-    return renderExpression(expression, context);
-  }
-
-  @Override
-  public String renderExpression(String expression, Object stateExecutionData, Object addition,
-      boolean adoptDelegateDecryption, int expressionFunctorToken) {
-    Map<String, Object> context = prepareContext(stateExecutionData, adoptDelegateDecryption, expressionFunctorToken);
-    if (addition instanceof Artifact) {
-      Artifact artifact = (Artifact) addition;
-      addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
-    }
-    return renderExpression(expression, context);
+  public String renderExpression(String expression, StateExecutionContext stateExecutionContext) {
+    return renderExpression(expression, prepareContext(stateExecutionContext));
   }
 
   @Override
@@ -230,14 +184,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Object evaluateExpression(String expression) {
-    Map<String, Object> context = prepareContext(false, 0);
-    return evaluateExpression(expression, context);
+    return evaluateExpression(expression, null);
   }
 
   @Override
-  public Object evaluateExpression(String expression, Object stateExecutionData) {
-    Map<String, Object> context = prepareContext(stateExecutionData, false, 0);
-    return evaluateExpression(expression, context);
+  public Object evaluateExpression(String expression, StateExecutionContext stateExecutionContext) {
+    return normalizeAndEvaluate(
+        expression, prepareContext(stateExecutionContext), normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
   @Override
@@ -382,10 +335,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         expression, context, variableResolverTracker, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
-  public Object evaluateExpression(String expression, Map<String, Object> context) {
-    return normalizeAndEvaluate(expression, context, normalizeStateName(stateExecutionInstance.getDisplayName()));
-  }
-
   private Object normalizeAndEvaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     if (expression == null) {
       return null;
@@ -479,34 +428,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return evaluator.evaluate(expr, evaluatedValueMap);
   }
 
-  public Map<String, Object> prepareContext(
-      Object executionData, boolean adoptDelegateDecryption, int expressionFunctorToken) {
-    Map<String, Object> context = prepareContext(adoptDelegateDecryption, expressionFunctorToken);
-    if (executionData != null) {
-      context.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), executionData);
-    }
-    if (executionData instanceof StateExecutionData) {
-      StateExecutionData stateExecutionData = (StateExecutionData) executionData;
-      if (isNotEmpty(stateExecutionData.getTemplateVariable())) {
-        context.putAll(stateExecutionData.getTemplateVariable());
-      }
-    }
-    return context;
-  }
-
   @Override
   public Map<String, Object> asMap() {
     Map<String, Object> context = new LateBindingMap();
-    context.putAll(prepareContext(false, 0));
+    context.putAll(prepareContext(null));
     return context;
-  }
-
-  private Map<String, Object> prepareContext(boolean adoptDelegateDecryption, int expressionFunctorToken) {
-    Map<String, Object> context = new LateBindingMap();
-    if (contextMap == null) {
-      contextMap = prepareContext(context, adoptDelegateDecryption, expressionFunctorToken);
-    }
-    return contextMap;
   }
 
   private String normalizeStateName(String name) {
@@ -633,11 +559,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private Map<String, Object> prepareContext(
-      Map<String, Object> context, boolean adoptDelegateDecryption, int expressionFunctorToken) {
+  private Map<String, Object> prepareCacheContext(StateExecutionContext stateExecutionContext) {
+    if (contextMap != null) {
+      return contextMap;
+    }
+    contextMap = new LateBindingMap();
+
     // add state execution data
-    stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
+    stateExecutionInstance.getStateExecutionMap().forEach(
+        (key, value) -> contextMap.put(normalizeStateName(key), value));
 
     // add context params
     Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
@@ -646,16 +576,19 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
       Map<String, Object> map = contextElement.paramMap(this);
       if (map != null) {
-        context.putAll(map);
+        contextMap.putAll(map);
       }
     }
 
+    boolean adoptDelegateDecryption = false;
+    if (stateExecutionContext != null) {
+      adoptDelegateDecryption = stateExecutionContext.isAdoptDelegateDecryption();
+    }
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PHASE_PARAM);
 
-    ShellElement shellElement = getContextElement(ContextElementType.SHELL);
-    if (shellElement != null) {
+    if (stateExecutionContext != null && stateExecutionContext.getScriptType() != null) {
       ShellScriptFunctor shellScriptFunctor =
-          ShellScriptFunctor.builder().scriptType(shellElement.getScriptType()).build();
+          ShellScriptFunctor.builder().scriptType(stateExecutionContext.getScriptType()).build();
       evaluator.addFunctor("shell", shellScriptFunctor);
     }
 
@@ -666,29 +599,32 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .managerDecryptionService(managerDecryptionService)
             .secretManager(secretManager)
             .adoptDelegateDecryption(adoptDelegateDecryption)
-            .expressionFunctorToken(expressionFunctorToken);
+            .expressionFunctorToken(
+                stateExecutionContext == null ? 0 : stateExecutionContext.getExpressionFunctorToken());
 
-    context.put(SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(OBTAIN_VALUE).build());
-    context.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
+    contextMap.put(SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(OBTAIN_VALUE).build());
+    contextMap.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
 
-    final EnvironmentVariables environmentVariables = EnvironmentVariables.builder()
-                                                          .executionContext(this)
-                                                          .serviceVariableService(serviceVariableService)
-                                                          .managerDecryptionService(managerDecryptionService)
-                                                          .secretManager(secretManager)
-                                                          .adoptDelegateDecryption(adoptDelegateDecryption)
-                                                          .expressionFunctorToken(expressionFunctorToken)
-                                                          .build();
+    final EnvironmentVariables environmentVariables =
+        EnvironmentVariables.builder()
+            .executionContext(this)
+            .serviceVariableService(serviceVariableService)
+            .managerDecryptionService(managerDecryptionService)
+            .secretManager(secretManager)
+            .adoptDelegateDecryption(adoptDelegateDecryption)
+            .expressionFunctorToken(
+                stateExecutionContext == null ? 0 : stateExecutionContext.getExpressionFunctorToken())
+            .build();
 
-    context.put(ENVIRONMENT_VARIABLE, environmentVariables);
+    contextMap.put(ENVIRONMENT_VARIABLE, environmentVariables);
 
     String workflowExecutionId = getWorkflowExecutionId();
 
-    context.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements(), workflowExecutionId));
+    contextMap.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements(), workflowExecutionId));
 
     final SweepingOutput sweepingOutput = prepareSweepingOutputBuilder(null).build();
 
-    context.put("context",
+    contextMap.put("context",
         SweepingOutputFunctor.builder()
             .sweepingOutputService(sweepingOutputService)
             .appId(sweepingOutput.getAppId())
@@ -697,19 +633,51 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .phaseExecutionId(sweepingOutput.getPhaseExecutionId())
             .build());
 
-    context.put("harnessShellUtils", SubstitutionFunctor.builder().build());
+    contextMap.put("harnessShellUtils", SubstitutionFunctor.builder().build());
 
     Application app = getApp();
     if (app != null) {
-      context.put("secrets",
+      contextMap.put("secrets",
           SecretFunctor.builder()
               .managerDecryptionService(managerDecryptionService)
               .secretManager(secretManager)
               .accountId(app.getAccountId())
               .build());
     }
+    return contextMap;
+  }
 
-    return context;
+  private Map<String, Object> copyIfNeeded(Map<String, Object> map) {
+    return contextMap == map ? new HashMap<>(map) : map;
+  }
+
+  private Map<String, Object> prepareContext(StateExecutionContext stateExecutionContext) {
+    Map<String, Object> map = prepareCacheContext(stateExecutionContext);
+    if (stateExecutionContext == null) {
+      return map;
+    }
+
+    List<ContextElement> contextElements = stateExecutionContext.getContextElements();
+    if (contextElements != null) {
+      for (ContextElement contextElement : contextElements) {
+        map = copyIfNeeded(map);
+        map.putAll(contextElement.paramMap(this));
+      }
+    }
+    StateExecutionData stateExecutionData = stateExecutionContext.getStateExecutionData();
+    if (stateExecutionData != null) {
+      map = copyIfNeeded(map);
+      map.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), stateExecutionData);
+      if (isNotEmpty(stateExecutionData.getTemplateVariable())) {
+        map = copyIfNeeded(map);
+        map.putAll(stateExecutionData.getTemplateVariable());
+      }
+    }
+    if (stateExecutionContext.getArtifact() != null) {
+      map = copyIfNeeded(map);
+      addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, stateExecutionContext.getArtifact());
+    }
+    return map;
   }
 
   @Override
