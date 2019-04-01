@@ -41,6 +41,7 @@ import java.util.Objects;
 public class Application extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+  public static final String APP_ID_KEY = "appId";
 
   @NotEmpty private String name;
   private String description;

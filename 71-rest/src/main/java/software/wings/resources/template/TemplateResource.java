@@ -1,5 +1,6 @@
 package software.wings.resources.template;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
@@ -43,8 +44,9 @@ public class TemplateResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Template>> list(
-      @QueryParam("accountId") String accountId, @BeanParam PageRequest<Template> pageRequest) {
+  public RestResponse<PageResponse<Template>> list(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @BeanParam PageRequest<Template> pageRequest) {
+    pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(templateService.list(pageRequest));
   }
 
@@ -58,9 +60,10 @@ public class TemplateResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
-  public RestResponse<Template> save(@QueryParam("accountId") String accountId, Template template) {
+  public RestResponse<Template> save(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, Template template) {
     template.setAccountId(accountId);
-    template.setAppId(GLOBAL_APP_ID);
+    template.setAppId(appId);
     return new RestResponse<>(templateService.save(template));
   }
 
@@ -75,10 +78,11 @@ public class TemplateResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
-  public RestResponse<Template> update(
-      @QueryParam("accountId") String accountId, @PathParam("templateId") String templateId, Template template) {
+  public RestResponse<Template> update(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
+      Template template) {
     template.setAccountId(accountId);
-    template.setAppId(GLOBAL_APP_ID);
+    template.setAppId(appId);
     template.setUuid(templateId);
     return new RestResponse<>(templateService.update(template));
   }

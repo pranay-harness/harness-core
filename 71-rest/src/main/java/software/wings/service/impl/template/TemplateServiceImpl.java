@@ -6,10 +6,13 @@ import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Account.ACCOUNT_ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Application.APP_ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -83,6 +86,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class TemplateServiceImpl implements TemplateService {
   private static final Logger logger = LoggerFactory.getLogger(TemplateServiceImpl.class);
+  private static final String ACCOUNT = "Account";
+  private static final String APPLICATION = "Application";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, AbstractTemplateProcessor> templateProcessBinder;
@@ -112,7 +117,7 @@ public class TemplateServiceImpl implements TemplateService {
     template.setVersion(Long.valueOf(1));
     template.setKeywords(getKeywords(template));
 
-    String templateUuid = Validator.duplicateCheck(() -> wingsPersistence.save(template), "name", template.getName());
+    String templateUuid = Validator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
     getTemplateVersion(template, templateUuid, template.getType(), template.getName(), CREATED);
 
     // Save Versioned template
@@ -170,6 +175,7 @@ public class TemplateServiceImpl implements TemplateService {
       oldTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
     }
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
+    validateScope(template, oldTemplate);
     List<String> existingKeywords = oldTemplate.getKeywords();
     List<String> generatedKeywords = trimStrings(template.generateKeywords());
     if (isNotEmpty(existingKeywords)) {
@@ -205,6 +211,15 @@ public class TemplateServiceImpl implements TemplateService {
       executorService.submit(() -> updateLinkedEntities(savedTemplate));
     }
     return savedTemplate;
+  }
+
+  private void validateScope(Template template, Template oldTemplate) {
+    if (!template.getAppId().equals(oldTemplate.getAppId())) {
+      String fromScope = oldTemplate.getAppId().equals(GLOBAL_APP_ID) ? ACCOUNT : APPLICATION;
+      String toScope = fromScope.equals(APPLICATION) ? ACCOUNT : APPLICATION;
+      throw new InvalidRequestException(
+          format("Template %s cannot be moved from %s to %s", oldTemplate.getName(), fromScope, toScope));
+    }
   }
 
   private boolean checkTemplateDetailsChanged(Template template, BaseTemplate oldTemplate, BaseTemplate newTemplate) {
@@ -398,8 +413,13 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public String fetchTemplateIdFromUri(String accountId, String templateUri) {
+    return fetchTemplateIdFromUri(accountId, GLOBAL_APP_ID, templateUri);
+  }
+
+  @Override
+  public String fetchTemplateIdFromUri(String accountId, String appId, String templateUri) {
     String folderPath = obtainTemplateFolderPath(templateUri);
-    TemplateFolder templateFolder = templateFolderService.getByFolderPath(accountId, folderPath);
+    TemplateFolder templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath);
     if (templateFolder == null) {
       throw new WingsException("No template folder found with the uri  [" + templateUri + "]");
     }
@@ -411,6 +431,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
                             .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
+                            .filter(APP_ID_KEY, appId)
                             .get();
     if (template == null) {
       throw new WingsException("No template found for the uri [" + templateUri + "]");
@@ -483,7 +504,27 @@ public class TemplateServiceImpl implements TemplateService {
     Template template = null;
     if (isNotEmpty(keyword)) {
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
-                                          .filter(Template.ACCOUNT_ID_KEY, accountId)
+                                          .filter(ACCOUNT_ID_KEY, accountId)
+                                          .filter(APP_ID_KEY, GLOBAL_APP_ID)
+                                          .field(Template.KEYWORDS_KEY)
+                                          .in(asList(keyword.toLowerCase()));
+      List<Template> templates = templateQuery.asList();
+      if (isNotEmpty(templates)) {
+        template = templates.get(0);
+      }
+      if (template != null) {
+        setTemplateDetails(template, null);
+      }
+    }
+    return template;
+  }
+
+  public Template fetchTemplateByKeyword(@NotEmpty String accountId, @NotEmpty String appId, String keyword) {
+    Template template = null;
+    if (isNotEmpty(keyword)) {
+      Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
+                                          .filter(ACCOUNT_ID_KEY, accountId)
+                                          .filter(APP_ID_KEY, appId)
                                           .field(Template.KEYWORDS_KEY)
                                           .in(asList(keyword.toLowerCase()));
       List<Template> templates = templateQuery.asList();

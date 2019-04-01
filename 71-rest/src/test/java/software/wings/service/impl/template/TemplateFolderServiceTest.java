@@ -381,17 +381,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveTemplateFolderAtApplicationLevel() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    TemplateFolder myTemplateFolder =
-        templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid(), APP_ID));
-
-    assertThat(myTemplateFolder).isNotNull();
-    assertThat(myTemplateFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
-    assertThat(myTemplateFolder.getAppId()).isEqualTo(APP_ID);
-    assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_NAME.toLowerCase());
-    assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_DEC.toLowerCase());
-    assertThat(myTemplateFolder.getPathId()).isNotEmpty();
-    assertThat(myTemplateFolder.getPathId().split("/")[0]).isEqualTo(parentFolder.getUuid());
+    TemplateFolder myTemplateFolder = createAppLevelTemplateFolder();
   }
 
   @Test
@@ -468,6 +458,12 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDeleteTemplateFolderApplicationLevel() {
+    TemplateFolder myTemplateFolder = createAppLevelTemplateFolder();
+
+    assertThat(templateFolderService.delete(myTemplateFolder.getUuid())).isTrue();
+  }
+
+  private TemplateFolder createAppLevelTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myTemplateFolder =
         templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid(), APP_ID));
@@ -479,25 +475,14 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_DEC.toLowerCase());
     assertThat(myTemplateFolder.getPathId()).isNotEmpty();
     assertThat(myTemplateFolder.getPathId().split("/")[0]).isEqualTo(parentFolder.getUuid());
-
-    assertThat(templateFolderService.delete(myTemplateFolder.getUuid())).isTrue();
+    return myTemplateFolder;
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldGetTemplateFolderForApplication() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    TemplateFolder myTemplateFolder =
-        templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid(), APP_ID));
-
-    assertThat(myTemplateFolder).isNotNull();
-    assertThat(myTemplateFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
-    assertThat(myTemplateFolder.getAppId()).isEqualTo(APP_ID);
-    assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_NAME.toLowerCase());
-    assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_DEC.toLowerCase());
-    assertThat(myTemplateFolder.getPathId()).isNotEmpty();
-    assertThat(myTemplateFolder.getPathId().split("/")[0]).isEqualTo(parentFolder.getUuid());
-
+    TemplateFolder myTemplateFolder = createAppLevelTemplateFolder();
     TemplateFolder savedTemplateFolder = templateFolderService.get(myTemplateFolder.getUuid());
     assertThat(savedTemplateFolder).isNotNull();
     assertThat(savedTemplateFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
@@ -511,17 +496,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
   public void shouldNotMoveFolderFromApplicationToAccount() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    TemplateFolder myTemplateFolder =
-        templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid(), APP_ID));
-
-    assertThat(myTemplateFolder).isNotNull();
-    assertThat(myTemplateFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
-    assertThat(myTemplateFolder.getAppId()).isEqualTo(APP_ID);
-    assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_NAME.toLowerCase());
-    assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_DEC.toLowerCase());
-    assertThat(myTemplateFolder.getPathId()).isNotEmpty();
-    assertThat(myTemplateFolder.getPathId().split("/")[0]).isEqualTo(parentFolder.getUuid());
+    TemplateFolder myTemplateFolder = createAppLevelTemplateFolder();
     myTemplateFolder.setAppId(GLOBAL_APP_ID);
     templateFolderService.update(myTemplateFolder);
   }

@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
@@ -30,7 +31,10 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V3_INSTALL
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_DEC;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
@@ -57,11 +61,12 @@ import java.util.List;
 import javax.validation.ConstraintViolationException;
 
 public class TemplateServiceTest extends TemplateBaseTest {
+  private static final String MY_START_COMMAND = "My Start Command";
   @Inject private TemplateVersionService templateVersionService;
 
   @Test
   @Category(UnitTests.class)
-  public void shouldSaveTemplate() {
+  public void shouldSaveTemplateAtAccountLevel() {
     Template template = getSshCommandTemplate();
 
     Template savedTemplate = templateService.save(template);
@@ -93,11 +98,13 @@ public class TemplateServiceTest extends TemplateBaseTest {
   @Category(UnitTests.class)
   public void shouldGetTemplate() {
     Template savedTemplate = saveTemplate();
-    Template template;
+    getTemplateAndValidate(savedTemplate, GLOBAL_APP_ID);
+  }
 
-    template = templateService.get(savedTemplate.getUuid());
+  private void getTemplateAndValidate(Template savedTemplate, String globalAppId) {
+    Template template = templateService.get(savedTemplate.getUuid());
     assertThat(template).isNotNull();
-    assertThat(template.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(template.getAppId()).isNotNull().isEqualTo(globalAppId);
     assertThat(template.getKeywords()).isNotEmpty();
     assertThat(template.getKeywords())
         .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
@@ -110,11 +117,15 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   private Template saveTemplate() {
-    Template template = getSshCommandTemplate();
+    return saveTemplate(MY_START_COMMAND, GLOBAL_APP_ID);
+  }
+
+  private Template saveTemplate(String name, String appId) {
+    Template template = getSshCommandTemplate(name, appId);
     Template savedTemplate = templateService.save(template);
 
     assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(appId);
     assertThat(savedTemplate.getKeywords()).isNotEmpty();
     assertThat(savedTemplate.getKeywords()).contains(template.getName().toLowerCase());
     assertThat(savedTemplate.getVersion()).isEqualTo(1);
@@ -231,94 +242,13 @@ public class TemplateServiceTest extends TemplateBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateHttpTemplate() {
-    Template httpTemplate =
-        Template.builder()
-            .name("Ping Response")
-            .appId(GLOBAL_APP_ID)
-            .accountId(GLOBAL_ACCOUNT_ID)
-            .folderPath("Harness/Tomcat Commands")
-            .templateObject(
-                HttpTemplate.builder().assertion("200 ok").url("http://harness.io").header("header").build())
-            .build();
-    Template savedTemplate = templateService.save(httpTemplate);
-
-    assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
-    assertThat(savedTemplate.getVersion()).isEqualTo(1);
-    HttpTemplate savedHttpTemplate = (HttpTemplate) savedTemplate.getTemplateObject();
-    assertThat(savedHttpTemplate).isNotNull();
-    assertThat(savedHttpTemplate.getUrl()).isNotNull().isEqualTo("http://harness.io");
-    assertThat(savedHttpTemplate).isNotNull();
-    assertThat(savedTemplate.getKeywords()).isNotEmpty();
-    assertThat(savedTemplate.getKeywords()).contains(savedTemplate.getName().toLowerCase());
-
-    savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
-
-    HttpTemplate updatedHttpTemplate = HttpTemplate.builder()
-                                           .url("https://harness.io")
-                                           .header(savedHttpTemplate.getHeader())
-                                           .assertion(savedHttpTemplate.getAssertion())
-                                           .build();
-    savedTemplate.setTemplateObject(updatedHttpTemplate);
-    savedTemplate.setName("Another Ping Response");
-
-    Template updatedTemplate = templateService.update(savedTemplate);
-    assertThat(updatedTemplate).isNotNull();
-    assertThat(updatedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
-    assertThat(updatedTemplate.getDescription()).isEqualTo(TEMPLATE_DESC_CHANGED);
-    assertThat(updatedTemplate.getVersion()).isEqualTo(2L);
-    assertThat(updatedTemplate.getTemplateObject()).isNotNull();
-    assertThat(updatedTemplate.getKeywords()).isNotEmpty();
-    assertThat(updatedTemplate.getKeywords()).contains(updatedTemplate.getName().toLowerCase());
-    assertThat(updatedTemplate.getKeywords()).doesNotContain("Ping Response".toLowerCase());
-
-    updatedHttpTemplate = (HttpTemplate) updatedTemplate.getTemplateObject();
-    assertThat(updatedHttpTemplate).isNotNull();
-    assertThat(updatedHttpTemplate.getUrl()).isNotNull().isEqualTo("https://harness.io");
-    assertThat(updatedHttpTemplate).isNotNull();
+    updateHttpTemplate(GLOBAL_APP_ID);
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldDeleteTemplate() {
-    Template template = getSshCommandTemplate();
-
-    Template savedTemplate = templateService.save(template);
-
-    assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
-    assertThat(savedTemplate.getKeywords())
-        .isNotEmpty()
-        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), savedTemplate.getName().toLowerCase());
-    assertThat(savedTemplate.getVersion()).isEqualTo(1);
-    SshCommandTemplate SshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
-    assertThat(SshCommandTemplate).isNotNull();
-    assertThat(SshCommandTemplate.getCommandType()).isEqualTo(START);
-    assertThat(SshCommandTemplate.getCommandUnits()).isNotEmpty();
-    assertThat(SshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
-
-    boolean delete = templateService.delete(savedTemplate.getAccountId(), savedTemplate.getUuid());
-    assertThat(delete).isTrue();
-    Template deletedTemplate;
-    try {
-      deletedTemplate = templateService.get(savedTemplate.getUuid());
-    } catch (WingsException e) {
-      deletedTemplate = null;
-    }
-    assertThat(deletedTemplate).isNull();
-
-    // Verify the versioned template
-    VersionedTemplate versionedTemplate = templateService.getVersionedTemplate(
-        savedTemplate.getAccountId(), savedTemplate.getUuid(), savedTemplate.getVersion());
-    assertThat(versionedTemplate).isNull();
-
-    // Verify the template versions deleted
-    PageRequest templateVersionPageRequest =
-        aPageRequest()
-            .addFilter(TemplateVersion.ACCOUNT_ID_KEY, EQ, savedTemplate.getAccountId())
-            .addFilter(TemplateVersion.TEMPLATE_UUID_KEY, EQ, savedTemplate.getUuid())
-            .build();
-    assertThat(templateVersionService.listTemplateVersions(templateVersionPageRequest).getResponse()).isEmpty();
+    deleteTemplate(GLOBAL_APP_ID);
   }
 
   @Test
@@ -354,7 +284,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
   private void assertTemplateUri(String templateUri) {
     assertThat(templateUri).isNotEmpty();
     assertThat(obtainTemplateFolderPath(templateUri)).isEqualTo("Harness/Tomcat Commands");
-    assertThat(obtainTemplateName(templateUri)).isEqualTo("My Start Command");
+    assertThat(obtainTemplateName(templateUri)).isEqualTo(MY_START_COMMAND);
   }
 
   @Test
@@ -393,6 +323,10 @@ public class TemplateServiceTest extends TemplateBaseTest {
   }
 
   private Template getSshCommandTemplate() {
+    return getSshCommandTemplate(MY_START_COMMAND, GLOBAL_APP_ID);
+  }
+
+  private Template getSshCommandTemplate(String name, String appId) {
     SshCommandTemplate sshCommandTemplate = SshCommandTemplate.builder()
                                                 .commandType(START)
                                                 .commandUnits(asList(anExecCommandUnit()
@@ -404,12 +338,12 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     return Template.builder()
         .templateObject(sshCommandTemplate)
-        .name("My Start Command")
+        .name(name)
         .description(TEMPLATE_DESC)
         .folderPath("Harness/Tomcat Commands")
         .keywords(asList(TEMPLATE_CUSTOM_KEYWORD))
         .gallery(HARNESS_GALLERY)
-        .appId(GLOBAL_APP_ID)
+        .appId(appId)
         .accountId(GLOBAL_ACCOUNT_ID)
         .build();
   }
@@ -568,5 +502,252 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().size()).isEqualTo(4);
     assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().get(0).getName())
         .isEqualTo("Download Artifact");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldSaveTemplateAtAppLevel() {
+    Template template = getSshCommandTemplate(MY_START_COMMAND, APP_ID);
+
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAccountId()).isNotEmpty();
+    assertThat(savedTemplate.getGalleryId()).isNotEmpty();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(APP_ID);
+    assertThat(savedTemplate.getKeywords()).isNotEmpty();
+    assertThat(savedTemplate.getKeywords())
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+
+    SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
+    assertThat(savedSshCommandTemplate).isNotNull();
+    assertThat(savedSshCommandTemplate.getCommandType()).isEqualTo(START);
+    assertThat(savedSshCommandTemplate.getCommandUnits()).isNotEmpty();
+    assertThat(savedSshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetAppLevelTemplate() {
+    Template savedTemplate = saveTemplate(MY_START_COMMAND, APP_ID);
+    getTemplateAndValidate(savedTemplate, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldListAppLevelTemplates() {
+    saveTemplate(MY_START_COMMAND, APP_ID);
+
+    PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, APP_ID).build();
+    List<Template> templates = templateService.list(pageRequest);
+
+    assertThat(templates).isNotEmpty();
+    Template template = templates.stream().findFirst().get();
+
+    assertThat(template).isNotNull();
+    assertThat(template.getAppId()).isNotNull().isEqualTo(APP_ID);
+    assertThat(template.getKeywords())
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAllowSameTemplateNameInAccountAndApplication() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder accountLevelFolder = templateFolderService.save(TemplateFolder.builder()
+                                                                       .name(TEMPLATE_FOLDER_NAME)
+                                                                       .description(TEMPLATE_FOLDER_DEC)
+                                                                       .parentId(parentFolder.getUuid())
+                                                                       .appId(GLOBAL_APP_ID)
+                                                                       .accountId(GLOBAL_ACCOUNT_ID)
+                                                                       .build());
+    assertThat(accountLevelFolder).isNotNull();
+    assertThat(accountLevelFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
+    assertThat(accountLevelFolder.getAppId()).isEqualTo(GLOBAL_APP_ID);
+
+    Template accountTemplate = templateService.save(
+        Template.builder()
+            .name("Ping Response")
+            .appId(GLOBAL_APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .folderId(accountLevelFolder.getUuid())
+            .templateObject(
+                HttpTemplate.builder().assertion("200 ok").url("http://harness.io").header("header").build())
+            .build());
+    assertThat(accountTemplate.getName()).isEqualTo("Ping Response");
+    assertThat(accountTemplate.getAppId()).isEqualTo(GLOBAL_APP_ID);
+
+    TemplateFolder appLevelFolder = templateFolderService.save(TemplateFolder.builder()
+                                                                   .name(TEMPLATE_FOLDER_NAME)
+                                                                   .description(TEMPLATE_FOLDER_DEC)
+                                                                   .parentId(parentFolder.getUuid())
+                                                                   .appId(APP_ID)
+                                                                   .accountId(GLOBAL_ACCOUNT_ID)
+                                                                   .build());
+    assertThat(appLevelFolder).isNotNull();
+    assertThat(appLevelFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
+    assertThat(appLevelFolder.getAppId()).isEqualTo(APP_ID);
+
+    Template appTemplate = templateService.save(
+        Template.builder()
+            .name("Ping Response")
+            .appId(APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .folderId(appLevelFolder.getUuid())
+            .templateObject(
+                HttpTemplate.builder().assertion("200 ok").url("http://harness.io").header("header").build())
+            .build());
+    assertThat(appTemplate.getName()).isEqualTo("Ping Response");
+    assertThat(appTemplate.getAppId()).isEqualTo(APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchApplicationLevelTemplateByKeyword() {
+    Template template = getSshCommandTemplate(MY_START_COMMAND, APP_ID);
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    Template template1 = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, TEMPLATE_CUSTOM_KEYWORD);
+    assertThat(template1).isNull();
+    template1 = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, APP_ID, TEMPLATE_CUSTOM_KEYWORD);
+    assertThat(template1.getUuid()).isEqualTo(savedTemplate.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateApplicationLevelHttpTemplate() {
+    updateHttpTemplate(APP_ID);
+  }
+
+  private void updateHttpTemplate(String appId) {
+    Template httpTemplate =
+        Template.builder()
+            .name("Ping Response")
+            .appId(appId)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .folderPath("Harness/Tomcat Commands")
+            .templateObject(
+                HttpTemplate.builder().assertion("200 ok").url("http://harness.io").header("header").build())
+            .build();
+    Template savedTemplate = templateService.save(httpTemplate);
+
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(appId);
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    HttpTemplate savedHttpTemplate = (HttpTemplate) savedTemplate.getTemplateObject();
+    assertThat(savedHttpTemplate).isNotNull();
+    assertThat(savedHttpTemplate.getUrl()).isNotNull().isEqualTo("http://harness.io");
+    assertThat(savedHttpTemplate).isNotNull();
+    assertThat(savedTemplate.getKeywords()).isNotEmpty();
+    assertThat(savedTemplate.getKeywords()).contains(savedTemplate.getName().toLowerCase());
+
+    savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
+
+    HttpTemplate updatedHttpTemplate = HttpTemplate.builder()
+                                           .url("https://harness.io")
+                                           .header(savedHttpTemplate.getHeader())
+                                           .assertion(savedHttpTemplate.getAssertion())
+                                           .build();
+    savedTemplate.setTemplateObject(updatedHttpTemplate);
+    savedTemplate.setName("Another Ping Response");
+
+    Template updatedTemplate = templateService.update(savedTemplate);
+    assertThat(updatedTemplate).isNotNull();
+    assertThat(updatedTemplate.getAppId()).isNotNull().isEqualTo(appId);
+    assertThat(updatedTemplate.getDescription()).isEqualTo(TEMPLATE_DESC_CHANGED);
+    assertThat(updatedTemplate.getVersion()).isEqualTo(2L);
+    assertThat(updatedTemplate.getTemplateObject()).isNotNull();
+    assertThat(updatedTemplate.getKeywords()).isNotEmpty();
+    assertThat(updatedTemplate.getKeywords()).contains(updatedTemplate.getName().toLowerCase());
+    assertThat(updatedTemplate.getKeywords()).doesNotContain("Ping Response".toLowerCase());
+
+    updatedHttpTemplate = (HttpTemplate) updatedTemplate.getTemplateObject();
+    assertThat(updatedHttpTemplate).isNotNull();
+    assertThat(updatedHttpTemplate.getUrl()).isNotNull().isEqualTo("https://harness.io");
+    assertThat(updatedHttpTemplate).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldDeleteApplicationLevelTemplatesByFolder() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder appLevelFolder = templateFolderService.save(TemplateFolder.builder()
+                                                                   .name(TEMPLATE_FOLDER_NAME)
+                                                                   .description(TEMPLATE_FOLDER_DEC)
+                                                                   .parentId(parentFolder.getUuid())
+                                                                   .appId(APP_ID)
+                                                                   .accountId(GLOBAL_ACCOUNT_ID)
+                                                                   .build());
+    assertThat(appLevelFolder).isNotNull();
+    assertThat(appLevelFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
+    assertThat(appLevelFolder.getAppId()).isEqualTo(APP_ID);
+
+    Template httpTemplate =
+        Template.builder()
+            .name("Ping Response")
+            .appId(APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .folderPath("Harness/My Template Folder")
+            .folderId(appLevelFolder.getUuid())
+            .templateObject(
+                HttpTemplate.builder().assertion("200 ok").url("http://harness.io").header("header").build())
+            .build();
+    Template savedTemplate = templateService.save(httpTemplate);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedTemplate.getName()).isEqualTo("Ping Response");
+
+    assertTrue(templateService.deleteByFolder(appLevelFolder));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldDeleteApplicationLevelTemplate() {
+    deleteTemplate(APP_ID);
+  }
+
+  private void deleteTemplate(String appId) {
+    Template template;
+    if (appId.equals(APP_ID)) {
+      template = getSshCommandTemplate(MY_START_COMMAND, APP_ID);
+    } else {
+      template = getSshCommandTemplate();
+    }
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(appId);
+    assertThat(savedTemplate.getKeywords())
+        .isNotEmpty()
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), savedTemplate.getName().toLowerCase());
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    SshCommandTemplate SshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
+    assertThat(SshCommandTemplate).isNotNull();
+    assertThat(SshCommandTemplate.getCommandType()).isEqualTo(START);
+    assertThat(SshCommandTemplate.getCommandUnits()).isNotEmpty();
+    assertThat(SshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
+
+    boolean delete = templateService.delete(savedTemplate.getAccountId(), savedTemplate.getUuid());
+    assertThat(delete).isTrue();
+    Template deletedTemplate;
+    try {
+      deletedTemplate = templateService.get(savedTemplate.getUuid());
+    } catch (WingsException e) {
+      deletedTemplate = null;
+    }
+    assertThat(deletedTemplate).isNull();
+
+    // Verify the versioned template
+    VersionedTemplate versionedTemplate = templateService.getVersionedTemplate(
+        savedTemplate.getAccountId(), savedTemplate.getUuid(), savedTemplate.getVersion());
+    assertThat(versionedTemplate).isNull();
+
+    // Verify the template versions deleted
+    PageRequest templateVersionPageRequest =
+        aPageRequest()
+            .addFilter(TemplateVersion.ACCOUNT_ID_KEY, EQ, savedTemplate.getAccountId())
+            .addFilter(TemplateVersion.APP_ID_KEY, EQ, appId)
+            .addFilter(TemplateVersion.TEMPLATE_UUID_KEY, EQ, savedTemplate.getUuid())
+            .build();
+    assertThat(templateVersionService.listTemplateVersions(templateVersionPageRequest).getResponse()).isEmpty();
   }
 }
