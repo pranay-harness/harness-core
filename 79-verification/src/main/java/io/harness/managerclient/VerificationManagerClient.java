@@ -66,6 +66,10 @@ public interface VerificationManagerClient {
   Call<RestResponse<Boolean>> triggerWorkflowDataCollection(
       @Query("analysisContextId") String contextId, @Query("startDataCollectionMinute") long collectionMinute);
 
+  @GET("harness-api-keys/validate")
+  Call<RestResponse<Boolean>> validateHarnessApiKey(
+      @Query("clientType") String clientType, @Query("apiKey") String apiKey);
+
   @POST("alerts/open-cv-alert")
   Call<RestResponse<Boolean>> triggerCVAlert(
       @Query("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData);

@@ -361,7 +361,7 @@ public class LicenseServiceImpl implements LicenseService {
   }
 
   @Override
-  public Account updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo) {
+  public boolean updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo) {
     Account accountInDB = accountService.get(accountId);
     notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
 
@@ -385,8 +385,7 @@ public class LicenseServiceImpl implements LicenseService {
     //    refreshUsersForAccountUpdate(updatedAccount);
 
     eventPublishHelper.publishLicenseChangeEvent(accountId, oldAccountType, licenseInfo.getAccountType());
-
-    return updatedAccount;
+    return true;
   }
 
   @Override

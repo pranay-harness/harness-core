@@ -16,7 +16,7 @@ public interface LicenseService {
 
   Account addLicenseInfo(Account account);
 
-  Account updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo);
+  boolean updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo);
 
   Account updateAccountSalesContacts(@NotEmpty String accountId, List<String> salesContacts);
 

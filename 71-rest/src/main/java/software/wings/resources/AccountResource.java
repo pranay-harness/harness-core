@@ -124,9 +124,9 @@ public class AccountResource {
   @Path("license/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Account> updateAccountLicense(
+  public RestResponse<Boolean> updateAccountLicense(
       @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
-    RestResponse<Account> response =
+    RestResponse<Boolean> response =
         accountPermissionUtils.checkIfHarnessUser("User not allowed to update account license");
     if (response == null) {
       response = new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));

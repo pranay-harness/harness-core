@@ -13,35 +13,35 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.beans.GlobalApiKey.ProviderType;
-import software.wings.service.intfc.GlobalApiKeyService;
+import software.wings.beans.HarnessApiKey.ClientType;
+import software.wings.service.intfc.HarnessApiKeyService;
 
 /**
  *
  * @author rktummala
  */
-public class GlobalApiKeyServiceTest extends WingsBaseTest {
-  @InjectMocks @Inject private GlobalApiKeyService globalApiKeyService;
+public class HarnessClientApiKeyServiceTest extends WingsBaseTest {
+  @InjectMocks @Inject private HarnessApiKeyService harnessApiKeyService;
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   @Category(UnitTests.class)
   public void testCRUD() {
-    String generatedApiKey = globalApiKeyService.generate(ProviderType.PROMETHEUS);
+    String generatedApiKey = harnessApiKeyService.generate(ClientType.PROMETHEUS.name());
     assertNotNull(generatedApiKey);
 
-    String keyFromGet = globalApiKeyService.get(ProviderType.PROMETHEUS);
+    String keyFromGet = harnessApiKeyService.get(ClientType.PROMETHEUS.name());
     assertEquals(keyFromGet, generatedApiKey);
 
-    String salesForceKey = globalApiKeyService.generate(ProviderType.SALESFORCE);
+    String salesForceKey = harnessApiKeyService.generate(ClientType.SALESFORCE.name());
     assertNotEquals(generatedApiKey, salesForceKey);
 
     thrown.expect(Exception.class);
-    globalApiKeyService.generate(ProviderType.PROMETHEUS);
+    harnessApiKeyService.generate(ClientType.PROMETHEUS.name());
 
-    globalApiKeyService.delete(ProviderType.PROMETHEUS);
+    harnessApiKeyService.delete(ClientType.PROMETHEUS.name());
 
     thrown.expect(Exception.class);
-    globalApiKeyService.get(ProviderType.PROMETHEUS);
+    harnessApiKeyService.get(ClientType.PROMETHEUS.name());
   }
 }
