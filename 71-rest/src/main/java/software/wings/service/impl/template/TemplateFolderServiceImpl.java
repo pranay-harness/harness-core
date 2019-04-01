@@ -5,10 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
 import static software.wings.beans.template.TemplateFolder.GALLERY_ID_KEY;
 import static software.wings.beans.template.TemplateFolder.NAME_KEY;
@@ -60,6 +62,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class TemplateFolderServiceImpl implements TemplateFolderService {
   private static final Logger logger = LoggerFactory.getLogger(TemplateFolderServiceImpl.class);
+  private static final String ACCOUNT = "Account";
+  private static final String APPLICATION = "Application";
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
@@ -108,6 +113,10 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     if (savedTemplateFolder == null) {
       throw new WingsException("Template Folder [" + templateFolder.getName() + "] was deleted", USER);
     }
+    // not allowing to move app level template to account level template and vice-versa for now - will be changed
+    // in later PR that deals with export of templates
+    validateScope(templateFolder, savedTemplateFolder);
+
     Query<TemplateFolder> query =
         wingsPersistence.createQuery(TemplateFolder.class).field(ID_KEY).equal(savedTemplateFolder.getUuid());
     UpdateOperations<TemplateFolder> operations = wingsPersistence.createUpdateOperations(TemplateFolder.class);
@@ -124,6 +133,15 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     operations.set("keywords", getKeywords(templateFolder));
     Validator.duplicateCheck(() -> wingsPersistence.update(query, operations), "name", templateFolder.getName());
     return get(savedTemplateFolder.getUuid());
+  }
+
+  private void validateScope(TemplateFolder templateFolder, TemplateFolder savedTemplateFolder) {
+    if (!templateFolder.getAppId().equals(savedTemplateFolder.getAppId())) {
+      String fromScope = savedTemplateFolder.getAppId().equals(GLOBAL_APP_ID) ? ACCOUNT : APPLICATION;
+      String toScope = fromScope.equals(APPLICATION) ? ACCOUNT : APPLICATION;
+      throw new InvalidRequestException(
+          format("TemplateFolder %s cannot be moved from %s to %s", savedTemplateFolder.getName(), fromScope, toScope));
+    }
   }
 
   @Override
@@ -242,27 +260,87 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
         }
       }
 
-      List<String> parentUuids =
-          templateFolders.stream()
-              .filter(templateFolder -> isNotEmpty(templateFolder.getPathId()))
-              .flatMap(templateFolder -> Arrays.stream(templateFolder.getPathId().split("/")).distinct())
-              .collect(Collectors.toList());
-      templateFolders.addAll(getTemplateFolderUuids(accountId, parentUuids));
+      getParentUuids(accountId, templateFolders);
     }
 
     List<Template> templates = templateQuery.asList();
-    List<String> templateFolderUuids =
-        templates.stream()
-            .flatMap(template -> Arrays.stream(template.getFolderPathId().split("/")).distinct())
-            .collect(Collectors.toList());
+    List<String> templateFolderUuids = getTemplateFolderUuids(templates);
 
     List<TemplateFolder> templateParentFolders = getTemplateFolderUuids(accountId, templateFolderUuids);
     templateFolders.addAll(templateParentFolders);
-    Map<String, Long> folderIdChildCountMap = templateFolders.stream().collect(Collectors.toMap(Base::getUuid,
+    Map<String, Long> folderIdChildCountMap = getFolderIdChildCountMap(templateFolders, templates);
+    return constructTemplateTree(templateFolders, folderIdChildCountMap);
+  }
+
+  @Override
+  public TemplateFolder getTemplateTree(String accountId, String appId, String keyword, List<String> templateTypes) {
+    // Get all app level template folders
+    Query<TemplateFolder> folderQuery =
+        wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, accountId).filter(APP_ID_KEY, appId);
+
+    // Get all templates belonging to appId
+    Query<Template> templateQuery =
+        wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID_KEY, accountId).filter(APP_ID_KEY, appId);
+
+    if (isNotEmpty(keyword)) {
+      folderQuery = folderQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
+      templateQuery = templateQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
+    }
+
+    List<TemplateFolder> templateFolders = new ArrayList<>();
+    boolean contentOnlySearch = false;
+    if (isNotEmpty(templateTypes)) {
+      templateQuery = templateQuery.field(TYPE_KEY).in(templateTypes);
+      contentOnlySearch = true;
+    }
+    if (!contentOnlySearch) {
+      templateFolders = folderQuery.asList();
+
+      // Get root template folder
+      TemplateGallery templateGallery = templateGalleryService.getByAccount(accountId);
+      if (templateGallery != null) {
+        TemplateFolder rootTemplateFolder = getRootLevelFolder(accountId, templateGallery.getUuid());
+        if (rootTemplateFolder != null) {
+          templateFolders.add(rootTemplateFolder);
+          templateFolders.addAll(wingsPersistence.createQuery(TemplateFolder.class)
+                                     .filter(ACCOUNT_ID_KEY, accountId)
+                                     .filter(APP_ID_KEY, appId)
+                                     .filter(GALLERY_ID_KEY, rootTemplateFolder.getGalleryId())
+                                     .asList());
+        }
+      }
+      getParentUuids(accountId, templateFolders);
+    }
+
+    List<Template> templates = templateQuery.asList();
+    List<String> templateFolderUuids = getTemplateFolderUuids(templates);
+
+    List<TemplateFolder> templateParentFolders = getTemplateFolderUuids(accountId, templateFolderUuids);
+    templateFolders.addAll(templateParentFolders);
+    Map<String, Long> folderIdChildCountMap = getFolderIdChildCountMap(templateFolders, templates);
+    return constructTemplateTree(templateFolders, folderIdChildCountMap);
+  }
+
+  private Map<String, Long> getFolderIdChildCountMap(List<TemplateFolder> templateFolders, List<Template> templates) {
+    return templateFolders.stream().collect(Collectors.toMap(Base::getUuid,
         templateFolder
         -> templates.stream().filter(t -> t.getFolderPathId().contains(templateFolder.getUuid())).count(),
         (a, b) -> b));
-    return constructTemplateTree(templateFolders, folderIdChildCountMap);
+  }
+
+  private List<String> getTemplateFolderUuids(List<Template> templates) {
+    return templates.stream()
+        .flatMap(template -> Arrays.stream(template.getFolderPathId().split("/")).distinct())
+        .collect(Collectors.toList());
+  }
+
+  private void getParentUuids(String accountId, List<TemplateFolder> templateFolders) {
+    List<String> parentUuids =
+        templateFolders.stream()
+            .filter(templateFolder -> isNotEmpty(templateFolder.getPathId()))
+            .flatMap(templateFolder -> Arrays.stream(templateFolder.getPathId().split("/")).distinct())
+            .collect(Collectors.toList());
+    templateFolders.addAll(getTemplateFolderUuids(accountId, parentUuids));
   }
 
   private List<TemplateFolder> getTemplateFolderUuids(String accountId, List<String> parentUuids) {
@@ -306,9 +384,14 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
 
   @Override
   public TemplateFolder getByFolderPath(String accountId, String folderPath) {
+    return getByFolderPath(accountId, GLOBAL_APP_ID, folderPath);
+  }
+
+  @Override
+  public TemplateFolder getByFolderPath(String accountId, String appId, String folderPath) {
     String[] folderPaths = folderPath.split("/");
     int beginIndex = folderPath.lastIndexOf('/');
-    List<TemplateFolder> templateFolders = getTemplateFolders(accountId, folderPath.substring(beginIndex + 1));
+    List<TemplateFolder> templateFolders = getTemplateFolders(accountId, appId, folderPath.substring(beginIndex + 1));
     for (TemplateFolder templateFolder : templateFolders) {
       // Verify the length of the parent folder matches the length of the given folder path
       // Otherwise, ignore
@@ -327,9 +410,10 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     return null;
   }
 
-  private List<TemplateFolder> getTemplateFolders(String accountId, String folderName) {
+  private List<TemplateFolder> getTemplateFolders(String accountId, String appId, String folderName) {
     return wingsPersistence.createQuery(TemplateFolder.class)
         .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(APP_ID_KEY, appId)
         .filter("name", folderName)
         .asList();
   }
