@@ -9,7 +9,9 @@ public interface TemplateTestConstants {
   String TEMPLATE_DESC_CHANGED = "Super awesome template";
   String TEMPLATE_CUSTOM_KEYWORD = "My custom keyword";
   String TEMPLATE_FOLDER_NAME = "My Template Folder";
+  String TEMPLATE_FOLDER_NAME_2 = "My Template Folder";
   String TEMPLATE_FOLDER_DEC = "An awesome template folder";
   String TEMPLATE_ID = "TEMPLATE_ID";
   String TEMPLATE_ACCOUNT = "Template Account";
+  String GLOBAL_FOLDER = "GLOBAL FOLDER";
 }

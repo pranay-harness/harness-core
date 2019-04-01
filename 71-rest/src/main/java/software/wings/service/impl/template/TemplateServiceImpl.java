@@ -323,6 +323,11 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
+  public TemplateFolder getTemplateTree(String accountId, String appId, String keyword, List<String> templateTypes) {
+    return templateFolderService.getTemplateTree(accountId, appId, keyword, templateTypes);
+  }
+
+  @Override
   public void updateLinkedEntities(Template savedTemplate) {
     AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(savedTemplate);
     abstractTemplateProcessor.updateLinkedEntities(savedTemplate);

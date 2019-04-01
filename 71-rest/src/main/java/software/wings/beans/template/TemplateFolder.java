@@ -38,7 +38,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Indexes(@Index(options = @IndexOptions(name = "duplicateKey", unique = true),
     fields = { @Field("accountId")
-               , @Field("name"), @Field("pathId") }))
+               , @Field("name"), @Field("pathId"), @Field("appId") }))
 public class TemplateFolder extends Base implements KeywordsAware {
   public static final String GALLERY_ID_KEY = "galleryId";
   public static final String KEYWORDS_KEY = "keywords";

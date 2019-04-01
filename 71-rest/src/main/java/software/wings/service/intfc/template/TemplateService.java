@@ -38,6 +38,9 @@ public interface TemplateService extends OwnedByAccount {
 
   TemplateFolder getTemplateTree(@NotEmpty String accountId, String keyword, List<String> templateTypes);
 
+  TemplateFolder getTemplateTree(
+      @NotEmpty String accountId, @NotEmpty String appId, String keyword, List<String> templateTypes);
+
   void updateLinkedEntities(Template updatedTemplate);
 
   boolean deleteByFolder(@Valid TemplateFolder templateFolder);

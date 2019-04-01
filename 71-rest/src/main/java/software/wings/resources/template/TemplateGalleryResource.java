@@ -24,6 +24,7 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -117,9 +118,9 @@ public class TemplateGalleryResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
-  public RestResponse<TemplateFolder> saveFolder(
-      @QueryParam("accountId") String accountId, TemplateFolder templateFolder) {
-    templateFolder.setAppId(GLOBAL_APP_ID);
+  public RestResponse<TemplateFolder> saveFolder(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, TemplateFolder templateFolder) {
+    templateFolder.setAppId(appId);
     templateFolder.setAccountId(accountId);
     if (EmptyPredicate.isEmpty(templateFolder.getParentId())) {
       throw new WingsException("Root folder can not be added. Only one root folder supported ", WingsException.USER);
@@ -138,8 +139,9 @@ public class TemplateGalleryResource {
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<TemplateFolder> updateFolder(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("templateFolderId") String templateFolderId, TemplateFolder templateFolder) {
-    templateFolder.setAppId(GLOBAL_APP_ID);
+    templateFolder.setAppId(appId);
     templateFolder.setUuid(templateFolderId);
     return new RestResponse<>(templateFolderService.update(templateFolder));
   }

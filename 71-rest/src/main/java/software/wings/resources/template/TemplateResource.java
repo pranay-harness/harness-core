@@ -23,6 +23,7 @@ import software.wings.service.intfc.template.TemplateVersionService;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -138,9 +139,9 @@ public class TemplateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<TemplateFolder> getTemplateTree(@QueryParam("accountId") String accountId,
-      @QueryParam("folderId") String folderId, @QueryParam("keyword") String keyword,
-      @QueryParam("type") List<String> templateTypes) {
-    return new RestResponse<>(templateService.getTemplateTree(accountId, keyword, templateTypes));
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("folderId") String folderId,
+      @QueryParam("keyword") String keyword, @QueryParam("type") List<String> templateTypes) {
+    return new RestResponse<>(templateService.getTemplateTree(accountId, appId, keyword, templateTypes));
   }
 
   @GET
