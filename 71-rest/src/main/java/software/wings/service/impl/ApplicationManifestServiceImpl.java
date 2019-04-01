@@ -376,10 +376,21 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
+  private void validateAppManifestForEnvironment(ApplicationManifest appManifest) {
+    if (isNotBlank(appManifest.getEnvId())) {
+      if (!StoreType.Local.equals(appManifest.getStoreType()) && !StoreType.Remote.equals(appManifest.getStoreType())) {
+        throw new InvalidRequestException(
+            "Only local and remote store types are allowed for values.yaml in environment");
+      }
+    }
+  }
+
   private void validateApplicationManifest(ApplicationManifest applicationManifest) {
     if (isBlank(applicationManifest.getServiceId()) && isBlank(applicationManifest.getEnvId())) {
       throw new InvalidRequestException("Both envId and serviceId cannot be empty for application manifest", USER);
     }
+
+    validateAppManifestForEnvironment(applicationManifest);
 
     GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
 
