@@ -55,6 +55,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -87,6 +88,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private DelegateService delegateService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
   @Inject private AwsCommandHelper awsCommandHelper;
+  @Inject private PermitService permitService;
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
@@ -116,7 +118,12 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream == null) {
       throw new WingsException("Artifact Stream was deleted", USER);
     }
-    return artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
+    final Artifact artifact = artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
+    if (artifactStream.getFailedCronAttempts() != 0) {
+      artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
+      permitService.releasePermitByKey(artifactStream.getUuid());
+    }
+    return artifact;
   }
 
   @Override

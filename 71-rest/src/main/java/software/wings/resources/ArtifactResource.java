@@ -20,6 +20,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.PermitService;
 
 import java.io.File;
 import javax.ws.rs.BeanParam;
@@ -49,6 +50,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 public class ArtifactResource {
   private ArtifactService artifactService;
   private ArtifactStreamService artifactStreamService;
+  private PermitService permitService;
 
   /**
    * Instantiates a new artifact resource.
@@ -57,9 +59,11 @@ public class ArtifactResource {
    * @param artifactStreamService
    */
   @Inject
-  public ArtifactResource(ArtifactService artifactService, ArtifactStreamService artifactStreamService) {
+  public ArtifactResource(
+      ArtifactService artifactService, ArtifactStreamService artifactStreamService, PermitService permitService) {
     this.artifactService = artifactService;
     this.artifactStreamService = artifactStreamService;
+    this.permitService = permitService;
   }
 
   /**
@@ -109,7 +113,12 @@ public class ArtifactResource {
     artifact.setAppId(appId);
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifact.getArtifactStreamId());
     artifact.setDisplayName(artifactStream.fetchArtifactDisplayName(artifact.getBuildNo()));
-    return new RestResponse<>(artifactService.create(artifact));
+    Artifact savedArtifact = artifactService.create(artifact);
+    if (artifactStream.getFailedCronAttempts() != 0) {
+      artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
+      permitService.releasePermitByKey(artifactStream.getUuid());
+    }
+    return new RestResponse<>(savedArtifact);
   }
 
   /**

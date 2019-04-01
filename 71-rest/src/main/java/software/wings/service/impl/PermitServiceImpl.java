@@ -1,20 +1,17 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.Permit.PERMIT_KEY_ID;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
-import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Permit;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PermitService;
 
-/**
- * Created by anubhaw on 7/17/18.
- */
 @Singleton
 public class PermitServiceImpl implements PermitService {
   @Inject private WingsPersistence wingsPersistence;
@@ -38,41 +35,12 @@ public class PermitServiceImpl implements PermitService {
   }
 
   @Override
-  public boolean releasePermit(String permitId) {
-    Query<Permit> query = wingsPersistence.createQuery(Permit.class).field(Mapper.ID_KEY).equal(permitId);
-    Permit permit = query.get();
+  public boolean releasePermitByKey(String key) {
+    Permit permit = wingsPersistence.createQuery(Permit.class).filter(PERMIT_KEY_ID, key).get();
     if (permit == null) {
-      logger.info("Permit [{}] already deleted", permitId);
+      logger.info("Permit with key [{}] already deleted", key);
       return true;
     }
-    return wingsPersistence.delete(query);
+    return wingsPersistence.delete(permit);
   }
-
-  //  @Override
-  //  public boolean releasePermit(String permitId, boolean withFailure) {
-  //    Query<Permit> query = wingsPersistence.createQuery(Permit.class).field(Mapper.ID_KEY).equal(permitId);
-  //    Permit permit = query.get();
-  //    if (permit == null) {
-  //      logger.info("Permit [{}] already deleted", permitId);
-  //      return true;
-  //    }
-  //
-  //    if (withFailure) {
-  //      int failedAttempt = (permit.getFailedAttempt() + 1) % BACKOFF_MULTIPLIER.length;
-  //      long updatedExpiry = permit.getExpireAt().getTime() + permit.getLeaseDuration() * failedAttempt;
-  //      Date expireAt = new Date(updatedExpiry); // TODO:: extend same date object
-  //      UpdateResults update = wingsPersistence.update(permit,
-  //          wingsPersistence.createUpdateOperations(Permit.class)
-  //              .set("failedAttempt", failedAttempt)
-  //              .set("expireAt", expireAt));
-  //      if (update.getUpdatedExisting()) {
-  //        logger.info("Permit updated with new expiry [{}] on [{}] failed attempt", updatedExpiry, failedAttempt);
-  //      } else {
-  //        logger.warn("Expiry update failed for Permit [{}]", permit);
-  //      }
-  //    } else {
-  //      return wingsPersistence.delete(query);
-  //    }
-  //    return true;
-  //  }
 }
