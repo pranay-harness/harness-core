@@ -736,7 +736,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Value
   @Builder
-  static class Tree implements Distributable, Ordinal {
+  public static class Tree implements Distributable, Ordinal {
     public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(Tree.class).getSerialVersionUID();
 
     private long contextOrder;

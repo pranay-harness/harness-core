@@ -49,6 +49,7 @@ import io.harness.exception.KmsOperationException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.rest.RestResponse;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,6 +176,7 @@ public class HKryo extends Kryo {
     register(ErrorCode.class, 5233);
     register(Level.class, 5590);
     register(ResponseMessage.class, 5316);
+    register(RestResponse.class, 5224);
 
     register(DelegateRetryableException.class, 5521);
     register(ExplanationException.class, 5324);
