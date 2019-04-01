@@ -99,6 +99,9 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       String hostNameField, String hostName, List<EncryptedDataDetail> encryptedDataDetails,
       ThirdPartyApiCallLog apiCallLog) {
     logger.info("Starting to fetch test log data by host for sumo logic");
+    if (apiCallLog == null) {
+      apiCallLog = createApiCallLog(accountId, GLOBAL_APP_ID, null);
+    }
 
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(5);
     long endTime = Timestamp.currentMinuteBoundary();
@@ -108,7 +111,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
                                                            .query(query)
                                                            .encryptedDataDetails(encryptedDataDetails)
                                                            .build(),
-        "1m", null, startTime, endTime, true, 5, 0, null);
+        "1m", null, startTime, endTime, true, 5, 0, apiCallLog);
 
     if (isEmpty(responseWithoutHost) || isEmpty(hostName)) {
       return VerificationNodeDataSetupResponse.builder()
@@ -124,7 +127,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
                                                           .query(query)
                                                           .encryptedDataDetails(encryptedDataDetails)
                                                           .build(),
-          "1m", hostName, startTime, endTime, false, 5, 0, null);
+          "1m", hostName, startTime, endTime, false, 5, 0, apiCallLog);
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(
