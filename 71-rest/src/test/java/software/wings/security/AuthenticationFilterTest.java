@@ -14,6 +14,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.security.AuthenticationFilter.EXTERNAL_FACING_API_HEADER;
+import static software.wings.security.AuthenticationFilter.USER_IDENTITY_HEADER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
@@ -142,8 +143,27 @@ public class AuthenticationFilterTest {
     doReturn(false).when(authenticationFilter).delegateAPI();
     doReturn(false).when(authenticationFilter).customApi();
     doReturn(true).when(authenticationFilter).identityServiceAPI();
+    doReturn(true).when(authenticationFilter).identityServiceAPI();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testRequestAuthenticatedByIdentitySvc() throws IOException {
+    when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("IdentityService token");
+    when(context.getHeaderString(USER_IDENTITY_HEADER)).thenReturn("userId");
+    doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
+    doReturn(false).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
+    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authenticationFilter).customApi();
+    doReturn(false).when(authenticationFilter).identityServiceAPI();
+    doReturn(true).when(authenticationFilter).isAuthenticatedByIdentitySvc(any(ContainerRequestContext.class));
+    User user = mock(User.class);
+    doReturn(user).when(userService).getUserFromCacheOrDB("userId");
+    authenticationFilter.filter(context);
+    assertThat(UserThreadLocal.get()).isNotNull();
   }
 
   @Test

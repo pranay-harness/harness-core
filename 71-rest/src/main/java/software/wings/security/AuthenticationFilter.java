@@ -3,6 +3,7 @@ package software.wings.security;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static javax.ws.rs.HttpMethod.OPTIONS;
@@ -52,6 +53,7 @@ import javax.ws.rs.core.Response;
 @Priority(AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
   @VisibleForTesting public static final String EXTERNAL_FACING_API_HEADER = "X-Api-Key";
+  @VisibleForTesting public static final String USER_IDENTITY_HEADER = "X-Identity-User";
   private static final int NUM_MANAGERS = 3;
 
   @Context private ResourceInfo resourceInfo;
@@ -102,6 +104,20 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       throw new WingsException(INVALID_TOKEN, USER);
     }
 
+    if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
+      String identityServiceToken =
+          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
+      secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
+      String userId = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
+      User user = userService.getUserFromCacheOrDB(userId);
+      if (user != null) {
+        UserThreadLocal.set(user);
+        return;
+      } else {
+        throw new WingsException(USER_DOES_NOT_EXIST, USER);
+      }
+    }
+
     if (isIdentityServiceRequest(containerRequestContext)) {
       String identityServiceToken =
           substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
@@ -128,6 +144,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     throw new WingsException(INVALID_CREDENTIAL, USER);
+  }
+
+  protected boolean isAuthenticatedByIdentitySvc(ContainerRequestContext containerRequestContext) {
+    String value = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
+    return isNotEmpty(value);
   }
 
   private void ensureValidQPM(String key) {
