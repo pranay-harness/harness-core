@@ -1,5 +1,7 @@
 package software.wings.service.impl.prometheus;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.PrometheusConfig;
@@ -14,7 +16,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-public class PrometheusDataCollectionInfo {
+public class PrometheusDataCollectionInfo implements ExecutionCapabilityDemander {
   private PrometheusConfig prometheusConfig;
   private String applicationId;
   private String stateExecutionId;
@@ -28,4 +30,9 @@ public class PrometheusDataCollectionInfo {
   private Map<String, String> hosts;
   private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
   private int dataCollectionMinute;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return prometheusConfig.fetchRequiredExecutionCapabilities();
+  }
 }

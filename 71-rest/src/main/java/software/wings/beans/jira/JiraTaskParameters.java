@@ -1,17 +1,21 @@
 package software.wings.beans.jira;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.JiraConfig;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.security.encryption.EncryptedDataDetail;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 @Data
 @Builder
-public class JiraTaskParameters {
+public class JiraTaskParameters implements ExecutionCapabilityDemander {
   private JiraConfig jiraConfig;
   private JiraAction jiraAction;
   private String project;
@@ -39,4 +43,10 @@ public class JiraTaskParameters {
   private String rejectionField;
   private String rejectionValue;
   private String callbackUrl;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(jiraConfig.getBaseUrl()));
+  }
 }
