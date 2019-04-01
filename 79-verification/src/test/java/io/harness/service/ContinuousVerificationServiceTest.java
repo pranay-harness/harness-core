@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -48,6 +49,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
@@ -518,6 +520,78 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(1, learningEngineAnalysisTasks.size());
     final int clusterMinute = 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
     LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(0);
+    validateL2Clustering(learningEngineAnalysisTask, clusterMinute);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsL2ClusteringRetry() {
+    continuousVerificationService.triggerLogsL2Clustering(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+    assertEquals(0, learningEngineAnalysisTasks.size());
+
+    int numOfMinutes = CRON_POLL_INTERVAL_IN_MINUTES - 5;
+    int numOfHosts = 3;
+
+    LogDataRecord logDataRecordInRetry = new LogDataRecord();
+    logDataRecordInRetry.setAppId(appId);
+    logDataRecordInRetry.setCvConfigId(cvConfigId);
+    logDataRecordInRetry.setStateType(StateType.SUMO);
+    logDataRecordInRetry.setClusterLevel(ClusterLevel.H1);
+
+    for (int i = 0; i < numOfMinutes; i++) {
+      for (int j = 0; j < numOfHosts; j++) {
+        logDataRecordInRetry.setUuid(null);
+        logDataRecordInRetry.setClusterLevel(ClusterLevel.H1);
+        logDataRecordInRetry.setHost("host-" + j);
+        logDataRecordInRetry.setLogCollectionMinute(100 + i);
+        wingsPersistence.save(logDataRecordInRetry);
+
+        logDataRecordInRetry.setUuid(null);
+        logDataRecordInRetry.setClusterLevel(ClusterLevel.L0);
+        wingsPersistence.save(logDataRecordInRetry);
+      }
+    }
+    final int clusterMinute = 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+    createFailedLETask("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, null, null, clusterMinute);
+    continuousVerificationService.triggerLogsL2Clustering(accountId);
+    learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+    assertEquals(1, learningEngineAnalysisTasks.size());
+
+    for (int i = numOfMinutes; i < CRON_POLL_INTERVAL_IN_MINUTES; i++) {
+      for (int j = 0; j < numOfHosts; j++) {
+        logDataRecordInRetry.setUuid(null);
+        logDataRecordInRetry.setClusterLevel(ClusterLevel.H1);
+        logDataRecordInRetry.setHost("host-" + j);
+        logDataRecordInRetry.setLogCollectionMinute(100 + i);
+        wingsPersistence.save(logDataRecordInRetry);
+
+        logDataRecordInRetry.setUuid(null);
+        logDataRecordInRetry.setClusterLevel(ClusterLevel.L0);
+        wingsPersistence.save(logDataRecordInRetry);
+      }
+    }
+
+    continuousVerificationService.triggerLogsL2Clustering(accountId);
+    learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+    assertEquals(1, learningEngineAnalysisTasks.size());
+
+    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class).filter("clusterLevel", ClusterLevel.L0));
+
+    createFailedLETask("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, null, null, clusterMinute);
+    continuousVerificationService.triggerLogsL2Clustering(accountId);
+    learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+    assertEquals(3, learningEngineAnalysisTasks.size());
+
+    LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(2);
+    validateL2Clustering(learningEngineAnalysisTask, clusterMinute);
+  }
+
+  private void validateL2Clustering(LearningEngineAnalysisTask learningEngineAnalysisTask, int clusterMinute) {
     assertNull(learningEngineAnalysisTask.getWorkflow_id());
     assertNull(learningEngineAnalysisTask.getWorkflow_execution_id());
     assertEquals(
@@ -533,5 +607,22 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         learningEngineAnalysisTask.getAnalysis_save_url());
     assertNull(learningEngineAnalysisTask.getControl_nodes());
     assertNull(learningEngineAnalysisTask.getTest_nodes());
+  }
+
+  private void createFailedLETask(
+      String stateExecutionId, String workflowId, String workflowExecutionId, int analysisMin) {
+    LearningEngineAnalysisTask task = LearningEngineAnalysisTask.builder()
+                                          .state_execution_id(stateExecutionId)
+                                          .workflow_id(workflowId)
+                                          .workflow_execution_id(workflowExecutionId)
+                                          .analysis_minute(analysisMin)
+                                          .executionStatus(ExecutionStatus.RUNNING)
+                                          .cluster_level(ClusterLevel.L2.getLevel())
+                                          .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
+                                          .retry(4)
+                                          .build();
+
+    task.setAppId(appId);
+    wingsPersistence.save(task);
   }
 }

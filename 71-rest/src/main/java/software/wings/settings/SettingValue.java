@@ -130,7 +130,7 @@ public abstract class SettingValue {
     /**
      * New relic setting variable types.
      */
-    NEW_RELIC("NewRelic"),
+    NEW_RELIC("New Relic"),
 
     /**
      * Dyna trace variable types.

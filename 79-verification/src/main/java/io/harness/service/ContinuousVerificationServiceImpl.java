@@ -549,11 +549,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + "?cvConfigId=" + cvConfiguration.getUuid() + "&appId=" + cvConfiguration.getAppId()
                 + "&clusterLevel=" + ClusterLevel.L1 + "&logCollectionMinute=" + logRecordMinute;
 
+            String stateExecutionIdForLETask = "LOGS_CLUSTER_L1_" + cvConfiguration.getUuid() + "_" + logRecordMinute;
+            learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) logRecordMinute);
             LearningEngineAnalysisTask analysisTask =
                 LearningEngineAnalysisTask.builder()
                     .control_input_url(inputLogsUrl)
                     .analysis_save_url(clusteredLogSaveUrl)
-                    .state_execution_id("LOGS_CLUSTER_L1_" + cvConfiguration.getUuid() + "_" + logRecordMinute)
+                    .state_execution_id(stateExecutionIdForLETask)
                     .service_id(cvConfiguration.getServiceId())
                     .control_nodes(hosts)
                     .sim_threshold(0.99)
@@ -678,11 +680,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + "?cvConfigId=" + cvConfiguration.getUuid() + "&appId=" + cvConfiguration.getAppId()
                 + "&clusterLevel=" + ClusterLevel.L2 + "&logCollectionMinute=" + maxLogRecordL1Minute;
 
+            String stateExecutionIdForLETask =
+                "LOGS_CLUSTER_L2_" + cvConfiguration.getUuid() + "_" + maxLogRecordL1Minute;
+            learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) maxLogRecordL1Minute);
             LearningEngineAnalysisTask analysisTask =
                 LearningEngineAnalysisTask.builder()
                     .control_input_url(inputLogsUrl)
                     .analysis_save_url(clusteredLogSaveUrl)
-                    .state_execution_id("LOGS_CLUSTER_L2_" + cvConfiguration.getUuid() + "_" + maxLogRecordL1Minute)
+                    .state_execution_id(stateExecutionIdForLETask)
                     .service_id(cvConfiguration.getServiceId())
                     .control_nodes(Collections.emptySet())
                     .sim_threshold(0.99)
@@ -846,9 +851,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()
                 + "&analysisMinute=" + ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute();
 
+            String stateExecutionIdForLETask =
+                "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin;
+            learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) analysisEndMin);
             LearningEngineAnalysisTask analysisTask =
                 LearningEngineAnalysisTask.builder()
-                    .state_execution_id("LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin)
+                    .state_execution_id(stateExecutionIdForLETask)
                     .service_id(logsCVConfiguration.getServiceId())
                     .query(Lists.newArrayList(logsCVConfiguration.getQuery()))
                     .sim_threshold(0.9)

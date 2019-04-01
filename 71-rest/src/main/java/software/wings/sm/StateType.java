@@ -255,7 +255,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * New relic state type.
    */
-  NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, "New Relic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * dyna trace state type.
@@ -305,7 +305,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * New relic deployment marker state type.
    */
-  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 13, "NewRelic Deployment Marker",
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 13, "New Relic Deployment Marker",
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(

@@ -115,6 +115,12 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Test
   @Category(UnitTests.class)
   public void shouldTestNonTemplatized() {
+    AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
+  }
+
+  private AppDynamicsState setupNonTemplatized(boolean isBadTier) {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
                                               .controllerUrl("appd-url")
@@ -129,6 +135,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     appDynamicsState.setAnalysisServerConfigId(settingAttribute.getUuid());
 
+    if (isBadTier) {
+      appDynamicsState.setTierId("123aa");
+    }
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyAppDynamicsState)
@@ -145,8 +154,16 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
              StateType.APP_DYNAMICS, appId, workflowId, serviceId))
         .thenReturn(workflowExecutionId);
-    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
+    return spyAppDynamicsState;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTestNonTemplatizedBadTier() {
+    ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
+    assertEquals(ExecutionStatus.ERROR, executionResponse.getExecutionStatus());
+    assertEquals(
+        "ApplicationID and TierID in AppDynamics setup must be valid numbers", executionResponse.getErrorMessage());
   }
 
   @Test
