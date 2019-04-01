@@ -33,6 +33,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
+  public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String COMPANY_NAME_KEY = "companyName";
 

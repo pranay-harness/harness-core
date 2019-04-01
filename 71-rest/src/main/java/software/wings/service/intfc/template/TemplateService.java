@@ -51,11 +51,15 @@ public interface TemplateService extends OwnedByAccount {
 
   String fetchTemplateIdFromUri(@NotEmpty String accountId, @NotEmpty String templateUri);
 
+  String fetchTemplateIdFromUri(@NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String templateUri);
+
   String fetchTemplateIdByNameAndFolderId(String accountId, String name, String folderId);
 
   VersionedTemplate getVersionedTemplate(@NotEmpty String accountId, @NotEmpty String templateUuid, Long version);
 
   Template fetchTemplateByKeyword(@NotEmpty String accountId, String keyword);
+
+  Template fetchTemplateByKeyword(@NotEmpty String accountId, @NotEmpty String appId, String keyword);
 
   Template convertYamlToTemplate(String templatePath) throws IOException;
 
