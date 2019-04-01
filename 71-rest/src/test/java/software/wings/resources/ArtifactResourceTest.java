@@ -38,6 +38,7 @@ import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.PermitService;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.ByteArrayInputStream;
@@ -55,6 +56,7 @@ public class ArtifactResourceTest {
   public static final ArtifactService ARTIFACT_SERVICE = mock(ArtifactService.class);
   public static final ArtifactStreamService ARTIFACT_STREAM_SERVICE =
       mock(ArtifactStreamService.class, RETURNS_DEEP_STUBS);
+  public static final PermitService PERMIT_SERVICE = mock(PermitService.class, RETURNS_DEEP_STUBS);
 
   /**
    * The constant RESOURCES.
@@ -62,7 +64,7 @@ public class ArtifactResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ArtifactResource(ARTIFACT_SERVICE, ARTIFACT_STREAM_SERVICE))
+          .addResource(new ArtifactResource(ARTIFACT_SERVICE, ARTIFACT_STREAM_SERVICE, PERMIT_SERVICE))
           .addProvider(ConstraintViolationExceptionMapper.class)
           .addProvider(WingsExceptionMapper.class)
           .build();
@@ -126,6 +128,10 @@ public class ArtifactResourceTest {
     when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).fetchArtifactDisplayName("5"))
         .thenReturn("DISPLAY_NAME");
 
+    when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).getFailedCronAttempts()).thenReturn(10);
+
+    when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).getUuid()).thenReturn(ARTIFACT_STREAM_ID);
+
     RestResponse<Artifact> restResponse =
         RESOURCES.client()
             .target("/artifacts?appId=" + APP_ID)
@@ -133,6 +139,8 @@ public class ArtifactResourceTest {
             .post(entity(artifact, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Artifact>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Artifact.class);
     verify(ARTIFACT_SERVICE).create(artifact);
+    verify(ARTIFACT_STREAM_SERVICE).updateFailedCronAttempts(APP_ID, ARTIFACT_STREAM_ID, 0);
+    verify(PERMIT_SERVICE).releasePermitByKey(ARTIFACT_STREAM_ID);
   }
 
   /**

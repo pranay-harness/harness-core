@@ -2,7 +2,6 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static software.wings.scheduler.ArtifactCollectionJob.GROUP;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -23,6 +22,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
+  public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionHandler.class);
 
   @Inject private PermitService permitService;

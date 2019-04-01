@@ -119,11 +119,11 @@ public class BuildSourceCallback implements NotifyCallback {
           "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds for artifactStream[{}], totalFailedAttempt:[{}]",
           artifactStreamId, artifactStream.getFailedCronAttempts() + 1);
     } else {
-      // permitService.releasePermit(permitId);
       if (artifactStream.getFailedCronAttempts() != 0) {
-        artifactStreamService.updateFailedCronAttempts(artifactStream.getAppId(), artifactStream.getUuid(), 0);
         logger.warn("ASYNC_ARTIFACT_COLLECTION: successfully fetched builds after [{}] failures for artifactStream[{}]",
             artifactStream.getFailedCronAttempts(), artifactStreamId);
+        artifactStreamService.updateFailedCronAttempts(artifactStream.getAppId(), artifactStream.getUuid(), 0);
+        permitService.releasePermitByKey(artifactStream.getUuid());
       }
     }
   }
