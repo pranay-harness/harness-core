@@ -130,7 +130,7 @@ public class PluginServiceTest {
                 .withSettingClass(NewRelicConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("NewRelic")
+                .withDisplayName("New Relic")
                 .withType(StateType.NEW_RELIC.name())
                 .withPluginCategories(asList(Verification))
                 .build(),

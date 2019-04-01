@@ -144,6 +144,15 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     this.tierId = tierId;
   }
 
+  private void validateFields(String finalAppId, String finalTierId) {
+    try {
+      Long.parseLong(finalAppId);
+      Long.parseLong(finalTierId);
+    } catch (NumberFormatException exception) {
+      throw new WingsException("ApplicationID and TierID in AppDynamics setup must be valid numbers");
+    }
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
@@ -181,6 +190,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         throw new WingsException("No appdynamics setting with id: " + finalServerConfigId + " found");
       }
     }
+    validateFields(finalApplicationId, finalTierId);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
 
     List<AppdynamicsTier> dependentTiers = new ArrayList<>();

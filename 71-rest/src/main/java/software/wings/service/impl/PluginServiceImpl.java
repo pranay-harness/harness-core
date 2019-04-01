@@ -131,7 +131,7 @@ public class PluginServiceImpl implements PluginService {
             .withSettingClass(NewRelicConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
-            .withDisplayName("NewRelic")
+            .withDisplayName("New Relic")
             .withType(SettingVariableTypes.NEW_RELIC.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.NEW_RELIC.name()))
