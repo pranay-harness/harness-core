@@ -15,6 +15,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +54,7 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
                                                      .isBlueGreen(true)
                                                      .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                                      .build();
+    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
 
     if (!(ecsCommandRequest instanceof EcsBGServiceSetupRequest)) {
       ecsCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
@@ -62,30 +65,40 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
           .build();
     }
 
-    EcsBGServiceSetupRequest ecsBGServiceSetupRequest = (EcsBGServiceSetupRequest) ecsCommandRequest;
+    try {
+      EcsBGServiceSetupRequest ecsBGServiceSetupRequest = (EcsBGServiceSetupRequest) ecsCommandRequest;
 
-    EcsSetupParams setupParams = ecsBGServiceSetupRequest.getEcsSetupParams();
-    ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
-        ContainerSetupCommandUnitExecutionData.builder();
-    commandExecutionDataBuilder.ecsRegion(setupParams.getRegion());
-    setTargetGroupForProdListener(
-        encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, commandExecutionDataBuilder, executionLogCallback);
-    createStageListenerNewServiceIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest, executionLogCallback);
-    commandExecutionDataBuilder.stageEcsListener(setupParams.getStageListenerArn());
-    commandExecutionDataBuilder.targetGroupForNewService(setupParams.getTargetGroupArn());
-    commandExecutionDataBuilder.targetGroupForExistingService(setupParams.getTargetGroupArn2());
+      EcsSetupParams setupParams = ecsBGServiceSetupRequest.getEcsSetupParams();
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
+          ContainerSetupCommandUnitExecutionData.builder();
+      commandExecutionDataBuilder.ecsRegion(setupParams.getRegion());
+      setTargetGroupForProdListener(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams,
+          commandExecutionDataBuilder, executionLogCallback);
+      createStageListenerNewServiceIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest, executionLogCallback);
+      commandExecutionDataBuilder.stageEcsListener(setupParams.getStageListenerArn());
+      commandExecutionDataBuilder.targetGroupForNewService(setupParams.getTargetGroupArn());
+      commandExecutionDataBuilder.targetGroupForExistingService(setupParams.getTargetGroupArn2());
 
-    TaskDefinition taskDefinition = ecsSetupCommandTaskHelper.createTaskDefinition(
-        ecsBGServiceSetupRequest.getAwsConfig(), encryptedDataDetails, ecsBGServiceSetupRequest.getServiceVariables(),
-        ecsBGServiceSetupRequest.getSafeDisplayServiceVariables(), executionLogCallback, setupParams);
+      TaskDefinition taskDefinition = ecsSetupCommandTaskHelper.createTaskDefinition(
+          ecsBGServiceSetupRequest.getAwsConfig(), encryptedDataDetails, ecsBGServiceSetupRequest.getServiceVariables(),
+          ecsBGServiceSetupRequest.getSafeDisplayServiceVariables(), executionLogCallback, setupParams);
 
-    createServiceForBlueGreen(setupParams, taskDefinition,
-        aSettingAttribute().withValue(ecsBGServiceSetupRequest.getAwsConfig()).build(), encryptedDataDetails,
-        commandExecutionDataBuilder, executionLogCallback);
+      createServiceForBlueGreen(setupParams, taskDefinition,
+          aSettingAttribute().withValue(ecsBGServiceSetupRequest.getAwsConfig()).build(), encryptedDataDetails,
+          commandExecutionDataBuilder, executionLogCallback);
 
-    ecsCommandResponse.setSetupData(commandExecutionDataBuilder.build());
+      ecsCommandResponse.setSetupData(commandExecutionDataBuilder.build());
+    } catch (Exception ex) {
+      logger.error("Completed operation with errors");
+      logger.error(ExceptionUtils.getMessage(ex), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
+
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      ecsCommandResponse.setCommandExecutionStatus(commandExecutionStatus);
+      ecsCommandResponse.setOutput(ExceptionUtils.getMessage(ex));
+    }
     return EcsCommandExecutionResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+        .commandExecutionStatus(commandExecutionStatus)
         .ecsCommandResponse(ecsCommandResponse)
         .build();
   }
