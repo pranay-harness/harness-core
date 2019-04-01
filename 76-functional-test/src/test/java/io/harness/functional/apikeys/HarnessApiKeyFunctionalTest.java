@@ -11,18 +11,17 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.GlobalApiKey.ProviderType;
+import software.wings.beans.HarnessApiKey.ClientType;
 
 import javax.ws.rs.core.GenericType;
 
 /**
  * @author rktummala on 03/07/19
  */
-public class GlobalApiKeyFunctionalTest extends AbstractFunctionalTest {
+public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   Owners owners;
 
@@ -34,55 +33,55 @@ public class GlobalApiKeyFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   public void testCRUD() {
-    deleteGlobalApiKey(ProviderType.PROMETHEUS);
-    deleteGlobalApiKey(ProviderType.SALESFORCE);
+    deleteHarnessClientApiKey(ClientType.PROMETHEUS);
+    deleteHarnessClientApiKey(ClientType.SALESFORCE);
 
-    String createdKey = generateGlobalApiKey(ProviderType.PROMETHEUS);
+    String createdKey = generateHarnessClientApiKey(ClientType.PROMETHEUS);
     assertThat(createdKey).isNotEmpty();
 
-    String salesForceKey = generateGlobalApiKey(ProviderType.SALESFORCE);
+    String salesForceKey = generateHarnessClientApiKey(ClientType.SALESFORCE);
     assertThat(salesForceKey).isNotEqualTo(createdKey);
 
-    String keyFromGet = getGlobalApiKey(ProviderType.PROMETHEUS);
+    String keyFromGet = getHarnessClientApiKey(ClientType.PROMETHEUS);
     assertThat(createdKey).isEqualTo(keyFromGet);
 
-    deleteGlobalApiKey(ProviderType.PROMETHEUS);
+    deleteHarnessClientApiKey(ClientType.PROMETHEUS);
 
-    keyFromGet = getGlobalApiKey(ProviderType.PROMETHEUS);
+    keyFromGet = getHarnessClientApiKey(ClientType.PROMETHEUS);
     assertThat(keyFromGet).isNull();
   }
 
-  private String generateGlobalApiKey(ProviderType providerType) {
+  private String generateHarnessClientApiKey(ClientType clientType) {
     GenericType<RestResponse<String>> returnType = new GenericType<RestResponse<String>>() {};
     RestResponse<String> response = Setup.portal()
                                         .auth()
                                         .oauth2(bearerToken)
-                                        .body(providerType, ObjectMapperType.GSON)
+                                        .body(clientType.name())
                                         .contentType(ContentType.JSON)
-                                        .post("/global-api-keys")
+                                        .post("harness-api-keys")
                                         .as(returnType.getType());
     return response.getResource();
   }
 
-  private String getGlobalApiKey(ProviderType providerType) {
+  private String getHarnessClientApiKey(ClientType clientType) {
     GenericType<RestResponse<String>> returnType = new GenericType<RestResponse<String>>() {};
     RestResponse<String> response = Setup.portal()
                                         .auth()
                                         .oauth2(bearerToken)
                                         .contentType(ContentType.JSON)
-                                        .get("/global-api-keys/" + providerType)
+                                        .get("harness-api-keys/" + clientType.name())
                                         .as(returnType.getType());
     return response.getResource();
   }
 
-  private RestResponse<Void> deleteGlobalApiKey(ProviderType providerType) {
-    GenericType<RestResponse<Void>> returnType = new GenericType<RestResponse<Void>>() {};
-    RestResponse<Void> response = Setup.portal()
-                                      .auth()
-                                      .oauth2(bearerToken)
-                                      .contentType(ContentType.JSON)
-                                      .delete("/global-api-keys/" + providerType)
-                                      .as(returnType.getType());
+  private RestResponse<Boolean> deleteHarnessClientApiKey(ClientType clientType) {
+    GenericType<RestResponse<Boolean>> returnType = new GenericType<RestResponse<Boolean>>() {};
+    RestResponse<Boolean> response = Setup.portal()
+                                         .auth()
+                                         .oauth2(bearerToken)
+                                         .contentType(ContentType.JSON)
+                                         .delete("harness-api-keys/" + clientType.name())
+                                         .as(returnType.getType());
     return response;
   }
 }

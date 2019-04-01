@@ -9,12 +9,13 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.GlobalApiKey.ProviderType;
+import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
-import software.wings.service.intfc.GlobalApiKeyService;
+import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.AccountPermissionUtils;
 
 import javax.validation.constraints.NotNull;
@@ -25,9 +26,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
-@Api("/global-api-keys")
-@Path("/global-api-keys")
+@Api("harness-api-keys")
+@Path("/harness-api-keys")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.API_KEY)
@@ -36,49 +38,60 @@ import javax.ws.rs.Produces;
  *
  * @author rktummala on 03/07/2019
  */
-public class GlobalApiKeyResource {
-  private GlobalApiKeyService globalApiKeyService;
+public class HarnessApiKeyResource {
+  private HarnessApiKeyService harnessApiKeyService;
   private AccountPermissionUtils accountPermissionUtils;
 
   @Inject
-  public GlobalApiKeyResource(GlobalApiKeyService globalApiKeyService, AccountPermissionUtils accountPermissionUtils) {
-    this.globalApiKeyService = globalApiKeyService;
+  public HarnessApiKeyResource(
+      HarnessApiKeyService harnessApiKeyService, AccountPermissionUtils accountPermissionUtils) {
+    this.harnessApiKeyService = harnessApiKeyService;
     this.accountPermissionUtils = accountPermissionUtils;
   }
 
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<String> generate(@NotNull ProviderType providerType) {
+  public RestResponse<String> generate(@NotNull String clientType) {
     RestResponse response = accountPermissionUtils.checkIfHarnessUser("User not allowed to perform operation");
     if (response == null) {
-      response = new RestResponse<>(globalApiKeyService.generate(providerType));
+      response = new RestResponse<>(harnessApiKeyService.generate(clientType));
     }
     return response;
   }
 
   @DELETE
-  @Path("{providerType}")
+  @Path("{clientType}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Void> delete(@NotEmpty @PathParam("providerType") String providerType) {
+  public RestResponse<Boolean> delete(@NotEmpty @PathParam("clientType") String clientType) {
     RestResponse response = accountPermissionUtils.checkIfHarnessUser("User not allowed to perform operation");
     if (response == null) {
-      globalApiKeyService.delete(ProviderType.valueOf(providerType));
-      response = new RestResponse<>();
+      response = new RestResponse<>(harnessApiKeyService.delete(clientType));
     }
     return response;
   }
 
   @GET
-  @Path("{providerType}")
+  @Path("{clientType}")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> get(@NotEmpty @PathParam("providerType") String providerType) {
+  public RestResponse<String> get(@NotEmpty @PathParam("clientType") String clientType) {
     RestResponse response = accountPermissionUtils.checkIfHarnessUser("User not allowed to perform operation");
     if (response == null) {
-      response = new RestResponse<>(globalApiKeyService.get(ProviderType.valueOf(providerType)));
+      response = new RestResponse<>(harnessApiKeyService.get(clientType));
     }
     return response;
+  }
+
+  @GET
+  @Path("validate")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Boolean> validate(
+      @NotEmpty @QueryParam("clientType") String clientType, @NotEmpty @QueryParam("apiKey") String apiKey) {
+    return new RestResponse<>(
+        harnessApiKeyService.validateHarnessClientApiRequest(ClientType.valueOf(clientType), apiKey));
   }
 }

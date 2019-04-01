@@ -11,7 +11,6 @@ import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -19,13 +18,10 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.SecretManager.JWT_CATEGORY;
-import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
@@ -35,6 +31,7 @@ import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
+import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
@@ -52,32 +49,31 @@ import javax.ws.rs.core.Response;
 @Singleton
 @Priority(AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
-  @VisibleForTesting public static final String EXTERNAL_FACING_API_HEADER = "X-Api-Key";
+  @VisibleForTesting public static final String API_KEY_HEADER = "X-Api-Key";
+  @VisibleForTesting public static final String HARNESS_API_KEY_HEADER = "X-Harness-Api-Key";
   @VisibleForTesting public static final String USER_IDENTITY_HEADER = "X-Identity-User";
   private static final int NUM_MANAGERS = 3;
 
   @Context private ResourceInfo resourceInfo;
-  private WingsPersistence wingsPersistence;
-  private MainConfiguration configuration;
-  private UserService userService;
   private AuthService authService;
+  private UserService userService;
   private AuditService auditService;
   private ApiKeyService apiKeyService;
+  private HarnessApiKeyService harnessApiKeyService;
   private AuditHelper auditHelper;
   private ExternalApiRateLimitingService rateLimitingService;
   private SecretManager secretManager;
 
   @Inject
-  public AuthenticationFilter(AuthService authService, WingsPersistence wingsPersistence,
-      MainConfiguration configuration, UserService userService, AuditService auditService, AuditHelper auditHelper,
-      ApiKeyService apiKeyService, ExternalApiRateLimitingService rateLimitingService, SecretManager secretManager) {
-    this.authService = authService;
-    this.wingsPersistence = wingsPersistence;
+  public AuthenticationFilter(UserService userService, AuthService authService, AuditService auditService,
+      AuditHelper auditHelper, ApiKeyService apiKeyService, HarnessApiKeyService harnessApiKeyService,
+      ExternalApiRateLimitingService rateLimitingService, SecretManager secretManager) {
     this.userService = userService;
-    this.configuration = configuration;
+    this.authService = authService;
     this.auditService = auditService;
     this.auditHelper = auditHelper;
     this.apiKeyService = apiKeyService;
+    this.harnessApiKeyService = harnessApiKeyService;
     this.rateLimitingService = rateLimitingService;
     this.secretManager = secretManager;
   }
@@ -89,13 +85,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     if (isExternalFacingApiRequest(containerRequestContext)) {
-      ensureValidQPM(containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER));
+      ensureValidQPM(containerRequestContext.getHeaderString(API_KEY_HEADER));
       validateExternalFacingApiRequest(containerRequestContext);
       return;
     }
 
-    if (isCustomApiRequest(containerRequestContext)) {
-      validateCustomApiRequest(containerRequestContext);
+    if (harnessApiKeyService.isHarnessClientApi(resourceInfo)) {
+      harnessApiKeyService.validateHarnessClientApiRequest(resourceInfo, containerRequestContext);
       return;
     }
 
@@ -194,16 +190,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
   }
 
-  protected void validateCustomApiRequest(ContainerRequestContext containerRequestContext) {
-    String tokenString = extractToken(containerRequestContext, "Bearer");
-    if (isBlank(tokenString)) {
-      throw new InvalidRequestException("Api Key not supplied", USER);
-    }
-    apiKeyService.validate(tokenString, GLOBAL_ACCOUNT_ID);
-  }
-
   protected void validateExternalFacingApiRequest(ContainerRequestContext containerRequestContext) {
-    String apiKey = containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER);
+    String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
     if (isBlank(apiKey)) {
       throw new InvalidRequestException("Api Key not supplied", USER);
     }
@@ -249,17 +237,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
   }
 
-  private boolean isCustomApiRequest(ContainerRequestContext requestContext) {
-    return customApi() && isNotEmpty(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION))
-        && isNotEmpty(extractToken(requestContext, "Bearer"));
-  }
-
-  protected boolean customApi() {
-    return resourceInfo.getResourceClass().getAnnotation(CustomApiAuth.class) != null;
-  }
-
   private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {
-    return externalFacingAPI() && isNotEmpty(requestContext.getHeaderString(EXTERNAL_FACING_API_HEADER));
+    return externalFacingAPI() && isNotEmpty(requestContext.getHeaderString(API_KEY_HEADER));
   }
 
   boolean identityServiceAPI() {

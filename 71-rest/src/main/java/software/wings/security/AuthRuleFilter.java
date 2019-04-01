@@ -27,9 +27,9 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
+import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.ListAPI;
@@ -69,7 +69,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private static final String[] NO_FILTERING_URIS_PREFIXES = new String[] {"users/user", "users/sso/zendesk",
       "users/account", "users/two-factor-auth", "users/disable-two-factor-auth", "users/enable-two-factor-auth",
-      "users/refresh-token", "account/new", "global-api-keys", "users/set-default-account"};
+      "users/refresh-token", "account/new", "harness-api-keys", "users/set-default-account"};
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES =
       new String[] {"limits/configure", "account/license", "account/export", "account/import", "account/delete/"};
@@ -142,10 +142,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)) {
-      return;
-    }
-
-    if (customAPI()) {
       return;
     }
 
@@ -420,7 +416,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
     // externalAPI() doesn't need any authorization
     return publicAPI() || requestContext.getMethod().equals(OPTIONS) || externalAPI() || identityServiceAPI()
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
+        || harnessClientApi() || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
   }
@@ -450,12 +446,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         || resourceClass.getAnnotation(PublicApi.class) != null;
   }
 
-  private boolean customAPI() {
+  private boolean harnessClientApi() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
 
-    return resourceMethod.getAnnotation(CustomApiAuth.class) != null
-        || resourceClass.getAnnotation(CustomApiAuth.class) != null;
+    return resourceMethod.getAnnotation(HarnessApiKeyAuth.class) != null
+        || resourceClass.getAnnotation(HarnessApiKeyAuth.class) != null;
   }
 
   private boolean externalAPI() {

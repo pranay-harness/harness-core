@@ -176,6 +176,6 @@ public class ManagerMorphiaClasses {
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
       LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
       AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class,
-      DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class, GlobalApiKey.class,
+      DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class, HarnessApiKey.class,
       ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class, Personalization.class);
 }

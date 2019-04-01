@@ -1,8 +1,6 @@
 package io.harness.security;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -10,11 +8,8 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
-import static org.mindrot.jbcrypt.BCrypt.checkpw;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,25 +18,23 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import io.harness.beans.PageRequest;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.service.intfc.LearningEngineService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ApiKeyEntry;
+import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.annotations.CustomApiAuth;
+import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -56,6 +49,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
   @Context private ResourceInfo resourceInfo;
   @Inject private LearningEngineService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private VerificationManagerClient verificationManagerClient;
 
   @Override
   public void filter(ContainerRequestContext containerRequestContext) throws IOException {
@@ -63,8 +57,13 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
       return;
     }
 
-    if (isCustomApiRequest(containerRequestContext)) {
-      validateCustomApiRequest(containerRequestContext);
+    if (isHarnessClientApi(resourceInfo)) {
+      String apiKeyFromHeader = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+      ClientType[] clientTypes = getClientTypesFromHarnessApiKeyAuth(resourceInfo);
+      if (isEmpty(clientTypes)) {
+        throw new WingsException(INVALID_TOKEN, USER);
+      }
+      verificationManagerClient.validateHarnessApiKey(clientTypes[0].name(), apiKeyFromHeader);
       return;
     }
 
@@ -82,41 +81,25 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     throw new WingsException(INVALID_CREDENTIAL, USER);
   }
 
-  private boolean isCustomApiRequest(ContainerRequestContext requestContext) {
-    return customApi() && isNotEmpty(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION))
-        && isNotEmpty(extractToken(requestContext, "Bearer"));
-  }
-
-  private boolean customApi() {
-    return resourceInfo.getResourceClass().getAnnotation(CustomApiAuth.class) != null;
-  }
-
-  protected void validateCustomApiRequest(ContainerRequestContext containerRequestContext) {
-    String tokenString = extractToken(containerRequestContext, "Bearer");
-    if (isBlank(tokenString)) {
-      throw new InvalidRequestException("Api Key not supplied", USER);
+  private ClientType[] getClientTypesFromHarnessApiKeyAuth(ResourceInfo resourceInfo) {
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    HarnessApiKeyAuth methodAnnotations = resourceMethod.getAnnotation(HarnessApiKeyAuth.class);
+    if (null != methodAnnotations) {
+      return methodAnnotations.clientTypes();
     }
-    validate(tokenString, GLOBAL_ACCOUNT_ID);
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    HarnessApiKeyAuth classAnnotations = resourceClass.getAnnotation(HarnessApiKeyAuth.class);
+    if (null != classAnnotations) {
+      return classAnnotations.clientTypes();
+    }
+
+    return null;
   }
 
-  public void validate(String key, String accountId) {
-    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter("accountId", EQ, accountId).build();
-    if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
-             .getResponse()
-             .stream()
-             .map(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))
-             .collect(Collectors.toSet())
-             .contains(true)) {
-      throw new UnauthorizedException("Invalid Api Key", USER);
-    }
-  }
-
-  protected String extractToken(ContainerRequestContext requestContext, String prefix) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
-    }
-    return authorizationHeader.substring(prefix.length()).trim();
+  private boolean isHarnessClientApi(ResourceInfo resourceInfo) {
+    return resourceInfo.getResourceMethod().getAnnotation(HarnessApiKeyAuth.class) != null
+        || resourceInfo.getResourceClass().getAnnotation(HarnessApiKeyAuth.class) != null;
   }
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
