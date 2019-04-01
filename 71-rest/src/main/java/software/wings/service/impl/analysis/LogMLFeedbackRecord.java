@@ -90,7 +90,6 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
                       .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                       .newKey(this.getUuid() == null ? generateUUID() : this.getUuid());
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
-    addFieldIfNotEmpty(recordBuilder, "stateType", stateType.name(), true);
     addFieldIfNotEmpty(recordBuilder, "appId", appId, false);
     addFieldIfNotEmpty(recordBuilder, "workflowId", workflowId, false);
     addFieldIfNotEmpty(recordBuilder, "workflowExecutionId", workflowExecutionId, false);
@@ -102,6 +101,10 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
     addFieldIfNotEmpty(recordBuilder, "logMD5Hash", logMD5Hash, true);
     addFieldIfNotEmpty(recordBuilder, "logMessage", logMessage, true);
     addFieldIfNotEmpty(recordBuilder, "supervisedLabel", supervisedLabel, true);
+
+    if (stateType != null) {
+      addFieldIfNotEmpty(recordBuilder, "stateType", stateType.name(), true);
+    }
 
     if (isNotEmpty(comment)) {
       addFieldIfNotEmpty(recordBuilder, "comment", comment, true);
@@ -116,7 +119,6 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
         LogMLFeedbackRecord.builder()
             .appId(readString(entity, "appId"))
             .uuid(entity.getKey().getName())
-            .stateType(StateType.valueOf(readString(entity, "stateType")))
             .logMessage(readString(entity, "logMessage"))
             .logMD5Hash(readString(entity, "logMD5Hash"))
             .workflowId(readString(entity, "workflowId"))
@@ -132,6 +134,11 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
     final String comment = readString(entity, "comment");
     if (isNotEmpty(comment)) {
       dataRecord.setComment(comment);
+    }
+
+    final String stateType = readString(entity, "stateType");
+    if (isNotEmpty(stateType)) {
+      dataRecord.setStateType(StateType.valueOf(stateType));
     }
 
     final String supervisedLabel = readString(entity, "supervisedLabel");
