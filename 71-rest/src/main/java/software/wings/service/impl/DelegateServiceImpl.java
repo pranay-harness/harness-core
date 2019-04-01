@@ -97,7 +97,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
-import io.harness.exception.FunctorException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -1679,18 +1679,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             .build();
       }
 
-    } catch (FunctorException | CriticalExpressionEvaluationException exception) {
+    } catch (CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTask.ACCOUNT_ID_KEY, delegateTask.getAccountId())
                                           .filter(ID_KEY, delegateTask.getUuid());
       DelegateTaskResponse response =
           DelegateTaskResponse.builder()
-              .response(ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build())
+              .response(ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build())
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
       handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
+      return null;
     }
     return DelegatePackage.builder().delegateTask(delegateTask).build();
   }
@@ -1707,20 +1708,20 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
         return DelegatePackage.builder().delegateTask(delegateTask).encryptionConfigs(encryptionConfigMap).build();
       }
-    } catch (FunctorException | CriticalExpressionEvaluationException exception) {
+    } catch (CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTask.ACCOUNT_ID_KEY, delegateTask.getAccountId())
                                           .filter(ID_KEY, delegateTask.getUuid());
       DelegateTaskResponse response =
           DelegateTaskResponse.builder()
-              .response(ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build())
+              .response(ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build())
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
       handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
+      return null;
     }
-    return DelegatePackage.builder().delegateTask(delegateTask).build();
   }
 
   private void handleResponse(String taskId, String delegateId, DelegateTask delegateTask,

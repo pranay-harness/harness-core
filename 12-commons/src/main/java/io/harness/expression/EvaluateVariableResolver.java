@@ -26,7 +26,9 @@ public class EvaluateVariableResolver extends StrLookup {
       }
     } catch (JexlException exception) {
       if (exception.getCause() instanceof FunctorException) {
-        throw(FunctorException) exception.getCause();
+        FunctorException functorException = (FunctorException) exception.getCause();
+        functorException.addParam(FunctorException.EXPRESSION_KEY, variable);
+        throw functorException;
       }
       context.set(name, "${" + variable + "}");
     }
