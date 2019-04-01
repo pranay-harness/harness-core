@@ -29,6 +29,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   public static final String KEY_KEY = "key";
   public static final String KEY_PASSPHRASE = "passphrase";
   public static final String KEY_SSH_PASSWORD = "sshPassword";
+  public static final String KEY_KERBEROS_PASSWORD = "kerberosPassword";
 
   @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;

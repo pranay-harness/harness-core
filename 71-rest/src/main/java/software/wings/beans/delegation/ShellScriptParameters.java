@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Setter;
 import lombok.Value;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.KerberosConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -52,6 +53,8 @@ public class ShellScriptParameters implements TaskParameters {
   private final boolean keyless;
   private final Integer port;
   private final HostConnectionAttributes.AccessType accessType;
+  private final HostConnectionAttributes.AuthenticationScheme authenticationScheme;
+  private final KerberosConfig kerberosConfig;
   private final String keyName;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
@@ -82,7 +85,9 @@ public class ShellScriptParameters implements TaskParameters {
         .withCommandUnitName(CommandUnit)
         .withPort(port)
         .withKeyName(keyName)
-        .withAccessType(accessType);
+        .withAccessType(accessType)
+        .withAuthenticationScheme(authenticationScheme)
+        .withKerberosConfig(kerberosConfig);
     EncryptedDataDetail encryptedDataDetailKey =
         fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_KEY);
     if (encryptedDataDetailKey != null) {
@@ -97,6 +102,11 @@ public class ShellScriptParameters implements TaskParameters {
         fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_SSH_PASSWORD);
     if (encryptedSshPassword != null) {
       sshSessionConfigBuilder.withSshPassword(encryptionService.getDecryptedValue(encryptedSshPassword));
+    }
+    EncryptedDataDetail encryptedKerberosPassword =
+        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_KERBEROS_PASSWORD);
+    if (encryptedKerberosPassword != null) {
+      sshSessionConfigBuilder.withPassword(encryptionService.getDecryptedValue(encryptedKerberosPassword));
     }
     return sshSessionConfigBuilder.build();
   }

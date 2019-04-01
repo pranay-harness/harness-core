@@ -43,6 +43,7 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.TaskType;
@@ -249,10 +250,12 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     boolean keyless = false;
     Integer port = null;
     HostConnectionAttributes.AccessType accessType = null;
+    HostConnectionAttributes.AuthenticationScheme authenticationScheme = null;
     String keyName = null;
     WinRmConnectionAttributes winRmConnectionAttributes = null;
     List<EncryptedDataDetail> winrmEdd = emptyList();
     List<EncryptedDataDetail> keyEncryptionDetails = emptyList();
+    KerberosConfig kerberosConfig = null;
 
     HostConnectionAttributes hostConnectionAttributes = null;
 
@@ -282,6 +285,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
           port = 22;
         }
         accessType = ((HostConnectionAttributes) keySettingAttribute.getValue()).getAccessType();
+        authenticationScheme = ((HostConnectionAttributes) keySettingAttribute.getValue()).getAuthenticationScheme();
+        kerberosConfig = hostConnectionAttributes != null ? hostConnectionAttributes.getKerberosConfig() : null;
         keyName = keySettingAttribute.getUuid();
         keyEncryptionDetails = secretManager.getEncryptionDetails(
             (EncryptableSetting) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
@@ -348,6 +353,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                                                                    .keyPath(keyPath)
                                                                    .port(port)
                                                                    .accessType(accessType)
+                                                                   .authenticationScheme(authenticationScheme)
+                                                                   .kerberosConfig(kerberosConfig)
                                                                    .keyName(keyName);
     // TODO: This has to be enabled once CS team gives go ahead
     //    if (featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_ENV,
