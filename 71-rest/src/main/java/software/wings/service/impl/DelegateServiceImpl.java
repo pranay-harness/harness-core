@@ -1519,6 +1519,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private DelegateTask updateDelegateTaskWithPreAssignedDelegateId(
       DelegateTask delegateTask, String preAssignedDelegateId, List<ExecutionCapability> executionCapabilities) {
     if (isBlank(preAssignedDelegateId) && isEmpty(executionCapabilities)) {
+      // Reason here we are fetching delegateTask again from DB  is,
+      // Before this call is made, we try to generate Capabilities required for this delegate Task.
+      // During this, we try to evaluateExpressions, which will replace secrets in parameters with expressions,
+      // like secretFunctor.obtain(),
+      // We want to broadcast original DelegateTask and not this modified one.
+      // So here we fetch original task and return it, so it will be broadcasted.
       return wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
     }
 

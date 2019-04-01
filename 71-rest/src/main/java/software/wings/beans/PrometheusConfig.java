@@ -3,6 +3,9 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,6 +17,9 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by rsingh on 3/15/18.
  */
@@ -21,7 +27,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @JsonTypeName("PROMETHEUS")
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class PrometheusConfig extends SettingValue implements EncryptableSetting {
+public class PrometheusConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @Attributes(title = "URL", required = true) private String url;
@@ -34,6 +40,11 @@ public class PrometheusConfig extends SettingValue implements EncryptableSetting
     this();
     this.url = url;
     this.accountId = accountId;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url));
   }
 
   @Data
