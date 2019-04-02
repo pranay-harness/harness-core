@@ -73,6 +73,7 @@ public class AnalysisContext extends Base {
   // Collection interval in minutes
   private int collectionInterval;
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
+  private DataCollectionInfo dataCollectionInfo;
 
   private int retry;
 
@@ -93,7 +94,8 @@ public class AnalysisContext extends Base {
       String prevWorkflowExecutionId, int minimumRequestsPerMinute, int comparisonWindow, int parallelProcesses,
       Map<String, List<TimeSeries>> timeSeriesToCollect, boolean runTillConvergence, String delegateTaskId,
       MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion, String envId,
-      String hostNameField, int collectionInterval, long startDataCollectionMinute) {
+      String hostNameField, int collectionInterval, long startDataCollectionMinute,
+      DataCollectionInfo dataCollectionInfo) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -131,6 +133,7 @@ public class AnalysisContext extends Base {
     this.hostNameField = hostNameField;
     this.collectionInterval = collectionInterval;
     this.startDataCollectionMinute = startDataCollectionMinute;
+    this.dataCollectionInfo = dataCollectionInfo;
   }
 
   public LogClusterContext getClusterContext() {

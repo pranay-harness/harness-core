@@ -208,7 +208,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
@@ -228,49 +228,45 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     List<NewRelicApplicationInstance> nodes = nodesResponse.getResource();
     assertFalse(nodes.isEmpty());
     long toTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(60);
+    NewRelicApplicationInstance node = nodes.iterator().next();
 
-    for (NewRelicApplicationInstance node : nodes) {
-      NewRelicSetupTestNodeData testNodeData =
-          NewRelicSetupTestNodeData.builder()
-              .newRelicAppId(107019083)
-              .appId(appId)
-              .settingId(newRelicConfigId)
-              .instanceName(generateUuid())
-              .hostExpression("${host.hostName}")
-              .workflowId(workflowId)
-              .toTime(toTime)
-              .fromTime(toTime - TimeUnit.MINUTES.toMillis(120))
-              .instanceElement(anInstanceElement()
-                                   .withHost(HostElement.Builder.aHostElement().withHostName(node.getHost()).build())
-                                   .build())
-              .build();
+    NewRelicSetupTestNodeData testNodeData =
+        NewRelicSetupTestNodeData.builder()
+            .newRelicAppId(107019083)
+            .appId(appId)
+            .settingId(newRelicConfigId)
+            .instanceName(generateUuid())
+            .hostExpression("${host.hostName}")
+            .workflowId(workflowId)
+            .toTime(toTime)
+            .fromTime(toTime - TimeUnit.MINUTES.toMillis(120))
+            .instanceElement(anInstanceElement()
+                                 .withHost(HostElement.Builder.aHostElement().withHostName(node.getHost()).build())
+                                 .build())
+            .build();
 
-      target =
-          client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId);
-      RestResponse<VerificationNodeDataSetupResponse> metricResponse =
-          getRequestBuilderWithAuthHeader(target).post(entity(testNodeData, APPLICATION_JSON),
-              new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
-      assertEquals(0, metricResponse.getResponseMessages().size());
-      assertTrue(metricResponse.getResource().isProviderReachable());
-      assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
-      assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
-      List<NewRelicMetric> txnsWithData =
-          (List<NewRelicMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
-      assertFalse(txnsWithData.isEmpty());
-      NewRelicMetricData newRelicMetricData =
-          JsonUtils.asObject(JsonUtils.asJson(metricResponse.getResource().getDataForNode()), NewRelicMetricData.class);
-      // found at least a node with data
-      if (!newRelicMetricData.getMetrics_found().isEmpty()) {
-        assertTrue(newRelicMetricData.getMetrics().size() > 0);
-        newRelicMetricData.getMetrics().forEach(newRelicMetricSlice -> {
-          assertTrue(!isEmpty(newRelicMetricSlice.getName()));
-          assertTrue(newRelicMetricSlice.getTimeslices().size() > 0);
-        });
+    target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId);
+    RestResponse<VerificationNodeDataSetupResponse> metricResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(testNodeData, APPLICATION_JSON), new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
+    assertEquals(0, metricResponse.getResponseMessages().size());
+    assertTrue(metricResponse.getResource().isProviderReachable());
+    assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
+    assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
+    List<NewRelicMetric> txnsWithData =
+        (List<NewRelicMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
+    assertFalse(txnsWithData.isEmpty());
+    NewRelicMetricData newRelicMetricData =
+        JsonUtils.asObject(JsonUtils.asJson(metricResponse.getResource().getDataForNode()), NewRelicMetricData.class);
+    // found at least a node with data
+    if (!newRelicMetricData.getMetrics_found().isEmpty()) {
+      assertTrue(newRelicMetricData.getMetrics().size() > 0);
+      newRelicMetricData.getMetrics().forEach(newRelicMetricSlice -> {
+        assertTrue(!isEmpty(newRelicMetricSlice.getName()));
+        assertTrue(newRelicMetricSlice.getTimeslices().size() > 0);
+      });
 
-        return;
-      }
+      return;
     }
-
     fail("No node with data found");
   }
 

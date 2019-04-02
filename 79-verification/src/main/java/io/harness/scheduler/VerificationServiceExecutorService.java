@@ -32,8 +32,11 @@ import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.time.OffsetDateTime;
@@ -132,41 +135,82 @@ public class VerificationServiceExecutorService {
         return;
       }
       cvConfigUuid = generateUuid();
+      CVConfiguration cvConfiguration;
       switch (context.getStateType()) {
         case SUMO:
-          LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
-          logsCVConfiguration.setAppId(context.getAppId());
-          logsCVConfiguration.setQuery(context.getQuery());
-          logsCVConfiguration.setBaselineEndMinute(context.getStartDataCollectionMinute());
-          logsCVConfiguration.setBaselineStartMinute(
-              context.getStartDataCollectionMinute() - context.getPredictiveHistoryMinutes() + 1);
-          logsCVConfiguration.setUuid(cvConfigUuid);
-          logsCVConfiguration.setName(cvConfigUuid);
-          logsCVConfiguration.setAccountId(context.getAccountId());
-          logsCVConfiguration.setConnectorId(context.getAnalysisServerConfigId());
-          logsCVConfiguration.setEnvId(context.getEnvId());
-          logsCVConfiguration.setServiceId(context.getServiceId());
-          logsCVConfiguration.setStateType(context.getStateType());
-          logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
-          logsCVConfiguration.setEnabled24x7(true);
-          logsCVConfiguration.setComparisonStrategy(context.getComparisonStrategy());
-          logsCVConfiguration.setWorkflowConfig(true);
-          logsCVConfiguration.setContextId(context.getUuid());
-          logsCVConfiguration.setValidUntil(
-              Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
-          wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(logsCVConfiguration));
-
-          context.setPredictiveCvConfigId(cvConfigUuid);
-          wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
-          wingsPersistence.updateField(
-              StateExecutionInstance.class, context.getStateExecutionId(), "lastUpdatedAt", System.currentTimeMillis());
-          logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
-              logsCVConfiguration.getStateType(), logsCVConfiguration.getUuid(), context.getStateExecutionId());
+          cvConfiguration = createSUMOCVConfiguration(context, cvConfigUuid);
+          break;
+        case ELK:
+          cvConfiguration = createELKCVConfiguration(context, cvConfigUuid);
           break;
         default:
           throw new IllegalArgumentException("Invalid state: " + context.getStateType());
       }
+      logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
+          cvConfiguration.getStateType(), cvConfiguration.getUuid(), context.getStateExecutionId());
+      context.setPredictiveCvConfigId(cvConfigUuid);
+      wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
+      wingsPersistence.updateField(
+          StateExecutionInstance.class, context.getStateExecutionId(), "lastUpdatedAt", System.currentTimeMillis());
     }
+  }
+
+  private LogsCVConfiguration createSUMOCVConfiguration(AnalysisContext context, String cvConfigUuid) {
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setAppId(context.getAppId());
+    logsCVConfiguration.setQuery(context.getQuery());
+    logsCVConfiguration.setExactBaselineEndMinute(context.getStartDataCollectionMinute());
+    logsCVConfiguration.setExactBaselineStartMinute(
+        context.getStartDataCollectionMinute() - context.getPredictiveHistoryMinutes() + 1);
+    logsCVConfiguration.setUuid(cvConfigUuid);
+    logsCVConfiguration.setName(cvConfigUuid);
+    logsCVConfiguration.setAccountId(context.getAccountId());
+    logsCVConfiguration.setConnectorId(context.getAnalysisServerConfigId());
+    logsCVConfiguration.setEnvId(context.getEnvId());
+    logsCVConfiguration.setServiceId(context.getServiceId());
+    logsCVConfiguration.setStateType(context.getStateType());
+    logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
+    logsCVConfiguration.setEnabled24x7(true);
+    logsCVConfiguration.setComparisonStrategy(context.getComparisonStrategy());
+    logsCVConfiguration.setWorkflowConfig(true);
+    logsCVConfiguration.setContextId(context.getUuid());
+    logsCVConfiguration.setValidUntil(
+        Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(logsCVConfiguration));
+    return logsCVConfiguration;
+  }
+
+  private ElkCVConfiguration createELKCVConfiguration(AnalysisContext context, String cvConfigUuid) {
+    ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) context.getDataCollectionInfo();
+    ElkCVConfiguration elkCVConfiguration = new ElkCVConfiguration();
+
+    elkCVConfiguration.setAppId(context.getAppId());
+    elkCVConfiguration.setHostnameField(context.getHostNameField());
+    elkCVConfiguration.setTimestampField(elkDataCollectionInfo.getTimestampField());
+    elkCVConfiguration.setTimestampFormat(elkDataCollectionInfo.getTimestampFieldFormat());
+    elkCVConfiguration.setIndex(elkDataCollectionInfo.getIndices());
+    elkCVConfiguration.setQuery(context.getQuery());
+    elkCVConfiguration.setQueryType(elkDataCollectionInfo.getQueryType());
+    elkCVConfiguration.setMessageField(elkDataCollectionInfo.getMessageField());
+    elkCVConfiguration.setExactBaselineEndMinute(context.getStartDataCollectionMinute());
+    elkCVConfiguration.setExactBaselineStartMinute(
+        context.getStartDataCollectionMinute() - context.getPredictiveHistoryMinutes() + 1);
+    elkCVConfiguration.setUuid(cvConfigUuid);
+    elkCVConfiguration.setName(cvConfigUuid);
+    elkCVConfiguration.setAccountId(context.getAccountId());
+    elkCVConfiguration.setConnectorId(context.getAnalysisServerConfigId());
+    elkCVConfiguration.setEnvId(context.getEnvId());
+    elkCVConfiguration.setServiceId(context.getServiceId());
+    elkCVConfiguration.setStateType(context.getStateType());
+    elkCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
+    elkCVConfiguration.setEnabled24x7(true);
+    elkCVConfiguration.setComparisonStrategy(context.getComparisonStrategy());
+    elkCVConfiguration.setWorkflowConfig(true);
+    elkCVConfiguration.setContextId(context.getUuid());
+    elkCVConfiguration.setValidUntil(
+        Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(elkCVConfiguration));
+    return elkCVConfiguration;
   }
 
   private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {

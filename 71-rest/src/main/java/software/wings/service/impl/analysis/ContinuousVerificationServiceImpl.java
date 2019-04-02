@@ -1564,27 +1564,34 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private DelegateTask createElkDelegateTask(ElkCVConfiguration config, String waitId, long startTime, long endTime) {
-    ElkConfig elkConfig = (ElkConfig) settingsService.get(config.getConnectorId()).getValue();
-    final ElkDataCollectionInfo dataCollectionInfo =
-        ElkDataCollectionInfo.builder()
-            .elkConfig(elkConfig)
-            .accountId(elkConfig.getAccountId())
-            .applicationId(config.getAppId())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
-            .cvConfigId(config.getUuid())
-            .serviceId(config.getServiceId())
-            .query(config.getQuery())
-            .indices(config.getIndex())
-            .hostnameField(config.getHostnameField())
-            .messageField(config.getMessageField())
-            .timestampField(config.getTimestampField())
-            .timestampFieldFormat(config.getTimestampFormat())
-            .queryType(config.getQueryType())
-            .startTime(startTime)
-            .endTime(endTime)
-            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, config.getAppId(), null))
-            .build();
+    ElkDataCollectionInfo dataCollectionInfo;
+    if (config.isWorkflowConfig()) {
+      // Extract data collection info from Analysis Context
+      dataCollectionInfo = (ElkDataCollectionInfo) wingsPersistence.get(AnalysisContext.class, config.getContextId())
+                               .getDataCollectionInfo();
+    } else {
+      ElkConfig elkConfig = (ElkConfig) settingsService.get(config.getConnectorId()).getValue();
+      dataCollectionInfo =
+          ElkDataCollectionInfo.builder()
+              .elkConfig(elkConfig)
+              .accountId(elkConfig.getAccountId())
+              .applicationId(config.getAppId())
+              .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+              .serviceId(config.getServiceId())
+              .query(config.getQuery())
+              .indices(config.getIndex())
+              .hostnameField(config.getHostnameField())
+              .messageField(config.getMessageField())
+              .timestampField(config.getTimestampField())
+              .timestampFieldFormat(config.getTimestampFormat())
+              .queryType(config.getQueryType())
+              .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+              .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, config.getAppId(), null))
+              .build();
+    }
+    dataCollectionInfo.setCvConfigId(config.getUuid());
+    dataCollectionInfo.setStartTime(startTime);
+    dataCollectionInfo.setEndTime(endTime);
     return createDelegateTask(TaskType.ELK_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
         new Object[] {dataCollectionInfo}, config.getEnvId());
   }
