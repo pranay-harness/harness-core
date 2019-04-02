@@ -22,6 +22,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutput.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.limits.LimitCheckerFactory;
@@ -46,8 +48,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.beans.SweepingOutput;
-import software.wings.beans.SweepingOutput.Scope;
 import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;

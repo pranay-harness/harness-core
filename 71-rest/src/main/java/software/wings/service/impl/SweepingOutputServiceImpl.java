@@ -7,14 +7,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutput.Scope;
+import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.SweepingOutput;
-import software.wings.beans.SweepingOutput.Scope;
-import software.wings.beans.SweepingOutput.SweepingOutputBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SweepingOutputService;
 

@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.beans;
 
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.PersistentEntity;

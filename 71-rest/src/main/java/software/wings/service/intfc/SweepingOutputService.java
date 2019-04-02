@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.SweepingOutput;
+import io.harness.beans.SweepingOutput;
 
 import javax.validation.Valid;
 
