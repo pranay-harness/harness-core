@@ -30,6 +30,7 @@ import software.wings.service.intfc.analysis.LogLabelingService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +41,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
   private static final Logger logger = LoggerFactory.getLogger(LogLabelingServiceImpl.class);
   private static final int MAX_CASSIFICATION_COUNT = 3;
   private static final int MAX_LOG_RETURN_SIZE = 10;
+  private static final int SAMPLE_SIZE = 2;
   @Inject DataStoreService dataStoreService;
   @Inject WingsPersistence wingsPersistence;
   @Inject FeatureFlagService featureFlagService;
@@ -172,5 +174,86 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   public List<LogLabel> getLabels() {
     return Arrays.asList(LogLabel.values());
+  }
+
+  /**
+   * This method will return a currently unclassified ignore feedback for this account/service combo.
+   * @param accountId
+   * @param serviceId
+   * @return
+   */
+  public LogMLFeedbackRecord getIgnoreFeedbackToClassify(String accountId, String serviceId) {
+    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
+      return null;
+    }
+    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest().addFilter("serviceId", Operator.EQ, serviceId).withLimit(UNLIMITED).build();
+    List<LogMLFeedbackRecord> feedbackRecords =
+        dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequest);
+    for (LogMLFeedbackRecord record : feedbackRecords) {
+      if (isEmpty(record.getSupervisedLabel())) {
+        return record;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * This method will return samples (2) of each label from the existing records for this account/service.
+   * @param accountId
+   * @param serviceId
+   * @return
+   */
+  public Map<String, List<LogMLFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(String accountId, String serviceId) {
+    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
+      return null;
+    }
+
+    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest().addFilter("serviceId", Operator.EQ, serviceId).withLimit(UNLIMITED).build();
+
+    Map<String, List<LogMLFeedbackRecord>> sampleRecords = new HashMap<>(), returnSamples = new HashMap<>();
+    List<LogMLFeedbackRecord> feedbackRecords =
+        dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequest);
+    feedbackRecords.forEach(feedbackRecord -> {
+      String label = feedbackRecord.getSupervisedLabel();
+      if (isNotEmpty(label)) {
+        if (!sampleRecords.containsKey(label)) {
+          sampleRecords.put(label, new ArrayList<>());
+        }
+        sampleRecords.get(label).add(feedbackRecord);
+      }
+    });
+
+    // randomize 2 per label.
+    if (isNotEmpty(sampleRecords)) {
+      sampleRecords.forEach((label, samples) -> {
+        List<LogMLFeedbackRecord> samplesForLabel = new ArrayList<>();
+        if (samples.size() <= 2) {
+          samplesForLabel = samples;
+        } else {
+          Random randomizer = new Random();
+          while (samplesForLabel.size() < SAMPLE_SIZE) {
+            samplesForLabel.add(samples.get(randomizer.nextInt(samples.size())));
+          }
+        }
+        returnSamples.put(label, samplesForLabel);
+      });
+    }
+
+    return returnSamples;
+  }
+
+  /**
+   * Saves the ignore feedback with a label
+   * @return
+   */
+  public boolean saveLabeledIgnoreFeedback(String accountId, LogMLFeedbackRecord feedbackRecord, String label) {
+    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
+      return false;
+    }
+    feedbackRecord.setSupervisedLabel(label);
+    dataStoreService.save(LogMLFeedbackRecord.class, Arrays.asList(feedbackRecord), false);
+    return true;
   }
 }
