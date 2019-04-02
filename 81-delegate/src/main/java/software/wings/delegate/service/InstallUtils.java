@@ -29,9 +29,13 @@ public class InstallUtils {
   private static final String helmVersion = "v2.13.1";
   private static final String helmBaseDir = "./client-tools/helm/";
 
+  private static final String chartMuseumVersion = "v0.8.2";
+  private static final String chartMuseumBaseDir = "./client-tools/chartmuseum/";
+
   private static String kubectlPath = "kubectl";
   private static String goTemplateToolPath = "go-template";
   private static String helmPath = "helm";
+  private static String chartMuseumPath = "chartmuseum";
 
   public static String getKubectlPath() {
     return kubectlPath;
@@ -43,6 +47,10 @@ public class InstallUtils {
 
   public static String getHelmPath() {
     return helmPath;
+  }
+
+  public static String getChartMuseumPath() {
+    return chartMuseumPath;
   }
 
   static boolean installKubectl(DelegateConfiguration configuration) {
@@ -349,6 +357,94 @@ public class InstallUtils {
       }
     } catch (Exception e) {
       logger.error("Error installing helm", e);
+      return false;
+    }
+  }
+
+  private static boolean validateChartMuseumExists(String chartMuseumDirectory) {
+    try {
+      if (!Files.exists(Paths.get(chartMuseumDirectory + "/chartmuseum"))) {
+        return false;
+      }
+
+      String script = "./chartmuseum -v";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(chartMuseumDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+
+      ProcessResult result = processExecutor.execute();
+      if (result.getExitValue() == 0) {
+        logger.info(result.outputString());
+        return true;
+      } else {
+        logger.error(result.outputString());
+        return false;
+      }
+
+    } catch (Exception e) {
+      logger.error("Error checking chart museum", e);
+      return false;
+    }
+  }
+
+  private static String getChartMuseumDownloadUrl(String managerBaseUrl, String version) {
+    return managerBaseUrl + "storage/harness-download/harness-chartmuseum/release/" + version + "/bin/" + getOsPath()
+        + "/amd64/chartmuseum";
+  }
+
+  static boolean installChartMuseum(DelegateConfiguration configuration) {
+    try {
+      if (isWindows()) {
+        logger.info("Skipping chart museum install on Windows");
+        return true;
+      }
+
+      String chartMuseumDirectory = chartMuseumBaseDir + chartMuseumVersion;
+      if (validateChartMuseumExists(chartMuseumDirectory)) {
+        chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
+        logger.info(format("chartmuseum version %s already installed", chartMuseumVersion));
+        return true;
+      }
+
+      logger.info("Installing chartmuseum");
+      createDirectoryIfDoesNotExist(chartMuseumDirectory);
+
+      String downloadUrl =
+          getChartMuseumDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), chartMuseumVersion);
+      logger.info("Download Url is " + downloadUrl);
+
+      String script = "curl $PROXY_CURL -LO " + downloadUrl + "\n"
+          + "chmod +x ./chartmuseum \n"
+          + "./chartmuseum -v \n";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(chartMuseumDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+
+      ProcessResult result = processExecutor.execute();
+      if (result.getExitValue() == 0) {
+        chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
+        logger.info(result.outputString());
+
+        if (validateChartMuseumExists(chartMuseumDirectory)) {
+          logger.info("chartmuseum path: {}", chartMuseumPath);
+          return true;
+        } else {
+          logger.error("chartmuseum not validated after download: {}", chartMuseumPath);
+          return false;
+        }
+      } else {
+        logger.error("chart museum install failed");
+        logger.error(result.outputString());
+        return false;
+      }
+
+    } catch (Exception e) {
+      logger.error("Error installing chart museum", e);
       return false;
     }
   }

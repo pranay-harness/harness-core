@@ -17,4 +17,9 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   public String getHelmPath() {
     return InstallUtils.getHelmPath();
   }
+
+  @Override
+  public String getChartMuseumPath() {
+    return InstallUtils.getChartMuseumPath();
+  }
 }

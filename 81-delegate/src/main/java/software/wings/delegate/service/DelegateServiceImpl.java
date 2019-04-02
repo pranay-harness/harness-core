@@ -51,6 +51,7 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
+import static software.wings.delegate.service.InstallUtils.installChartMuseum;
 import static software.wings.delegate.service.InstallUtils.installGoTemplateTool;
 import static software.wings.delegate.service.InstallUtils.installHelm;
 import static software.wings.delegate.service.InstallUtils.installKubectl;
@@ -288,6 +289,7 @@ public class DelegateServiceImpl implements DelegateService {
       boolean kubectlInstalled = installKubectl(delegateConfiguration);
       boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
       boolean helmInstalled = installHelm(delegateConfiguration);
+      boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -423,14 +425,15 @@ public class DelegateServiceImpl implements DelegateService {
 
       startProfileCheck();
 
-      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled) {
+      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled) {
         systemExecutorService.submit(() -> {
           boolean kubectl = kubectlInstalled;
           boolean goTemplate = goTemplateInstalled;
           boolean helm = helmInstalled;
+          boolean chartMuseum = chartMuseumInstalled;
 
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm) && retries > 0) {
+          while ((!kubectl || !goTemplate || !helm || !chartMuseum) && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectl) {
               kubectl = installKubectl(delegateConfiguration);
@@ -441,6 +444,10 @@ public class DelegateServiceImpl implements DelegateService {
             if (!helm) {
               helm = installHelm(delegateConfiguration);
             }
+            if (!chartMuseum) {
+              chartMuseum = installChartMuseum(delegateConfiguration);
+            }
+
             retries--;
           }
 
@@ -452,6 +459,9 @@ public class DelegateServiceImpl implements DelegateService {
           }
           if (!helm) {
             logger.error("Failed to install helm after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!chartMuseum) {
+            logger.error("Failed to install chartMuseum after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
       }
