@@ -13,7 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 
@@ -80,7 +79,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
     when(query.filter(anyString(), anyObject())).thenReturn(query);
     String apiKey = "Foo";
     ApiKeyEntry apiKeyEntry = ApiKeyEntry.builder()
-                                  .appId(GLOBAL_APP_ID)
+                                  .uuid(generateUuid())
                                   .encryptedKey(getSimpleEncryption(ACCOUNT_ID).encryptChars(apiKey.toCharArray()))
                                   .hashOfKey("Hash Of Key")
                                   .accountId(ACCOUNT_ID)
@@ -108,7 +107,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
         PageResponseBuilder.aPageResponse()
             .withResponse(
                 Arrays.asList(ApiKeyEntry.builder()
-                                  .appId(GLOBAL_APP_ID)
+                                  .uuid(generateUuid())
                                   .encryptedKey(getSimpleEncryption(ACCOUNT_ID).encryptChars(apiKey.toCharArray()))
                                   .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
                                   .accountId(ACCOUNT_ID)
