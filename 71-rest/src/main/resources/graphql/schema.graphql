@@ -4,9 +4,35 @@ schema {
 
 type Query {
   workflow(id: String!, appId: String!): Workflow
-  workflows(appId: String!, limit: String, offSet: String): PageResponse
+  workflows(appId: String!, limit: Int, offset: Int): PagedData
   workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution
-  workflowExecutionList(workflowId: String!, appId: String!, envId: String!, limit: String, offSet: String): PageResponse
+  workflowExecutionList(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData
+  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]
+}
+
+scalar DateTime
+
+interface DebugInfo {
+  debugInfo: String
+}
+
+type WorkflowExecution implements DebugInfo {
+  id: String
+  name: String
+  status: String
+  startTime: DateTime
+  endTime: DateTime
+  debugInfo: String
+}
+
+type Workflow implements DebugInfo {
+  id: String
+  name: String
+  workflowType: String
+  description: String
+  templatized: Boolean
+  services: [Service]
+  debugInfo: String
 }
 
 type Service {
@@ -16,28 +42,25 @@ type Service {
    deploymentType: String
 }
 
-
-type PageResponse {
+type PagedData {
   total: Int
-  response: [Response]
+  offset: Int
+  limit: Int
+  data: [Result]
+  debugInfo: String
 }
 
-type Workflow {
-  id: String
-  name: String
-  description: String
-  templatized: Boolean
-  keywords: [String]
-  services: [Service]
-}
+union Result = Workflow | WorkflowExecution
 
-type WorkflowExecution {
-  id: String
-  name: String
-  status: String
-  startTs: Long
-  endTs: Long
+type Artifact implements DebugInfo {
+    id: String
+    sourceName: String
+    displayName: String
+    buildNo: String
+    workflowExecutionName: String
+    pipelineflowExecutionName: String
+    lastDeployedAt: Long
+    lastDeployedBy: String
+    debugInfo: String
 }
-
-union Response = Workflow | WorkflowExecution
 

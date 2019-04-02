@@ -3,11 +3,16 @@ package software.wings.app;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Names;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 
 import graphql.GraphQL;
+import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
+import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
+import software.wings.graphql.datafetcher.workflow.WorkflowExecutionDataFetcher;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
 
@@ -20,6 +25,14 @@ public class GraphQLModule extends AbstractModule {
     bind(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}).to(GraphQLProvider.class);
 
     bindPostContructInitializationForGraphQL();
+
+    bind(AbstractDataFetcher.class).annotatedWith(Names.named("workflowDataFetcher")).to(WorkflowDataFetcher.class);
+
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named("workflowExecutionDataFetcher"))
+        .to(WorkflowExecutionDataFetcher.class);
+
+    bind(AbstractDataFetcher.class).annotatedWith(Names.named("artifactDataFetcher")).to(ArtifactDataFetcher.class);
   }
 
   /***

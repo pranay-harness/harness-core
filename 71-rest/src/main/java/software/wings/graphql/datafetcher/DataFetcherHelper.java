@@ -1,15 +1,13 @@
 package software.wings.graphql.datafetcher;
 
-import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW;
-import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW_EXECUTION;
-import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW_EXECUTION_LIST;
-import static software.wings.graphql.datafetcher.SchemaFieldsEnum.WORKFLOW_LIST;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import graphql.schema.DataFetcher;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 
 import java.util.Map;
 
@@ -18,12 +16,17 @@ import java.util.Map;
  * field/endpoints(operations) that will be exposed to customers.
  *
  * So, if someone wants to add new field/operation
- * they can just add an endry in <code>SchemaFieldsEnum</code>
+ * they can just add an endry in <code>QueryOperationsEnum</code>
  * and add the corresponding <code>DataFetcher</code> in this class
  */
 @Singleton
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class DataFetcherHelper {
-  @Inject private WorkflowDataFetcher workflowDataFetcher;
+  @Inject @Named("workflowDataFetcher") AbstractDataFetcher workflowDataFetcher;
+
+  @Inject @Named("workflowExecutionDataFetcher") AbstractDataFetcher workflowExecutionDataFetcher;
+
+  @Inject @Named("artifactDataFetcher") AbstractDataFetcher artifactDataFetcher;
 
   /**
    * Later, we should have TEST to make sure a fieldName is only used once
@@ -31,9 +34,10 @@ public class DataFetcherHelper {
    * @return
    */
   public Map<String, DataFetcher<?>> getDataFetcherMap() {
-    return ImmutableMap.of(WORKFLOW.getFieldName(), workflowDataFetcher.getWorkflow(), WORKFLOW_LIST.getFieldName(),
-        workflowDataFetcher.getWorkflows(), WORKFLOW_EXECUTION.getFieldName(),
-        workflowDataFetcher.getWorkflowExecution(), WORKFLOW_EXECUTION_LIST.getFieldName(),
-        workflowDataFetcher.getWorkflowExecutionList());
+    return ImmutableMap.<String, DataFetcher<?>>builder()
+        .putAll(workflowDataFetcher.getOperationToDataFetcherMap())
+        .putAll(workflowExecutionDataFetcher.getOperationToDataFetcherMap())
+        .putAll(artifactDataFetcher.getOperationToDataFetcherMap())
+        .build();
   }
 }
