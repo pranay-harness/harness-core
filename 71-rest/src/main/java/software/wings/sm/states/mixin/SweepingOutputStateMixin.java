@@ -2,8 +2,8 @@ package software.wings.sm.states.mixin;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.serializer.KryoUtils;
-import software.wings.beans.SweepingOutput;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 

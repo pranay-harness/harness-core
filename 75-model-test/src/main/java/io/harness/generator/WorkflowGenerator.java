@@ -1,5 +1,8 @@
 package io.harness.generator;
 
+import static io.harness.beans.SweepingOutput.Scope.PHASE;
+import static io.harness.beans.SweepingOutput.Scope.PIPELINE;
+import static io.harness.beans.SweepingOutput.Scope.WORKFLOW;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.ResourceConstraintGenerator.ResourceConstraints.GENERIC_ASAP_TEST;
@@ -17,9 +20,6 @@ import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
-import static software.wings.beans.SweepingOutput.Scope.PHASE;
-import static software.wings.beans.SweepingOutput.Scope.PIPELINE;
-import static software.wings.beans.SweepingOutput.Scope.WORKFLOW;
 import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;

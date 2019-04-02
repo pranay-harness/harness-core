@@ -2,10 +2,10 @@ package software.wings.expression;
 
 import static java.lang.String.format;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.expression.LateBindingMap;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
-import software.wings.beans.SweepingOutput;
 import software.wings.service.intfc.SweepingOutputService;
 
 @Builder

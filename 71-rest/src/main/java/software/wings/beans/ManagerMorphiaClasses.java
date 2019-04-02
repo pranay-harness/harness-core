@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.SweepingOutput;
 import io.harness.event.model.QueableEvent;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.security.encryption.EncryptedRecord;

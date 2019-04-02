@@ -1,9 +1,9 @@
 package software.wings.expression;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.expression.LateBindingValue;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
-import software.wings.beans.SweepingOutput;
 import software.wings.service.intfc.SweepingOutputService;
 
 @Builder

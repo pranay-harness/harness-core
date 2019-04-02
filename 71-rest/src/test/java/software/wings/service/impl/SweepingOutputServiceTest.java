@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -14,8 +16,6 @@ import io.harness.serializer.KryoUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.beans.SweepingOutput;
-import software.wings.beans.SweepingOutput.SweepingOutputBuilder;
 import software.wings.service.intfc.SweepingOutputService;
 
 public class SweepingOutputServiceTest extends WingsBaseTest {

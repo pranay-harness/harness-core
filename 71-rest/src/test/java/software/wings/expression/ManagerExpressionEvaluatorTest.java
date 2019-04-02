@@ -13,13 +13,13 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
-import software.wings.beans.SweepingOutput;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.SweepingOutputService;
 

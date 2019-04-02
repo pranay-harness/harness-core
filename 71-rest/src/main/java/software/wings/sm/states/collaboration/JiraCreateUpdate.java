@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -24,7 +25,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SweepingOutput;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;

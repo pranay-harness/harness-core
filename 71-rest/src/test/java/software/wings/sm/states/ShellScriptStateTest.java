@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.SweepingOutput.Scope.PIPELINE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,7 +12,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.SweepingOutput.Scope.PIPELINE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -22,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -38,7 +39,6 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.SweepingOutput;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
