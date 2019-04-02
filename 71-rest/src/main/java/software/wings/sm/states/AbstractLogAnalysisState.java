@@ -4,9 +4,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
+import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -18,15 +23,17 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.metrics.RiskLevel;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionContext;
@@ -130,7 +137,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
       if (isEmpty(lastExecutionNodes)) {
-        if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
           getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
               executionContext.getStateExecutionInstanceId());
           return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
@@ -143,7 +150,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
 
       String responseMessage = "Log Verification running.";
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
         WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
         String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
             analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
@@ -185,7 +192,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       executionData.setErrorMsg(responseMessage);
 
       Set<String> hostsToBeCollected = new HashSet<>();
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
+      if (getComparisonStrategy() == COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
         hostsToBeCollected.addAll(lastExecutionNodes);
       }
 
@@ -194,9 +201,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
           executionContext.getStateExecutionInstanceId());
 
-      // Currently only SUMO implemented for creating separate data collection job each minute
-      if (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, executionContext.getAccountId())
-          && getStateType().equals(StateType.SUMO.name())) {
+      // In case of predictive the data collection will be handled as per 24x7 logic
+      // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
+      if (getComparisonStrategy() == PREDICTIVE
+          || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, executionContext.getAccountId())
+                 && getStateType().equals(StateType.SUMO.name()))) {
         getLogger().info(
             "Feature flag CV_DATA_COLLECTION_JOB is enabled will use data collection for triggering delegate task");
       } else {
@@ -369,9 +378,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
-    Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-        ? Collections.emptyMap()
-        : getLastExecutionNodes(context);
+    Map<String, String> controlNodes =
+        getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
     Map<String, String> testNodes = getCanaryNewHostNames(context);
     testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -381,30 +389,65 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     if (StateType.valueOf(getStateType()).equals(StateType.SUMO)) {
       hostNameField = ((SumoLogicAnalysisState) this).getHostnameField().getHostNameField();
     }
-    return AnalysisContext.builder()
-        .accountId(this.appService.get(context.getAppId()).getAccountId())
-        .appId(context.getAppId())
-        .workflowId(getWorkflowId(context))
-        .workflowExecutionId(context.getWorkflowExecutionId())
-        .stateExecutionId(context.getStateExecutionInstanceId())
-        .serviceId(getPhaseServiceId(context))
-        .analysisType(MLAnalysisType.LOG_ML)
-        .controlNodes(controlNodes)
-        .testNodes(testNodes)
-        .query(query)
-        .isSSL(this.configuration.isSslEnabled())
-        .appPort(this.configuration.getApplicationPort())
-        .comparisonStrategy(getComparisonStrategy())
-        .timeDuration(Integer.parseInt(getTimeDuration()))
-        .stateType(StateType.valueOf(getStateType()))
-        .analysisServerConfigId(getAnalysisServerConfigId())
-        .correlationId(correlationId)
-        .managerVersion(versionInfoManager.getVersionInfo().getVersion())
-        .envId(envId)
-        .hostNameField(hostNameField)
-        .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
-        .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
-        .build();
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(this.appService.get(context.getAppId()).getAccountId())
+            .appId(context.getAppId())
+            .workflowId(getWorkflowId(context))
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .serviceId(getPhaseServiceId(context))
+            .analysisType(MLAnalysisType.LOG_ML)
+            .controlNodes(controlNodes)
+            .testNodes(testNodes)
+            .query(query)
+            .isSSL(this.configuration.isSslEnabled())
+            .appPort(this.configuration.getApplicationPort())
+            .comparisonStrategy(getComparisonStrategy())
+            .timeDuration(Integer.parseInt(getTimeDuration()))
+            .stateType(StateType.valueOf(getStateType()))
+            .analysisServerConfigId(getAnalysisServerConfigId())
+            .correlationId(correlationId)
+            .managerVersion(versionInfoManager.getVersionInfo().getVersion())
+            .envId(envId)
+            .hostNameField(hostNameField)
+            .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
+            .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
+            .build();
+
+    // Data collection info is created and put in Analysis context for persistence
+    if (getComparisonStrategy().equals(PREDICTIVE)) {
+      DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext);
+      analysisContext.setDataCollectionInfo(dataCollectionInfo);
+    }
+    return analysisContext;
+  }
+
+  public DataCollectionInfo createDataCollectionInfo(AnalysisContext analysisContext) {
+    StateType stateType = StateType.valueOf(getStateType());
+    switch (stateType) {
+      case ELK:
+        ElkAnalysisState elkAnalysisState = (ElkAnalysisState) this;
+        ElkConfig elkConfig = (ElkConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        return ElkDataCollectionInfo.builder()
+            .elkConfig(elkConfig)
+            .accountId(analysisContext.getAccountId())
+            .applicationId(analysisContext.getAppId())
+            .stateExecutionId(analysisContext.getStateExecutionId())
+            .serviceId(analysisContext.getServiceId())
+            .query(elkAnalysisState.getQuery())
+            .indices(elkAnalysisState.getIndices())
+            .hostnameField(elkAnalysisState.getHostnameField())
+            .messageField(elkAnalysisState.getMessageField())
+            .timestampField(elkAnalysisState.getTimestampField())
+            .timestampFieldFormat(elkAnalysisState.getTimestampFormat())
+            .queryType(elkAnalysisState.getQueryType())
+            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, analysisContext.getAppId(), null))
+            .build();
+      default:
+        return null;
+    }
   }
 
   public abstract AnalysisTolerance getAnalysisTolerance();

@@ -73,7 +73,7 @@ public class VerificationJob implements Job {
     PageResponse<Account> accounts;
     int offSet = 0;
     List<Account> accountsFetched = new ArrayList<>();
-    int numOfAccountsFetched = 0;
+    int numOfAccountsFetched;
     do {
       accounts = verificationManagerClientHelper
                      .callManagerWithRetry(verificationManagerClient.getAccounts(String.valueOf(offSet)))

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * Elk Data collection Info that is shared for while initiating Data collection task
  * Created by rsingh on 5/18/17.
  */
 @Data

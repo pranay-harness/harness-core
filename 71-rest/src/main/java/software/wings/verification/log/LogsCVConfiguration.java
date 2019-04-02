@@ -23,6 +23,10 @@ public class LogsCVConfiguration extends CVConfiguration {
     this.query = isNotEmpty(query) ? query.trim() : query;
   }
 
+  /**
+   * Sets the floor value for Baseline Start Minute
+   * @param baselineStartMinute
+   */
   public void setBaselineStartMinute(long baselineStartMinute) {
     if (Math.floorMod(baselineStartMinute - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
       baselineStartMinute -= Math.floorMod(baselineStartMinute - 1, CRON_POLL_INTERVAL_IN_MINUTES);
@@ -30,8 +34,28 @@ public class LogsCVConfiguration extends CVConfiguration {
     this.baselineStartMinute = baselineStartMinute;
   }
 
+  /**
+   * Sets the floor value for Baseline End Minute
+   * @param baselineEndMinute
+   */
   public void setBaselineEndMinute(long baselineEndMinute) {
     this.baselineEndMinute = baselineEndMinute - Math.floorMod(baselineEndMinute, CRON_POLL_INTERVAL_IN_MINUTES);
+  }
+
+  /**
+   * Sets the Exact Baseline Start Minute
+   * @param baselineStartMinute
+   */
+  public void setExactBaselineStartMinute(long baselineStartMinute) {
+    this.baselineStartMinute = baselineStartMinute;
+  }
+
+  /**
+   * Sets the Exact Baseline End Minute
+   * @param baselineEndMinute
+   */
+  public void setExactBaselineEndMinute(long baselineEndMinute) {
+    this.baselineEndMinute = baselineEndMinute;
   }
 
   @Data
