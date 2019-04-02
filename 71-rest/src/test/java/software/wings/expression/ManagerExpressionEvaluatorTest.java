@@ -99,6 +99,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
 
     SweepingOutput sweepingOutput =
         sweepingOutputService.save(SweepingOutput.builder()
+                                       .uuid(generateUuid())
                                        .name("jenkins")
                                        .appId(appId)
                                        .pipelineExecutionId(pipelineExecutionId)
@@ -134,6 +135,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
 
     SweepingOutput sweepingOutput =
         sweepingOutputService.save(SweepingOutput.builder()
+                                       .uuid(generateUuid())
                                        .name("workflow")
                                        .appId(appId)
                                        .pipelineExecutionId(pipelineExecutionId)

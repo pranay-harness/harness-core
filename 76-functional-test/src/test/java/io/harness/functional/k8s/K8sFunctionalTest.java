@@ -32,6 +32,7 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -82,18 +83,21 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Category(FunctionalTests.class)
+  @Ignore
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
   @Test(timeout = TIMEOUT)
   @Category(FunctionalTests.class)
+  @Ignore
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
   @Test(timeout = TIMEOUT)
   @Category(FunctionalTests.class)
+  @Ignore
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);
   }

@@ -830,6 +830,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       phaseExecutionId = "dummy-" + generateUuid();
     }
     return SweepingOutput.builder()
+        .uuid(generateUuid())
         .appId(getAppId())
         .pipelineExecutionId(pipelineExecutionId)
         .workflowExecutionId(workflowExecutionId)
