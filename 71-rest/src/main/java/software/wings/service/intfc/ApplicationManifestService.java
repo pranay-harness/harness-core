@@ -61,4 +61,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   List<ApplicationManifest> listAppManifests(String appId, String serviceId);
 
   List<ManifestFile> listManifestFiles(String appManifestId);
+
+  ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind);
 }

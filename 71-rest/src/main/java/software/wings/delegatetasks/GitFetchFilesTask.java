@@ -22,6 +22,9 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.Log;
+import software.wings.beans.Log.LogColor;
+import software.wings.beans.Log.LogWeight;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
@@ -60,12 +63,13 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
         delegateLogService, taskParams.getAccountId(), taskParams.getAppId(), taskParams.getActivityId(), FetchFiles);
-    executionLogCallback.saveExecutionLog("Fetching files from git");
 
     try {
       Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
 
       for (Entry<String, GitFetchFilesConfig> entry : taskParams.getGitFetchFilesConfigMap().entrySet()) {
+        executionLogCallback.saveExecutionLog(
+            Log.color("\nFetching values files from git for " + entry.getKey(), LogColor.White, LogWeight.Bold));
         GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
 
         GitFetchFilesResult gitFetchFilesResult = fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(),
