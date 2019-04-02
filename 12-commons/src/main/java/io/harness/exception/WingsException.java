@@ -3,6 +3,7 @@ package io.harness.exception;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
+import static io.harness.exception.WingsException.ReportTarget.GRAPHQL_API;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.exception.WingsException.ReportTarget.RED_BELL_ALERT;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
@@ -39,6 +40,8 @@ public class WingsException extends RuntimeException {
 
     // When exception targets user admin it will trigger an alert in the harness app.
     RED_BELL_ALERT,
+
+    GRAPHQL_API
   }
 
   public static final EnumSet<ReportTarget> EVERYBODY =
@@ -51,7 +54,7 @@ public class WingsException extends RuntimeException {
       EnumSet.<ReportTarget>of(DELEGATE_LOG_SYSTEM, RED_BELL_ALERT, REST_API);
   public static final EnumSet<ReportTarget> ADMIN = EnumSet.<ReportTarget>of(DELEGATE_LOG_SYSTEM, RED_BELL_ALERT);
   public static final EnumSet<ReportTarget> SRE = EnumSet.<ReportTarget>of(LOG_SYSTEM, DELEGATE_LOG_SYSTEM);
-  public static final EnumSet<ReportTarget> USER = EnumSet.<ReportTarget>of(REST_API);
+  public static final EnumSet<ReportTarget> USER = EnumSet.<ReportTarget>of(REST_API, GRAPHQL_API);
   public static final EnumSet<ReportTarget> NOBODY = EnumSet.noneOf(ReportTarget.class);
 
   public enum ExecutionContext { MANAGER, DELEGATE }

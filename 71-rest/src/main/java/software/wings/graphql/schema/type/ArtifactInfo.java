@@ -1,0 +1,22 @@
+package software.wings.graphql.schema.type;
+
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
+public class ArtifactInfo implements DebugInfo {
+  String id;
+  String name;
+  String sourceName;
+  String displayName;
+  String buildNo;
+  String workflowExecutionName;
+  String pipelineExecutionName;
+  String lastDeployedBy;
+  long lastDeployedAt;
+  String debugInfo;
+}

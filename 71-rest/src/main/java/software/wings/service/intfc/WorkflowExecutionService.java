@@ -158,5 +158,5 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       @NotNull String appId, @NotNull String workflowId, String serviceId, String envId);
 
   PageResponse<WorkflowExecution> fetchWorkflowExecutionList(
-      @NotNull String appId, @NotNull String workflowId, @NotNull String envId, String pageOffset, String pageLimit);
+      @NotNull String appId, @NotNull String workflowId, @NotNull String envId, int pageOffset, int pageLimit);
 }

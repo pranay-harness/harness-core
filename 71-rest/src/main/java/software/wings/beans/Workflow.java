@@ -10,9 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
@@ -282,17 +280,6 @@ public class Workflow extends Base implements KeywordsAware {
       keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
     }
     return keywords;
-  }
-
-  /**
-   * Temporary change for GraphQL api's
-   * Will change it in subsequent PR
-   * @return
-   */
-  @JsonIgnore
-  @SchemaIgnore
-  public String getId() {
-    return getUuid();
   }
 
   public static final class WorkflowBuilder {

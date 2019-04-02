@@ -4,6 +4,7 @@ import static software.wings.graphql.utils.GraphQLConstants.QUERY_API;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
@@ -11,22 +12,27 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import software.wings.graphql.datafetcher.DataFetcherHelper;
-import software.wings.graphql.typeresolver.TypeResolverHelper;
+import software.wings.graphql.scalar.GraphQLScalars;
+import software.wings.graphql.schema.type.resolvers.TypeResolverHelper;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import javax.validation.constraints.NotNull;
 
+@Singleton
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private static final String GRAPHQL_SCHEMA_FILE_PATH = "graphql/schema.graphql";
 
-  private GraphQL graphQL;
+  GraphQL graphQL;
 
-  private DataFetcherHelper dataFetcherHelper;
+  DataFetcherHelper dataFetcherHelper;
 
-  private TypeResolverHelper typeResolverHelper;
+  TypeResolverHelper typeResolverHelper;
 
   @Inject
   public GraphQLProvider(@NotNull DataFetcherHelper dataFetcherHelper, @NotNull TypeResolverHelper typeResolverHelper) {
@@ -52,7 +58,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   }
 
   private RuntimeWiring buildRuntimeWiring() {
-    RuntimeWiring.Builder builder = RuntimeWiring.newRuntimeWiring();
+    RuntimeWiring.Builder builder = RuntimeWiring.newRuntimeWiring().scalar(GraphQLScalars.DATE_TIME);
 
     this.dataFetcherHelper.getDataFetcherMap().forEach(
         (k, v) -> builder.type(QUERY_API, typeWiring -> typeWiring.dataFetcher(k, v)));

@@ -1,19 +1,23 @@
 package software.wings.resources.graphql;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import graphql.ExecutionInput;
 import graphql.ExecutionResult;
+import graphql.ExecutionResultImpl;
 import graphql.GraphQL;
-import io.harness.eraro.ResponseMessage;
-import io.harness.rest.RestResponse;
+import graphql.GraphqlErrorBuilder;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.graphql.utils.GraphQLConstants;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -26,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 @Produces("application/json")
 @Singleton
 @Slf4j
+@PublicApi
 public class GraphQLResource {
   private GraphQL graphQL;
 
@@ -40,16 +45,43 @@ public class GraphQLResource {
 
   @POST
   @Consumes(MediaType.TEXT_PLAIN)
-  public RestResponse<Object> execute(String query) {
-    RestResponse<Object> response;
+  public Map<String, Object> execute(String query) {
+    ExecutionInput executionInput = ExecutionInput.newExecutionInput().query(query).build();
+    return execute(executionInput);
+  }
+
+  /**
+   * GraphQL graphQLQuery can be sent as plain text
+   * or as JSON hence I have added overloaded methods
+   * to handle both cases.
+   * @param graphQLQuery
+   * @return
+   */
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Map<String, Object> execute(GraphQLQuery graphQLQuery) {
+    return execute(getExecutionInput(graphQLQuery));
+  }
+
+  private Map<String, Object> execute(ExecutionInput executionInput) {
+    ExecutionResult executionResult;
     if (featureFlagService.isEnabled(FeatureName.GRAPHQL, null)) {
-      ExecutionResult executionResult = graphQL.execute(query);
-      response = new RestResponse<>(executionResult.getData());
+      executionResult = graphQL.execute(executionInput);
     } else {
       log.info(GraphQLConstants.FEATURE_NOT_ENABLED);
-      response = new RestResponse<>();
-      response.addResponseMessage(ResponseMessage.builder().message(GraphQLConstants.FEATURE_NOT_ENABLED).build());
+      executionResult =
+          ExecutionResultImpl.newExecutionResult()
+              .addError(GraphqlErrorBuilder.newError().message(GraphQLConstants.FEATURE_NOT_ENABLED).build())
+              .build();
     }
-    return response;
+    return executionResult.toSpecification();
+  }
+
+  private ExecutionInput getExecutionInput(GraphQLQuery graphQLQuery) {
+    return ExecutionInput.newExecutionInput()
+        .query(graphQLQuery.getQuery())
+        .variables(graphQLQuery.getVariables() == null ? Maps.newHashMap() : graphQLQuery.getVariables())
+        .operationName(graphQLQuery.getOperationName())
+        .build();
   }
 }

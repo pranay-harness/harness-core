@@ -2797,14 +2797,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public PageResponse<WorkflowExecution> fetchWorkflowExecutionList(
-      String appId, String workflowId, String envId, String pageOffset, String pageLimit) {
+      String appId, String workflowId, String envId, int pageOffset, int pageLimit) {
     PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
             .addFilter(WorkflowExecution.WORKFLOW_TYPE_ID_KEY, Operator.EQ, ORCHESTRATION)
             .addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, appId)
             .addFilter(WorkflowExecution.WORKFLOW_ENV_IDS_KEY, Operator.IN, Arrays.asList(envId))
-            .withLimit(pageLimit)
-            .withOffset(pageOffset)
+            .withLimit(String.valueOf(pageLimit))
+            .withOffset(String.valueOf(pageOffset))
             .addOrder(
                 SortOrder.Builder.aSortOrder().withField(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC).build())
             .build();
