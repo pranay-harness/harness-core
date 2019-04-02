@@ -173,6 +173,7 @@ import software.wings.service.impl.prometheus.PrometheusDelegateServiceImpl;
 import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
@@ -222,6 +223,7 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
@@ -401,6 +403,7 @@ public class DelegateModule extends DependencyModule {
     bind(AwsRoute53HelperServiceDelegate.class).to(AwsRoute53HelperServiceDelegateImpl.class);
     bind(AwsServiceDiscoveryHelperServiceDelegate.class).to(AwsServiceDiscoveryHelperServiceDelegateImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
+    bind(ServiceNowDelegateService.class).to(ServiceNowDelegateServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

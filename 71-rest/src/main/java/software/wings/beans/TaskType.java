@@ -56,6 +56,7 @@ import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.jira.JiraTask;
+import software.wings.delegatetasks.jira.ServicenowTask;
 import software.wings.delegatetasks.jira.ShellScriptApprovalTask;
 import software.wings.delegatetasks.k8s.K8sTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
@@ -97,6 +98,7 @@ import software.wings.delegatetasks.validation.NexusValidation;
 import software.wings.delegatetasks.validation.PCFCommandValidation;
 import software.wings.delegatetasks.validation.PrometheusValidation;
 import software.wings.delegatetasks.validation.SecretManagerValidation;
+import software.wings.delegatetasks.validation.ServicenowValidation;
 import software.wings.delegatetasks.validation.SftpValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SmbValidation;
@@ -319,7 +321,9 @@ public enum TaskType {
   CUSTOM_VALIDATE_ARTIFACT_STREAM(
       TaskGroup.CUSTOM, ServiceImplDelegateTask.class, CustomArtifactSourceValidation.class),
   SHELL_SCRIPT_PROVISION_TASK(
-      TaskGroup.SHELL_SCRIPT_PROVISION, ShellScriptProvisionTask.class, AlwaysTrueValidation.class);
+      TaskGroup.SHELL_SCRIPT_PROVISION, ShellScriptProvisionTask.class, AlwaysTrueValidation.class),
+  SERVICENOW(TaskGroup.SERVICENOW, ServicenowTask.class, ServicenowValidation.class),
+  SERVICENOW_VALIDATION(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

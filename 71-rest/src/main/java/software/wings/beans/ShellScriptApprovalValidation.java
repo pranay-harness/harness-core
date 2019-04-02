@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.netty.util.NetUtil.LOCALHOST;
 import static java.util.Collections.singletonList;
 
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
@@ -23,7 +24,7 @@ public class ShellScriptApprovalValidation extends AbstractDelegateValidateTask 
   @Override
   public List<String> getCriteria() {
     List<String> list = new ArrayList<>();
-    list.add("localhost");
+    list.add(LOCALHOST.getHostName());
 
     return list;
   }

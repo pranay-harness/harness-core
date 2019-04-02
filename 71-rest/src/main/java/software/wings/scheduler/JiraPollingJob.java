@@ -90,7 +90,7 @@ public class JiraPollingJob implements Job {
     try {
       ExecutionStatus approval = jiraHelperService.getApprovalStatus(
           connectorId, accountId, appId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
-      // TODO:: Swagat: What if ticket not found or rejected. Also, there should be window till we should poll after
+      // TODO:: Pooja: What if ticket not found or rejected. Also, there should be window till we should poll after
       // than it should delete
 
       logger.info("Jira Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
@@ -108,7 +108,7 @@ public class JiraPollingJob implements Job {
     } catch (Exception ex) {
       logger.error("Exception in execute JiraPollingJob. approvalId: {}, workflowExecutionId: {} ", approvalId,
           workflowExecutionId, ex);
-      // TODO:: Swagat: Add logic to determine terminal exceptions and cleanup for those.
+      // TODO:: Pooja: Add logic to determine terminal exceptions and cleanup for those.
     }
 
     if (isTerminalState) {
