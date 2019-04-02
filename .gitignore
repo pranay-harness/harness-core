@@ -20,6 +20,7 @@ delegate.log
 dependency-reduced-pom.xml
 dump.tar.gz
 dump/
+manager.lock
 mygclogfilename.gc
 portal-gc-logs.gc
 portal.log

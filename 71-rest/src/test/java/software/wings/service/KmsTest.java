@@ -1308,11 +1308,11 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(Type.TEXT, savedAttribute.getType());
     assertEquals("unencrypted", new String(savedAttribute.getValue()));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).count());
-    assertNull(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                   .filter("type", SettingVariableTypes.SECRET_TEXT)
-                   .asList()
-                   .get(0)
-                   .getParentIds());
+    assertTrue(isEmpty(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                           .filter("type", SettingVariableTypes.SECRET_TEXT)
+                           .asList()
+                           .get(0)
+                           .getParentIds()));
   }
 
   @Test
