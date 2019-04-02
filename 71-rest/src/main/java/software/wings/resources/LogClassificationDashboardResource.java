@@ -12,10 +12,11 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogLabel;
+import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.intfc.analysis.LogLabelingService;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -32,8 +33,7 @@ public class LogClassificationDashboardResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<List<LogDataRecord>> getLogRecordsToClassify(@QueryParam("accountId") String accountId)
-      throws IOException {
+  public RestResponse<List<LogDataRecord>> getLogRecordsToClassify(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(logLabelingService.getLogRecordsToClassify(accountId));
   }
 
@@ -50,7 +50,34 @@ public class LogClassificationDashboardResource {
   @Path(VerificationConstants.GET_CLASSIFY_LABELS_URL)
   @Timed
   @ExceptionMetered
-  public RestResponse<List<LogLabel>> getLabels(@QueryParam("accountId") String accountId) throws IOException {
+  public RestResponse<List<LogLabel>> getLabels(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(logLabelingService.getLabels());
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_IGNORE_RECORDS_TO_CLASSIFY)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LogMLFeedbackRecord> getIgnoreFeedbacksToClassify(
+      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(logLabelingService.getIgnoreFeedbackToClassify(accountId, serviceId));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_SAMPLE_LABELS_IGNORE_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, List<LogMLFeedbackRecord>>> getSampleLabelsForIgnoreFeedback(
+      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(logLabelingService.getLabeledSamplesForIgnoreFeedback(accountId, serviceId));
+  }
+
+  @POST
+  @Path(VerificationConstants.GET_IGNORE_RECORDS_TO_CLASSIFY)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveLabeledIgnoreFeedback(@QueryParam("accountId") String accountId,
+      @QueryParam("label") String label, LogMLFeedbackRecord feedbackRecord) {
+    return new RestResponse<>(logLabelingService.saveLabeledIgnoreFeedback(accountId, feedbackRecord, label));
   }
 }

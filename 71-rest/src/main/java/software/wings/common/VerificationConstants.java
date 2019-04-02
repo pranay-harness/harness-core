@@ -46,6 +46,8 @@ public class VerificationConstants {
   public static final String LEARNING_EXP_URL = "learning-exp";
   public static final String LOG_CLASSIFY_URL = "log-classify";
   public static final String GET_CLASSIFY_LABELS_URL = "/list-labels-to-classify";
+  public static final String GET_IGNORE_RECORDS_TO_CLASSIFY = "/ignore-feedback-to-classify";
+  public static final String GET_SAMPLE_LABELS_IGNORE_FEEDBACK = "/labels-for-ignore-feedback";
   public static final String LAMBDA_HOST_NAME = "LAMBDA_HOST";
   public static final String DEFAULT_GROUP_NAME = "default";
   public static final String ECS_HOST_NAME = "ECS_HOST";
