@@ -68,7 +68,7 @@ public class EncryptedData extends Base implements EncryptedRecord {
 
   @NotEmpty @Indexed private String accountId;
 
-  @Builder.Default private boolean enabled = true;
+  @Default private boolean enabled = true;
 
   @NotEmpty private String kmsId;
 
