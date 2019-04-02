@@ -1,12 +1,13 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import lombok.Getter;
@@ -18,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;

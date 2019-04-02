@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.netty.util.NetUtil.LOCALHOST;
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 

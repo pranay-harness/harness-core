@@ -1,5 +1,6 @@
 package software.wings.managerclient;
 
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
@@ -19,7 +20,6 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log;

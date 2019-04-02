@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.toMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -44,7 +45,6 @@ import software.wings.api.DeploymentType;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;

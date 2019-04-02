@@ -4,10 +4,10 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureConfig;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.azure.AcrService;
 import software.wings.security.encryption.EncryptedDataDetail;

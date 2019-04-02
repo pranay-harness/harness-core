@@ -8,10 +8,10 @@ import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;

@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
 import com.google.common.base.Splitter;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -28,7 +29,6 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 

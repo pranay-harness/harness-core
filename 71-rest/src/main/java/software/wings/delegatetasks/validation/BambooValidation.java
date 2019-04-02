@@ -2,8 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.DelegateTask;
 
 import java.util.Arrays;
 import java.util.List;

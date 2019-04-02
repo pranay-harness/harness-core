@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.AllArgsConstructor;

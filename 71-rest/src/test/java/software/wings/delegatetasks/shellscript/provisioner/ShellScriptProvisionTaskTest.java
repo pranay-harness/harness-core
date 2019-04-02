@@ -3,6 +3,7 @@ package software.wings.delegatetasks.shellscript.provisioner;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
@@ -12,7 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.security.encryption.EncryptedDataDetail;

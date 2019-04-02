@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.DelegateTask;
+import io.harness.beans.DelegateTask;
 import software.wings.beans.TaskGroup;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 

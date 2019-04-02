@@ -5,8 +5,8 @@ import static java.util.Collections.singletonList;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 
+import io.harness.beans.DelegateTask;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;

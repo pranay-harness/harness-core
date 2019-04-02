@@ -7,10 +7,10 @@ import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureConfig;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;

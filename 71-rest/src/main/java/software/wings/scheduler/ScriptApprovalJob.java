@@ -10,6 +10,7 @@ import static software.wings.common.Constants.WORKFLOW_EXECUTION_ID_KEY;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.beans.approval.ShellScriptApprovalParams;
 import software.wings.service.impl.DelegateServiceImpl;

@@ -1,16 +1,16 @@
 package software.wings.delegatetasks.terraform;
 
+import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static org.junit.Assert.assertTrue;
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.TerraformFetchTargetsTask;
 import software.wings.utils.WingsTestConstants;
 

@@ -70,6 +70,7 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.DelegateTask;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.SecretDetail;
@@ -122,7 +123,6 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;

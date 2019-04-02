@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Injector;
 
 import io.harness.CategoryTest;
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.SecretDetail;
@@ -26,7 +27,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import software.wings.beans.DelegatePackage;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.KmsConfig;
 import software.wings.managerclient.ManagerClient;
 import software.wings.security.encryption.EncryptedData;

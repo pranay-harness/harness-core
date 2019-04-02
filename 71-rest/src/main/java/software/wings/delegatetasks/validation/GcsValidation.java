@@ -2,7 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import software.wings.beans.DelegateTask;
+import io.harness.beans.DelegateTask;
 
 import java.util.List;
 import java.util.function.Consumer;
