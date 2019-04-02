@@ -568,11 +568,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>61-serialization-utils</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>64-events-framework</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

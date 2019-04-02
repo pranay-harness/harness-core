@@ -1,8 +1,6 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.k8s.model.K8sContainer;
-import io.harness.k8s.model.K8sPod;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -1192,8 +1190,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sBlueGreenDeployTaskParameters.class, 7142);
     kryo.register(K8sBlueGreenDeployResponse.class, 7143);
     kryo.register(K8sElement.class, 7144);
-    kryo.register(K8sPod.class, 7145);
-    kryo.register(K8sContainer.class, 7146);
     kryo.register(K8sInstanceSyncTaskParameters.class, 7147);
     kryo.register(EcsServiceDeployRequest.class, 7148);
     kryo.register(EcsServiceDeployResponse.class, 7149);

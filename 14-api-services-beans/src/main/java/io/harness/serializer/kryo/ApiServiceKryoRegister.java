@@ -41,6 +41,8 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.harness.k8s.model.K8sContainer;
+import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
@@ -92,5 +94,8 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
     kryo.register(BasicDBObject.class, 2016);
     kryo.register(EncryptionConfig.class, 5305);
     kryo.register(EncryptionType.class, 5123);
+
+    kryo.register(K8sPod.class, 7145);
+    kryo.register(K8sContainer.class, 7146);
   }
 }
