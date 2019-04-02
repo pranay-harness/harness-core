@@ -32,8 +32,10 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.stats.CloneMetadata;
@@ -41,6 +43,7 @@ import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
@@ -566,6 +569,18 @@ public class WorkflowResource {
   public RestResponse<List<InstanceElement>> getDeployedNodes(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
     return new RestResponse<>(workflowService.getDeployedNodes(appId, workflowId));
+  }
+
+  @POST
+  @Path("phase/{phaseId}/sections/{sectionId}/{position}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WorkflowCategorySteps> getSteps(@PathParam("phaseId") String phaseId,
+      @PathParam("sectionId") String sectionId, @PathParam("position") int position, Workflow workflow) {
+    final User user = UserThreadLocal.get();
+    final WorkflowCategorySteps steps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, sectionId, position);
+    return new RestResponse<>(steps);
   }
 
   @GET

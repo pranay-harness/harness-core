@@ -132,6 +132,7 @@ import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.REPEAT;
+import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -158,6 +159,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -224,7 +226,10 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowCategorySteps;
+import software.wings.beans.WorkflowCategoryStepsMeta;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.WorkflowStepMeta;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ServiceCommand;
@@ -262,12 +267,15 @@ import software.wings.sm.StateTypeScope;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.ConstraintViolationException;
 
 /**
@@ -3375,5 +3383,79 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow = constructLinkedTemplate(templateStep);
 
     return workflowService.createWorkflow(workflow);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCategoriesFromCalculateCategorySteps() {
+    Workflow workflow = aWorkflow().build();
+    StateType[] stateTypes = {HTTP, SHELL_SCRIPT};
+    StencilCategory[] stencilCategory = {StencilCategory.OTHERS};
+
+    final WorkflowCategoryStepsMeta categoryOthers = WorkflowCategoryStepsMeta.builder()
+                                                         .id(StencilCategory.OTHERS.getName())
+                                                         .name(StencilCategory.OTHERS.getDisplayName())
+                                                         .stepIds(asList(HTTP.getType(), SHELL_SCRIPT.getType()))
+                                                         .build();
+
+    final WorkflowCategoryStepsMeta categoryFavorites =
+        WorkflowCategoryStepsMeta.builder().id("FAVORITE").name("Favorite").stepIds(asList(HTTP.getType())).build();
+
+    WorkflowCategorySteps workflowCategorySteps =
+        WorkflowServiceImpl.calculateCategorySteps(null, null, stateTypes, stencilCategory, workflow, null, null, 0);
+    assertThat(workflowCategorySteps.getCategories()).containsExactly(categoryOthers);
+
+    Set<String> favorite = ImmutableSet.of(HTTP.name());
+    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
+        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0);
+    assertThat(workflowCategorySteps.getCategories()).containsExactly(categoryFavorites, categoryOthers);
+
+    LinkedList<String> recent = new LinkedList();
+    recent.add(SHELL_SCRIPT.getType());
+
+    final WorkflowCategoryStepsMeta categoryRecent =
+        WorkflowCategoryStepsMeta.builder().id("RECENT").name("Recent").stepIds(asList(SHELL_SCRIPT.getType())).build();
+
+    workflowCategorySteps =
+        WorkflowServiceImpl.calculateCategorySteps(null, recent, stateTypes, stencilCategory, workflow, null, null, 0);
+    assertThat(workflowCategorySteps.getCategories()).containsExactly(categoryRecent, categoryOthers);
+
+    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
+        favorite, recent, stateTypes, stencilCategory, workflow, null, null, 0);
+    assertThat(workflowCategorySteps.getCategories())
+        .containsExactly(categoryRecent, categoryFavorites, categoryOthers);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testStepsFromCalculateCategorySteps() {
+    Workflow workflow = aWorkflow().build();
+    StateType[] stateTypes = {HTTP, SHELL_SCRIPT};
+    StencilCategory[] stencilCategory = {StencilCategory.OTHERS};
+
+    ImmutableMap<String, WorkflowStepMeta> stepMetaMap =
+        ImmutableMap.<String, WorkflowStepMeta>builder()
+            .put(
+                HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).featured(false).available(true).build())
+            .put(SHELL_SCRIPT.getType(),
+                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).featured(false).available(true).build())
+            .build();
+
+    WorkflowCategorySteps workflowCategorySteps =
+        WorkflowServiceImpl.calculateCategorySteps(null, null, stateTypes, stencilCategory, workflow, null, null, 0);
+    assertThat(workflowCategorySteps.getSteps()).isEqualTo(stepMetaMap);
+
+    Set<String> favorite = ImmutableSet.of(HTTP.name());
+    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
+        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0);
+
+    stepMetaMap =
+        ImmutableMap.<String, WorkflowStepMeta>builder()
+            .put(HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).featured(true).available(true).build())
+            .put(SHELL_SCRIPT.getType(),
+                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).featured(false).available(true).build())
+            .build();
+
+    assertThat(workflowCategorySteps.getSteps()).isEqualTo(stepMetaMap);
   }
 }
