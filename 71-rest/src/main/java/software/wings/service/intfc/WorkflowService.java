@@ -17,6 +17,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -175,4 +176,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   List<String> obtainWorkflowNamesReferencedByService(String appId, @NotEmpty String serviceId);
 
   List<String> obtainWorkflowNamesReferencedByServiceInfrastructure(String appId, @NotEmpty String infraMappingId);
+
+  WorkflowCategorySteps calculateCategorySteps(
+      Workflow workflow, String userId, String phaseId, String sectionId, int position);
 }

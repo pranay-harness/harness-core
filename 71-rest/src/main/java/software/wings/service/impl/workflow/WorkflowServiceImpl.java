@@ -150,15 +150,19 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowCategorySteps;
+import software.wings.beans.WorkflowCategoryStepsMeta;
 import software.wings.beans.WorkflowCreationFlags;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.WorkflowStepMeta;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataBuilder;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
@@ -185,6 +189,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByWorkflow;
+import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -209,6 +214,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -269,25 +275,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private EntityVersionService entityVersionService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private EventPublishHelper eventPublishHelper;
   @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private HostService hostService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private K8sStateHelper k8sStateHelper;
+  @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private NotificationSetupService notificationSetupService;
+  @Inject private PersonalizationService personalizationService;
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
-  @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private TriggerService triggerService;
-  @Inject private EnvironmentService environmentService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
-  @Inject private HostService hostService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private YamlPushService yamlPushService;
-  @Inject private EventPublishHelper eventPublishHelper;
-  @Inject private LimitCheckerFactory limitCheckerFactory;
-  @Inject private K8sStateHelper k8sStateHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -2693,6 +2700,71 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         })
         .map(Workflow::getName)
         .collect(toList());
+  }
+
+  @Override
+  public WorkflowCategorySteps calculateCategorySteps(
+      Workflow workflow, String userId, String phaseId, String sectionId, int position) {
+    Set<String> favorites = null;
+    LinkedList<String> recent = null;
+
+    if (userId != null) {
+      final Personalization personalization =
+          personalizationService.fetch(workflow.getAccountId(), userId, asList(Personalization.STEPS_KEY));
+
+      if (personalization != null && personalization.getSteps() != null) {
+        favorites = personalization.getSteps().getFavorites();
+        recent = personalization.getSteps().getRecent();
+      }
+    }
+    return calculateCategorySteps(
+        favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId, sectionId, position);
+  }
+
+  public static WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
+      StateType[] stateTypes, StencilCategory[] stencilCategoryies, Workflow workflow, String phaseId, String sectionId,
+      int position) {
+    Map<String, WorkflowStepMeta> steps = new HashMap<>();
+    for (StateType step : stateTypes) {
+      final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
+                                            .name(step.getName())
+                                            .featured(isNotEmpty(favorites) && favorites.contains(step.getType()))
+                                            .available(true)
+                                            .build();
+      steps.put(step.getType(), stepMeta);
+    }
+
+    List<WorkflowCategoryStepsMeta> categories = new ArrayList<>();
+
+    if (isNotEmpty(recent)) {
+      List<String> stepIds = new ArrayList<>();
+      recent.descendingIterator().forEachRemaining(stepId -> stepIds.add(stepId));
+      categories.add(WorkflowCategoryStepsMeta.builder().id("RECENT").name("Recent").stepIds(stepIds).build());
+    }
+
+    if (isNotEmpty(favorites)) {
+      List<String> stepIds = new ArrayList<>();
+      for (StateType step : stateTypes) {
+        if (favorites.contains(step.getType())) {
+          stepIds.add(step.getType());
+        }
+      }
+      categories.add(WorkflowCategoryStepsMeta.builder().id("FAVORITE").name("Favorite").stepIds(stepIds).build());
+    }
+
+    for (StencilCategory category : stencilCategoryies) {
+      List<String> stepIds = new ArrayList<>();
+      for (StateType step : stateTypes) {
+        stepIds.add(step.getType());
+      }
+      categories.add(WorkflowCategoryStepsMeta.builder()
+                         .id(category.getName())
+                         .name(category.getDisplayName())
+                         .stepIds(stepIds)
+                         .build());
+    }
+
+    return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
   }
 
   @Override
