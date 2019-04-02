@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
 import static software.wings.utils.Validator.notNullCheck;
@@ -25,6 +26,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -48,6 +50,7 @@ import java.util.Map;
 @Singleton
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   private static final Logger logger = LoggerFactory.getLogger(StepYamlHandler.class);
+  private static final String APP_PREFIX = "App/";
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
@@ -101,9 +104,15 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String templateVersion = null;
     String templateUri = stepYaml.getTemplateUri();
     if (isNotEmpty(templateUri)) {
-      templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
+      if (templateUri.startsWith(APP_PREFIX)) {
+        templateUri = templateUri.substring(APP_PREFIX.length());
+        templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
+      } else {
+        templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
+      }
       templateVersion = obtainTemplateVersion(templateUri);
     }
+
     return GraphNode.builder()
         .name(stepYaml.getName())
         .type(stepYaml.getType())
@@ -159,6 +168,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       }
       if (step.getTemplateVersion() != null) {
         templateUri = templateUri + ":" + step.getTemplateVersion();
+      }
+      Template template = templateService.get(templateUuid);
+      if (template != null) {
+        if (!template.getAppId().equals(GLOBAL_APP_ID)) {
+          templateUri = APP_PREFIX + templateUri;
+        }
       }
     }
 
