@@ -192,6 +192,10 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
   }
 
   private Template getTemplate(TemplateFolder parentFolder) {
+    return getTemplate(parentFolder, GLOBAL_APP_ID);
+  }
+
+  private Template getTemplate(TemplateFolder parentFolder, String appId) {
     HttpTemplate httpTemplate = HttpTemplate.builder()
                                     .url("http://$workflow.variables.F5_URL}/mgmt/tm/${foo}/members")
                                     .method("GET")
@@ -202,7 +206,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     return Template.builder()
         .templateObject(httpTemplate)
         .folderId(parentFolder.getUuid())
-        .appId(GLOBAL_APP_ID)
+        .appId(appId)
         .accountId(GLOBAL_ACCOUNT_ID)
         .name("Enable Instance")
         .variables(asList(aVariable().withType(TEXT).withName("Url").withMandatory(true).build(),
@@ -213,13 +217,27 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    Template template = getTemplate(parentFolder);
+    updateLinkedEntities(GLOBAL_APP_ID);
+  }
 
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateEntitiesWhenLinkedAppTemplateUpdated() {
+    updateLinkedEntities(APP_ID);
+  }
+
+  private void updateLinkedEntities(String appId) {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    Template template;
+    if (appId.equals(GLOBAL_APP_ID)) {
+      template = getTemplate(parentFolder);
+    } else {
+      template = getTemplate(parentFolder, appId);
+    }
     Template savedTemplate = templateService.save(template);
 
     assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(appId);
     assertThat(savedTemplate.getVariables()).extracting("name").contains("Url", "Header");
 
     HttpTemplate savedHttpTemplate = (HttpTemplate) savedTemplate.getTemplateObject();
