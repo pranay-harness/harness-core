@@ -297,7 +297,12 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .executionData(executionData)
+                                    .isLogCollection(false)
+                                    .build(),
+        waitId);
     return delegateService.queueTask(delegateTask);
   }
 

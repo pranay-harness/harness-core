@@ -1354,10 +1354,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logger.error("Calling collect 24x7 data for an unsupported state");
         return false;
     }
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(cvConfiguration.getAppId(),
-                                    getExecutionData(cvConfiguration, waitId,
-                                        (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), isLogCollection),
-                                    isLogCollection),
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(cvConfiguration.getAppId())
+                                    .executionData(getExecutionData(cvConfiguration, waitId,
+                                        (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), isLogCollection))
+                                    .isLogCollection(isLogCollection)
+                                    .cvConfigId(cvConfiguration.getUuid())
+                                    .dataCollectionStartTime(startTime)
+                                    .dataCollectionEndTime(endTime)
+                                    .build(),
         waitId);
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
     delegateService.queueTask(task);
@@ -1636,8 +1641,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             String waitId = generateUuid();
             delegateTasks.add(createDelegateTask(TaskType.SUMO_COLLECT_LOG_DATA, context.getAccountId(),
                 context.getAppId(), waitId, new Object[] {dataCollectionInfo}, context.getEnvId()));
-            waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, true, true,
-                                            context.getStateExecutionId(), context.getStateType()),
+            waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                            .appId(context.getAppId())
+                                            .executionData(executionData)
+                                            .isLogCollection(true)
+                                            .isSumoDataCollection(true)
+                                            .stateExecutionId(context.getStateExecutionId())
+                                            .stateType(context.getStateType())
+                                            .build(),
                 waitId);
           }
           for (DelegateTask task : delegateTasks) {

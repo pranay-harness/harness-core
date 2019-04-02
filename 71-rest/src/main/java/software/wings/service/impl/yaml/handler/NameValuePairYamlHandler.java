@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
@@ -16,7 +15,7 @@ import java.util.List;
  */
 @Singleton
 public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml, NameValuePair> {
-  private NameValuePair toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private NameValuePair toBean(ChangeContext<Yaml> changeContext) {
     NameValuePair.Yaml yaml = changeContext.getYaml();
     return NameValuePair.builder().name(yaml.getName()).value(yaml.getValue()).valueType(yaml.getValueType()).build();
   }
@@ -31,8 +30,7 @@ public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml
   }
 
   @Override
-  public NameValuePair upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public NameValuePair upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
@@ -47,7 +45,7 @@ public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }
