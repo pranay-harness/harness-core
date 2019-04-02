@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -49,7 +50,11 @@ import io.harness.exception.KmsOperationException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.reflection.CodeUtils;
 import io.harness.rest.RestResponse;
+import lombok.Setter;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +82,8 @@ import java.util.TreeSet;
 
 public class HKryo extends Kryo {
   private static final Logger logger = LoggerFactory.getLogger(HKryo.class);
+
+  @Setter private String currentLocation;
 
   public HKryo(ClassResolver classResolver) {
     super(classResolver, new MapReferenceResolver(), new DefaultStreamFactory());
@@ -189,12 +196,23 @@ public class HKryo extends Kryo {
     register(UnexpectedException.class, 5330);
     register(WingsException.ReportTarget.class, 5348);
     register(WingsException.class, 5174);
+
+    register(JSONArray.class, 5583);
+    register(JSONObject.class, 5584);
   }
 
   private Registration check(Registration registration, int id) {
+    if (CodeUtils.isHarnessClass(registration.getType())) {
+      final String location = CodeUtils.location(registration.getType());
+      if (currentLocation != null && !currentLocation.equals(location)) {
+        throw new IllegalStateException(format("The class %s in %s is registered from registrar from module %s",
+            registration.getType().getCanonicalName(), location, currentLocation));
+      }
+    }
+
     if (registration.getId() != id) {
       throw new IllegalStateException(
-          String.format("The class %s was already registered with id %d, do not double register it with %d",
+          format("The class %s was already registered with id %d, do not double register it with %d",
               registration.getType().getCanonicalName(), registration.getId(), id));
     }
     return registration;

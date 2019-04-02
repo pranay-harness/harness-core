@@ -15,7 +15,6 @@
         <module>20-persistence-test</module>
         <module>21-persistence</module>
         <module>31-orchestration</module>
-        <module>61-serialization-utils</module>
         <module>64-events-framework</module>
         <module>71-rest</module>
         <module>79-verification</module>
@@ -755,6 +754,12 @@
                 <groupId>net.redhogs.cronparser</groupId>
                 <artifactId>cron-parser</artifactId>
                 <version>2.6</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sf.json-lib</groupId>
+                <artifactId>json-lib</artifactId>
+                <version>2.4</version>
+                <classifier>jdk15</classifier>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

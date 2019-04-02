@@ -9,6 +9,7 @@ import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.util.IntMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.reflection.CodeUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ public class KryoUtils {
 
   private static synchronized Kryo kryo() {
     final ClassResolver classResolver = new ClassResolver();
-    Kryo kryo = new HKryo(classResolver);
+    HKryo kryo = new HKryo(classResolver);
 
     try {
       Reflections reflections = new Reflections("io.harness.serializer.kryo");
@@ -35,6 +36,7 @@ public class KryoUtils {
         final KryoRegistrar kryoRegistrar = (KryoRegistrar) constructor.newInstance();
 
         final IntMap<Registration> previousState = new IntMap<>(classResolver.getRegistrations());
+        kryo.setCurrentLocation(CodeUtils.location(kryoRegistrar.getClass()));
         kryoRegistrar.register(kryo);
 
         try {
