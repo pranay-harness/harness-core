@@ -1478,6 +1478,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .hosts(hostsMap)
             .encryptedDataDetails(secretManager.getEncryptionDetails(newRelicConfig, config.getAppId(), null))
             .settingAttributeId(config.getConnectorId())
+            .checkNotAllowedStrings(!featureFlagService.isEnabled(
+                FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, newRelicConfig.getAccountId()))
             .build();
     return createDelegateTask(TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId());

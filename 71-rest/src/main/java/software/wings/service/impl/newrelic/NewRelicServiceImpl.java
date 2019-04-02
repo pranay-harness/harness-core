@@ -26,6 +26,7 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -39,6 +40,7 @@ import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.MLServiceUtil;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
@@ -79,6 +81,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config) {
@@ -251,7 +254,10 @@ public class NewRelicServiceImpl implements NewRelicService {
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .getTxnsWithData((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId, null);
+          .getTxnsWithData((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId,
+              featureFlagService.isEnabled(
+                  FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, settingAttribute.getAccountId()),
+              null);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.NEWRELIC_ERROR, USER)
           .addParam("message", "Error in getting txns with data. " + e.getMessage());
@@ -303,6 +309,8 @@ public class NewRelicServiceImpl implements NewRelicService {
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
               instanceId,
+              featureFlagService.isEnabled(
+                  FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, settingAttribute.getAccountId()),
               createApiCallLog(
                   settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {

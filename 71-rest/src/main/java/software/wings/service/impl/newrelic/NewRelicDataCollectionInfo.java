@@ -35,4 +35,5 @@ public class NewRelicDataCollectionInfo {
   private String deploymentMarker;
   private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
   private String cvConfigId;
+  private boolean checkNotAllowedStrings;
 }

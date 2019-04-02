@@ -54,15 +54,15 @@ public interface NewRelicDelegateService {
       long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
 
   Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics, NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException;
+      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, boolean checkNotAllowedStrings,
+      ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA)
   List<NewRelicMetric> getTxnsWithData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptionDetails,
-      long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
+      long newRelicAppId, boolean checkNotAllowedStrings, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, NewRelicSetupTestNodeData setupTestNodeData, long instanceId,
-      ThirdPartyApiCallLog apiCallLog) throws IOException;
+      boolean checkNotAllowedStrings, ThirdPartyApiCallLog apiCallLog) throws IOException;
 }

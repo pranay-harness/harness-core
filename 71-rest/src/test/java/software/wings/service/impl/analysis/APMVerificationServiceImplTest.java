@@ -45,6 +45,7 @@ import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
@@ -68,6 +69,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private WaitNotifyEngine mockWaitNotifyEngine;
   @Mock private SecretManager mockSecretManager;
   @Mock private CloudWatchService cloudWatchService;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
 
@@ -75,6 +77,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     setInternalState(service, "wingsPersistence", wingsPersistence);
+    setInternalState(service, "featureFlagService", featureFlagService);
+    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
   }
 
   @Test
