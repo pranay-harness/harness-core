@@ -339,7 +339,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("serviceId", cvConfiguration.getServiceId())
             .set("enabled24x7", cvConfiguration.isEnabled24x7())
             .set("analysisTolerance", cvConfiguration.getAnalysisTolerance())
-            .set("name", cvConfiguration.getName());
+            .set("name", cvConfiguration.getName())
+            .set("alertEnabled", cvConfiguration.isAlertEnabled())
+            .set("alertThreshold", cvConfiguration.getAlertThreshold())
+            .set("snoozeStartTime", cvConfiguration.getSnoozeStartTime())
+            .set("snoozeEndTime", cvConfiguration.getSnoozeEndTime());
     switch (stateType) {
       case NEW_RELIC:
         updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId())
