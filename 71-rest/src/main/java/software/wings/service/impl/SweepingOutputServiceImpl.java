@@ -30,7 +30,8 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   @Override
   public SweepingOutput save(SweepingOutput sweepingOutput) {
     try {
-      return wingsPersistence.saveAndGet(SweepingOutput.class, sweepingOutput);
+      wingsPersistence.save(sweepingOutput);
+      return sweepingOutput;
     } catch (DuplicateKeyException exception) {
       throw new InvalidRequestException(
           format("Output with name %s, already saved in the context", sweepingOutput.getName()), exception);

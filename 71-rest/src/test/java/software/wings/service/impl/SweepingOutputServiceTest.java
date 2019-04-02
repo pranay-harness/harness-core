@@ -35,7 +35,8 @@ public class SweepingOutputServiceTest extends WingsBaseTest {
                                               .workflowExecutionId(generateUuid())
                                               .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")));
 
-    sweepingOutputService.save(builder.build());
-    assertThatThrownBy(() -> sweepingOutputService.save(builder.build())).isInstanceOf(WingsException.class);
+    sweepingOutputService.save(builder.uuid(generateUuid()).build());
+    assertThatThrownBy(() -> sweepingOutputService.save(builder.uuid(generateUuid()).build()))
+        .isInstanceOf(WingsException.class);
   }
 }
