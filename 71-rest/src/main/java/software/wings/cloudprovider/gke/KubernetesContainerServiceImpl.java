@@ -28,7 +28,6 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -260,7 +259,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   @SuppressWarnings("unchecked")
   public List<? extends HasMetadata> getControllers(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
@@ -272,7 +270,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                              .list()
                              .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -282,7 +280,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -292,7 +290,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -302,7 +300,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     try {
@@ -312,7 +310,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               .list()
               .getItems());
       allFailed = false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       // Ignore
     }
     if (allFailed) {
