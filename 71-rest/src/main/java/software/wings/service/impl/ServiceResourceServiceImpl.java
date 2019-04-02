@@ -318,6 +318,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service clone(String appId, String originalServiceId, Service service) {
     String accountId = appService.getAccountIdByAppId(service.getAppId());
 
+    if (isEmpty(service.getName()) || isEmpty(service.getName().trim())) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Service Name can not be empty", USER)
+          .addParam("message", "Service Name can not be empty");
+    }
+
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_SERVICE));
 

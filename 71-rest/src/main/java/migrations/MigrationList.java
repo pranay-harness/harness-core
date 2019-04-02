@@ -74,6 +74,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextNameKeyWordsMigration;
+import migrations.all.ServiceNameMigrationIfEmpty;
 import migrations.all.SetIsDeletedFlagForInstances;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import migrations.all.SetRollbackFlagToWorkflows;
@@ -211,6 +212,7 @@ public class MigrationList {
         .add(Pair.of(236, LogAnalysisDeprecatedRecordMigration.class))
         .add(Pair.of(237, K8sV2ServiceInfraReleaseNameMigration.class))
         .add(Pair.of(238, MigrateLogFeedbackRecordsToGoogle.class))
+        .add(Pair.of(239, ServiceNameMigrationIfEmpty.class))
         .build();
   }
 }
