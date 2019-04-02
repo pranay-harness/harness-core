@@ -35,7 +35,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
@@ -636,9 +636,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   @Override
   public YamlType getYamlTypeFromAppManifest(ApplicationManifest applicationManifest) {
-    AppManifestType appManifestType = applicationManifestService.getAppManifestType(applicationManifest);
+    AppManifestSource appManifestSource = applicationManifestService.getAppManifestType(applicationManifest);
 
-    switch (appManifestType) {
+    switch (appManifestSource) {
       case SERVICE:
         return APPLICATION_MANIFEST;
       case ENV:
@@ -646,7 +646,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case ENV_SERVICE:
         return APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
       default:
-        unhandled(appManifestType);
+        unhandled(appManifestSource);
         throw new WingsException("Unhandled app manifest type");
     }
   }

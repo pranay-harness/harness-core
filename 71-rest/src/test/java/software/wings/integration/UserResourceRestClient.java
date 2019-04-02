@@ -138,7 +138,7 @@ public class UserResourceRestClient {
       user.setPasswordChangedAt(System.currentTimeMillis());
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
       try {
-        wingsPersistence.saveAndGet(User.class, user);
+        wingsPersistence.save(user);
       } catch (Exception e) {
         user = wingsPersistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
       }

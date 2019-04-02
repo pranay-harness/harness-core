@@ -13,7 +13,8 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
@@ -463,5 +464,23 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   void deleteHelmChartSpecification(HelmChartSpecification helmChartSpecification);
 
-  void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestType appManifestType);
+  void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestSource appManifestSource);
+
+  ManifestFile createK8sValueYaml(String appId, String serviceId, ManifestFile manifestFile);
+
+  ManifestFile getK8sValueYaml(String appId, String serviceId, String manifestFileId);
+
+  ManifestFile updateK8sValueYaml(String appId, String serviceId, String manifestFileId, ManifestFile manifestFile);
+
+  void deleteK8sValueYaml(String appId, String serviceId, String manifestFileId);
+
+  ApplicationManifest createK8sValueAppManifest(
+      String appId, String serviceId, ApplicationManifest applicationManifest);
+
+  ApplicationManifest getK8sValueAppManifest(String appId, String serviceId, String appManifestId);
+
+  ApplicationManifest updateK8sValueAppManifest(
+      String appId, String serviceId, String appManifestId, ApplicationManifest applicationManifest);
+
+  void deleteK8sValueAppManifest(String appId, String serviceId, String appManifestId);
 }

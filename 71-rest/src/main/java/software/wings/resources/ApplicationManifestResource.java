@@ -19,6 +19,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.yaml.directory.DirectoryNode;
 
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -138,5 +139,13 @@ public class ApplicationManifestResource {
   public RestResponse<DirectoryNode> getManifestFilesFromGit(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId) {
     return new RestResponse<>(applicationManifestService.getManifestFilesFromGit(appId, appManifestId));
+  }
+
+  @GET
+  @Path("{appManifestId}/manifest-files")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<ManifestFile>> listManifestFiles(@PathParam("appManifestId") String appManifestId) {
+    return new RestResponse<>(applicationManifestService.listManifestFiles(appManifestId));
   }
 }

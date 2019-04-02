@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByService;
@@ -19,7 +19,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ApplicationManifest update(ApplicationManifest applicationManifest);
 
-  ApplicationManifest getByServiceId(String appId, String serviceId);
+  ApplicationManifest getK8sManifestByServiceId(String appId, String serviceId);
 
   ApplicationManifest getById(String appId, String id);
 
@@ -44,7 +44,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ApplicationManifest getAppManifest(String appId, String envId, String serviceId, AppManifestKind kind);
 
-  AppManifestType getAppManifestType(ApplicationManifest applicationManifest);
+  AppManifestSource getAppManifestType(ApplicationManifest applicationManifest);
 
   List<ApplicationManifest> getAllByEnvId(String appId, String envId);
 
@@ -57,4 +57,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   List<ApplicationManifest> getAllByEnvIdAndKind(String appId, String envId, AppManifestKind kind);
 
   ManifestFile getManifestFileByEnvId(String appId, String envId, AppManifestKind kind);
+
+  List<ApplicationManifest> listAppManifests(String appId, String serviceId);
+
+  List<ManifestFile> listManifestFiles(String appManifestId);
 }

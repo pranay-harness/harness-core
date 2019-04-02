@@ -143,7 +143,7 @@ public class ServiceSampleDataProvider {
                                                       .description(K8S_SERVICE_DESC)
                                                       .build());
 
-    ApplicationManifest appManifest = applicationManifestService.getByServiceId(appId, service.getUuid());
+    ApplicationManifest appManifest = applicationManifestService.getK8sManifestByServiceId(appId, service.getUuid());
 
     ManifestFile valuesFile =
         applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), "values.yaml");

@@ -152,7 +152,8 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     doNothing().when(deploymentEventQueue).send(any());
 
-    // This mocking will be used for workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId())
+    // This mocking will be used for
+    // workflowStandardParams.getArtifactForService(phaseExecutionData.getK8sManifestByServiceId())
     workflowStandardParams.setAppId(APP_ID);
     workflowStandardParams.setArtifactIds(asList("artifact_1", "artifact_2"));
     when(artifactService.get(anyString(), anyString())).thenAnswer(invocation -> {

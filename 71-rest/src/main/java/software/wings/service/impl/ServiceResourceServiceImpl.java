@@ -30,6 +30,7 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_VALUE_YAML;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -97,7 +98,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
@@ -1905,7 +1906,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    if (applicationManifestService.getByServiceId(service.getAppId(), service.getUuid()) != null) {
+    if (applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid()) != null) {
       return;
     }
 
@@ -1953,7 +1954,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
-    ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(appId, originalServiceId);
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getK8sManifestByServiceId(appId, originalServiceId);
     if (applicationManifest == null) {
       return;
     }
@@ -2002,8 +2004,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestType appManifestType) {
-    if (!AppManifestType.SERVICE.equals(appManifestType)) {
+  public void setK8v2ServiceFromAppManifest(
+      ApplicationManifest applicationManifest, AppManifestSource appManifestSource) {
+    if (!AppManifestSource.SERVICE.equals(appManifestSource)) {
       return;
     }
 
@@ -2017,5 +2020,88 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       wingsPersistence.update(query, updateOperations);
     }
+  }
+
+  @Override
+  public ManifestFile createK8sValueYaml(String appId, String serviceId, ManifestFile manifestFile) {
+    ApplicationManifest appManifest =
+        applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
+    if (appManifest == null) {
+      appManifest = ApplicationManifest.builder()
+                        .storeType(StoreType.Local)
+                        .serviceId(serviceId)
+                        .kind(AppManifestKind.VALUES)
+                        .build();
+      appManifest.setAppId(appId);
+      appManifest = applicationManifestService.create(appManifest);
+    }
+    manifestFile.setAppId(appId);
+    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setApplicationManifestId(appManifest.getUuid());
+    return applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+  }
+
+  @Override
+  public ManifestFile getK8sValueYaml(String appId, String serviceId, String manifestFileId) {
+    return applicationManifestService.getManifestFileById(appId, manifestFileId);
+  }
+
+  @Override
+  public ManifestFile updateK8sValueYaml(
+      String appId, String serviceId, String manifestFileId, ManifestFile manifestFile) {
+    ApplicationManifest appManifest =
+        applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
+    if (appManifest == null) {
+      throw new InvalidRequestException("Application Manifest not found", USER);
+    }
+    ManifestFile savedManifestFIle = applicationManifestService.getManifestFileById(appId, manifestFileId);
+    if (savedManifestFIle == null) {
+      throw new InvalidRequestException("Manifest file does not exist with given id", USER);
+    }
+    manifestFile.setUuid(manifestFileId);
+    manifestFile.setAppId(appId);
+    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setApplicationManifestId(appManifest.getUuid());
+    return applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, false);
+  }
+
+  @Override
+  public void deleteK8sValueYaml(String appId, String serviceId, String manifestFileId) {
+    applicationManifestService.deleteManifestFileById(appId, manifestFileId);
+  }
+
+  @Override
+  public ApplicationManifest createK8sValueAppManifest(
+      String appId, String serviceId, ApplicationManifest appManifest) {
+    if (isNotEmpty(appManifest.getUuid())) {
+      throw new InvalidRequestException("Application Manifest already has an id", USER);
+    }
+    appManifest.setServiceId(serviceId);
+    appManifest.setKind(AppManifestKind.VALUES);
+    appManifest.setAppId(appId);
+    return applicationManifestService.create(appManifest);
+  }
+
+  @Override
+  public ApplicationManifest getK8sValueAppManifest(String appId, String serviceId, String appManifestId) {
+    return applicationManifestService.getById(appId, appManifestId);
+  }
+
+  @Override
+  public ApplicationManifest updateK8sValueAppManifest(
+      String appId, String serviceId, String appManifestId, ApplicationManifest applicationManifest) {
+    ApplicationManifest savedAppManifest = applicationManifestService.getById(appId, appManifestId);
+    if (savedAppManifest == null) {
+      throw new InvalidRequestException("No App Manifest exists with the given id", USER);
+    }
+    applicationManifest.setUuid(appManifestId);
+    applicationManifest.setServiceId(savedAppManifest.getServiceId());
+    applicationManifest.setAppId(appId);
+    return applicationManifestService.update(applicationManifest);
+  }
+
+  @Override
+  public void deleteK8sValueAppManifest(String appId, String serviceId, String appManifestId) {
+    applicationManifestService.deleteAppManifest(appId, appManifestId);
   }
 }

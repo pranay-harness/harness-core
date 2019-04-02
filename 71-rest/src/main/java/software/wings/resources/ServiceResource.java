@@ -17,6 +17,7 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -631,6 +632,93 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<ApplicationManifest> getAppManifest(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(applicationManifestService.getByServiceId(appId, serviceId));
+    return new RestResponse<>(applicationManifestService.getK8sManifestByServiceId(appId, serviceId));
+  }
+
+  @POST
+  @Path("{serviceId}/k8s-values")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ManifestFile> createK8sValueYaml(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
+    return new RestResponse<>(serviceResourceService.createK8sValueYaml(appId, serviceId, manifestFile));
+  }
+
+  @GET
+  @Path("{serviceId}/k8s-values/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ManifestFile> getK8sValueYaml(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("manifestFileId") String manifestFileId) {
+    return new RestResponse<>(serviceResourceService.getK8sValueYaml(appId, serviceId, manifestFileId));
+  }
+
+  @PUT
+  @Path("{serviceId}/k8s-values/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ManifestFile> updateK8sValueYaml(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("manifestFileId") String manifestFileId,
+      ManifestFile manifestFile) {
+    return new RestResponse<>(
+        serviceResourceService.updateK8sValueYaml(appId, serviceId, manifestFileId, manifestFile));
+  }
+
+  @DELETE
+  @Path("{serviceId}/k8s-values/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse deleteK8sValueYaml(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      @PathParam("manifestFileId") String manifestFileId) {
+    serviceResourceService.deleteK8sValueYaml(appId, serviceId, manifestFileId);
+    return new RestResponse();
+  }
+
+  @POST
+  @Path("{serviceId}/k8s-values/app-manifest")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ApplicationManifest> createK8sValueAppManifest(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, ApplicationManifest applicationManifest) {
+    return new RestResponse<>(serviceResourceService.createK8sValueAppManifest(appId, serviceId, applicationManifest));
+  }
+
+  @GET
+  @Path("{serviceId}/k8s-values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ApplicationManifest> getK8sValueAppManifest(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId) {
+    return new RestResponse<>(serviceResourceService.getK8sValueAppManifest(appId, serviceId, appManifestId));
+  }
+
+  @PUT
+  @Path("{serviceId}/k8s-values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ApplicationManifest> updateK8sValueAppManifest(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId,
+      ApplicationManifest applicationManifest) {
+    return new RestResponse<>(
+        serviceResourceService.updateK8sValueAppManifest(appId, serviceId, appManifestId, applicationManifest));
+  }
+
+  @DELETE
+  @Path("{serviceId}/k8s-values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse deleteK8sValueAppManifest(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId) {
+    serviceResourceService.deleteK8sValueAppManifest(appId, serviceId, appManifestId);
+    return new RestResponse();
+  }
+
+  @GET
+  @Path("{serviceId}/app-manifests")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<ApplicationManifest>> listAppManifests(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(applicationManifestService.listAppManifests(appId, serviceId));
   }
 }

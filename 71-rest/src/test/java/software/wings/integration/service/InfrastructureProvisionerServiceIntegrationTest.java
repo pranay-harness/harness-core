@@ -23,7 +23,7 @@ public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegra
   //
   //    List<InfrastructureProvisioner> provisioners = infrastructureProvisionerService.listByBlueprintDetails(
   //        infrastructureProvisioner.getAppId(), infrastructureProvisioner.getInfrastructureProvisionerType(),
-  //        mappingBlueprint.getServiceId(), mappingBlueprint.getDeploymentType(),
+  //        mappingBlueprint.getK8sManifestByServiceId(), mappingBlueprint.getDeploymentType(),
   //        mappingBlueprint.getCloudProviderType());
   //
   //    assertThat(provisioners.size()).isEqualTo(1);
