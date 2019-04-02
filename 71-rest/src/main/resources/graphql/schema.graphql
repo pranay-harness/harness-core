@@ -2,65 +2,126 @@ schema {
   query: Query
 }
 
+# Harness GraphQL SDL details
 type Query {
+  # Get the workflow details for a specific appId and workflow Id
   workflow(id: String!, appId: String!): Workflow
+
+  # Get list of workflows for an appId. It will return paginated data
   workflows(appId: String!, limit: Int, offset: Int): PagedData
+
+  # Get the execution status of a workflow
   workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution
+
+  # Get the list of workflow execution status for a particular workflowId, envId and appId.  It will return Paginated data.
   workflowExecutionList(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData
+
+  # Get list of successfully deployed articacts.
   deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]
+
 }
 
+# DateTime which will return date based on PST zone
 scalar DateTime
+
 
 interface DebugInfo {
   debugInfo: String
 }
 
+# Type for workflow Execution
 type WorkflowExecution implements DebugInfo {
+  # Workflow Execution Id
   id: String
+
+  # Name of the workflow
   name: String
+
+  # Status of the workflow
   status: String
+
+  # DateTime when execution started
   startTime: DateTime
+
+  # DateTime when execution ended
   endTime: DateTime
+
+  # Debug info useful to troubleshoot issues
   debugInfo: String
 }
 
+# Type workflow
 type Workflow implements DebugInfo {
+  # Workflow Id
   id: String
+
+  # Name of the workflow
   name: String
+
+  # Workflow type PIPELINE or ORCHESTRATION
   workflowType: String
+
+  # Description of the workflow
   description: String
+
+  # Flag whether this workflow is templatized
   templatized: Boolean
+
+  # Services associated with the workflow
   services: [Service]
+
+  # Debug info useful to troubleshoot issues
   debugInfo: String
 }
 
+# Service Type
 type Service {
+   # Name of the service
    name: String
+   # Description of th Service
    description: String
+   # Artifact type deployed by this service Jar Tar
    artifactType: String
+   # Deployment Type SSH, Heml, Kubernetes
    deploymentType: String
 }
 
+# Type for returning paged data
 type PagedData {
+  # Total number of entries matching the result
   total: Int
+  # offset of current page data
   offset: Int
+  # limit of current page data
   limit: Int
+  # Data returned
   data: [Result]
+  # Debug info useful to troubleshoot issues
   debugInfo: String
 }
 
+# Union for Workflow and Workflow Execution
 union Result = Workflow | WorkflowExecution
 
+# Aritifact type
 type Artifact implements DebugInfo {
+    # Artifact Id
     id: String
+    # Source of the artifact Docker Jenkins
     sourceName: String
+    # Display name of the artifact
     displayName: String
+    # Build number of the artifiact
     buildNo: String
+    # Workflow that successfully deployed it last
     workflowExecutionName: String
+    # Pipelin that successfully deployed it last
     pipelineflowExecutionName: String
-    lastDeployedAt: Long
+    # DateTime when artifact was last successfully last
+    lastDeployedAt: DateTime
+    # Last User who deployed successfully this artifact
     lastDeployedBy: String
+    # Debug info useful to troubleshoot issues
     debugInfo: String
 }
 
