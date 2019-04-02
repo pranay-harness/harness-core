@@ -1,35 +1,26 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAccess;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.jersey.JsonViews;
 
-@Getter
-@NoArgsConstructor
+@Value
+@Builder
 @Entity(value = "apiKeys", noClassnameStored = true)
 @HarnessExportableEntity
-@EqualsAndHashCode(callSuper = true)
-public class ApiKeyEntry extends Base {
+public class ApiKeyEntry implements PersistentEntity, UuidAccess {
+  public static final String ACCOUNT_ID_KEY = "accountId";
+
+  @Id private String uuid;
   @Indexed @NotEmpty private String accountId;
   @JsonView(JsonViews.Internal.class) @NotEmpty private char[] encryptedKey;
   @JsonView(JsonViews.Internal.class) @NotEmpty private String hashOfKey;
-
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
-  @Builder
-  public ApiKeyEntry(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath, String accountId, char[] encryptedKey, String hashOfKey) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
-    this.accountId = accountId;
-    this.encryptedKey = encryptedKey;
-    this.hashOfKey = hashOfKey;
-  }
 }

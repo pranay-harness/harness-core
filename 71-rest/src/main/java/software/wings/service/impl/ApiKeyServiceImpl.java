@@ -2,11 +2,11 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -44,7 +44,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     int KEY_LEN = 80;
     String apiKey = CryptoUtil.secureRandAlphaNumString(KEY_LEN);
     wingsPersistence.save(ApiKeyEntry.builder()
-                              .appId(GLOBAL_APP_ID)
+                              .uuid(generateUuid())
                               .encryptedKey(getSimpleEncryption(accountId).encryptChars(apiKey.toCharArray()))
                               .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
                               .accountId(accountId)
