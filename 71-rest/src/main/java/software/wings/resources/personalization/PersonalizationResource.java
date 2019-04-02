@@ -37,7 +37,7 @@ public class PersonalizationResource {
   }
 
   @PUT
-  @Path("personalization/steps/{stepId}/favorite")
+  @Path("steps/{stepId}/favorite")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -47,7 +47,7 @@ public class PersonalizationResource {
   }
 
   @DELETE
-  @Path("personalization/steps/{stepId}/favorite")
+  @Path("steps/{stepId}/favorite")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -57,7 +57,7 @@ public class PersonalizationResource {
   }
 
   @PUT
-  @Path("personalization/steps/{stepId}/recent")
+  @Path("steps/{stepId}/recent")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
