@@ -137,7 +137,7 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage(), WingsException.USER);
       }
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {

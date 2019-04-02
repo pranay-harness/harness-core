@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -48,7 +49,7 @@ public class Service extends Base implements KeywordsAware {
   public static final String ARTIFACT_TYPE = "artifactType";
   public static final String IS_K8S_V2_KEY = "isK8sV2";
 
-  @Trimmed @EntityName private String name;
+  @Trimmed @EntityName @NotEmpty private String name;
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;

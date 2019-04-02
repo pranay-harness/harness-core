@@ -11,7 +11,6 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ILLEGAL_ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -86,6 +85,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+  private static final String HARNESS_NAME = "Harness";
 
   @Before
   public void setup() {
