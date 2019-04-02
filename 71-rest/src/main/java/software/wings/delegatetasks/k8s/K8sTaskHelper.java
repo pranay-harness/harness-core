@@ -563,7 +563,7 @@ public class K8sTaskHelper {
 
   private void printGitConfigInExecutionLogs(
       GitConfig gitConfig, GitFileConfig gitFileConfig, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("\nFetching manifest files");
+    executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getRepoUrl());
     if (gitFileConfig.isUseBranch()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitFileConfig.getBranch());

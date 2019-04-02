@@ -539,7 +539,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind) {
+  @Override
+  public ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
                                            .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)

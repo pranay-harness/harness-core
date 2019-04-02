@@ -280,6 +280,12 @@ public class K8sStateHelper {
     }
     appManifestMap.put(K8sValuesLocation.Service, applicationManifest);
 
+    applicationManifest =
+        applicationManifestService.getByServiceId(context.getAppId(), serviceElement.getUuid(), AppManifestKind.VALUES);
+    if (applicationManifest != null) {
+      appManifestMap.put(K8sValuesLocation.ServiceOverride, applicationManifest);
+    }
+
     InfrastructureMapping infraMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     if (infraMapping == null) {
@@ -362,6 +368,11 @@ public class K8sStateHelper {
 
     if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
       addRenderedValueToList(context, K8sValuesLocation.Service, valuesFiles.get(K8sValuesLocation.Service), result);
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.ServiceOverride)) {
+      addRenderedValueToList(
+          context, K8sValuesLocation.ServiceOverride, valuesFiles.get(K8sValuesLocation.ServiceOverride), result);
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
