@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -39,6 +40,7 @@ import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -77,6 +79,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Metrics") private List<String> metrics;
 
   @Inject @SchemaIgnore private transient NewRelicService newRelicService;
+  @Inject @SchemaIgnore private transient FeatureFlagService featureFlagService;
 
   public NewRelicState(String name) {
     super(name, StateType.NEW_RELIC);
@@ -192,6 +195,8 @@ public class NewRelicState extends AbstractMetricAnalysisState {
                 newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
             .settingAttributeId(finalServerConfigId)
+            .checkNotAllowedStrings(!featureFlagService.isEnabled(
+                FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, newRelicConfig.getAccountId()))
             .build();
 
     String waitId = generateUuid();

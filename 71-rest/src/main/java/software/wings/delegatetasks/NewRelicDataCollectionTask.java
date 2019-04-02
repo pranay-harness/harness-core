@@ -138,7 +138,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
           createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       this.analysisType = dataCollectionInfo.getTimeSeriesMlAnalysisType();
-
       logger.info("NewRelic collector initialized : managerAnalysisStartTime - {}, windowStartTimeManager {}",
           managerAnalysisStartTime, windowStartTimeManager);
     }
@@ -353,7 +352,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
-    private Set<NewRelicMetric> getTxnsToCollect() throws IOException {
+    private Set<NewRelicMetric> getTxnsToCollect(boolean checkNotAllowedStrings) throws IOException {
       logger.info("Collecting txn names for {}", dataCollectionInfo);
       logger.info("all txns so far {} for {}", allTxns.size(), dataCollectionInfo.getStateExecutionId());
       Set<NewRelicMetric> newTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
@@ -361,9 +360,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       newTxns.removeAll(allTxns);
       logger.info("new txns {} for {}", newTxns.size(), dataCollectionInfo.getStateExecutionId());
-      Set<NewRelicMetric> txnsWithData = newRelicDelegateService.getTxnsWithDataInLastHour(allTxns,
-          dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-          dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+      Set<NewRelicMetric> txnsWithData =
+          newRelicDelegateService.getTxnsWithDataInLastHour(allTxns, dataCollectionInfo.getNewRelicConfig(),
+              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
+              checkNotAllowedStrings, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       logger.info("txns with data {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
       txnsWithData.addAll(newTxns);
       logger.info("txns to collect {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
@@ -387,14 +387,15 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       while (!completed.get() && retry < RETRIES) {
         try {
-          Set<NewRelicMetric> txnsToCollect = getTxnsToCollect();
+          Set<NewRelicMetric> txnsToCollect = getTxnsToCollect(dataCollectionInfo.isCheckNotAllowedStrings());
           logger.info("Found total new relic metrics " + txnsToCollect.size());
           List<NewRelicApplicationInstance> instances = newRelicDelegateService.getApplicationInstances(
               dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
               dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
           logger.info("Got {} new relic nodes.", instances.size());
 
-          Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(txnsToCollect);
+          Map<String, List<Set<String>>> metricBatches =
+              batchMetricsToCollect(txnsToCollect, dataCollectionInfo.isCheckNotAllowedStrings());
           logger.info("Found total new relic metric batches " + metricBatches.size());
 
           List<Callable<Boolean>> callables = new ArrayList<>();

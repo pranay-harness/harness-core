@@ -208,7 +208,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void getNewRelicDataForNode() {

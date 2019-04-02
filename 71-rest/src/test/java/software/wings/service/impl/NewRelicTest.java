@@ -131,7 +131,7 @@ public class NewRelicTest extends WingsBaseTest {
                 .build());
 
     Map<String, List<Set<String>>> batchMetricsToCollect =
-        NewRelicDelgateServiceImpl.batchMetricsToCollect(metricNames);
+        NewRelicDelgateServiceImpl.batchMetricsToCollect(metricNames, true);
     assertEquals(2, batchMetricsToCollect.size());
     List<Set<String>> nonSpecialCharBatches = batchMetricsToCollect.get(METRIC_NAME_NON_SPECIAL_CHARS);
     assertEquals(1, nonSpecialCharBatches.size());

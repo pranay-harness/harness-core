@@ -29,7 +29,7 @@ public enum AlertType {
   INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class),
   RESOURCE_USAGE_APPROACHING_LIMIT(Setup, Warning, ResourceUsageApproachingLimitAlert.class),
   DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning, DeploymentRateApproachingLimitAlert.class),
-  CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Warning, ContinuousVerificationAlertData.class),
+  CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Error, ContinuousVerificationAlertData.class),
   CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT(
       ContinuousVerification, Error, ContinuousVerificationDataCollectionAlert.class);
 

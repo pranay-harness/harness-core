@@ -84,7 +84,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;
 
-  public static Map<String, List<Set<String>>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
+  public static Map<String, List<Set<String>>> batchMetricsToCollect(
+      Collection<NewRelicMetric> metrics, boolean checkNotAllowedStrings) {
     Map<String, List<Set<String>>> rv = new HashMap<>();
     rv.put(METRIC_NAME_NON_SPECIAL_CHARS, new ArrayList<>());
     rv.put(METRIC_NAME_SPECIAL_CHARS, new ArrayList<>());
@@ -92,7 +93,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     Set<String> batchedNonSpecialCharMetrics = new HashSet<>();
     Set<String> batchedSpecialCharMetrics = new HashSet<>();
     for (NewRelicMetric metric : metrics) {
-      if (containsNotAllowedChars(metric.getName())) {
+      if (checkNotAllowedStrings && containsNotAllowedChars(metric.getName())) {
         logger.info("metric {} contains not allowed characters {}. This will skip analysis", metric.getName(),
             NOT_ALLOWED_STRINGS);
         continue;
@@ -271,12 +272,12 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public List<NewRelicMetric> getTxnsWithData(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptionDetails, long applicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException {
+      List<EncryptedDataDetail> encryptionDetails, long applicationId, boolean checkNotAllowedStrings,
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
     Set<NewRelicMetric> txnNameToCollect =
         getTxnNameToCollect(newRelicConfig, encryptionDetails, applicationId, apiCallLog);
-    Set<NewRelicMetric> txnsWithDataInLastHour =
-        getTxnsWithDataInLastHour(txnNameToCollect, newRelicConfig, encryptionDetails, applicationId, apiCallLog);
+    Set<NewRelicMetric> txnsWithDataInLastHour = getTxnsWithDataInLastHour(
+        txnNameToCollect, newRelicConfig, encryptionDetails, applicationId, checkNotAllowedStrings, apiCallLog);
     return Lists.newArrayList(txnsWithDataInLastHour);
   }
 
@@ -346,7 +347,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   public Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics,
       NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, long applicationId,
-      ThirdPartyApiCallLog apiCallLog) {
+      boolean checkNotAllowedStrings, ThirdPartyApiCallLog apiCallLog) {
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
     }
@@ -354,7 +355,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     for (NewRelicMetric metric : metrics) {
       webTransactionMetrics.put(metric.getName(), metric);
     }
-    Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(metrics);
+    Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(metrics, checkNotAllowedStrings);
     List<Callable<Set<String>>> metricDataCallabels = new ArrayList<>();
     final ThirdPartyApiCallLog apiCallLogCopy = apiCallLog.copy();
     metricBatches.forEach((metricTypeName, metricSets) -> {
@@ -387,48 +388,58 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     return new HashSet<>(webTransactionMetrics.values());
   }
 
-  private Set<String> getMetricsWithNoData(Collection<String> metricNames, NewRelicConfig newRelicConfig,
+  private Set<String> getMetricsWithNoData(Set<String> metricNames, NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long applicationId, ThirdPartyApiCallLog apiCallLog,
       boolean failOnException) throws IOException {
-    final long currentTime = System.currentTimeMillis();
-    Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
-    NewRelicMetricData metricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
-        metricNames, currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog.copy());
+    try {
+      final long currentTime = System.currentTimeMillis();
+      Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
+      NewRelicMetricData metricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
+          metricNames, currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog.copy());
 
-    if (metricData == null) {
-      throw new WingsException(ErrorCode.NEWRELIC_ERROR,
-          "Unable to get NewRelic metric data for metric name collection " + newRelicConfig,
-          EnumSet.of(ReportTarget.UNIVERSAL));
-    }
+      if (metricData == null) {
+        throw new WingsException(ErrorCode.NEWRELIC_ERROR,
+            "Unable to get NewRelic metric data for metric name collection " + newRelicConfig,
+            EnumSet.of(ReportTarget.UNIVERSAL));
+      }
 
-    metricsWithNoData.removeAll(metricData.getMetrics_found());
+      metricsWithNoData.removeAll(metricData.getMetrics_found());
 
-    NewRelicMetricData errorMetricData =
-        getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId, getErrorMetricNames(metricNames),
-            currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog.copy());
+      NewRelicMetricData errorMetricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
+          getErrorMetricNames(metricNames), currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true,
+          apiCallLog.copy());
 
-    metricsWithNoData.removeAll(metricData.getMetrics_found());
+      metricsWithNoData.removeAll(metricData.getMetrics_found());
 
-    for (NewRelicMetricData.NewRelicMetricSlice metric : metricData.getMetrics()) {
-      for (NewRelicMetricData.NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
-        final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
-        NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
-        if (webTransactions.getRequests_per_minute() < MIN_RPM) {
-          metricsWithNoData.add(metric.getName());
+      for (NewRelicMetricData.NewRelicMetricSlice metric : metricData.getMetrics()) {
+        for (NewRelicMetricData.NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
+          final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
+          NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
+          if (webTransactions.getRequests_per_minute() < MIN_RPM) {
+            metricsWithNoData.add(metric.getName());
+          }
         }
       }
-    }
 
-    for (NewRelicMetricData.NewRelicMetricSlice metric : errorMetricData.getMetrics()) {
-      for (NewRelicMetricData.NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
-        final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
-        NewRelicErrors webTransactions = JsonUtils.asObject(webTxnJson, NewRelicErrors.class);
-        if (webTransactions.getError_count() > 0 || webTransactions.getErrors_per_minute() > 0) {
-          metricsWithNoData.remove(metric.getName());
+      for (NewRelicMetricData.NewRelicMetricSlice metric : errorMetricData.getMetrics()) {
+        for (NewRelicMetricData.NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
+          final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
+          NewRelicErrors webTransactions = JsonUtils.asObject(webTxnJson, NewRelicErrors.class);
+          if (webTransactions.getError_count() > 0 || webTransactions.getErrors_per_minute() > 0) {
+            metricsWithNoData.remove(metric.getName());
+          }
         }
       }
+      return metricsWithNoData;
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      if (!failOnException) {
+        logger.info("for {} marking all metrics to be not with data", apiCallLog.getStateExecutionId(), e);
+        return metricNames;
+      }
+      throw e;
     }
-    return metricsWithNoData;
   }
 
   @Override
@@ -566,10 +577,10 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, NewRelicSetupTestNodeData setupTestNodeData, long instanceId,
-      ThirdPartyApiCallLog apiCallLog) {
+      boolean checkNotAllowedStrings, ThirdPartyApiCallLog apiCallLog) {
     try {
-      List<NewRelicMetric> txnsWithData =
-          getTxnsWithData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), apiCallLog);
+      List<NewRelicMetric> txnsWithData = getTxnsWithData(newRelicConfig, encryptedDataDetails,
+          setupTestNodeData.getNewRelicAppId(), checkNotAllowedStrings, apiCallLog);
       if (isEmpty(txnsWithData)) {
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)
