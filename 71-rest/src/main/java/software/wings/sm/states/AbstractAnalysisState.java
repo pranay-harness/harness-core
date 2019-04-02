@@ -367,7 +367,7 @@ public abstract class AbstractAnalysisState extends State {
       phaseHosts.keySet().forEach(host -> hosts.remove(host));
       return hosts;
     }
-    int offSet = 0;
+    int offset = 0;
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
@@ -380,7 +380,7 @@ public abstract class AbstractAnalysisState extends State {
             .addFilter("envId", Operator.EQ, envId)
             .addFilter("status", Operator.EQ, SUCCESS)
             .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
-            .withOffset(String.valueOf(offSet))
+            .withOffset(String.valueOf(offset))
             .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
             .build();
 
@@ -425,8 +425,8 @@ public abstract class AbstractAnalysisState extends State {
         }
       }
 
-      offSet = offSet + PageRequest.DEFAULT_PAGE_SIZE;
-      pageRequest.setOffset(String.valueOf(offSet));
+      offset = offset + PageRequest.DEFAULT_PAGE_SIZE;
+      pageRequest.setOffset(String.valueOf(offset));
     } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
 
     getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);

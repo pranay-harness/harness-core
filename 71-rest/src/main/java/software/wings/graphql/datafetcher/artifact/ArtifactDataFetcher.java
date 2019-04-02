@@ -92,7 +92,7 @@ public class ArtifactDataFetcher extends AbstractDataFetcher {
         return deployedArtifactList;
       }
 
-      // At present, we are not getting limit/offSet from query inputs.
+      // At present, we are not getting limit/offset from query inputs.
       int limit = getPageLimit(environment);
       int offset = getPageOffset(environment);
 

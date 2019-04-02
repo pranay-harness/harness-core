@@ -2485,13 +2485,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public List<InstanceElement> getDeployedNodes(String appId, String workflowId) {
-    int offSet = 0;
+    int offset = 0;
     final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, SUCCESS)
                                                            .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
-                                                           .withOffset(String.valueOf(offSet))
+                                                           .withOffset(String.valueOf(offset))
                                                            .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
                                                            .build();
 
@@ -2529,8 +2529,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           return instanceElements;
         }
       }
-      offSet = offSet + PageRequest.DEFAULT_PAGE_SIZE;
-      pageRequest.setOffset(String.valueOf(offSet));
+      offset = offset + PageRequest.DEFAULT_PAGE_SIZE;
+      pageRequest.setOffset(String.valueOf(offset));
     } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
 
     logger.info("No nodes were found in any execution for workflow {}", workflowId);
