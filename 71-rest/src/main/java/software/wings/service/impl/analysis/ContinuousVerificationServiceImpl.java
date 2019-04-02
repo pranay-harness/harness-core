@@ -233,14 +233,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     request.addFilter("workflowStartTs", Operator.GE, beginEpochTs);
     request.addFilter("workflowStartTs", Operator.LT, endEpochTs);
     request.addFilter("applicationId", Operator.IN, getAllowedApplicationsForUser(user, accountId).toArray());
-    int previousOffSet = 0;
+    int previousOffset = 0;
     List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData = new ArrayList<>();
     PageResponse<ContinuousVerificationExecutionMetaData> response =
         wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
     while (!response.isEmpty()) {
       continuousVerificationExecutionMetaData.addAll(response.getResponse());
-      previousOffSet += response.size();
-      request.setOffset(String.valueOf(previousOffSet));
+      previousOffset += response.size();
+      request.setOffset(String.valueOf(previousOffset));
       response = wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
     }
 
@@ -376,14 +376,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     request.addFilter("workflowStartTs", Operator.GE, startTime);
     request.addFilter("workflowStartTs", Operator.LT, endTime);
 
-    int previousOffSet = 0;
+    int previousOffset = 0;
     List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData = new ArrayList<>();
     PageResponse<ContinuousVerificationExecutionMetaData> response =
         wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
     while (!response.isEmpty()) {
       continuousVerificationExecutionMetaData.addAll(response.getResponse());
-      previousOffSet += response.size();
-      request.setOffset(String.valueOf(previousOffSet));
+      previousOffset += response.size();
+      request.setOffset(String.valueOf(previousOffset));
       response = wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
     }
 
@@ -406,14 +406,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .withLimit("500")
             .withOffset("0")
             .build();
-    previousOffSet = 0;
+    previousOffset = 0;
     List<WorkflowExecution> workflowExecutionList = new ArrayList<>();
     PageResponse<WorkflowExecution> workflowExecutionResponse =
         wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
     while (!workflowExecutionResponse.isEmpty()) {
       workflowExecutionList.addAll(workflowExecutionResponse.getResponse());
-      previousOffSet += workflowExecutionResponse.size();
-      workflowExecutionPageRequest.setOffset(String.valueOf(previousOffSet));
+      previousOffset += workflowExecutionResponse.size();
+      workflowExecutionPageRequest.setOffset(String.valueOf(previousOffset));
       workflowExecutionResponse = wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
     }
 
@@ -1121,7 +1121,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             Lists.newArrayList("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata", "tag"));
         dataRecordPageRequest.setOffset("0");
         dataRecordPageRequest.setLimit("5000");
-        int previousOffSet = 0;
+        int previousOffset = 0;
         PageResponse<NewRelicMetricDataRecord> response =
             wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
         while (!response.isEmpty()) {
@@ -1139,8 +1139,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           filterMetrics(filter, records);
           setDeeplinkUrlInRecords(cvConfiguration, connectorConfig, startTime, endTime, records);
           metricRecords.addAll(records);
-          previousOffSet += response.size();
-          dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
+          previousOffset += response.size();
+          dataRecordPageRequest.setOffset(String.valueOf(previousOffset));
           response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
         }
       }

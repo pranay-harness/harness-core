@@ -420,9 +420,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     Preconditions.checkState(!L0.equals(clusterLevel) || (L0.equals(clusterLevel) && isNotEmpty(logRequest.getNodes())),
         "for L0 -> L1 clustering nodes can not be empty, level: " + clusterLevel + " logRequest: " + logRequest);
     Set<LogDataRecord> logDataRecords = new HashSet<>();
-    int previousOffSet = 0;
+    int previousOffset = 0;
     PageRequest<LogDataRecord> pageRequest = aPageRequest()
-                                                 .withOffset(String.valueOf(previousOffSet))
+                                                 .withOffset(String.valueOf(previousOffset))
                                                  .withLimit("1000")
                                                  .addFilter("appId", Operator.EQ, appId)
                                                  .addFilter("cvConfigId", Operator.EQ, cvConfigId)
@@ -444,8 +444,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     while (!response.isEmpty()) {
       logDataRecords.addAll(response.getResponse());
 
-      previousOffSet += response.size();
-      pageRequest.setOffset(String.valueOf(previousOffSet));
+      previousOffset += response.size();
+      pageRequest.setOffset(String.valueOf(previousOffset));
       response = wingsPersistence.query(LogDataRecord.class, pageRequest, excludeCount);
     }
     return logDataRecords;

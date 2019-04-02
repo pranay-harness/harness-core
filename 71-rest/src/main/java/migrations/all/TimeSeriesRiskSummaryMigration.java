@@ -62,13 +62,13 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
           wingsPersistence.query(TimeSeriesMLAnalysisRecord.class, recordPageRequest, excludeAuthority);
 
       logger.info("The total number of records for cvConfigId {} is {}", config.getUuid(), response.getTotal());
-      int previousOffSet = 0;
+      int previousOffset = 0;
       while (!response.isEmpty()) {
         List<TimeSeriesMLAnalysisRecord> records = response.getResponse();
         logger.info("Currently Migrating for cvConfigId {} and batchsize {}", config.getUuid(), records.size());
         saveRiskSummaries(records);
-        previousOffSet += response.size();
-        recordPageRequest.setOffset(String.valueOf(previousOffSet));
+        previousOffset += response.size();
+        recordPageRequest.setOffset(String.valueOf(previousOffset));
         response = wingsPersistence.query(TimeSeriesMLAnalysisRecord.class, recordPageRequest, excludeAuthority);
       }
       sleep(ofMillis(1000));

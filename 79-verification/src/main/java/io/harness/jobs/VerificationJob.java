@@ -71,12 +71,12 @@ public class VerificationJob implements Job {
     // Single api call to fetch both Enabled and disabled accounts
     // As this being a paginated request, it fetches max of 50 accounts at a time.
     PageResponse<Account> accounts;
-    int offSet = 0;
+    int offset = 0;
     List<Account> accountsFetched = new ArrayList<>();
     int numOfAccountsFetched;
     do {
       accounts = verificationManagerClientHelper
-                     .callManagerWithRetry(verificationManagerClient.getAccounts(String.valueOf(offSet)))
+                     .callManagerWithRetry(verificationManagerClient.getAccounts(String.valueOf(offset)))
                      .getResource();
       accountsFetched.addAll(accounts);
       numOfAccountsFetched = accounts.size();
@@ -99,7 +99,7 @@ public class VerificationJob implements Job {
       // schedule APM and log cron's
       triggerDataProcessorCron(enabledAccounts);
       logger.info("Completed scheduling APM and Log processing jobs");
-      offSet = offSet + PageRequest.DEFAULT_PAGE_SIZE;
+      offset = offset + PageRequest.DEFAULT_PAGE_SIZE;
     } while (numOfAccountsFetched >= PageRequest.DEFAULT_PAGE_SIZE);
     lastAvailableAccounts.removeAll(accountsFetched);
     // delete lastAvailableAccounts that are no longer available

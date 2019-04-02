@@ -1233,7 +1233,7 @@ public class SecretManagerImpl implements SecretManager {
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException {
     List<EncryptedData> filteredEncryptedDataList = Lists.newArrayList();
 
-    int batchOffSet = pageRequest.getStart();
+    int batchOffset = pageRequest.getStart();
     final int batchPageSize;
 
     // Increase the batch fetch page size to 2 times the requested, just in case some of the data
@@ -1256,7 +1256,7 @@ public class SecretManagerImpl implements SecretManager {
     int numRecordsReturnedCurrentBatch;
     do {
       PageRequest<EncryptedData> batchPageRequest = pageRequest.copy();
-      batchPageRequest.setOffset(String.valueOf(batchOffSet));
+      batchPageRequest.setOffset(String.valueOf(batchOffset));
       batchPageRequest.setLimit(String.valueOf(batchPageSize));
 
       PageResponse<EncryptedData> batchPageResponse = wingsPersistence.query(EncryptedData.class, batchPageRequest);
@@ -1264,14 +1264,14 @@ public class SecretManagerImpl implements SecretManager {
       numRecordsReturnedCurrentBatch = encryptedDataList.size();
 
       // Set the new offset if another batch retrieval is needed if the requested page size is not fulfilled yet.
-      batchOffSet = filterSecreteDataBasedOnUsageRestrictions(accountId, isAccountAdmin, appIdFromRequest,
-          envIdFromRequest, details, inputPageSize, batchOffSet, appEnvMapFromPermissions,
+      batchOffset = filterSecreteDataBasedOnUsageRestrictions(accountId, isAccountAdmin, appIdFromRequest,
+          envIdFromRequest, details, inputPageSize, batchOffset, appEnvMapFromPermissions,
           restrictionsFromUserPermissions, encryptedDataList, filteredEncryptedDataList);
     } while (numRecordsReturnedCurrentBatch == batchPageSize && filteredEncryptedDataList.size() < inputPageSize);
 
-    // UI should read the adjust batchOffSet while sending another page request!
+    // UI should read the adjust batchOffset while sending another page request!
     return aPageResponse()
-        .withOffset(String.valueOf(batchOffSet))
+        .withOffset(String.valueOf(batchOffset))
         .withLimit(String.valueOf(inputPageSize))
         .withResponse(filteredEncryptedDataList)
         .withTotal(Long.valueOf(filteredEncryptedDataList.size()))
@@ -1289,7 +1289,7 @@ public class SecretManagerImpl implements SecretManager {
    * has not fulfilled. The new batch load will start from the adjusted offset.
    */
   private int filterSecreteDataBasedOnUsageRestrictions(String accountId, boolean isAccountAdmin,
-      String appIdFromRequest, String envIdFromRequest, boolean details, int inputPageSize, int batchOffSet,
+      String appIdFromRequest, String envIdFromRequest, boolean details, int inputPageSize, int batchOffset,
       Map<String, Set<String>> appEnvMapFromPermissions, UsageRestrictions restrictionsFromUserPermissions,
       List<EncryptedData> encryptedDataList, List<EncryptedData> filteredEncryptedDataList)
       throws IllegalAccessException {
@@ -1328,7 +1328,7 @@ public class SecretManagerImpl implements SecretManager {
 
     // The requested page size may have not been filled, may need to fetch another batch and adjusting the offset
     // accordingly;
-    return batchOffSet + index;
+    return batchOffset + index;
   }
 
   @Override

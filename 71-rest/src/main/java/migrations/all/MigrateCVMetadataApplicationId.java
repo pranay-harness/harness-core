@@ -32,7 +32,7 @@ public class MigrateCVMetadataApplicationId implements Migration {
                                                                                  .build();
     PageResponse<ContinuousVerificationExecutionMetaData> cvMetadataResponse =
         wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, cvMetadataRequest);
-    int previousOffSet = 0;
+    int previousOffset = 0;
     while (!cvMetadataResponse.isEmpty()) {
       List<ContinuousVerificationExecutionMetaData> cvList = cvMetadataResponse.getResponse();
       for (ContinuousVerificationExecutionMetaData cvMetadata : cvList) {
@@ -47,8 +47,8 @@ public class MigrateCVMetadataApplicationId implements Migration {
         }
       }
       logger.info("Updated appId for {} CVExecutionMetadata records", cvList.size());
-      previousOffSet += cvList.size();
-      cvMetadataRequest.setOffset(String.valueOf(previousOffSet));
+      previousOffset += cvList.size();
+      cvMetadataRequest.setOffset(String.valueOf(previousOffset));
       cvMetadataResponse = wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, cvMetadataRequest);
     }
   }
