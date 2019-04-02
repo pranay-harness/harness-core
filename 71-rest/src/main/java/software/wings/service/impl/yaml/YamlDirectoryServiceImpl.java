@@ -68,7 +68,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.ArtifactStream;
@@ -937,7 +937,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid());
+        applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid());
     if (applicationManifest != null) {
       applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
           service.getAppId(), service.getUuid(), INDEX_YAML, ApplicationManifest.class,
@@ -996,7 +996,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateManifestFileFoldeNodeForServiceView(String accountId, Service service) {
     ApplicationManifest applicationManifest =
-        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid());
+        applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid());
     DirectoryPath manifestFilePath = new DirectoryPath(MANIFEST_FILE_FOLDER);
     return generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
   }
@@ -1612,8 +1612,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       environment = environmentService.get(applicationManifest.getAppId(), applicationManifest.getEnvId(), true);
     }
 
-    AppManifestType appManifestType = applicationManifestService.getAppManifestType(applicationManifest);
-    switch (appManifestType) {
+    AppManifestSource appManifestSource = applicationManifestService.getAppManifestType(applicationManifest);
+    switch (appManifestSource) {
       case ENV_SERVICE:
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
@@ -1641,7 +1641,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         return builder.toString();
 
       default:
-        unhandled(appManifestType);
+        unhandled(appManifestSource);
         throw new WingsException("Invalid application manifest type");
     }
   }

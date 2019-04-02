@@ -63,7 +63,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   private static ApplicationManifest applicationManifest =
-      ApplicationManifest.builder().serviceId(SERVICE_ID).storeType(Local).kind(AppManifestKind.VALUES).build();
+      ApplicationManifest.builder().serviceId(SERVICE_ID).storeType(Local).kind(AppManifestKind.K8S_MANIFEST).build();
 
   private static ManifestFile manifestFile =
       ManifestFile.builder().fileName("deploy.yaml").fileContent("deployment spec").build();
@@ -122,7 +122,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
 
-    ApplicationManifest manifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    ApplicationManifest manifest = applicationManifestService.getK8sManifestByServiceId(APP_ID, SERVICE_ID);
 
     assertThat(manifest).isEqualTo(savedManifest);
   }
@@ -410,7 +410,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     List<ManifestFile> manifestFiles =
         applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
     assertThat(manifestFiles).isEmpty();
-    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    applicationManifest = applicationManifestService.getK8sManifestByServiceId(APP_ID, SERVICE_ID);
     assertThat(applicationManifest).isNull();
   }
 
@@ -434,7 +434,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     List<ManifestFile> manifestFiles =
         applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
     assertThat(manifestFiles).isEmpty();
-    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    applicationManifest = applicationManifestService.getK8sManifestByServiceId(APP_ID, SERVICE_ID);
     assertThat(applicationManifest).isNull();
   }
 
@@ -454,7 +454,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     List<ManifestFile> manifestFiles =
         applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
     assertThat(manifestFiles).isEmpty();
-    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    applicationManifest = applicationManifestService.getK8sManifestByServiceId(APP_ID, SERVICE_ID);
     assertThat(applicationManifest).isNotNull();
   }
 
@@ -518,7 +518,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     List<ManifestFile> manifestFiles =
         applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
     assertThat(manifestFiles).isEmpty();
-    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    applicationManifest = applicationManifestService.getK8sManifestByServiceId(APP_ID, SERVICE_ID);
     assertThat(applicationManifest).isNull();
   }
 
@@ -601,7 +601,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     upsertManifestFile("abc/def", "abc/def");
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
   public void testValidateManifestFileName8() {
     upsertManifestFile("abc/def", "abc/ghi");

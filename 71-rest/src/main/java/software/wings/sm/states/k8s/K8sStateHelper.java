@@ -274,7 +274,7 @@ public class K8sStateHelper {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getByServiceId(app.getUuid(), serviceElement.getUuid());
+        applicationManifestService.getK8sManifestByServiceId(app.getUuid(), serviceElement.getUuid());
     if (applicationManifest == null) {
       throw new InvalidRequestException("Manifests not found for service.");
     }
@@ -310,7 +310,7 @@ public class K8sStateHelper {
     }
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getByServiceId(appId, infraMapping.getServiceId());
+        applicationManifestService.getK8sManifestByServiceId(appId, infraMapping.getServiceId());
     if (doesValuesFileContainArtifact(applicationManifest)) {
       return true;
     }

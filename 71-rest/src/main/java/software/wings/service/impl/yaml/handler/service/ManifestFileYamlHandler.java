@@ -13,7 +13,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.ManifestFile.Yaml;
 import software.wings.beans.yaml.Change;
@@ -135,9 +135,9 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
   }
 
   private YamlType getManifestFileYamlTypeFromAppManifest(ApplicationManifest applicationManifest) {
-    AppManifestType appManifestType = applicationManifestService.getAppManifestType(applicationManifest);
+    AppManifestSource appManifestSource = applicationManifestService.getAppManifestType(applicationManifest);
 
-    switch (appManifestType) {
+    switch (appManifestSource) {
       case SERVICE:
         return YamlType.MANIFEST_FILE;
       case ENV:
@@ -145,7 +145,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
       case ENV_SERVICE:
         return YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE;
       default:
-        unhandled(appManifestType);
+        unhandled(appManifestSource);
         throw new WingsException("Unhandled app manifest type");
     }
   }

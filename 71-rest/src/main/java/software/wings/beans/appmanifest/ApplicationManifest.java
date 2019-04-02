@@ -46,7 +46,7 @@ public class ApplicationManifest extends Base {
     return manifest;
   }
 
-  public enum AppManifestType { SERVICE, ENV, ENV_SERVICE }
+  public enum AppManifestSource { SERVICE, ENV, ENV_SERVICE }
 
   @Data
   @NoArgsConstructor
