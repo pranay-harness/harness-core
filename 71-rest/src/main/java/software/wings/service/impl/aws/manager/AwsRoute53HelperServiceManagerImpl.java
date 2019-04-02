@@ -8,6 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
@@ -15,7 +16,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsResponse;

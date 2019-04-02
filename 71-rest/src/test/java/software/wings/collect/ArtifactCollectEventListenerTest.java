@@ -27,6 +27,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +38,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;

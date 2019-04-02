@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.interfaces.Claim;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -25,7 +26,6 @@ import software.wings.api.JiraExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.approval.JiraApprovalParams;

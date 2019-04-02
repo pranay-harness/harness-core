@@ -15,6 +15,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -32,7 +33,6 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Log;

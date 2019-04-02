@@ -2,11 +2,11 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
-import software.wings.beans.DelegateTask;
 
 import java.util.List;
 import java.util.function.Consumer;

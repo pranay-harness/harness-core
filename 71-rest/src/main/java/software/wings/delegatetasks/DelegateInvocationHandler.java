@@ -3,10 +3,10 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.TaskData;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.DelegateTask;
-import software.wings.beans.DelegateTask.DelegateTaskBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;

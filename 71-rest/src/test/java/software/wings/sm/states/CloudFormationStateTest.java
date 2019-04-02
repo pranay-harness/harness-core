@@ -49,6 +49,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -73,7 +74,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingBlueprint;

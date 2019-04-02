@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -17,7 +18,6 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.ErrorNotifyResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;

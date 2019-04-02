@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import software.wings.beans.DelegateTask;
+import io.harness.beans.DelegateTask;
 import software.wings.beans.jira.JiraTaskParameters;
 
 import java.util.ArrayList;

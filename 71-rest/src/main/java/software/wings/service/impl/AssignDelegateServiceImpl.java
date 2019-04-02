@@ -17,6 +17,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.beans.DelegateTask;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -28,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.FeatureName;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;

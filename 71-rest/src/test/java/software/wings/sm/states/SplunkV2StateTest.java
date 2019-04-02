@@ -13,6 +13,8 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.Status;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -21,8 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.DelegateTask;
-import software.wings.beans.DelegateTask.Status;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;

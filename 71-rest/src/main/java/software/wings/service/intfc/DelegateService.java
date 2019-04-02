@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import freemarker.template.TemplateException;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateScripts;
@@ -13,7 +14,6 @@ import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateStatus;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;

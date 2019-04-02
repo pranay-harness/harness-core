@@ -42,6 +42,7 @@ import com.google.inject.Injector;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -56,7 +57,6 @@ import software.wings.WingsBaseTest;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ActivityHelperService;

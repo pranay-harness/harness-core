@@ -4,8 +4,8 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
 import software.wings.service.impl.ContainerServiceParams;
 

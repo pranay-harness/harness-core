@@ -8,10 +8,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.monitoring.v3.MonitoringScopes;
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.GcpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;

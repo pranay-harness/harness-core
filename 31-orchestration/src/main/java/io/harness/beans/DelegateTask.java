@@ -1,5 +1,7 @@
-package software.wings.beans;
+package io.harness.beans;
 
+import io.harness.beans.DelegateTask.ParametersConverter;
+import io.harness.beans.DelegateTask.ResponseDataConverter;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -19,8 +21,6 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.converters.SimpleValueConverter;
-import software.wings.beans.DelegateTask.ParametersConverter;
-import software.wings.beans.DelegateTask.ResponseDataConverter;
 
 import java.time.OffsetDateTime;
 import java.util.Date;

@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
@@ -20,5 +21,7 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(ExecutionStatus.class, 5136);
     kryo.register(OrchestrationWorkflowType.class, 5148);
     kryo.register(WorkflowType.class, 5025);
+    kryo.register(DelegateTask.Status.class, 5004);
+    kryo.register(DelegateTask.class, 5003);
   }
 }

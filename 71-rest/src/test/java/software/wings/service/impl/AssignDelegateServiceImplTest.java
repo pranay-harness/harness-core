@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,7 +8,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.Delegate.Status.ENABLED;
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
@@ -20,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -31,7 +32,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;

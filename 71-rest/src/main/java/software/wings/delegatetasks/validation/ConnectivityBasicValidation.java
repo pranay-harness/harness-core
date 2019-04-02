@@ -7,9 +7,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.WinRmConnectionAttributes;

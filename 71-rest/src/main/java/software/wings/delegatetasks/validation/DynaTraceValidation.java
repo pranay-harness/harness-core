@@ -2,8 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 

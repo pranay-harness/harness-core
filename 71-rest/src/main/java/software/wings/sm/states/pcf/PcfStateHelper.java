@@ -5,6 +5,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -14,7 +15,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;

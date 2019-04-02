@@ -1,10 +1,10 @@
 package software.wings.service.impl.security;
 
+import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

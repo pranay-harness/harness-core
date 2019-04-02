@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.sync;
 
-import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
+import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

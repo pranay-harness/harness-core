@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static io.harness.beans.DelegateTask.Status.QUEUED;
+import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.isMaintenance;
@@ -7,14 +9,13 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.DelegateTask.Status.QUEUED;
-import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
@@ -29,7 +30,6 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.mongodb.morphia.query.WhereCriteria;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.DelegateTask;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;

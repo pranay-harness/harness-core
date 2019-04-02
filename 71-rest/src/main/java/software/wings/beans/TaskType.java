@@ -4,6 +4,7 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.Injector;
 
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.DelegateRunnableTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;

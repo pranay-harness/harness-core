@@ -5,7 +5,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import software.wings.beans.DelegateTask;
+import io.harness.beans.DelegateTask;
 import software.wings.beans.SmbConfig;
 import software.wings.service.impl.SmbHelperService;
 

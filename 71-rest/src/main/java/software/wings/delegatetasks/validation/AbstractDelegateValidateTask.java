@@ -6,11 +6,11 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.TaskLogContext;
 
 import java.util.List;

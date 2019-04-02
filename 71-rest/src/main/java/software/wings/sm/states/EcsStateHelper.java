@@ -24,6 +24,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -54,7 +55,6 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
