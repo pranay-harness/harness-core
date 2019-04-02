@@ -318,7 +318,11 @@ public enum ErrorCode {
 
   MARKETPLACE_TOKEN_NOT_FOUND,
 
-  INVALID_MARKETPLACE_TOKEN;
+  INVALID_MARKETPLACE_TOKEN,
+
+  INVALID_TICKETING_SERVER,
+
+  SERVICENOW_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

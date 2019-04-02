@@ -43,6 +43,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
@@ -63,6 +64,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ContainerService;
@@ -114,6 +116,7 @@ public class SettingValidationService {
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private JiraHelperService jiraHelperService;
   @Inject private DelegateService delegateService;
+  @Inject private ServiceNowServiceImpl servicenowServiceImpl;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -258,6 +261,8 @@ public class SettingValidationService {
       validateHostConnectionAttributes((HostConnectionAttributes) settingValue);
     } else if (settingValue instanceof JiraConfig) {
       jiraHelperService.validateCredential((JiraConfig) settingValue);
+    } else if (settingValue instanceof ServiceNowConfig) {
+      servicenowServiceImpl.validateCredential(settingAttribute);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {

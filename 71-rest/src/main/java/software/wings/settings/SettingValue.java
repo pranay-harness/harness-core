@@ -265,6 +265,8 @@ public abstract class SettingValue {
      */
     JIRA("JIRA"),
 
+    SERVICENOW("ServiceNow"),
+
     SECRET_TEXT,
 
     YAML_GIT_SYNC,
