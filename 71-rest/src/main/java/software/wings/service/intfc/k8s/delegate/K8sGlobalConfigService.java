@@ -4,4 +4,5 @@ public interface K8sGlobalConfigService {
   String getKubectlPath();
   String getGoTemplateClientPath();
   String getHelmPath();
+  String getChartMuseumPath();
 }
