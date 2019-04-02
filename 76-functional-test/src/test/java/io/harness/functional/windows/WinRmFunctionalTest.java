@@ -268,19 +268,17 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
             .workflowType(WorkflowType.ORCHESTRATION)
             .infraMappingId(infraMappingId)
             .envId(envId)
-            .orchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .name("Phase1")
-                                          .serviceId(serviceId)
-                                          .deploymentType(WINRM)
-                                          .infraMappingId(infraMappingId)
-                                          .phaseSteps(phaseSteps)
-                                          .build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
+            .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                       .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+                                       .addWorkflowPhase(aWorkflowPhase()
+                                                             .name("Phase1")
+                                                             .serviceId(serviceId)
+                                                             .deploymentType(WINRM)
+                                                             .infraMappingId(infraMappingId)
+                                                             .phaseSteps(phaseSteps)
+                                                             .build())
+                                       .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+                                       .build())
             .build();
 
     return workflowRestUtil.createWorkflow(application.getAccountId(), appId, iisAppWorkflow);

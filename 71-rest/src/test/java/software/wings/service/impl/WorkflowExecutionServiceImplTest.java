@@ -1709,18 +1709,16 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .appId(appId)
             .envId(env.getUuid())
             .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .name("Phase1")
-                                          .serviceId(service.getUuid())
-                                          .deploymentType(SSH)
-                                          .infraMappingId(infrastructureMapping.getUuid())
-                                          .build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                       .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+                                       .addWorkflowPhase(aWorkflowPhase()
+                                                             .name("Phase1")
+                                                             .serviceId(service.getUuid())
+                                                             .deploymentType(SSH)
+                                                             .infraMappingId(infrastructureMapping.getUuid())
+                                                             .build())
+                                       .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+                                       .build())
             .build();
 
     Workflow orchestrationWorkflow2 = workflowService.createWorkflow(orchestrationWorkflow);
@@ -1794,7 +1792,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .envId(env.getUuid())
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
                                           .name("Phase1")
                                           .serviceId(service.getUuid())
@@ -1802,8 +1800,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                           .infraMappingId(infrastructureMapping.getUuid())
                                           .templateExpressions(asList(infraExpression, serviceExpression))
                                           .build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
                     .build())
             .build();
 

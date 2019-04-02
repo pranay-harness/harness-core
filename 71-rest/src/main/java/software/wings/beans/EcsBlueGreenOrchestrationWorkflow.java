@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import software.wings.common.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +45,7 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
 
   public static final class EcsBlueGreenOrchestrationWorkflowBuilder {
     private Graph graph;
-    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
+    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
     private String ecsBGType;
     private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
     private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
@@ -56,7 +55,7 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private List<Variable> userVariables = new ArrayList<>();
     private List<Variable> derivedVariables = new ArrayList<>();
-    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
+    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
     private List<String> workflowPhaseIds = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
 

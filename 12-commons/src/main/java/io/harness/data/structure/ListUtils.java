@@ -3,6 +3,7 @@ package io.harness.data.structure;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListUtils {
@@ -28,5 +29,26 @@ public class ListUtils {
         .filter(s -> isNotEmpty(s))
         .distinct()
         .collect(toList());
+  }
+
+  public static <V> List<V> addSafely(V value, List<V> list) {
+    // if value is null - do nothing
+    if (value == null) {
+      return list;
+    }
+    // If the list is null instantiate it
+    if (list == null) {
+      list = new ArrayList<>();
+    }
+
+    try {
+      list.add(value);
+    } catch (UnsupportedOperationException ignore) {
+      // If the list does not allow for adding elements, instantiate copy that allows it.
+      final ArrayList<V> arrayList = new ArrayList<>(list);
+      arrayList.add(value);
+      return arrayList;
+    }
+    return list;
   }
 }

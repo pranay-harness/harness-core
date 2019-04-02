@@ -64,8 +64,12 @@ public class ScmSecretTest {
       return;
     }
 
-    final Integer length =
-        scmSecret.getSecrets().keySet().stream().map(value -> ((String) value).length()).max(Integer::compare).get();
+    final Integer length = scmSecret.getSecrets()
+                               .keySet()
+                               .stream()
+                               .map(value -> ((String) value).length())
+                               .max(Integer::compare)
+                               .orElseGet(null);
 
     final String pattern = format("%%-%ds = %%s%%n", length);
 
@@ -82,7 +86,11 @@ public class ScmSecretTest {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(secretsPath.toFile()))) {
       for (Object key : sortedKeys) {
         final SecretName secretName = SecretName.builder().value((String) key).build();
-        final String secret = ScmSecret.encrypt(scmSecret.decrypt(secretName), passphrase);
+        final byte[] decrypt = scmSecret.decrypt(secretName);
+
+        // logger.info("{} = {}", secretName, new String(decrypt));
+
+        final String secret = ScmSecret.encrypt(decrypt, passphrase);
 
         final String line = format(pattern, key, secret);
         if (line.length() <= 120) {

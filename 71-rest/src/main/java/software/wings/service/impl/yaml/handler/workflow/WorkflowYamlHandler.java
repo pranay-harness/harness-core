@@ -34,7 +34,6 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.Constants;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
@@ -204,8 +203,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
 
       // Pre-deployment steps
-      PhaseStepBuilder preDeploymentSteps =
-          PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
+      PhaseStepBuilder preDeploymentSteps = PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT);
 
       if (yaml.getPreDeploymentSteps() != null) {
         List<GraphNode> stepList =
@@ -224,8 +222,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       }
 
       // Post-deployment steps
-      PhaseStepBuilder postDeploymentSteps =
-          PhaseStepBuilder.aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
+      PhaseStepBuilder postDeploymentSteps = PhaseStepBuilder.aPhaseStep(PhaseStepType.POST_DEPLOYMENT);
 
       if (yaml.getPostDeploymentSteps() != null) {
         List<GraphNode> postDeployStepList =

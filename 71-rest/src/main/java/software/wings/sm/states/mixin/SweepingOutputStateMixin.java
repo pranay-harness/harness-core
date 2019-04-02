@@ -18,8 +18,10 @@ public interface SweepingOutputStateMixin {
       return;
     }
 
+    final String renderedOutputName = context.renderExpression(getSweepingOutputName());
+
     final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(getSweepingOutputScope())
-                                              .name(getSweepingOutputName())
+                                              .name(renderedOutputName)
                                               .output(KryoUtils.asDeflatedBytes(data))
                                               .build();
 

@@ -26,8 +26,6 @@ import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
-import static software.wings.common.Constants.POST_DEPLOYMENT;
-import static software.wings.common.Constants.PRE_DEPLOYMENT;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
@@ -61,7 +59,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
 
-  private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
+  private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
 
   // This is a nullable field
   private PhaseStep rollbackProvisioners;
@@ -74,7 +72,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
-  private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
+  private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
 
   private List<NotificationRule> notificationRules = new ArrayList<>();
 
@@ -790,12 +788,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public static final class CanaryOrchestrationWorkflowBuilder {
     private Graph graph;
-    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
+    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
     private List<String> workflowPhaseIds = new ArrayList<>();
     private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
     private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
+    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();

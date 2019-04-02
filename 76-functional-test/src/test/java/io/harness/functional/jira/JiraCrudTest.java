@@ -44,7 +44,6 @@ import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.Constants;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -90,9 +89,8 @@ public class JiraCrudTest extends AbstractFunctionalTest {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(getJiraCreateNode()).build())
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).addStep(getJiraCreateNode()).build())
                     .build())
             .build();
 

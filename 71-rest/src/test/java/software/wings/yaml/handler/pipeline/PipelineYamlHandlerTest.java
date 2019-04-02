@@ -56,7 +56,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.Constants;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
@@ -187,23 +186,21 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
                    .description("pipeline description")
                    .pipelineStages(Arrays.asList(pipelineStage1, pipelineStage2))
                    .build();
-    Workflow workflow1 =
-        aWorkflow()
-            .envId(ENV_ID)
-            .name(WORKFLOW_NAME)
-            .appId(APP_ID)
-            .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .infraMappingId(INFRA_MAPPING_ID)
-                                          .serviceId(SERVICE_ID)
-                                          .deploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = aWorkflow()
+                             .envId(ENV_ID)
+                             .name(WORKFLOW_NAME)
+                             .appId(APP_ID)
+                             .workflowType(WorkflowType.ORCHESTRATION)
+                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                        .addWorkflowPhase(aWorkflowPhase()
+                                                                              .infraMappingId(INFRA_MAPPING_ID)
+                                                                              .serviceId(SERVICE_ID)
+                                                                              .deploymentType(SSH)
+                                                                              .build())
+                                                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                        .build())
+                             .build();
     workflowService.createWorkflow(workflow1);
   }
 

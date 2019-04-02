@@ -93,7 +93,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
@@ -430,11 +429,10 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow()
-                        .orchestrationWorkflow(
-                            aCanaryOrchestrationWorkflow()
-                                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                                .build())
+                        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                   .build())
                         .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
 
@@ -476,21 +474,19 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow()
-                        .orchestrationWorkflow(
-                            aCanaryOrchestrationWorkflow()
-                                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                                .build())
+                        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                   .build())
                         .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
 
     when(workflowService.readWorkflowWithoutServices(APP_ID, "DISABLE_WORKFLOW_ID"))
         .thenReturn(aWorkflow()
-                        .orchestrationWorkflow(
-                            aCanaryOrchestrationWorkflow()
-                                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                                .build())
+                        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                   .build())
                         .services(asList(Service.builder()
                                              .appId(APP_ID)
                                              .uuid("DISABLE_STEP_SERVICE_ID")
@@ -533,8 +529,8 @@ public class PipelineServiceTest extends WingsBaseTest {
                     aCanaryOrchestrationWorkflow()
                         .withUserVariables(asList(
                             aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
-                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                         .build())
                 .build());
 
@@ -573,8 +569,8 @@ public class PipelineServiceTest extends WingsBaseTest {
                     aCanaryOrchestrationWorkflow()
                         .withUserVariables(asList(
                             aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
-                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                         .build())
                 .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                 .build());
@@ -629,8 +625,8 @@ public class PipelineServiceTest extends WingsBaseTest {
                                 .withEntityType(INFRASTRUCTURE_MAPPING)
                                 .withName("ServiceInfrastructure_SSH")
                                 .build()))
-                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                         .build())
                 .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                 .build());
@@ -1016,8 +1012,8 @@ public class PipelineServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withUserVariables(
                         asList(aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                     .build())
             .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
             .build();
@@ -1039,11 +1035,10 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow()
-                        .orchestrationWorkflow(
-                            aBuildOrchestrationWorkflow()
-                                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                                .build())
+                        .orchestrationWorkflow(aBuildOrchestrationWorkflow()
+                                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                   .build())
                         .build());
     List<EntityType> requiredEntities = pipelineService.getRequiredEntities(APP_ID, PIPELINE_ID);
     assertThat(requiredEntities).isEmpty();
@@ -1108,8 +1103,8 @@ public class PipelineServiceTest extends WingsBaseTest {
                 aCanaryOrchestrationWorkflow()
                     .withUserVariables(
                         asList(aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                     .withRequiredEntityTypes(ImmutableSet.of(ARTIFACT, SSH_USER, SSH_PASSWORD))
                     .build())
             .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))

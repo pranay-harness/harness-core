@@ -15,6 +15,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.ListUtils;
 import io.harness.data.structure.MapUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -46,6 +47,7 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
+import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -850,10 +852,20 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
   ContextElementType getRequiredContextElementType(State state) {
     ContextElementType requiredContextElementType = state.getRequiredContextElementType();
-    if (requiredContextElementType == null && state.getPatternsForRequiredContextElementType() != null) {
-      requiredContextElementType = scanRequiredContextElementType(state.getPatternsForRequiredContextElementType());
+    if (requiredContextElementType != null) {
+      return requiredContextElementType;
     }
-    return requiredContextElementType;
+    List<String> patternsForRequiredContextElementType = state.getPatternsForRequiredContextElementType();
+    if (state instanceof SweepingOutputStateMixin) {
+      patternsForRequiredContextElementType = ListUtils.addSafely(
+          ((SweepingOutputStateMixin) state).getSweepingOutputName(), patternsForRequiredContextElementType);
+    }
+
+    if (patternsForRequiredContextElementType != null) {
+      return scanRequiredContextElementType(patternsForRequiredContextElementType);
+    }
+
+    return null;
   }
 
   private State createRepeatState(State state, ContextElementType requiredContextElementType) {

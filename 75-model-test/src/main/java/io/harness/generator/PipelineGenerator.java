@@ -39,7 +39,6 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Workflow;
-import software.wings.common.Constants;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
@@ -83,11 +82,10 @@ public class PipelineGenerator {
                 .name(format("Barrier Parallel Section %d-%d", i + 1, j + 1))
                 .workflowType(WorkflowType.ORCHESTRATION)
                 .infraMappingId(infrastructureMapping.getUuid())
-                .orchestrationWorkflow(
-                    aBasicOrchestrationWorkflow()
-                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                        .build())
+                .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                           .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                           .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                           .build())
                 .build());
 
         workflows[i][j] =
@@ -165,7 +163,7 @@ public class PipelineGenerator {
               .orchestrationWorkflow(
                   aBasicOrchestrationWorkflow()
                       .withPreDeploymentSteps(
-                          aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                          aPhaseStep(PRE_DEPLOYMENT)
                               .addStep(
                                   GraphNode.builder()
                                       .type(RESOURCE_CONSTRAINT.name())
@@ -180,7 +178,7 @@ public class PipelineGenerator {
                                                       .build())
                                       .build())
                               .build())
-                      .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                      .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                       .build())
               .build());
 

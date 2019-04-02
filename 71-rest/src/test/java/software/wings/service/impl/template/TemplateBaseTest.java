@@ -46,7 +46,7 @@ public class TemplateBaseTest extends WingsBaseTest {
         .workflowType(WorkflowType.ORCHESTRATION)
         .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(step).build())
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(step).build())
                 .addWorkflowPhase(
                     aWorkflowPhase()
                         .infraMappingId(INFRA_MAPPING_ID)
@@ -54,7 +54,7 @@ public class TemplateBaseTest extends WingsBaseTest {
                         .deploymentType(SSH)
                         .phaseSteps(asList(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE).addStep(step).build()))
                         .build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(step).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).addStep(step).build())
                 .build())
         .linkedTemplateUuids(asList(savedTemplate.getUuid()))
         .build();

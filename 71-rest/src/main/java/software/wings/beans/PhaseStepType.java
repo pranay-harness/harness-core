@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import lombok.Getter;
+
 /**
  * Created by rishi on 12/22/16.
  */
@@ -12,9 +14,9 @@ public enum PhaseStepType {
   ENABLE_SERVICE,
   VERIFY_SERVICE,
   WRAP_UP,
-  PRE_DEPLOYMENT,
+  PRE_DEPLOYMENT("Pre-Deployment"),
   ROLLBACK_PROVISIONERS,
-  POST_DEPLOYMENT,
+  POST_DEPLOYMENT("Post-Deployment"),
   STOP_SERVICE,
   @Deprecated DE_PROVISION_NODE,
   CLUSTER_SETUP,
@@ -36,5 +38,13 @@ public enum PhaseStepType {
   ECS_UPDATE_ROUTE_53_DNS_WEIGHT,
   HELM_DEPLOY,
   ROUTE_UPDATE,
-  K8S_PHASE_STEP
+  K8S_PHASE_STEP;
+
+  PhaseStepType() {}
+
+  PhaseStepType(String defaultName) {
+    this.defaultName = defaultName;
+  }
+
+  @Getter private String defaultName;
 }

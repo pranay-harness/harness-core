@@ -16,6 +16,7 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.SweepingOutput.Scope.PHASE;
 import static software.wings.beans.SweepingOutput.Scope.PIPELINE;
 import static software.wings.beans.SweepingOutput.Scope.WORKFLOW;
@@ -95,6 +96,7 @@ public class WorkflowGenerator {
   public enum Workflows {
     BASIC_SIMPLE,
     BASIC_10_NODES,
+    ROLLING_10_NODES,
     TERRAFORM,
     PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT,
     BUILD_JENKINS,
@@ -108,6 +110,8 @@ public class WorkflowGenerator {
         return ensureBasicSimple(seed, owners);
       case BASIC_10_NODES:
         return ensureBasic10Nodes(seed, owners);
+      case ROLLING_10_NODES:
+        return ensureRolling10Nodes(seed, owners);
       case TERRAFORM:
         return ensureTerraform(seed, owners);
       case PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT:
@@ -132,11 +136,10 @@ public class WorkflowGenerator {
             .name("Basic - simple")
             .workflowType(WorkflowType.ORCHESTRATION)
             .infraMappingId(infrastructureMapping.getUuid())
-            .orchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
+            .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                       .build())
             .build());
   }
 
@@ -149,14 +152,32 @@ public class WorkflowGenerator {
             .name("Basic - 10 nodes")
             .workflowType(WorkflowType.ORCHESTRATION)
             .infraMappingId(infrastructureMapping.getUuid())
-            .orchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
+            .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                       .build())
             .build());
 
     workflow = postProcess(workflow, PostProcessInfo.builder().selectNodeCount(10).build());
+    return workflow;
+  }
+
+  private Workflow ensureRolling10Nodes(Randomizer.Seed seed, Owners owners) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+
+    Workflow workflow = ensureWorkflow(seed, owners,
+        aWorkflow()
+            .name("Rolling - 10 nodes")
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .orchestrationWorkflow(aRollingOrchestrationWorkflow()
+                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                       .build())
+            .build());
+
+    workflow = postProcess(workflow, PostProcessInfo.builder().selectNodeCount(2).build());
     return workflow;
   }
 
@@ -192,7 +213,7 @@ public class WorkflowGenerator {
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(
-                        aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                        aPhaseStep(PRE_DEPLOYMENT)
                             .addStep(GraphNode.builder()
                                          .type(TERRAFORM_PROVISION.name())
                                          .name("Provision infra")
@@ -209,7 +230,7 @@ public class WorkflowGenerator {
                                          .build())
                             .build())
                     .withPostDeploymentSteps(
-                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
+                        aPhaseStep(POST_DEPLOYMENT)
                             .addStep(GraphNode.builder()
                                          .type(TERRAFORM_DESTROY.name())
                                          .name("Deprovision infra")
@@ -237,7 +258,7 @@ public class WorkflowGenerator {
             .orchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(
-                        aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                        aPhaseStep(PRE_DEPLOYMENT)
                             .addStep(GraphNode.builder()
                                          .type(RESOURCE_CONSTRAINT.name())
                                          .name(asapResourceConstraint.getName() + " 1")
@@ -257,7 +278,7 @@ public class WorkflowGenerator {
                                                          .build())
                                          .build())
                             .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                     .build())
             .build());
   }
@@ -276,8 +297,8 @@ public class WorkflowGenerator {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aBuildOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT)
                                                  .addStep(getHTTPNode("pipeline"))
                                                  .addStep(getHTTPNode("workflow"))
                                                  .addStep(getHTTPNode("phase"))
@@ -366,8 +387,8 @@ public class WorkflowGenerator {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aBuildOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                     .addWorkflowPhase(aWorkflowPhase()
                                           .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build(),
                                               aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
@@ -476,13 +497,13 @@ public class WorkflowGenerator {
                 .stream()
                 .filter(entry -> INFRASTRUCTURE_NODE_NAME.equals(entry.getValue().getGraphName()))
                 .findFirst()
-                .get()
+                .orElseGet(null)
                 .getValue()
                 .getNodes()
                 .stream()
                 .filter(entry -> SELECT_NODE_NAME.equals(entry.getName()))
                 .findFirst()
-                .get();
+                .orElseGet(null);
 
         selectNodes.getProperties().put("instanceCount", params.getSelectNodeCount());
       }

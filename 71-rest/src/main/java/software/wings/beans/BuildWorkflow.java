@@ -8,7 +8,6 @@ import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuild
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import software.wings.common.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,12 +72,12 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
 
   public static final class BuildOrchestrationWorkflowBuilder {
     private Graph graph;
-    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
+    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
     private List<String> workflowPhaseIds = new ArrayList<>();
     private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
     private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
+    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();
