@@ -44,7 +44,6 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
@@ -126,24 +125,22 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
   public void shouldNotUpdateEntitiesIfNotLinked() {
     Template savedTemplate = createShellScriptTemplate();
 
-    Workflow workflow =
-        aWorkflow()
-            .name(WORKFLOW_NAME)
-            .appId(APP_ID)
-            .uuid(WORKFLOW_ID)
-            .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .infraMappingId(INFRA_MAPPING_ID)
-                                          .serviceId(SERVICE_ID)
-                                          .deploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .linkedTemplateUuids(asList(savedTemplate.getUuid()))
-            .build();
+    Workflow workflow = aWorkflow()
+                            .name(WORKFLOW_NAME)
+                            .appId(APP_ID)
+                            .uuid(WORKFLOW_ID)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                       .addWorkflowPhase(aWorkflowPhase()
+                                                                             .infraMappingId(INFRA_MAPPING_ID)
+                                                                             .serviceId(SERVICE_ID)
+                                                                             .deploymentType(SSH)
+                                                                             .build())
+                                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                       .build())
+                            .linkedTemplateUuids(asList(savedTemplate.getUuid()))
+                            .build();
 
     on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(shellScriptTemplateProcessor).set("workflowService", workflowService);

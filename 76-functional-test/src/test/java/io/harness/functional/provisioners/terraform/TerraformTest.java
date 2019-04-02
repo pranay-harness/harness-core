@@ -51,7 +51,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
@@ -152,11 +151,11 @@ public class TerraformTest extends AbstractFunctionalTest {
         .orchestrationWorkflow(
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(
-                    aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                    aPhaseStep(PRE_DEPLOYMENT)
                         .addStep(buildTerraformProvisionStep(terraformInfrastructureProvisioner.getUuid()))
                         .build())
                 .withPostDeploymentSteps(
-                    aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
+                    aPhaseStep(POST_DEPLOYMENT)
                         .addStep(buildTerraformDestroyStep(terraformInfrastructureProvisioner.getUuid()))
                         .build())
                 .build())

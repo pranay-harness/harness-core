@@ -407,6 +407,8 @@ public class DataGenService {
 
     Workflow workflow2 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_10_NODES);
 
+    Workflow workflow3 = workflowGenerator.ensurePredefined(seed, owners, Workflows.ROLLING_10_NODES);
+
     pipelineGenerator.ensurePredefined(seed, owners, Pipelines.BARRIER);
 
     pipelineGenerator.ensurePipeline(seed, owners,
@@ -424,11 +426,20 @@ public class DataGenService {
                            .build(),
                     PipelineStage.builder()
                         .pipelineStageElements(asList(PipelineStageElement.builder()
-                                                          .name("5 nodes")
+                                                          .name("10 nodes")
                                                           .type(ENV_STATE.name())
                                                           .properties(ImmutableMap.of("envId", workflow2.getEnvId(),
                                                               "workflowId", workflow2.getUuid()))
                                                           .build()))
+                        .build(),
+                    PipelineStage.builder()
+                        .pipelineStageElements(
+                            asList(PipelineStageElement.builder()
+                                       .name("10 rolling nodes")
+                                       .type(ENV_STATE.name())
+                                       .properties(ImmutableMap.of(
+                                           "envId", workflow3.getEnvId(), "workflowId", workflow3.getUuid()))
+                                       .build()))
                         .build()))
             .build());
 

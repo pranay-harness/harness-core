@@ -817,7 +817,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     String workflowExecutionId = getWorkflowExecutionId();
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String phaseExecutionId = phaseElement == null ? null : workflowExecutionId + phaseElement.getUuid();
+    String phaseExecutionId =
+        phaseElement == null ? null : workflowExecutionId + phaseElement.getUuid() + phaseElement.getPhaseName();
 
     if (pipelineExecutionId == null || !Scope.PIPELINE.equals(sweepingOutputScope)) {
       pipelineExecutionId = "dummy-" + generateUuid();

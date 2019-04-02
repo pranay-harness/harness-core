@@ -38,7 +38,6 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.states.HttpState;
 
@@ -70,18 +69,16 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   public void shouldCreateHTTPStepinWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    Workflow workflow =
-        aWorkflow()
-            .name("HTTP Workflow")
-            .workflowType(WorkflowType.ORCHESTRATION)
-            .envId(environment.getUuid())
-            .orchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(getHTTPNode()).build())
-                    .build())
-            .build();
+    Workflow workflow = aWorkflow()
+                            .name("HTTP Workflow")
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .envId(environment.getUuid())
+                            .orchestrationWorkflow(
+                                aCanaryOrchestrationWorkflow()
+                                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).addStep(getHTTPNode()).build())
+                                    .build())
+                            .build();
 
     // Test  creating a workflow
     Workflow savedWorkflow =

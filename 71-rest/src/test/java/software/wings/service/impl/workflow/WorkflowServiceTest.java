@@ -236,7 +236,6 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.template.TemplateType;
-import software.wings.common.Constants;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
@@ -1595,7 +1594,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdatePreDeployment() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).withStepsInParallel(true).build();
+    PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT).withStepsInParallel(true).build();
     workflowService.updatePreDeployment(workflow1.getAppId(), workflow1.getUuid(), phaseStep);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1633,7 +1632,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdatePostDeployment() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    PhaseStep phaseStep = aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).withStepsInParallel(true).build();
+    PhaseStep phaseStep = aPhaseStep(POST_DEPLOYMENT).withStepsInParallel(true).build();
     workflowService.updatePostDeployment(workflow1.getAppId(), workflow1.getUuid(), phaseStep);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());

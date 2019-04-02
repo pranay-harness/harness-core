@@ -65,9 +65,15 @@ public class PhaseStep {
       new HashSet<>(Arrays.asList(CONTAINER_SETUP, PCF_SETUP, AMI_AUTOSCALING_GROUP_SETUP));
   public PhaseStep() {}
 
-  public PhaseStep(PhaseStepType phaseStepType, String name) {
-    this.phaseStepType = phaseStepType;
+  public PhaseStep(PhaseStepType phaseStepType) {
     this.uuid = generateUuid();
+    this.phaseStepType = phaseStepType;
+    this.name = phaseStepType.getDefaultName();
+  }
+
+  public PhaseStep(PhaseStepType phaseStepType, String name) {
+    this.uuid = generateUuid();
+    this.phaseStepType = phaseStepType;
     this.name = name;
   }
 
@@ -413,6 +419,9 @@ public class PhaseStep {
 
     private PhaseStepBuilder() {}
 
+    public static PhaseStepBuilder aPhaseStep(PhaseStepType phaseStepType) {
+      return aPhaseStep(phaseStepType, phaseStepType.getDefaultName());
+    }
     public static PhaseStepBuilder aPhaseStep(PhaseStepType phaseStepType, String name) {
       PhaseStepBuilder phaseStepBuilder = new PhaseStepBuilder();
       phaseStepBuilder.phaseStepType = phaseStepType;

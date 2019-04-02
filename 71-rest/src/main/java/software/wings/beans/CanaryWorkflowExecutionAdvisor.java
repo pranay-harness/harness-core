@@ -7,6 +7,7 @@ import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
@@ -106,7 +107,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       if (rolling && state.getStateType().equals(StateType.PHASE_STEP.name())
-          && state.getName().equals(Constants.PRE_DEPLOYMENT) && executionEvent.getExecutionStatus() == SUCCESS) {
+          && state.getName().equals(PRE_DEPLOYMENT.getDefaultName())
+          && executionEvent.getExecutionStatus() == SUCCESS) {
         // ready for rolling deploy
 
         if (orchestrationWorkflow == null || isEmpty(orchestrationWorkflow.getWorkflowPhases())) {
@@ -189,7 +191,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         rollbackProvisioners = true;
 
       } else if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow
-          && ((PhaseStepSubWorkflow) state).getPhaseStepType().equals(PhaseStepType.PRE_DEPLOYMENT)
+          && ((PhaseStepSubWorkflow) state).getPhaseStepType().equals(PRE_DEPLOYMENT)
           && executionEvent.getExecutionStatus() == FAILED) {
         return getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {

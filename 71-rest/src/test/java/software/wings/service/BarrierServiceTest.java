@@ -28,7 +28,6 @@ import software.wings.beans.BarrierInstance;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStepType;
-import software.wings.common.Constants;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 
@@ -56,9 +55,9 @@ public class BarrierServiceTest extends WingsBaseTest {
   public void testObtainInstancesWithNoBarriers() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
             .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID).infraMappingId(INFRA_MAPPING_ID).build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
             .build();
 
     final List<BarrierInstance> barrierInstances = barrierService.obtainInstances(APP_ID,
@@ -77,7 +76,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   public void testObtainInstancesWithSingleBarrier() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
@@ -93,7 +92,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .build())
                             .build()))
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
             .build();
 
     final List<BarrierInstance> barrierInstances = barrierService.obtainInstances(APP_ID,
@@ -111,7 +110,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   public void testObtainInstances() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow1 =
         aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
@@ -127,12 +126,12 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .build())
                             .build()))
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
             .build();
 
     final CanaryOrchestrationWorkflow orchestrationWorkflow2 =
         aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
@@ -148,7 +147,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .build())
                             .build()))
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
             .build();
 
     String pipelineExecution = generateUuid();
@@ -187,7 +186,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   public void testObtainInstancesWithTwoBarriersInTheSamePhaseStep() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
@@ -210,7 +209,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .build())
                             .build()))
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
             .build();
 
     assertThrowsNotRunningConcurrently(orchestrationWorkflow);
@@ -221,7 +220,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   public void testObtainInstancesWithTwoBarriersInTheSameWorkflowPhase() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
@@ -246,7 +245,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .build())
                             .build()))
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
             .build();
 
     assertThrowsNotRunningConcurrently(orchestrationWorkflow);
@@ -257,7 +256,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   public void testObtainInstancesWithDifferentBarriers() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
@@ -284,7 +283,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                     .build())
                             .build()))
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
             .build();
 
     final List<BarrierInstance> barrierInstances = barrierService.obtainInstances(APP_ID,

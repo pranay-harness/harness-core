@@ -37,7 +37,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
-import software.wings.common.Constants;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
@@ -119,19 +118,17 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   public void t4_testWorkflowCreation() throws Exception {
-    Workflow workflow =
-        aWorkflow()
-            .name("SampleWF")
-            .envId(sampleEnvironment.getUuid())
-            .serviceId(sampleService.getUuid())
-            .infraMappingId(gcpInfra.getUuid())
-            .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow = aWorkflow()
+                            .name("SampleWF")
+                            .envId(sampleEnvironment.getUuid())
+                            .serviceId(sampleService.getUuid())
+                            .infraMappingId(gcpInfra.getUuid())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                       .build())
+                            .build();
 
     sampleWF = workflowRestUtil.createWorkflow(getAccount().getUuid(), sampleApp.getUuid(), workflow);
 

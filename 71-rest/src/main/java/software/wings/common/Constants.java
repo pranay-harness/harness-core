@@ -27,15 +27,7 @@ public interface Constants {
   /**
    * The constant PRE_DEPLOYMENT.
    */
-  String PRE_DEPLOYMENT = "Pre-Deployment";
-  /**
-   * The constant PRE_DEPLOYMENT.
-   */
   String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
-  /**
-   * The constant POST_DEPLOYMENT.
-   */
-  String POST_DEPLOYMENT = "Post-Deployment";
   /**
    * The constant DISABLE_SERVICE.
    */
