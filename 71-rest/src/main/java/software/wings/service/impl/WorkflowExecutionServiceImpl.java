@@ -2801,6 +2801,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
             .addFilter(WorkflowExecution.WORKFLOW_TYPE_ID_KEY, Operator.EQ, ORCHESTRATION)
+            .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, Operator.EQ, workflowId)
             .addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, appId)
             .addFilter(WorkflowExecution.WORKFLOW_ENV_IDS_KEY, Operator.IN, Arrays.asList(envId))
             .withLimit(String.valueOf(pageLimit))

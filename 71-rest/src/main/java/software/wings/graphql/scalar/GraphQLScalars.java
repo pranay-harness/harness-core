@@ -30,7 +30,7 @@ public final class GraphQLScalars {
               Object parsedObject = parseLiteral(obj);
 
               if (parsedObject instanceof ZonedDateTime) {
-                return ((ZonedDateTime) parsedObject).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                return ((ZonedDateTime) parsedObject).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
               }
 
               return obj;
