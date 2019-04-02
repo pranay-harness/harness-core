@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
@@ -15,26 +16,42 @@ import io.harness.persistence.ReadPref;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.Builder;
+import lombok.Data;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
+import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
+import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 /**
  * Created by rsingh on 5/18/17.
  */
+@Data
+@Builder
 public class DataCollectionCallback implements NotifyCallback {
   @Transient private static final Logger logger = LoggerFactory.getLogger(DataCollectionCallback.class);
 
-  @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private transient WaitNotifyEngine waitNotifyEngine;
+  @Inject private transient WingsPersistence wingsPersistence;
+  @Inject private transient AlertService alertService;
+  @Inject private transient AppService appService;
+  @Inject private transient CVConfigurationService cvConfigurationService;
 
   private String appId;
   private boolean isLogCollection;
@@ -42,22 +59,9 @@ public class DataCollectionCallback implements NotifyCallback {
   private boolean isSumoDataCollection;
   private String stateExecutionId;
   private StateType stateType;
-
-  public DataCollectionCallback(String appId, LogAnalysisExecutionData executionData, boolean isLogCollection,
-      boolean isSumoDataCollection, String stateExecutionId, StateType stateType) {
-    this.appId = appId;
-    this.executionData = executionData;
-    this.isLogCollection = isLogCollection;
-    this.isSumoDataCollection = isSumoDataCollection;
-    this.stateExecutionId = stateExecutionId;
-    this.stateType = stateType;
-  }
-
-  public DataCollectionCallback(String appId, StateExecutionData executionData, boolean isLogCollection) {
-    this.appId = appId;
-    this.executionData = executionData;
-    this.isLogCollection = isLogCollection;
-  }
+  private String cvConfigId;
+  private long dataCollectionStartTime;
+  private long dataCollectionEndTime;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
@@ -66,6 +70,8 @@ public class DataCollectionCallback implements NotifyCallback {
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       sendErrorNotification(result.getErrorMessage());
     }
+
+    alertIfNecessary(result.getStatus(), "");
   }
 
   // TODO what is this used for
@@ -75,6 +81,7 @@ public class DataCollectionCallback implements NotifyCallback {
     if (response.values().iterator().next() instanceof ErrorNotifyResponseData) {
       final ErrorNotifyResponseData result = (ErrorNotifyResponseData) response.values().iterator().next();
       sendErrorNotification(result.getErrorMessage());
+      alertIfNecessary(DataCollectionTaskStatus.FAILURE, result.getErrorMessage());
     }
   }
 
@@ -98,6 +105,37 @@ public class DataCollectionCallback implements NotifyCallback {
           MetricDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
       metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
       waitNotifyEngine.notify(analysisExecutionData.getCorrelationId(), metricDataAnalysisResponse);
+    }
+  }
+
+  private void alertIfNecessary(DataCollectionTaskStatus status, String errorMessage) {
+    if (isEmpty(cvConfigId)) {
+      return;
+    }
+    switch (status) {
+      case SUCCESS:
+        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId,
+            AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
+            ContinuousVerificationDataCollectionAlert.builder().cvConfigId(cvConfigId).build());
+        break;
+      case FAILURE:
+        final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+        if (cvConfiguration == null) {
+          return;
+        }
+
+        String message = "Failed to collect data for " + cvConfiguration.getName() + "(Application: "
+            + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName() + ") for Time: "
+            + new SimpleDateFormat(ContinuousVerificationAlertData.DEFAULT_TIME_FORMAT)
+                  .format(new Date(dataCollectionEndTime))
+            + "\nReason: " + errorMessage;
+        alertService.openAlert(appService.getAccountIdByAppId(appId), appId,
+            AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
+            ContinuousVerificationDataCollectionAlert.builder().cvConfigId(cvConfigId).message(message).build());
+        break;
+
+      default:
+        throw new IllegalStateException("Invalid status " + status);
     }
   }
 

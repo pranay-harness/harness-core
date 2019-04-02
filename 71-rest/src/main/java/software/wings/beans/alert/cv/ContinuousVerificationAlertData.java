@@ -15,8 +15,7 @@ import java.util.Date;
 @Builder
 public class ContinuousVerificationAlertData implements AlertData {
   private static final Logger log = LoggerFactory.getLogger(ContinuousVerificationAlertData.class);
-  private static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
-  private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DEFAULT_TIME_FORMAT);
+  public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
 
   private CVConfiguration cvConfiguration;
   @Default private double riskScore = -1;
@@ -33,7 +32,7 @@ public class ContinuousVerificationAlertData implements AlertData {
   public String buildTitle() {
     return "24/7 Service Guard detected anomalies (Risk Level: High) for " + cvConfiguration.getName()
         + "(Application: " + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName()
-        + ") Time: " + new Date(analysisEndTime) + "\nRisk Score: " + riskScore
-        + ", Alert Threshold: " + cvConfiguration.getAlertThreshold();
+        + ") Time: " + new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime))
+        + "\nRisk Score: " + riskScore + ", Alert Threshold: " + cvConfiguration.getAlertThreshold();
   }
 }

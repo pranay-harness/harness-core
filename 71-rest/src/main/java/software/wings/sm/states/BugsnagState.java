@@ -240,7 +240,12 @@ public class BugsnagState extends AbstractLogAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .executionData(executionData)
+                                    .isLogCollection(true)
+                                    .build(),
+        waitId);
     return delegateService.queueTask(delegateTask);
   }
 
