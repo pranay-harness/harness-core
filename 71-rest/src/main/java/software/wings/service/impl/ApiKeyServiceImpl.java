@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.System.currentTimeMillis;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -45,6 +46,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     String apiKey = CryptoUtil.secureRandAlphaNumString(KEY_LEN);
     wingsPersistence.save(ApiKeyEntry.builder()
                               .uuid(generateUuid())
+                              .createdAt(currentTimeMillis())
                               .encryptedKey(getSimpleEncryption(accountId).encryptChars(apiKey.toCharArray()))
                               .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
                               .accountId(accountId)

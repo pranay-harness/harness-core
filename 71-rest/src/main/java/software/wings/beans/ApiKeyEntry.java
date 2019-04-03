@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessExportableEntity;
+import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -16,10 +17,11 @@ import software.wings.jersey.JsonViews;
 @Builder
 @Entity(value = "apiKeys", noClassnameStored = true)
 @HarnessExportableEntity
-public class ApiKeyEntry implements PersistentEntity, UuidAccess {
+public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAccess {
   public static final String ACCOUNT_ID_KEY = "accountId";
 
   @Id private String uuid;
+  @Indexed private long createdAt;
   @Indexed @NotEmpty private String accountId;
   @JsonView(JsonViews.Internal.class) @NotEmpty private char[] encryptedKey;
   @JsonView(JsonViews.Internal.class) @NotEmpty private String hashOfKey;
