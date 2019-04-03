@@ -2,9 +2,6 @@ package software.wings.beans;
 
 import com.google.common.collect.ImmutableSet;
 
-import io.harness.beans.DelegateTask;
-import io.harness.beans.SweepingOutput;
-import io.harness.event.model.QueableEvent;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
@@ -142,12 +139,11 @@ public class ManagerMorphiaClasses {
       ApiKeyEntry.class, PipelineExecution.class, HarnessUserGroup.class, FailureNotification.class, Service.class,
       Whitelist.class, DeploymentPreference.class, EntityVersion.class, BaseFile.class,
       CloudFormationInfrastructureProvisioner.class, BarrierInstance.class, ResourceConstraint.class,
-      DirectKubernetesInfrastructureMapping.class, DelegateTask.class, Alert.class, EcrArtifactStream.class,
-      ServiceSecretKey.class, ArtifactStream.class, ActionableNotification.class, AppContainer.class,
-      EcsContainerTask.class, SweepingOutput.class, PhysicalInfrastructureMappingWinRm.class, CacheEntity.class,
-      Preference.class, PcfServiceSpecification.class, ResourceConstraintNotification.class,
-      EcsInfrastructureMapping.class, LdapSettings.class, ServiceVariable.class, KmsConfig.class,
-      AmiArtifactStream.class, JenkinsArtifactStream.class, AzureInfrastructureMapping.class,
+      DirectKubernetesInfrastructureMapping.class, Alert.class, EcrArtifactStream.class, ServiceSecretKey.class,
+      ArtifactStream.class, ActionableNotification.class, AppContainer.class, EcsContainerTask.class,
+      PhysicalInfrastructureMappingWinRm.class, CacheEntity.class, Preference.class, PcfServiceSpecification.class,
+      ResourceConstraintNotification.class, EcsInfrastructureMapping.class, LdapSettings.class, ServiceVariable.class,
+      KmsConfig.class, AmiArtifactStream.class, JenkinsArtifactStream.class, AzureInfrastructureMapping.class,
       ContainerInfrastructureMapping.class, Role.class, Command.class, SettingAttribute.class,
       WorkflowExecutionBaseline.class, DockerArtifactStream.class, Workflow.class, PcfInfrastructureMapping.class,
       SSOSettings.class, Notification.class, Log.class, DeploymentSpecification.class,
@@ -171,13 +167,16 @@ public class ManagerMorphiaClasses {
       LogDataRecord.class, InstanceChangeEvent.class, YamlChangeSet.class, YamlHistory.class,
       LearningEngineAnalysisTask.class, ExperimentalMetricAnalysisRecord.class, Comparable.class,
       LogMLAnalysisRecord.class, TimeSeriesMLAnalysisRecord.class, StateExecutionInstance.class,
-      DatadogCVServiceConfiguration.class, MetricAnalysisRecord.class, YamlVersion.class, EncryptionConfig.class,
-      Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class, EncryptedRecord.class,
-      NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
-      YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
-      ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
-      LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
-      AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class,
-      DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class, HarnessApiKey.class,
-      ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class, Personalization.class);
+      DatadogCVServiceConfiguration.class, MetricAnalysisRecord.class, YamlVersion.class, Principal.class,
+      PrometheusCVServiceConfiguration.class, EncryptedData.class, NewRelicCVServiceConfiguration.class,
+      ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class, YamlGitConfig.class,
+      TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class, ExecutionEvent.class,
+      ManifestFile.class, GcsFileMetadata.class, PruneEvent.class, LogsCVConfiguration.class, ElkCVConfiguration.class,
+      Permit.class, LabeledLogRecord.class, AlertNotificationRule.class, CustomArtifactStream.class,
+      NotificationReceiverInfo.class, DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class,
+      HarnessApiKey.class, ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class,
+      Personalization.class);
+
+  public static final Set<Class> dependentClasses =
+      ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class);
 }

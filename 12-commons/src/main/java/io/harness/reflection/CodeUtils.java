@@ -1,8 +1,11 @@
 package io.harness.reflection;
 
+import static java.lang.String.format;
+
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.Set;
 
 public class CodeUtils {
   public static String location(Class clazz) {
@@ -35,5 +38,20 @@ public class CodeUtils {
       return true;
     }
     return false;
+  }
+
+  public static void checkHarnessClassBelongToModule(String location, Set<Class> classes) {
+    for (Class clazz : classes) {
+      if (!CodeUtils.isHarnessClass(clazz)) {
+        continue;
+      }
+      final String clazzLocation = CodeUtils.location(clazz);
+      if (clazzLocation.equals(location)) {
+        continue;
+      }
+
+      throw new RuntimeException(
+          format("%s class should be registered in module %s", clazz.getCanonicalName(), clazzLocation));
+    }
   }
 }

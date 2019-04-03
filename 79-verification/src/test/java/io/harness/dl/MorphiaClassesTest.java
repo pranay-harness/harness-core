@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.OrchestrationMorphiaClasses;
 import io.harness.app.VerificationServiceApplication;
 import io.harness.category.element.UnitTests;
+import io.harness.entities.VerificationMorphiaClasses;
 import io.harness.mongo.HObjectFactory;
+import io.harness.reflection.CodeUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
@@ -46,5 +48,12 @@ public class MorphiaClassesTest {
     }
 
     assertThat(success).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testModule() {
+    CodeUtils.checkHarnessClassBelongToModule(
+        CodeUtils.location(VerificationMorphiaClasses.class), VerificationMorphiaClasses.classes);
   }
 }

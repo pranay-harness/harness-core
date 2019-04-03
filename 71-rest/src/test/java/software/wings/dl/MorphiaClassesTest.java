@@ -3,7 +3,9 @@ package software.wings.dl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.mongo.HObjectFactory;
+import io.harness.reflection.CodeUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
@@ -11,6 +13,7 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsApplication;
+import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.integration.common.MongoDBTest.MongoEntity;
 import software.wings.integration.dl.PageRequestTest.Dummy;
 
@@ -43,5 +46,19 @@ public class MorphiaClassesTest {
     }
 
     assertThat(success).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLimitsModule() {
+    CodeUtils.checkHarnessClassBelongToModule(
+        CodeUtils.location(LimitsMorphiaClasses.class), LimitsMorphiaClasses.classes);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testManagerModule() {
+    CodeUtils.checkHarnessClassBelongToModule(
+        CodeUtils.location(ManagerMorphiaClasses.class), ManagerMorphiaClasses.classes);
   }
 }

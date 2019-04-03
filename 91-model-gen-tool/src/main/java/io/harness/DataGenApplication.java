@@ -14,6 +14,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.harness.event.EventsModule;
+import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.maintenance.MaintenanceController;
@@ -61,6 +62,8 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
+                                                      .addAll(ManagerMorphiaClasses.dependentClasses)
+                                                      .addAll(EventsMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .build();
