@@ -342,7 +342,7 @@ function setupDelegateJars(){
 function setupClientUtils(){
    echo "################################Setting up Client Utils ################################"
 
-   echo "Copying kubectl and go-template to harness-manager-nginx-0"
+   echo "Copying kubectl go-template and helm"
 
     for platform in linux darwin; do
         for kubectlversion in v1.13.2; do
@@ -353,6 +353,11 @@ function setupClientUtils(){
         for gotemplateversion in v0.2 v0.3; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
             cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
+        done
+
+        for helmversion in v2.13.1; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
+            cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
         done
     done
 }
