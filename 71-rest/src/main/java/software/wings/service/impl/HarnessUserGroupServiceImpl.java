@@ -19,6 +19,7 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.app.DeployMode;
 import software.wings.beans.Account;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
@@ -177,6 +178,10 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
   @Override
   public boolean isHarnessSupportUser(String userId) {
+    String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
+    if (DeployMode.isOnPrem(deployMode)) {
+      return false;
+    }
     Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
     query.filter("memberIds", userId);
     Key<HarnessUserGroup> userGroupKey = query.getKey();

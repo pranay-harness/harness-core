@@ -12,6 +12,7 @@ public enum DeployMode {
   KUBERNETES,
   KUBERNETES_ONPREM;
 
+  public static final String DEPLOY_MODE = "DEPLOY_MODE";
   public static boolean isOnPrem(String deployMode) {
     if (isEmpty(deployMode)) {
       return false;

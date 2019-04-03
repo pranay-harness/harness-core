@@ -347,7 +347,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     cacheHelper.getNewRelicApplicationCache();
     cacheHelper.getWhitelistConfigCache();
 
-    String deployMode = System.getenv("DEPLOY_MODE");
+    String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
 
     if (DeployMode.isOnPrem(deployMode)) {
       LicenseService licenseService = injector.getInstance(LicenseService.class);
