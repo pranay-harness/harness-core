@@ -244,7 +244,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final String delegateConnectionId = generateUuid();
   private DelegateConnectionHeartbeat connectionHeartbeat;
 
-  private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get("DEPLOY_MODE"))
+  private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get(DeployMode.DEPLOY_MODE))
       || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
 
   public static String getHostName() {

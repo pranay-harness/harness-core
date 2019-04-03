@@ -204,7 +204,7 @@ public class LicenseServiceImpl implements LicenseService {
 
   @Override
   public Account addLicenseInfo(Account account) {
-    String deployMode = System.getenv().get("DEPLOY_MODE");
+    String deployMode = System.getenv().get(DeployMode.DEPLOY_MODE);
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (licenseInfo == null) {
       if (!DeployMode.isOnPrem(deployMode)) {
