@@ -121,6 +121,24 @@ for goversion in v0.2 v0.3; do
     curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 done
 
+for helmversion in v2.13.1; do
+    echo "Adding helmversion $helmversion"
+    HELM_LINUX_DIR="${IMAGES_DIR}/helm/linux/$helmversion/"
+    HELM_MAC_DIR="${IMAGES_DIR}/helm/darwin/$helmversion/"
+
+    HELM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-helm/release/"$helmversion"/bin/linux/amd64/helm
+    HELM_MAC_URL=https://app.harness.io/storage/harness-download/harness-helm/release/"$helmversion"/bin/darwin/amd64/helm
+
+    echo "$HELM_MAC_DIR"
+    echo "$HELM_LINUX_DIR"
+
+    mkdir -p $HELM_LINUX_DIR
+    mkdir -p $HELM_MAC_DIR
+
+    curl -L -o "${HELM_LINUX_DIR}helm" "${HELM_LINUX_URL}"
+    curl -L -o "${HELM_MAC_DIR}helm" "${HELM_MAC_URL}"
+done
+
 cp delegate.jar "${IMAGES_DIR}/"
 cp watcher.jar "${IMAGES_DIR}/"
 mv "${JRE_SOLARIS_1}" "${IMAGES_DIR}/"
