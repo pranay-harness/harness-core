@@ -245,11 +245,13 @@ public class YamlHandlerFactory {
         yamlHandler = defaultsYamlHandler;
         break;
       case APPLICATION_MANIFEST:
+      case APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE:
       case APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE:
       case APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE:
         yamlHandler = applicationManifestYamlHandler;
         break;
       case MANIFEST_FILE:
+      case MANIFEST_FILE_VALUES_SERVICE_OVERRIDE:
       case MANIFEST_FILE_VALUES_ENV_OVERRIDE:
       case MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE:
         yamlHandler = manifestFileYamlHandler;

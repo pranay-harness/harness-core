@@ -128,10 +128,11 @@ public class YamlHelper {
   public AppManifestKind getAppManifestKindFromPath(String yamlFilePath) {
     String kind = extractParentEntityName(
         YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    if (isNotBlank(kind)) {
+    String kind2 = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(kind) || isNotBlank(kind2)) {
       return AppManifestKind.VALUES;
     }
-
     return AppManifestKind.K8S_MANIFEST;
   }
 

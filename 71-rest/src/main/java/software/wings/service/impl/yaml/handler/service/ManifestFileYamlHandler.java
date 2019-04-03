@@ -12,6 +12,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -139,7 +140,11 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
 
     switch (appManifestSource) {
       case SERVICE:
-        return YamlType.MANIFEST_FILE;
+        if (applicationManifest.getKind() == AppManifestKind.VALUES) {
+          return YamlType.MANIFEST_FILE_VALUES_SERVICE_OVERRIDE;
+        } else {
+          return YamlType.MANIFEST_FILE;
+        }
       case ENV:
         return YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE;
       case ENV_SERVICE:
