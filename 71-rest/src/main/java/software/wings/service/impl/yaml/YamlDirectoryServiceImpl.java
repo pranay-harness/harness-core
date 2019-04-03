@@ -921,10 +921,41 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           serviceFolder.addChild(applicationManifestFolder);
         }
         // ------------------- END APPLICATION MANIFEST FILES SECTION -----------------------
+
+        // ------------------- VALUES YAML OVERRIDE SECTION -----------------------
+
+        FolderNode valuesFolder = generateValuesFolder(accountId, service, servicePath);
+        if (valuesFolder != null) {
+          serviceFolder.addChild(valuesFolder);
+        }
+        // ------------------- END VALUES YAML OVERRIDE SECTION -----------------------
       }
     }
 
     return servicesFolder;
+  }
+
+  private FolderNode generateValuesFolder(String accountId, Service service, DirectoryPath servicePath) {
+    ApplicationManifest appManifest =
+        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid(), AppManifestKind.VALUES);
+    if (appManifest == null) {
+      return null;
+    }
+    DirectoryPath valuesFolderPath = servicePath.clone().add(VALUES_FOLDER);
+    FolderNode valuesFolder = new FolderNode(
+        accountId, VALUES_FOLDER, ApplicationManifest.class, valuesFolderPath, service.getAppId(), yamlGitSyncService);
+    valuesFolder.addChild(new ServiceLevelYamlNode(accountId, appManifest.getUuid(), service.getAppId(),
+        service.getUuid(), INDEX_YAML, ApplicationManifest.class, valuesFolderPath.clone().add(INDEX_YAML),
+        yamlGitSyncService, Type.APPLICATION_MANIFEST));
+    if (appManifest.getStoreType() == StoreType.Local) {
+      List<ManifestFile> manifestFiles =
+          applicationManifestService.getManifestFilesByAppManifestId(service.getAppId(), appManifest.getUuid());
+      ManifestFile valuesFile = manifestFiles.get(0);
+      valuesFolder.addChild(new ServiceLevelYamlNode(accountId, valuesFile.getUuid(), service.getAppId(),
+          service.getUuid(), valuesFile.getFileName(), ManifestFile.class,
+          valuesFolderPath.clone().add(valuesFile.getFileName()), yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+    }
+    return valuesFolder;
   }
 
   private FolderNode generateApplicationManifestNodeForService(
