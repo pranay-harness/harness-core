@@ -36,6 +36,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.entities.VerificationMorphiaClasses;
+import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.health.VerificationServiceHealthCheck;
 import io.harness.jobs.VerificationJob;
 import io.harness.jobs.VerificationMetricJob;
@@ -87,6 +88,8 @@ import javax.ws.rs.Path;
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
+                                                      .addAll(ManagerMorphiaClasses.dependentClasses)
+                                                      .addAll(EventsMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .addAll(VerificationMorphiaClasses.classes)

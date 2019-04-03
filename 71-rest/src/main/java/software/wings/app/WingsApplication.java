@@ -41,6 +41,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.OrchestrationMorphiaClasses;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
+import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
@@ -162,6 +163,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
+                                                      .addAll(ManagerMorphiaClasses.dependentClasses)
+                                                      .addAll(EventsMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .addAll(OrchestrationMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
