@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
@@ -56,8 +55,7 @@ public class ApiKeyResource {
   @ExceptionMetered
   public RestResponse<PageResponse<ApiKeyEntry>> list(
       @NotEmpty @QueryParam("accountId") String accountId, @BeanParam PageRequest<ApiKeyEntry> pageRequest) {
-    pageRequest.addFilter("appId", EQ, GLOBAL_APP_ID);
-    pageRequest.addFilter("accountId", EQ, accountId);
+    pageRequest.addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId);
     return new RestResponse<>(apiKeyService.list(pageRequest));
   }
 
