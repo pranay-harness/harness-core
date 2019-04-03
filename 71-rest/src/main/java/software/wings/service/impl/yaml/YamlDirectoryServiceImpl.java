@@ -685,7 +685,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        logger.error(ExceptionUtils.getMessage(e), e);
+        logger.warn(ExceptionUtils.getMessage(e), e);
       }
     }
 
