@@ -27,6 +27,7 @@ import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.utils.CacheHelper;
@@ -49,6 +50,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CacheHelper cacheHelper;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private AccountService accountService;
 
   @Override
   public Whitelist save(Whitelist whitelist) {
@@ -98,6 +100,11 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public boolean isValidIPAddress(String accountId, String ipAddress) {
+    if (accountService.isAccountLite(accountId)) {
+      logger.debug("Account is LITE. No IP Whitelisting - So, all IPs are valid IPs. accountId={}", accountId);
+      return true;
+    }
+
     List<Whitelist> whitelistConfigList = getWhitelistConfig(accountId);
     return isValidIPAddress(ipAddress, whitelistConfigList);
   }
@@ -137,8 +144,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     cache.remove(accountId);
   }
 
-  @Override
-  public boolean isValidIPAddress(String ipAddress, List<Whitelist> whitelistConfigList) {
+  private boolean isValidIPAddress(String ipAddress, List<Whitelist> whitelistConfigList) {
     if (isEmpty(whitelistConfigList)) {
       return true;
     } else {

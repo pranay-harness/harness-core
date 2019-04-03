@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddStateMachineToWorkflowExecutions;
 import migrations.all.AddValidUntilToCommandLog;
@@ -46,6 +47,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(18, CleanupSyncStatusForDeletedEntities.class))
         .add(Pair.of(19, AddStateMachineToWorkflowExecutions.class))
         .add(Pair.of(20, DeleteOrphanNotificationGroups.class))
+        .add(Pair.of(21, AddIsDefaultFlagToUserGroup.class))
         .build();
   }
 }

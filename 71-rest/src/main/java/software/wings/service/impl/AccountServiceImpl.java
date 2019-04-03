@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
@@ -76,6 +77,7 @@ import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -349,7 +351,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public void updateTwoFactorEnforceInfo(String accountId, User user, boolean enabled) {
+  public void updateTwoFactorEnforceInfo(String accountId, boolean enabled) {
     Account account = get(accountId);
     account.setTwoFactorAdminEnforced(enabled);
     update(account);
@@ -378,10 +380,43 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public Optional<String> getAccountType(String accountId) {
+    Account account = get(accountId);
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    if (null == licenseInfo) {
+      logger.error(
+          "License info not present for account. Account will not be considered lite. accountId={}", accountId);
+      return Optional.empty();
+    }
+
+    String accountType = licenseInfo.getAccountType();
+    if (!AccountType.isValid(accountType)) {
+      logger.error("Invalid account type. accountType={}, accountId={}", accountType, accountId);
+      return Optional.empty();
+    }
+
+    return Optional.of(accountType);
+  }
+
+  @Override
   public Account update(@Valid Account account) {
     // Need to update the account status if the account status is not null.
-    if (account.getLicenseInfo() != null && account.getLicenseInfo().getAccountStatus() != null) {
-      setAccountStatus(account.getUuid(), account.getLicenseInfo().getAccountStatus());
+    if (account.getLicenseInfo() != null) {
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+
+      AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
+      boolean shouldisableAuthMechanism = AuthenticationMechanism.DISABLED_FOR_LITE.contains(authMechanism);
+      boolean isLite = AccountType.isLite(licenseInfo.getAccountType());
+
+      if (isLite && shouldisableAuthMechanism) {
+        logger.info("[LITE_DOWNGRADE] Auth Mechanism. current={} new={} accountId={}",
+            account.getAuthenticationMechanism(), AuthenticationMechanism.USER_PASSWORD, account.getUuid());
+        account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
+      }
+
+      if (licenseInfo.getAccountStatus() != null) {
+        setAccountStatus(account.getUuid(), account.getLicenseInfo().getAccountStatus());
+      }
     }
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
@@ -512,6 +547,11 @@ public class AccountServiceImpl implements AccountService {
     update(account);
 
     return setAccountStatus(accountId, AccountStatus.MIGRATED);
+  }
+
+  @Override
+  public boolean isAccountLite(String accountId) {
+    return getAccountType(accountId).map(AccountType::isLite).orElse(false);
   }
 
   private boolean setAccountStatus(String accountId, String accountStatus) {

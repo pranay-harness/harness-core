@@ -45,16 +45,21 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.Account.Builder;
+import software.wings.beans.AccountType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -74,6 +79,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -112,8 +118,9 @@ public class SecretTextTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(SecretTextTest.class);
 
   @Parameter public EncryptionType encryptionType;
-  @Inject private VaultService vaultService;
-  @Inject private KmsService kmsService;
+  @Mock private AccountService accountService;
+  @Inject @InjectMocks private VaultService vaultService;
+  @Inject @InjectMocks private KmsService kmsService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
@@ -146,7 +153,11 @@ public class SecretTextTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     initMocks(this);
-    accountId = generateUuid();
+
+    Account account = getAccount();
+    accountId = account.getUuid();
+    when(accountService.get(accountId)).thenReturn(account);
+
     appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     workflowName = generateUuid();
     envId = generateUuid();
@@ -2265,5 +2276,14 @@ public class SecretTextTest extends WingsBaseTest {
         assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());
       }
     }
+  }
+
+  private Account getAccount() {
+    Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());
+    LicenseInfo license = getLicenseInfo();
+    license.setAccountType(AccountType.PAID);
+    accountBuilder.withLicenseInfo(license);
+
+    return accountBuilder.build();
   }
 }

@@ -47,6 +47,7 @@ import software.wings.common.Constants;
 import software.wings.helpers.ext.vault.VaultSysMountsRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
@@ -69,7 +70,9 @@ import java.util.concurrent.TimeUnit;
  */
 @Singleton
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
+  private static final String REASON_KEY = "reason";
   @Inject private AlertService alertService;
+  @Inject private AccountService accountService;
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
@@ -186,12 +189,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
-    Account account = wingsPersistence.get(Account.class, accountId);
-    if (account != null && account.isLocalEncryptionEnabled()) {
-      // Reject creation of new Vault secret manager if 'localEncryptionEnabled' account flag is set
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
-          .addParam("reason", "Can't create new Vault secret manager for a LOCAL encryption enabled account!");
-    }
+    checkIfVaultConfigCanBeCreatedOrUpdated(accountId, vaultConfig);
 
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
@@ -236,7 +234,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       vaultConfigId = wingsPersistence.save(vaultConfig);
     } catch (DuplicateKeyException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
-          .addParam("reason", "Another vault configuration with the same name or URL exists");
+          .addParam(REASON_KEY, "Another vault configuration with the same name or URL exists");
     }
 
     // When setting this vault config as default, set current default secret manager to non-default first.
@@ -253,6 +251,33 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     return vaultConfigId;
   }
 
+  private void checkIfVaultConfigCanBeCreatedOrUpdated(String accountId, VaultConfig vaultConfig) {
+    Account account = accountService.get(accountId);
+
+    if (account.isLocalEncryptionEnabled()) {
+      // Reject creation of new Vault secret manager if 'localEncryptionEnabled' account flag is set
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
+          .addParam(REASON_KEY, "Can't create new Vault secret manager for a LOCAL encryption enabled account!");
+    }
+
+    String vaultConfigId = vaultConfig.getUuid();
+    boolean isNewVaultConfig = isEmpty(vaultConfigId);
+    boolean isLiteAccount = accountService.isAccountLite(accountId);
+    if (isLiteAccount) {
+      if (isNewVaultConfig) {
+        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
+            .addParam(REASON_KEY, "Can't create new Vault secret manager for a Lite account!");
+      } else if (vaultConfig.isDefault() && !getSavedVaultConfig(vaultConfigId).isDefault()) {
+        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
+            .addParam(REASON_KEY, "Can't update Vault secret manager to default for a Lite account!");
+      }
+    }
+  }
+
+  private VaultConfig getSavedVaultConfig(String id) {
+    return wingsPersistence.get(VaultConfig.class, id);
+  }
+
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
     final long count = wingsPersistence.createQuery(EncryptedData.class)
@@ -264,7 +289,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     if (count > 0) {
       String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", message);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
     }
 
     VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -379,7 +404,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     } catch (Exception e) {
       String message =
           "Was not able to determine the vault server's secret engine version using given credentials. Please check your credentials and try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam("reason", message);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
     }
 
     try {
@@ -387,7 +412,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     } catch (WingsException e) {
       String message =
           "Was not able to reach vault using given credentials. Please check your credentials and try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam("reason", message);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
     }
   }
 

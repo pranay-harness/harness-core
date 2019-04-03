@@ -10,13 +10,17 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
+
+import java.util.Optional;
 
 @Singleton
 public class TwoFactorAuthenticationManager {
@@ -61,6 +65,11 @@ public class TwoFactorAuthenticationManager {
     if (settings.getMechanism() == null) {
       throw new WingsException(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION, USER);
     }
+    if (!isAllowed2FAEnable(user)) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam(
+              "message", "Two Factor authentication is not supported for Lite account. Please upgrade to Harness Pro.");
+    }
     settings.setTwoFactorAuthenticationEnabled(true);
     return applyTwoFactorAuthenticationSettings(user, settings);
   }
@@ -92,6 +101,18 @@ public class TwoFactorAuthenticationManager {
     }
   }
 
+  private boolean isAllowed2FAEnable(User user) {
+    return CollectionUtils.isEmpty(user.getAccounts()) || !isPrimaryAccountLite(user);
+  }
+
+  private boolean isPrimaryAccountLite(User user) {
+    return getPrimaryAccount(user).map(account -> accountService.isAccountLite(account.getUuid())).orElse(false);
+  }
+
+  private Optional<Account> getPrimaryAccount(User user) {
+    return user.getAccounts().stream().findFirst();
+  }
+
   public boolean getTwoFactorAuthAdminEnforceInfo(String accountId) {
     return accountService.getTwoFactorEnforceInfo(accountId);
   }
@@ -104,17 +125,22 @@ public class TwoFactorAuthenticationManager {
     return twoFactorEnabled;
   }
 
-  public boolean overrideTwoFactorAuthentication(String accountId, User user, TwoFactorAdminOverrideSettings settings) {
+  public boolean overrideTwoFactorAuthentication(String accountId, TwoFactorAdminOverrideSettings settings) {
     try {
       if (settings != null) {
+        if (accountService.isAccountLite(accountId) && settings.isAdminOverrideTwoFactorEnabled()) {
+          throw new WingsException(GENERAL_ERROR, USER)
+              .addParam("message",
+                  "Two Factor authentication is not supported for Lite account. Please upgrade to Harness Pro.");
+        }
         // Update 2FA enforce flag
-        accountService.updateTwoFactorEnforceInfo(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
+        accountService.updateTwoFactorEnforceInfo(accountId, settings.isAdminOverrideTwoFactorEnabled());
 
         // Enable 2FA for all users if admin enforced
         if (settings.isAdminOverrideTwoFactorEnabled()) {
           logger.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
           boolean success =
-              userService.overrideTwoFactorforAccount(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
+              userService.overrideTwoFactorforAccount(accountId, settings.isAdminOverrideTwoFactorEnabled());
           if (success) {
             eventPublishHelper.publishSetup2FAEvent(accountId);
           }

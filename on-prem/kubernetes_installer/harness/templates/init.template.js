@@ -37,6 +37,7 @@ if (0 < db.accounts.count()) {
         'name' : 'Account Administrator',
         'description' : 'Default account admin user group',
         'accountId' : '{{ .Values.accounts.accountId }}',
+        "isDefault" : true,
         'appPermissions' : [
             {
                 'permissionType' : 'ALL_APP_ENTITIES',
@@ -71,6 +72,7 @@ if (0 < db.accounts.count()) {
         'name' : 'Production Support',
         'description' : 'Production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within PROD environments',
         'accountId' : '{{ .Values.accounts.accountId }}',
+        "isDefault" : true,
         'appPermissions' : [
             {
                 'permissionType' : 'ENV',
@@ -171,6 +173,7 @@ if (0 < db.accounts.count()) {
         'name' : 'Non-Production Support',
         'description' : 'Non-production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within NON_PROD environments',
         'accountId' : '{{ .Values.accounts.accountId }}',
+        "isDefault" : true,
         'appPermissions' : [
             {
                 'permissionType' : 'DEPLOYMENT',

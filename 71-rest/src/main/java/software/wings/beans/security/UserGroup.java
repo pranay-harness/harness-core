@@ -3,6 +3,8 @@ package software.wings.beans.security;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.collect.ImmutableSet;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessExportableEntity;
@@ -52,6 +54,26 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";
   public static final String ACCOUNT_ID_KEY = "accountId";
+  /**
+   * The constant DEFAULT_READ_ONLY_USER_GROUP_NAME.
+   */
+  public static final String DEFAULT_READ_ONLY_USER_GROUP_NAME = "ReadOnlyUserGroup";
+  /**
+   * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME.
+   */
+  public static final String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME = "Non-Production Support";
+  /**
+   * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_NAME.
+   */
+  public static final String DEFAULT_PROD_SUPPORT_USER_GROUP_NAME = "Production Support";
+  /**
+   * The constant DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME.
+   */
+  public static final String DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME = "Account Administrator";
+
+  public static final Set<String> DEFAULT_USER_GROUPS =
+      ImmutableSet.of(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME, DEFAULT_PROD_SUPPORT_USER_GROUP_NAME,
+          DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_READ_ONLY_USER_GROUP_NAME);
 
   @NotEmpty private String name;
   private String description;
@@ -75,13 +97,15 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
 
   @Nullable private NotificationSettings notificationSettings;
 
+  private boolean isDefault;
+
   // TODO: Should use Builder at the class level itself.
   @Builder
   public UserGroup(String name, String description, String accountId, List<String> memberIds, List<User> members,
       Set<AppPermission> appPermissions, AccountPermissions accountPermissions, String uuid, String appId,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
       boolean isSsoLinked, SSOType linkedSsoType, String linkedSsoId, String linkedSsoDisplayName, String ssoGroupId,
-      String ssoGroupName, NotificationSettings notificationSettings) {
+      String ssoGroupName, NotificationSettings notificationSettings, boolean isDefault) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -97,6 +121,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
     this.ssoGroupId = ssoGroupId;
     this.ssoGroupName = ssoGroupName;
     this.notificationSettings = notificationSettings;
+    this.isDefault = isDefault;
   }
 
   public UserGroup cloneWithNewName(final String newName, final String newDescription) {
@@ -121,6 +146,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
         .linkedSsoId(linkedSsoId)
         .linkedSsoDisplayName(linkedSsoDisplayName)
         .notificationSettings(notificationSettings)
+        .isDefault(isDefault)
         .ssoGroupId(ssoGroupId)
         .ssoGroupName(ssoGroupName)
         .build();

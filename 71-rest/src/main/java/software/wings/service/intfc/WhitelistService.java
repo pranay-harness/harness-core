@@ -6,8 +6,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
-import java.util.List;
-
 /**
  * @author rktummala on 04/06/2018
  */
@@ -47,14 +45,6 @@ public interface WhitelistService extends OwnedByAccount {
    * @return
    */
   boolean isValidIPAddress(@NotEmpty String accountId, @NotEmpty String ipAddress);
-
-  /**
-   *
-   * @param ipAddress
-   * @param whitelistConfigList
-   * @return
-   */
-  boolean isValidIPAddress(String ipAddress, List<Whitelist> whitelistConfigList);
 
   Whitelist update(Whitelist whitelist);
 

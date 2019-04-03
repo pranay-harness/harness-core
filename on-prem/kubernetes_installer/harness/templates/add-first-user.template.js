@@ -50,6 +50,7 @@ function addFirstUser() {
         "name" : "Account Administrator",
         "description" : "Default account admin user group",
         "accountId" : "{{ .Values.accounts.accountId }}",
+        "isDefault" : true,
         "appPermissions" : [
             {
                 "permissionType" : "ALL_APP_ENTITIES",
@@ -85,6 +86,7 @@ function addFirstUser() {
         "name" : "Production Support",
         "description" : "Production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within PROD environments",
         "accountId" : "{{ .Values.accounts.accountId }}",
+        "isDefault" : true,
         "appPermissions" : [
             {
                 "permissionType" : "ENV",
@@ -186,6 +188,7 @@ function addFirstUser() {
         "name" : "Non-Production Support",
         "description" : "Non-production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within NON_PROD environments",
         "accountId" : "{{ .Values.accounts.accountId }}",
+        "isDefault" : true,
         "appPermissions" : [
             {
                 "permissionType" : "DEPLOYMENT",

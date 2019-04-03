@@ -213,7 +213,18 @@ public class Account extends Base {
   }
 
   public AuthenticationMechanism getAuthenticationMechanism() {
+    boolean shouldBeDisabled = AuthenticationMechanism.DISABLED_FOR_LITE.contains(authenticationMechanism);
+
+    if (this.isLite() && shouldBeDisabled) {
+      return AuthenticationMechanism.USER_PASSWORD;
+    }
+
     return authenticationMechanism;
+  }
+
+  @JsonIgnore
+  public boolean isLite() {
+    return licenseInfo != null && AccountType.isLite(licenseInfo.getAccountType());
   }
 
   public void setAuthenticationMechanism(AuthenticationMechanism authenticationMechanism) {

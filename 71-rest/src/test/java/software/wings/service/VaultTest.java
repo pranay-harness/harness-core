@@ -42,6 +42,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -49,12 +50,16 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
+import software.wings.beans.Account;
+import software.wings.beans.Account.Builder;
+import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -74,6 +79,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.security.KmsTransitionEventListener;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
@@ -111,8 +117,9 @@ public class VaultTest extends WingsBaseTest {
   private final int numOfEncryptedValsForVault = 1;
   private int numOfEncRecords;
   @Parameter public boolean isKmsEnabled;
-  @Inject private VaultService vaultService;
-  @Inject private KmsService kmsService;
+  @Mock private AccountService accountService;
+  @Inject @InjectMocks private VaultService vaultService;
+  @Inject @InjectMocks private KmsService kmsService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
@@ -179,7 +186,9 @@ public class VaultTest extends WingsBaseTest {
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
-    accountId = UUID.randomUUID().toString();
+    Account account = getAccount(AccountType.PAID);
+    accountId = account.getUuid();
+    when(accountService.get(accountId)).thenReturn(account);
     numOfEncRecords = numOfEncryptedValsForVault;
     if (isKmsEnabled) {
       final KmsConfig kmsConfig = getKmsConfig();
@@ -313,7 +322,10 @@ public class VaultTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void saveAndEditConfig() {
-    String renameAccountId = UUID.randomUUID().toString();
+    Account renameAccount = getAccount(AccountType.PAID);
+    String renameAccountId = renameAccount.getUuid();
+    when(accountService.get(renameAccountId)).thenReturn(renameAccount);
+
     String name = UUID.randomUUID().toString();
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setName(name);
@@ -346,6 +358,15 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.get(0).getParentIds().size());
     assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
     assertEquals(name + "_token", encryptedDataList.get(0).getName());
+  }
+
+  private Account getAccount(String accountType) {
+    Builder accountBuilder = Builder.anAccount().withUuid(UUID.randomUUID().toString());
+    LicenseInfo license = getLicenseInfo();
+    license.setAccountType(accountType);
+    accountBuilder.withLicenseInfo(license);
+
+    return accountBuilder.build();
   }
 
   @Test
@@ -470,6 +491,114 @@ public class VaultTest extends WingsBaseTest {
     assertEquals("config1", defaultConfig.getName());
     assertEquals(vaultConfig.getVaultUrl(), defaultConfig.getVaultUrl());
     assertTrue(defaultConfig.isDefault());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNewVaultConfigForLiteAccount() {
+    Account account = getAccount(AccountType.FREE);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
+    vaultConfig.setAccountId(accountId);
+
+    try {
+      vaultService.saveVaultConfig(accountId, vaultConfig);
+      fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.VAULT_OPERATION_ERROR, e.getCode());
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateVaultConfigFromNonDefaultToDefaultForLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String vaultConfigId = vaultService.saveVaultConfig(accountId, getNonDefaultVaultConfig());
+
+    account.getLicenseInfo().setAccountType(AccountType.FREE);
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+
+    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    updatedVaultConfig.setDefault(true);
+
+    try {
+      vaultService.saveVaultConfig(accountId, updatedVaultConfig);
+      fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.VAULT_OPERATION_ERROR, e.getCode());
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateVaultConfigFromDefaultToNonDefaultForLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String vaultConfigId = vaultService.saveVaultConfig(accountId, getDefaultVaultConfig());
+
+    account.getLicenseInfo().setAccountType(AccountType.FREE);
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+
+    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    updatedVaultConfig.setDefault(false);
+
+    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
+
+    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
+    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateVaultConfigFromNonDefaultToDefaultForNonLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String vaultConfigId = vaultService.saveVaultConfig(accountId, getNonDefaultVaultConfig());
+
+    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    updatedVaultConfig.setDefault(true);
+
+    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
+
+    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
+    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateVaultConfigFromDefaultToNonDefaultForNonLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String vaultConfigId = vaultService.saveVaultConfig(accountId, getDefaultVaultConfig());
+
+    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    updatedVaultConfig.setDefault(false);
+
+    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
+
+    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
+    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
   }
 
   @Test
@@ -1529,5 +1658,19 @@ public class VaultTest extends WingsBaseTest {
   private void stopTransitionListener(Thread thread) throws InterruptedException {
     transitionEventListener.shutDown();
     thread.join();
+  }
+
+  private VaultConfig getNonDefaultVaultConfig() {
+    VaultConfig vaultConfig = getVaultConfig();
+    vaultConfig.setDefault(false);
+
+    return vaultConfig;
+  }
+
+  private VaultConfig getDefaultVaultConfig() {
+    VaultConfig vaultConfig = getVaultConfig();
+    vaultConfig.setDefault(true);
+
+    return vaultConfig;
   }
 }

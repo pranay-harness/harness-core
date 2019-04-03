@@ -41,6 +41,7 @@ db.getCollection('userGroups').insert({
     "name" : "Account Administrator",
     "description" : "Default account admin user group",
     "accountId" : "kmpySmUISimoRrJL6NL73w",
+    "isDefault" : true,
     "appPermissions" : [
         {
             "permissionType" : "ALL_APP_ENTITIES",
@@ -76,6 +77,7 @@ db.getCollection('userGroups').insert({
     "name" : "Production Support",
     "description" : "Production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within PROD environments",
     "accountId" : "kmpySmUISimoRrJL6NL73w",
+    "isDefault" : true,
     "appPermissions" : [
         {
             "permissionType" : "ENV",
@@ -177,6 +179,7 @@ db.getCollection('userGroups').insert({
     "name" : "Non-Production Support",
     "description" : "Non-production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within NON_PROD environments",
     "accountId" : "kmpySmUISimoRrJL6NL73w",
+    "isDefault" : true,
     "appPermissions" : [
         {
             "permissionType" : "DEPLOYMENT",

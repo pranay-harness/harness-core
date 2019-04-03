@@ -4,9 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.Base;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 
 import javax.validation.executable.ValidateOnExecution;
@@ -18,11 +18,17 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private GovernanceConfigServiceForLite governanceConfigServiceForLite;
+  @Inject private AccountService accountService;
 
   @Override
   public GovernanceConfig get(String accountId) {
+    if (accountService.isAccountLite(accountId)) {
+      return governanceConfigServiceForLite.get(accountId);
+    }
+
     GovernanceConfig governanceConfig =
-        wingsPersistence.createQuery(GovernanceConfig.class).filter(Base.ACCOUNT_ID_KEY, accountId).get();
+        wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfig.ACCOUNT_ID_KEY, accountId).get();
     if (governanceConfig == null) {
       return getDefaultGovernanceConfig(accountId);
     }

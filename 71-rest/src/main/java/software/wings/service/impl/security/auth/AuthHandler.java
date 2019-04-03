@@ -6,11 +6,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
-import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION;
-import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.common.Constants.DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION;
-import static software.wings.common.Constants.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
@@ -1278,6 +1278,7 @@ public class AuthHandler {
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
                                             .name(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
+                                            .isDefault(true)
                                             .accountPermissions(accountPermissions)
                                             .appPermissions(appPermissions)
                                             .notificationSettings(notificationSettings)
@@ -1302,6 +1303,7 @@ public class AuthHandler {
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
                                             .name(userGroupName)
+                                            .isDefault(true)
                                             .appPermissions(appPermissions)
                                             .description("Default account admin user group");
     if (user != null) {
@@ -1312,7 +1314,7 @@ public class AuthHandler {
   }
 
   private UserGroup buildSupportUserGroup(
-      String accountId, String envFilterType, String userGroupName, String description) {
+      String accountId, String envFilterType, String userGroupName, String description, boolean isDefault) {
     Set<Action> actions = getAllNonDeploymentActions();
     Set<AppPermission> appPermissions = Sets.newHashSet();
     AppPermission svcPermission = AppPermission.builder()
@@ -1369,6 +1371,7 @@ public class AuthHandler {
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
                                             .name(userGroupName)
+                                            .isDefault(isDefault)
                                             .appPermissions(appPermissions)
                                             .description(description);
 
@@ -1377,12 +1380,12 @@ public class AuthHandler {
 
   public UserGroup buildProdSupportUserGroup(String accountId) {
     return buildSupportUserGroup(
-        accountId, PROD, DEFAULT_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION);
+        accountId, PROD, DEFAULT_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION, true);
   }
 
   public UserGroup buildNonProdSupportUserGroup(String accountId) {
-    return buildSupportUserGroup(
-        accountId, NON_PROD, DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION);
+    return buildSupportUserGroup(accountId, NON_PROD, DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME,
+        DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION, true);
   }
 
   private Set<PermissionType> getAllAccountPermissions() {
