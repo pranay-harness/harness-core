@@ -206,9 +206,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public List<ManifestFile> listManifestFiles(String appManifestId) {
-    Query<ManifestFile> query =
-        wingsPersistence.createQuery(ManifestFile.class).filter(APPLICATION_MANIFEST_ID_KEY, appManifestId);
+  public List<ManifestFile> listManifestFiles(String appManifestId, String appId) {
+    Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
+                                    .filter(APP_ID_KEY, appId)
+                                    .filter(APPLICATION_MANIFEST_ID_KEY, appManifestId);
     return query.asList();
   }
 

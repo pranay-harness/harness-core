@@ -145,7 +145,8 @@ public class ApplicationManifestResource {
   @Path("{appManifestId}/manifest-files")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<ManifestFile>> listManifestFiles(@PathParam("appManifestId") String appManifestId) {
-    return new RestResponse<>(applicationManifestService.listManifestFiles(appManifestId));
+  public RestResponse<List<ManifestFile>> listManifestFiles(
+      @PathParam("appManifestId") String appManifestId, @QueryParam("appId") String appId) {
+    return new RestResponse<>(applicationManifestService.listManifestFiles(appManifestId, appId));
   }
 }
