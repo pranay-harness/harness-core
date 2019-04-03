@@ -1,5 +1,6 @@
 package migrations.all;
 
+import com.mongodb.DBObject;
 import org.slf4j.LoggerFactory;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -31,7 +32,7 @@ public class MetricMLAnalysisRecordGroupNameMigration extends AddFieldMigration 
   }
 
   @Override
-  protected Object getFieldValue() {
+  protected Object getFieldValue(DBObject existingRecord) {
     return NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
   }
 }

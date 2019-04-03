@@ -10,7 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.common.Constants.DEFAULT_USER_GROUP_DESCRIPTION;
 
 import com.google.common.collect.Sets;
@@ -357,6 +357,10 @@ public class UserGroupServiceImpl implements UserGroupService {
   public boolean delete(String accountId, String userGroupId) {
     UserGroup userGroup = get(accountId, userGroupId, false);
     Validator.notNullCheck("userGroup", userGroup);
+    if (userGroup.isDefault()) {
+      throw new WingsException(ErrorCode.DELETE_NOT_ALLOWED)
+          .addParam("message", "Default user groups can not be deleted.");
+    }
     Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
                                           .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
                                           .filter(ID_KEY, userGroupId);
@@ -403,8 +407,12 @@ public class UserGroupServiceImpl implements UserGroupService {
                                              .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
                                              .addFilter("memberIds", Operator.HAS, user.getUuid())
                                              .build();
-    PageResponse<UserGroup> pageResponse = list(accountId, pageRequest, true);
-    return pageResponse.getResponse();
+    List<UserGroup> allUserGroups = list(accountId, pageRequest, true).getResponse();
+
+    if (accountService.isAccountLite(accountId)) {
+      return allUserGroups.stream().filter(UserGroup::isDefault).collect(toList());
+    }
+    return allUserGroups;
   }
 
   @Override

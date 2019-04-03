@@ -582,8 +582,7 @@ public class UserResource {
     // Trying Override = true
     if (settings.isAdminOverrideTwoFactorEnabled()) {
       if (twoFactorAuthenticationManager.isTwoFactorEnabledForAdmin(accountId, UserThreadLocal.get())) {
-        return new RestResponse(
-            twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, UserThreadLocal.get(), settings));
+        return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
       } else {
         return Builder.aRestResponse()
             .withResponseMessages(
@@ -595,8 +594,7 @@ public class UserResource {
     }
     // Trying Override = false
     else {
-      return new RestResponse(
-          twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, UserThreadLocal.get(), settings));
+      return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
     }
   }
 

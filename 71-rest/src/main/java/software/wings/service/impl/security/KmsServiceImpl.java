@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -35,6 +36,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -58,6 +60,7 @@ import java.util.UUID;
 @Singleton
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
+  @Inject private AccountService accountService;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
@@ -125,15 +128,37 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public String saveKmsConfig(String accountId, KmsConfig kmsConfig) {
-    Account account = wingsPersistence.get(Account.class, accountId);
-    if (account != null && account.isLocalEncryptionEnabled()) {
+    if (accountId.equals(GLOBAL_ACCOUNT_ID)) {
+      return saveGlobalKmsConfig(accountId, kmsConfig);
+    }
+    checkIfKmsConfigCanBeCreatedOrUpdated(accountId, kmsConfig);
+    validateKms(accountId, kmsConfig);
+    return saveKmsConfigInternal(accountId, kmsConfig);
+  }
+
+  private void checkIfKmsConfigCanBeCreatedOrUpdated(String accountId, KmsConfig kmsConfig) {
+    Account account = accountService.get(accountId);
+
+    if (account.isLocalEncryptionEnabled()) {
       // Reject creation of new KMS secret manager if 'localEncryptionEnabled' account flag is set
       throw new KmsOperationException(
           "Can't create new KMS secret manager for a LOCAL encryption enabled account!", USER_SRE);
     }
 
-    validateKms(accountId, kmsConfig);
-    return saveKmsConfigInternal(accountId, kmsConfig);
+    String kmsConfigId = kmsConfig.getUuid();
+    boolean isNewKmsConfig = isEmpty(kmsConfigId);
+    boolean isLiteAccount = accountService.isAccountLite(accountId);
+    if (isLiteAccount) {
+      if (isNewKmsConfig) {
+        throw new KmsOperationException("Can't create new KMS secret manager for a Lite account!", USER);
+      } else if (kmsConfig.isDefault() && !getSavedKmsConfig(kmsConfigId).isDefault()) {
+        throw new KmsOperationException("Can't update KMS secret manager to default for a Lite account!", USER);
+      }
+    }
+  }
+
+  private KmsConfig getSavedKmsConfig(String id) {
+    return wingsPersistence.get(KmsConfig.class, id);
   }
 
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {

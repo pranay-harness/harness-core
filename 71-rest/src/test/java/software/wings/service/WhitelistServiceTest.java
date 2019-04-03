@@ -37,6 +37,15 @@ import java.util.List;
  * @author rktummala
  */
 public class WhitelistServiceTest extends WingsBaseTest {
+  private static final String IP_ADDRESS_1 = "192.168.0.1";
+  private static final String IP_ADDRESS_2 = "10.17.12.5";
+  private static final String IP_ADDRESS_3 = "10.18.12.1";
+  private static final String IP_ADDRESS_4 = "12.12.12.12";
+  private static final String IP_ADDRESS_5 = "127.0.0.1";
+  private static final String IP_ADDRESS_6 = "192.168.128.66";
+  private static final String IP_ADDRESS_7 = "192.168.1.66";
+  private static final String INVALID_IP_ADDRESS = "invalidIp";
+
   @Mock private AccountService accountService;
   @Mock private Account account;
 
@@ -51,7 +60,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   private String cidrFilter1 = "10.18.12.1/32";
   private String invalidCidrFilter1 = "127.0.0.1//8";
   private String invalidCidrFilter2 = "127.0.0.1/8/b";
-  private String ipFilter = "192.168.0.1";
+  private String ipFilter = IP_ADDRESS_1;
   private String invalidIpFilter1 = "999.0.0.1";
   private String invalidIpFilter2 = "127";
   private String invalidIpFilter3 = "abcd";
@@ -113,6 +122,66 @@ public class WhitelistServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testIsValidIpAddress() {
+    createWhitelists();
+
+    boolean valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_1);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_2);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_3);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_4);
+    assertFalse(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_5);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_6);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_7);
+    assertFalse(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, INVALID_IP_ADDRESS);
+    assertFalse(valid);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testIsValidIpAddressTrueForLite() {
+    createWhitelists();
+
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+
+    boolean valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_1);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_2);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_3);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_4);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_5);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_6);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_7);
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, INVALID_IP_ADDRESS);
+    assertTrue(valid);
+  }
+
+  private void createWhitelists() {
     Whitelist whitelist1 = Whitelist.builder()
                                .accountId(accountId)
                                .description(description)
@@ -136,30 +205,6 @@ public class WhitelistServiceTest extends WingsBaseTest {
                                .status(WhitelistStatus.ACTIVE)
                                .build();
     whitelistService.save(whitelist3);
-
-    boolean valid = whitelistService.isValidIPAddress(accountId, "192.168.0.1");
-    assertTrue(valid);
-
-    valid = whitelistService.isValidIPAddress(accountId, "10.17.12.5");
-    assertTrue(valid);
-
-    valid = whitelistService.isValidIPAddress(accountId, "10.18.12.1");
-    assertTrue(valid);
-
-    valid = whitelistService.isValidIPAddress(accountId, "12.12.12.12");
-    assertFalse(valid);
-
-    valid = whitelistService.isValidIPAddress(accountId, "127.0.0.1");
-    assertTrue(valid);
-
-    valid = whitelistService.isValidIPAddress(accountId, "192.168.128.66");
-    assertTrue(valid);
-
-    valid = whitelistService.isValidIPAddress(accountId, "192.168.1.66");
-    assertFalse(valid);
-
-    valid = whitelistService.isValidIPAddress(accountId, "invalidIp");
-    assertFalse(valid);
   }
 
   @Test

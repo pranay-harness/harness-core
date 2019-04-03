@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -39,6 +40,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,6 +74,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -452,6 +455,65 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     UserThreadLocal.set(user);
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
         .isFalse();
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testDefaultUserGroupShouldNotBeDeleted() {
+    UserGroup defaultUserGroup = UserGroup.builder().accountId(ACCOUNT_ID).name(name).isDefault(true).build();
+    wingsPersistence.save(defaultUserGroup);
+
+    userGroupService.delete(ACCOUNT_ID, defaultUserGroup.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNonDefaultUserGroupShouldBeDeleted() {
+    UserGroup nonDefaultUserGroup = UserGroup.builder().accountId(ACCOUNT_ID).name(name).isDefault(false).build();
+    wingsPersistence.save(nonDefaultUserGroup);
+
+    boolean deleted = userGroupService.delete(ACCOUNT_ID, nonDefaultUserGroup.getUuid());
+
+    assertTrue(deleted);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testActiveUserGroups() {
+    UserGroup defaultUserGroup = UserGroup.builder()
+                                     .accountId(ACCOUNT_ID)
+                                     .name(name)
+                                     .memberIds(Collections.singletonList(user.getUuid()))
+                                     .isDefault(true)
+                                     .build();
+    UserGroup nonDefaultUserGroup = UserGroup.builder()
+                                        .accountId(ACCOUNT_ID)
+                                        .name(name2)
+                                        .memberIds(Collections.singletonList(user.getUuid()))
+                                        .isDefault(false)
+                                        .build();
+
+    wingsPersistence.save(defaultUserGroup);
+    wingsPersistence.save(nonDefaultUserGroup);
+
+    when(accountService.isAccountLite(ACCOUNT_ID)).thenReturn(true);
+
+    assertEquals(Collections.singletonList(defaultUserGroup.getUuid()),
+        getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)));
+
+    when(accountService.isAccountLite(ACCOUNT_ID)).thenReturn(false);
+
+    assertEquals(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()),
+        getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)));
+  }
+
+  private List<String> getIds(List<UserGroup> userGroups) {
+    List<String> ids = new ArrayList<>();
+    for (UserGroup userGroup : userGroups) {
+      String uuid = userGroup.getUuid();
+      ids.add(uuid);
+    }
+    return ids;
   }
 
   private User createUser(String userId) {

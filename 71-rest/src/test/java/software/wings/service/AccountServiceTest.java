@@ -35,9 +35,11 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
@@ -103,6 +105,22 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withLicenseInfo(getLicenseInfo())
                                               .build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAccountType() {
+    LicenseInfo licenseInfo = getLicenseInfo();
+    licenseInfo.setAccountType(AccountType.FREE);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withLicenseInfo(licenseInfo)
+                                              .build());
+
+    assertThat(accountService.getAccountType(account.getUuid())).isEqualTo(Optional.of(AccountType.FREE));
   }
 
   @Test

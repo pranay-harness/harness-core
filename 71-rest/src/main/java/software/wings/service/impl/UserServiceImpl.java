@@ -113,7 +113,6 @@ import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
@@ -1366,7 +1365,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean overrideTwoFactorforAccount(String accountId, User user, boolean adminOverrideTwoFactorEnabled) {
+  public boolean overrideTwoFactorforAccount(String accountId, boolean adminOverrideTwoFactorEnabled) {
     try {
       Query<User> updateQuery = wingsPersistence.createQuery(User.class);
       updateQuery.filter("accounts", accountId);
@@ -1910,7 +1909,7 @@ public class UserServiceImpl implements UserService {
   private List<UserGroup> getAccountAdminGroup(String accountId) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
                                              .addFilter(UserGroup.ACCOUNT_ID_KEY, EQ, accountId)
-                                             .addFilter("name", EQ, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
+                                             .addFilter("name", EQ, UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
                                              .build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     return pageResponse.getResponse();

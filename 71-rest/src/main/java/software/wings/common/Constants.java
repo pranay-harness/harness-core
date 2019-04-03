@@ -656,27 +656,11 @@ public interface Constants {
   String SECRET_MASK = "**************";
 
   /**
-   * The constant DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME.
-   */
-  String DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME = "Account Administrator";
-  /**
-   * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_NAME.
-   */
-  String DEFAULT_PROD_SUPPORT_USER_GROUP_NAME = "Production Support";
-  /**
    * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
    */
   String DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
       "Production Support members have access to override configuration, "
       + "setup infrastructure and setup/execute deployment workflows within PROD environments";
-  /**
-   * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME.
-   */
-  String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME = "Non-Production Support";
-  /**
-   * The constant DEFAULT_READ_ONLY_USER_GROUP_NAME.
-   */
-  String DEFAULT_READ_ONLY_USER_GROUP_NAME = "ReadOnlyUserGroup";
   /**
    * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
    */

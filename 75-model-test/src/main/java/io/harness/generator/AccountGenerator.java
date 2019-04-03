@@ -238,9 +238,9 @@ public class AccountGenerator {
         readOnlyUserUuid, readOnlyUserName, readOnlyEmail, scmSecret.decryptToCharArray(readOnlyPassword), account);
     ensureUser(rbac1UserUuid, rbac1UserName, rbac1Email, scmSecret.decryptToCharArray(rbac1Password), account);
     ensureUser(rbac2UserUuid, rbac2UserName, rbac2Email, scmSecret.decryptToCharArray(rbac2Password), account);
-    addUserToUserGroup(adminUser, account.getUuid(), Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
+    addUserToUserGroup(adminUser, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(
-        account.getUuid(), readOnlyUser, Constants.DEFAULT_READ_ONLY_USER_GROUP_NAME);
+        account.getUuid(), readOnlyUser, UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
     readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
 
     addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
@@ -253,7 +253,7 @@ public class AccountGenerator {
   public Account ensureTestUser(Account account) {
     User testUser =
         ensureUser(testUserUuid, testUserName, testEmail, scmSecret.decryptToCharArray(defaultPassword), account);
-    addUserToUserGroup(testUser, account.getUuid(), Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
+    addUserToUserGroup(testUser, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
 
     return account;
   }

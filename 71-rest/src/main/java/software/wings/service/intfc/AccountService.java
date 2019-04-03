@@ -15,6 +15,7 @@ import software.wings.service.impl.analysis.CVEnabledService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -38,11 +39,13 @@ public interface AccountService {
 
   boolean getTwoFactorEnforceInfo(String accountId);
 
-  void updateTwoFactorEnforceInfo(String accountId, User user, boolean enabled);
+  void updateTwoFactorEnforceInfo(String accountId, boolean enabled);
 
   String suggestAccountName(@NotNull String accountName);
 
   boolean exists(String accountName);
+
+  Optional<String> getAccountType(String accountId);
 
   /**
    * List.
@@ -90,4 +93,6 @@ public interface AccountService {
    * new cluster that the account has been migrated into.
    */
   boolean completeAccountMigration(String accountId, String newClusterUrl);
+
+  boolean isAccountLite(String accountId);
 }

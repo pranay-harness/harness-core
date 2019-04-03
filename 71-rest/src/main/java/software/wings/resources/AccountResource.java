@@ -9,22 +9,35 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountSalesContactsInfo;
+import software.wings.beans.AccountType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
+import software.wings.beans.User;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.licensing.LicenseService;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.utils.AccountPermissionUtils;
+import software.wings.utils.CacheHelper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -44,6 +57,10 @@ public class AccountResource {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
   @Inject private AccountPermissionUtils accountPermissionUtils;
+  @Inject private CacheHelper cacheHelper;
+  @Inject private GovernanceConfigService governanceConfigService;
+  @Inject private UserService userService;
+  @Inject private TOTPAuthHandler totpHandler;
 
   @GET
   @Path("{accountId}/status")
@@ -135,6 +152,40 @@ public class AccountResource {
   }
 
   @PUT
+  @Path("accountType")
+  public RestResponse<Boolean> makeLite(
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("type") @NotEmpty String type) {
+    if (!accountService.isFeatureFlagEnabled(FeatureName.HARNESS_LITE.name(), accountId)) {
+      throw new InvalidRequestException("HARNESS_LITE feature is disabled");
+    }
+
+    if (!AccountType.isValid(type)) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Type");
+    }
+
+    cacheHelper.getUserPermissionInfoCache().clear();
+    Account account = accountService.get(accountId);
+
+    if (type.equals(AccountType.FREE)) {
+      governanceConfigService.update(accountId, GovernanceConfig.builder().deploymentFreeze(false).build());
+      accountService.updateTwoFactorEnforceInfo(accountId, false);
+      List<User> usersWithThisPrimaryAccount = userService.getUsersOfAccount(accountId)
+                                                   .stream()
+                                                   .filter(u -> u.getAccounts().get(0).getUuid().equals(accountId))
+                                                   .collect(Collectors.toList());
+      for (User u : usersWithThisPrimaryAccount) {
+        totpHandler.disableTwoFactorAuthentication(u);
+      }
+      account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
+      accountService.update(account);
+    }
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    licenseInfo.setAccountType(type);
+
+    return new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
+  }
+
+  @PUT
   @Path("{accountId}/sales-contacts")
   @Timed
   @ExceptionMetered
@@ -186,5 +237,12 @@ public class AccountResource {
       response = new RestResponse<>(accountService.save(account));
     }
     return response;
+  }
+
+  @GET
+  @Path("{accountId}/type")
+  public RestResponse<String> getAccountType(@PathParam("accountId") String accountId) {
+    String accountType = accountService.getAccountType(accountId).orElse(null);
+    return new RestResponse<>(accountType);
   }
 }

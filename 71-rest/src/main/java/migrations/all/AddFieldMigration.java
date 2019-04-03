@@ -32,11 +32,11 @@ public abstract class AddFieldMigration implements Migration {
     int updated = 0;
     int batched = 0;
     while (dataRecords.hasNext()) {
-      DBObject next = dataRecords.next();
+      DBObject record = dataRecords.next();
 
-      String uuId = (String) next.get("_id");
+      String uuId = (String) record.get("_id");
       bulkWriteOperation.find(wingsPersistence.createQuery(getCollectionClass()).filter(ID_KEY, uuId).getQueryObject())
-          .updateOne(new BasicDBObject("$set", new BasicDBObject(getFieldName(), getFieldValue())));
+          .updateOne(new BasicDBObject("$set", new BasicDBObject(getFieldName(), getFieldValue(record))));
       updated++;
       batched++;
 
@@ -63,5 +63,5 @@ public abstract class AddFieldMigration implements Migration {
 
   protected abstract String getFieldName();
 
-  protected abstract Object getFieldValue();
+  protected abstract Object getFieldValue(DBObject existingRecord);
 }

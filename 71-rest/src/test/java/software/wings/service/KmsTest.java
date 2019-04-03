@@ -33,6 +33,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.ReadPref;
@@ -49,6 +50,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -57,6 +59,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
+import software.wings.beans.Account;
+import software.wings.beans.Account.Builder;
+import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
@@ -65,6 +70,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -92,6 +98,7 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.KmsTransitionEventListener;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -134,7 +141,8 @@ public class KmsTest extends WingsBaseTest {
   private static final String arn = generateUuid();
   @Inject private KmsResource kmsResource;
   @Inject private SecretManagementResource secretManagementResource;
-  @Inject private KmsService kmsService;
+  @Mock private AccountService accountService;
+  @Inject @InjectMocks private KmsService kmsService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
@@ -163,8 +171,12 @@ public class KmsTest extends WingsBaseTest {
 
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
-    accountId = generateUuid();
     initMocks(this);
+
+    Account account = getAccount(AccountType.PAID);
+    accountId = account.getUuid();
+    when(accountService.get(accountId)).thenReturn(account);
+
     appId = wingsPersistence.save(
         Application.Builder.anApplication().withName(generateUuid()).withAccountId(accountId).build());
     workflowName = generateUuid();
@@ -526,6 +538,114 @@ public class KmsTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(numOfEncryptedValsForKms + 1, query.count());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNewKmsConfigForLiteAccount() {
+    Account account = getAccount(AccountType.FREE);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setAccountId(accountId);
+
+    try {
+      kmsService.saveKmsConfig(accountId, kmsConfig);
+      fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getCode());
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateKmsConfigFromNonDefaultToDefaultForLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String kmsConfigId = kmsService.saveKmsConfig(accountId, getNonDefaultKmsConfig());
+
+    account.getLicenseInfo().setAccountType(AccountType.FREE);
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+
+    KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
+    updatedKmsConfig.setDefault(true);
+
+    try {
+      kmsService.saveKmsConfig(accountId, updatedKmsConfig);
+      fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getCode());
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateKmsConfigFromDefaultToNonDefaultForLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String kmsConfigId = kmsService.saveKmsConfig(accountId, getDefaultKmsConfig());
+
+    account.getLicenseInfo().setAccountType(AccountType.FREE);
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+
+    KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
+    updatedKmsConfig.setDefault(false);
+
+    kmsService.saveKmsConfig(accountId, updatedKmsConfig);
+
+    assertEquals(updatedKmsConfig.getUuid(), kmsService.getKmsConfig(accountId, kmsConfigId).getUuid());
+    assertEquals(updatedKmsConfig.isDefault(), kmsService.getKmsConfig(accountId, kmsConfigId).isDefault());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateKmsConfigFromNonDefaultToDefaultForNonLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String kmsConfigId = kmsService.saveKmsConfig(accountId, getNonDefaultKmsConfig());
+
+    KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
+    updatedKmsConfig.setDefault(true);
+
+    kmsService.saveKmsConfig(accountId, updatedKmsConfig);
+
+    assertEquals(updatedKmsConfig.getUuid(), kmsService.getKmsConfig(accountId, kmsConfigId).getUuid());
+    assertEquals(updatedKmsConfig.isDefault(), kmsService.getKmsConfig(accountId, kmsConfigId).isDefault());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateKmsConfigFromDefaultToNonDefaultForNonLiteAccount() {
+    Account account = getAccount(AccountType.PAID);
+    String accountId = account.getUuid();
+
+    when(accountService.get(accountId)).thenReturn(account);
+    when(accountService.isAccountLite(accountId)).thenReturn(false);
+
+    String kmsConfigId = kmsService.saveKmsConfig(accountId, getDefaultKmsConfig());
+
+    KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
+    updatedKmsConfig.setDefault(false);
+
+    kmsService.saveKmsConfig(accountId, updatedKmsConfig);
+
+    assertEquals(updatedKmsConfig.getUuid(), kmsService.getKmsConfig(accountId, kmsConfigId).getUuid());
+    assertEquals(updatedKmsConfig.isDefault(), kmsService.getKmsConfig(accountId, kmsConfigId).isDefault());
   }
 
   @Test
@@ -1702,7 +1822,6 @@ public class KmsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void kmsEncryptionSaveGlobalConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
-
     kmsResource.saveKmsConfig(GLOBAL_ACCOUNT_ID, kmsConfig);
     assertEquals(1, wingsPersistence.createQuery(KmsConfig.class).count());
 
@@ -2249,7 +2368,9 @@ public class KmsTest extends WingsBaseTest {
       final long seed = System.currentTimeMillis();
       logger.info("seed: " + seed);
       Random r = new Random(seed);
-      final String randomAccountId = UUID.randomUUID().toString();
+      Account randomAccount = getAccount(AccountType.PAID);
+      String randomAccountId = randomAccount.getUuid();
+      when(accountService.get(randomAccountId)).thenReturn(randomAccount);
       final String randomAppId = UUID.randomUUID().toString();
       KmsConfig fromConfig = getKmsConfig();
       kmsResource.saveKmsConfig(randomAccountId, fromConfig);
@@ -2462,7 +2583,9 @@ public class KmsTest extends WingsBaseTest {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
-    final String renameAccountId = UUID.randomUUID().toString();
+    Account renameAccount = getAccount(AccountType.PAID);
+    String renameAccountId = renameAccount.getUuid();
+    when(accountService.get(renameAccountId)).thenReturn(renameAccount);
     final String renameAppId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(renameAccountId, fromConfig);
@@ -2510,7 +2633,9 @@ public class KmsTest extends WingsBaseTest {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
-    final String randomAccountId = UUID.randomUUID().toString();
+    Account randomAccount = getAccount(AccountType.PAID);
+    String randomAccountId = randomAccount.getUuid();
+    when(accountService.get(randomAccountId)).thenReturn(randomAccount);
     final String randomAppId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(randomAccountId, fromConfig);
@@ -2635,7 +2760,9 @@ public class KmsTest extends WingsBaseTest {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
-    final String renameAccountId = UUID.randomUUID().toString();
+    Account renameAccount = getAccount(AccountType.PAID);
+    String renameAccountId = renameAccount.getUuid();
+    when(accountService.get(renameAccountId)).thenReturn(renameAccount);
     final String renameAppId = UUID.randomUUID().toString();
 
     KmsConfig fromConfig = getKmsConfig();
@@ -3153,6 +3280,15 @@ public class KmsTest extends WingsBaseTest {
     }
   }
 
+  private Account getAccount(String accountType) {
+    Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());
+    LicenseInfo license = getLicenseInfo();
+    license.setAccountType(accountType);
+    accountBuilder.withLicenseInfo(license);
+
+    return accountBuilder.build();
+  }
+
   public KmsConfig getKmsConfig() {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
@@ -3177,5 +3313,19 @@ public class KmsTest extends WingsBaseTest {
   private void stopTransitionListener(Thread thread) throws InterruptedException {
     transitionEventListener.shutDown();
     thread.join();
+  }
+
+  private KmsConfig getNonDefaultKmsConfig() {
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setDefault(false);
+
+    return kmsConfig;
+  }
+
+  private KmsConfig getDefaultKmsConfig() {
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setDefault(true);
+
+    return kmsConfig;
   }
 }

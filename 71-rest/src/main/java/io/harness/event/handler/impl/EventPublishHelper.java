@@ -3,11 +3,11 @@ package io.harness.event.handler.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
 import static software.wings.common.Constants.ACCOUNT_ID;
-import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
-import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
-import static software.wings.common.Constants.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
-import static software.wings.common.Constants.DEFAULT_READ_ONLY_USER_GROUP_NAME;
 import static software.wings.common.Constants.EMAIL_ID;
 
 import com.google.inject.Inject;

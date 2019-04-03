@@ -26,6 +26,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
+import software.wings.licensing.LicenseService;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
@@ -60,6 +61,8 @@ public class AuthenticationManager {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private OauthBasedAuthHandler oauthBasedAuthHandler;
   @Inject private OauthOptions oauthOptions;
+
+  @Inject private LicenseService licenseService;
 
   private static Logger logger = LoggerFactory.getLogger(AuthenticationManager.class);
 

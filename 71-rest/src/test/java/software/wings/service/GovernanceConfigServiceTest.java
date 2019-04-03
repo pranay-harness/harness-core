@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -63,6 +64,15 @@ public class GovernanceConfigServiceTest extends WingsBaseTest {
 
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);
+
+    // treat the account as LITE
+    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    savedGovernanceConfig = governanceConfigService.get(accountId);
+    assertFalse(savedGovernanceConfig.isDeploymentFreeze());
+
+    inputConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(true).build();
+    governanceConfigService.update(accountId, inputConfig);
+    assertFalse(governanceConfigService.get(accountId).isDeploymentFreeze());
   }
 
   private void compare(GovernanceConfig lhs, GovernanceConfig rhs) {

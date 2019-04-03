@@ -4,6 +4,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.security.authentication.TwoFactorAuthenticationMechanism.TOTP;
 
 import com.google.inject.Inject;
 
@@ -20,14 +22,18 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import org.joda.time.DateTimeUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.AccountType;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.authentication.TwoFactorAuthenticationSettings.TwoFactorAuthenticationSettingsBuilder;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -35,6 +41,7 @@ import software.wings.service.intfc.UserService;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.UUID;
 
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock UserService userService;
@@ -49,13 +56,12 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTwoFactorAuthenticationUsingTOTP() throws InterruptedException {
     try {
-      TwoFactorAuthHandler handler =
-          twoFactorAuthenticationManager.getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism.TOTP);
+      TwoFactorAuthHandler handler = twoFactorAuthenticationManager.getTwoFactorAuthHandler(TOTP);
       User user = spy(new User());
       when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
       String totpSecretKey = TimeBasedOneTimePasswordUtil.generateBase32Secret();
       user.setTotpSecretKey(totpSecretKey);
-      doReturn(TwoFactorAuthenticationMechanism.TOTP).when(user).getTwoFactorAuthenticationMechanism();
+      doReturn(TOTP).when(user).getTwoFactorAuthenticationMechanism();
       String encryptedCode = null;
 
       for (int t = 1; t < 60; t++) {
@@ -141,9 +147,9 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     when(account.getCompanyName()).thenReturn("TestCompany");
     when(authenticationUtil.getPrimaryAccount(user)).thenReturn(account);
 
-    TwoFactorAuthenticationSettings settings = twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(
-        user, TwoFactorAuthenticationMechanism.TOTP);
-    assertThat(settings.getMechanism()).isEqualTo(TwoFactorAuthenticationMechanism.TOTP);
+    TwoFactorAuthenticationSettings settings =
+        twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(user, TOTP);
+    assertThat(settings.getMechanism()).isEqualTo(TOTP);
     assertThat(settings.isTwoFactorAuthenticationEnabled()).isFalse();
     assertThat(settings.getTotpSecretKey()).isNotEmpty();
     assertThat(settings.getTotpqrurl()).isNotEmpty();
@@ -152,23 +158,38 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldOverrideTwoFactorAuthentication() {
-    Account account = getAccount(true);
-    User user = spy(new User());
+    Account account = getAccount(AccountType.PAID, false);
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
-    accountService.updateTwoFactorEnforceInfo(
-        account.getUuid(), user, twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled());
+    when(accountService.isAccountLite(account.getUuid())).thenReturn(false);
+
     when(userService.overrideTwoFactorforAccount(
-             account.getUuid(), user, twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled()))
+             account.getUuid(), twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled()))
         .thenReturn(true);
+
     assertThat(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(
-                   account.getUuid(), user, twoFactorAdminOverrideSettings))
+                   account.getUuid(), twoFactorAdminOverrideSettings))
         .isTrue();
   }
 
   @Test
   @Category(UnitTests.class)
+  public void shouldNotEnableTwoFactorAuthenticationForLiteAccount() {
+    Account account = getAccount(AccountType.FREE, false);
+    TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
+    when(accountService.isAccountLite(account.getUuid())).thenReturn(true);
+
+    try {
+      twoFactorAuthenticationManager.overrideTwoFactorAuthentication(account.getUuid(), twoFactorAdminOverrideSettings);
+      Assert.fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.GENERAL_ERROR, e.getCode());
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAdminEnforce() {
-    Account account = getAccount(false);
+    Account account = getAccount(AccountType.PAID, false);
 
     // Original user object
     User user = getUser(true);
@@ -186,7 +207,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForAdminEnforce() {
-    Account account = getAccount(true);
+    Account account = getAccount(AccountType.PAID, true);
 
     User user = getUser(true);
     user.setAccounts(Arrays.asList(account));
@@ -199,8 +220,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForMultiAccounts() {
-    Account account1 = getAccount(false);
-    Account account2 = getAccount(false);
+    Account account1 = getAccount(AccountType.PAID, false);
+    Account account2 = getAccount(AccountType.PAID, false);
 
     User user = getUser(true);
     user.setAccounts(Arrays.asList(account1, account2));
@@ -221,16 +242,43 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     assertThat(user.isTwoFactorAuthenticationEnabled()).isTrue();
   }
 
-  private Account getAccount(boolean twoFactorAdminEnforced) {
-    Account account = anAccount().withAccountName("Harness").build();
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotEnableTwoFactorAuthenticationForUserWhosePrimaryAccountIsLite() {
+    Account account1 = getAccount(AccountType.FREE, false);
+    Account account2 = getAccount(AccountType.PAID, false);
+
+    User user = getUser(false);
+    user.setAccounts(Arrays.asList(account1, account2));
+
+    when(accountService.isAccountLite(account1.getUuid())).thenReturn(true);
+    when(accountService.isAccountLite(account2.getUuid())).thenReturn(false);
+
+    TwoFactorAuthenticationSettings settings =
+        new TwoFactorAuthenticationSettingsBuilder().twoFactorAuthenticationEnabled(true).mechanism(TOTP).build();
+
+    try {
+      twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(user, settings);
+      Assert.fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.GENERAL_ERROR, e.getCode());
+    }
+  }
+
+  private Account getAccount(String accountType, boolean twoFactorAdminEnforced) {
+    Account account = anAccount().withUuid(UUID.randomUUID().toString()).withAccountName("Harness").build();
     account.setTwoFactorAdminEnforced(twoFactorAdminEnforced);
+    LicenseInfo license = getLicenseInfo();
+    license.setAccountType(accountType);
+    account.setLicenseInfo(license);
+
     return account;
   }
 
   private User getUser(boolean twoFactorEnabled) {
     User user = spy(new User());
     user.setTwoFactorAuthenticationEnabled(twoFactorEnabled);
-    user.setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP);
+    user.setTwoFactorAuthenticationMechanism(TOTP);
     return user;
   }
 }
