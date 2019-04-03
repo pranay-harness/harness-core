@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
@@ -80,6 +81,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
     String apiKey = "Foo";
     ApiKeyEntry apiKeyEntry = ApiKeyEntry.builder()
                                   .uuid(generateUuid())
+                                  .createdAt(currentTimeMillis())
                                   .encryptedKey(getSimpleEncryption(ACCOUNT_ID).encryptChars(apiKey.toCharArray()))
                                   .hashOfKey("Hash Of Key")
                                   .accountId(ACCOUNT_ID)
@@ -108,6 +110,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
             .withResponse(
                 Arrays.asList(ApiKeyEntry.builder()
                                   .uuid(generateUuid())
+                                  .createdAt(currentTimeMillis())
                                   .encryptedKey(getSimpleEncryption(ACCOUNT_ID).encryptChars(apiKey.toCharArray()))
                                   .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
                                   .accountId(ACCOUNT_ID)
