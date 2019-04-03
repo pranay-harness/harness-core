@@ -139,6 +139,24 @@ for helmversion in v2.13.1; do
     curl -L -o "${HELM_MAC_DIR}helm" "${HELM_MAC_URL}"
 done
 
+for chartmuseumversion in v0.8.2; do
+    echo "Adding chartmuseumversion $chartmuseumversion"
+    CHARTMUSEUM_LINUX_DIR="${IMAGES_DIR}/chartmuseum/linux/$chartmuseumversion/"
+    CHARTMUSEUM_MAC_DIR="${IMAGES_DIR}/chartmuseum/darwin/$chartmuseumversion/"
+
+    CHARTMUSEUM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-chartmuseum/release/"$chartmuseumversion"/bin/linux/amd64/chartmuseum
+    CHARTMUSEUM_MAC_URL=https://app.harness.io/storage/harness-download/harness-chartmuseum/release/"$chartmuseumversion"/bin/darwin/amd64/chartmuseum
+
+    echo "$CHARTMUSEUM_MAC_DIR"
+    echo "$CHARTMUSEUM_LINUX_DIR"
+
+    mkdir -p $CHARTMUSEUM_LINUX_DIR
+    mkdir -p $CHARTMUSEUM_MAC_DIR
+
+    curl -L -o "${CHARTMUSEUM_LINUX_DIR}chartmuseum" "${CHARTMUSEUM_LINUX_URL}"
+    curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
+done
+
 cp delegate.jar "${IMAGES_DIR}/"
 cp watcher.jar "${IMAGES_DIR}/"
 mv "${JRE_SOLARIS_1}" "${IMAGES_DIR}/"
