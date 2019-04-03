@@ -980,9 +980,11 @@ public class GitClientImpl implements GitClient {
     String keyPath = null;
     try {
       String sshKey = new String(((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue()).getKey());
+
       keyPath = getTempSshKeyPath(sshKey);
 
-      SshSessionFactory sshSessionFactory = getSshSessionFactory(keyPath);
+      char[] passphrase = ((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue()).getPassphrase();
+      SshSessionFactory sshSessionFactory = getSshSessionFactory(keyPath, passphrase);
 
       gitCommand.setTransportConfigCallback(transport -> {
         SshTransport sshTransport = (SshTransport) transport;
@@ -1003,7 +1005,7 @@ public class GitClientImpl implements GitClient {
     gitCommand.setCredentialsProvider(getCredentialsProvider(gitConfig));
   }
 
-  private SshSessionFactory getSshSessionFactory(String sshKeyPath) {
+  private SshSessionFactory getSshSessionFactory(String sshKeyPath, char[] passphrase) {
     return new JschConfigSessionFactory() {
       @Override
       protected void configure(OpenSshConfig.Host host, Session session) {
@@ -1014,7 +1016,12 @@ public class GitClientImpl implements GitClient {
       protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
         JSch jsch = super.getJSch(hc, fs);
         jsch.removeAllIdentity();
-        jsch.addIdentity(sshKeyPath);
+        if (isNotEmpty(passphrase)) {
+          jsch.addIdentity(sshKeyPath, new String(passphrase));
+        } else {
+          jsch.addIdentity(sshKeyPath);
+        }
+
         return jsch;
       }
 
