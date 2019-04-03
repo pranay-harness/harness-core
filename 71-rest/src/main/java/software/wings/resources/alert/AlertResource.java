@@ -8,16 +8,12 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
-import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
-import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.AlertServiceImpl;
@@ -51,19 +47,7 @@ public class AlertResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Alert>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Alert> request) {
-    User user = UserThreadLocal.get();
-    if (null == user) {
-      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, "Could not find user while trying to list alerts");
-    }
-
-    PageResponse<Alert> response = alertService.list(request);
-    List<Alert> filteredAlerts =
-        response.stream()
-            .filter(alert -> alertVisibilityChecker.shouldAlertBeShownToUser(accountId, alert, user))
-            .collect(Collectors.toList());
-
-    response.setResponse(filteredAlerts);
-    return new RestResponse<>(response);
+    return new RestResponse<>(alertService.list(request));
   }
 
   @GET
