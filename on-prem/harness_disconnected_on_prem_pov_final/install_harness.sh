@@ -342,7 +342,7 @@ function setupDelegateJars(){
 function setupClientUtils(){
    echo "################################Setting up Client Utils ################################"
 
-   echo "Copying kubectl go-template and helm"
+   echo "Copying kubectl go-template helm and chartmuseum"
 
     for platform in linux darwin; do
         for kubectlversion in v1.13.2; do
@@ -358,6 +358,11 @@ function setupClientUtils(){
         for helmversion in v2.13.1; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
             cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
+        done
+
+        for chartmuseumversion in v0.8.2; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
+            cp images/chartmuseum/${platform}/$chartmuseumversion/chartmuseum ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
         done
     done
 }
