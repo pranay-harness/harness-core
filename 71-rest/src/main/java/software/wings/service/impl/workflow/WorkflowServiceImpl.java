@@ -327,19 +327,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
     Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
 
-    if (!featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_PROVISION, appService.getAccountIdByAppId(appId))) {
-      List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
+    removeStencil(stencils, appId, FeatureName.SHELL_SCRIPT_PROVISION, StateTypeScope.ORCHESTRATION_STENCILS,
+        StateType.SHELL_SCRIPT_PROVISION);
+    removeStencil(
+        stencils, appId, FeatureName.STACK_DRIVER, StateTypeScope.ORCHESTRATION_STENCILS, StateType.STACK_DRIVER);
+    return stencils;
+  }
+
+  private void removeStencil(Map<StateTypeScope, List<Stencil>> stencils, String appId, FeatureName featureName,
+      StateTypeScope stateTypeScope, StateType stateType) {
+    if (!featureFlagService.isEnabled(featureName, appService.getAccountIdByAppId(appId))) {
+      List<Stencil> stencilList = stencils.get(stateTypeScope);
       if (isNotEmpty(stencilList)) {
         for (Iterator<Stencil> it = stencilList.iterator(); it.hasNext();) {
           Stencil stencil = it.next();
-          if (stencil.getType().equals(StateType.SHELL_SCRIPT_PROVISION.toString())) {
+          if (stencil.getType().equals(stateType.toString())) {
             it.remove();
           }
         }
       }
     }
-
-    return stencils;
   }
 
   private Map<StateTypeScope, List<Stencil>> getStencils(
