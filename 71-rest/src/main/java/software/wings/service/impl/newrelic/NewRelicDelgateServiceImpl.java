@@ -526,6 +526,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         return response.body().getMetric_data();
       }
     }
+    delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
     String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()
         + " Error: " + response.errorBody().string();
     throw new WingsException(ErrorCode.NEWRELIC_ERROR, errMsg, USER);
