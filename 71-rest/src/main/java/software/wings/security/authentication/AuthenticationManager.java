@@ -173,7 +173,24 @@ public class AuthenticationManager {
     return authService.generateBearerTokenForUser(user);
   }
 
-  private User generate2faJWTToken(User user) {
+  /**
+   * PLEASE DON'T CALL THESE API DIRECTLY if the call is not from identity service!
+   *
+   * This API is only for Identity Service to login user directly because identity service have already
+   * been authenticated the user through OAUTH etc auth mechanism and need a trusted explicit login from
+   * manager.
+   */
+  public User loginUserForIdentityService(String email) {
+    User user = userService.getUserByEmail(email);
+    if (user.isTwoFactorAuthenticationEnabled()) {
+      user = generate2faJWTToken(user);
+    } else {
+      user = authService.generateBearerTokenForUser(user);
+    }
+    return user;
+  }
+
+  public User generate2faJWTToken(User user) {
     String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.MULTIFACTOR_AUTH);
     return User.Builder.anUser()
         .withUuid(user.getUuid())

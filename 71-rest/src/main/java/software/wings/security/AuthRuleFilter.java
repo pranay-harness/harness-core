@@ -141,7 +141,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return; // do nothing
     }
 
-    if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)) {
+    if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)
+        || isIdentityServiceRequest(requestContext)) {
       return;
     }
 
@@ -411,6 +412,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private boolean isLearningEngineServiceRequest(ContainerRequestContext requestContext) {
     return learningEngineServiceAPI()
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine ");
+  }
+
+  private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {
+    return identityServiceAPI()
+        && startsWith(
+               requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.IDENTITY_SERVICE_PREFIX);
   }
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
