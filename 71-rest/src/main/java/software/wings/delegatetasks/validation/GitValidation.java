@@ -43,7 +43,7 @@ public class GitValidation extends AbstractDelegateValidateTask {
     }
 
     boolean validated = true;
-    if (isNotEmpty(gitClient.validate(gitConfig, false))) {
+    if (isNotEmpty(gitClient.validate(gitConfig))) {
       validated = false;
     }
 

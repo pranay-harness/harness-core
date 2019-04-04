@@ -88,14 +88,7 @@ public interface GitClient {
    */
   PullResult pull(GitConfig gitConfig);
 
-  /**
-   * Validate.
-   *
-   * @param gitConfig the git config
-   * @param logError  the log error
-   * @return the string
-   */
-  String validate(GitConfig gitConfig, boolean logError);
+  String validate(GitConfig gitConfig);
 
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
 

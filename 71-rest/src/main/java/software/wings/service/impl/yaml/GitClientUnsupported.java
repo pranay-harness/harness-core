@@ -56,7 +56,7 @@ public class GitClientUnsupported implements GitClient {
   }
 
   @Override
-  public String validate(GitConfig gitConfig, boolean logError) {
+  public String validate(GitConfig gitConfig) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 
