@@ -25,6 +25,7 @@ import io.netty.channel.ConnectTimeoutException;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
@@ -107,6 +108,47 @@ public class SshHelperUtil {
     return errorConst;
   }
 
+  public static SshSessionConfig createSshSessionConfig(SettingAttribute settingAttribute, String hostName) {
+    HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+    AuthenticationScheme authenticationScheme = hostConnectionAttributes.getAuthenticationScheme();
+    AccessType accessType = hostConnectionAttributes.getAccessType();
+    ExecutorType executorType =
+        accessType.equals(AccessType.KEY) || accessType.equals(KEY_SU_APP_USER) || accessType.equals(KEY_SUDO_APP_USER)
+        ? KEY_AUTH
+        : PASSWORD_AUTH; // TODO: remove executorType.
+
+    Builder builder = aSshSessionConfig()
+                          .withAccountId(settingAttribute.getAccountId())
+                          .withExecutorType(executorType)
+                          .withHost(hostName);
+
+    if (authenticationScheme != null) {
+      if (AuthenticationScheme.KERBEROS.equals(authenticationScheme)) {
+        KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
+        builder.withPassword(hostConnectionAttributes.getKerberosPassword())
+            .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS)
+            .withKerberosConfig(kerberosConfig)
+            .withPort(hostConnectionAttributes.getSshPort());
+      } else {
+        builder.withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
+            .withAccessType(hostConnectionAttributes.getAccessType())
+            .withUserName(hostConnectionAttributes.getUserName())
+            .withPort(hostConnectionAttributes.getSshPort());
+
+        if (hostConnectionAttributes.getAccessType().equals(AccessType.USER_PASSWORD)) {
+          builder.withSshPassword(hostConnectionAttributes.getSshPassword());
+        } else {
+          builder.withKey(hostConnectionAttributes.getKey())
+              .withKeyName(settingAttribute.getUuid())
+              .withKeyLess(hostConnectionAttributes.isKeyless())
+              .withKeyPath(hostConnectionAttributes.getKeyPath())
+              .withKeyPassphrase(hostConnectionAttributes.getPassphrase());
+        }
+      }
+    }
+
+    return builder.build();
+  }
   public static SshSessionConfig getSshSessionConfig(
       String hostName, String commandName, CommandExecutionContext context, @Nullable Integer connectTimeoutSeconds) {
     ExecutorType executorType = getExecutorType(context);
