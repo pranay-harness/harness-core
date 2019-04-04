@@ -53,12 +53,14 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void azureAuthenticationTest() {
     azureHelperService.validateAzureAccountCredential(clientId, tenantId, key);
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void getSubscriptionsTest() {
     AzureConfig config = getAzureConfig();
@@ -68,6 +70,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void getContainerRegistriesTest() {
     AzureConfig config = getAzureConfig();
@@ -84,6 +87,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void getVirtualMachineScaleSetsTest() {
     AzureConfig config = getAzureConfig();
@@ -99,6 +103,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void getAvailabilitySets() {
     AzureConfig config = getAzureConfig();
@@ -193,6 +198,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void getKubernetesClusters() {
     AzureConfig config = getAzureConfig();
