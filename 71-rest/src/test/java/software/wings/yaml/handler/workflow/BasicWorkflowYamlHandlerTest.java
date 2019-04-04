@@ -45,6 +45,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @InjectMocks @Inject private BasicWorkflowYamlHandler yamlHandler;
+
   @Before
   public void runBeforeTest() {
     setup(BASIC_VALID_YAML_FILE_PATH, workflowName);

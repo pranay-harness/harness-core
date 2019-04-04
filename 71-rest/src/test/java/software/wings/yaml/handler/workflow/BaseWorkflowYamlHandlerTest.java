@@ -35,6 +35,8 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.SSHKeyDataProvider;
+import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
@@ -97,6 +99,8 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
   @InjectMocks @Inject protected NameValuePairYamlHandler nameValuePairYamlHandler;
   @InjectMocks @Inject protected WorkflowServiceHelper workflowServiceHelper;
+  @InjectMocks @Inject private SSHKeyDataProvider sshKeyDataProvider;
+  @InjectMocks @Inject private WinRmConnectionAttributesDataProvider winRmConnectionAttributesDataProvider;
 
   protected void setup(String yamlFilePath, String workflowName) {
     when(appService.getAppByName(anyString(), anyString()))

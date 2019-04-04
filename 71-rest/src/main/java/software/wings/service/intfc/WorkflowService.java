@@ -87,7 +87,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   StateMachine readStateMachine(String appId, String originId, Integer version);
 
-  Map<String, StateTypeDescriptor> stencilMap();
+  Map<String, StateTypeDescriptor> stencilMap(String appId);
 
   PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep);
 
