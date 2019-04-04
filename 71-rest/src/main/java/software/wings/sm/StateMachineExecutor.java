@@ -543,7 +543,15 @@ public class StateMachineExecutor implements StateInspectionListener {
           status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
           executionResponse.getNotifyElements(), executionResponse.getDelegateTaskId());
       if (!updated) {
-        throw new WingsException("updateStateExecutionData failed");
+        // Currently, it is by design that handle execute response can be in race with some other ways to update the
+        // state. Say it can be aborted.
+        final StateExecutionInstance dbStateExecutionInstance =
+            wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
+        if (ExecutionStatus.isFinalStatus(dbStateExecutionInstance.getStatus())) {
+          throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+        } else {
+          throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+        }
       }
       invokeAdvisors(context, currentState);
       if (status == RUNNING) {
@@ -1144,11 +1152,12 @@ public class StateMachineExecutor implements StateInspectionListener {
       ops.set("delegateTaskId", delegateTaskId);
     }
 
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .filter("appId", stateExecutionInstance.getAppId())
-                                              .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                              .field(StateExecutionInstance.STATUS_KEY)
-                                              .in(runningStatusLists);
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, stateExecutionInstance.getAppId())
+            .filter(ID_KEY, stateExecutionInstance.getUuid())
+            .field(StateExecutionInstance.STATUS_KEY)
+            .in(runningStatusLists);
 
     ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
 
@@ -1156,7 +1165,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       logger.warn("StateExecutionInstance status could not be updated -"
               + " stateExecutionInstance: {}, stateExecutionData: {}, status: {}, errorMsg: {}, ",
-          stateExecutionInstance.getUuid(), stateExecutionData, status, errorMsg);
+          stateExecutionInstance.getUuid(), stateExecutionData.toString(), status, errorMsg);
 
       return false;
     }
