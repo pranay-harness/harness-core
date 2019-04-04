@@ -3,6 +3,7 @@ package software.wings.delegatetasks.delegatecapability;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import com.google.inject.Singleton;
 
@@ -19,7 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,7 +83,12 @@ public class CapabilityHelper {
     }
 
     EncryptedDataDetail encryptedDataDetail = encryptedDataDetails.get(0);
-    return Arrays.asList(getHttpCapabilityForDecryption(encryptedDataDetail.getEncryptionConfig()));
+    ExecutionCapability vaultCapability = getHttpCapabilityForDecryption(encryptedDataDetail.getEncryptionConfig());
+    if (vaultCapability != null) {
+      executionCapabilities.add(vaultCapability);
+    }
+
+    return executionCapabilities;
   }
 
   public static HttpConnectionExecutionCapability getHttpCapabilityForDecryption(EncryptionConfig encryptionConfig) {
@@ -155,5 +163,29 @@ public class CapabilityHelper {
 
     task.getExecutionCapabilities().forEach(capability -> builder.append('\n').append(capability.toString()));
     return builder.toString();
+  }
+
+  /**
+   * This is Used by BuildSourceParameters
+   */
+  public static List<ExecutionCapability> generateCapabilities(
+      SettingValue settingValue, ArtifactStreamAttributes artifactStreamAttributes) {
+    String artifactStreamType = artifactStreamAttributes.getArtifactStreamType();
+
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    if (artifactStreamType.equals(GCR.name())) {
+      String hostName = artifactStreamAttributes.getRegistryHostName();
+      executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+          new StringBuilder(128)
+              .append("https://")
+              .append(hostName)
+              .append(hostName.endsWith("/") ? "" : "/")
+              .toString()));
+
+    } else if (settingValue instanceof ExecutionCapabilityDemander) {
+      executionCapabilities.addAll(((ExecutionCapabilityDemander) settingValue).fetchRequiredExecutionCapabilities());
+    }
+
+    return executionCapabilities;
   }
 }
