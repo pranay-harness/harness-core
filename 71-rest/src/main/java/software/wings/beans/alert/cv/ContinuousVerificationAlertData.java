@@ -18,6 +18,9 @@ public class ContinuousVerificationAlertData implements AlertData {
   public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
 
   private CVConfiguration cvConfiguration;
+  private String portalUrl;
+  private String accountId;
+
   @Default private double riskScore = -1;
   private long analysisStartTime;
   private long analysisEndTime;
@@ -32,7 +35,8 @@ public class ContinuousVerificationAlertData implements AlertData {
   public String buildTitle() {
     return "24/7 Service Guard detected anomalies (Risk Level: High) for " + cvConfiguration.getName()
         + "(Application: " + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName()
-        + ") Time: " + new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime))
-        + "\nRisk Score: " + riskScore + ", Alert Threshold: " + cvConfiguration.getAlertThreshold();
+        + ") Time: " + new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime)) + "\nRisk Score: "
+        + riskScore + ", Alert Threshold: " + cvConfiguration.getAlertThreshold() + "\nCheck at: " + portalUrl
+        + "/#/account/" + accountId + "/24-7-service-guard/" + cvConfiguration.getServiceId() + "/details";
   }
 }

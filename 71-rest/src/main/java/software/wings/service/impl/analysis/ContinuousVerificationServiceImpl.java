@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -177,6 +178,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private CV24x7DashboardService cv24x7DashboardService;
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private AlertService alertService;
+  @Inject private MainConfiguration mainConfiguration;
 
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
@@ -1748,6 +1750,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Preconditions.checkNotNull(cvConfiguration, "No config found with id " + cvConfigId);
     Preconditions.checkNotNull(alertData, "Invalid alert data");
     alertData.setCvConfiguration(cvConfiguration);
+    alertData.setPortalUrl(mainConfiguration.getPortal().getUrl());
+    alertData.setAccountId(appService.getAccountIdByAppId(cvConfiguration.getAppId()));
 
     logger.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
     alertService.openAlert(appService.getAccountIdByAppId(cvConfiguration.getAppId()), cvConfiguration.getAppId(),
