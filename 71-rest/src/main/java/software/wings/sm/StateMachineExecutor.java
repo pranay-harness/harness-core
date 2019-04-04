@@ -54,7 +54,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.ResponseData;
@@ -758,7 +757,6 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param exception the exception
    * @return the state execution instance
    */
-  @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
   StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, WingsException exception) {
     StateExecutionInstance stateExecutionInstance = null;
     State currentState = null;
@@ -770,10 +768,14 @@ public class StateMachineExecutor implements StateInspectionListener {
       addContext(context, exception);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException ex) {
-      logger.error("Error when processing exception", ex);
+      final WingsException wingsException = new WingsException(ex);
+      addContext(context, wingsException);
+      logger.error("Error when processing exception", wingsException);
     }
 
-    updateStateExecutionData(stateExecutionInstance, null, FAILED, ExceptionUtils.getMessage(exception), null, null);
+    if (stateExecutionInstance != null) {
+      updateStateExecutionData(stateExecutionInstance, null, FAILED, ExceptionUtils.getMessage(exception), null, null);
+    }
 
     try {
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
