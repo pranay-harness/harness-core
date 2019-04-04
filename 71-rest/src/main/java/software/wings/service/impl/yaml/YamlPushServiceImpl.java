@@ -160,6 +160,9 @@ public class YamlPushServiceImpl implements YamlPushService {
       UuidAware uuidAware = null;
       if (isNotBlank(appName)) {
         uuidAware = yamlHelper.getApp(accountId, yamlFilePath);
+        if (uuidAware == null) {
+          return false;
+        }
         appId = uuidAware.getUuid();
       } else {
         // This is shared entity
@@ -169,20 +172,26 @@ public class YamlPushServiceImpl implements YamlPushService {
       String serviceName = yamlHelper.getServiceName(yamlFilePath);
       if (isNotBlank(serviceName)) {
         uuidAware = yamlHelper.getService(appId, yamlFilePath);
+        if (uuidAware == null) {
+          return false;
+        }
       }
 
       String envName = yamlHelper.getEnvironmentName(yamlFilePath);
-      if (isNotBlank(envName) && uuidAware != null) {
+      if (isNotBlank(envName)) {
         uuidAware = yamlHelper.getEnvironment(appId, yamlFilePath);
+        if (uuidAware == null) {
+          return false;
+        }
       }
-
-      return uuidAware != null;
     } catch (Exception e) {
       // In case we failed to determine, just return true and try to push this delete change to GIT.
       // This is just a safegaurd to see, git sync is not affected duw to any issue in determining
       // parentEntityExists.
       return true;
     }
+
+    return true;
   }
 
   public void pushYamlChangeSet(String accountId, String appId, ChangeType changeType, boolean syncFromGit) {
