@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +25,9 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by raghu on 8/28/17.
  */
@@ -30,7 +36,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Builder
 @ToString(exclude = "apiKey")
 @EqualsAndHashCode(callSuper = false)
-public class NewRelicConfig extends SettingValue implements EncryptableSetting {
+public class NewRelicConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @EnumData(enumDataProvider = NewRelicUrlProvider.class)
   @Attributes(title = "URL")
   @NotEmpty
@@ -71,6 +77,12 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting {
     this.accountId = accountId;
     this.newRelicAccountId = "";
     this.encryptedApiKey = encryptedApiKey;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(newRelicUrl));
   }
 
   @Data

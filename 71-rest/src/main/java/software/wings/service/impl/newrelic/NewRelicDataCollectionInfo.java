@@ -1,10 +1,13 @@
 package software.wings.service.impl.newrelic;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.NewRelicConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 
@@ -18,7 +21,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewRelicDataCollectionInfo {
+public class NewRelicDataCollectionInfo implements ExecutionCapabilityDemander {
   private NewRelicConfig newRelicConfig;
   private String applicationId;
   private String stateExecutionId;
@@ -36,4 +39,9 @@ public class NewRelicDataCollectionInfo {
   private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
   private String cvConfigId;
   private boolean checkNotAllowedStrings;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateDelegateCapabilities(newRelicConfig, encryptedDataDetails);
+  }
 }

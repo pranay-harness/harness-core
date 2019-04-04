@@ -1,10 +1,13 @@
 package software.wings.service.impl.elk;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import software.wings.beans.ElkConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.sm.StateType;
@@ -19,7 +22,7 @@ import java.util.Set;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class ElkDataCollectionInfo extends LogDataCollectionInfo {
+public class ElkDataCollectionInfo extends LogDataCollectionInfo implements ExecutionCapabilityDemander {
   private ElkConfig elkConfig;
   private String indices;
   private String messageField;
@@ -41,5 +44,10 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
     this.timestampField = timestampField;
     this.timestampFieldFormat = timestampFieldFormat;
     this.queryType = queryType;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateDelegateCapabilities(elkConfig, getEncryptedDataDetails());
   }
 }

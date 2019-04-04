@@ -1,10 +1,13 @@
 package software.wings.service.impl.logz;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import software.wings.beans.config.LogzConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -19,7 +22,7 @@ import java.util.Set;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class LogzDataCollectionInfo extends LogDataCollectionInfo {
+public class LogzDataCollectionInfo extends LogDataCollectionInfo implements ExecutionCapabilityDemander {
   private LogzConfig logzConfig;
   private String messageField;
   private String timestampField;
@@ -39,5 +42,10 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo {
     this.timestampField = timestampField;
     this.timestampFieldFormat = timestampFieldFormat;
     this.queryType = queryType;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateDelegateCapabilities(logzConfig, getEncryptedDataDetails());
   }
 }
