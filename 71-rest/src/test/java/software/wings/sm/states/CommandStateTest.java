@@ -79,7 +79,6 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -634,9 +633,8 @@ public class CommandStateTest extends WingsBaseTest {
    * Should throw exception for unknown command.
    */
   @Test
-  @Owner(emails = "aaditi@harness.io", intermittent = true)
+  @Owner(emails = "anubhaw@harness.io", intermittent = true)
   @Category(UnitTests.class)
-  @Ignore
   public void shouldFailWhenNestedCommandNotFound() {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand()
