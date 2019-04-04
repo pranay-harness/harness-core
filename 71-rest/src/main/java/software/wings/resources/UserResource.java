@@ -387,9 +387,7 @@ public class UserResource {
   @ExceptionMetered
   @IdentityServiceAuth
   public RestResponse<User> loginUser(@QueryParam("email") String email) {
-    User user = userService.getUserByEmail(urlDecode(email));
-    user = authService.generateBearerTokenForUser(user);
-    return new RestResponse<>(user);
+    return new RestResponse<>(authenticationManager.loginUserForIdentityService(urlDecode(email)));
   }
 
   /**

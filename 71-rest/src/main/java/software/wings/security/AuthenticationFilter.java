@@ -52,6 +52,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   @VisibleForTesting public static final String API_KEY_HEADER = "X-Api-Key";
   @VisibleForTesting public static final String HARNESS_API_KEY_HEADER = "X-Harness-Api-Key";
   @VisibleForTesting public static final String USER_IDENTITY_HEADER = "X-Identity-User";
+  public static final String IDENTITY_SERVICE_PREFIX = "IdentityService ";
   private static final int NUM_MANAGERS = 3;
 
   @Context private ResourceInfo resourceInfo;
@@ -102,7 +103,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
       String identityServiceToken =
-          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
+          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
       secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
       String userId = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
       User user = userService.getUserFromCacheOrDB(userId);
@@ -116,7 +117,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     if (isIdentityServiceRequest(containerRequestContext)) {
       String identityServiceToken =
-          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
+          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
       secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
       return;
     }
@@ -234,7 +235,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
   private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {
     return identityServiceAPI()
-        && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "IdentityService ");
+        && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
   }
 
   private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {

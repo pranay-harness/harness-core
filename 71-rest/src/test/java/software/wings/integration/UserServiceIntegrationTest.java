@@ -46,6 +46,7 @@ import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.common.Constants;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
+import software.wings.security.AuthenticationFilter;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
@@ -209,13 +210,34 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/user/login?email=" + adminUserEmail);
 
     String identityServiceToken = generateIdentityServiceJwtToken();
-    RestResponse<User> response = target.request()
-                                      .header(HttpHeaders.AUTHORIZATION, "IdentityService " + identityServiceToken)
-                                      .get(new GenericType<RestResponse<User>>() {});
+    RestResponse<User> response =
+        target.request()
+            .header(HttpHeaders.AUTHORIZATION, AuthenticationFilter.IDENTITY_SERVICE_PREFIX + identityServiceToken)
+            .get(new GenericType<RestResponse<User>>() {});
     assertEquals(0, response.getResponseMessages().size());
     User user = response.getResource();
     assertNotNull(user);
     assertNotNull(user.getToken());
+    assertNotNull(user.getAccounts());
+    assertTrue(user.getAccounts().size() > 0);
+    assertTrue(user.getSupportAccounts().size() > 0);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testGetUserUsingIdentityServiceAuth() {
+    WebTarget target = client.target(API_BASE + "/users/user");
+
+    User adminUser = userService.getUserByEmail(adminUserEmail);
+    String identityServiceToken = generateIdentityServiceJwtToken();
+    RestResponse<User> response =
+        target.request()
+            .header(HttpHeaders.AUTHORIZATION, AuthenticationFilter.IDENTITY_SERVICE_PREFIX + identityServiceToken)
+            .header(AuthenticationFilter.USER_IDENTITY_HEADER, adminUser.getUuid())
+            .get(new GenericType<RestResponse<User>>() {});
+    assertEquals(0, response.getResponseMessages().size());
+    User user = response.getResource();
+    assertNotNull(user);
     assertNotNull(user.getAccounts());
     assertTrue(user.getAccounts().size() > 0);
     assertTrue(user.getSupportAccounts().size() > 0);
