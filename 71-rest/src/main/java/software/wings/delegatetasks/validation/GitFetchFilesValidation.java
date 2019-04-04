@@ -60,7 +60,7 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
       return false;
     }
 
-    if (isNotEmpty(gitClient.validate(gitConfig, false))) {
+    if (isNotEmpty(gitClient.validate(gitConfig))) {
       return false;
     }
 

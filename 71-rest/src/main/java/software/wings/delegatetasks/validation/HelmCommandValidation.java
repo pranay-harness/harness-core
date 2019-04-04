@@ -96,6 +96,6 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
     }
 
     gitConfig.setGitRepoType(GitRepositoryType.YAML);
-    return gitClient.validate(gitConfig, true);
+    return gitClient.validate(gitConfig);
   }
 }
