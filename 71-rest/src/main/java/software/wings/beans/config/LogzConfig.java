@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +21,9 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by rsingh on 8/21/17.
  */
@@ -26,7 +32,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Builder
 @ToString(exclude = "token")
 @EqualsAndHashCode(callSuper = false)
-public class LogzConfig extends SettingValue implements EncryptableSetting {
+public class LogzConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;
 
   @Attributes(title = "Token", required = true) @Encrypted private char[] token;
@@ -47,6 +53,11 @@ public class LogzConfig extends SettingValue implements EncryptableSetting {
     this.token = token;
     this.accountId = accountId;
     this.encryptedToken = encryptedToken;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(logzUrl));
   }
 
   @Data

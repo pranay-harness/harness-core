@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -23,6 +26,9 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * The type ELK config.
  */
@@ -31,7 +37,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
-public class ElkConfig extends SettingValue implements EncryptableSetting {
+public class ElkConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(required = true, title = "Connector type")
   @DefaultValue("ELASTIC_SEARCH_SERVER")
   private ElkConnector elkConnector;
@@ -84,6 +90,11 @@ public class ElkConfig extends SettingValue implements EncryptableSetting {
     this.kibanaVersion = kibanaVersion;
     this.encryptedPassword = encryptedPassword;
     this.validationType = validationType;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(elkUrl));
   }
 
   @Data

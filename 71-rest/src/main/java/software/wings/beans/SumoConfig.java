@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +20,9 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by sriram_parthasarathy on 9/11/17.
  */
@@ -25,7 +31,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Builder
 @ToString(exclude = {"accessId", "accessKey"})
 @EqualsAndHashCode(callSuper = false)
-public class SumoConfig extends SettingValue implements EncryptableSetting {
+public class SumoConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(title = "Sumo Logic API Server URL", required = true) @NotEmpty private String sumoUrl;
 
   @Attributes(title = "Access ID", required = true) @Encrypted private char[] accessId;
@@ -53,6 +59,11 @@ public class SumoConfig extends SettingValue implements EncryptableSetting {
     this.accountId = accountId;
     this.encryptedAccessId = encryptedAccessId;
     this.encryptedAccessKey = encryptedAccessKey;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(sumoUrl));
   }
 
   @Data

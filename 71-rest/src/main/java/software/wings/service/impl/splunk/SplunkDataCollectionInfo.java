@@ -1,10 +1,13 @@
 package software.wings.service.impl.splunk;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import software.wings.beans.SplunkConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.sm.StateType;
@@ -18,7 +21,7 @@ import java.util.Set;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class SplunkDataCollectionInfo extends LogDataCollectionInfo {
+public class SplunkDataCollectionInfo extends LogDataCollectionInfo implements ExecutionCapabilityDemander {
   private SplunkConfig splunkConfig;
 
   @Builder
@@ -30,5 +33,10 @@ public class SplunkDataCollectionInfo extends LogDataCollectionInfo {
         startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.SPLUNKV2,
         encryptedDataDetails);
     this.splunkConfig = splunkConfig;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateDelegateCapabilities(splunkConfig, getEncryptedDataDetails());
   }
 }
