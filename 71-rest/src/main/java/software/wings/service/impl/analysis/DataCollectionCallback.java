@@ -71,7 +71,7 @@ public class DataCollectionCallback implements NotifyCallback {
       sendErrorNotification(result.getErrorMessage());
     }
 
-    alertIfNecessary(result.getStatus(), "");
+    alertIfNecessary(result.getStatus(), result.getErrorMessage());
   }
 
   // TODO what is this used for
