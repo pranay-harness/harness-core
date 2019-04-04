@@ -176,7 +176,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(appId, workflowId))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
 
-    when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
     when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap(), any(), any(), any()))
         .thenReturn(DeploymentMetadata.builder().build());
     pipelineService.save(pipeline);
@@ -220,7 +220,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipeline =
         Pipeline.builder().name("pipeline1").appId(APP_ID).uuid(PIPELINE_ID).pipelineStages(pipelineStages).build();
 
-    when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
     pipelineService.save(pipeline);
 
@@ -248,7 +248,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
-    when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
     pipelineService.save(pipeline);
 
@@ -281,7 +281,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
-    when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
     pipeline.setName("Changed Pipeline");
     pipeline.setDescription("Description changed");
@@ -1068,7 +1068,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
-    when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
     try {
       pipelineService.save(pipeline);

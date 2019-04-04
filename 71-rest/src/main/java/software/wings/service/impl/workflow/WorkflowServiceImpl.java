@@ -486,11 +486,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   /**
    * {@inheritDoc}
+   * @param appId
    */
   @Override
-  public Map<String, StateTypeDescriptor> stencilMap() {
+  public Map<String, StateTypeDescriptor> stencilMap(String appId) {
     if (cachedStencilMap == null) {
-      stencils(null, null, null);
+      stencils(appId, null, null);
     }
     return cachedStencilMap;
   }
@@ -942,7 +943,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       //      updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
-          ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
+          ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()));
       wingsPersistence.save(stateMachine);
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
 
@@ -1128,7 +1129,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
 
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
-          ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
+          ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()));
       wingsPersistence.save(stateMachine);
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();

@@ -180,7 +180,7 @@ public class PipelineServiceImpl implements PipelineService {
         ops);
 
     // TODO: remove this when all the needed verification is done from validatePipeline
-    new StateMachine(pipeline, workflowService.stencilMap());
+    new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
 
     Pipeline updatedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
 
@@ -728,7 +728,7 @@ public class PipelineServiceImpl implements PipelineService {
       wingsPersistence.save(pipeline);
 
       // TODO: remove this when all the needed verification is done from validatePipeline
-      new StateMachine(pipeline, workflowService.stencilMap());
+      new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
 
       yamlPushService.pushYamlChangeSet(accountId, null, pipeline, Type.CREATE, pipeline.isSyncFromGit(), false);
 

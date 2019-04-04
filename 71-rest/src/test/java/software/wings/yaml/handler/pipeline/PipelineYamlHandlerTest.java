@@ -57,6 +57,8 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.rules.SetupScheduler;
+import software.wings.service.impl.SSHKeyDataProvider;
+import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
@@ -98,6 +100,8 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private PipelineYamlHandler yamlHandler;
   @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
+  @InjectMocks @Inject private SSHKeyDataProvider sshKeyDataProvider;
+  @InjectMocks @Inject private WinRmConnectionAttributesDataProvider winRmConnectionAttributesDataProvider;
 
   private final String APP_NAME = "app1";
   private final String PIPELINE_NAME = "pipeline1";
