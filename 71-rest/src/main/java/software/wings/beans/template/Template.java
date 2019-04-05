@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("accountId")
-               , @Field("name"), @Field("folderId") }))
+               , @Field("name"), @Field("folderId"), @Field("appId") }))
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
