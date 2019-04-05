@@ -381,7 +381,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Optional<String> getAccountType(String accountId) {
-    Account account = get(accountId);
+    Account account = getFromCache(accountId);
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (null == licenseInfo) {
       logger.error(

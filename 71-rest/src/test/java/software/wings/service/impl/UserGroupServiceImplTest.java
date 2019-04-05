@@ -43,6 +43,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -479,6 +480,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  @Ignore
   public void testActiveUserGroups() {
     UserGroup defaultUserGroup = UserGroup.builder()
                                      .accountId(ACCOUNT_ID)

@@ -407,12 +407,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                                              .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
                                              .addFilter("memberIds", Operator.HAS, user.getUuid())
                                              .build();
-    List<UserGroup> allUserGroups = list(accountId, pageRequest, true).getResponse();
-
-    if (accountService.isAccountLite(accountId)) {
-      return allUserGroups.stream().filter(UserGroup::isDefault).collect(toList());
-    }
-    return allUserGroups;
+    return list(accountId, pageRequest, true).getResponse();
   }
 
   @Override
