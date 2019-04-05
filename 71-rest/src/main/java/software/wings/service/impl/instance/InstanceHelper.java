@@ -361,6 +361,7 @@ public class InstanceHelper {
             .computeProviderId(phaseExecutionData.getComputeProviderId())
             .computeProviderName(phaseExecutionData.getComputeProviderName())
             .infraMappingId(phaseExecutionData.getInfraMappingId())
+            .infraMappingName(phaseExecutionData.getInfraMappingName())
             .infraMappingType(infraMappingType)
             .lastDeployedAt(phaseStepExecutionData.getEndTs() != null ? phaseStepExecutionData.getEndTs()
                                                                       : System.currentTimeMillis())

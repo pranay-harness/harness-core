@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddStateMachineToWorkflowExecutions;
@@ -48,6 +49,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(19, AddStateMachineToWorkflowExecutions.class))
         .add(Pair.of(20, DeleteOrphanNotificationGroups.class))
         .add(Pair.of(21, AddIsDefaultFlagToUserGroup.class))
+        .add(Pair.of(22, AddInfraMappingNameToInstanceData.class))
         .build();
   }
 }

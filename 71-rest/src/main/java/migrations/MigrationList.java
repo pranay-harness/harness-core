@@ -37,8 +37,6 @@ import migrations.all.EntityNameValidationMigration_All_02;
 import migrations.all.EntityNameValidationMigration_All_03;
 import migrations.all.EntityNameValidationMigration_All_04;
 import migrations.all.FixCVDashboardStatusMigration;
-import migrations.all.FixInstanceData;
-import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GcsArtifactProjectIdMigration;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
@@ -103,9 +101,9 @@ public class MigrationList {
    */
   public static List<Pair<Integer, Class<? extends Migration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends Migration>>>()
-        .add(Pair.of(130, FixInstanceData.class))
+        .add(Pair.of(130, BaseMigration.class))
         .add(Pair.of(131, LogAnalysisExperimentalRecordsMigration.class))
-        .add(Pair.of(132, FixInstanceDataForAwsSSH.class))
+        .add(Pair.of(132, BaseMigration.class))
         .add(Pair.of(133, NewRelicMetricAnalysisRecordsMigration.class))
         .add(Pair.of(134, NewRelicMetricDataRecordsMigration.class))
         .add(Pair.of(135, TimeSeriesAnalysisRecordsMigration.class))
