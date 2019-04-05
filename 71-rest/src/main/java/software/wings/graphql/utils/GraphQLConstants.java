@@ -6,6 +6,7 @@ public class GraphQLConstants {
   public static final String QUERY_API = "Query";
   public static final String ENTITY_ID = "id";
   public static final String APP_ID = "appId";
+  public static final String ACCOUNT_ID = "accountId";
   public static final String SERVICE_ID = "serviceId";
   public static final String ENV_ID = "envId";
   public static final String PAGE_LIMIT = "limit";
@@ -25,6 +26,7 @@ public class GraphQLConstants {
   public static final String WORKFLOW_TYPE = "Workflow";
   public static final String WORKFLOW_EXECUTION_TYPE = "WorkflowExecution";
   public static final String ARTIFACT_TYPE = "Artifact";
+  public static final String APPLICATION_TYPE = "Application";
 
   // Error messages
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";

@@ -10,6 +10,7 @@ import com.google.inject.spi.TypeListener;
 
 import graphql.GraphQL;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowExecutionDataFetcher;
@@ -33,6 +34,10 @@ public class GraphQLModule extends AbstractModule {
         .to(WorkflowExecutionDataFetcher.class);
 
     bind(AbstractDataFetcher.class).annotatedWith(Names.named("artifactDataFetcher")).to(ArtifactDataFetcher.class);
+
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named("applicationDataFetcher"))
+        .to(ApplicationDataFetcher.class);
   }
 
   /***

@@ -19,6 +19,11 @@ type Query {
   # Get list of successfully deployed articacts.
   deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]
 
+  #Asking accountID temporarily because there is no auth support as of now. Will remove it once authentication is available
+  applications(accountId:String!): PagedData
+
+  application(appId:String!): Application
+
 }
 
 # DateTime which will return date based on PST zone
@@ -78,11 +83,11 @@ type Workflow implements DebugInfo {
 type Service {
    # Name of the service
    name: String
-   # Description of th Service
+   # Description of the Service
    description: String
-   # Artifact type deployed by this service Jar Tar
+   # Artifact type deployed by this service
    artifactType: String
-   # Deployment Type SSH, Heml, Kubernetes
+   # Deployment Type SSH, Helm, Kubernetes
    deploymentType: String
 }
 
@@ -101,7 +106,7 @@ type PagedData {
 }
 
 # Union for Workflow and Workflow Execution
-union Result = Workflow | WorkflowExecution
+union Result = Workflow | WorkflowExecution | Application
 
 # Aritifact type
 type Artifact implements DebugInfo {
@@ -115,7 +120,7 @@ type Artifact implements DebugInfo {
     buildNo: String
     # Workflow that successfully deployed it last
     workflowExecutionName: String
-    # Pipelin that successfully deployed it last
+    # Pipeline that successfully deployed it last
     pipelineflowExecutionName: String
     # DateTime when artifact was last successfully last
     lastDeployedAt: DateTime
@@ -125,3 +130,10 @@ type Artifact implements DebugInfo {
     debugInfo: String
 }
 
+type Application implements DebugInfo {
+  id: String
+  name : String
+  description : String
+  # Debug info useful to troubleshoot issues
+  debugInfo: String
+}

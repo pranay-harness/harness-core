@@ -13,9 +13,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Account;
+import software.wings.beans.User;
 import software.wings.graphql.schema.type.DebugInfo;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 import java.util.List;
@@ -34,7 +37,7 @@ public abstract class AbstractDataFetcher {
     return authHandler.authorize(permissionAttributeList, asList(appId), entityId);
   }
 
-  protected abstract Map<String, DataFetcher<?>> getOperationToDataFetcherMap();
+  public abstract Map<String, DataFetcher<?>> getOperationToDataFetcherMap();
 
   protected int getPageLimit(@NotNull DataFetchingEnvironment environment) {
     Integer limit = environment.getArgument(GraphQLConstants.PAGE_LIMIT);
@@ -65,5 +68,14 @@ public abstract class AbstractDataFetcher {
   protected void throwNotAuthorizedException(String entityName, String id, String appId) {
     String errorMsg = String.format(USER_NOT_AUTHORIZED_TO_VIEW_ENTITY, entityName, id, appId);
     throw new WingsException(errorMsg, WingsException.USER);
+  }
+
+  /**
+   * TODO This method implementation has to be changed later on
+   * @return
+   */
+  protected Account getAccount() {
+    User currentUser = UserThreadLocal.get();
+    return currentUser.getAccounts().get(0);
   }
 }
