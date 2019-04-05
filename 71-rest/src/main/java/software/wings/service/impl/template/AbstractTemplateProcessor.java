@@ -14,6 +14,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
@@ -109,7 +110,7 @@ public abstract class AbstractTemplateProcessor {
 
   public abstract void updateLinkedEntities(Template template);
 
-  public abstract Object constructEntityFromTemplate(Template template);
+  public abstract Object constructEntityFromTemplate(Template template, EntityType entityType);
 
   public abstract List<String> fetchTemplateProperties();
 

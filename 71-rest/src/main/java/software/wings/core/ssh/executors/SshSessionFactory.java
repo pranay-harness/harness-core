@@ -145,7 +145,6 @@ public class SshSessionFactory {
       session.setUserInfo(new SshUserInfo(new String(config.getPassword())));
     }
     session.setConfig("StrictHostKeyChecking", "no");
-
     session.setTimeout(config.getSshSessionTimeout());
     session.setServerAliveInterval(10 * 1000); // Send noop packet every 10 sec
 

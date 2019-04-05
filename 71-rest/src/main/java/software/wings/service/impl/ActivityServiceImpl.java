@@ -13,6 +13,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -37,6 +38,9 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ownership.OwnedByActivity;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +123,7 @@ public class ActivityServiceImpl implements ActivityService {
                        .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
                        .name(commandUnit.getName())
                        .commandUnitType(activity.getCommandUnitType())
+                       .variables(commandUnit.getVariables())
                        .build());
           }
           break;
@@ -196,6 +201,11 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public void updateCommandUnitStatus(
       String appId, String activityId, String unitName, CommandExecutionStatus commandUnitStatus) {
+    try {
+      unitName = URLDecoder.decode(unitName, StandardCharsets.UTF_8.toString());
+    } catch (UnsupportedEncodingException e) {
+      throw new InvalidRequestException("Failed to decode unitName [" + unitName + "]");
+    }
     //    Query<Activity> query =
     //        wingsPersistence.createQuery(Activity.class).filter(Mapper.ID_KEY, activityId).filter("appId",
     //        appId).disableValidation().filter("commandUnits.name",

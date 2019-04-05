@@ -8,10 +8,12 @@ import com.google.inject.Inject;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
@@ -81,7 +83,7 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
       for (GraphNode step : phaseStep.getSteps()) {
         if (template.getUuid().equals(step.getTemplateUuid())
             && (step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))) {
-          GraphNode templateStep = constructEntityFromTemplate(template);
+          GraphNode templateStep = constructEntityFromTemplate(template, EntityType.WORKFLOW);
           Map<String, Object> stepProperties = step.getProperties();
           if (templateStep != null) {
             stepProperties.putAll(templateStep.getProperties());
@@ -97,15 +99,20 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   @Override
-  public GraphNode constructEntityFromTemplate(Template template) {
-    Map<String, Object> properties = new HashMap<>();
-    transform(template, properties);
-    return GraphNode.builder()
-        .templateVariables(template.getVariables())
-        .properties(properties)
-        .templateUuid(template.getUuid())
-        .type(getTemplateType().name())
-        .build();
+  public GraphNode constructEntityFromTemplate(Template template, EntityType entityType) {
+    switch (entityType) {
+      case WORKFLOW:
+        Map<String, Object> properties = new HashMap<>();
+        transform(template, properties);
+        return GraphNode.builder()
+            .templateVariables(template.getVariables())
+            .properties(properties)
+            .templateUuid(template.getUuid())
+            .type(getTemplateType().name())
+            .build();
+      default:
+        throw new InvalidRequestException("Unsupported Entity Type");
+    }
   }
 
   public abstract void transform(Template template, Map<String, Object> properties);

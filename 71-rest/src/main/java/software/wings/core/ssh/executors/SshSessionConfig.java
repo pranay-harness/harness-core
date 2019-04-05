@@ -10,7 +10,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.KerberosConfig;
-import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
+import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.concurrent.TimeUnit;
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 2/8/16.
  */
 @Data
-public class SshSessionConfig implements EncryptableSetting {
+public class SshSessionConfig implements EncryptableSetting, ScriptExecutionContext {
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
   @NotEmpty private ExecutorType executorType;

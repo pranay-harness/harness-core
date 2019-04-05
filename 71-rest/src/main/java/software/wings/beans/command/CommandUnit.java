@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.Variable;
+
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 11/14/16.
@@ -88,4 +91,8 @@ public interface CommandUnit {
    * @param deploymentType the deployment type
    */
   @Deprecated void setDeploymentType(String deploymentType);
+
+  @SchemaIgnore List<Variable> getVariables();
+
+  @SchemaIgnore void setVariables(List<Variable> variables);
 }

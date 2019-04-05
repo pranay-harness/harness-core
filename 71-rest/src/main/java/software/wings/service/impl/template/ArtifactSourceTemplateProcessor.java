@@ -13,10 +13,12 @@ import com.google.inject.Singleton;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.EntityType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
@@ -92,7 +94,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
           String templateVersion = artifactStream.getTemplateVersion();
           if (templateVersion == null || templateVersion.equalsIgnoreCase(LATEST_TAG)) {
             logger.info(format("Updating the linked artifact stream with id %s", artifactStream.getUuid()));
-            ArtifactStream entityFromTemplate = constructEntityFromTemplate(template);
+            ArtifactStream entityFromTemplate = constructEntityFromTemplate(template, EntityType.ARTIFACT_STREAM);
             updateEntity(entityFromTemplate, artifactStream);
             artifactStreamService.update(artifactStream);
             logger.info("Linked artifact stream with id %s updated", artifactStream.getUuid());
@@ -106,25 +108,31 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
     }
   }
 
-  public ArtifactStream constructEntityFromTemplate(Template template) {
-    ArtifactSourceTemplate artifactSourceTemplate = (ArtifactSourceTemplate) template.getTemplateObject();
-    if (artifactSourceTemplate.getArtifactSource() instanceof CustomArtifactSourceTemplate) {
-      CustomArtifactSourceTemplate customArtifactSourceTemplate =
-          (CustomArtifactSourceTemplate) artifactSourceTemplate.getArtifactSource();
-      CustomArtifactStream customArtifactStream =
-          CustomArtifactStream.builder()
-              .scripts(asList(CustomArtifactStream.Script.builder()
-                                  .scriptString(customArtifactSourceTemplate.getScript())
-                                  .timeout(customArtifactSourceTemplate.getTimeoutSeconds())
-                                  .customRepositoryMapping(customArtifactSourceTemplate.getCustomRepositoryMapping())
-                                  .build()))
-              .build();
-      customArtifactStream.setTemplateUuid(template.getUuid());
-      customArtifactStream.setTemplateVersion(String.valueOf(template.getVersion()));
-      customArtifactStream.setTemplateVariables(template.getVariables());
-      return customArtifactStream;
+  public ArtifactStream constructEntityFromTemplate(Template template, EntityType entityType) {
+    switch (entityType) {
+      case ARTIFACT_STREAM:
+        ArtifactSourceTemplate artifactSourceTemplate = (ArtifactSourceTemplate) template.getTemplateObject();
+        if (artifactSourceTemplate.getArtifactSource() instanceof CustomArtifactSourceTemplate) {
+          CustomArtifactSourceTemplate customArtifactSourceTemplate =
+              (CustomArtifactSourceTemplate) artifactSourceTemplate.getArtifactSource();
+          CustomArtifactStream customArtifactStream =
+              CustomArtifactStream.builder()
+                  .scripts(
+                      asList(CustomArtifactStream.Script.builder()
+                                 .scriptString(customArtifactSourceTemplate.getScript())
+                                 .timeout(customArtifactSourceTemplate.getTimeoutSeconds())
+                                 .customRepositoryMapping(customArtifactSourceTemplate.getCustomRepositoryMapping())
+                                 .build()))
+                  .build();
+          customArtifactStream.setTemplateUuid(template.getUuid());
+          customArtifactStream.setTemplateVersion(String.valueOf(template.getVersion()));
+          customArtifactStream.setTemplateVariables(template.getVariables());
+          return customArtifactStream;
+        }
+        return null;
+      default:
+        throw new InvalidRequestException("Unsupported Entity Type");
     }
-    return null;
   }
 
   private void updateEntity(ArtifactStream fromTemplate, ArtifactStream artifactStream) {

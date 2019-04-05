@@ -754,6 +754,17 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static GraphNode constructCommandTemplateStep() {
+    return GraphNode.builder()
+        .type(StateType.COMMAND.name())
+        .templateUuid(TEMPLATE_ID)
+        .properties(constructCommandTemplateProperties())
+        .templateVersion(LATEST_TAG)
+        .templateVariables(
+            asList(aVariable().withName("name").withValue("${artifact.name}").build(), aVariable().build()))
+        .build();
+  }
+
   private static Map<String, Object> constructHttpProperties() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("url", "${url}");
@@ -767,6 +778,15 @@ public class WorkflowServiceTestHelper {
     properties.put("scriptType", "BASH");
     properties.put("scriptString", "echo \"Executing\" ${name}\n export A=\"aaa\"");
     properties.put("outputVars", "A");
+    return properties;
+  }
+
+  private static Map<String, Object> constructCommandTemplateProperties() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("commandName", "MyInstall");
+    properties.put("host", "localhost");
+    properties.put("sshKeyRef", "dummykey");
+    properties.put("executeOnDelegate", "false");
     return properties;
   }
 

@@ -37,6 +37,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.template.Template;
@@ -152,6 +153,11 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
                             .linkedTemplateUuids(asList(savedTemplate.getUuid()))
                             .build();
 
+    validateWorkflow(savedTemplate, workflow);
+    verify(workflowService, times(0)).updateWorkflow(workflow);
+  }
+
+  private void validateWorkflow(Template savedTemplate, Workflow workflow) {
     on(httpTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(httpTemplateProcessor).set("workflowService", workflowService);
 
@@ -169,7 +175,6 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     templateService.updateLinkedEntities(savedTemplate);
 
     verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
-    verify(workflowService, times(0)).updateWorkflow(workflow);
   }
 
   private Template createHttpTemplate() {
@@ -240,28 +245,12 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     HttpTemplate savedHttpTemplate = (HttpTemplate) savedTemplate.getTemplateObject();
     assertThat(savedHttpTemplate).isNotNull();
     assertThat(savedHttpTemplate.getAssertion()).isNotEmpty();
-    GraphNode step = httpTemplateProcessor.constructEntityFromTemplate(savedTemplate);
+    GraphNode step = httpTemplateProcessor.constructEntityFromTemplate(savedTemplate, EntityType.WORKFLOW);
     step.setTemplateVersion(LATEST_TAG);
 
     Workflow workflow = generateWorkflow(savedTemplate, step);
 
-    on(httpTemplateProcessor).set("wingsPersistence", wingsPersistence);
-    on(httpTemplateProcessor).set("workflowService", workflowService);
-
-    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
-
-    when(query.field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
-    when(end.contains(savedTemplate.getUuid())).thenReturn(query);
-    when(query.fetch()).thenReturn(workflowIterator);
-    when(workflowIterator.getCursor()).thenReturn(dbCursor);
-    when(workflowIterator.hasNext()).thenReturn(true).thenReturn(false);
-    when(workflowIterator.next()).thenReturn(workflow);
-
-    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-
-    templateService.updateLinkedEntities(savedTemplate);
-
-    verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
+    validateWorkflow(savedTemplate, workflow);
     verify(workflowService).updateWorkflow(workflow);
   }
 }

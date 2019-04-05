@@ -42,7 +42,7 @@ public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecu
    * {@inheritDoc}
    */
   @Override
-  public CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
+  public CommandExecutionStatus execute(CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
     logService.save(context.getAccountId(),
         aLog()

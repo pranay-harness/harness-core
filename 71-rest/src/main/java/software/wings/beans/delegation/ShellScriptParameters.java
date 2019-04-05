@@ -151,6 +151,7 @@ public class ShellScriptParameters implements TaskParameters {
         .workingDirectory(workingDirectory)
         .environment(getResolvedEnvironmentVariables())
         .kubeConfigContent(kubeConfigContent)
+        .scriptType(scriptType)
         .build();
   }
 }

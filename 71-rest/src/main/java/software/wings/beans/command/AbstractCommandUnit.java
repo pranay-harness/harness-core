@@ -11,8 +11,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.Variable;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.command.CommandRefYaml;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by anubhaw on 5/25/16.
@@ -23,7 +27,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
   @SchemaIgnore private boolean artifactNeeded;
   @Deprecated @SchemaIgnore private String deploymentType;
-
+  private List<Variable> variables = new ArrayList<>();
   /**
    * Instantiates a new Command unit.
    */
@@ -134,6 +138,16 @@ public abstract class AbstractCommandUnit implements CommandUnit {
    */
   public void setDeploymentType(String deploymentType) {
     this.deploymentType = deploymentType;
+  }
+
+  @Override
+  public List<Variable> getVariables() {
+    return variables;
+  }
+
+  @Override
+  public void setVariables(List<Variable> variables) {
+    this.variables = variables;
   }
 
   @Override

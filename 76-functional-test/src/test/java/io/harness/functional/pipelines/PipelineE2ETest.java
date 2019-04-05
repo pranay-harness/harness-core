@@ -132,7 +132,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
             .envId(environment.getUuid())
             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
             .build();
-
+    resetCache();
     savedWorkflow = workflowRestUtil.createWorkflow(AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);
 
     assertThat(savedWorkflow).isNotNull();

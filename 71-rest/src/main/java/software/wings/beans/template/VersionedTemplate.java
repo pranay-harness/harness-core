@@ -23,9 +23,14 @@ import javax.validation.constraints.NotNull;
 @JsonInclude(NON_NULL)
 @Entity(value = "versionedTemplate", noClassnameStored = true)
 @HarnessExportableEntity
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("templateId"), @Field("version") },
-    options = @IndexOptions(name = "yaml", unique = true)))
+@Indexes({
+  @Index(fields = { @Field("accountId")
+                    , @Field("templateId"), @Field("version") },
+      options = @IndexOptions(name = "yaml", unique = true))
+  ,
+      @Index(fields = { @Field("templateObject.referencedTemplateList.templateReference.templateUuid") },
+          options = @IndexOptions(name = "referencedTemplates"))
+})
 @Data
 @Builder
 @NoArgsConstructor

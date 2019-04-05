@@ -55,12 +55,13 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
   public void cleanup(String activityId, Host host) {}
 
   @Override
-  public CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
+  public CommandExecutionStatus execute(CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
+    String publicDns = context.getHost().getPublicDns();
     logService.save(context.getAccountId(),
         aLog()
             .withAppId(context.getAppId())
-            .withHostName(host.getPublicDns())
+            .withHostName(publicDns)
             .withActivityId(activityId)
             .withLogLevel(INFO)
             .withCommandUnitName(commandUnit.getName())
@@ -90,7 +91,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
           aLog()
               .withAppId(context.getAppId())
               .withActivityId(activityId)
-              .withHostName(host.getPublicDns())
+              .withHostName(publicDns)
               .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
               .withLogLine("Command execution timed out")
               .withCommandUnitName(commandUnit.getName())
@@ -105,7 +106,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
             aLog()
                 .withAppId(context.getAppId())
                 .withActivityId(activityId)
-                .withHostName(host.getPublicDns())
+                .withHostName(publicDns)
                 .withCommandUnitName(commandUnit.getName())
                 .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine(errorMessage)
@@ -117,7 +118,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
             aLog()
                 .withAppId(context.getAppId())
                 .withActivityId(activityId)
-                .withHostName(host.getPublicDns())
+                .withHostName(publicDns)
                 .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine("Unknown Error " + e.getCause().getMessage())
                 .withCommandUnitName(commandUnit.getName())
@@ -135,7 +136,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
               aLog()
                   .withAppId(context.getAppId())
                   .withActivityId(activityId)
-                  .withHostName(host.getPublicDns())
+                  .withHostName(publicDns)
                   .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                   .withLogLine("Command execution failed: invalid key")
                   .withCommandUnitName(commandUnit.getName())
@@ -149,7 +150,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
             aLog()
                 .withAppId(context.getAppId())
                 .withActivityId(activityId)
-                .withHostName(host.getPublicDns())
+                .withHostName(publicDns)
                 .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine("Command execution failed")
                 .withCommandUnitName(commandUnit.getName())
@@ -162,7 +163,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
           aLog()
               .withAppId(context.getAppId())
               .withActivityId(activityId)
-              .withHostName(host.getPublicDns())
+              .withHostName(publicDns)
               .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
               .withLogLine("Command execution failed")
               .withCommandUnitName(commandUnit.getName())
@@ -175,7 +176,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
         aLog()
             .withAppId(context.getAppId())
             .withActivityId(activityId)
-            .withHostName(host.getPublicDns())
+            .withHostName(publicDns)
             .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
             .withLogLine("Command execution finished with status " + commandExecutionStatus)
             .withCommandUnitName(commandUnit.getName())

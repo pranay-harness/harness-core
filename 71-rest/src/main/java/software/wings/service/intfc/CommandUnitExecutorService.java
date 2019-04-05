@@ -12,12 +12,11 @@ public interface CommandUnitExecutorService {
   /**
    * Execute execution result.
    *
-   * @param host        the host
    * @param commandUnit the command unit
    * @param context     the context
    * @return the execution result
    */
-  CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context);
+  CommandExecutionStatus execute(CommandUnit commandUnit, CommandExecutionContext context);
 
   /**
    * Clenup any resource blocked execution optimization

@@ -24,9 +24,9 @@ import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.ShellExecutionData;
-import software.wings.core.local.executors.ShellExecutor;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
+import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -68,9 +68,10 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
                                                   .commandUnitName(parameters.getCommandName())
                                                   .workingDirectory(parameters.getWorkingDirectory())
                                                   .environment(new HashMap<>())
+                                                  .scriptType(parameters.getScriptType())
                                                   .build();
 
-    ShellExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig, parameters.getScriptType());
+    ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
     List<String> items = new ArrayList<>();
     if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
       items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));

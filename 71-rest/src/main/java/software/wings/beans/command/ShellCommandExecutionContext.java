@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
-import software.wings.core.BaseExecutor;
+import software.wings.core.BaseScriptExecutor;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 public class ShellCommandExecutionContext extends CommandExecutionContext {
-  private BaseExecutor executor;
+  private BaseScriptExecutor executor;
 
   public ShellCommandExecutionContext(CommandExecutionContext other) {
     super(other);
@@ -54,7 +54,7 @@ public class ShellCommandExecutionContext extends CommandExecutionContext {
     return executor.executeCommandString(commandString, output);
   }
 
-  public void setExecutor(BaseExecutor executor) {
+  public void setExecutor(BaseScriptExecutor executor) {
     this.executor = executor;
   }
 }

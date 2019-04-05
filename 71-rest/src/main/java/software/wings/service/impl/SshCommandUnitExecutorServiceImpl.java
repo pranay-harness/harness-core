@@ -28,8 +28,10 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
-import software.wings.core.ssh.executors.AbstractSshExecutor;
-import software.wings.core.ssh.executors.SshExecutor;
+import software.wings.core.local.executors.ShellExecutorConfig;
+import software.wings.core.local.executors.ShellExecutorFactory;
+import software.wings.core.ssh.executors.ScriptExecutor;
+import software.wings.core.ssh.executors.ScriptSshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
@@ -60,23 +62,22 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   @Inject private SshExecutorFactory sshExecutorFactory;
 
+  @Inject private ShellExecutorFactory shellExecutorFactory;
+
   @Override
   public void cleanup(String activityId, Host host) {
-    AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
+    ScriptSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
+  public CommandExecutionStatus execute(CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
 
-    final Builder logBuilder = aLog()
-                                   .withAppId(context.getAppId())
-                                   .withActivityId(activityId)
-                                   .withHostName(host.getPublicDns())
-                                   .withCommandUnitName(commandUnit.getName());
+    final Builder logBuilder =
+        aLog().withAppId(context.getAppId()).withActivityId(activityId).withCommandUnitName(commandUnit.getName());
 
     logService.save(context.getAccountId(),
         logBuilder.withLogLevel(INFO)
@@ -85,11 +86,20 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             .build());
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
-
-    SshSessionConfig sshSessionConfig =
-        SshHelperUtil.getSshSessionConfig(host.getPublicDns(), commandUnit.getName(), context, null);
-    SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
-    executor.init(sshSessionConfig);
+    ScriptExecutor executor;
+    if (context.isExecuteOnDelegate()) {
+      ShellExecutorConfig shellExecutorConfig = ShellExecutorConfig.builder()
+                                                    .accountId(context.getAccountId())
+                                                    .appId(context.getAppId())
+                                                    .executionId(context.getActivityId())
+                                                    .commandUnitName(commandUnit.getName())
+                                                    .environment(context.getEnvVariables())
+                                                    .build();
+      executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
+    } else {
+      SshSessionConfig sshSessionConfig = SshHelperUtil.getSshSessionConfig(commandUnit.getName(), context, null);
+      executor = sshExecutorFactory.getExecutor(sshSessionConfig);
+    }
 
     ShellCommandExecutionContext shellCommandExecutionContext = new ShellCommandExecutionContext(context);
     shellCommandExecutionContext.setExecutor(executor);

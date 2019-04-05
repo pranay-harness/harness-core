@@ -144,7 +144,7 @@ public class ServiceTemplateResource {
   @ExceptionMetered
   public RestResponse<List<ConfigFile>> computeFiles(@PathParam("templateId") String templateId,
       @QueryParam("envId") @NotEmpty String envId, @QueryParam("appId") @NotEmpty String appId,
-      @QueryParam("hostId") @NotEmpty String hostId, @QueryParam("accountId") @NotEmpty String accountId) {
+      @QueryParam("hostId") String hostId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId));
   }
 }

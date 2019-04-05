@@ -264,6 +264,7 @@ import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapUserResponse;
 import software.wings.beans.sso.LdapUserSettings;
 import software.wings.beans.sso.SSOType;
+import software.wings.beans.template.TemplateReference;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -1208,5 +1209,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmRepoConfigValidationTaskParams.class, 7158);
     kryo.register(HttpHelmRepoConfig.class, 7159);
     kryo.register(HelmRepoConfigValidationResponse.class, 7160);
+    kryo.register(TemplateReference.class, 7161);
   }
 }

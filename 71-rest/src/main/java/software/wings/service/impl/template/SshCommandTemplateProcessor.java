@@ -25,15 +25,23 @@ import com.google.inject.Singleton;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.EntityType;
+import software.wings.beans.GraphNode;
+import software.wings.beans.Variable;
 import software.wings.beans.command.AbstractCommandUnit.Yaml;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.template.BaseTemplate;
+import software.wings.beans.template.ReferencedTemplate;
+import software.wings.beans.template.ReferencedTemplate.ReferencedTemplateBuilder;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.SshCommandTemplate;
@@ -44,11 +52,17 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private static final Logger logger = LoggerFactory.getLogger(SshCommandTemplateProcessor.class);
+  private static final String COMMAND_UNITS = "commandUnits";
+  private static final String REFERENCED_TEMPLATE_LIST = "referencedTemplateList";
+  private static final String COMMAND_TYPE = "commandType";
+  private static final String COMMAND_PATH = "commandPath";
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject ServiceResourceService serviceResourceService;
@@ -57,11 +71,98 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   @Override
   public Template process(Template template) {
     template = super.process(template);
+    validateTemplate(template);
     SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
     if (isNotEmpty(sshCommandTemplate.getCommands())) {
       template.setTemplateObject(convertYamlCommandToCommandUnits(template));
     }
+    List<Variable> templateVariables = template.getVariables();
+    List<ReferencedTemplate> referencedTemplateList = new ArrayList<>();
+    if (isNotEmpty(sshCommandTemplate.getCommandUnits())) {
+      for (CommandUnit commandUnit : sshCommandTemplate.getCommandUnits()) {
+        ReferencedTemplateBuilder referencedTemplateBuilder = ReferencedTemplate.builder();
+        if (commandUnit.getCommandUnitType().equals(CommandUnitType.COMMAND)) {
+          if (((Command) commandUnit).getTemplateReference() != null) {
+            referencedTemplateBuilder.templateReference(((Command) commandUnit).getTemplateReference());
+            List<Variable> commandVariables = ((Command) commandUnit).getTemplateVariables();
+            Map<String, Variable> variableMap = new HashMap<>();
+            for (Variable commandVariable : commandVariables) {
+              // Check if variable's value already defined in top-level template variables i.e. variable references
+              // another variable
+              String variable = ExpressionEvaluator.getName(commandVariable.getValue());
+              if (isNotEmpty(variable) && variable.equals(commandVariable.getValue())) {
+                variable = commandVariable.getName();
+              }
+              Variable parentVariable = getTopLevelTemplateVariable(templateVariables, variable);
+              variableMap.put(commandVariable.getName(), parentVariable);
+            }
+            referencedTemplateBuilder.variableMapping(variableMap);
+          }
+        }
+        referencedTemplateList.add(referencedTemplateBuilder.build());
+      }
+      template.setTemplateObject(
+          ((SshCommandTemplate) template.getTemplateObject()).withReferencedTemplateList(referencedTemplateList));
+    }
     return template;
+  }
+
+  private Variable getTopLevelTemplateVariable(List<Variable> variables, String lookupVariable) {
+    if (isNotEmpty(variables)) {
+      for (Variable variable : variables) {
+        if (variable.getName().equals(lookupVariable)) {
+          return variable;
+        }
+      }
+    }
+    return null;
+  }
+
+  private void validateTemplate(Template template) {
+    List<Variable> topLevelVariables = template.getVariables();
+    // holds only the variables that are provided with fixed values
+    Map<String, String> fixedValueMap = new HashMap<>();
+
+    SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+    if (isNotEmpty(sshCommandTemplate.getCommandUnits())) {
+      for (CommandUnit commandUnit : sshCommandTemplate.getCommandUnits()) {
+        if (commandUnit.getCommandUnitType().equals(CommandUnitType.COMMAND)) {
+          List<Variable> commandVariables = ((Command) commandUnit).getTemplateVariables();
+          for (Variable commandVariable : commandVariables) {
+            // evaluate expression
+            String value = ExpressionEvaluator.getName(commandVariable.getValue());
+            // if value is a fixed value check if the current variable is not already defined with another fixed value
+            // in a prior command unit
+            if (isNotEmpty(value)) {
+              if (value.equals(commandVariable.getValue())) {
+                if (fixedValueMap.containsKey(commandVariable.getName())
+                    && !fixedValueMap.get(commandVariable.getName()).equals(value)) {
+                  throw new InvalidRequestException(format(
+                      "Variable \"%s\" already has a value %s assigned in template: %s. The same fixed value or a reference variable is allowed.",
+                      commandVariable.getName(), fixedValueMap.get(commandVariable.getName()), template.getName()));
+                } else if (!fixedValueMap.containsKey(commandVariable.getName())) {
+                  Variable topLevelVariable = getTopLevelTemplateVariable(topLevelVariables, commandVariable.getName());
+                  if (topLevelVariable == null) { // variable not provided in top level -> fail
+                    throw new InvalidRequestException(
+                        format("Variable \"%s\" is being referenced but not provided in template: %s",
+                            commandVariable.getName(), template.getName()));
+                  }
+                  fixedValueMap.put(commandVariable.getName(), commandVariable.getValue());
+                }
+              } else { // value mapped to another variable
+                // check if variable defined in top level
+                Variable topLevelVariable = getTopLevelTemplateVariable(topLevelVariables, value);
+                if (topLevelVariable == null) { // variable not provided in top level -> fail
+                  throw new InvalidRequestException(
+                      format("Variable \"%s\" is being referenced but not provided in template: %s", value,
+                          template.getName()));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   @Override
@@ -105,8 +206,8 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   @Override
-  public Command constructEntityFromTemplate(Template template) {
-    return transform(template);
+  public Object constructEntityFromTemplate(Template template, EntityType entityType) {
+    return transform(template, entityType);
   }
 
   private SshCommandTemplate convertYamlCommandToCommandUnits(Template template) {
@@ -138,27 +239,41 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   private void setCommandFromTemplate(Template template, ServiceCommand serviceCommand) {
-    Command command = transform(template);
+    Command command = (Command) transform(template, EntityType.COMMAND);
     serviceCommand.setCommand(command);
     serviceCommand.setName(command.getName());
   }
 
-  private Command transform(Template template) {
+  private Object transform(Template template, EntityType entityType) {
     SshCommandTemplate commandTemplate = (SshCommandTemplate) template.getTemplateObject();
-    return aCommand()
-        .withTemplateVariables(template.getVariables())
-        .withCommandUnits(commandTemplate.getCommandUnits())
-        .withName(template.getName())
-        .withCommandType(commandTemplate.getCommandType())
-        .withTemplateId(template.getUuid())
-        .build();
+    switch (entityType) {
+      case COMMAND:
+        return aCommand()
+            .withTemplateVariables(template.getVariables())
+            .withCommandUnits(commandTemplate.getCommandUnits())
+            .withName(template.getName())
+            .withCommandType(commandTemplate.getCommandType())
+            .withTemplateId(template.getUuid())
+            .withTemplateVersion(String.valueOf(template.getVersion()))
+            .build();
+      case WORKFLOW:
+        return GraphNode.builder()
+            .name(template.getName())
+            .type(commandTemplate.getCommandType().name())
+            .templateUuid(template.getUuid())
+            .templateVersion(String.valueOf(template.getVersion()))
+            .templateVariables(template.getVariables())
+            .build();
+      default:
+        throw new InvalidRequestException("Unsupported Entity Type");
+    }
   }
 
-  public Command fetchEntityFromTemplate(Template template) {
+  public Command fetchEntityFromTemplate(Template template, EntityType entityType) {
     Command command = null;
     if (template != null) {
       command = (Command) templateService.constructEntityFromTemplate(
-          template.getUuid(), String.valueOf(template.getVersion()));
+          template.getUuid(), String.valueOf(template.getVersion()), entityType);
       command.setTemplateVersion("latest");
     }
     return command;
@@ -166,7 +281,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
 
   @Override
   public List<String> fetchTemplateProperties() {
-    return asList();
+    return asList(COMMAND_UNITS, REFERENCED_TEMPLATE_LIST, COMMAND_TYPE, COMMAND_PATH);
   }
 
   @Override

@@ -61,6 +61,7 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
+import software.wings.beans.template.VersionedTemplate.VersionedTemplateBuilder;
 import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
@@ -127,14 +128,14 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private VersionedTemplate buildTemplateDetails(Template template, String templateUuid) {
-    return VersionedTemplate.builder()
-        .templateId(templateUuid)
+    VersionedTemplateBuilder builder = VersionedTemplate.builder();
+    builder.templateId(templateUuid)
         .accountId(template.getAccountId())
         .version(template.getVersion())
         .templateObject(template.getTemplateObject())
         .galleryId(template.getGalleryId())
-        .variables(template.getVariables())
-        .build();
+        .variables(template.getVariables());
+    return builder.build();
   }
 
   private void saveOrUpdate(Template template) {
@@ -405,10 +406,10 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
-  public Object constructEntityFromTemplate(String templateId, String version) {
+  public Object constructEntityFromTemplate(String templateId, String version, EntityType entityType) {
     Template template = get(templateId, version);
     AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
-    return abstractTemplateProcessor.constructEntityFromTemplate(template);
+    return abstractTemplateProcessor.constructEntityFromTemplate(template, entityType);
   }
 
   @Override

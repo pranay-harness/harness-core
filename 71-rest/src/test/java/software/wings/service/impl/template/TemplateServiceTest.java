@@ -44,6 +44,7 @@ import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.CommandCategory;
+import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -315,7 +316,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
 
-    Object command = templateService.constructEntityFromTemplate(template.getUuid(), "1");
+    Object command = templateService.constructEntityFromTemplate(template.getUuid(), "1", EntityType.COMMAND);
     assertThat(command).isNotNull();
     assertThat(command instanceof Command);
     Command sshcommand = (Command) command;
@@ -364,7 +365,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     assertThat(savedTemplate).isNotNull();
 
-    Object http = templateService.constructEntityFromTemplate(savedTemplate.getUuid(), "1");
+    Object http = templateService.constructEntityFromTemplate(savedTemplate.getUuid(), "1", EntityType.WORKFLOW);
     assertThat(http).isNotNull();
     assertThat(http instanceof GraphNode);
     GraphNode graphNode = (GraphNode) http;

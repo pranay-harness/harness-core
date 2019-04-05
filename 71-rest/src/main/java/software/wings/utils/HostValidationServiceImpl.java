@@ -25,6 +25,7 @@ import software.wings.beans.HostValidationResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.infrastructure.Host;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionFactory;
 import software.wings.core.winrm.executors.WinRmSession;
@@ -90,12 +91,13 @@ public class HostValidationServiceImpl implements HostValidationService {
 
   private HostValidationResponse validateHostSsh(
       String hostName, SettingAttribute connectionSetting, ExecutionCredential executionCredential) {
-    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                          .withHostConnectionAttributes(connectionSetting)
-                                                          .withExecutionCredential(executionCredential)
-                                                          .build();
-    SshSessionConfig sshSessionConfig =
-        getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", commandExecutionContext, 60);
+    CommandExecutionContext commandExecutionContext =
+        aCommandExecutionContext()
+            .withHostConnectionAttributes(connectionSetting)
+            .withExecutionCredential(executionCredential)
+            .withHost(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
+            .build();
+    SshSessionConfig sshSessionConfig = getSshSessionConfig("HOST_CONNECTION_TEST", commandExecutionContext, 60);
 
     HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
                                           .withHostName(hostName)

@@ -16,10 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.delegation.ShellScriptParameters;
-import software.wings.core.local.executors.ShellExecutor;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.SshExecutor;
-import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
+import software.wings.core.ssh.executors.ScriptExecutor;
+import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmExecutor;
@@ -60,8 +59,8 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
 
   private CommandExecutionResult run(ShellScriptParameters parameters) {
     if (parameters.isExecuteOnDelegate()) {
-      ShellExecutor executor = shellExecutorFactory.getExecutor(
-          parameters.processExecutorConfig(containerDeploymentDelegateHelper), parameters.getScriptType());
+      ScriptProcessExecutor executor =
+          shellExecutorFactory.getExecutor(parameters.processExecutorConfig(containerDeploymentDelegateHelper));
       List<String> items = new ArrayList<>();
       if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
         items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
@@ -73,10 +72,9 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
 
     switch (parameters.getConnectionType()) {
       case SSH: {
-        SshExecutor executor = sshExecutorFactory.getExecutor(ExecutorType.KEY_AUTH);
         try {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
-          executor.init(expectedSshConfig);
+          ScriptExecutor executor = sshExecutorFactory.getExecutor(expectedSshConfig);
           List<String> items = new ArrayList<>();
           if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
             items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));

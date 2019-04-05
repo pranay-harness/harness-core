@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -20,9 +21,9 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
+import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BASTION_HOST;
+import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
+import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -34,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.FILE_PATH;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_KEY_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.PUBLIC_DNS;
 import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 
@@ -65,10 +67,8 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Host.Builder;
+import software.wings.core.ssh.executors.ScriptSshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
-import software.wings.core.ssh.executors.SshJumpboxExecutor;
-import software.wings.core.ssh.executors.SshPubKeyAuthExecutor;
-import software.wings.core.ssh.executors.SshPwdAuthExecutor;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
@@ -114,18 +114,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * The Ssh executor factory.
    */
   @Mock private SshExecutorFactory sshExecutorFactory;
-  /**
-   * The Ssh pwd auth executor.
-   */
-  @Mock private SshPwdAuthExecutor sshPwdAuthExecutor;
-  /**
-   * The Ssh pub key auth executor.
-   */
-  @Mock private SshPubKeyAuthExecutor sshPubKeyAuthExecutor;
-  /**
-   * The Ssh jumpbox executor.
-   */
-  @Mock private SshJumpboxExecutor sshJumpboxExecutor;
+  @Mock private ScriptSshExecutor scriptSshExecutor;
 
   @Mock private Injector injector;
   /**
@@ -136,7 +125,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @InjectMocks
   private CommandUnitExecutorService sshCommandUnitExecutorService = new SshCommandUnitExecutorServiceImpl();
 
-  private Builder builder = aHost().withAppId(APP_ID).withHostName(HOST_NAME);
+  private Builder builder = aHost().withAppId(APP_ID).withHostName(HOST_NAME).withPublicDns(PUBLIC_DNS);
   private CommandExecutionContext.Builder commandExecutionContextBuider =
       aCommandExecutionContext()
           .withAppId(APP_ID)
@@ -149,6 +138,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
               Lists.newArrayList(anArtifactFile().withName("artifact.war").withFileUuid(FILE_ID).build()))
           .withServiceVariables(ImmutableMap.of("PORT", "8080", "PASSWORD", "aSecret"))
           .withSafeDisplayServiceVariables(ImmutableMap.of("PORT", "8080", "PASSWORD", "*****"))
+          .withHost(builder.build())
           .withAccountId(ACCOUNT_ID);
 
   @Before
@@ -169,7 +159,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
-                                             .withHost(HOST_NAME)
+                                             .withHost(PUBLIC_DNS)
                                              .withUserName(SSH_USER_NAME)
                                              .withExecutorType(PASSWORD_AUTH)
                                              .withSshPassword(SSH_USER_PASSWORD)
@@ -178,11 +168,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                              .withAuthenticationScheme(SSH_KEY)
                                              .build();
 
-    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT,
+    when(sshExecutorFactory.getExecutor(expectedSshConfig)).thenReturn(scriptSshExecutor);
+    sshCommandUnitExecutorService.execute(EXEC_COMMAND_UNIT,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
-    verify(sshExecutorFactory).getExecutor(PASSWORD_AUTH);
-    verify(sshPwdAuthExecutor).init(expectedSshConfig);
+    verify(sshExecutorFactory).getExecutor(expectedSshConfig);
   }
 
   /**
@@ -195,7 +184,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
-                                             .withHost(HOST_NAME)
+                                             .withHost(PUBLIC_DNS)
                                              .withUserName(SSH_USER_NAME)
                                              .withExecutorType(KEY_AUTH)
                                              .withKey(WingsTestConstants.SSH_KEY)
@@ -203,11 +192,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                              .withAccountId(ACCOUNT_ID)
                                              .build();
 
-    when(sshExecutorFactory.getExecutor(KEY_AUTH)).thenReturn(sshPubKeyAuthExecutor);
-    sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT,
+    when(sshExecutorFactory.getExecutor(expectedSshConfig)).thenReturn(scriptSshExecutor);
+    sshCommandUnitExecutorService.execute(EXEC_COMMAND_UNIT,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_KEY).build());
-    verify(sshExecutorFactory).getExecutor(KEY_AUTH);
-    verify(sshPubKeyAuthExecutor).init(expectedSshConfig);
+    verify(sshExecutorFactory).getExecutor(expectedSshConfig);
   }
 
   /**
@@ -221,7 +209,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
-                                             .withHost(HOST_NAME)
+                                             .withHost(PUBLIC_DNS)
                                              .withUserName(SSH_USER_NAME)
                                              .withExecutorType(BASTION_HOST)
                                              .withAuthenticationScheme(SSH_KEY)
@@ -235,14 +223,13 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                              .withAccountId(ACCOUNT_ID)
                                              .build();
 
-    when(sshExecutorFactory.getExecutor(BASTION_HOST)).thenReturn(sshJumpboxExecutor);
-    sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT,
+    when(sshExecutorFactory.getExecutor(expectedSshConfig)).thenReturn(scriptSshExecutor);
+    sshCommandUnitExecutorService.execute(EXEC_COMMAND_UNIT,
         commandExecutionContextBuider.but()
             .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)
             .withBastionConnectionAttributes(BASTION_HOST_ATTR)
             .build());
-    verify(sshExecutorFactory).getExecutor(BASTION_HOST);
-    verify(sshJumpboxExecutor).init(expectedSshConfig);
+    verify(sshExecutorFactory).getExecutor(expectedSshConfig);
   }
 
   /**
@@ -252,10 +239,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecuteExecCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
-    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT,
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    sshCommandUnitExecutorService.execute(EXEC_COMMAND_UNIT,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
-    verify(sshPwdAuthExecutor).executeCommandString(EXEC_COMMAND_UNIT.getPreparedCommand(), false);
+    verify(scriptSshExecutor).executeCommandString(EXEC_COMMAND_UNIT.getPreparedCommand(), false);
   }
 
   /**
@@ -271,14 +258,14 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                      .withFileCategory(ScpFileCategory.ARTIFACTS)
                                      .build();
 
-    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
-    sshCommandUnitExecutorService.execute(host, commandUnit,
+    sshCommandUnitExecutorService.execute(commandUnit,
         commandExecutionContextBuider.but()
             .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)
             .withArtifactStreamAttributes(artifactStreamAttributes)
             .build());
-    verify(sshPwdAuthExecutor)
+    verify(scriptSshExecutor)
         .copyGridFsFiles(commandUnit.getDestinationDirectoryPath(), ARTIFACTS,
             Lists.newArrayList(org.apache.commons.lang3.tuple.Pair.of(FILE_ID, null)));
   }
@@ -300,17 +287,17 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .build();
     commandUnit.setCommand(command);
 
-    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    when(sshPwdAuthExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
-    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(scriptSshExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
 
-    sshCommandUnitExecutorService.execute(host, commandUnit,
-        commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
-    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
+    sshCommandUnitExecutorService.execute(
+        commandUnit, commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
+    verify(scriptSshExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
 
     String actualLauncherScript =
         new File(System.getProperty("java.io.tmpdir"), "harnesslauncherACTIVITY_ID.sh").getAbsolutePath();
-    verify(sshPwdAuthExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
+    verify(scriptSshExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
     assertThat(new File(actualLauncherScript))
         .hasContent(
             CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
@@ -318,8 +305,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     String expectedExecCommandUnitScript =
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
             .getAbsolutePath();
-    verify(sshPwdAuthExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
-    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
+    verify(scriptSshExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
+    verify(scriptSshExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
@@ -344,15 +331,15 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .build();
     commandUnit.setCommand(command);
 
-    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    when(sshPwdAuthExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
 
-    sshCommandUnitExecutorService.execute(host, commandUnit,
+    sshCommandUnitExecutorService.execute(commandUnit,
         commandExecutionContextBuider.but()
             .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)
             .withInlineSshCommand(true)
             .build());
-    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
+    verify(scriptSshExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
     assertThat(((ExecCommandUnit) command.getCommandUnits().get(1)).getPreparedCommand().contains("ls"));
   }
 
@@ -381,11 +368,11 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .build();
     commandUnit.setCommand(command);
 
-    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    when(sshPwdAuthExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
-    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
-    sshCommandUnitExecutorService.execute(host, commandUnit,
-        commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(scriptSshExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
+    sshCommandUnitExecutorService.execute(
+        commandUnit, commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
 
     String expectedExecCommandUnitScript =
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
@@ -394,7 +381,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"))
             .getAbsolutePath();
 
-    verify(sshPwdAuthExecutor)
+    verify(scriptSshExecutor)
         .copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
@@ -409,7 +396,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         .contains("/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/home/tomcat' harness"
             + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"));
 
-    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
+    verify(scriptSshExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
   }
 
   /**
@@ -436,9 +423,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .build();
     commandUnit.setCommand(command);
 
-    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    when(sshPwdAuthExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
-    sshCommandUnitExecutorService.execute(host, commandUnit,
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    sshCommandUnitExecutorService.execute(commandUnit,
         commandExecutionContextBuider.but()
             .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)
             .withInlineSshCommand(true)
@@ -449,6 +436,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                    .getPreparedCommand()
                    .contains("start.sh"));
 
-    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
+    verify(scriptSshExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
   }
 }
