@@ -382,6 +382,11 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Optional<String> getAccountType(String accountId) {
     Account account = getFromCache(accountId);
+    if (account == null) {
+      logger.warn("accountId={} doesn't exist", accountId);
+      return Optional.empty();
+    }
+
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (null == licenseInfo) {
       logger.warn("License info not present for account. accountId={}", accountId);
