@@ -84,7 +84,8 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
     assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
     assertEquals(AlertStatus.Open, alert.getStatus());
-    assertEquals(cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfigId());
+    assertEquals(
+        cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
 
     response.put("error", DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build());
     dataCollectionCallback.notify(response);
@@ -95,7 +96,8 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
     assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
     assertEquals(AlertStatus.Closed, alert.getStatus());
-    assertEquals(cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfigId());
+    assertEquals(
+        cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
 
     // reopen alert
     response.put("error", ErrorNotifyResponseData.builder().errorMessage("some error message").build());
@@ -111,6 +113,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
     assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
     assertEquals(AlertStatus.Open, alert.getStatus());
-    assertEquals(cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfigId());
+    assertEquals(
+        cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
   }
 }
