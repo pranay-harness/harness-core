@@ -31,6 +31,7 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
 
   private String sourceRepoReference;
   private List<String> targets;
+  private List<String> tfVarFiles;
 
   private String planLogFileId;
 

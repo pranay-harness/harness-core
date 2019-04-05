@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -102,6 +103,7 @@ public abstract class TerraformProvisionState extends State {
   private static final String VARIABLES_KEY = "variables";
   private static final String BACKEND_CONFIGS_KEY = "backend_configs";
   private static final String TARGETS_KEY = "targets";
+  private static final String TF_VAR_FILES_KEY = "tf_var_files";
   private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
   private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
   private static final int DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT = 30 * 60 * 1000; // 10 minutes
@@ -126,6 +128,8 @@ public abstract class TerraformProvisionState extends State {
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
   @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
   @Getter @Setter private List<String> targets;
+
+  @Getter @Setter private List<String> tfVarFiles;
 
   @Getter @Setter private boolean runPlanOnly;
   @Getter @Setter private boolean inheritApprovedPlan;
@@ -202,6 +206,7 @@ public abstract class TerraformProvisionState extends State {
             .entityId(generateEntityId(context))
             .provisionerId(provisionerId)
             .targets(terraformExecutionData.getTargets())
+            .tfVarFiles(terraformExecutionData.getTfVarFiles())
             .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .sourceRepoReference(terraformExecutionData.getSourceRepoReference())
             .variables(terraformExecutionData.getVariables())
@@ -230,6 +235,7 @@ public abstract class TerraformProvisionState extends State {
     if (!(this instanceof DestroyTerraformProvisionState)) {
       List<NameValuePair> variables = terraformExecutionData.getVariables();
       List<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
+      List<String> tfVarFiles = terraformExecutionData.getTfVarFiles();
       List<String> targets = terraformExecutionData.getTargets();
 
       if (isNotEmpty(variables)) {
@@ -260,6 +266,10 @@ public abstract class TerraformProvisionState extends State {
 
       if (isNotEmpty(targets)) {
         others.put(TARGETS_KEY, targets);
+      }
+
+      if (isNotEmpty(tfVarFiles)) {
+        others.put(TF_VAR_FILES_KEY, tfVarFiles);
       }
 
       if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
@@ -337,11 +347,6 @@ public abstract class TerraformProvisionState extends State {
           .forEach(variable -> validVariables.add(variable));
     }
 
-    if (isNotEmpty(provisionerVariables) && (provisionerVariables.size() > validVariables.size())) {
-      throw new InvalidRequestException(
-          "The provisioner requires more variables. Please correct it in the workflow step.");
-    }
-
     return validVariables;
   }
 
@@ -385,6 +390,10 @@ public abstract class TerraformProvisionState extends State {
     GitConfig gitConfig = getGitConfig(element.getSourceRepoSettingId());
     if (isNotEmpty(element.getSourceRepoReference())) {
       gitConfig.setReference(element.getSourceRepoReference());
+      String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
+      if (isNotEmpty(branch)) {
+        gitConfig.setBranch(branch);
+      }
     } else {
       throw new InvalidRequestException("No commit id found in context inherit tf plan element.");
     }
@@ -428,6 +437,7 @@ public abstract class TerraformProvisionState extends State {
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)
             .targets(targets)
+            .tfVarFiles(element.getTfVarFiles())
             .runPlanOnly(false)
             .build();
 
@@ -485,7 +495,7 @@ public abstract class TerraformProvisionState extends State {
                                                                                  .name(entry.getKey())
                                                                                  .value((String) entry.getValue())
                                                                                  .build())
-                                                                      .collect(Collectors.toList()),
+                                                                      .collect(toList()),
                 context);
       }
 
@@ -501,7 +511,7 @@ public abstract class TerraformProvisionState extends State {
                                                                                  .name(entry.getKey())
                                                                                  .value((String) entry.getValue())
                                                                                  .build())
-                                                                      .collect(Collectors.toList()),
+                                                                      .collect(toList()),
                 context);
       }
 
@@ -517,7 +527,7 @@ public abstract class TerraformProvisionState extends State {
                            .name(entry.getKey())
                            .value((String) entry.getValue())
                            .build())
-                .collect(Collectors.toList()),
+                .collect(toList()),
             context.getAppId());
       }
 
@@ -533,13 +543,19 @@ public abstract class TerraformProvisionState extends State {
                            .name(entry.getKey())
                            .value((String) entry.getValue())
                            .build())
-                .collect(Collectors.toList()),
+                .collect(toList()),
             context.getAppId());
       }
       List<String> targets = (List<String>) fileMetadata.getMetadata().get(TARGETS_KEY);
       if (isNotEmpty(targets)) {
         setTargets(targets);
       }
+
+      List<String> tfVarFiles = (List<String>) fileMetadata.getMetadata().get(TF_VAR_FILES_KEY);
+      if (isNotEmpty(tfVarFiles)) {
+        setTfVarFiles(tfVarFiles);
+      }
+
     } else {
       final List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
@@ -574,6 +590,7 @@ public abstract class TerraformProvisionState extends State {
             .encryptedBackendConfigs(encryptedBackendConfigs)
             .targets(targets)
             .runPlanOnly(runPlanOnly)
+            .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()
@@ -597,11 +614,18 @@ public abstract class TerraformProvisionState extends State {
         .build();
   }
 
+  private List<String> getRenderedTfVarFiles(List<String> tfVarFiles, ExecutionContext context) {
+    if (isEmpty(tfVarFiles)) {
+      return tfVarFiles;
+    }
+    return tfVarFiles.stream().map(context::renderExpression).collect(toList());
+  }
+
   protected List<String> resolveTargets(List<String> targets, ExecutionContext context) {
     if (isEmpty(targets)) {
       return targets;
     }
-    return targets.stream().map(context::renderExpression).collect(Collectors.toList());
+    return targets.stream().map(context::renderExpression).collect(toList());
   }
 
   /**
@@ -621,6 +645,7 @@ public abstract class TerraformProvisionState extends State {
                                             .sourceRepoReference(executionData.getSourceRepoReference())
                                             .variables(executionData.getVariables())
                                             .backendConfigs(executionData.getBackendConfigs())
+                                            .tfVarFiles(executionData.getTfVarFiles())
                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                             .targets(executionData.getTargets())
                                             .command(executionData.getCommandExecuted())

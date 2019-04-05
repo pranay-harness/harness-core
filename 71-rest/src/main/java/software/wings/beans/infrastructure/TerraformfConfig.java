@@ -46,6 +46,7 @@ public class TerraformfConfig implements PersistentEntity, UuidAware, CreatedAtA
   private final List<NameValuePair> variables;
   private final List<NameValuePair> backendConfigs;
   private final List<String> targets;
+  private final List<String> tfVarFiles;
   private final TerraformCommand command;
 
   @Indexed private final String entityId;

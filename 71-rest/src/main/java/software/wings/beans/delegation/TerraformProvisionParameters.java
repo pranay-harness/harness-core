@@ -43,5 +43,6 @@ public class TerraformProvisionParameters {
   private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);
 
   private final List<String> targets;
+  private final List<String> tfVarFiles;
   private final boolean runPlanOnly;
 }

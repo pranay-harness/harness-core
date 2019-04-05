@@ -18,6 +18,7 @@ public class TerraformProvisionInheritPlanElement implements ContextElement {
   private String entityId;
   private String provisionerId;
   private List<String> targets;
+  private List<String> tfVarFiles;
   private String sourceRepoSettingId;
   private String sourceRepoReference;
   private List<NameValuePair> variables;
