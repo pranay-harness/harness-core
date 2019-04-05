@@ -38,6 +38,7 @@ import io.harness.rule.OwnerRule.Owner;
 import io.restassured.path.json.JsonPath;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -118,8 +119,9 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = "swamy@harness.io", resent = false, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore
   public void variablesTest() throws Exception {
     logger.info("Starting the test");
     ServiceVariable normalServiceVariable = new ServiceVariable();

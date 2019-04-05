@@ -63,6 +63,7 @@ public class CommandExecutionContext {
   private String deploymentType;
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private boolean inlineSshCommand;
+  private boolean executeOnDelegate;
 
   public CommandExecutionContext() {}
 
@@ -106,6 +107,7 @@ public class CommandExecutionContext {
     this.deploymentType = other.deploymentType;
     this.artifactServerEncryptedDataDetails = other.artifactServerEncryptedDataDetails;
     this.inlineSshCommand = other.inlineSshCommand;
+    this.executeOnDelegate = other.executeOnDelegate;
   }
 
   /**
@@ -192,6 +194,7 @@ public class CommandExecutionContext {
     private String deploymentType;
     private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
     private boolean inlineSshCommand;
+    private boolean executeOnDelegate;
 
     private Builder() {}
 
@@ -376,6 +379,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withExecuteOnDelegate(boolean executeOnDelegate) {
+      this.executeOnDelegate = executeOnDelegate;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -412,7 +420,8 @@ public class CommandExecutionContext {
           .withTimeout(timeout)
           .withDeploymentType(deploymentType)
           .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
-          .withInlineSshCommand(inlineSshCommand);
+          .withInlineSshCommand(inlineSshCommand)
+          .withExecuteOnDelegate(executeOnDelegate);
     }
 
     public CommandExecutionContext build() {
@@ -452,6 +461,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setDeploymentType(deploymentType);
       commandExecutionContext.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
       commandExecutionContext.setInlineSshCommand(inlineSshCommand);
+      commandExecutionContext.setExecuteOnDelegate(executeOnDelegate);
       return commandExecutionContext;
     }
   }

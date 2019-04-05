@@ -79,6 +79,7 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -316,6 +317,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Owner(emails = "rathnakara.malatesha@harness.io")
   @Category(UnitTests.class)
+  @Ignore
   public void execute() {
     when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
 

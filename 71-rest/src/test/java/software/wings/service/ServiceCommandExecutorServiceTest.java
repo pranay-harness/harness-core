@@ -80,8 +80,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecuteCommandForServiceInstance() {
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
-    when(sshCommandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context)))
-        .thenReturn(SUCCESS);
+    when(sshCommandUnitExecutorService.execute(any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
     CommandExecutionStatus commandExecutionStatus = cmdExecutorService.execute(command, context);
     assertThat(commandExecutionStatus).isEqualTo(SUCCESS);
   }
@@ -94,8 +93,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").addCommandUnits(command).build();
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
-    when(sshCommandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context)))
-        .thenReturn(SUCCESS);
+    when(sshCommandUnitExecutorService.execute(any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
     CommandExecutionStatus commandExecutionStatus = cmdExecutorService.execute(nestedCommand, context);
     assertThat(commandExecutionStatus).isEqualTo(SUCCESS);
   }

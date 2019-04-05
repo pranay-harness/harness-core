@@ -3,7 +3,9 @@ package software.wings.service.impl.template;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -28,6 +30,8 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.shell.ScriptType;
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -36,15 +40,25 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Variable;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceResourceService;
 
+import java.util.List;
+
 public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
+  private static final String MY_STOP = "MyStop";
+  private static final String STANDALONE_EXEC = "Standalone Exec";
+  private static final String ANOTHER_COMMAND = "AnotherCommand";
+  private static final String MY_START = "MyStart";
+  private static final String MY_INSTALL = "MyInstall";
   @Mock private MorphiaIterator<ServiceCommand, ServiceCommand> serviceCommandIterator;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Query<ServiceCommand> query;
@@ -209,5 +223,290 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
 
     verify(serviceResourceService)
         .updateCommand(serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand, true);
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testCRUDCommandTemplate() {
+    // Create individual commands like MyStart, MyStop, MyAnotherCommand
+    Template myStop = createMyStopCommand();
+    Template myStart = createMyStartCommand();
+    Template myAnotherCommand = createMyAnotherCommand();
+    // Create command MyInstall composed of other commands from template library
+    Template installCommand = createInstallCommand(myStop, myStart, myAnotherCommand);
+    assertThat(installCommand).isNotNull();
+    assertThat(installCommand.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(installCommand.getVersion()).isEqualTo(1);
+    SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) installCommand.getTemplateObject();
+    assertThat(savedSshCommandTemplate.getCommandUnits().size()).isEqualTo(4);
+    assertThat(savedSshCommandTemplate.getReferencedTemplateList().size()).isEqualTo(4);
+    assertThat(
+        savedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateUuid().equals(
+            myStop.getUuid()));
+    assertThat(
+        savedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateVersion().equals(
+            myStop.getVersion()));
+    assertThat(savedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().containsKey("V3"));
+    assertThat(savedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().get("V3").getValue())
+        .isEqualTo("hello3");
+
+    // update top-level variable and check if its reflected in templateVariablesList
+    installCommand.setVariables(asList(aVariable().withName("V3").withValue("hello3-updated").build(),
+        aVariable().withName("V4").withValue("world4").build(), aVariable().withName("V5").withValue("bye").build(),
+        aVariable().withName("V2").withValue("there2").build()));
+    Template updatedTemplate = templateService.update(installCommand);
+    SshCommandTemplate updatedSshCommandTemplate = (SshCommandTemplate) updatedTemplate.getTemplateObject();
+    assertThat(updatedSshCommandTemplate.getCommandUnits().size()).isEqualTo(4);
+    assertThat(updatedSshCommandTemplate.getReferencedTemplateList().size()).isEqualTo(4);
+    assertThat(
+        updatedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateUuid().equals(
+            myStop.getUuid()));
+    assertThat(
+        updatedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateVersion().equals(
+            myStop.getVersion()));
+    assertThat(updatedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().containsKey("V3"));
+    assertThat(updatedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().get("V3").getValue())
+        .isEqualTo("hello3-updated");
+    assertThat(updatedTemplate.getVariables().size()).isEqualTo(4);
+    assertThat(updatedTemplate.getVariables()).extracting("name", "value").contains(tuple("V3", "hello3-updated"));
+
+    // try deleting my stop - should fail since its referenced in myinstall
+    templateService.delete(GLOBAL_ACCOUNT_ID, myStop.getUuid());
+    // delete myinstall
+    deleteTemplate(installCommand);
+    deleteTemplates(myStop, myStart, myAnotherCommand);
+  }
+
+  private void deleteTemplate(Template installCommand) {
+    assertTrue(templateService.delete(GLOBAL_ACCOUNT_ID, installCommand.getUuid()));
+  }
+
+  private void deleteTemplates(Template myStop, Template myStart, Template myAnotherCommand) {
+    deleteTemplate(myStop);
+    deleteTemplate(myStart);
+    deleteTemplate(myAnotherCommand);
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testCreateTemplateDuplicateVariablesDifferentFixedValues() {
+    // Create individual commands like MyStart, MyStop, MyAnotherCommand
+    Template myStop = createMyStopCommand();
+    Template myStart = createMyStartCommand();
+    Template myAnotherCommand = createMyAnotherCommand();
+    // Create command MyInstall composed of other commands from template library
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    List<Variable> myStopVariables = asList(
+        aVariable().withName("V3").withValue("hello3").build(), aVariable().withName("V4").withValue("world4").build());
+    List<Variable> myStartVariables = asList(
+        aVariable().withName("V1").withValue("${V3}").build(), aVariable().withName("V2").withValue("there2").build());
+    SshCommandTemplate commandTemplate =
+        SshCommandTemplate.builder()
+            .commandUnits(asList(createCommand(myStop, myStopVariables, MY_STOP), createStandaloneExec(),
+                createCommand(myStart, myStartVariables, MY_START),
+                createCommand(
+                    myAnotherCommand, asList(aVariable().withName("V3").withValue("hello4").build()), ANOTHER_COMMAND)))
+            .commandType(CommandType.OTHER)
+            .build();
+    List<Variable> myInstallVariables = asList(aVariable().withName("V3").withValue("hello3").build(),
+        aVariable().withName("V4").withValue("world4").build(), aVariable().withName("V5").withValue("bye").build(),
+        aVariable().withName("V2").withValue("there2").build());
+    Template template = Template.builder()
+                            .name(MY_INSTALL)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .type("SSH")
+                            .templateObject(commandTemplate)
+                            .variables(myInstallVariables)
+                            .build();
+    templateService.save(template);
+
+    deleteTemplates(myStop, myStart, myAnotherCommand);
+  }
+
+  private ExecCommandUnit createStandaloneExec() {
+    return anExecCommandUnit()
+        .withName(STANDALONE_EXEC)
+        .withScriptType(ScriptType.BASH)
+        .withCommandString("echo ${V5}")
+        .withCommandPath("/tmp")
+        .build();
+  }
+
+  private TemplateReference createTemplateReference(Template myStop) {
+    return TemplateReference.builder().templateUuid(myStop.getUuid()).templateVersion(myStop.getVersion()).build();
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testCreateTemplateVariableNotPassedInParent() {
+    // Create individual commands like MyStart, MyStop, MyAnotherCommand
+    Template myStop = createMyStopCommand();
+    Template myStart = createMyStartCommand();
+    Template myAnotherCommand = createMyAnotherCommand();
+    // Create command MyInstall composed of other commands from template library
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    List<Variable> myStopVariables = asList(
+        aVariable().withName("V3").withValue("hello3").build(), aVariable().withName("V4").withValue("world4").build());
+    List<Variable> myStartVariables = asList(
+        aVariable().withName("V1").withValue("hi").build(), aVariable().withName("V2").withValue("there2").build());
+    List<Variable> anotherCommandVariables = asList(aVariable().withName("V3").withValue("${V1}").build());
+    SshCommandTemplate commandTemplate =
+        SshCommandTemplate.builder()
+            .commandUnits(asList(createCommand(myStop, myStopVariables, MY_STOP), createStandaloneExec(),
+                createCommand(myStart, myStartVariables, MY_START),
+                createCommand(myAnotherCommand, anotherCommandVariables, ANOTHER_COMMAND)))
+            .commandType(CommandType.OTHER)
+            .build();
+    List<Variable> installCommandVariables = asList(aVariable().withName("V3").withValue("hello3").build(),
+        aVariable().withName("V4").withValue("world4").build(), aVariable().withName("V5").withValue("bye").build(),
+        aVariable().withName("V2").withValue("there2").build());
+    Template template = Template.builder()
+                            .name(MY_INSTALL)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .type("SSH")
+                            .templateObject(commandTemplate)
+                            .variables(installCommandVariables)
+                            .build();
+    templateService.save(template);
+
+    deleteTemplates(myStop, myStart, myAnotherCommand);
+  }
+
+  private Command createCommand(Template template, List<Variable> myStopVariables, String name) {
+    return aCommand()
+        .withName(name)
+        .withTemplateReference(createTemplateReference(template))
+        .withTemplateVariables(myStopVariables)
+        .build();
+  }
+
+  private Template createMyStopCommand() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
+                                             .commandUnits(asList(anExecCommandUnit()
+                                                                      .withName("EXEC-1")
+                                                                      .withCommandPath("/home/xxx/tomcat")
+                                                                      .withCommandString("echo ${V3}")
+                                                                      .withScriptType(ScriptType.BASH)
+                                                                      .build(),
+                                                 anExecCommandUnit()
+                                                     .withName("EXEC-2")
+                                                     .withCommandPath("/home/xxx/tomcat")
+                                                     .withCommandString("echo ${V4}")
+                                                     .withScriptType(ScriptType.BASH)
+                                                     .build()))
+                                             .build();
+
+    Template template = Template.builder()
+                            .name(MY_STOP)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .templateObject(commandTemplate)
+                            .appId(GLOBAL_APP_ID)
+                            .variables(asList(aVariable().withName("V3").withValue("hello").build(),
+                                aVariable().withName("V4").withValue("world").build()))
+                            .build();
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    return savedTemplate;
+  }
+
+  private Template createMyStartCommand() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
+                                             .commandUnits(asList(anExecCommandUnit()
+                                                                      .withName("EXEC-1")
+                                                                      .withCommandPath("/home/xxx/tomcat")
+                                                                      .withCommandString("echo ${V1}")
+                                                                      .withScriptType(ScriptType.BASH)
+                                                                      .build(),
+                                                 anExecCommandUnit()
+                                                     .withName("EXEC-2")
+                                                     .withCommandPath("/home/xxx/tomcat")
+                                                     .withCommandString("echo ${V2}")
+                                                     .withScriptType(ScriptType.BASH)
+                                                     .build()))
+                                             .build();
+
+    Template template = Template.builder()
+                            .name(MY_START)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .templateObject(commandTemplate)
+                            .appId(GLOBAL_APP_ID)
+                            .variables(asList(aVariable().withName("V1").withValue("hi").build(),
+                                aVariable().withName("V2").withValue("world").build()))
+                            .build();
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    return savedTemplate;
+  }
+
+  private Template createMyAnotherCommand() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
+                                             .commandUnits(asList(anExecCommandUnit()
+                                                                      .withName("EXEC-1")
+                                                                      .withCommandPath("/home/xxx/tomcat")
+                                                                      .withCommandString("echo ${V3}")
+                                                                      .withScriptType(ScriptType.BASH)
+                                                                      .build()))
+                                             .build();
+
+    Template template = Template.builder()
+                            .name(ANOTHER_COMMAND)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .templateObject(commandTemplate)
+                            .variables(asList(aVariable().withName("V3").withValue("hi").build()))
+                            .build();
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    return savedTemplate;
+  }
+
+  private Template createInstallCommand(Template myStop, Template myStart, Template myAnotherCommand) {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    SshCommandTemplate commandTemplate =
+        SshCommandTemplate.builder()
+            .commandUnits(asList(createCommand(myStop,
+                                     asList(aVariable().withName("V3").withValue("hello3").build(),
+                                         aVariable().withName("V4").withValue("world4").build()),
+                                     MY_STOP),
+                createStandaloneExec(),
+                createCommand(myStart,
+                    asList(aVariable().withName("V1").withValue("${V3}").build(),
+                        aVariable().withName("V2").withValue("there2").build()),
+                    MY_START),
+                createCommand(
+                    myAnotherCommand, asList(aVariable().withName("V3").withValue("hello3").build()), ANOTHER_COMMAND)))
+            .commandType(CommandType.OTHER)
+            .build();
+    Template template = Template.builder()
+                            .name(MY_INSTALL)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .type("SSH")
+                            .templateObject(commandTemplate)
+                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
+                                aVariable().withName("V4").withValue("world4").build(),
+                                aVariable().withName("V5").withValue("bye").build(),
+                                aVariable().withName("V2").withValue("there2").build()))
+                            .build();
+    return templateService.save(template);
   }
 }

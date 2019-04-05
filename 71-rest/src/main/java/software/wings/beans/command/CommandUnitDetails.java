@@ -24,6 +24,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.beans.Variable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by rsingh on 11/17/17.
@@ -36,6 +40,7 @@ public class CommandUnitDetails {
   private String name;
   private CommandExecutionStatus commandExecutionStatus;
   private CommandUnitType commandUnitType;
+  @Builder.Default private List<Variable> variables = new ArrayList<>();
 
   public enum CommandUnitType {
     COMMAND("COMMAND"),

@@ -89,7 +89,7 @@ public class WorkflowServiceTemplateHelper {
         }
         if (versionChanged || oldTemplateStep == null) {
           GraphNode templateStep = (GraphNode) templateService.constructEntityFromTemplate(
-              step.getTemplateUuid(), step.getTemplateVersion());
+              step.getTemplateUuid(), step.getTemplateVersion(), EntityType.WORKFLOW);
           Validator.notNullCheck("Template does not exist", templateStep, USER);
           step.setTemplateVariables(
               templateHelper.overrideVariables(templateStep.getTemplateVariables(), oldTemplateVariables));
@@ -98,7 +98,9 @@ public class WorkflowServiceTemplateHelper {
               List<String> templateProperties =
                   templateService.fetchTemplateProperties(step.getTemplateUuid(), step.getTemplateVersion());
               step.getProperties().keySet().removeAll(templateProperties);
-              step.getProperties().putAll(templateStep.getProperties());
+              if (!step.getType().equals("COMMAND")) {
+                step.getProperties().putAll(templateStep.getProperties());
+              }
             }
           }
         } else if (oldTemplateStep != null) {
@@ -107,9 +109,11 @@ public class WorkflowServiceTemplateHelper {
               templateService.fetchTemplateProperties(step.getTemplateUuid(), step.getTemplateVersion());
           if (step.getProperties() != null) {
             step.getProperties().keySet().removeAll(templateProperties);
-            if (oldTemplateStep.getProperties() != null) {
-              for (String s : templateProperties) {
-                step.getProperties().put(s, oldTemplateStep.getProperties().get(s));
+            if (!step.getType().equals("COMMAND")) {
+              if (oldTemplateStep.getProperties() != null) {
+                for (String s : templateProperties) {
+                  step.getProperties().put(s, oldTemplateStep.getProperties().get(s));
+                }
               }
             }
           }

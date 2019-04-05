@@ -37,6 +37,8 @@ import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -158,7 +160,8 @@ public class DelegateLogServiceImpl implements DelegateLogService {
         log.setCommandExecutionStatus(commandUnitStatus);
         log.setCreatedAt(System.currentTimeMillis());
         logger.info("Dispatched log status- [{}] [{}]", log.getCommandUnitName(), log.getCommandExecutionStatus());
-        RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(activityId, unitName, accountId, log));
+        RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(
+            activityId, URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId, log));
         logger.info("{} log lines dispatched for accountId: {}",
             restResponse.getResource() != null ? logBatch.size() : 0, accountId);
       } catch (Exception e) {

@@ -15,6 +15,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
@@ -85,12 +86,14 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
             }
           } else {
             try {
-              getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST",
-                                aCommandExecutionContext()
-                                    .withHostConnectionAttributes(connectionSetting)
-                                    .withExecutionCredential(executionCredential)
-                                    .build(),
-                                20))
+              getSSHSession(
+                  getSshSessionConfig("HOST_CONNECTION_TEST",
+                      aCommandExecutionContext()
+                          .withHostConnectionAttributes(connectionSetting)
+                          .withExecutionCredential(executionCredential)
+                          .withHost(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
+                          .build(),
+                      20))
                   .disconnect();
               resultBuilder.validated(true);
             } catch (Exception e) {

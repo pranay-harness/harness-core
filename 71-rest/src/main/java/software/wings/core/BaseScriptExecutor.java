@@ -9,7 +9,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
 
-public interface BaseExecutor {
+public interface BaseScriptExecutor {
   CommandExecutionStatus executeCommandString(String command);
 
   CommandExecutionStatus executeCommandString(String command, boolean displayCommand);

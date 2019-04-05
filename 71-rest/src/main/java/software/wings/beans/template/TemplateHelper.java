@@ -3,6 +3,7 @@ package software.wings.beans.template;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeValidate;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
@@ -90,6 +91,16 @@ public class TemplateHelper {
                                .field(lookupLinkedTemplateField(templateType))
                                .in(templateUuids)
                                .count(new CountOptions().limit(1));
+    long templatesReferencedInOtherTemplates;
+    if (templateType.equals(TemplateType.SSH)) {
+      templatesReferencedInOtherTemplates =
+          wingsPersistence.createQuery(VersionedTemplate.class, excludeValidate)
+              .field("templateObject.referencedTemplateList.templateReference.templateUuid")
+              .in(templateUuids)
+              .count(new CountOptions().limit(1));
+      return templatesOfType != 0 && (linkedTemplates != 0 || templatesReferencedInOtherTemplates != 0);
+    }
+
     return templatesOfType != 0 && linkedTemplates != 0;
   }
 

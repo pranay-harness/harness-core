@@ -96,6 +96,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithTwoPhases;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCloneMetadata;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCommandTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCustomWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructDirectKubernetesInfra;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructEcsWorkflow;
@@ -3148,7 +3149,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(preDeploymentStep.getTemplateUuid(), "1"))
+    when(templateService.constructEntityFromTemplate(preDeploymentStep.getTemplateUuid(), "1", EntityType.WORKFLOW))
         .thenReturn(templateStep);
 
     PhaseStep updatedPhaseStep =
@@ -3174,7 +3175,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(postDeploymentStep.getTemplateUuid(), "1"))
+    when(templateService.constructEntityFromTemplate(postDeploymentStep.getTemplateUuid(), "1", EntityType.WORKFLOW))
         .thenReturn(templateStep);
 
     PhaseStep updatedPhaseStep =
@@ -3205,7 +3206,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1")).thenReturn(templateStep);
+    when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1", EntityType.WORKFLOW))
+        .thenReturn(templateStep);
 
     WorkflowPhase updateWorkflowPhase =
         workflowService.updateWorkflowPhase(savedWorkflow.getAppId(), savedWorkflow.getUuid(), workflowPhase);
@@ -3240,7 +3242,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1")).thenReturn(templateStep);
+    when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1", EntityType.WORKFLOW))
+        .thenReturn(templateStep);
 
     Workflow oldWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
 
@@ -3272,7 +3275,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(step.getTemplateUuid(), TemplateConstants.LATEST_TAG))
+    when(templateService.constructEntityFromTemplate(
+             step.getTemplateUuid(), TemplateConstants.LATEST_TAG, EntityType.WORKFLOW))
         .thenReturn(templateStep);
 
     Workflow workflow = constructLinkedTemplate(step);
@@ -3368,6 +3372,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    .contains(SERVICE_ID));
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDeploymentMetadataForLinkedCommandWorkflow() {
+    Workflow workflow = createLinkedWorkflow(TemplateType.SSH);
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null)
+                   .getArtifactRequiredServiceIds()
+                   .contains(SERVICE_ID));
+  }
+
   private Workflow createLinkedWorkflow(TemplateType templateType) {
     GraphNode templateStep = null;
 
@@ -3375,8 +3388,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
       templateStep = constructHttpTemplateStep();
     } else if (templateType.equals(TemplateType.SHELL_SCRIPT)) {
       templateStep = constructShellScriptTemplateStep();
+    } else if (templateType.equals(TemplateType.SSH)) {
+      templateStep = constructCommandTemplateStep();
     }
-    when(templateService.constructEntityFromTemplate(TEMPLATE_ID, TemplateConstants.LATEST_TAG))
+    when(templateService.constructEntityFromTemplate(TEMPLATE_ID, TemplateConstants.LATEST_TAG, EntityType.WORKFLOW))
         .thenReturn(templateStep);
 
     Workflow workflow = constructLinkedTemplate(templateStep);

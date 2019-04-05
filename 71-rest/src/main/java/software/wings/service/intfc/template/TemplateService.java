@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.CommandCategory;
+import software.wings.beans.EntityType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
@@ -47,7 +48,7 @@ public interface TemplateService extends OwnedByAccount {
 
   String fetchTemplateUri(@NotEmpty String templateUuid);
 
-  Object constructEntityFromTemplate(@NotEmpty String templateId, String version);
+  Object constructEntityFromTemplate(@NotEmpty String templateId, String version, EntityType entityType);
 
   String fetchTemplateIdFromUri(@NotEmpty String accountId, @NotEmpty String templateUri);
 

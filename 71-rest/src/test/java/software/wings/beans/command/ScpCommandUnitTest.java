@@ -30,7 +30,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;
-import software.wings.core.BaseExecutor;
+import software.wings.core.BaseScriptExecutor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants;
 
@@ -40,7 +40,7 @@ import java.util.Map;
 
 public class ScpCommandUnitTest extends WingsBaseTest {
   @InjectMocks private ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
-  @Mock BaseExecutor baseExecutor;
+  @Mock BaseScriptExecutor baseExecutor;
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)

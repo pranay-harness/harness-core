@@ -1,20 +1,11 @@
 package software.wings.core.ssh.executors;
 
-import software.wings.core.BaseExecutor;
-
-import javax.validation.Valid;
+import software.wings.core.BaseScriptExecutor;
 
 /**
  * Created by anubhaw on 2/4/16.
  */
-public interface SshExecutor extends BaseExecutor {
-  /**
-   * Inits the.
-   *
-   * @param config the config
-   */
-  void init(@Valid SshSessionConfig config);
-
+public interface ScriptExecutor extends BaseScriptExecutor {
   /**
    * The Enum ExecutorType.
    */

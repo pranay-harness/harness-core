@@ -28,6 +28,7 @@ import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
@@ -88,12 +89,17 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateHostSsh(CommandExecutionContext context) {
-    String hostName = context.getHost().getPublicDns();
+    if (context.isExecuteOnDelegate()) {
+      return DelegateConnectionResult.builder().validated(true).build();
+    }
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     try {
-      getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context, 20)).disconnect();
+      SshSessionConfig host_connection_test = getSshSessionConfig("HOST_CONNECTION_TEST", context, 20);
+      getSSHSession(host_connection_test).disconnect();
       resultBuilder.validated(true);
     } catch (Exception e) {
+      logger.error("Failed to validate host:" + context.getHost(), e);
+      logger.error("Failed to validate host - public dns:" + context.getHost().getPublicDns(), e);
       resultBuilder.validated(false);
     }
     return resultBuilder.build();
@@ -270,6 +276,9 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         return getAwsRegionCriteria(region);
       case WINRM:
       case SSH:
+        if (context.isExecuteOnDelegate()) {
+          return "localhost";
+        }
         return context.getHost().getPublicDns();
       case AMI:
       case AWS_LAMBDA:

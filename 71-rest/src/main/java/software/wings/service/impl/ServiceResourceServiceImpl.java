@@ -509,7 +509,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       switch (artifactType) {
         case IIS:
           template = templateService.fetchTemplateByKeyword(accountId, IISWEBSITE_KEYWORD);
-          command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template);
+          command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template, EntityType.COMMAND);
           if (command != null) {
             if (template.getName().equals(INSTALL_IIS_WEBSITE_TEMPLATE_NAME)) {
               command.setName(IIS_INSTALL_COMMAND_NAME);
@@ -520,7 +520,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         case IIS_APP:
         case IIS_VirtualDirectory:
           template = templateService.fetchTemplateByKeyword(accountId, IISAPP_KEYWORD);
-          command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template);
+          command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template, EntityType.COMMAND);
           if (command != null) {
             if (template.getName().equals(INSTALL_IIS_APPLICATION_TEMPLATE_NAME)) {
               command.setName(IIS_INSTALL_COMMAND_NAME);
@@ -1195,7 +1195,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Command command = serviceCommand.getCommand();
     if (serviceCommand.getTemplateUuid() != null) {
       command = (Command) templateService.constructEntityFromTemplate(
-          serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion());
+          serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion(), EntityType.COMMAND);
       command.setAppId(appId);
       if (isNotEmpty(serviceCommand.getName())) {
         command.setName(serviceCommand.getName());

@@ -42,7 +42,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
-import software.wings.core.BaseExecutor;
+import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -56,7 +56,7 @@ import java.util.Map;
 @RunWith(JUnitParamsRunner.class)
 public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @InjectMocks private DownloadArtifactCommandUnit downloadArtifactCommandUnit = new DownloadArtifactCommandUnit();
-  @Mock private BaseExecutor executor;
+  @Mock private BaseScriptExecutor executor;
   @Mock private EncryptionService encryptionService;
   @Mock private AwsHelperService awsHelperService;
   @Mock DelegateLogService logService;

@@ -1,13 +1,17 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
@@ -30,6 +34,7 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +58,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.TaskType;
+import software.wings.beans.Variable;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -72,6 +78,9 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.template.ReferencedTemplate;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.dl.WingsPersistence;
@@ -91,6 +100,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -103,10 +113,12 @@ import software.wings.stencils.Expand;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -136,10 +148,66 @@ public class CommandState extends State {
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
   @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
+  @Inject @Transient private transient TemplateService templateService;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
 
   @Attributes(title = "Command") @Expand(dataProvider = CommandStateEnumDataProvider.class) private String commandName;
+
+  @NotEmpty @SchemaIgnore private String sshKeyRef;
+  @NotEmpty @SchemaIgnore private String connectionAttributes;
+
+  @SchemaIgnore private boolean executeOnDelegate;
+
+  @NotEmpty @SchemaIgnore private String host;
+  public enum ConnectionType { SSH, WINRM }
+
+  @NotEmpty @SchemaIgnore private ConnectionType connectionType;
+
+  @SchemaIgnore
+  public String getSshKeyRef() {
+    return sshKeyRef;
+  }
+
+  public void setSshKeyRef(String sshKeyRef) {
+    this.sshKeyRef = sshKeyRef;
+  }
+
+  @SchemaIgnore
+  public String getConnectionAttributes() {
+    return connectionAttributes;
+  }
+
+  public void setConnectionAttributes(String connectionAttributes) {
+    this.connectionAttributes = connectionAttributes;
+  }
+
+  @SchemaIgnore
+  public boolean isExecuteOnDelegate() {
+    return executeOnDelegate;
+  }
+
+  public void setExecuteOnDelegate(boolean executeOnDelegate) {
+    this.executeOnDelegate = executeOnDelegate;
+  }
+
+  @SchemaIgnore
+  public String getHost() {
+    return host;
+  }
+
+  public void setHost(String host) {
+    this.host = host;
+  }
+
+  @SchemaIgnore
+  public ConnectionType getConnectionType() {
+    return connectionType;
+  }
+
+  public void setConnectionType(ConnectionType connectionType) {
+    this.connectionType = connectionType;
+  }
 
   /**
    * Instantiates a new Command state.
@@ -150,7 +218,6 @@ public class CommandState extends State {
   public CommandState(String name, String commandName) {
     super(name, COMMAND.name());
     this.commandName = commandName;
-    this.setRequiredContextElementType(ContextElementType.INSTANCE);
   }
 
   /**
@@ -160,7 +227,6 @@ public class CommandState extends State {
    */
   public CommandState(String name) {
     super(name, COMMAND.name());
-    this.setRequiredContextElementType(ContextElementType.INSTANCE);
   }
 
   /**
@@ -190,6 +256,13 @@ public class CommandState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (this.getTemplateUuid() != null) {
+      return executeLinkedCommand(context);
+    }
+    return executeCommand(context);
+  }
+
+  private ExecutionResponse executeCommand(ExecutionContext context) {
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
     String activityId = null;
 
@@ -242,12 +315,18 @@ public class CommandState extends State {
       executionDataBuilder.withCommandName(actualCommand);
       ServiceCommand serviceCommand =
           serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand);
-      Command command = serviceCommand != null ? serviceCommand.getCommand() : null;
-      if (command == null) {
+      if (serviceCommand == null || serviceCommand.getCommand() == null) {
         throw new WingsException(format(""
                                          + "Unable to find command %s for service %s",
-                                     actualCommand, service.getUuid()),
+                                     actualCommand, service.getName()),
             WingsException.USER);
+      }
+      Command command = serviceCommand.getCommand();
+
+      List<Variable> commandTemplateVariables = command.getTemplateVariables();
+      if (serviceCommand.getTemplateUuid()
+          != null) { // If linked in service we are overriding command from template to support referenced commands
+        command = getCommandFromTemplate(serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion());
       }
 
       command.setGraph(null);
@@ -274,9 +353,6 @@ public class CommandState extends State {
 
       DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
 
-      List<CommandUnit> flattenCommandUnits =
-          getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId);
-
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
       String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
       String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH);
@@ -300,117 +376,71 @@ public class CommandState extends State {
               .withAccountId(accountId)
               .withTimeout(getTimeoutMillis());
 
-      if (isNotEmpty(host.getHostConnAttr())) {
-        SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
-        commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
-        commandExecutionContextBuilder.withHostConnectionCredentials(
-            secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionAttribute.getValue(),
-                context.getAppId(), context.getWorkflowExecutionId()));
-      }
-      if (isNotEmpty(host.getBastionConnAttr())) {
-        SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
-        commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
-        commandExecutionContextBuilder.withBastionConnectionCredentials(
-            secretManager.getEncryptionDetails((EncryptableSetting) bastionConnectionAttribute.getValue(),
-                context.getAppId(), context.getWorkflowExecutionId()));
-      }
-      if (isNotEmpty(host.getWinrmConnAttr())) {
-        WinRmConnectionAttributes winrmConnectionAttribute =
-            (WinRmConnectionAttributes) settingsService.get(host.getWinrmConnAttr()).getValue();
-        commandExecutionContextBuilder.withWinRmConnectionAttributes(winrmConnectionAttribute);
-        commandExecutionContextBuilder.withWinrmConnectionEncryptedDataDetails(secretManager.getEncryptionDetails(
-            winrmConnectionAttribute, context.getAppId(), context.getWorkflowExecutionId()));
-      }
+      getHostConnectionDetails(context, host, commandExecutionContextBuilder);
 
       if (artifact != null) {
-        logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
-            context.getStateExecutionInstanceId());
-        commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
-        // Observed NPE in alerts
-        ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-        if (artifactStream == null) {
-          throw new WingsException(format("Unable to find artifact stream for service %s, artifact %s",
-                                       service.getName(), artifact.getArtifactSourceName()),
-              WingsException.USER);
-        }
-
-        ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
-        artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
-        if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
-          SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-          if (settingAttribute == null) {
-            throw new WingsException(format("Unable to find Connector/Cloud Provider for artifact stream %s",
-                                         artifactStream.getSourceName()),
-                WingsException.USER);
-          }
-          artifactStreamAttributes.setServerSetting(settingAttribute);
-          artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
-              (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
-              context.getWorkflowExecutionId()));
-          commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
-              (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
-              context.getWorkflowExecutionId()));
-        }
-        artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
-        artifactStreamAttributes.setMetadata(artifact.getMetadata());
-
-        if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
-          artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
-        }
-        artifactStreamAttributes.setArtifactType(service.getArtifactType());
-        commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
-
-        commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
-        executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
+        getArtifactDetails(context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
       } else if (command.isArtifactNeeded()) {
         throw new WingsException(
             format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
       }
 
+      boolean isInExpectedFormat = false;
+      if (serviceCommand.getTemplateUuid() != null) {
+        Template template = templateService.get(serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion());
+        if (template != null) {
+          SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+          // check if template in new format, If yes, do the new flow else old
+          if (isNotEmpty(sshCommandTemplate.getReferencedTemplateList())) {
+            isInExpectedFormat = true;
+            expandCommand(
+                command, serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion(), command.getName());
+            resolveTemplateVariablesInLinkedCommands(
+                command, sshCommandTemplate.getReferencedTemplateList(), commandTemplateVariables);
+            command.setTemplateVariables(commandTemplateVariables);
+            renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
+          } else {
+            expandCommand(serviceInstance, command, service.getUuid(), envId);
+            executionDataBuilder.withTemplateVariable(convertToVariableMap(commandTemplateVariables));
+            renderCommandString(command, context, executionDataBuilder.build(), artifact);
+          }
+        }
+      } else {
+        expandCommand(serviceInstance, command, service.getUuid(), envId);
+        executionDataBuilder.withTemplateVariable(convertToVariableMap(commandTemplateVariables));
+        renderCommandString(command, context, executionDataBuilder.build(), artifact);
+      }
+
+      List<CommandUnit> flattenCommandUnits;
+      if (serviceCommand.getTemplateUuid() != null) {
+        if (isInExpectedFormat) {
+          flattenCommandUnits =
+              getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, true);
+        } else {
+          flattenCommandUnits =
+              getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, false);
+        }
+      } else {
+        flattenCommandUnits =
+            getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, false);
+      }
+
       Activity activity = activityHelperService.createAndSaveActivity(
           context, Type.Command, command.getName(), command.getCommandUnitType().name(), flattenCommandUnits, artifact);
       activityId = activity.getUuid();
-
       executionDataBuilder.withActivityId(activityId);
-      expandCommand(serviceInstance, command, service.getUuid(), envId);
-      executionDataBuilder.withTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
-      renderCommandString(command, context, executionDataBuilder.build(), artifact);
+
       if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
         commandExecutionContextBuilder.withInlineSshCommand(true);
       }
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
-      DelegateTask delegateTask = DelegateTask.builder()
-                                      .async(true)
-                                      .accountId(accountId)
-                                      .appId(appId)
-                                      .waitId(activityId)
-                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                      .data(TaskData.builder()
-                                                .taskType(TaskType.COMMAND.name())
-                                                .parameters(new Object[] {command, commandExecutionContext})
-                                                .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
-                                                .build())
-                                      .envId(envId)
-                                      .infrastructureMappingId(infrastructureMappingId)
-                                      .build();
-      delegateTaskId = delegateService.queueTask(delegateTask);
+      delegateTaskId = queueDelegateTask(
+          activityId, appId, envId, infrastructureMappingId, command, accountId, commandExecutionContext);
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        logger.warn("Exception in command execution", e);
-      } else {
-        // unhandled exception
-        logger.error("Exception in command execution", e);
-      }
-      handleCommandException(context, activityId, appId);
-      updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
-      return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withStateExecutionData(executionDataBuilder.build())
-          .withErrorMessage(ExceptionUtils.getMessage(e))
-          .build();
+      return handleException(context, executionDataBuilder, activityId, appId, e);
     }
 
     return anExecutionResponse()
@@ -421,14 +451,346 @@ public class CommandState extends State {
         .build();
   }
 
+  private String queueDelegateTask(String activityId, String appId, String envId, String infrastructureMappingId,
+      Command command, String accountId, CommandExecutionContext commandExecutionContext) {
+    String delegateTaskId;
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(accountId)
+                                    .appId(appId)
+                                    .waitId(activityId)
+                                    .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.COMMAND.name())
+                                              .parameters(new Object[] {command, commandExecutionContext})
+                                              .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
+                                              .build())
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .build();
+    delegateTaskId = delegateService.queueTask(delegateTask);
+    return delegateTaskId;
+  }
+
+  private void getArtifactDetails(ExecutionContext context, CommandStateExecutionData.Builder executionDataBuilder,
+      Service service, String accountId, Artifact artifact,
+      CommandExecutionContext.Builder commandExecutionContextBuilder) {
+    logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
+        context.getStateExecutionInstanceId());
+    commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
+    // Observed NPE in alerts
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    if (artifactStream == null) {
+      throw new WingsException(format("Unable to find artifact stream for service %s, artifact %s", service.getName(),
+                                   artifact.getArtifactSourceName()),
+          WingsException.USER);
+    }
+
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
+    if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute == null) {
+        throw new WingsException(
+            format("Unable to find Connector/Cloud Provider for artifact stream %s", artifactStream.getSourceName()),
+            WingsException.USER);
+      }
+      artifactStreamAttributes.setServerSetting(settingAttribute);
+      artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+          (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
+          context.getWorkflowExecutionId()));
+      commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+          (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
+          context.getWorkflowExecutionId()));
+    }
+    artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
+    artifactStreamAttributes.setMetadata(artifact.getMetadata());
+
+    if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
+      artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
+    }
+    artifactStreamAttributes.setArtifactType(service.getArtifactType());
+    commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
+
+    commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
+    executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
+  }
+
+  private void getHostConnectionDetails(
+      ExecutionContext context, Host host, CommandExecutionContext.Builder commandExecutionContextBuilder) {
+    if (isNotEmpty(host.getHostConnAttr())) {
+      SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
+      commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
+      commandExecutionContextBuilder.withHostConnectionCredentials(
+          secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionAttribute.getValue(),
+              context.getAppId(), context.getWorkflowExecutionId()));
+    }
+    if (isNotEmpty(host.getBastionConnAttr())) {
+      SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
+      commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
+      commandExecutionContextBuilder.withBastionConnectionCredentials(
+          secretManager.getEncryptionDetails((EncryptableSetting) bastionConnectionAttribute.getValue(),
+              context.getAppId(), context.getWorkflowExecutionId()));
+    }
+    if (isNotEmpty(host.getWinrmConnAttr())) {
+      WinRmConnectionAttributes winrmConnectionAttribute =
+          (WinRmConnectionAttributes) settingsService.get(host.getWinrmConnAttr()).getValue();
+      commandExecutionContextBuilder.withWinRmConnectionAttributes(winrmConnectionAttribute);
+      commandExecutionContextBuilder.withWinrmConnectionEncryptedDataDetails(secretManager.getEncryptionDetails(
+          winrmConnectionAttribute, context.getAppId(), context.getWorkflowExecutionId()));
+    }
+  }
+
+  private ExecutionResponse executeLinkedCommand(ExecutionContext context) {
+    CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
+    String activityId = null;
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String envId = workflowStandardParams.getEnvId();
+    Host host = null;
+    InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
+    ServiceTemplate serviceTemplate = null;
+    if (instanceElement != null) {
+      String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
+      serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
+    }
+
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
+    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    InfrastructureMapping infrastructureMapping = null;
+    Service service = null;
+    if (infrastructureMappingId != null) {
+      infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
+      if (infrastructureMapping != null) {
+        service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
+      }
+    }
+
+    DeploymentType deploymentType = null;
+    if (executeOnDelegate) {
+      deploymentType = DeploymentType.SSH;
+      executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
+          .withServiceName(service != null ? service.getName() : null)
+          .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+          .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
+          .withAppId(appId);
+    } else {
+      if (this.getHost() == null) {
+        throw new WingsException("Host cannot be empty");
+      } else { // host can contain either ${instance.hostName} or some hostname/ip
+        // take user provided value for host
+        if (connectionType == null || connectionType == ConnectionType.SSH) {
+          deploymentType = DeploymentType.SSH;
+          if (isEmpty(sshKeyRef)) {
+            throw new WingsException("SSH Connection Attribute not provided in Command Step", USER);
+          }
+          SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
+          if (keySettingAttribute == null) {
+            throw new WingsException("SSH Connection Attribute provided in Command Step not found", USER);
+          }
+          String hostName = context.renderExpression(this.getHost());
+          host = Host.Builder.aHost()
+                     .withHostName(hostName)
+                     .withPublicDns(hostName)
+                     .withAppId(appId)
+                     .withHostConnAttr(sshKeyRef)
+                     .build();
+          executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
+              .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+              .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
+              .withHostName(hostName)
+              .withPublicDns(hostName)
+              .withAppId(appId);
+        } else if (connectionType == ConnectionType.WINRM) {
+          deploymentType = DeploymentType.WINRM;
+          if (isEmpty(connectionAttributes)) {
+            throw new WingsException("WinRM Connection Attribute not provided in Command Step", USER);
+          }
+          WinRmConnectionAttributes winRmConnectionAttributes =
+              (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
+          if (winRmConnectionAttributes == null) {
+            throw new WingsException("WinRM Connection Attribute provided in Command Step not found", USER);
+          }
+          String hostName = context.renderExpression(this.getHost());
+          host = Host.Builder.aHost()
+                     .withHostName(hostName)
+                     .withPublicDns(hostName)
+                     .withAppId(appId)
+                     .withWinrmConnAttr(connectionAttributes)
+                     .build();
+          executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
+              .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+              .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
+              .withHostName(hostName)
+              .withPublicDns(hostName)
+              .withAppId(appId);
+        }
+      }
+    }
+    updateWorkflowExecutionStatsInProgress(context);
+
+    String delegateTaskId;
+    try {
+      Command command = getCommandFromTemplate(this.getTemplateUuid(), this.getTemplateVersion());
+      executionDataBuilder.withCommandName(command.getName());
+
+      Application application = appService.get(appId);
+      String accountId = application.getAccountId();
+      Artifact artifact = null;
+
+      if (command.isArtifactNeeded()) {
+        if (service == null) {
+          throw new WingsException("Linked Command needs artifact but service is not found", USER);
+        }
+        artifact = findArtifact(service.getUuid(), context);
+      }
+
+      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
+          Collectors.toMap(Entry::getKey, e -> e.getValue().toString()));
+      Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
+
+      if (serviceVariables != null) {
+        serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
+      }
+
+      if (safeDisplayServiceVariables != null) {
+        safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
+      }
+
+      String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
+      String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
+      String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH);
+      String windowsRuntimePath = getEvaluatedSettingValue(context, accountId, appId, envId, WINDOWS_RUNTIME_PATH);
+
+      CommandExecutionContext.Builder commandExecutionContextBuilder =
+          aCommandExecutionContext()
+              .withAppId(appId)
+              .withEnvId(envId)
+              .withBackupPath(backupPath)
+              .withRuntimePath(runtimePath)
+              .withStagingPath(stagingPath)
+              .withWindowsRuntimePath(windowsRuntimePath)
+              .withExecutionCredential(workflowStandardParams.getExecutionCredential())
+              .withServiceVariables(serviceVariables)
+              .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
+              .withServiceTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+              .withAppContainer(service != null ? service.getAppContainer() : null)
+              .withHost(host)
+              .withAccountId(accountId)
+              .withTimeout(getTimeoutMillis())
+              .withExecuteOnDelegate(executeOnDelegate)
+              .withDeploymentType(deploymentType != null ? deploymentType.name() : null);
+
+      if (host != null) {
+        getHostConnectionDetails(context, host, commandExecutionContextBuilder);
+      }
+
+      if (artifact != null) {
+        getArtifactDetails(context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
+      } else if (command.isArtifactNeeded()) {
+        if (service != null) {
+          throw new WingsException(
+              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
+        }
+        throw new WingsException("Command needs artifact. However, service not found.", USER);
+      }
+
+      String templateId = this.getTemplateUuid();
+      String templateVersion = this.getTemplateVersion();
+      expandCommand(command, templateId, templateVersion, command.getName());
+      Template template = templateService.get(templateId, templateVersion);
+      if (template != null) {
+        SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+        resolveTemplateVariablesInLinkedCommands(
+            command, sshCommandTemplate.getReferencedTemplateList(), this.getTemplateVariables());
+      }
+
+      renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
+
+      List<CommandUnit> flattenCommandUnits =
+          getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, true);
+      Activity activity = activityHelperService.createAndSaveActivity(
+          context, Type.Command, command.getName(), command.getCommandUnitType().name(), flattenCommandUnits, artifact);
+      activityId = activity.getUuid();
+
+      executionDataBuilder.withActivityId(activityId);
+      executionDataBuilder.withTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
+      if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
+        commandExecutionContextBuilder.withInlineSshCommand(true);
+      }
+      CommandExecutionContext commandExecutionContext =
+          commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
+
+      delegateTaskId = queueDelegateTask(
+          activityId, appId, envId, infrastructureMappingId, command, accountId, commandExecutionContext);
+      logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
+    } catch (Exception e) {
+      return handleException(context, executionDataBuilder, activityId, appId, e);
+    }
+
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(activityId))
+        .withStateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
+        .withDelegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  private ExecutionResponse handleException(ExecutionContext context,
+      CommandStateExecutionData.Builder executionDataBuilder, String activityId, String appId, Exception e) {
+    if (e instanceof WingsException) {
+      logger.warn("Exception in command execution", e);
+    } else {
+      // unhandled exception
+      logger.error("Exception in command execution", e);
+    }
+    handleCommandException(context, activityId, appId);
+    updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.FAILED)
+        .withStateExecutionData(executionDataBuilder.build())
+        .withErrorMessage(ExceptionUtils.getMessage(e))
+        .build();
+  }
+
+  private Command getCommandFromTemplate(String templateId, String version) {
+    Template template = templateService.get(templateId, version);
+    Command commandEntity = aCommand().build();
+    if (this.getTemplateUuid() != null) {
+      commandEntity.setTemplateVariables(getTemplateVariables());
+    } else {
+      commandEntity.setTemplateVariables(template.getVariables());
+    }
+    if (template != null) {
+      SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+      commandEntity.setName(template.getName());
+      commandEntity.setCommandType(sshCommandTemplate.getCommandType());
+      commandEntity.setCommandUnits(sshCommandTemplate.getCommandUnits());
+    }
+    return commandEntity;
+  }
+
   static void renderCommandString(Command command, ExecutionContext context,
       CommandStateExecutionData commandStateExecutionData, Artifact artifact) {
+    renderCommandString(command, context, commandStateExecutionData, artifact, false);
+  }
+
+  static void renderCommandString(Command command, ExecutionContext context,
+      CommandStateExecutionData commandStateExecutionData, Artifact artifact, boolean linkedFromTemplateLibrary) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
         Command commandCommandUnit = (Command) commandUnit;
         commandStateExecutionData.setTemplateVariable(convertToVariableMap(commandCommandUnit.getTemplateVariables()));
-        renderCommandString((Command) commandUnit, context, commandStateExecutionData, artifact);
+        renderCommandString(
+            (Command) commandUnit, context, commandStateExecutionData, artifact, linkedFromTemplateLibrary);
         continue;
+      }
+
+      if (linkedFromTemplateLibrary) {
+        commandStateExecutionData.setTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
+        commandUnit.setVariables(command.getTemplateVariables());
       }
 
       if (commandUnit instanceof ScpCommandUnit) {
@@ -477,11 +839,17 @@ public class CommandState extends State {
     execCommandUnit.setTailPatterns(filePatternEntries);
   }
 
-  private List<CommandUnit> getFlattenCommandUnits(
-      String appId, String envId, Service service, String deploymentType, String accountId) {
-    List<CommandUnit> flattenCommandUnitList =
-        serviceResourceService.getFlattenCommandUnitList(appId, service.getUuid(), envId, commandName);
+  private List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, String deploymentType,
+      String accountId, Command templateCommand, boolean fromTemplate) {
+    List<CommandUnit> flattenCommandUnitList;
+    if (fromTemplate) {
+      flattenCommandUnitList = getFlattenCommandUnitList(templateCommand);
+    } else {
+      flattenCommandUnitList =
+          serviceResourceService.getFlattenCommandUnitList(appId, service.getUuid(), envId, commandName);
+    }
 
+    // if (!executeOnDelegate) {
     if (DeploymentType.SSH.name().equals(deploymentType)) {
       if (getScriptType(flattenCommandUnitList) == ScriptType.POWERSHELL) {
         flattenCommandUnitList.add(0, new InitPowerShellCommandUnit());
@@ -500,7 +868,21 @@ public class CommandState extends State {
         flattenCommandUnitList.add(new CleanupPowerShellCommandUnit());
       }
     }
+    // }
     return flattenCommandUnitList;
+  }
+
+  private List<CommandUnit> getFlattenCommandUnitList(Command command) {
+    return command.getCommandUnits()
+        .stream()
+        .flatMap(commandUnit -> {
+          if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+            return getFlattenCommandUnitList((Command) commandUnit).stream();
+          } else {
+            return Stream.of(commandUnit);
+          }
+        })
+        .collect(toList());
   }
 
   private Artifact findArtifact(String serviceId, ExecutionContext context) {
@@ -660,10 +1042,79 @@ public class CommandState extends State {
     }
   }
 
+  private void expandCommand(Command command, String templateId, String templateVersion, String parentName) {
+    Command referredCommand = Optional.ofNullable(getCommandFromTemplate(templateId, templateVersion))
+                                  .orElse(aServiceCommand().build().getCommand());
+
+    if (referredCommand == null) {
+      throw new WingsException(COMMAND_DOES_NOT_EXIST, USER);
+    }
+    command.setCommandUnits(referredCommand.getCommandUnits());
+    for (CommandUnit commandUnit : command.getCommandUnits()) {
+      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+        if (((Command) commandUnit).getTemplateReference() == null) {
+          throw new WingsException("No command units found in command " + commandUnit.getName(), USER);
+        }
+        expandCommand((Command) commandUnit, ((Command) commandUnit).getTemplateReference().getTemplateUuid(),
+            String.valueOf(((Command) commandUnit).getTemplateReference().getTemplateVersion()),
+            parentName + "/" + commandUnit.getName());
+      } else {
+        commandUnit.setName(parentName + "/" + commandUnit.getName());
+      }
+    }
+  }
+
+  private void resolveTemplateVariablesInLinkedCommands(
+      Command command, List<ReferencedTemplate> referencedTemplateList, List<Variable> globalVariables) {
+    for (int i = 0; i < command.getCommandUnits().size(); i++) {
+      CommandUnit commandUnit = command.getCommandUnits().get(i);
+      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+        List<Variable> variables = ((Command) commandUnit).getTemplateVariables();
+        if (isNotEmpty(referencedTemplateList)) {
+          ReferencedTemplate referencedTemplate = referencedTemplateList.get(i);
+          if (referencedTemplate != null) {
+            Map<String, Variable> variableMapping = referencedTemplate.getVariableMapping();
+            if (isNotEmpty(variables) && isNotEmpty(variableMapping)) {
+              for (Variable variable : variables) {
+                if (variableMapping.containsKey(variable.getName())) {
+                  Variable mappedVariable = variableMapping.get(variable.getName());
+                  variable.setValue(getTopLevelTemplateVariableValue(globalVariables, mappedVariable.getName()));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private String getTopLevelTemplateVariableValue(List<Variable> variables, String lookupVariable) {
+    if (isNotEmpty(variables)) {
+      for (Variable variable : variables) {
+        if (variable.getName().equals(lookupVariable)) {
+          return variable.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
   @Override
   @SchemaIgnore
   public List<EntityType> getRequiredExecutionArgumentTypes() {
     return Lists.newArrayList(EntityType.SERVICE, EntityType.INSTANCE);
+  }
+
+  @Override
+  @SchemaIgnore
+  public List<String> getPatternsForRequiredContextElementType() {
+    if (executeOnDelegate) {
+      return null;
+    }
+    if (host != null) {
+      return asList(host);
+    }
+    return asList("${instance}");
   }
 
   /**

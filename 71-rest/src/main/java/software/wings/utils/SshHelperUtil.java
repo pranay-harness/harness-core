@@ -13,9 +13,9 @@ import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
+import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BASTION_HOST;
+import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
+import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.jcraft.jsch.JSchException;
@@ -29,7 +29,7 @@ import software.wings.beans.KerberosConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
+import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 
@@ -108,11 +108,12 @@ public class SshHelperUtil {
   }
 
   public static SshSessionConfig getSshSessionConfig(
-      String hostName, String commandName, CommandExecutionContext context, @Nullable Integer connectTimeoutSeconds) {
+      String commandName, CommandExecutionContext context, @Nullable Integer connectTimeoutSeconds) {
     ExecutorType executorType = getExecutorType(context);
 
     SSHExecutionCredential sshExecutionCredential = (SSHExecutionCredential) context.getExecutionCredential();
 
+    String hostName = context.getHost().getPublicDns();
     Builder builder = aSshSessionConfig()
                           .withAccountId(context.getAccountId())
                           .withAppId(context.getAppId())

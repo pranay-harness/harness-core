@@ -156,6 +156,7 @@ import software.wings.beans.WorkflowCreationFlags;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowStepMeta;
+import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -190,6 +191,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.service.intfc.personalization.PersonalizationService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -295,6 +297,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private TemplateService templateService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -2107,12 +2110,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
 
       if ("COMMAND".equals(step.getType())) {
+        if (step.getTemplateUuid() != null) {
+          Command command = (Command) templateService.constructEntityFromTemplate(
+              step.getTemplateUuid(), step.getTemplateVersion(), EntityType.COMMAND);
+          if (command != null && command.isArtifactNeeded()) {
+            artifactNeeded = true;
+            break;
+          }
+        }
         if (serviceId != null) {
           boolean serviceExists = serviceResourceService.exists(appId, serviceId);
           if (serviceExists) {
-            ServiceCommand command = serviceResourceService.getCommandByName(
+            ServiceCommand serviceCommand = serviceResourceService.getCommandByName(
                 appId, serviceId, (String) step.getProperties().get("commandName"));
-            if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
+            if (serviceCommand != null && serviceCommand.getCommand() != null
+                && serviceCommand.getCommand().isArtifactNeeded()) {
               artifactNeeded = true;
               break;
             }

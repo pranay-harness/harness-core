@@ -38,6 +38,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.template.Template;
@@ -142,23 +143,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
                             .linkedTemplateUuids(asList(savedTemplate.getUuid()))
                             .build();
 
-    on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);
-    on(shellScriptTemplateProcessor).set("workflowService", workflowService);
-
-    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
-
-    when(query.field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
-    when(end.contains(savedTemplate.getUuid())).thenReturn(query);
-    when(query.fetch()).thenReturn(workflowIterator);
-    when(workflowIterator.getCursor()).thenReturn(dbCursor);
-    when(workflowIterator.hasNext()).thenReturn(true).thenReturn(false);
-
-    when(workflowIterator.next()).thenReturn(workflow);
-    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-
-    templateService.updateLinkedEntities(savedTemplate);
-
-    verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
+    validateWorkflow(savedTemplate, workflow);
     verify(workflowService, times(0)).updateWorkflow(workflow);
   }
 
@@ -176,11 +161,16 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
 
     ShellScriptTemplate savedShellScriptTemplate = (ShellScriptTemplate) savedTemplate.getTemplateObject();
     assertThat(savedShellScriptTemplate).isNotNull();
-    GraphNode step = shellScriptTemplateProcessor.constructEntityFromTemplate(savedTemplate);
+    GraphNode step = shellScriptTemplateProcessor.constructEntityFromTemplate(savedTemplate, EntityType.WORKFLOW);
     step.setTemplateVersion(LATEST_TAG);
 
     final Workflow workflow = generateWorkflow(savedTemplate, step);
 
+    validateWorkflow(savedTemplate, workflow);
+    verify(workflowService).updateWorkflow(workflow);
+  }
+
+  private void validateWorkflow(Template savedTemplate, Workflow workflow) {
     on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(shellScriptTemplateProcessor).set("workflowService", workflowService);
 
@@ -198,7 +188,6 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
     templateService.updateLinkedEntities(savedTemplate);
 
     verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
-    verify(workflowService).updateWorkflow(workflow);
   }
 
   private void assertSavedTemplate(Template template, Template savedTemplate) {

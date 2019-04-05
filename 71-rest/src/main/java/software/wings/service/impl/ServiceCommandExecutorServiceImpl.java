@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.common.collect.Sets;
@@ -30,6 +31,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -62,8 +64,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   private CommandExecutionStatus executeNonSshCommand(
       Command command, CommandExecutionContext context, CommandUnitExecutorService commandUnitExecutorService) {
     try {
-      CommandExecutionStatus commandExecutionStatus = commandUnitExecutorService.execute(
-          context.getHost(), command.getCommandUnits().get(0), context); // TODO:: do it recursively
+      CommandExecutionStatus commandExecutionStatus =
+          commandUnitExecutorService.execute(command.getCommandUnits().get(0), context); // TODO:: do it recursively
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return commandExecutionStatus;
     } catch (Exception ex) {
@@ -75,8 +77,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   private CommandExecutionStatus executeShellCommand(
       Command command, CommandExecutionContext context, String deploymentType) {
     CommandUnitExecutorService commandUnitExecutorService = commandUnitExecutorServiceMap.get(deploymentType);
-
-    ScriptType scriptType = getScriptType(command.getCommandUnits());
+    List<CommandUnit> flattenedCommandUnits = getFlattenCommandUnitList(command);
+    ScriptType scriptType = getScriptType(flattenedCommandUnits);
     try {
       if (scriptType == ScriptType.BASH) {
         if (context.isInlineSshCommand()) {
@@ -97,12 +99,28 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       }
 
       CommandExecutionStatus commandExecutionStatus = executeShellCommand(commandUnitExecutorService, command, context);
-      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
+      if (!context.isExecuteOnDelegate()) {
+        commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
+      }
       return commandExecutionStatus;
     } catch (Exception ex) {
-      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
+      if (!context.isExecuteOnDelegate()) {
+        commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
+      }
       throw ex;
     }
+  }
+  private List<CommandUnit> getFlattenCommandUnitList(Command command) {
+    return command.getCommandUnits()
+        .stream()
+        .flatMap(commandUnit -> {
+          if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+            return getFlattenCommandUnitList((Command) commandUnit).stream();
+          } else {
+            return Stream.of(commandUnit);
+          }
+        })
+        .collect(toList());
   }
 
   private ScriptType getScriptType(List<CommandUnit> commandUnits) {
@@ -125,7 +143,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     for (CommandUnit commandUnit : commandUnits) {
       commandExecutionStatus = COMMAND.equals(commandUnit.getCommandUnitType())
           ? executeShellCommand(commandUnitExecutorService, (Command) commandUnit, context)
-          : commandUnitExecutorService.execute(context.getHost(), commandUnit, context);
+          : commandUnitExecutorService.execute(commandUnit, context);
       if (FAILURE == commandExecutionStatus) {
         break;
       }

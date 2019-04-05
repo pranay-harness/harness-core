@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
-import software.wings.core.local.executors.ShellExecutor;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
+import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -72,14 +72,15 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
 
       outputFile = createNewFile(outputPath);
 
-      ShellExecutor executor = shellExecutorFactory.getExecutor(ShellExecutorConfig.builder()
-                                                                    .accountId(parameters.getAccountId())
-                                                                    .appId(parameters.getAppId())
-                                                                    .commandUnitName(parameters.getCommandUnit())
-                                                                    .executionId(parameters.getActivityId())
-                                                                    .environment(variablesMap)
-                                                                    .build(),
-          ScriptType.BASH);
+      ShellExecutorConfig shellExecutorConfig = ShellExecutorConfig.builder()
+                                                    .accountId(parameters.getAccountId())
+                                                    .appId(parameters.getAppId())
+                                                    .commandUnitName(parameters.getCommandUnit())
+                                                    .executionId(parameters.getActivityId())
+                                                    .environment(variablesMap)
+                                                    .scriptType(ScriptType.BASH)
+                                                    .build();
+      ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
       CommandExecutionResult commandExecutionResult =
           executor.executeCommandString(parameters.getScriptBody(), Collections.emptyList());
 
