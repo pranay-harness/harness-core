@@ -12,6 +12,7 @@ import graphql.GraphQL;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
+import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowExecutionDataFetcher;
 import software.wings.graphql.provider.GraphQLProvider;
@@ -38,6 +39,9 @@ public class GraphQLModule extends AbstractModule {
     bind(AbstractDataFetcher.class)
         .annotatedWith(Names.named("applicationDataFetcher"))
         .to(ApplicationDataFetcher.class);
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named("environmentDataFetcher"))
+        .to(EnvironmentDataFetcher.class);
   }
 
   /***

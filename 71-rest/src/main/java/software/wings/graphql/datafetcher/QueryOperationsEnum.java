@@ -14,7 +14,9 @@ public enum QueryOperationsEnum {
   WORKFLOW_EXECUTION_LIST("workflowExecutionList"),
   DEPLOYED_ARTIFACTS("deployedArtifacts"),
   APPLICATIONS("applications"),
-  APPLICATION("application");
+  APPLICATION("application"),
+  ENVIRONMENTS("environments"),
+  ENVIRONMENT("environment");
 
   @Getter private String operationName;
 

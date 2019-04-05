@@ -30,6 +30,7 @@ public class DataFetcherHelper {
 
   @Inject @Named("applicationDataFetcher") AbstractDataFetcher applicationDataFetcher;
 
+  @Inject @Named("environmentDataFetcher") AbstractDataFetcher environmentDataFetcher;
   /**
    * Later, we should have TEST to make sure a fieldName is only used once
    * otherwise it may be overridden.
@@ -41,6 +42,7 @@ public class DataFetcherHelper {
         .putAll(workflowExecutionDataFetcher.getOperationToDataFetcherMap())
         .putAll(artifactDataFetcher.getOperationToDataFetcherMap())
         .putAll(applicationDataFetcher.getOperationToDataFetcherMap())
+        .putAll(environmentDataFetcher.getOperationToDataFetcherMap())
         .build();
   }
 }
