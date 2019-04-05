@@ -1,5 +1,8 @@
 package io.harness.Utils;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import io.harness.RestUtils.MailinatorRestUtils;
 import io.harness.framework.Retry;
 import io.harness.framework.email.mailinator.MailinatorInbox;
@@ -8,6 +11,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.io.IOException;
@@ -95,5 +99,12 @@ public class TestUtils {
       return resetToken;
     }
     return resetToken;
+  }
+
+  public static JsonObject massageAlertNotificationRules(AlertNotificationRule alertNotificationRule) {
+    Gson gson = new Gson();
+    String jsonString = gson.toJson(alertNotificationRule);
+    JsonObject jsonObject = gson.fromJson(jsonString, JsonObject.class);
+    return jsonObject;
   }
 }
