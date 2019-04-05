@@ -45,6 +45,14 @@ public class InstanceSyncTestConstants {
   public static final String INFRA_MAPPING_6_ID = "infraMapping6_Id";
   public static final String INFRA_MAPPING_7_ID = "infraMapping7_Id";
   public static final String INFRA_MAPPING_8_ID = "infraMapping8_Id";
+  public static final String INFRA_MAPPING_1_NAME = "infraMapping1_Name";
+  public static final String INFRA_MAPPING_2_NAME = "infraMapping2_Name";
+  public static final String INFRA_MAPPING_3_NAME = "infraMapping3_Name";
+  public static final String INFRA_MAPPING_4_NAME = "infraMapping4_Name";
+  public static final String INFRA_MAPPING_5_NAME = "infraMapping5_Name";
+  public static final String INFRA_MAPPING_6_NAME = "infraMapping6_Name";
+  public static final String INFRA_MAPPING_7_NAME = "infraMapping7_Name";
+  public static final String INFRA_MAPPING_8_NAME = "infraMapping8_Name";
   public static final String HOST_NAME = "hostName";
   public static final String CONTAINER_ID = "container_Id";
   public static final String CONTAINER_1_ID = "container1_Id";

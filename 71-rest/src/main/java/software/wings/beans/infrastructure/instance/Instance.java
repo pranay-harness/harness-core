@@ -63,6 +63,7 @@ public class Instance extends Base {
   private String appName;
 
   private String infraMappingId;
+  private String infraMappingName;
   private String infraMappingType;
 
   private String computeProviderId;
@@ -94,7 +95,7 @@ public class Instance extends Base {
       long lastUpdatedAt, String entityYamlPath, InstanceType instanceType, HostInstanceKey hostInstanceKey,
       ContainerInstanceKey containerInstanceKey, PcfInstanceKey pcfInstanceKey, PodInstanceKey podInstanceKey,
       String envId, String envName, EnvironmentType envType, String accountId, String serviceId, String serviceName,
-      String appName, String infraMappingId, String infraMappingType, String computeProviderId,
+      String appName, String infraMappingId, String infraMappingName, String infraMappingType, String computeProviderId,
       String computeProviderName, String lastArtifactStreamId, String lastArtifactId, String lastArtifactName,
       String lastArtifactSourceName, String lastArtifactBuildNum, String lastDeployedById, String lastDeployedByName,
       long lastDeployedAt, String lastWorkflowExecutionId, String lastWorkflowExecutionName,
@@ -114,6 +115,7 @@ public class Instance extends Base {
     this.serviceName = serviceName;
     this.appName = appName;
     this.infraMappingId = infraMappingId;
+    this.infraMappingName = infraMappingName;
     this.infraMappingType = infraMappingType;
     this.computeProviderId = computeProviderId;
     this.computeProviderName = computeProviderName;

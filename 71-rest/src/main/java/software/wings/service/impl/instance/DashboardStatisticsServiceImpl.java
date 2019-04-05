@@ -741,7 +741,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             grouping("count", accumulator("$sum", 1)),
             grouping("appInfo", grouping("$first", projection("id", "appId"), projection("name", "appName"))),
             grouping("infraMappingInfo",
-                grouping("$first", projection("id", "infraMappingId"), projection("name", "infraMappingType"))),
+                grouping("$first", projection("id", "infraMappingId"), projection("name", "infraMappingName"))),
             grouping("envInfo",
                 grouping(
                     "$first", projection("id", "envId"), projection("name", "envName"), projection("type", "envType"))),

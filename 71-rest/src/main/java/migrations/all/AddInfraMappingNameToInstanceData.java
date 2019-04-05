@@ -14,15 +14,11 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import migrations.Migration;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.beans.infrastructure.instance.info.HostInstanceInfo;
-import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -32,11 +28,11 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * Migration script to fix the host name issue due to invalid pattern.
- * @author rktummala on 05/03/18
+ * Migration script to add inframapping name to instance data
+ * @author rktummala on 04/03/19
  */
-public class FixInstanceDataForAwsSSH implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(FixInstanceDataForAwsSSH.class);
+public class AddInfraMappingNameToInstanceData implements Migration {
+  private static final Logger logger = LoggerFactory.getLogger(AddInfraMappingNameToInstanceData.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
@@ -52,17 +48,15 @@ public class FixInstanceDataForAwsSSH implements Migration {
       List<String> appIds = appService.getAppIdsByAccountId(account.getUuid());
       appIds.forEach(appId -> {
         try {
-          logger.info("Fixing instances for appId:" + appId);
+          logger.info("Adding infraMapping name to instances for appId:" + appId);
           PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
           pageRequest.addFilter("appId", Operator.EQ, appId);
-          pageRequest.addFilter("infraMappingType", Operator.EQ, InfrastructureMappingType.AWS_SSH.getName());
           PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
           // Response only contains id
           List<InfrastructureMapping> infraMappingList = response.getResponse();
 
           infraMappingList.forEach(infraMapping -> {
             String infraMappingId = infraMapping.getUuid();
-            logger.info("Fixing instances for infraMappingId:" + infraMappingId);
             try (AcquiredLock lock = persistentLocker.tryToAcquireLock(
                      InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120))) {
               if (lock == null) {
@@ -71,42 +65,30 @@ public class FixInstanceDataForAwsSSH implements Migration {
 
               try {
                 List<Instance> instances = wingsPersistence.createQuery(Instance.class)
+                                               .field("isDeleted")
+                                               .equal(false)
                                                .field("infraMappingId")
                                                .equal(infraMappingId)
                                                .field("appId")
                                                .equal(appId)
-                                               .field("hostInstanceKey.hostName")
-                                               .contains("internal.split")
                                                .asList();
 
-                instances.forEach(instance -> {
-                  HostInstanceKey hostInstanceKey = instance.getHostInstanceKey();
-                  String hostName = hostInstanceKey.getHostName();
-                  String changedHostName = hostName.replace("internal.split(\'\\.\')[0]", "internal");
-                  hostInstanceKey.setHostName(changedHostName);
-                  HostInstanceInfo instanceInfo = (HostInstanceInfo) instance.getInstanceInfo();
-                  instanceInfo.setHostName(changedHostName);
-
-                  UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
-                  updateOperations.set("hostInstanceKey.hostName", changedHostName);
-                  updateOperations.set("instanceInfo.hostName", changedHostName);
-                  wingsPersistence.update(instance, updateOperations);
-                });
-
-                logger.info("Instance fix completed for infraMapping [{}]", infraMappingId);
+                instances.forEach(instance
+                    -> wingsPersistence.updateField(
+                        Instance.class, instance.getUuid(), "infraMappingName", infraMapping.getName()));
               } catch (Exception ex) {
-                logger.warn(format("Instance fix failed for infraMappingId [%s]", infraMappingId), ex);
+                logger.warn(format("Adding infraMappingName failed for infraMappingId [%s]", infraMappingId), ex);
               }
             } catch (Exception e) {
               logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
             }
           });
 
-          logger.info("Instance sync done for appId:" + appId);
+          logger.info("Adding infraMappingName done for appId:" + appId);
         } catch (WingsException exception) {
           ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception ex) {
-          logger.warn(format("Error while syncing instances for app: %s", appId), ex);
+          logger.warn("Error while setting infraMappingName to instances for app: {}", appId, ex);
         }
       });
     });

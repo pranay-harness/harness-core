@@ -37,14 +37,21 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_6_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_1_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_1_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_2_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_2_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_3_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_3_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_4_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_4_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_5_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_5_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_6_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_6_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_7_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_7_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_8_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_8_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_10_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_11_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_12_ID;
@@ -225,68 +232,68 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
 
   private void saveInstancesToDB() {
     currentTime = System.currentTimeMillis();
-    instance1 = buildInstance(
-        INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID, CONTAINER_1_ID, currentTime);
+    instance1 = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
+        INFRA_MAPPING_1_NAME, CONTAINER_1_ID, currentTime);
     wingsPersistence.save(instance1);
-    instance2 = buildInstance(
-        INSTANCE_2_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_2_ID, ENV_1_ID, INFRA_MAPPING_2_ID, CONTAINER_2_ID, currentTime);
+    instance2 = buildInstance(INSTANCE_2_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_2_ID, ENV_1_ID, INFRA_MAPPING_2_ID,
+        INFRA_MAPPING_2_NAME, CONTAINER_2_ID, currentTime);
     wingsPersistence.save(instance2);
     instance3 = buildInstance(INSTANCE_3_ID, ACCOUNT_1_ID, APP_2_ID, SERVICE_3_ID, ENV_2_ID, INFRA_MAPPING_3_ID,
-        CONTAINER_3_ID, currentTime - 10000);
+        INFRA_MAPPING_3_NAME, CONTAINER_3_ID, currentTime - 10000);
     wingsPersistence.save(instance3);
     instance4 = buildInstance(INSTANCE_4_ID, ACCOUNT_1_ID, APP_2_ID, SERVICE_4_ID, ENV_3_ID, INFRA_MAPPING_4_ID,
-        CONTAINER_4_ID, currentTime - 20000);
+        INFRA_MAPPING_4_NAME, CONTAINER_4_ID, currentTime - 20000);
     wingsPersistence.save(instance4);
     instance5 = buildInstance(INSTANCE_5_ID, ACCOUNT_1_ID, APP_3_ID, SERVICE_5_ID, ENV_4_ID, INFRA_MAPPING_5_ID,
-        CONTAINER_5_ID, currentTime - 30000);
+        INFRA_MAPPING_5_NAME, CONTAINER_5_ID, currentTime - 30000);
     wingsPersistence.save(instance5);
     instance6 = buildInstance(INSTANCE_6_ID, ACCOUNT_1_ID, APP_3_ID, SERVICE_5_ID, ENV_4_ID, INFRA_MAPPING_6_ID,
-        CONTAINER_6_ID, currentTime - 30000);
+        INFRA_MAPPING_6_NAME, CONTAINER_6_ID, currentTime - 30000);
     wingsPersistence.save(instance6);
     instance7 = buildInstance(INSTANCE_7_ID, ACCOUNT_2_ID, APP_4_ID, SERVICE_6_ID, ENV_5_ID, INFRA_MAPPING_7_ID,
-        CONTAINER_7_ID, currentTime - 40000);
+        INFRA_MAPPING_7_NAME, CONTAINER_7_ID, currentTime - 40000);
     wingsPersistence.save(instance7);
     instance8 = buildInstance(INSTANCE_8_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
-        CONTAINER_8_ID, currentTime - 50000);
+        INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 50000);
     wingsPersistence.save(instance8);
     deletedInstance9 = buildInstance(INSTANCE_9_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
-        CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
+        INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
     wingsPersistence.save(deletedInstance9);
     deletedInstance10 = buildInstance(INSTANCE_10_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
-        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
+        INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
     wingsPersistence.save(deletedInstance10);
     deletedInstance11 = buildInstance(INSTANCE_11_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
-        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
+        INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
     wingsPersistence.save(deletedInstance11);
     deletedInstance12 = buildInstance(INSTANCE_12_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
-        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
+        INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
     wingsPersistence.save(deletedInstance12);
     deletedInstance13 = buildInstance(INSTANCE_9_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
-        CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
+        INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
     wingsPersistence.save(deletedInstance9);
     deletedInstance14 = buildInstance(INSTANCE_10_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
-        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
+        INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
     wingsPersistence.save(deletedInstance10);
     deletedInstance15 = buildInstance(INSTANCE_11_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
-        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
+        INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
     wingsPersistence.save(deletedInstance11);
     deletedInstance16 = buildInstance(INSTANCE_12_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
-        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
+        INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
     wingsPersistence.save(deletedInstance12);
   }
 
   private Instance buildInstance(String instanceId, String accountId, String appId, String serviceId, String envId,
-      String infraMappingId, String containerId, long createdAt) {
+      String infraMappingId, String infraMappingName, String containerId, long createdAt) {
     InstanceBuilder builder = Instance.builder();
-    setValues(builder, instanceId, accountId, appId, serviceId, envId, infraMappingId, containerId);
+    setValues(builder, instanceId, accountId, appId, serviceId, envId, infraMappingId, infraMappingName, containerId);
     builder.createdAt(createdAt);
     return builder.build();
   }
 
   private Instance buildInstance(String instanceId, String accountId, String appId, String serviceId, String envId,
-      String infraMappingId, String containerId, long createdAt, long deletedAt) {
+      String infraMappingId, String infraMappingName, String containerId, long createdAt, long deletedAt) {
     InstanceBuilder builder = Instance.builder();
-    setValues(builder, instanceId, accountId, appId, serviceId, envId, infraMappingId, containerId);
+    setValues(builder, instanceId, accountId, appId, serviceId, envId, infraMappingId, infraMappingName, containerId);
     builder.createdAt(createdAt);
     builder.isDeleted(true);
     builder.deletedAt(deletedAt);
@@ -294,7 +301,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   private void setValues(InstanceBuilder instanceBuilder, String instanceId, String accountId, String appId,
-      String serviceId, String envId, String infraMappingId, String containerId) {
+      String serviceId, String envId, String infraMappingId, String infraMappingName, String containerId) {
     instanceBuilder.uuid(instanceId)
         .accountId(accountId)
         .appId(appId)
@@ -306,6 +313,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
         .serviceName(SERVICE_NAME)
         .envType(EnvironmentType.PROD)
         .infraMappingId(infraMappingId)
+        .infraMappingName(infraMappingName)
         .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
         .instanceType(InstanceType.KUBERNETES_CONTAINER_INSTANCE)
         .containerInstanceKey(ContainerInstanceKey.builder().containerId(containerId).build())
@@ -512,7 +520,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       infra1.setAccountId(ACCOUNT_1_ID);
       infra1.setAppId(APP_1_ID);
       infra1.setUuid(INFRA_MAPPING_1_ID);
-      infra1.setName(INFRA_MAPPING_NAME);
+      infra1.setName(INFRA_MAPPING_1_NAME);
       infraList.add(infra1);
 
       InfrastructureMapping infra2 = new GcpKubernetesInfrastructureMapping();
@@ -521,7 +529,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       infra2.setAccountId(ACCOUNT_1_ID);
       infra2.setAppId(APP_1_ID);
       infra2.setUuid(INFRA_MAPPING_2_ID);
-      infra2.setName(INFRA_MAPPING_NAME);
+      infra2.setName(INFRA_MAPPING_2_NAME);
       infraList.add(infra2);
 
       PageResponse<InfrastructureMapping> infrasPageResponse = aPageResponse().withResponse(infraList).build();
@@ -534,12 +542,12 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
           EntitySummary.builder().id(ENV_1_ID).name(ENV_NAME).type(EntityType.ENVIRONMENT.name()).build();
       EntitySummary infraSummary1 = EntitySummary.builder()
                                         .id(INFRA_MAPPING_1_ID)
-                                        .name(INFRA_MAPPING_NAME)
+                                        .name(INFRA_MAPPING_1_NAME)
                                         .type(EntityType.INFRASTRUCTURE_MAPPING.name())
                                         .build();
       EntitySummary infraSummary2 = EntitySummary.builder()
                                         .id(INFRA_MAPPING_2_ID)
-                                        .name(INFRA_MAPPING_NAME)
+                                        .name(INFRA_MAPPING_2_NAME)
                                         .type(EntityType.INFRASTRUCTURE_MAPPING.name())
                                         .build();
       EntitySummary workflow = EntitySummary.builder()
