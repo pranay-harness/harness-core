@@ -1,21 +1,16 @@
 package software.wings.sm.states.provision;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.beans.NameValuePair;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class TerraformProvisionStateTest extends WingsBaseTest {
@@ -32,39 +27,5 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
 
     final Map<String, Object> stringObjectMap = TerraformProvisionState.parseOutputs(json);
     assertThat(stringObjectMap.size()).isEqualTo(4);
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testValidateAndFilterVariables() {
-    List<NameValuePair> variables = new ArrayList<>();
-    List<NameValuePair> provisionerVariables = new ArrayList<>();
-
-    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables)).isEmpty();
-
-    variables.add(NameValuePair.builder().name("foo").valueType("TEXT").build());
-    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables)).isEmpty();
-
-    provisionerVariables.add(NameValuePair.builder().name("foo").valueType("TEXT").build());
-    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
-        .containsExactly(variables.get(0));
-
-    variables.add(NameValuePair.builder().name("bar").valueType("ENCYPTED_TEXT").build());
-    provisionerVariables.add(NameValuePair.builder().name("bar").valueType("ENCYPTED_TEXT").build());
-    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
-        .containsExactly(variables.get(0), variables.get(1));
-
-    provisionerVariables.add(NameValuePair.builder().name("baz").valueType("TEXT").build());
-    assertThatThrownBy(() -> TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
-        .isInstanceOf(InvalidRequestException.class);
-
-    variables.add(NameValuePair.builder().name("baz").valueType("ENCYPTED_TEXT").build());
-    assertThatThrownBy(() -> TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
-        .isInstanceOf(InvalidRequestException.class);
-
-    assertThat(TerraformProvisionState.validateAndFilterVariables(null, null)).isEmpty();
-    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, null)).isEmpty();
-    assertThatThrownBy(() -> TerraformProvisionState.validateAndFilterVariables(null, provisionerVariables))
-        .isInstanceOf(InvalidRequestException.class);
   }
 }

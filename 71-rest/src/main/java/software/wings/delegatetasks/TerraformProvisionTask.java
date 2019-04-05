@@ -75,9 +75,10 @@ import java.util.regex.Pattern;
 
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionTask.class);
+  private static final String USER_DIR_KEY = "user.dir";
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
   private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
-  private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform.tfvars";
+  private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
   private static final String TERRAFORM_SCRIPT_FILE_EXTENSION = "tf";
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
   private static final String REMOTE_STATE_FILE_PATH = ".terraform/terraform.tfstate";
@@ -116,6 +117,17 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     writer.write(format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
+  private String getAllTfVarFilesArgument(String userDir, String gitDir, List<String> tfVarFiles) {
+    StringBuffer buffer = new StringBuffer();
+    if (isNotEmpty(tfVarFiles)) {
+      tfVarFiles.forEach(file -> {
+        String pathForFile = Paths.get(userDir, gitDir, file).toString();
+        buffer.append(String.format(" -var-file=\"%s\" ", pathForFile));
+      });
+    }
+    return buffer.toString();
+  }
+
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     saveExecutionLog(parameters, "Branch: " + gitConfig.getBranch() + "\nPath: " + parameters.getScriptPath(),
@@ -142,7 +154,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
     String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
 
-    File tfVariablesFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
+    File tfVariablesFile =
+        Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
     File tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
 
     ensureLocalCleanup(scriptDirectory);
@@ -200,8 +213,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
 
-      File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
+      File tfOutputsFile =
+          Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
       String targetArgs = getTargetArgs(parameters.getTargets());
+      String tfVarFiles = getAllTfVarFilesArgument(
+          System.getProperty(USER_DIR_KEY), gitClientHelper.getRepoDirectory(gitConfig), parameters.getTfVarFiles());
+      tfVarFiles = format("%s -var-file=\"%s\"", tfVarFiles, tfVariablesFile.toString());
 
       int code;
       ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters);
@@ -220,12 +237,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               scriptDirectory, parameters, activityLogOutputStream);
           if (code == 0) {
             code = executeShellCommand(
-                format("terraform refresh -input=false %s && echo \"Terraform refresh... done\"", targetArgs),
+                format("terraform refresh -input=false %s %s && echo \"Terraform refresh ... done\"", targetArgs,
+                    tfVarFiles),
                 scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
             code = executeShellCommand(
-                format("terraform plan -out=tfplan -input=false %s && echo \"Terraform plan ... done\"", targetArgs),
+                format("terraform plan -out=tfplan -input=false %s %s && echo \"Terraform plan ... done\"", targetArgs,
+                    tfVarFiles),
                 scriptDirectory, parameters, planLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
@@ -245,13 +264,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                                 : ""),
               scriptDirectory, parameters, activityLogOutputStream);
           if (code == 0) {
-            code = executeShellCommand(
-                format("terraform refresh -input=false %s && echo \"Terraform refresh... done\"", targetArgs),
-                scriptDirectory, parameters, activityLogOutputStream);
+            code =
+                executeShellCommand(format("terraform refresh -input=false %s %s && echo \"Terraform refresh... done\"",
+                                        targetArgs, tfVarFiles),
+                    scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
             code = executeShellCommand(
-                format("terraform destroy -force %s && echo \"Terraform destroy... done\"", targetArgs),
+                format("terraform destroy -force %s %s && echo \"Terraform destroy... done\"", targetArgs, tfVarFiles),
                 scriptDirectory, parameters, activityLogOutputStream);
           }
           break;
@@ -342,6 +362,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .variables(variableList)
               .backendConfigs(backendConfigs)
               .targets(parameters.getTargets())
+              .tfVarFiles(parameters.getTfVarFiles())
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
@@ -469,7 +490,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   private String resolveScriptDirectory(GitConfig gitConfig, String scriptPath) {
     return Paths
-        .get(Paths.get(System.getProperty("user.dir")).toString(), gitClientHelper.getRepoDirectory(gitConfig),
+        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), gitClientHelper.getRepoDirectory(gitConfig),
             scriptPath == null ? "" : scriptPath)
         .toString();
   }

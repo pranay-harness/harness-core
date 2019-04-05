@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
@@ -108,6 +109,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
     final GitConfig gitConfig = getGitConfig(configParameter.getSourceRepoSettingId());
     if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
       gitConfig.setReference(configParameter.getSourceRepoReference());
+      String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
+      if (isNotEmpty(branch)) {
+        gitConfig.setBranch(branch);
+      }
     }
 
     List<NameValuePair> allVariables = configParameter.getVariables();
@@ -150,6 +155,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .encryptedBackendConfigs(encryptedBackendConfigs)
             .targets(targets)
             .runPlanOnly(false)
+            .tfVarFiles(configParameter.getTfVarFiles())
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()
