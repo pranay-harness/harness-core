@@ -2,10 +2,15 @@ package io.harness.Utils;
 
 import static junit.framework.TestCase.assertTrue;
 
+import com.google.gson.JsonObject;
+
 import io.harness.RestUtils.UserGroupRestUtil;
 import software.wings.beans.Account;
+import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.UserGroup;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserGroupUtils {
@@ -21,5 +26,19 @@ public class UserGroupUtils {
       }
     }
     return null;
+  }
+
+  public static UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
+    UserGroup userGroup = userGroupRestUtil.createUserGroup(account, bearerToken, jsonObject);
+    assertTrue(userGroup != null);
+    return userGroup;
+  }
+
+  public static NotificationSettings createNotificationSettings(String emailId, String slackWebhook) {
+    boolean useIndividualEmailId = false;
+    List<String> emailAddresses = new ArrayList<>();
+    emailAddresses.add(emailId);
+    SlackNotificationSetting slackNotificationSetting = new SlackNotificationSetting("dummyChannelName", slackWebhook);
+    return new NotificationSettings(useIndividualEmailId, emailAddresses, slackNotificationSetting);
   }
 }
