@@ -38,6 +38,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
 import io.harness.serializer.KryoUtils;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +99,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -578,7 +580,7 @@ public class K8sStateHelper {
 
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
+                                    .async(false)
                                     .accountId(containerInfrastructureMapping.getAccountId())
                                     .appId(containerInfrastructureMapping.getAppId())
                                     .waitId(waitId)
@@ -586,20 +588,27 @@ public class K8sStateHelper {
                                     .data(TaskData.builder()
                                               .taskType(TaskType.K8S_COMMAND_TASK.name())
                                               .parameters(new Object[] {k8sInstanceSyncTaskParameters})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .timeout(Duration.ofMinutes(2).toMillis())
                                               .build())
                                     .envId(containerInfrastructureMapping.getEnvId())
                                     .infrastructureMappingId(containerInfrastructureMapping.getUuid())
                                     .build();
 
     try {
-      K8sTaskExecutionResponse k8sTaskExecutionResponse = delegateService.executeTask(delegateTask);
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        K8sInstanceSyncResponse k8sInstanceSyncResponse =
-            (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
-        return k8sInstanceSyncResponse.getK8sPodInfoList();
+      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      if (notifyResponseData instanceof ErrorNotifyResponseData) {
+        logger.info("Failed to fetch PodList for release {}. Msg: {}.", releaseName,
+            ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      } else {
+        K8sTaskExecutionResponse k8sTaskExecutionResponse = delegateService.executeTask(delegateTask);
+        if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+          K8sInstanceSyncResponse k8sInstanceSyncResponse =
+              (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+          return k8sInstanceSyncResponse.getK8sPodInfoList();
+        }
+        logger.info("Failed to fetch PodList for release {}. Msg: {}. Status: {}", releaseName,
+            k8sTaskExecutionResponse.getErrorMessage(), k8sTaskExecutionResponse.getCommandExecutionStatus());
       }
-      logger.info("Failed to fetch PodList for release " + releaseName);
     } catch (Exception e) {
       logger.info("Failed to fetch PodList for release " + releaseName, e);
     }
