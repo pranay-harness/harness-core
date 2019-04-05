@@ -279,7 +279,9 @@ public abstract class SettingValue {
 
     PROMETHEUS("Prometheus"),
 
-    INFRASTRUCTURE_MAPPING;
+    INFRASTRUCTURE_MAPPING,
+
+    HTTP_HELM_REPO_CONFIG("Http Helm Repo Config");
 
     @Getter private String displayName;
 

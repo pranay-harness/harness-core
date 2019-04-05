@@ -252,6 +252,9 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
+import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
+import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
+import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapGroupResponse;
@@ -1202,5 +1205,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceNowConfig.class, 7155);
     kryo.register(ServiceNowAction.class, 7156);
     kryo.register(ServiceNowDelegateServiceImpl.class, 7157);
+    kryo.register(HelmRepoConfigValidationTaskParams.class, 7158);
+    kryo.register(HttpHelmRepoConfig.class, 7159);
+    kryo.register(HelmRepoConfigValidationResponse.class, 7160);
   }
 }

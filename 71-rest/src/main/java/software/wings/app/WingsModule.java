@@ -246,6 +246,7 @@ import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
 import software.wings.service.impl.yaml.GitClientUnsupported;
+import software.wings.service.impl.yaml.K8sGlobalConfigServiceUnsupported;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlChangeSetServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
@@ -370,6 +371,7 @@ import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.personalization.PersonalizationService;
@@ -576,6 +578,7 @@ public class WingsModule extends DependencyModule {
     bind(LogLabelingService.class).to(LogLabelingServiceImpl.class);
     bind(AwsRoute53HelperServiceManager.class).to(AwsRoute53HelperServiceManagerImpl.class);
     bind(HarnessApiKeyService.class).to(HarnessApiKeyServiceImpl.class);
+    bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
 
     bind(SamlUserGroupSync.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
