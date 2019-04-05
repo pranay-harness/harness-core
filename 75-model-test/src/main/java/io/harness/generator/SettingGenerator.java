@@ -61,9 +61,6 @@ public class SettingGenerator {
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   private static final String HARNESS_GCP_EXPLORATION = "harness-exploration";
   private static final String HARNESS_EXPLORATION_GCS = "harness-exploration-gcs";
-  private static final String AZURE_CLIENT_ID = "2d7ae800-e1dd-4098-97f8-f6ae330abf82";
-  private static final String AZURE_TENANT_ID = "b229b2bb-5f33-4d22-bce0-730f6474e906";
-  private static final String AZURE_KEY = "ON3N2Ce+GxKcnculN2A7tDUr4EGhp5bUVne4v7Wg4Zg=";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -164,20 +161,21 @@ public class SettingGenerator {
 
   public SettingAttribute ensureAzureTestCloudProvider(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute settingAttribute = aSettingAttribute()
-                                            .withCategory(CLOUD_PROVIDER)
-                                            .withName("Test Azure Cloud Provider")
-                                            .withAppId(GLOBAL_APP_ID)
-                                            .withEnvId(GLOBAL_ENV_ID)
-                                            .withAccountId(account.getUuid())
-                                            .withValue(AzureConfig.builder()
-                                                           .clientId(AZURE_CLIENT_ID)
-                                                           .tenantId(AZURE_TENANT_ID)
-                                                           .accountId(account.getUuid())
-                                                           .key(AZURE_KEY.toCharArray())
-                                                           .build())
-                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                                            .build();
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CLOUD_PROVIDER)
+            .withName("Test Azure Cloud Provider")
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(account.getUuid())
+            .withValue(AzureConfig.builder()
+                           .accountId(account.getUuid())
+                           .clientId(scmSecret.decryptToString(new SecretName("azure_client_id")))
+                           .tenantId(scmSecret.decryptToString(new SecretName("azure_tenant_id")))
+                           .key(scmSecret.decryptToCharArray(new SecretName("azure_key")))
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
     return ensureSettingAttribute(seed, settingAttribute);
   }
 

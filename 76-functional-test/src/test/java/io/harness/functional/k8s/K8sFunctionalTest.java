@@ -83,7 +83,6 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Category(FunctionalTests.class)
-  @Ignore
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
