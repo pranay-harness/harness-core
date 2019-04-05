@@ -12,7 +12,9 @@ public enum QueryOperationsEnum {
   WORKFLOW_LIST("workflows"),
   WORKFLOW_EXECUTION("workflowExecution"),
   WORKFLOW_EXECUTION_LIST("workflowExecutionList"),
-  DEPLOYED_ARTIFACTS("deployedArtifacts");
+  DEPLOYED_ARTIFACTS("deployedArtifacts"),
+  APPLICATIONS("applications"),
+  APPLICATION("application");
 
   @Getter private String operationName;
 

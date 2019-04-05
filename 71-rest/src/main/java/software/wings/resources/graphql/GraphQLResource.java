@@ -28,9 +28,9 @@ import javax.ws.rs.core.MediaType;
 @Api("/graphql")
 @Path("/graphql")
 @Produces("application/json")
+@PublicApi
 @Singleton
 @Slf4j
-@PublicApi
 public class GraphQLResource {
   private GraphQL graphQL;
 

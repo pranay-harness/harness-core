@@ -69,7 +69,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private static final String[] NO_FILTERING_URIS_PREFIXES = new String[] {"users/user", "users/sso/zendesk",
       "users/account", "users/two-factor-auth", "users/disable-two-factor-auth", "users/enable-two-factor-auth",
-      "users/refresh-token", "account/new", "harness-api-keys", "users/set-default-account"};
+      "users/refresh-token", "account/new", "harness-api-keys", "users/set-default-account", "graphql"};
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES =
       new String[] {"limits/configure", "account/license", "account/export", "account/import", "account/delete/"};

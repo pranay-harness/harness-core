@@ -64,7 +64,7 @@ public class ArtifactDataFetcher extends AbstractDataFetcher {
   }
 
   @Override
-  protected Map<String, DataFetcher<?>> getOperationToDataFetcherMap() {
+  public Map<String, DataFetcher<?>> getOperationToDataFetcherMap() {
     return ImmutableMap.<String, DataFetcher<?>>builder()
         .put(DEPLOYED_ARTIFACTS.getOperationName(), getSuccessFullyDeployedArtifacts())
         .build();
