@@ -16,6 +16,7 @@ public class GraphQLConstants {
   public static final String ZERO_OFFSET_STR = "0";
   public static final int MAX_PAGE_SIZE = 20;
   public static final String MAX_PAGE_SIZE_STR = "20";
+  public static final String ENV_TYPE = "environmentType";
 
   // Workflow related constants.
   public static final String WORKFLOW_ID = "workflowId";
@@ -27,6 +28,7 @@ public class GraphQLConstants {
   public static final String WORKFLOW_EXECUTION_TYPE = "WorkflowExecution";
   public static final String ARTIFACT_TYPE = "Artifact";
   public static final String APPLICATION_TYPE = "Application";
+  public static final String ENVIRONMENT_TYPE = "Environment";
 
   // Error messages
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";
