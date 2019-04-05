@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -57,6 +58,9 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.helm.HelmRepoConfig;
+import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
+import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
@@ -263,6 +267,8 @@ public class SettingValidationService {
       jiraHelperService.validateCredential((JiraConfig) settingValue);
     } else if (settingValue instanceof ServiceNowConfig) {
       servicenowServiceImpl.validateCredential(settingAttribute);
+    } else if (settingValue instanceof HelmRepoConfig) {
+      validateHelmRepoConfig(settingAttribute, encryptedDataDetails);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -374,5 +380,55 @@ public class SettingValidationService {
       managerDecryptionService.decrypt((EncryptableSetting) settingAttribute.getValue(), encryptionDetails);
     }
     return settingAttribute;
+  }
+
+  private void validateHelmRepoConfig(
+      SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
+    HelmRepoConfigValidationResponse repoConfigValidationResponse;
+
+    try {
+      HelmRepoConfigValidationTaskParams taskParams = HelmRepoConfigValidationTaskParams.builder()
+                                                          .accountId(settingAttribute.getAccountId())
+                                                          .appId(settingAttribute.getAppId())
+                                                          .encryptedDataDetails(encryptedDataDetails)
+                                                          .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
+                                                          .build();
+
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .accountId(settingAttribute.getAccountId())
+                                      .appId(settingAttribute.getAppId())
+                                      .async(false)
+                                      .data(TaskData.builder()
+                                                .taskType(TaskType.HELM_REPO_CONFIG_VALIDATION.name())
+                                                .parameters(new Object[] {taskParams})
+                                                .timeout(TimeUnit.MINUTES.toMillis(2))
+                                                .build())
+                                      .build();
+
+      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+
+      if (notifyResponseData instanceof ErrorNotifyResponseData) {
+        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      } else if ((notifyResponseData instanceof RemoteMethodReturnValueData)
+          && (((RemoteMethodReturnValueData) notifyResponseData).getException() instanceof InvalidRequestException)) {
+        throw(InvalidRequestException)((RemoteMethodReturnValueData) notifyResponseData).getException();
+      } else if (!(notifyResponseData instanceof HelmRepoConfigValidationResponse)) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR)
+            .addParam("message", "Unknown response from delegate")
+            .addContext(ResponseData.class, notifyResponseData);
+      }
+
+      repoConfigValidationResponse = (HelmRepoConfigValidationResponse) notifyResponseData;
+    } catch (InterruptedException e) {
+      repoConfigValidationResponse = HelmRepoConfigValidationResponse.builder()
+                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                         .errorMessage(ExceptionUtils.getMessage(e))
+                                         .build();
+    }
+
+    if (CommandExecutionStatus.FAILURE.equals(repoConfigValidationResponse.getCommandExecutionStatus())) {
+      logger.warn(repoConfigValidationResponse.getErrorMessage());
+      throw new InvalidRequestException(repoConfigValidationResponse.getErrorMessage());
+    }
   }
 }

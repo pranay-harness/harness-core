@@ -19,6 +19,7 @@ import software.wings.delegatetasks.EcsSteadyStateCheckTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.GitFetchFilesTask;
+import software.wings.delegatetasks.HelmRepoConfigValidationTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
@@ -85,6 +86,7 @@ import software.wings.delegatetasks.validation.GcsValidation;
 import software.wings.delegatetasks.validation.GitFetchFilesValidation;
 import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HelmCommandValidation;
+import software.wings.delegatetasks.validation.HelmRepoConfigValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
@@ -324,7 +326,9 @@ public enum TaskType {
   SHELL_SCRIPT_PROVISION_TASK(
       TaskGroup.SHELL_SCRIPT_PROVISION, ShellScriptProvisionTask.class, AlwaysTrueValidation.class),
   SERVICENOW(TaskGroup.SERVICENOW, ServicenowTask.class, ServicenowValidation.class),
-  SERVICENOW_VALIDATION(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class);
+  SERVICENOW_VALIDATION(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class),
+  HELM_REPO_CONFIG_VALIDATION(
+      TaskGroup.HELM_REPO_CONFIG_VALIDATION, HelmRepoConfigValidationTask.class, HelmRepoConfigValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
