@@ -384,14 +384,13 @@ public class AccountServiceImpl implements AccountService {
     Account account = getFromCache(accountId);
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (null == licenseInfo) {
-      logger.error(
-          "License info not present for account. Account will not be considered lite. accountId={}", accountId);
+      logger.warn("License info not present for account. accountId={}", accountId);
       return Optional.empty();
     }
 
     String accountType = licenseInfo.getAccountType();
     if (!AccountType.isValid(accountType)) {
-      logger.error("Invalid account type. accountType={}, accountId={}", accountType, accountId);
+      logger.warn("Invalid account type. accountType={}, accountId={}", accountType, accountId);
       return Optional.empty();
     }
 

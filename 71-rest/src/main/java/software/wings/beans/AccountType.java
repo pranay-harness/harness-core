@@ -39,7 +39,7 @@ public interface AccountType {
     }
 
     if (!isValid(type)) {
-      log.error("[INVALID_ACCOUNT_TYPE] type={}", type);
+      log.warn("[INVALID_ACCOUNT_TYPE] type={}", type);
       return false;
     }
 
