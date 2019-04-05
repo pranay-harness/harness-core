@@ -112,18 +112,17 @@ public class DataCollectionCallback implements NotifyCallback {
     if (isEmpty(cvConfigId)) {
       return;
     }
+    final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    if (cvConfiguration == null) {
+      return;
+    }
     switch (status) {
       case SUCCESS:
         alertService.closeAlert(appService.getAccountIdByAppId(appId), appId,
             AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
-            ContinuousVerificationDataCollectionAlert.builder().cvConfigId(cvConfigId).build());
+            ContinuousVerificationDataCollectionAlert.builder().cvConfiguration(cvConfiguration).build());
         break;
       case FAILURE:
-        final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
-        if (cvConfiguration == null) {
-          return;
-        }
-
         String message = "Failed to collect data for " + cvConfiguration.getName() + "(Application: "
             + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName() + ") for Time: "
             + new SimpleDateFormat(ContinuousVerificationAlertData.DEFAULT_TIME_FORMAT)
@@ -131,7 +130,10 @@ public class DataCollectionCallback implements NotifyCallback {
             + "\nReason: " + errorMessage;
         alertService.openAlert(appService.getAccountIdByAppId(appId), appId,
             AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
-            ContinuousVerificationDataCollectionAlert.builder().cvConfigId(cvConfigId).message(message).build());
+            ContinuousVerificationDataCollectionAlert.builder()
+                .cvConfiguration(cvConfiguration)
+                .message(message)
+                .build());
         break;
 
       default:
