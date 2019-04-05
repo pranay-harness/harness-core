@@ -3,12 +3,12 @@ package software.wings.service.impl.newrelic;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.URL_STRING;
-import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
@@ -22,6 +22,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.serializer.JsonUtils;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -56,12 +58,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -73,7 +75,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public static final String METRIC_NAME_NON_SPECIAL_CHARS = "METRIC_NAME_NON_SPECIAL_CHARS";
   public static final String METRIC_NAME_SPECIAL_CHARS = "METRIC_NAME_SPECIAL_CHAR";
   private static final Set<String> txnsToCollect = Sets.newHashSet("WebTransaction/", "WebTransactionTotalTime/");
-  private static final int METRIC_DATA_QUERY_BATCH_SIZE = 30;
+  private static final int METRIC_DATA_QUERY_BATCH_SIZE = 15;
   private static final int MIN_RPM = 1;
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
   private static final Pattern METRIC_NAME_PATTERN_NO_SPECIAL_CHAR = Pattern.compile("[a-zA-Z0-9_\\-\\+\\s/]*");
@@ -518,14 +520,14 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         sleep(ofMillis(1000));
       }
     }
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      if (response.isSuccessful()) {
-        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        return response.body().getMetric_data();
-      }
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+      return response.body().getMetric_data();
     }
+
+    apiCallLog.addFieldToResponse(response.code(), response.toString(), FieldType.TEXT);
     delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
     String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()
         + " Error: " + response.errorBody().string();
@@ -595,13 +597,24 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
             .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(txnsWithData).build())
             .build();
       }
-      Set<String> metricNames = txnsWithData.stream().map(NewRelicMetric::getName).collect(Collectors.toSet());
-      NewRelicMetricData newRelicMetricData =
-          getMetricData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), instanceId,
-              metricNames, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, false);
+      Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(txnsWithData, checkNotAllowedStrings);
+      for (Entry<String, List<Set<String>>> metricBatchEntry : metricBatches.entrySet()) {
+        for (Set<String> metricNames : metricBatchEntry.getValue()) {
+          NewRelicMetricData newRelicMetricData =
+              getMetricData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), instanceId,
+                  metricNames, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, true);
+          if (isNotEmpty(newRelicMetricData.getMetrics_found())) {
+            return VerificationNodeDataSetupResponse.builder()
+                .providerReachable(true)
+                .dataForNode(newRelicMetricData)
+                .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(txnsWithData).build())
+                .build();
+          }
+        }
+      }
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
-          .dataForNode(newRelicMetricData)
+          .dataForNode(null)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(txnsWithData).build())
           .build();
     } catch (Exception e) {
@@ -611,12 +624,21 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   private NewRelicRestClient getNewRelicRestClient(final NewRelicConfig newRelicConfig) {
+    OkHttpClient.Builder httpClient = getOkHttpClientBuilder();
+    httpClient.addInterceptor(chain -> {
+      Request original = chain.request();
+
+      Request request =
+          original.newBuilder().url(original.url().toString().replaceAll("\\{", "%7B").replaceAll("}", "%7D")).build();
+      return chain.proceed(request);
+    });
+
     final String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
                                                                          : newRelicConfig.getNewRelicUrl() + "/";
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(getUnsafeHttpClient(baseUrl))
+                                  .client(httpClient.build())
                                   .build();
     return retrofit.create(NewRelicRestClient.class);
   }

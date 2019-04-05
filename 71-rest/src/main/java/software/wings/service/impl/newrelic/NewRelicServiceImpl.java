@@ -288,10 +288,8 @@ public class NewRelicServiceImpl implements NewRelicService {
       }
     }
 
-    if (setupTestNodeData.getToTime() <= 0 || setupTestNodeData.getFromTime() <= 0) {
-      setupTestNodeData.setToTime(System.currentTimeMillis());
-      setupTestNodeData.setFromTime(setupTestNodeData.getToTime() - TimeUnit.MINUTES.toMillis(15));
-    }
+    setupTestNodeData.setToTime(System.currentTimeMillis());
+    setupTestNodeData.setFromTime(setupTestNodeData.getToTime() - TimeUnit.MINUTES.toMillis(15));
     return new RestResponse<>(getMetricsWithDataForNode(setupTestNodeData, instanceId));
   }
 
@@ -309,7 +307,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
               instanceId,
-              featureFlagService.isEnabled(
+              !featureFlagService.isEnabled(
                   FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, settingAttribute.getAccountId()),
               createApiCallLog(
                   settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));

@@ -120,8 +120,8 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
         parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(), elkSetupTestNodeData.getTimeStampField(),
             elkSetupTestNodeData.getTimeStampFieldFormat(), elkSetupTestNodeData.getHostNameField(),
             elkSetupTestNodeData.isServiceLevel() ? null : elkSetupTestNodeData.getInstanceElement().getHostName(),
-            elkSetupTestNodeData.getMessageField(), 0, elkSetupTestNodeData.isServiceLevel(),
-            elkSetupTestNodeData.getFromTime(), elkSetupTestNodeData.getToTime());
+            elkSetupTestNodeData.getMessageField(), 0, true, elkSetupTestNodeData.getFromTime(),
+            elkSetupTestNodeData.getToTime());
 
     if (elkSetupTestNodeData.isServiceLevel()) {
       return VerificationNodeDataSetupResponse.builder()
