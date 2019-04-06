@@ -46,6 +46,9 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
+import software.wings.beans.Variable;
+import software.wings.beans.Variable.VariableBuilder;
+import software.wings.beans.VariableType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.template.Template;
@@ -224,6 +227,64 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(SshCommandTemplate.getCommandType()).isEqualTo(START);
     assertThat(SshCommandTemplate.getCommandUnits()).isNotEmpty();
     assertThat(SshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateTemplateVariables() {
+    Template template = getSshCommandTemplate();
+
+    Template savedTemplate = templateService.save(template);
+
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getKeywords())
+        .isNotEmpty()
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), savedTemplate.getName().toLowerCase());
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    SshCommandTemplate SshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
+    assertThat(SshCommandTemplate).isNotNull();
+    assertThat(SshCommandTemplate.getCommandType()).isEqualTo(START);
+    assertThat(SshCommandTemplate.getCommandUnits()).isNotEmpty();
+    assertThat(SshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
+    assertThat(savedTemplate.getVariables()).isNullOrEmpty();
+
+    Variable var1 = VariableBuilder.aVariable()
+                        .withType(VariableType.TEXT)
+                        .withName("var1")
+                        .withMandatory(false)
+                        .withDescription("var 1 original")
+                        .build();
+    savedTemplate.setVariables(asList(var1));
+
+    Template updatedTemplate = templateService.update(savedTemplate);
+    assertThat(updatedTemplate).isNotNull();
+    assertThat(updatedTemplate.getVersion()).isEqualTo(2L);
+    assertThat(updatedTemplate.getVariables()).containsExactly(var1);
+
+    var1.setDescription("var 1 updated");
+    updatedTemplate.setVariables(asList(var1));
+
+    updatedTemplate = templateService.update(updatedTemplate);
+    assertThat(updatedTemplate).isNotNull();
+    assertThat(updatedTemplate.getVersion()).isEqualTo(3L);
+    assertThat(updatedTemplate.getVariables()).containsExactly(var1);
+
+    var1.setValue("var 1");
+    updatedTemplate.setVariables(asList(var1));
+
+    updatedTemplate = templateService.update(updatedTemplate);
+    assertThat(updatedTemplate).isNotNull();
+    assertThat(updatedTemplate.getVersion()).isEqualTo(4L);
+    assertThat(updatedTemplate.getVariables()).containsExactly(var1);
+
+    var1.setDescription("var 1 with value");
+    updatedTemplate.setVariables(asList(var1));
+
+    updatedTemplate = templateService.update(updatedTemplate);
+    assertThat(updatedTemplate).isNotNull();
+    assertThat(updatedTemplate.getVersion()).isEqualTo(5L);
+    assertThat(updatedTemplate.getVariables()).containsExactly(var1);
   }
 
   @Test(expected = ConstraintViolationException.class)
