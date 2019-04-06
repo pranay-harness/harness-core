@@ -160,12 +160,20 @@ public class TemplateHelper {
         if (variable.getValue() != null) {
           if (!variable.getValue().equals(oldVariable.getValue())) {
             variablesChanged = true;
+            break;
+          }
+        }
+        if (variable.getDescription() != null) {
+          if (!variable.getDescription().equals(oldVariable.getDescription())) {
+            variablesChanged = true;
+            break;
           }
         }
         oldVariablesMap.remove(variable.getName());
       } else {
         // New variable added check if any default value present
         variablesChanged = true;
+        break;
       }
     }
     return variablesChanged || oldVariablesMap.size() != 0;
