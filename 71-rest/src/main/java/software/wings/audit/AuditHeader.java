@@ -2,6 +2,8 @@ package software.wings.audit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.Getter;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -9,6 +11,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.Service;
 import software.wings.beans.User;
+
+import java.util.List;
 
 /**
  * HttpAuditHeader bean class.
@@ -51,6 +55,10 @@ public class AuditHeader extends Base {
   private String responsePayloadUuid;
   private Long requestTime;
   private Long responseTime;
+
+  // For Audit Headers created by Git user actions
+  @Getter @Setter private GitAuditUser gitAuditUser;
+  @Getter @Setter private List<EntityAuditRecord> entityAuditRecords;
 
   /**
    * Gets query params.
@@ -501,6 +509,8 @@ public class AuditHeader extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private GitAuditUser gitAuditUser;
+    private List<EntityAuditRecord> entityAuditRecords;
 
     private Builder() {}
 
@@ -511,6 +521,16 @@ public class AuditHeader extends Base {
      */
     public static Builder anAuditHeader() {
       return new Builder();
+    }
+
+    public Builder withGitAuditUser(GitAuditUser gitAuditUser) {
+      this.gitAuditUser = gitAuditUser;
+      return this;
+    }
+
+    public Builder withEntityAuditRecords(List<EntityAuditRecord> entityAuditRecords) {
+      this.entityAuditRecords = entityAuditRecords;
+      return this;
     }
 
     /**
@@ -844,6 +864,7 @@ public class AuditHeader extends Base {
       auditHeader.setCreatedAt(createdAt);
       auditHeader.setLastUpdatedBy(lastUpdatedBy);
       auditHeader.setLastUpdatedAt(lastUpdatedAt);
+      auditHeader.setGitAuditUser(gitAuditUser);
       return auditHeader;
     }
   }
