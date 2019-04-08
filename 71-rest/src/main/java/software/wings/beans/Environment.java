@@ -42,6 +42,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
 public class Environment extends Base implements KeywordsAware {
+  public static final String APP_ID_KEY = "appId";
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
 

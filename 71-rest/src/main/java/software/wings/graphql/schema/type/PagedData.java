@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PagedData<T> implements DebugInfo {
+public class PagedData<T> implements BaseInfo {
   long total;
   int offset;
   int limit;

@@ -1,10 +1,11 @@
 package software.wings.graphql.provider;
 
-import static software.wings.graphql.utils.GraphQLConstants.QUERY_API;
-
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
@@ -14,13 +15,15 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import software.wings.graphql.datafetcher.DataFetcherHelper;
+import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.RuntimeConnectionWiringEnum;
 import software.wings.graphql.scalar.GraphQLScalars;
 import software.wings.graphql.schema.type.resolvers.TypeResolverHelper;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 
 @Singleton
@@ -30,14 +33,14 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
   GraphQL graphQL;
 
-  DataFetcherHelper dataFetcherHelper;
-
   TypeResolverHelper typeResolverHelper;
 
+  Injector injector;
+
   @Inject
-  public GraphQLProvider(@NotNull DataFetcherHelper dataFetcherHelper, @NotNull TypeResolverHelper typeResolverHelper) {
-    this.dataFetcherHelper = dataFetcherHelper;
+  public GraphQLProvider(@NotNull TypeResolverHelper typeResolverHelper, Injector injector) {
     this.typeResolverHelper = typeResolverHelper;
+    this.injector = injector;
   }
   /**
    * Not synchronizing this method as it will be only
@@ -60,8 +63,15 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private RuntimeWiring buildRuntimeWiring() {
     RuntimeWiring.Builder builder = RuntimeWiring.newRuntimeWiring().scalar(GraphQLScalars.DATE_TIME);
 
-    this.dataFetcherHelper.getDataFetcherMap().forEach(
-        (k, v) -> builder.type(QUERY_API, typeWiring -> typeWiring.dataFetcher(k, v)));
+    // Add runtime wiring for data fetchers
+    Stream.of(RuntimeConnectionWiringEnum.values())
+        .forEach(c
+            -> c.getRuntimeWiringNameEnums().forEach(e
+                -> builder.type(e.getTypeName(),
+                    typeWiring
+                    -> typeWiring.dataFetcher(c.getDataFetcherEnum().getDataFetcherName(),
+                        injector.getInstance(Key.get(
+                            AbstractDataFetcher.class, Names.named(c.getDataFetcherEnum().getDataFetcherName())))))));
 
     this.typeResolverHelper.getTypeResolverMap().forEach(
         (k, v) -> builder.type(k, typeWiring -> typeWiring.typeResolver(v)));

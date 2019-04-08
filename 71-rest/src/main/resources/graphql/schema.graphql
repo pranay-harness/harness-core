@@ -14,32 +14,34 @@ type Query {
   workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution
 
   # Get the list of workflow execution status for a particular workflowId, envId and appId.  It will return Paginated data.
-  workflowExecutionList(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData
+  workflowExecutions(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData
 
   # Get list of successfully deployed articacts.
   deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]
 
+  # Get details about an application
+  application(appId:String!): Application
+
   #Asking accountID temporarily because there is no auth support as of now. Will remove it once authentication is available
   applications(accountId:String!): PagedData
 
-  application(appId:String!): Application
-
-  environments(appId: String!, environmentType: String,limit: Int, offset: Int): PagedData
-
+  # Get details about an environment
   environment(appId: String!, envId: String! ): Environment
 
+  # Get page data of environments
+  environments(appId: String!, environmentType: String,limit: Int, offset: Int): PagedData
 }
 
 # DateTime which will return date based on PST zone
 scalar DateTime
 
 
-interface DebugInfo {
+interface BaseInfo {
   debugInfo: String
 }
 
 # Type for workflow Execution
-type WorkflowExecution implements DebugInfo {
+type WorkflowExecution implements BaseInfo {
   # Workflow Execution Id
   id: String
 
@@ -60,7 +62,7 @@ type WorkflowExecution implements DebugInfo {
 }
 
 # Type workflow
-type Workflow implements DebugInfo {
+type Workflow implements BaseInfo {
   # Workflow Id
   id: String
 
@@ -79,8 +81,11 @@ type Workflow implements DebugInfo {
   # Services associated with the workflow
   services: [Service]
 
+  environment: Environment
+
   # Debug info useful to troubleshoot issues
   debugInfo: String
+
 }
 
 # Service Type
@@ -113,7 +118,7 @@ type PagedData {
 union Result = Workflow | WorkflowExecution | Application | Environment
 
 # Aritifact type
-type Artifact implements DebugInfo {
+type Artifact implements BaseInfo {
     # Artifact Id
     id: String
     # Source of the artifact Docker Jenkins
@@ -134,7 +139,7 @@ type Artifact implements DebugInfo {
     debugInfo: String
 }
 
-type Application implements DebugInfo {
+type Application implements BaseInfo {
   id: String
   name : String
   description : String
@@ -142,7 +147,7 @@ type Application implements DebugInfo {
   debugInfo: String
 }
 
-type Environment implements DebugInfo {
+type Environment implements BaseInfo {
   id: String
   name : String
   description : String

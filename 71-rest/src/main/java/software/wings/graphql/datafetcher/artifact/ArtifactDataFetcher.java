@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.artifact;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.graphql.datafetcher.QueryOperationsEnum.DEPLOYED_ARTIFACTS;
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID;
 import static software.wings.graphql.utils.GraphQLConstants.ARTIFACT_TYPE;
 import static software.wings.graphql.utils.GraphQLConstants.ENV_ID;
@@ -11,13 +10,12 @@ import static software.wings.graphql.utils.GraphQLConstants.NO_RECORDS_FOUND_FOR
 import static software.wings.graphql.utils.GraphQLConstants.SERVICE_ID;
 import static software.wings.graphql.utils.GraphQLConstants.ZERO_OFFSET_STR;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -44,7 +42,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ArtifactDataFetcher extends AbstractDataFetcher {
+public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>> {
   public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
   public static final String LAST_ARTIFACT_ID_KEY = "lastArtifactId";
   public static final String LAST_DEPLOYED_AT_KEY = "lastDeployedAt";
@@ -61,82 +59,6 @@ public class ArtifactDataFetcher extends AbstractDataFetcher {
     super(authHandler);
     this.instanceService = instanceService;
     this.artifactService = artifactService;
-  }
-
-  @Override
-  public Map<String, DataFetcher<?>> getOperationToDataFetcherMap() {
-    return ImmutableMap.<String, DataFetcher<?>>builder()
-        .put(DEPLOYED_ARTIFACTS.getOperationName(), getSuccessFullyDeployedArtifacts())
-        .build();
-  }
-
-  private DataFetcher<List<ArtifactInfo>> getSuccessFullyDeployedArtifacts() {
-    return environment -> {
-      List<ArtifactInfo> deployedArtifactList = Lists.newArrayList();
-
-      String appId = environment.getArgument(GraphQLConstants.APP_ID);
-      if (StringUtils.isBlank(appId)) {
-        addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.APP_ID);
-        return deployedArtifactList;
-      }
-
-      String serviceId = environment.getArgument(GraphQLConstants.SERVICE_ID);
-      if (StringUtils.isBlank(serviceId)) {
-        addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.SERVICE_ID);
-        return deployedArtifactList;
-      }
-
-      String envId = environment.getArgument(GraphQLConstants.ENV_ID);
-      if (StringUtils.isBlank(envId)) {
-        addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.ENV_ID);
-        return deployedArtifactList;
-      }
-
-      // At present, we are not getting limit/offset from query inputs.
-      int limit = getPageLimit(environment);
-      int offset = getPageOffset(environment);
-
-      PageResponse<Instance> instancePageResponse = getDeployedInstances(appId, envId, serviceId, limit, offset);
-
-      Map<String, List<Instance>> artifactToInstanceMap = Maps.newHashMap();
-      for (Instance instance : instancePageResponse.getResponse()) {
-        artifactToInstanceMap.computeIfAbsent(instance.getLastArtifactId(), k -> new ArrayList<>()).add(instance);
-      }
-
-      if (!artifactToInstanceMap.isEmpty()) {
-        PageResponse<Artifact> artifactPageResponse = getArtifacts(appId, artifactToInstanceMap.keySet().toArray());
-
-        Map<String, Artifact> artifactMap =
-            artifactPageResponse.stream().collect(Collectors.toMap(a -> a.getUuid(), a -> a));
-
-        deployedArtifactList = instancePageResponse.stream()
-                                   .map(i -> {
-                                     Artifact artifact = artifactMap.get(i.getLastArtifactId());
-
-                                     ArtifactInfo artifactInfo =
-                                         ArtifactInfo.builder()
-                                             .lastDeployedAt(i.getLastDeployedAt())
-                                             .lastDeployedBy(i.getLastDeployedByName())
-                                             .workflowExecutionName(i.getLastWorkflowExecutionName())
-                                             .pipelineExecutionName(i.getLastPipelineExecutionName())
-                                             .id(i.getLastArtifactId())
-                                             .buildNo(artifact != null ? artifact.getBuildNo() : null)
-                                             .displayName(artifact != null ? artifact.getDisplayName() : null)
-                                             .sourceName(artifact != null ? artifact.getArtifactSourceName() : null)
-                                             .build();
-
-                                     return artifactInfo;
-                                   })
-                                   .collect(Collectors.toList());
-      }
-
-      if (deployedArtifactList.isEmpty()) {
-        addNoRecordFoundDebugInfo(
-            deployedArtifactList, NO_RECORDS_FOUND_FOR_ENTITIES, ARTIFACT_TYPE, appId, envId, serviceId);
-      }
-
-      return deployedArtifactList;
-    };
   }
 
   private PageResponse<Artifact> getArtifacts(String appId, Object[] ids) {
@@ -177,5 +99,70 @@ public class ArtifactDataFetcher extends AbstractDataFetcher {
     ArtifactInfo artifactInfo = ArtifactInfo.builder().build();
     artifactInfoList.add(artifactInfo);
     addNoRecordFoundInfo(artifactInfo, messageString, values);
+  }
+
+  @Override
+  public List<ArtifactInfo> get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
+    List<ArtifactInfo> deployedArtifactList = Lists.newArrayList();
+
+    String appId = dataFetchingEnvironment.getArgument(GraphQLConstants.APP_ID);
+    if (StringUtils.isBlank(appId)) {
+      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.APP_ID);
+      return deployedArtifactList;
+    }
+
+    String serviceId = dataFetchingEnvironment.getArgument(GraphQLConstants.SERVICE_ID);
+    if (StringUtils.isBlank(serviceId)) {
+      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.SERVICE_ID);
+      return deployedArtifactList;
+    }
+
+    String envId = dataFetchingEnvironment.getArgument(GraphQLConstants.ENV_ID);
+    if (StringUtils.isBlank(envId)) {
+      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.ENV_ID);
+      return deployedArtifactList;
+    }
+
+    // At present, we are not getting limit/offset from query inputs.
+    int limit = getPageLimit(dataFetchingEnvironment);
+    int offset = getPageOffset(dataFetchingEnvironment);
+
+    PageResponse<Instance> instancePageResponse = getDeployedInstances(appId, envId, serviceId, limit, offset);
+
+    Map<String, List<Instance>> artifactToInstanceMap = Maps.newHashMap();
+    for (Instance instance : instancePageResponse.getResponse()) {
+      artifactToInstanceMap.computeIfAbsent(instance.getLastArtifactId(), k -> new ArrayList<>()).add(instance);
+    }
+
+    if (!artifactToInstanceMap.isEmpty()) {
+      PageResponse<Artifact> artifactPageResponse = getArtifacts(appId, artifactToInstanceMap.keySet().toArray());
+
+      Map<String, Artifact> artifactMap =
+          artifactPageResponse.stream().collect(Collectors.toMap(a -> a.getUuid(), a -> a));
+
+      deployedArtifactList = instancePageResponse.stream()
+                                 .map(i -> {
+                                   Artifact artifact = artifactMap.get(i.getLastArtifactId());
+
+                                   return ArtifactInfo.builder()
+                                       .lastDeployedAt(i.getLastDeployedAt())
+                                       .lastDeployedBy(i.getLastDeployedByName())
+                                       .workflowExecutionName(i.getLastWorkflowExecutionName())
+                                       .pipelineExecutionName(i.getLastPipelineExecutionName())
+                                       .id(i.getLastArtifactId())
+                                       .buildNo(artifact != null ? artifact.getBuildNo() : null)
+                                       .displayName(artifact != null ? artifact.getDisplayName() : null)
+                                       .sourceName(artifact != null ? artifact.getArtifactSourceName() : null)
+                                       .build();
+                                 })
+                                 .collect(Collectors.toList());
+    }
+
+    if (deployedArtifactList.isEmpty()) {
+      addNoRecordFoundDebugInfo(
+          deployedArtifactList, NO_RECORDS_FOUND_FOR_ENTITIES, ARTIFACT_TYPE, appId, envId, serviceId);
+    }
+
+    return deployedArtifactList;
   }
 }

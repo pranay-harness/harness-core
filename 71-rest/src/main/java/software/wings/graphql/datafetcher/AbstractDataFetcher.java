@@ -5,6 +5,7 @@ import static software.wings.graphql.utils.GraphQLConstants.EMPTY_OR_NULL_INPUT_
 import static software.wings.graphql.utils.GraphQLConstants.MAX_PAGE_SIZE;
 import static software.wings.graphql.utils.GraphQLConstants.USER_NOT_AUTHORIZED_TO_VIEW_ENTITY;
 
+import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
@@ -15,29 +16,26 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.graphql.schema.type.DebugInfo;
+import software.wings.graphql.schema.type.BaseInfo;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Getter
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public abstract class AbstractDataFetcher {
+public abstract class AbstractDataFetcher<T> implements DataFetcher {
   AuthHandler authHandler;
 
   protected boolean isAuthorizedToView(String appId, PermissionAttribute permissionAttribute, String entityId) {
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
     return authHandler.authorize(permissionAttributeList, asList(appId), entityId);
   }
-
-  public abstract Map<String, DataFetcher<?>> getOperationToDataFetcherMap();
 
   protected int getPageLimit(@NotNull DataFetchingEnvironment environment) {
     Integer limit = environment.getArgument(GraphQLConstants.PAGE_LIMIT);
@@ -55,14 +53,14 @@ public abstract class AbstractDataFetcher {
     return offset;
   }
 
-  protected void addInvalidInputInfo(DebugInfo debugInfo, String entityName) {
+  protected void addInvalidInputInfo(BaseInfo baseInfo, String entityName) {
     String invalidInputMsg = String.format(EMPTY_OR_NULL_INPUT_FIELD, entityName);
-    debugInfo.setDebugInfo(invalidInputMsg);
+    baseInfo.setDebugInfo(invalidInputMsg);
   }
 
-  protected void addNoRecordFoundInfo(DebugInfo debugInfo, String messageString, Object... values) {
+  protected void addNoRecordFoundInfo(BaseInfo baseInfo, String messageString, Object... values) {
     String noRecordsFoundMsg = String.format(messageString, values);
-    debugInfo.setDebugInfo(noRecordsFoundMsg);
+    baseInfo.setDebugInfo(noRecordsFoundMsg);
   }
 
   protected void throwNotAuthorizedException(String entityName, String id, String appId) {
@@ -77,5 +75,15 @@ public abstract class AbstractDataFetcher {
   protected Account getAccount() {
     User currentUser = UserThreadLocal.get();
     return currentUser.getAccounts().get(0);
+  }
+
+  protected Object getArgumentValue(DataFetchingEnvironment dataFetchingEnvironment, String argumentName) {
+    Object argumentValue = dataFetchingEnvironment.getArgument(argumentName);
+    if (argumentValue == null) {
+      GraphQLContext.Builder contextBuilder = dataFetchingEnvironment.getContext();
+      GraphQLContext context = contextBuilder.build();
+      argumentValue = context.get(argumentName);
+    }
+    return argumentValue;
   }
 }

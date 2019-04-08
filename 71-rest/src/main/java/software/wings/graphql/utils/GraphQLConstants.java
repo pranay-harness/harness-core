@@ -11,7 +11,6 @@ public class GraphQLConstants {
   public static final String ENV_ID = "envId";
   public static final String PAGE_LIMIT = "limit";
   public static final String PAGE_OFFSET = "offset";
-  public static final String DEBUG_INFO = "debugInfo";
   public static final int ZERO_OFFSET = 0;
   public static final String ZERO_OFFSET_STR = "0";
   public static final int MAX_PAGE_SIZE = 20;
@@ -23,7 +22,7 @@ public class GraphQLConstants {
 
   // Defining Types here, if required will move to an enum
   public static final String RESULT_TYPE = "Result";
-  public static final String DEBUG_INFO_TYPE = "DebugInfo";
+  public static final String BASE_INFO_TYPE = "BaseInfo";
   public static final String WORKFLOW_TYPE = "Workflow";
   public static final String WORKFLOW_EXECUTION_TYPE = "WorkflowExecution";
   public static final String ARTIFACT_TYPE = "Artifact";
