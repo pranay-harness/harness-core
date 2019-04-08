@@ -59,7 +59,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testExecuteInternal_noAlert() {
-    saveDelegate("host1", 2);
+    saveDelegate("host1", 2, true);
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
     alertCheckJob.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).closeAlert(any(), any(), any(), any());
@@ -71,8 +71,8 @@ public class AlertCheckJobTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testExecuteInternal_noDelegateAlert() {
-    saveDelegate("host1", 12);
-    saveDelegate("host2", 10);
+    saveDelegate("host1", 12, false);
+    saveDelegate("host2", 10, false);
     doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
     doNothing().when(delegateService).sendAlertNotificationsForNoActiveDelegates(any());
@@ -92,8 +92,8 @@ public class AlertCheckJobTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testExecuteInternal_delegatesDownAlert() {
-    saveDelegate("host1", 2);
-    saveDelegate("host2", 10);
+    saveDelegate("host1", 2, true);
+    saveDelegate("host2", 10, false);
 
     doNothing().when(delegateService).sendAlertNotificationsForDownDelegates(any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
@@ -111,19 +111,22 @@ public class AlertCheckJobTest extends WingsBaseTest {
     assertEquals("host2", delegate.getHostName());
   }
 
-  private void saveDelegate(String host, int timeAfterLastHB) {
+  private void saveDelegate(String host, int timeAfterLastHB, boolean createConnection) {
     Delegate delegate = new Delegate();
     delegate.setHostName(host);
     long lastHeartbeat = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeAfterLastHB);
     delegate.setLastHeartBeat(lastHeartbeat);
     delegate.setAccountId(ACCOUNT_ID);
     wingsPersistence.save(delegate);
-    DelegateConnection connection = DelegateConnection.builder()
-                                        .accountId(ACCOUNT_ID)
-                                        .delegateId(delegate.getUuid())
-                                        .lastHeartbeat(lastHeartbeat)
-                                        .build();
-    wingsPersistence.save(connection);
+
+    if (createConnection) {
+      DelegateConnection connection = DelegateConnection.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .delegateId(delegate.getUuid())
+                                          .lastHeartbeat(lastHeartbeat)
+                                          .build();
+      wingsPersistence.save(connection);
+    }
   }
 
   @Test

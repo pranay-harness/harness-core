@@ -168,18 +168,10 @@ public class AlertCheckJob implements Job {
             .collect(toMap(DelegateConnection::getDelegateId, connection -> connection));
 
     List<Delegate> delegatesDown =
-        delegates.stream()
-            .filter(delegate -> primaryConnections.containsKey(delegate.getUuid()))
-            .filter(delegate
-                -> clock.millis() - primaryConnections.get(delegate.getUuid()).getLastHeartbeat() > MAX_HB_TIMEOUT)
-            .collect(toList());
+        delegates.stream().filter(delegate -> !primaryConnections.containsKey(delegate.getUuid())).collect(toList());
 
     List<Delegate> delegatesUp =
-        delegates.stream()
-            .filter(delegate -> primaryConnections.containsKey(delegate.getUuid()))
-            .filter(delegate
-                -> clock.millis() - primaryConnections.get(delegate.getUuid()).getLastHeartbeat() <= MAX_HB_TIMEOUT)
-            .collect(toList());
+        delegates.stream().filter(delegate -> primaryConnections.containsKey(delegate.getUuid())).collect(toList());
 
     if (CollectionUtils.isNotEmpty(delegatesDown)) {
       delegateService.sendAlertNotificationsForDownDelegates(accountId, delegatesDown);
