@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package software.wings.service.impl;
 
 import static com.google.common.collect.Lists.newArrayList;

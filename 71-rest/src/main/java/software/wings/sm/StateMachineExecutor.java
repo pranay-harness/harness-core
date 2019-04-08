@@ -1529,19 +1529,21 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (context == null) {
       return;
     }
-
-    if (context.getAppId() != null) {
-      final String accountId = appService.getAccountIdByAppId(context.getAppId());
-      exception.addContext(Account.class, accountId);
-      exception.addContext(Application.class, context.getAppId());
-    }
-    if (context.getEnv() != null) {
-      exception.addContext(Environment.class, context.getEnv().getUuid());
-    }
-    exception.addContext(WorkflowExecution.class, context.getWorkflowExecutionId());
-
-    if (context.getStateExecutionInstance() != null) {
-      exception.addContext(StateExecutionInstance.class, context.getStateExecutionInstance().getUuid());
+    try {
+      if (context.getStateExecutionInstance() != null) {
+        exception.addContext(StateExecutionInstance.class, context.getStateExecutionInstance().getUuid());
+      }
+      exception.addContext(WorkflowExecution.class, context.getWorkflowExecutionId());
+      if (context.getEnv() != null) {
+        exception.addContext(Environment.class, context.getEnv().getUuid());
+      }
+      if (context.getAppId() != null) {
+        final String accountId = appService.getAccountIdByAppId(context.getAppId());
+        exception.addContext(Account.class, accountId);
+        exception.addContext(Application.class, context.getAppId());
+      }
+    } catch (RuntimeException ignore) {
+      // Suppress any exception during filling the context. We would like to see the original more.
     }
   }
 
