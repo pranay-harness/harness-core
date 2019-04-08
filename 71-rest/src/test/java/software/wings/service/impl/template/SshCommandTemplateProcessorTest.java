@@ -31,6 +31,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,6 +60,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   private static final String ANOTHER_COMMAND = "AnotherCommand";
   private static final String MY_START = "MyStart";
   private static final String MY_INSTALL = "MyInstall";
+  private static final String ANOTHER_APP_ID = "ANOTHER_APP_ID";
   @Mock private MorphiaIterator<ServiceCommand, ServiceCommand> serviceCommandIterator;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Query<ServiceCommand> query;
@@ -385,6 +387,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   }
 
   private Template createMyStopCommand() {
+    return createMyStopCommand(GLOBAL_APP_ID);
+  }
+
+  private Template createMyStopCommand(String appId) {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
                                              .commandUnits(asList(anExecCommandUnit()
@@ -404,16 +410,15 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     Template template = Template.builder()
                             .name(MY_STOP)
                             .folderId(parentFolder.getUuid())
-                            .appId(GLOBAL_APP_ID)
+                            .appId(appId)
                             .accountId(GLOBAL_ACCOUNT_ID)
                             .templateObject(commandTemplate)
-                            .appId(GLOBAL_APP_ID)
                             .variables(asList(aVariable().withName("V3").withValue("hello").build(),
                                 aVariable().withName("V4").withValue("world").build()))
                             .build();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(appId);
     assertThat(savedTemplate.getVersion()).isEqualTo(1);
     return savedTemplate;
   }
@@ -441,7 +446,6 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
                             .appId(GLOBAL_APP_ID)
                             .accountId(GLOBAL_ACCOUNT_ID)
                             .templateObject(commandTemplate)
-                            .appId(GLOBAL_APP_ID)
                             .variables(asList(aVariable().withName("V1").withValue("hi").build(),
                                 aVariable().withName("V2").withValue("world").build()))
                             .build();
@@ -508,5 +512,122 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
                                 aVariable().withName("V2").withValue("there2").build()))
                             .build();
     return templateService.save(template);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotLinkAppLevelTemplateToAccountLevelTemplate() {
+    // Create individual commands like MyStart, MyStop
+    Template myStop = createMyStopCommand(APP_ID);
+    Template myStart = createMyStartCommand();
+
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    SshCommandTemplate commandTemplate =
+        SshCommandTemplate.builder()
+            .commandUnits(asList(createCommand(myStop,
+                                     asList(aVariable().withName("V3").withValue("hello3").build(),
+                                         aVariable().withName("V4").withValue("world4").build()),
+                                     MY_STOP),
+                createCommand(myStart,
+                    asList(aVariable().withName("V1").withValue("${V3}").build(),
+                        aVariable().withName("V2").withValue("there2").build()),
+                    MY_START)))
+            .commandType(CommandType.OTHER)
+            .build();
+    Template template = Template.builder()
+                            .name(MY_INSTALL)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .type("SSH")
+                            .templateObject(commandTemplate)
+                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
+                                aVariable().withName("V4").withValue("world4").build(),
+                                aVariable().withName("V5").withValue("bye").build(),
+                                aVariable().withName("V2").withValue("there2").build()))
+                            .build();
+    templateService.save(template);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotLinkTemplatesAcrossApps() {
+    // Create individual commands like MyStop with ANOTHER_APP_ID
+    Template myStop = createMyStopCommand(ANOTHER_APP_ID);
+
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
+                                             .commandUnits(asList(createCommand(myStop,
+                                                 asList(aVariable().withName("V3").withValue("hello3").build(),
+                                                     aVariable().withName("V4").withValue("world4").build()),
+                                                 MY_STOP)))
+                                             .commandType(CommandType.OTHER)
+                                             .build();
+    Template template = Template.builder()
+                            .name(MY_INSTALL)
+                            .folderId(parentFolder.getUuid())
+                            .appId(APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .type("SSH")
+                            .templateObject(commandTemplate)
+                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
+                                aVariable().withName("V4").withValue("world4").build(),
+                                aVariable().withName("V5").withValue("bye").build(),
+                                aVariable().withName("V2").withValue("there2").build()))
+                            .build();
+    templateService.save(template);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCanLinkAccountLevelTemplateToAppLevelTemplate() {
+    // Create individual commands like MyStop with GLOBAL_APP_ID
+    linkAccountLevelToAppLevelAndValidate();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void testInvalidUpdateWhenLinkingTemplatesAcrossApps() {
+    Template savedTemplate = linkAccountLevelToAppLevelAndValidate();
+    SshCommandTemplate savedCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
+    Template myStop = createMyStopCommand(ANOTHER_APP_ID);
+    savedCommandTemplate.getCommandUnits().add(createCommand(myStop,
+        asList(aVariable().withName("V3").withValue("hello3").build(),
+            aVariable().withName("V4").withValue("world4").build()),
+        MY_STOP));
+    savedTemplate.setTemplateObject(savedCommandTemplate);
+    templateService.update(savedTemplate);
+  }
+
+  private Template linkAccountLevelToAppLevelAndValidate() {
+    Template myStop = createMyStopCommand();
+
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
+                                             .commandUnits(asList(createCommand(myStop,
+                                                 asList(aVariable().withName("V3").withValue("hello3").build(),
+                                                     aVariable().withName("V4").withValue("world4").build()),
+                                                 MY_STOP)))
+                                             .commandType(CommandType.OTHER)
+                                             .build();
+    Template template = Template.builder()
+                            .name(MY_INSTALL)
+                            .folderId(parentFolder.getUuid())
+                            .appId(APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .type("SSH")
+                            .templateObject(commandTemplate)
+                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
+                                aVariable().withName("V4").withValue("world4").build(),
+                                aVariable().withName("V5").withValue("bye").build(),
+                                aVariable().withName("V2").withValue("there2").build()))
+                            .build();
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(APP_ID);
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+    SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
+    assertThat(savedSshCommandTemplate.getCommandUnits().size()).isEqualTo(1);
+    return savedTemplate;
   }
 }
