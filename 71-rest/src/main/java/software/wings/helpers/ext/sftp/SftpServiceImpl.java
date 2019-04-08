@@ -3,7 +3,6 @@ package software.wings.helpers.ext.sftp;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -44,7 +43,7 @@ public class SftpServiceImpl implements SftpService {
   @Override
   public List<BuildDetails> getBuildDetails(SftpConfig sftpConfig, List<EncryptedDataDetail> encryptionDetails,
       List<String> artifactPaths, boolean isExpression) {
-    List<BuildDetails> buildDetailsList = Lists.newArrayList();
+    List<BuildDetails> buildDetailsList;
     try {
       buildDetailsList = sftpHelperService.getArtifactDetails(sftpConfig, encryptionDetails, artifactPaths);
     } catch (Exception e) {

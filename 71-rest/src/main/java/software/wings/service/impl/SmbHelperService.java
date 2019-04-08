@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.artifact.ArtifactUtilities.getFileParentPath;
+import static io.harness.artifact.ArtifactUtilities.getFileSearchPattern;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.common.Constants.ARTIFACT_PATH;
-import static software.wings.common.Constants.URL;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -18,13 +18,12 @@ import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.BuildMetadataKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -123,31 +122,26 @@ public class SmbHelperService {
       // Connect to Shared folder
       String sharedFolderName = getSharedFolderName(smbConfig.getSmbUrl());
       try (DiskShare share = (DiskShare) session.connectShare(sharedFolderName)) {
-        Path p = Paths.get(artifactPath);
-        if (p != null) {
-          Path fileName = p.getFileName();
-          String searchPattern = fileName != null ? fileName.toString() : "*";
-          Path parent = p.getParent();
-          String path = parent != null ? parent.toString() : "";
-          if (path.contains("*")) {
-            String[] split = path.split("\\*");
-            String prePath = split[0];
+        String searchPattern = getFileSearchPattern(artifactPath);
+        String path = getFileParentPath(artifactPath);
+        if (path.contains("*")) {
+          String[] split = path.split("\\*");
+          String prePath = split[0];
 
-            // Get all folders matching search pattern, these will be release numbers
-            List<FileIdBothDirectoryInformation> fileList = share.list(prePath, "*");
-            for (FileIdBothDirectoryInformation f : fileList) {
-              if (f.getFileName().equals(".") || f.getFileName().equals("..")) {
-                continue;
-              }
-
-              // all folders matching regex
-              if (share.folderExists(Paths.get(prePath, f.getFileName()).toString())) {
-                buildNumbers.put(Paths.get(prePath, f.getFileName(), searchPattern).toString(), f.getFileName());
-              }
+          // Get all folders matching search pattern, these will be release numbers
+          List<FileIdBothDirectoryInformation> fileList = share.list(prePath, "*");
+          for (FileIdBothDirectoryInformation f : fileList) {
+            if (f.getFileName().equals(".") || f.getFileName().equals("..")) {
+              continue;
             }
-          } else {
-            buildNumbers.put(path, buildNo);
+
+            // all folders matching regex
+            if (share.folderExists(Paths.get(prePath, f.getFileName()).toString())) {
+              buildNumbers.put(Paths.get(prePath, f.getFileName(), searchPattern).toString(), f.getFileName());
+            }
           }
+        } else {
+          buildNumbers.put(path, buildNo);
         }
       }
     }
@@ -173,53 +167,48 @@ public class SmbHelperService {
           // buildNos map has artifact path to traverse and corresponding build nos.
           buildNos = getArtifactBuildNumbers(smbConfig, encryptionDetails, artifactPath);
           if (isNotEmpty(buildNos)) {
-            Path p = Paths.get(artifactPath);
-            if (p != null) {
-              Path fileName = p.getFileName();
-              String searchPattern = (fileName != null) ? fileName.toString() : "*";
-              Path parent = p.getParent();
-              String path = parent != null ? parent.toString() : "";
+            String searchPattern = getFileSearchPattern(artifactPath);
+            String path = getFileParentPath(artifactPath);
 
-              // for each folder construct build details
-              for (Entry<String, String> entry : buildNos.entrySet()) {
-                List<BuildDetails> buildDetailsListForArtifactPath = Lists.newArrayList();
-                if (buildNos.get(entry.getKey()) != null && isNotEmpty(buildNos.get(entry.getKey()))) {
-                  Map<String, String> map = new HashMap<>();
-                  map.put(ARTIFACT_PATH, entry.getKey());
-                  buildDetailsListForArtifactPath.add(aBuildDetails()
-                                                          .withNumber(buildNos.get(entry.getKey()))
-                                                          .withArtifactPath(entry.getKey())
-                                                          .withBuildParameters(map)
-                                                          .build());
-                } else {
-                  List<FileIdBothDirectoryInformation> fileList = share.list(entry.getKey(), searchPattern);
+            // for each folder construct build details
+            for (Entry<String, String> entry : buildNos.entrySet()) {
+              List<BuildDetails> buildDetailsListForArtifactPath = Lists.newArrayList();
+              if (buildNos.get(entry.getKey()) != null && isNotEmpty(buildNos.get(entry.getKey()))) {
+                Map<String, String> map = new HashMap<>();
+                map.put(BuildMetadataKeys.artifactPath.name(), entry.getKey());
+                buildDetailsListForArtifactPath.add(aBuildDetails()
+                                                        .withNumber(buildNos.get(entry.getKey()))
+                                                        .withArtifactPath(entry.getKey())
+                                                        .withBuildParameters(map)
+                                                        .build());
+              } else {
+                List<FileIdBothDirectoryInformation> fileList = share.list(entry.getKey(), searchPattern);
 
-                  for (FileIdBothDirectoryInformation f : fileList) {
-                    if (f.getFileName().equals(".") || f.getFileName().equals("..")) {
-                      continue;
-                    }
-                    boolean isFolder = share.folderExists(Paths.get(path, f.getFileName()).toString());
-                    boolean isFile = share.fileExists(Paths.get(path, f.getFileName()).toString());
+                for (FileIdBothDirectoryInformation f : fileList) {
+                  if (f.getFileName().equals(".") || f.getFileName().equals("..")) {
+                    continue;
+                  }
+                  boolean isFolder = share.folderExists(Paths.get(path, f.getFileName()).toString());
+                  boolean isFile = share.fileExists(Paths.get(path, f.getFileName()).toString());
 
-                    if (isFile || isFolder) {
-                      Map<String, String> map = new HashMap<>();
-                      String aPath = Paths.get(path, f.getFileName()).toString();
-                      map.put(ARTIFACT_PATH, aPath);
-                      map.put(URL, smbConfig.getSmbUrl());
-                      map.put(Constants.ARTIFACT_FILE_NAME, f.getFileName());
-                      map.put("allocationSize", Long.toString(f.getAllocationSize()));
-                      map.put("fileAttributes", Long.toString(f.getFileAttributes()));
-                      buildDetailsListForArtifactPath.add(aBuildDetails()
-                                                              .withNumber(f.getFileName())
-                                                              .withArtifactPath(aPath)
-                                                              .withBuildUrl(smbConfig.getSmbUrl())
-                                                              .withBuildParameters(map)
-                                                              .build());
-                    }
+                  if (isFile || isFolder) {
+                    Map<String, String> map = new HashMap<>();
+                    String aPath = Paths.get(path, f.getFileName()).toString();
+                    map.put(BuildMetadataKeys.artifactPath.name(), aPath);
+                    map.put(BuildMetadataKeys.url.name(), smbConfig.getSmbUrl());
+                    map.put(BuildMetadataKeys.artifactFileName.name(), f.getFileName());
+                    map.put(BuildMetadataKeys.allocationSize.name(), Long.toString(f.getAllocationSize()));
+                    map.put(BuildMetadataKeys.fileAttributes.name(), Long.toString(f.getFileAttributes()));
+                    buildDetailsListForArtifactPath.add(aBuildDetails()
+                                                            .withNumber(f.getFileName())
+                                                            .withArtifactPath(aPath)
+                                                            .withBuildUrl(smbConfig.getSmbUrl())
+                                                            .withBuildParameters(map)
+                                                            .build());
                   }
                 }
-                buildDetailsList.addAll(buildDetailsListForArtifactPath);
               }
+              buildDetailsList.addAll(buildDetailsListForArtifactPath);
             }
           }
         }

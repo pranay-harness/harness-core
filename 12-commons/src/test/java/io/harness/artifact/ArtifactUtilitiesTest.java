@@ -56,4 +56,26 @@ public class ArtifactUtilitiesTest {
                    "https://nexus.harness.io", null, "http://nexus3.harness.io:5000", "harness/todolist-sample"))
         .isEqualTo("nexus3.harness.io:5000/harness/todolist-sample");
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void getFileSearchPatternTest() {
+    assertThat(ArtifactUtilities.getFileSearchPattern("harness/todolist-sample")).isEqualTo("todolist-sample");
+    assertThat(ArtifactUtilities.getFileSearchPattern("harness/todolist-sample/")).isEqualTo("*");
+    assertThat(ArtifactUtilities.getFileSearchPattern("harness\\todolist-sample\\")).isEqualTo("*");
+    assertThat(ArtifactUtilities.getFileSearchPattern("harness\\todolist-*.zip")).isEqualTo("todolist-*.zip");
+    assertThat(ArtifactUtilities.getFileSearchPattern("prefix*")).isEqualTo("prefix*");
+    assertThat(ArtifactUtilities.getFileSearchPattern("")).isEqualTo("*");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void getFileParentPathTest() {
+    assertThat(ArtifactUtilities.getFileParentPath("harness/todolist-sample")).isEqualTo("harness");
+    assertThat(ArtifactUtilities.getFileParentPath("harness/todolist-sample/")).isEqualTo("harness/todolist-sample");
+    assertThat(ArtifactUtilities.getFileParentPath("harness\\todolist-sample\\")).isEqualTo("harness\\todolist-sample");
+    assertThat(ArtifactUtilities.getFileParentPath("harness\\todolist-*.zip")).isEqualTo("harness");
+    assertThat(ArtifactUtilities.getFileParentPath("prefix*")).isEqualTo("");
+    assertThat(ArtifactUtilities.getFileParentPath("")).isEqualTo("");
+  }
 }
