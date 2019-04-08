@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class ArtifactInfo implements DebugInfo {
+public class ArtifactInfo implements BaseInfo {
   String id;
   String name;
   String sourceName;

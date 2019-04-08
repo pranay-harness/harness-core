@@ -10,11 +10,16 @@ import com.google.inject.spi.TypeListener;
 
 import graphql.GraphQL;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.DataFetcherEnum;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
+import software.wings.graphql.datafetcher.application.ApplicationListDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
+import software.wings.graphql.datafetcher.environment.EnvironmentListDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowExecutionDataFetcher;
+import software.wings.graphql.datafetcher.workflow.WorkflowExecutionListDataFetcher;
+import software.wings.graphql.datafetcher.workflow.WorkflowListDataFetcher;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
 
@@ -28,20 +33,40 @@ public class GraphQLModule extends AbstractModule {
 
     bindPostContructInitializationForGraphQL();
 
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named("workflowDataFetcher")).to(WorkflowDataFetcher.class);
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named(DataFetcherEnum.WORKFLOW.getDataFetcherName()))
+        .to(WorkflowDataFetcher.class);
 
     bind(AbstractDataFetcher.class)
-        .annotatedWith(Names.named("workflowExecutionDataFetcher"))
+        .annotatedWith(Names.named(DataFetcherEnum.WORKFLOWS.getDataFetcherName()))
+        .to(WorkflowListDataFetcher.class);
+
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named(DataFetcherEnum.WORKFLOW_EXECUTION.getDataFetcherName()))
         .to(WorkflowExecutionDataFetcher.class);
 
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named("artifactDataFetcher")).to(ArtifactDataFetcher.class);
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named(DataFetcherEnum.WORKFLOW_EXECUTIONS.getDataFetcherName()))
+        .to(WorkflowExecutionListDataFetcher.class);
 
     bind(AbstractDataFetcher.class)
-        .annotatedWith(Names.named("applicationDataFetcher"))
+        .annotatedWith(Names.named(DataFetcherEnum.DEPLOYED_ARTIFACTS.getDataFetcherName()))
+        .to(ArtifactDataFetcher.class);
+
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named(DataFetcherEnum.APPLICATION.getDataFetcherName()))
         .to(ApplicationDataFetcher.class);
     bind(AbstractDataFetcher.class)
-        .annotatedWith(Names.named("environmentDataFetcher"))
+        .annotatedWith(Names.named(DataFetcherEnum.ENVIRONMENT.getDataFetcherName()))
         .to(EnvironmentDataFetcher.class);
+
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named(DataFetcherEnum.ENVIRONMENTS.getDataFetcherName()))
+        .to(EnvironmentListDataFetcher.class);
+
+    bind(AbstractDataFetcher.class)
+        .annotatedWith(Names.named(DataFetcherEnum.APPLICATIONS.getDataFetcherName()))
+        .to(ApplicationListDataFetcher.class);
   }
 
   /***

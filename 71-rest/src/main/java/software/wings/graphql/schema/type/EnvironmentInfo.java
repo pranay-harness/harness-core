@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EnvironmentInfo implements DebugInfo {
+public class EnvironmentInfo implements BaseInfo {
   String id;
   String name;
   String description;

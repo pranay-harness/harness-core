@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkflowInfo implements DebugInfo {
+public class WorkflowInfo implements BaseInfo {
   String id;
   String name;
   String description;

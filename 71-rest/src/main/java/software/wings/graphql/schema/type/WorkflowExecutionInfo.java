@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkflowExecutionInfo implements DebugInfo {
+public class WorkflowExecutionInfo implements BaseInfo {
   String id;
   String name;
   ExecutionStatus status;

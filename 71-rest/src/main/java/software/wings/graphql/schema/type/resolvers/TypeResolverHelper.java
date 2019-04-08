@@ -2,7 +2,7 @@ package software.wings.graphql.schema.type.resolvers;
 
 import static software.wings.graphql.utils.GraphQLConstants.APPLICATION_TYPE;
 import static software.wings.graphql.utils.GraphQLConstants.ARTIFACT_TYPE;
-import static software.wings.graphql.utils.GraphQLConstants.DEBUG_INFO_TYPE;
+import static software.wings.graphql.utils.GraphQLConstants.BASE_INFO_TYPE;
 import static software.wings.graphql.utils.GraphQLConstants.ENVIRONMENT_TYPE;
 import static software.wings.graphql.utils.GraphQLConstants.WORKFLOW_EXECUTION_TYPE;
 import static software.wings.graphql.utils.GraphQLConstants.WORKFLOW_TYPE;
@@ -30,7 +30,7 @@ public class TypeResolverHelper {
    */
   public Map<String, TypeResolver> getTypeResolverMap() {
     return ImmutableMap.of(
-        GraphQLConstants.RESULT_TYPE, getResultTypeResolver(), DEBUG_INFO_TYPE, getDebugInfoTypeResolver());
+        GraphQLConstants.RESULT_TYPE, getResultTypeResolver(), BASE_INFO_TYPE, getBaseInfoTypeResolver());
   }
 
   private TypeResolver getResultTypeResolver() {
@@ -50,7 +50,7 @@ public class TypeResolverHelper {
     };
   }
 
-  private TypeResolver getDebugInfoTypeResolver() {
+  private TypeResolver getBaseInfoTypeResolver() {
     return env -> {
       Object javaObject = env.getObject();
       GraphQLObjectType graphQLObjectType = null;
