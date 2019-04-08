@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.Log.Builder.aLog;
@@ -269,6 +270,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private String constructCommandStringForSMB(ShellCommandExecutionContext context) {
     Map<String, String> metadata = context.getMetadata();
     String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
+    String artifactPath = metadata.get(Constants.ARTIFACT_PATH);
     SmbConfig smbConfig = (SmbConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
     List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
     encryptionService.decrypt(smbConfig, encryptionDetails);
@@ -279,6 +281,12 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         String userPassword = "/user:" + domain + smbConfig.getUsername() + " " + new String(smbConfig.getPassword());
         String shareUrl = smbHelperService.getSMBConnectionHost(smbConfig.getSmbUrl()) + "\\"
             + smbHelperService.getSharedFolderName(smbConfig.getSmbUrl());
+
+        String artifactFolder = getArtifactFolder(artifactPath, artifactFileName);
+        if (!isEmpty(artifactFolder)) {
+          shareUrl = shareUrl + "\\" + artifactFolder;
+        }
+
         String roboCopyCommand = "robocopy \\\\" + shareUrl + " " + getCommandPath() + " " + artifactFileName;
         command = "net use \\\\" + shareUrl + " " + userPassword + " /persistent:no\n " + roboCopyCommand;
         break;
@@ -288,16 +296,19 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     return command;
   }
 
+  private static String getArtifactFolder(String artifactPath, String artifactFileName) {
+    return artifactPath.substring(0, artifactPath.lastIndexOf(artifactFileName));
+  }
+
   private String constructCommandStringForSFTP(ShellCommandExecutionContext context) {
     Map<String, String> metadata = context.getMetadata();
-    String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
+    String artifactPath = metadata.get(Constants.ARTIFACT_PATH);
     SftpConfig sftpConfig = (SftpConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
     List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
     encryptionService.decrypt(sftpConfig, encryptionDetails);
     String command;
     switch (this.getScriptType()) {
       case POWERSHELL:
-        String artifactPath = artifactFileName;
         command = "if (Get-Module -ListAvailable -Name Posh-SSH) {\n"
             + "    Write-Host \"Posh-SSH Module exists\"\n"
             + "\n"
@@ -320,7 +331,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + "\n"
             + "$SftpIp = \'" + sftpHelperService.getSFTPConnectionHost(sftpConfig.getSftpUrl()) + "\'\n"
             + "\n"
-            + "$ThisSession = New-SFTPSession -ComputerName $SftpIp -Credential $Credential\n"
+            + "$ThisSession = New-SFTPSession -ComputerName $SftpIp -Credential $Credential -AcceptKey\n"
             + "\n"
             + "$sftpPathAttribute = Get-SFTPPathAttribute -SessionId ($ThisSession).SessionId -Path  $Remotepath \n"
             + "if ( $sftpPathAttribute.IsRegularFile ) \n"

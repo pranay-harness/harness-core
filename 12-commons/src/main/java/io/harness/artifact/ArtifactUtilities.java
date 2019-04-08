@@ -78,4 +78,30 @@ public class ArtifactUtilities {
       return dockerRegistryUrl;
     }
   }
+
+  public static String getFileSearchPattern(String artifactPath) {
+    int index = artifactPath.lastIndexOf('/');
+    if (index == -1) {
+      index = artifactPath.lastIndexOf('\\');
+    }
+
+    if (index == artifactPath.length() - 1) {
+      return "*";
+    } else {
+      return artifactPath.substring(index + 1);
+    }
+  }
+
+  public static String getFileParentPath(String artifactPath) {
+    int index = artifactPath.lastIndexOf('/');
+    if (index == -1) {
+      index = artifactPath.lastIndexOf('\\');
+    }
+
+    if (index == -1) {
+      return "";
+    } else {
+      return artifactPath.substring(0, index);
+    }
+  }
 }

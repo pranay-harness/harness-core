@@ -1,11 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.artifact.ArtifactUtilities.getFileParentPath;
+import static io.harness.artifact.ArtifactUtilities.getFileSearchPattern;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
-import static software.wings.common.Constants.ARTIFACT_PATH;
-import static software.wings.common.Constants.PARENT;
-import static software.wings.common.Constants.PATH;
-import static software.wings.common.Constants.URL;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.api.client.util.Lists;
@@ -15,7 +12,6 @@ import com.google.inject.Singleton;
 import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.DisconnectReason;
-import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.transport.TransportException;
@@ -23,12 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SftpConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.BuildMetadataKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -190,39 +185,30 @@ public class SftpHelperService {
       // Get artifact details for each path
       try {
         for (String artifactPath : artifactPaths) {
-          Path path = Paths.get(artifactPath);
-          if (path != null) {
-            Path ph = path.getFileName();
-            String fileName = ph != null ? ph.toString() : "";
-            Path parent = path.getParent();
-            String directory = parent != null ? parent.toString() : "";
-            // if directory is empty, default is HOME
-            if (isEmpty(directory)) {
-              directory = ROOT_DIR_ARTIFACT_PATH;
-            }
-
-            // Check if artifact is file or folder
-            String artifactFullPath = directory + "\\" + artifactPath;
-            FileAttributes attributes = sftp.lstat(artifactFullPath);
-
-            if ("REGULAR".equals(attributes.getMode().getType().toString())) {
-              resourceInfos = sftp.ls(directory, RemoteResourceInfo::isRegularFile);
-            } else if ("DIRECTORY".equals(attributes.getMode().getType().name())) {
-              resourceInfos = sftp.ls(directory, RemoteResourceInfo::isDirectory);
-            }
-            resourceInfos = resourceInfos.stream()
-                                .filter(resourceInfo -> resourceInfo.getName().startsWith(fileName))
-                                .collect(Collectors.toList());
+          String searchPattern = getFileSearchPattern(artifactPath);
+          String directory = getFileParentPath(artifactPath);
+          String fileName = searchPattern;
+          // if directory is empty, default is HOME
+          if (isEmpty(directory)) {
+            directory = ROOT_DIR_ARTIFACT_PATH;
           }
+
+          resourceInfos = sftp.ls(directory, RemoteResourceInfo::isRegularFile);
+
+          Pattern pattern = Pattern.compile(fileName.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+
+          resourceInfos = resourceInfos.stream()
+                              .filter(resourceInfo -> pattern.matcher(resourceInfo.getName()).find())
+                              .collect(Collectors.toList());
 
           List<BuildDetails> buildDetailsListForArtifactPath = Lists.newArrayList();
           for (RemoteResourceInfo resourceInfo : resourceInfos) {
             Map<String, String> map = new HashMap<>();
-            map.put(ARTIFACT_PATH, artifactPath);
-            map.put(URL, sftpConfig.getSftpUrl());
-            map.put(ARTIFACT_FILE_NAME, resourceInfo.getName());
-            map.put(PATH, resourceInfo.getPath());
-            map.put(PARENT, resourceInfo.getParent());
+            map.put(BuildMetadataKeys.artifactPath.name(), resourceInfo.getPath());
+            map.put(BuildMetadataKeys.url.name(), sftpConfig.getSftpUrl());
+            map.put(BuildMetadataKeys.artifactFileName.name(), resourceInfo.getName());
+            map.put(BuildMetadataKeys.path.name(), resourceInfo.getPath());
+            map.put(BuildMetadataKeys.parent.name(), resourceInfo.getParent());
             buildDetailsListForArtifactPath.add(aBuildDetails()
                                                     .withNumber(resourceInfo.getName())
                                                     .withArtifactPath(artifactPath)
