@@ -481,7 +481,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @Ignore
-  public void testActiveUserGroups() {
+  public void testUserGroups() {
     UserGroup defaultUserGroup = UserGroup.builder()
                                      .accountId(ACCOUNT_ID)
                                      .name(name)
