@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
@@ -403,11 +404,15 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public List<UserGroup> getUserGroupsByAccountId(String accountId, User user) {
-    PageRequest<UserGroup> pageRequest = aPageRequest()
-                                             .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                             .addFilter("memberIds", Operator.HAS, user.getUuid())
-                                             .build();
-    return list(accountId, pageRequest, true).getResponse();
+    PageRequestBuilder pageRequest = aPageRequest()
+                                         .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                         .addFilter("memberIds", Operator.HAS, user.getUuid());
+
+    if (accountService.isAccountLite(accountId)) {
+      pageRequest.addFilter(UserGroup.IS_DEFAULT_KEY, Operator.EQ, true);
+    }
+
+    return list(accountId, pageRequest.build(), true).getResponse();
   }
 
   @Override
