@@ -20,6 +20,7 @@ import migrations.all.CleanupOrphanInstances;
 import migrations.all.CreateDefaultAlertNotificationRule;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DanglingUserInviteCleanupMigration;
+import migrations.all.DeleteCVAlertsMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteNewRelicMetricNameCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
@@ -211,6 +212,7 @@ public class MigrationList {
         .add(Pair.of(237, K8sV2ServiceInfraReleaseNameMigration.class))
         .add(Pair.of(238, MigrateLogFeedbackRecordsToGoogle.class))
         .add(Pair.of(239, ServiceNameMigrationIfEmpty.class))
+        .add(Pair.of(240, DeleteCVAlertsMigration.class))
         .build();
   }
 }

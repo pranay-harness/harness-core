@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -35,8 +34,6 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -123,17 +120,17 @@ public class DataCollectionCallback implements NotifyCallback {
             ContinuousVerificationDataCollectionAlert.builder().cvConfiguration(cvConfiguration).build());
         break;
       case FAILURE:
-        String message = "Failed to collect data for " + cvConfiguration.getName() + "(Application: "
-            + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName() + ") for Time: "
-            + new SimpleDateFormat(ContinuousVerificationAlertData.DEFAULT_TIME_FORMAT)
-                  .format(new Date(dataCollectionEndTime))
-            + "\nReason: " + errorMessage;
-        alertService.openAlert(appService.getAccountIdByAppId(appId), appId,
-            AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
-            ContinuousVerificationDataCollectionAlert.builder()
-                .cvConfiguration(cvConfiguration)
-                .message(message)
-                .build());
+        //        String message = "Failed to collect data for " + cvConfiguration.getName() + "(Application: "
+        //            + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName() + ") for Time: "
+        //            + new SimpleDateFormat(ContinuousVerificationAlertData.DEFAULT_TIME_FORMAT)
+        //                  .format(new Date(dataCollectionEndTime))
+        //            + "\nReason: " + errorMessage;
+        //        alertService.openAlert(appService.getAccountIdByAppId(appId), appId,
+        //            AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
+        //            ContinuousVerificationDataCollectionAlert.builder()
+        //                .cvConfiguration(cvConfiguration)
+        //                .message(message)
+        //                .build());
         break;
 
       default:
