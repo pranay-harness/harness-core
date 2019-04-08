@@ -1,10 +1,12 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
@@ -63,6 +65,8 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private static final String REFERENCED_TEMPLATE_LIST = "referencedTemplateList";
   private static final String COMMAND_TYPE = "commandType";
   private static final String COMMAND_PATH = "commandPath";
+  private static final String ACCOUNT = "Account";
+  private static final String APPLICATION = "Application";
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject ServiceResourceService serviceResourceService;
@@ -119,6 +123,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   private void validateTemplate(Template template) {
+    String parentScope = getTemplateScope(template.getAppId());
     List<Variable> topLevelVariables = template.getVariables();
     // holds only the variables that are provided with fixed values
     Map<String, String> fixedValueMap = new HashMap<>();
@@ -127,6 +132,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     if (isNotEmpty(sshCommandTemplate.getCommandUnits())) {
       for (CommandUnit commandUnit : sshCommandTemplate.getCommandUnits()) {
         if (commandUnit.getCommandUnitType().equals(CommandUnitType.COMMAND)) {
+          validateTemplateReference(parentScope, template.getAppId(), (Command) commandUnit);
           List<Variable> commandVariables = ((Command) commandUnit).getTemplateVariables();
           for (Variable commandVariable : commandVariables) {
             // evaluate expression
@@ -162,6 +168,35 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
           }
         }
       }
+    }
+  }
+
+  private void validateTemplateReference(String parentScope, String parentAppId, Command commandUnit) {
+    Template template;
+    if (commandUnit.getTemplateReference() != null) { // service command following new format
+      template = templateService.get(commandUnit.getTemplateReference().getTemplateUuid());
+    } else { // old format template like our default Install command which has no TemplateReference
+      template = templateService.get(commandUnit.getReferenceUuid());
+    }
+    validateScope(parentScope, parentAppId, template.getAppId());
+  }
+
+  private void validateScope(String parentScope, String parentAppId, String childAppId) {
+    String childScope = getTemplateScope(childAppId);
+    // account level templates should not be able to reference app level templates
+    if (parentScope.equals(ACCOUNT) && childScope.equals(APPLICATION)) {
+      throw new InvalidRequestException("Account level templates cannot reference Application level templates", USER);
+    } else if (parentScope.equals(APPLICATION) && childScope.equals(APPLICATION) && !parentAppId.equals(childAppId)) {
+      throw new InvalidRequestException(
+          "Application level template cannot reference template belonging to another application", USER);
+    }
+  }
+
+  private String getTemplateScope(String appId) {
+    if (appId.equals(GLOBAL_APP_ID)) {
+      return ACCOUNT;
+    } else {
+      return APPLICATION;
     }
   }
 
