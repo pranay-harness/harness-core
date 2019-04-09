@@ -126,17 +126,23 @@ public class AwsLambdaHelperServiceDelegateImpl
 
   @Override
   public AwsLambdaFunctionResponse getLambdaFunctions(AwsLambdaFunctionRequest request) {
-    AwsConfig awsConfig = request.getAwsConfig();
-    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-    encryptionService.decrypt(awsConfig, encryptionDetails);
-    AWSLambdaClient lambdaClient = getAmazonLambdaClient(
-        request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
-    lambdaClient.listFunctions();
-    AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
-    List<String> lambdaFunctions = new ArrayList<>();
-    lambdaClient.listFunctions().getFunctions().forEach(
-        functionConfiguration -> { lambdaFunctions.add(functionConfiguration.getFunctionName()); });
-    return response.lambdaFunctions(lambdaFunctions).build();
+    try {
+      AwsConfig awsConfig = request.getAwsConfig();
+      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AWSLambdaClient lambdaClient = getAmazonLambdaClient(
+          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
+      List<String> lambdaFunctions = new ArrayList<>();
+      lambdaClient.listFunctions().getFunctions().forEach(
+          functionConfiguration -> { lambdaFunctions.add(functionConfiguration.getFunctionName()); });
+      return response.lambdaFunctions(lambdaFunctions).executionStatus(SUCCESS).build();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return null;
   }
 
   @Override
