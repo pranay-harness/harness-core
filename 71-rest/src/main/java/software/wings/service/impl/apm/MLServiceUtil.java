@@ -18,6 +18,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 
 /**
@@ -52,7 +53,7 @@ public class MLServiceUtil {
       StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
                                                           .filter("executionUuid", workflowExecution.getUuid())
                                                           .filter("stateType", StateType.PHASE)
-                                                          .order(Sort.descending(StateExecutionInstance.CREATED_AT_KEY))
+                                                          .order(Sort.descending(StateExecutionInstanceKeys.createdAt))
                                                           .get();
       ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
       String hostName = isEmpty(nodeData.getHostExpression())

@@ -23,6 +23,7 @@ import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
@@ -44,24 +45,24 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
     try (HIterator<StateExecutionInstance> stateExecutionInstances =
              new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                 .filter(StateExecutionInstance.APP_ID_KEY, appId)
-                                 .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-                                 .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
-                                 .project(StateExecutionInstance.CONTEXT_TRANSITION_KEY, true)
-                                 .project(StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY, true)
-                                 .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-                                 .project(StateExecutionInstance.EXECUTION_TYPE_KEY, true)
-                                 .project(StateExecutionInstance.ID_KEY, true)
-                                 .project(StateExecutionInstance.INTERRUPT_HISTORY_KEY, true)
-                                 .project(StateExecutionInstance.LAST_UPDATED_AT_KEY, true)
-                                 .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-                                 .project(StateExecutionInstance.PREV_INSTANCE_ID_KEY, true)
-                                 .project(StateExecutionInstance.STATE_EXECUTION_DATA_HISTORY_KEY, true)
-                                 .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
-                                 .project(StateExecutionInstance.STATE_NAME_KEY, true)
-                                 .project(StateExecutionInstance.STATE_TYPE_KEY, true)
-                                 .project(StateExecutionInstance.STATUS_KEY, true)
-                                 .project(StateExecutionInstance.HAS_INSPECTION_KEY, true)
+                                 .filter(StateExecutionInstanceKeys.appId, appId)
+                                 .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                                 .project(StateExecutionInstanceKeys.contextElement, true)
+                                 .project(StateExecutionInstanceKeys.contextTransition, true)
+                                 .project(StateExecutionInstanceKeys.dedicatedInterruptCount, true)
+                                 .project(StateExecutionInstanceKeys.displayName, true)
+                                 .project(StateExecutionInstanceKeys.executionType, true)
+                                 .project(StateExecutionInstanceKeys.uuid, true)
+                                 .project(StateExecutionInstanceKeys.interruptHistory, true)
+                                 .project(StateExecutionInstanceKeys.lastUpdatedAt, true)
+                                 .project(StateExecutionInstanceKeys.parentInstanceId, true)
+                                 .project(StateExecutionInstanceKeys.prevInstanceId, true)
+                                 .project(StateExecutionInstanceKeys.stateExecutionDataHistory, true)
+                                 .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+                                 .project(StateExecutionInstanceKeys.stateName, true)
+                                 .project(StateExecutionInstanceKeys.stateType, true)
+                                 .project(StateExecutionInstanceKeys.status, true)
+                                 .project(StateExecutionInstanceKeys.hasInspection, true)
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
@@ -77,10 +78,10 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     List<String> names = new ArrayList<>();
     try (HIterator<StateExecutionInstance> stateExecutionInstances =
              new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                 .filter(StateExecutionInstance.APP_ID_KEY, appId)
-                                 .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-                                 .filter(StateExecutionInstance.STATE_TYPE_KEY, PHASE.name())
-                                 .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+                                 .filter(StateExecutionInstanceKeys.appId, appId)
+                                 .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                                 .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
+                                 .project(StateExecutionInstanceKeys.displayName, true)
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
@@ -96,13 +97,13 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     List<StateExecutionData> executionDataList = new ArrayList<>();
     try (HIterator<StateExecutionInstance> stateExecutionInstances =
              new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                 .filter(StateExecutionInstance.APP_ID_KEY, appId)
-                                 .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-                                 .filter(StateExecutionInstance.STATE_TYPE_KEY, StateType.PHASE.name())
-                                 .order(Sort.ascending(StateExecutionInstance.CREATED_AT_KEY))
-                                 .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-                                 .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
-                                 .project(StateExecutionInstance.ID_KEY, true)
+                                 .filter(StateExecutionInstanceKeys.appId, appId)
+                                 .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                                 .filter(StateExecutionInstanceKeys.stateType, StateType.PHASE.name())
+                                 .order(Sort.ascending(StateExecutionInstanceKeys.createdAt))
+                                 .project(StateExecutionInstanceKeys.displayName, true)
+                                 .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+                                 .project(StateExecutionInstanceKeys.uuid, true)
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
@@ -174,15 +175,14 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   }
 
   public StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName) {
-    StateExecutionInstance stateExecutionInstance =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, appId)
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-            .filter(StateExecutionInstance.DISPLAY_NAME_KEY, phaseName)
-            .filter(StateExecutionInstance.STATE_TYPE_KEY, PHASE.name())
-            .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-            .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
-            .get();
+    StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                                        .filter(StateExecutionInstanceKeys.appId, appId)
+                                                        .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                                                        .filter(StateExecutionInstanceKeys.displayName, phaseName)
+                                                        .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
+                                                        .project(StateExecutionInstanceKeys.displayName, true)
+                                                        .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+                                                        .get();
     return stateExecutionInstance.getStateExecutionData();
   }
 

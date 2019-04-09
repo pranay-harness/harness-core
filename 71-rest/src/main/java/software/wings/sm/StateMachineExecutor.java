@@ -103,6 +103,7 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
@@ -877,7 +878,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       throw new WingsException(STATE_NOT_FOR_TYPE)
           .addParam("displayName", stateExecutionInstance.getDisplayName())
           .addParam("type", DISCONTINUING.name())
-          .addParam(StateExecutionInstance.STATUS_KEY, stateExecutionInstance.getStatus().name())
+          .addParam(StateExecutionInstanceKeys.status, stateExecutionInstance.getStatus().name())
           .addParam("statuses", executionStatuses);
     }
 
@@ -1050,9 +1051,9 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     Query<StateExecutionInstance> query =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, stateExecutionInstance.getAppId())
-            .filter(StateExecutionInstance.ID_KEY, stateExecutionInstance.getUuid())
-            .field(StateExecutionInstance.STATUS_KEY)
+            .filter(StateExecutionInstanceKeys.appId, stateExecutionInstance.getAppId())
+            .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstance.getUuid())
+            .field(StateExecutionInstanceKeys.status)
             .in(existingExecutionStatus);
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
@@ -1070,11 +1071,11 @@ public class StateMachineExecutor implements StateInspectionListener {
   private void statusUpdateOperation(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       UpdateOperations<StateExecutionInstance> ops) {
     stateExecutionInstance.setStatus(status);
-    ops.set(StateExecutionInstance.STATUS_KEY, stateExecutionInstance.getStatus());
+    ops.set(StateExecutionInstanceKeys.status, stateExecutionInstance.getStatus());
 
     stateExecutionInstance.setDedicatedInterruptCount(
         workflowExecutionService.getExecutionInterruptCount(stateExecutionInstance.getUuid()));
-    ops.set(StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY, stateExecutionInstance.getDedicatedInterruptCount());
+    ops.set(StateExecutionInstanceKeys.dedicatedInterruptCount, stateExecutionInstance.getDedicatedInterruptCount());
 
     if (isFinalStatus(status)) {
       stateExecutionInstance.setEndTs(System.currentTimeMillis());
@@ -1156,9 +1157,9 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     Query<StateExecutionInstance> query =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, stateExecutionInstance.getAppId())
+            .filter(StateExecutionInstanceKeys.appId, stateExecutionInstance.getAppId())
             .filter(ID_KEY, stateExecutionInstance.getUuid())
-            .field(StateExecutionInstance.STATUS_KEY)
+            .field(StateExecutionInstanceKeys.status)
             .in(runningStatusLists);
 
     ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
@@ -1307,9 +1308,9 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
-            .filter(StateExecutionInstance.STATUS_KEY, WAITING)
+            .filter(StateExecutionInstanceKeys.appId, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionInterrupt.getExecutionUuid())
+            .filter(StateExecutionInstanceKeys.status, WAITING)
             .asList();
 
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
@@ -1329,9 +1330,9 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
-            .filter(StateExecutionInstance.STATUS_KEY, DISCONTINUING)
+            .filter(StateExecutionInstanceKeys.appId, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionInterrupt.getExecutionUuid())
+            .filter(StateExecutionInstanceKeys.status, DISCONTINUING)
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
@@ -1402,12 +1403,12 @@ public class StateMachineExecutor implements StateInspectionListener {
       stateExecutionInstance.setEndTs(null);
       ops.unset("endTs");
     }
-    ops.set(StateExecutionInstance.STATUS_KEY, NEW);
+    ops.set(StateExecutionInstanceKeys.status, NEW);
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                               .filter("appId", stateExecutionInstance.getAppId())
                                               .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                              .field(StateExecutionInstance.STATUS_KEY)
+                                              .field(StateExecutionInstanceKeys.status)
                                               .in(asList(WAITING, FAILED, ERROR));
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
@@ -1424,14 +1425,14 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
-            .field(StateExecutionInstance.STATUS_KEY)
+            .filter(StateExecutionInstanceKeys.appId, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionInterrupt.getExecutionUuid())
+            .field(StateExecutionInstanceKeys.status)
             .in(statuses)
-            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .field(StateExecutionInstanceKeys.createdAt)
             .greaterThanOrEq(workflowExecution.getCreatedAt())
-            .project(StateExecutionInstance.ID_KEY, true)
-            .project(StateExecutionInstance.STATE_TYPE_KEY, true)
+            .project(StateExecutionInstanceKeys.uuid, true)
+            .project(StateExecutionInstanceKeys.stateType, true)
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
@@ -1445,9 +1446,9 @@ public class StateMachineExecutor implements StateInspectionListener {
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
-    ops.set(StateExecutionInstance.STATUS_KEY, DISCONTINUING);
+    ops.set(StateExecutionInstanceKeys.status, DISCONTINUING);
 
-    ops.addToSet(StateExecutionInstance.INTERRUPT_HISTORY_KEY,
+    ops.addToSet(StateExecutionInstanceKeys.interruptHistory,
         ExecutionInterruptEffect.builder()
             .interruptId(workflowExecutionInterrupt.getUuid())
             .tookEffectAt(new Date())
@@ -1455,9 +1456,9 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     Query<StateExecutionInstance> query =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
-            .field(StateExecutionInstance.ID_KEY)
+            .filter(StateExecutionInstanceKeys.appId, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionInterrupt.getExecutionUuid())
+            .field(StateExecutionInstanceKeys.uuid)
             .in(leafInstanceIds);
     // Set the status to DISCONTINUING
     UpdateResults updateResult = wingsPersistence.update(query, ops);
@@ -1492,13 +1493,13 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     List<StateExecutionInstance> childInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
-            .field(StateExecutionInstance.PARENT_INSTANCE_ID_KEY)
+            .filter(StateExecutionInstanceKeys.appId, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionInterrupt.getExecutionUuid())
+            .field(StateExecutionInstanceKeys.parentInstanceId)
             .in(parentInstanceIds)
-            .field(StateExecutionInstance.STATUS_KEY)
+            .field(StateExecutionInstanceKeys.status)
             .in(EnumSet.<ExecutionStatus>of(NEW, QUEUED, STARTING, RUNNING, PAUSED, PAUSING, WAITING))
-            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .field(StateExecutionInstanceKeys.createdAt)
             .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
 
@@ -1518,7 +1519,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     // TODO: convert this not to use Query directly after default createdAt sorting is taken off
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class, CRITICAL)
                                               .filter(ID_KEY, stateExecutionInstanceId)
-                                              .filter(StateExecutionInstance.APP_ID_KEY, appId);
+                                              .filter(StateExecutionInstanceKeys.appId, appId);
     if (executionUuid != null) {
       query.filter("executionUuid", executionUuid);
     }
@@ -1550,11 +1551,11 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Override
   public void appendedDataFor(String stateExecutionInstanceId) {
     final Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                    .filter(StateExecutionInstance.ID_KEY, stateExecutionInstanceId);
+                                                    .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstanceId);
 
     final UpdateOperations<StateExecutionInstance> updateOperations =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class)
-            .set(StateExecutionInstance.HAS_INSPECTION_KEY, true);
+            .set(StateExecutionInstanceKeys.hasInspection, true);
 
     wingsPersistence.update(query, updateOperations);
   }

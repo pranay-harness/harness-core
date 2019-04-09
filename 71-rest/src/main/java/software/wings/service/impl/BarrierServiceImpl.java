@@ -8,6 +8,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.StateType.BARRIER;
+import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
@@ -41,6 +42,7 @@ import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.BarrierStatusData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,10 +95,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       if (workflow.getPipelineStateExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
-                     .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
-                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, pipeline.getExecutionId())
-                     .filter(StateExecutionInstance.STATE_TYPE_KEY, "ENV_STATE")
-                     .filter(StateExecutionInstance.PIPELINE_STATE_ELEMENT_ID_KEY, workflow.getPipelineStateId())
+                     .filter(StateExecutionInstanceKeys.appId, barrierInstance.getAppId())
+                     .filter(StateExecutionInstanceKeys.executionUuid, pipeline.getExecutionId())
+                     .filter(StateExecutionInstanceKeys.stateType, ENV_STATE.name())
+                     .filter(StateExecutionInstanceKeys.pipelineStateElementId, workflow.getPipelineStateId())
                      .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
@@ -131,10 +133,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       if (workflow.getPhaseExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
-                     .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
-                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
-                     .filter(StateExecutionInstance.PHASE_SUBWORKFLOW_ID_KEY, workflow.getPhaseUuid())
-                     .field(StateExecutionInstance.STATE_TYPE_KEY)
+                     .filter(StateExecutionInstanceKeys.appId, barrierInstance.getAppId())
+                     .filter(StateExecutionInstanceKeys.executionUuid, workflow.getWorkflowExecutionId())
+                     .filter(StateExecutionInstanceKeys.phaseSubWorkflowId, workflow.getPhaseUuid())
+                     .field(StateExecutionInstanceKeys.stateType)
                      .in(asList(PHASE.name(), PHASE_STEP.name()))
                      .fetchKeys())) {
           if (!keys.hasNext()) {
@@ -150,10 +152,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       if (workflow.getStepExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
-                     .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
-                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
-                     .filter(StateExecutionInstance.STATE_TYPE_KEY, BARRIER.name())
-                     .filter(StateExecutionInstance.STEP_ID_KEY, workflow.getStepUuid())
+                     .filter(StateExecutionInstanceKeys.appId, barrierInstance.getAppId())
+                     .filter(StateExecutionInstanceKeys.executionUuid, workflow.getWorkflowExecutionId())
+                     .filter(StateExecutionInstanceKeys.stateType, BARRIER.name())
+                     .filter(StateExecutionInstanceKeys.stepId, workflow.getStepUuid())
                      .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
@@ -239,9 +241,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       status = workflowExecution.getStatus();
     } else {
       status = wingsPersistence.createQuery(StateExecutionInstance.class)
-                   .filter(StateExecutionInstance.APP_ID_KEY, metadata.get(APP_ID))
-                   .filter(StateExecutionInstance.ID_KEY, forcerId.getValue())
-                   .project(StateExecutionInstance.STATUS_KEY, true)
+                   .filter(StateExecutionInstanceKeys.appId, metadata.get(APP_ID))
+                   .filter(StateExecutionInstanceKeys.uuid, forcerId.getValue())
+                   .project(StateExecutionInstanceKeys.status, true)
                    .get()
                    .getStatus();
     }

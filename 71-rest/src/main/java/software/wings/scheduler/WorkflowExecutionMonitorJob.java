@@ -36,6 +36,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutor;
 
 import java.time.Duration;
@@ -85,9 +86,9 @@ public class WorkflowExecutionMonitorJob implements Job {
         boolean hasActiveStates = false;
         try (HIterator<StateExecutionInstance> stateExecutionInstances =
                  new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                     .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
-                                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
-                                     .field(StateExecutionInstance.STATUS_KEY)
+                                     .filter(StateExecutionInstanceKeys.appId, workflowExecution.getAppId())
+                                     .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+                                     .field(StateExecutionInstanceKeys.status)
                                      .in(asList(RUNNING, NEW, STARTING, PAUSED, WAITING))
                                      .fetch())) {
           hasActiveStates = stateExecutionInstances.hasNext();
@@ -120,13 +121,13 @@ public class WorkflowExecutionMonitorJob implements Job {
 
           final StateExecutionInstance stateExecutionInstance =
               wingsPersistence.createQuery(StateExecutionInstance.class)
-                  .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
-                  .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
-                  .field(StateExecutionInstance.NOTIFY_ID_KEY)
+                  .filter(StateExecutionInstanceKeys.appId, workflowExecution.getAppId())
+                  .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+                  .field(StateExecutionInstanceKeys.notifyId)
                   .doesNotExist()
-                  .field(StateExecutionInstance.CALLBACK_KEY)
+                  .field(StateExecutionInstanceKeys.callback)
                   .exists()
-                  .order(Sort.descending(StateExecutionInstance.LAST_UPDATED_AT_KEY))
+                  .order(Sort.descending(StateExecutionInstanceKeys.lastUpdatedAt))
                   .get();
 
           if (stateExecutionInstance == null) {

@@ -13,6 +13,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,7 @@ public class CleanUpDatadogCallLogMigration implements Migration {
       List<StateExecutionInstance> stateExecutionInstances =
           wingsPersistence.createQuery(StateExecutionInstance.class)
               .filter("stateType", "DATA_DOG")
-              .field(StateExecutionInstance.CREATED_AT_KEY)
+              .field(StateExecutionInstanceKeys.createdAt)
               .greaterThanOrEq(Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
               .asList();
 

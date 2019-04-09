@@ -206,6 +206,7 @@ import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
@@ -661,7 +662,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .withLimit(UNLIMITED)
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-            .addFilter(StateExecutionInstance.CREATED_AT_KEY, GE, workflowExecution.getCreatedAt())
+            .addFilter(StateExecutionInstanceKeys.createdAt, GE, workflowExecution.getCreatedAt())
             .build();
     return wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
   }
@@ -1823,13 +1824,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Map<String, Stat> stats = new HashMap<>();
     try (HIterator<StateExecutionInstance> stateExecutionInstances = new HIterator<>(
              wingsPersistence.createQuery(StateExecutionInstance.class)
-                 .filter(StateExecutionInstance.APP_ID_KEY, appId)
-                 .filter(StateExecutionInstance.EXECUTION_UUID_KEY, stateExecutionInstance.getExecutionUuid())
-                 .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
-                 .project(StateExecutionInstance.ID_KEY, true)
-                 .project(StateExecutionInstance.STATUS_KEY, true)
-                 .project(StateExecutionInstance.PREV_INSTANCE_ID_KEY, true)
-                 .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+                 .filter(StateExecutionInstanceKeys.appId, appId)
+                 .filter(StateExecutionInstanceKeys.executionUuid, stateExecutionInstance.getExecutionUuid())
+                 .filter(StateExecutionInstanceKeys.parentInstanceId, stateExecutionInstanceId)
+                 .project(StateExecutionInstanceKeys.uuid, true)
+                 .project(StateExecutionInstanceKeys.status, true)
+                 .project(StateExecutionInstanceKeys.prevInstanceId, true)
+                 .project(StateExecutionInstanceKeys.contextElement, true)
                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance instance = stateExecutionInstances.next();
@@ -1966,12 +1967,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         aPageRequest()
             .withReadPref(CRITICAL)
             .withLimit(UNLIMITED)
-            .addFilter(StateExecutionInstance.APP_ID_KEY, EQ, workflowExecution.getAppId())
-            .addFilter(StateExecutionInstance.EXECUTION_UUID_KEY, EQ, workflowExecution.getUuid())
-            .addFilter(StateExecutionInstance.STATE_TYPE_KEY, IN, StateType.REPEAT.name(), StateType.FORK.name(),
+            .addFilter(StateExecutionInstanceKeys.appId, EQ, workflowExecution.getAppId())
+            .addFilter(StateExecutionInstanceKeys.executionUuid, EQ, workflowExecution.getUuid())
+            .addFilter(StateExecutionInstanceKeys.stateType, IN, StateType.REPEAT.name(), StateType.FORK.name(),
                 StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), PHASE_STEP.name())
-            .addFilter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, NOT_EXISTS)
-            .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.ASC)
+            .addFilter(StateExecutionInstanceKeys.parentInstanceId, NOT_EXISTS)
+            .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.ASC)
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
@@ -2077,13 +2078,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
       try (HIterator<StateExecutionInstance> iterator =
                new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                   .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
-                                   .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
-                                   .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
-                                   .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-                                   .project(StateExecutionInstance.ID_KEY, true)
-                                   .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-                                   .project(StateExecutionInstance.STATUS_KEY, true)
+                                   .filter(StateExecutionInstanceKeys.appId, workflowExecution.getAppId())
+                                   .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+                                   .project(StateExecutionInstanceKeys.contextElement, true)
+                                   .project(StateExecutionInstanceKeys.displayName, true)
+                                   .project(StateExecutionInstanceKeys.uuid, true)
+                                   .project(StateExecutionInstanceKeys.parentInstanceId, true)
+                                   .project(StateExecutionInstanceKeys.status, true)
                                    .fetch())) {
         stateMachineExecutionSimulator.prepareStateExecutionInstanceMap(iterator, stateExecutionStatuses);
       }
@@ -2124,11 +2125,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
-            .filter(StateExecutionInstance.STATE_TYPE_KEY, PHASE.name())
-            .filter(StateExecutionInstance.ROLLBACK_KEY, false)
-            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .filter(StateExecutionInstanceKeys.appId, workflowExecution.getAppId())
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+            .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
+            .filter(StateExecutionInstanceKeys.rollback, false)
+            .field(StateExecutionInstanceKeys.createdAt)
             .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
 
@@ -2203,11 +2204,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String executionUuid, String parentStateExecutionInstanceId) {
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, appId)
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-            .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, parentStateExecutionInstanceId)
-            .order(Sort.ascending(StateExecutionInstance.CREATED_AT_KEY))
-            .project(StateExecutionInstance.CONTEXT_ELEMENTS_KEY, false)
+            .filter(StateExecutionInstanceKeys.appId, appId)
+            .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+            .filter(StateExecutionInstanceKeys.parentInstanceId, parentStateExecutionInstanceId)
+            .order(Sort.ascending(StateExecutionInstanceKeys.createdAt))
+            .project(StateExecutionInstanceKeys.contextElements, false)
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
@@ -2316,17 +2317,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String executionUuid, String stateExecutionInstanceId) {
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, appId)
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-            .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
-            .filter(StateExecutionInstance.STATE_TYPE_KEY, PHASE_STEP.name())
-            .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
-            .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-            .project(StateExecutionInstance.ID_KEY, true)
-            .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-            .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
-            .project(StateExecutionInstance.STATE_TYPE_KEY, true)
-            .project(StateExecutionInstance.STATUS_KEY, true)
+            .filter(StateExecutionInstanceKeys.appId, appId)
+            .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+            .filter(StateExecutionInstanceKeys.parentInstanceId, stateExecutionInstanceId)
+            .filter(StateExecutionInstanceKeys.stateType, PHASE_STEP.name())
+            .project(StateExecutionInstanceKeys.contextElement, true)
+            .project(StateExecutionInstanceKeys.displayName, true)
+            .project(StateExecutionInstanceKeys.uuid, true)
+            .project(StateExecutionInstanceKeys.parentInstanceId, true)
+            .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+            .project(StateExecutionInstanceKeys.stateType, true)
+            .project(StateExecutionInstanceKeys.status, true)
             .asList();
 
     PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
@@ -2358,17 +2359,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     while (isNotEmpty(parentInstanceIds)) {
       try (HIterator<StateExecutionInstance> iterator = new HIterator<StateExecutionInstance>(
                wingsPersistence.createQuery(StateExecutionInstance.class)
-                   .filter(StateExecutionInstance.APP_ID_KEY, appId)
-                   .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-                   .field(StateExecutionInstance.PARENT_INSTANCE_ID_KEY)
+                   .filter(StateExecutionInstanceKeys.appId, appId)
+                   .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                   .field(StateExecutionInstanceKeys.parentInstanceId)
                    .in(parentInstanceIds)
-                   .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
-                   .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-                   .project(StateExecutionInstance.ID_KEY, true)
-                   .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-                   .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
-                   .project(StateExecutionInstance.STATE_TYPE_KEY, true)
-                   .project(StateExecutionInstance.STATUS_KEY, true)
+                   .project(StateExecutionInstanceKeys.contextElement, true)
+                   .project(StateExecutionInstanceKeys.displayName, true)
+                   .project(StateExecutionInstanceKeys.uuid, true)
+                   .project(StateExecutionInstanceKeys.parentInstanceId, true)
+                   .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+                   .project(StateExecutionInstanceKeys.stateType, true)
+                   .project(StateExecutionInstanceKeys.status, true)
                    .fetch())) {
         if (!iterator.hasNext()) {
           return null;
@@ -2398,9 +2399,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<Artifact> getArtifactsCollected(String appId, String executionUuid) {
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, appId)
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-            .filter(StateExecutionInstance.STATE_TYPE_KEY, ARTIFACT_COLLECTION.name())
+            .filter(StateExecutionInstanceKeys.appId, appId)
+            .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+            .filter(StateExecutionInstanceKeys.stateType, ARTIFACT_COLLECTION.name())
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
@@ -2479,8 +2480,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         String executionUuid = stageExecution.getUuid();
         List<StateExecutionInstance> stateExecutionInstances =
             wingsPersistence.createQuery(StateExecutionInstance.class)
-                .filter(StateExecutionInstance.APP_ID_KEY, appId)
-                .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+                .filter(StateExecutionInstanceKeys.appId, appId)
+                .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
                 .asList();
 
         boolean containsVerificationState = false;
