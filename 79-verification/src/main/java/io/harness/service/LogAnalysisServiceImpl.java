@@ -49,6 +49,7 @@ import software.wings.api.InstanceElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
@@ -238,6 +239,10 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       }
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
 
+      if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel == ClusterLevel.L2) {
+        dataStoreService.save(LogDataRecord.class, logDataRecords, true);
+      }
+
       // bump the level for clustered data
       long logCollectionMinute = logData.get(0).getLogCollectionMinute();
       String query = logData.get(0).getQuery();
@@ -307,6 +312,12 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
       logger.info("Saved clustered data for cvConfig: {}, minute {}, toLevel {}", cvConfigId, logCollectionMinute,
           clusterLevel);
+
+      if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel.equals(ClusterLevel.L2)) {
+        dataStoreService.save(LogDataRecord.class, logDataRecords, true);
+        logger.info("Saved L2 clustered data to GoogleDatStore for cvConfig: {}, minute {}, toLevel {}", cvConfigId,
+            logCollectionMinute, clusterLevel);
+      }
     }
 
     switch (clusterLevel) {
