@@ -572,7 +572,7 @@ public class WorkflowResource {
   }
 
   @POST
-  @Path("phase/{phaseId}/sections/{sectionId}/{position}")
+  @Path("steps/phase/{phaseId}/sections/{sectionId}/{position}")
   @Timed
   @ExceptionMetered
   public RestResponse<WorkflowCategorySteps> getSteps(@PathParam("phaseId") String phaseId,

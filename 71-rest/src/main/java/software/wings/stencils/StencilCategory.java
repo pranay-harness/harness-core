@@ -7,6 +7,7 @@ package software.wings.stencils;
 import com.google.common.base.CaseFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Getter;
 
 /**
  * The enum Stencil category.
@@ -15,74 +16,26 @@ import com.fasterxml.jackson.annotation.JsonFormat;
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StencilCategory {
-  /**
-   * Commons stencil category.
-   */
-  COMMONS,
-  /**
-   * Commands stencil category.
-   */
-  COMMANDS(1),
-  /**
-   * Controls stencil category.
-   */
-  CONTROLS(0),
-  /**
-   * Environments stencil category.
-   */
-  ENVIRONMENTS(1),
-  /**
-   * Build stencil category.
-   */
   BUILD(0),
-  /**
-   * Scripts stencil category.
-   */
-  SCRIPTS,
-  /**
-   * Containers stencil category.
-   */
-  CONTAINERS,
-  /**
-   * Verifications stencil category.
-   */
-  VERIFICATIONS(2),
-  /**
-   * Copy stencil category.
-   */
-  COPY,
-  /**
-   * Cloud stencil category.
-   */
   CLOUD(3),
-  /**
-   * Subworkflow stencil category.
-   */
-  SUB_WORKFLOW(100),
-  /**
-   * Flow controls stencil category.
-   */
-  FLOW_CONTROLS("Flow controls", 9),
-  /**
-   * Others stencil category.
-   */
-  OTHERS(10),
-  /**
-   * Configurations stencil category.
-   */
-  CONFIGURATIONS,
-  /**
-   * Collections stencil category.
-   */
+  COLLABORATION("Collaboration", 4),
   COLLECTIONS,
-  /**
-   * Provisioners stencil category.
-   */
-  PROVISIONERS(0),
-
+  COMMANDS(1),
+  COMMONS,
+  CONFIGURATIONS,
+  CONTAINERS,
+  CONTROLS(0, true),
+  COPY,
+  ENVIRONMENTS(1, true),
+  FLOW_CONTROLS("Flow controls", 9),
   KUBERNETES("Kubernetes", 0),
+  OTHERS(10),
+  PROVISIONERS(0),
+  SCRIPTS,
+  SUB_WORKFLOW(100, true),
+  VERIFICATIONS(2);
 
-  COLLABORATION("Collaboration", 4);
+  @Getter boolean hidden;
 
   private String displayName;
 
@@ -95,6 +48,11 @@ public enum StencilCategory {
 
   StencilCategory(Integer displayOrder) {
     this(null, displayOrder);
+  }
+
+  StencilCategory(Integer displayOrder, boolean hidden) {
+    this(null, displayOrder);
+    this.hidden = hidden;
   }
 
   StencilCategory(String displayName) {

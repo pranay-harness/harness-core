@@ -65,7 +65,7 @@ public class PersonalizationServiceImpl implements PersonalizationService {
     }
 
     final Personalization personalization = query.get();
-    if (personalization.getSteps() != null) {
+    if (personalization != null && personalization.getSteps() != null) {
       normalizeRecent(personalization.getSteps().getRecent());
     }
 

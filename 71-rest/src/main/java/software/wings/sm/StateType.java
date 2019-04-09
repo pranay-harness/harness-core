@@ -47,15 +47,12 @@ import static software.wings.common.Constants.ROLLBACK_AWS_AMI_CLUSTER;
 import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
 import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
-import static software.wings.common.Constants.ROLLBACK_CONTAINERS;
 import static software.wings.common.Constants.ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS;
 import static software.wings.common.Constants.ROLLBACK_ECS_SETUP;
 import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
 import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
-import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP;
 import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP_ROUTE;
-import static software.wings.common.Constants.UPGRADE_CONTAINERS;
 import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
@@ -381,23 +378,23 @@ public enum StateType implements StateTypeDescriptor {
    */
   ARTIFACT_CHECK(ArtifactCheckState.class, OTHERS, 4, "Artifact Check", asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  AZURE_NODE_SELECT(AzureNodeSelectState.class, CLOUD, SELECT_NODE_NAME,
+  AZURE_NODE_SELECT(AzureNodeSelectState.class, CLOUD, "Azure Select Nodes",
       Lists.newArrayList(InfrastructureMappingType.AZURE_INFRA), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
       ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Select state.
    */
-  AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, SELECT_NODE_NAME,
+  AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, "AWS Select Nodes",
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
       ORCHESTRATION_STENCILS),
 
-  DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, SELECT_NODE_NAME,
+  DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, "Select Nodes",
       Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH), asList(SELECT_NODE),
       ORCHESTRATION_STENCILS),
 
-  ROLLING_NODE_SELECT(
-      RollingNodeSelectState.class, CLOUD, SELECT_NODE_NAME, asList(), asList(SELECT_NODE), ORCHESTRATION_STENCILS),
+  ROLLING_NODE_SELECT(RollingNodeSelectState.class, CLOUD, "Rolling Select Nodes", asList(), asList(SELECT_NODE),
+      ORCHESTRATION_STENCILS),
 
   PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
@@ -451,10 +448,10 @@ public enum StateType implements StateTypeDescriptor {
   ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, CLOUD, Constants.ECS_BG_SERVICE_SETUP_ROUTE_53,
       Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, UPGRADE_CONTAINERS, Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, "ECS Upgrade Containers", Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, ROLLBACK_CONTAINERS, Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, "ECS Rollback Containers", Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS, Lists.newArrayList(AWS_ECS),
@@ -480,12 +477,12 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS, UPGRADE_CONTAINERS,
+  KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS, "Kubernetes Upgrade Containers",
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY, WRAP_UP), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, ROLLBACK_CONTAINERS,
+  KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, "Kubernetes Rollback Containers",
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
