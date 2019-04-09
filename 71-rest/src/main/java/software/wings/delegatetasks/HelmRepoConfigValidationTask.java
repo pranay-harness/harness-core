@@ -5,6 +5,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
 
 import com.google.inject.Inject;
 
@@ -17,11 +18,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
+import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
+import software.wings.helpers.ext.chartmuseum.ChartMuseumServerConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -36,6 +41,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
 
   @Inject private EncryptionService encryptionService;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private ChartMuseumClient chartMuseumClient;
 
   public HelmRepoConfigValidationTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -50,11 +56,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
       logger.info(format("Running HelmRepoConfigValidationTask for account %s app %s", taskParams.getAccountId(),
           taskParams.getAppId()));
 
-      HelmRepoConfig helmRepoConfig = taskParams.getHelmRepoConfig();
-      List<EncryptedDataDetail> encryptedDataDetails = taskParams.getEncryptedDataDetails();
-      encryptionService.decrypt(helmRepoConfig, encryptedDataDetails);
-
-      validateHelmRepoConfig(helmRepoConfig);
+      validateHelmRepoConfig(taskParams);
 
       return HelmRepoConfigValidationResponse.builder().commandExecutionStatus(SUCCESS).build();
     } catch (Exception e) {
@@ -71,9 +73,16 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     throw new NotImplementedException("not implemented");
   }
 
-  private void validateHelmRepoConfig(HelmRepoConfig helmRepoConfig) throws Exception {
+  private void validateHelmRepoConfig(HelmRepoConfigValidationTaskParams taskParams) throws Exception {
+    HelmRepoConfig helmRepoConfig = taskParams.getHelmRepoConfig();
+    List<EncryptedDataDetail> encryptedDataDetails = taskParams.getEncryptedDataDetails();
+    encryptionService.decrypt(helmRepoConfig, encryptedDataDetails);
+
     if (helmRepoConfig instanceof HttpHelmRepoConfig) {
       validateHttpHelmRepoConfig(helmRepoConfig);
+      return;
+    } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
+      validateAmazonS3HelmRepoConfig(helmRepoConfig, taskParams);
       return;
     }
 
@@ -113,6 +122,42 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
         builder.append(" --password ").append(httpHelmRepoConfig.getPassword());
       }
     }
+
+    return builder.toString();
+  }
+
+  private void validateAmazonS3HelmRepoConfig(
+      HelmRepoConfig helmRepoConfig, HelmRepoConfigValidationTaskParams taskParams) throws Exception {
+    AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
+
+    AwsConfig awsConfig = (AwsConfig) taskParams.getConnectorConfig();
+    List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
+    encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
+
+    ChartMuseumServerConfig chartMuseumServerConfig = null;
+    try {
+      chartMuseumServerConfig =
+          chartMuseumClient.startChartMuseumServer(amazonS3HelmRepoConfig, taskParams.getConnectorConfig());
+
+      String repoAddCommand = getAmazonS3RepoAddCommand(amazonS3HelmRepoConfig, chartMuseumServerConfig.getPort());
+      executeCommand(repoAddCommand);
+
+    } finally {
+      if (chartMuseumServerConfig != null) {
+        chartMuseumClient.stopChartMuseumServer(chartMuseumServerConfig.getStartedProcess());
+      }
+    }
+  }
+
+  private String getAmazonS3RepoAddCommand(AmazonS3HelmRepoConfig amazonS3HelmRepoConfig, int port) {
+    String repoUrl = CHART_MUSEUM_SERVER_URL.replace("${PORT}", Integer.toString(port));
+    StringBuilder builder = new StringBuilder(128);
+
+    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath()))
+        .append(" repo add ")
+        .append(amazonS3HelmRepoConfig.getRepoName())
+        .append(' ')
+        .append(repoUrl);
 
     return builder.toString();
   }

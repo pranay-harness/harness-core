@@ -2,4 +2,4 @@ package software.wings.beans.settings.helm;
 
 import software.wings.annotation.EncryptableSetting;
 
-public interface HelmRepoConfig extends EncryptableSetting {}
+public interface HelmRepoConfig extends EncryptableSetting { String getConnectorId(); }
