@@ -15,7 +15,7 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
@@ -39,11 +39,14 @@ public class AwsClusterServiceImpl implements AwsClusterService {
 
   @Inject private EcsContainerService ecsContainerService;
 
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   @Override
   public void createCluster(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, ClusterConfiguration clusterConfiguration,
       LogCallback logCallback) {
+    if (!(clusterConfiguration instanceof AwsClusterConfiguration)) {
+      throw new WingsException("Unexpected type of cluster configuration");
+    }
+
     AwsClusterConfiguration awsClusterConfiguration = (AwsClusterConfiguration) clusterConfiguration;
 
     // Provision cloud infra nodes

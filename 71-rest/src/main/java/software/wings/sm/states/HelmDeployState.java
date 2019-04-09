@@ -18,7 +18,6 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -283,7 +282,6 @@ public class HelmDeployState extends State {
     }
   }
 
-  @SuppressFBWarnings("DB_DUPLICATE_BRANCHES") // TODO
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
@@ -310,7 +308,8 @@ public class HelmDeployState extends State {
               .collect(Collectors.toList());
     }
 
-    steadyStateTimeout = steadyStateTimeout > 0 ? 10 : DEFAULT_STEADY_STATE_TIMEOUT;
+    // TODO: this fix makes the previous behavior more obvious. We should review why we are overriding the value here
+    steadyStateTimeout = DEFAULT_STEADY_STATE_TIMEOUT;
 
     HelmInstallCommandRequestBuilder helmInstallCommandRequestBuilder =
         HelmInstallCommandRequest.builder()
