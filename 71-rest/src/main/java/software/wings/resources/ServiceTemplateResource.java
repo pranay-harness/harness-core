@@ -23,6 +23,7 @@ import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -57,10 +58,11 @@ public class ServiceTemplateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
-      @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
+      @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest,
+      @QueryParam("details") @DefaultValue("true") boolean details) {
     pageRequest.addFilter("appId", EQ, appId);
     pageRequest.addFilter("envId", EQ, envId);
-    return new RestResponse<>(serviceTemplateService.list(pageRequest, true, MASKED));
+    return new RestResponse<>(serviceTemplateService.list(pageRequest, details, MASKED));
   }
 
   /**
