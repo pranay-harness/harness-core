@@ -4,7 +4,6 @@ import static software.wings.graphql.utils.GraphQLConstants.NO_RECORDS_FOUND_FOR
 import static software.wings.graphql.utils.GraphQLConstants.WORKFLOW_TYPE;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.beans.PageRequest;
@@ -26,7 +25,6 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.stream.Collectors;
 
-@Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowListDataFetcher extends AbstractDataFetcher<PagedData<WorkflowInfo>> {
@@ -45,7 +43,7 @@ public class WorkflowListDataFetcher extends AbstractDataFetcher<PagedData<Workf
   @Override
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     PagedData<WorkflowInfo> pagedData = PagedData.<WorkflowInfo>builder().build();
-    String appId = dataFetchingEnvironment.getArgument(GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
 
     if (StringUtils.isBlank(appId)) {
       addInvalidInputInfo(pagedData, GraphQLConstants.APP_ID);

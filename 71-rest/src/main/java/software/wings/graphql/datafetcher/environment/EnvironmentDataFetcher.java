@@ -4,7 +4,6 @@ import static software.wings.graphql.utils.GraphQLConstants.APP_ID;
 import static software.wings.graphql.utils.GraphQLConstants.ENV_ID;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import lombok.AccessLevel;
@@ -18,7 +17,6 @@ import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.EnvironmentService;
 
-@Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EnvironmentDataFetcher extends AbstractDataFetcher<EnvironmentInfo> {

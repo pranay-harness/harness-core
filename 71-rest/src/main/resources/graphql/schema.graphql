@@ -1,3 +1,5 @@
+directive @dataFetcher(name : String!, contextFieldArgsMap: String) on FIELD_DEFINITION
+
 schema {
   query: Query
 }
@@ -5,36 +7,36 @@ schema {
 # Harness GraphQL SDL details
 type Query {
   # Get the workflow details for a specific appId and workflow Id
-  workflow(id: String!, appId: String!): Workflow
+  workflow(appId: String!, workflowId: String!): Workflow   @dataFetcher(name : "workflow")
 
   # Get list of workflows for an appId. It will return paginated data
-  workflows(appId: String!, limit: Int, offset: Int): PagedData
+  workflows(appId: String!, limit: Int, offset: Int): PagedData  @dataFetcher(name : "workflows")
 
   # Get the execution status of a workflow
-  workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution
+  workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution  @dataFetcher(name : "workflowExecution")
 
   # Get the list of workflow execution status for a particular workflowId, envId and appId.  It will return Paginated data.
-  workflowExecutions(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData
+  workflowExecutions(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData  @dataFetcher(name : "workflowExecutions")
 
   # Get list of successfully deployed articacts.
-  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]
+  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]  @dataFetcher(name : "deployedArtifacts")
 
   # Get details about an application
-  application(appId:String!): Application
+  application(appId:String!): Application @dataFetcher(name : "application")
 
   #Asking accountID temporarily because there is no auth support as of now. Will remove it once authentication is available
-  applications(accountId:String!): PagedData
+  applications(accountId:String!): PagedData  @dataFetcher(name : "applications")
 
   # Get details about an environment
-  environment(appId: String!, envId: String! ): Environment
+  environment(appId: String!, envId: String! ): Environment  @dataFetcher(name : "environment")
 
   # Get page data of environments
-  environments(appId: String!, environmentType: String,limit: Int, offset: Int): PagedData
+  environments(appId: String!, environmentType: String,limit: Int, offset: Int): PagedData  @dataFetcher(name : "environments")
 }
 
 # DateTime which will return date based on PST zone
 scalar DateTime
-
+scalar Object
 
 interface BaseInfo {
   debugInfo: String
@@ -81,7 +83,7 @@ type Workflow implements BaseInfo {
   # Services associated with the workflow
   services: [Service]
 
-  environment: Environment
+  environment: Environment  @dataFetcher(name : "environment", contextFieldArgsMap: "{ \"appId\": \"appId\", \"envId\": \"envId\"}")
 
   # Debug info useful to troubleshoot issues
   debugInfo: String
@@ -137,6 +139,8 @@ type Artifact implements BaseInfo {
     lastDeployedBy: String
     # Debug info useful to troubleshoot issues
     debugInfo: String
+    # Application of the artifact
+    application: Application @dataFetcher(name : "application", contextFieldArgsMap: "{ \"appId\": \"appId\"}")
 }
 
 type Application implements BaseInfo {
@@ -145,6 +149,8 @@ type Application implements BaseInfo {
   description : String
   # Debug info useful to troubleshoot issues
   debugInfo: String
+  # Workflows within an application
+  workflows: PagedData  @dataFetcher(name : "workflows", contextFieldArgsMap: "{ \"appId\": \"id\"}")
 }
 
 type Environment implements BaseInfo {

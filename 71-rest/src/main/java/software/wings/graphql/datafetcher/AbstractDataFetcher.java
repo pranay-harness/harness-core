@@ -5,13 +5,13 @@ import static software.wings.graphql.utils.GraphQLConstants.EMPTY_OR_NULL_INPUT_
 import static software.wings.graphql.utils.GraphQLConstants.MAX_PAGE_SIZE;
 import static software.wings.graphql.utils.GraphQLConstants.USER_NOT_AUTHORIZED_TO_VIEW_ENTITY;
 
-import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
@@ -22,15 +22,21 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public abstract class AbstractDataFetcher<T> implements DataFetcher {
-  AuthHandler authHandler;
+  @NotNull final AuthHandler authHandler;
+  @Setter Map<String, String> contextFieldArgsMap;
 
   protected boolean isAuthorizedToView(String appId, PermissionAttribute permissionAttribute, String entityId) {
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
@@ -79,11 +85,32 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
 
   protected Object getArgumentValue(DataFetchingEnvironment dataFetchingEnvironment, String argumentName) {
     Object argumentValue = dataFetchingEnvironment.getArgument(argumentName);
-    if (argumentValue == null) {
-      GraphQLContext.Builder contextBuilder = dataFetchingEnvironment.getContext();
-      GraphQLContext context = contextBuilder.build();
-      argumentValue = context.get(argumentName);
+    if (argumentValue == null && contextFieldArgsMap != null) {
+      String parentFieldName = contextFieldArgsMap.get(argumentName);
+      argumentValue = getFieldValue(dataFetchingEnvironment.getSource(), parentFieldName);
     }
     return argumentValue;
+  }
+
+  private Object getFieldValue(Object obj, String fieldName) {
+    Object fieldValue = null;
+    Class<?> clazz = obj.getClass();
+    try {
+      Field field = clazz.getDeclaredField(fieldName);
+      if (field != null) {
+        PropertyDescriptor pd = new PropertyDescriptor(field.getName(), obj.getClass());
+        fieldValue = pd.getReadMethod().invoke(obj);
+      }
+    } catch (NoSuchFieldException e) {
+      log.warn("NoSuchFieldException occured while fetching value for field {}", fieldName);
+    } catch (IllegalAccessException e) {
+      log.warn("IllegalAccessException occured while fetching value for field {}", fieldName);
+    } catch (IntrospectionException e) {
+      log.warn("IntrospectionException occured while fetching value for field {}", fieldName);
+    } catch (InvocationTargetException e) {
+      log.warn("InvocationTargetException occured while fetching value for field {}", fieldName);
+    }
+
+    return fieldValue;
   }
 }

@@ -24,5 +24,7 @@ public class WorkflowInfo implements BaseInfo {
   WorkflowType workflowType;
   boolean templatized;
   List<Service> services;
+  String envId;
+  String appId;
   String debugInfo;
 }

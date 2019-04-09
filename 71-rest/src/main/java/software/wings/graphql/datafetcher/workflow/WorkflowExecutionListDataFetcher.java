@@ -4,7 +4,6 @@ import static software.wings.graphql.utils.GraphQLConstants.NO_RECORDS_FOUND_FOR
 import static software.wings.graphql.utils.GraphQLConstants.WORKFLOW_EXECUTION_TYPE;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.beans.PageResponse;
@@ -23,7 +22,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.stream.Collectors;
 
-@Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class WorkflowExecutionListDataFetcher extends AbstractDataFetcher<PagedData<WorkflowExecutionInfo>> {
@@ -42,19 +40,19 @@ public class WorkflowExecutionListDataFetcher extends AbstractDataFetcher<PagedD
   public PagedData<WorkflowExecutionInfo> get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     PagedData<WorkflowExecutionInfo> pagedData = PagedData.<WorkflowExecutionInfo>builder().build();
 
-    String appId = dataFetchingEnvironment.getArgument(GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     if (StringUtils.isBlank(appId)) {
       addInvalidInputInfo(pagedData, GraphQLConstants.APP_ID);
       return pagedData;
     }
 
-    String workflowId = dataFetchingEnvironment.getArgument(GraphQLConstants.WORKFLOW_ID);
+    String workflowId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.WORKFLOW_ID);
     if (StringUtils.isBlank(workflowId)) {
       addInvalidInputInfo(pagedData, GraphQLConstants.WORKFLOW_ID);
       return pagedData;
     }
 
-    String envId = dataFetchingEnvironment.getArgument(GraphQLConstants.ENV_ID);
+    String envId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ENV_ID);
     if (StringUtils.isBlank(envId)) {
       addInvalidInputInfo(pagedData, GraphQLConstants.ENV_ID);
       return pagedData;

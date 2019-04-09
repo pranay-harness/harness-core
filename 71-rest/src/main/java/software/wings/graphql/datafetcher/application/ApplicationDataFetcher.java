@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.application;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import lombok.AccessLevel;
@@ -14,7 +13,6 @@ import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 
-@Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApplicationDataFetcher extends AbstractDataFetcher<ApplicationInfo> {
@@ -30,7 +28,7 @@ public class ApplicationDataFetcher extends AbstractDataFetcher<ApplicationInfo>
 
   @Override
   public ApplicationInfo get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    String appId = dataFetchingEnvironment.getArgument(GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     Application application = appService.get(appId);
     ApplicationInfo applicationInfo = ApplicationInfo.builder().build();
     if (null == application) {
