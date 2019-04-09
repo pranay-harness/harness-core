@@ -217,7 +217,7 @@ public class AuthenticationManager {
       if (isNotEmpty(accountId)) {
         User user = authenticationUtil.getUser(userName, USER);
         AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
-        return defaultLoginInternal(userName, password, authenticationMechanism);
+        return defaultLoginInternal(userName, password, false, authenticationMechanism);
       } else {
         return defaultLogin(userName, password);
       }
@@ -232,13 +232,36 @@ public class AuthenticationManager {
   }
 
   public User defaultLogin(String userName, String password) {
-    return defaultLoginInternal(userName, password, getAuthenticationMechanism(userName));
+    return defaultLoginInternal(userName, password, false, getAuthenticationMechanism(userName));
   }
 
-  private User defaultLoginInternal(String userName, String password, AuthenticationMechanism authenticationMechanism) {
+  public User defaultLoginUsingPasswordHash(String userName, String passwordHash) {
+    return defaultLoginInternal(userName, passwordHash, true, getAuthenticationMechanism(userName));
+  }
+
+  private User defaultLoginInternal(
+      String userName, String password, boolean isPasswordHash, AuthenticationMechanism authenticationMechanism) {
     try {
       AuthHandler authHandler = getAuthHandler(authenticationMechanism);
-      User user = authHandler.authenticate(userName, password).getUser();
+      if (authHandler == null) {
+        logger.error("No auth handler found for auth mechanism {}", authenticationMechanism);
+        throw new WingsException(INVALID_CREDENTIAL);
+      }
+
+      User user;
+      if (isPasswordHash) {
+        if (authHandler instanceof PasswordBasedAuthHandler) {
+          PasswordBasedAuthHandler passwordBasedAuthHandler = (PasswordBasedAuthHandler) authHandler;
+          user = passwordBasedAuthHandler.authenticateWithPasswordHash(userName, password).getUser();
+        } else {
+          logger.error("isPasswordHash should not be true if the auth mechanism {} is not username / password",
+              authenticationMechanism);
+          throw new WingsException(INVALID_CREDENTIAL);
+        }
+      } else {
+        user = authHandler.authenticate(userName, password).getUser();
+      }
+
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {

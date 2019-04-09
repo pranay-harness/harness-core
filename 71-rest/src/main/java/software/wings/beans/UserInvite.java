@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
@@ -42,6 +43,7 @@ public class UserInvite extends Base {
   @Transient private String name;
 
   @Transient private char[] password;
+  @JsonIgnore private String passwordHash;
 
   private String accountName;
 
@@ -196,6 +198,14 @@ public class UserInvite extends Base {
 
   public void setMarketPlaceToken(String marketPlaceToken) {
     this.marketPlaceToken = marketPlaceToken;
+  }
+
+  public String getPasswordHash() {
+    return passwordHash;
+  }
+
+  public void setPasswordHash(String passwordHash) {
+    this.passwordHash = passwordHash;
   }
 
   public static final class UserInviteBuilder {

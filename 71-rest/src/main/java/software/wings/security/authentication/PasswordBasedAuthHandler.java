@@ -30,6 +30,10 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
+    return authenticateInternal(false, credentials);
+  }
+
+  private AuthenticationResponse authenticateInternal(boolean isPasswordHash, String... credentials) {
     if (credentials == null || credentials.length != 2) {
       throw new WingsException(INVALID_ARGUMENT);
     }
@@ -44,10 +48,22 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     if (!user.isEmailVerified()) {
       throw new WingsException(EMAIL_NOT_VERIFIED, USER);
     }
-    if (checkpw(password, user.getPasswordHash())) {
-      return new AuthenticationResponse(user);
+
+    if (isPasswordHash) {
+      if (password.equals(user.getPasswordHash())) {
+        return new AuthenticationResponse(user);
+      }
+    } else {
+      if (checkpw(password, user.getPasswordHash())) {
+        return new AuthenticationResponse(user);
+      }
     }
+
     throw new WingsException(INVALID_CREDENTIAL, USER);
+  }
+
+  public AuthenticationResponse authenticateWithPasswordHash(String... credentials) {
+    return authenticateInternal(true, credentials);
   }
 
   @Override
