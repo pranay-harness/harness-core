@@ -155,7 +155,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
-          .withDisplayName(STATE_NAME)
+          .displayName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
           .addContextElement(ContainerServiceElement.builder()

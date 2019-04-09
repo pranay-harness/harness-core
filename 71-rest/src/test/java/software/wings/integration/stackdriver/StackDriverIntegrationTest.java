@@ -60,10 +60,10 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()
-                              .withExecutionUuid(workflowExecutionId)
-                              .withStateType(StateType.PHASE.name())
-                              .withAppId(appId)
-                              .withDisplayName(generateUuid())
+                              .executionUuid(workflowExecutionId)
+                              .stateType(StateType.PHASE.name())
+                              .appId(appId)
+                              .displayName(generateUuid())
                               .build());
     SettingAttribute settingAttribute = settingsService.getByName(accountId, Application.GLOBAL_APP_ID, GOOGLE_ACCOUNT);
     assertNotNull(settingAttribute);

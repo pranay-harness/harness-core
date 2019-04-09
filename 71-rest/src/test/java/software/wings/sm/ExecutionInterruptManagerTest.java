@@ -108,10 +108,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
-                                                        .withAppId(app.getUuid())
-                                                        .withDisplayName("state1")
-                                                        .build();
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().appId(app.getUuid()).displayName("state1").build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -138,10 +136,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
-                                                        .withAppId(app.getUuid())
-                                                        .withDisplayName("state1")
-                                                        .build();
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().appId(app.getUuid()).displayName("state1").build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -169,9 +165,9 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
-                                                        .withAppId(app.getUuid())
-                                                        .withDisplayName("state1")
-                                                        .withStatus(ExecutionStatus.SUCCESS)
+                                                        .appId(app.getUuid())
+                                                        .displayName("state1")
+                                                        .status(ExecutionStatus.SUCCESS)
                                                         .build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -200,9 +196,9 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
-                                                        .withAppId(app.getUuid())
-                                                        .withDisplayName("state1")
-                                                        .withStatus(ExecutionStatus.SUCCESS)
+                                                        .appId(app.getUuid())
+                                                        .displayName("state1")
+                                                        .status(ExecutionStatus.SUCCESS)
                                                         .build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()

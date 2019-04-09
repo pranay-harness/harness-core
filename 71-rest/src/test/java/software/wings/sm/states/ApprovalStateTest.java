@@ -121,7 +121,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(asList(User.Builder.anUser().build()));
     when(context.getStateExecutionInstance())
-        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.PIPELINE).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.PIPELINE).build());
 
     ExecutionResponse executionResponse = approvalState.execute(context);
     verify(alertService)
@@ -167,8 +167,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
     when(context.getStateExecutionInstance())
-        .thenReturn(
-            aStateExecutionInstance().withExecutionType(WorkflowType.PIPELINE).withUuid(generateUuid()).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.PIPELINE).uuid(generateUuid()).build());
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.PIPELINE.name());
 
@@ -190,8 +189,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
     when(context.getStateExecutionInstance())
-        .thenReturn(
-            aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).withUuid(generateUuid()).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).uuid(generateUuid()).build());
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.ORCHESTRATION.name());
 
@@ -212,8 +210,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
     when(context.getStateExecutionInstance())
-        .thenReturn(
-            aStateExecutionInstance().withExecutionType(WorkflowType.PIPELINE).withUuid(generateUuid()).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.PIPELINE).uuid(generateUuid()).build());
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.PIPELINE.name());
 
@@ -234,8 +231,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
 
     when(context.getStateExecutionInstance())
-        .thenReturn(
-            aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).withUuid(generateUuid()).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).uuid(generateUuid()).build());
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.ORCHESTRATION.name());
 
@@ -278,7 +274,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForWorkflow() {
     when(context.getStateExecutionInstance())
-        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
     when(context.getEnv()).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
 
     approvalState.execute(context);
@@ -296,7 +292,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForPipelineWithApproval() {
     when(context.getStateExecutionInstance())
-        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.PIPELINE).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.PIPELINE).build());
 
     approvalState.execute(context);
     ArgumentCaptor<ApprovalNeededAlert> argumentCaptor = ArgumentCaptor.forClass(ApprovalNeededAlert.class);
@@ -313,7 +309,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForPipelineWithWorkflowApproval() {
     when(context.getStateExecutionInstance())
-        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).build());
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
     when(context.getEnv()).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
     when(context.getContextElement(ContextElementType.STANDARD))
         .thenReturn(

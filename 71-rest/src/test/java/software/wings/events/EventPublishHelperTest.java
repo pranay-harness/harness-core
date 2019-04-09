@@ -335,8 +335,8 @@ public class EventPublishHelperTest extends WingsBaseTest {
           .thenReturn(
               PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflowExecution)).withTotal(1).build());
       StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
-                                                          .withUuid(STATE_EXECUTION_ID)
-                                                          .withExecutionUuid(WORKFLOW_EXECUTION_ID)
+                                                          .uuid(STATE_EXECUTION_ID)
+                                                          .executionUuid(WORKFLOW_EXECUTION_ID)
                                                           .build();
       when(stateExecutionService.list(any(PageRequest.class)))
           .thenReturn(PageResponseBuilder.aPageResponse()

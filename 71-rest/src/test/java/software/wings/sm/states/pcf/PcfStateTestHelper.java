@@ -139,7 +139,7 @@ public class PcfStateTestHelper {
   private StateExecutionInstance.Builder getStateExecutionInstancBuilder(
       WorkflowStandardParams workflowStandardParams, PhaseElement phaseElement, ServiceElement serviceElement) {
     return aStateExecutionInstance()
-        .withDisplayName(STATE_NAME)
+        .displayName(STATE_NAME)
         .addContextElement(workflowStandardParams)
         .addContextElement(phaseElement)
         .addStateExecutionData(aCommandStateExecutionData().build());

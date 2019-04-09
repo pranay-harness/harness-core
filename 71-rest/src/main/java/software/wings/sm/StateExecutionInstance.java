@@ -158,37 +158,37 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
       return new Builder();
     }
 
-    public Builder withChildStateMachineId(String childStateMachineId) {
+    public Builder childStateMachineId(String childStateMachineId) {
       this.childStateMachineId = childStateMachineId;
       return this;
     }
 
-    public Builder withDisplayName(String displayName) {
+    public Builder displayName(String displayName) {
       this.displayName = displayName;
       return this;
     }
 
-    public Builder withStateName(String stateName) {
+    public Builder stateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
-    public Builder withStateType(String stateType) {
+    public Builder stateType(String stateType) {
       this.stateType = stateType;
       return this;
     }
 
-    public Builder withContextElement(ContextElement contextElement) {
+    public Builder contextElement(ContextElement contextElement) {
       this.contextElement = contextElement;
       return this;
     }
 
-    public Builder withContextTransition(boolean contextTransition) {
+    public Builder contextTransition(boolean contextTransition) {
       this.contextTransition = contextTransition;
       return this;
     }
 
-    public Builder withContextElements(LinkedList<ContextElement> contextElements) {
+    public Builder contextElements(LinkedList<ContextElement> contextElements) {
       this.contextElements = contextElements;
       return this;
     }
@@ -208,144 +208,144 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
       return this;
     }
 
-    public Builder withStateExecutionMap(Map<String, StateExecutionData> stateExecutionMap) {
+    public Builder stateExecutionMap(Map<String, StateExecutionData> stateExecutionMap) {
       this.stateExecutionMap = stateExecutionMap;
       return this;
     }
 
-    public Builder withStateExecutionDataHistory(List<StateExecutionData> stateExecutionDataHistory) {
+    public Builder stateExecutionDataHistory(List<StateExecutionData> stateExecutionDataHistory) {
       this.stateExecutionDataHistory = stateExecutionDataHistory;
       return this;
     }
 
-    public Builder withNotifyElements(List<ContextElement> notifyElements) {
+    public Builder notifyElements(List<ContextElement> notifyElements) {
       this.notifyElements = notifyElements;
       return this;
     }
 
-    public Builder withCallback(StateMachineExecutionCallback callback) {
+    public Builder callback(StateMachineExecutionCallback callback) {
       this.callback = callback;
       return this;
     }
 
-    public Builder withExecutionName(String executionName) {
+    public Builder executionName(String executionName) {
       this.executionName = executionName;
       return this;
     }
 
-    public Builder withExecutionType(WorkflowType executionType) {
+    public Builder executionType(WorkflowType executionType) {
       this.executionType = executionType;
       return this;
     }
 
-    public Builder withOrchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
+    public Builder orchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
       this.orchestrationWorkflowType = orchestrationWorkflowType;
       return this;
     }
 
-    public Builder withExecutionUuid(String executionUuid) {
+    public Builder executionUuid(String executionUuid) {
       this.executionUuid = executionUuid;
       return this;
     }
 
-    public Builder withParentInstanceId(String parentInstanceId) {
+    public Builder parentInstanceId(String parentInstanceId) {
       this.parentInstanceId = parentInstanceId;
       return this;
     }
 
-    public Builder withPrevInstanceId(String prevInstanceId) {
+    public Builder prevInstanceId(String prevInstanceId) {
       this.prevInstanceId = prevInstanceId;
       return this;
     }
 
-    public Builder withNextInstanceId(String nextInstanceId) {
+    public Builder nextInstanceId(String nextInstanceId) {
       this.nextInstanceId = nextInstanceId;
       return this;
     }
 
-    public Builder withCloneInstanceId(String cloneInstanceId) {
+    public Builder cloneInstanceId(String cloneInstanceId) {
       this.cloneInstanceId = cloneInstanceId;
       return this;
     }
 
-    public Builder withNotifyId(String notifyId) {
+    public Builder notifyId(String notifyId) {
       this.notifyId = notifyId;
       return this;
     }
 
-    public Builder withStatus(ExecutionStatus status) {
+    public Builder status(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
-    public Builder withStartTs(Long startTs) {
+    public Builder startTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
-    public Builder withEndTs(Long endTs) {
+    public Builder endTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withAppId(String appId) {
+    public Builder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withCreatedAt(long createdAt) {
+    public Builder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
     public Builder but() {
       return aStateExecutionInstance()
-          .withStateName(stateName)
-          .withDisplayName(displayName)
-          .withStateType(stateType)
-          .withContextElement(contextElement)
-          .withContextTransition(contextTransition)
-          .withContextElements(contextElements)
-          .withStateExecutionMap(stateExecutionMap)
-          .withStateExecutionDataHistory(stateExecutionDataHistory)
-          .withNotifyElements(notifyElements)
-          .withCallback(callback)
-          .withExecutionName(executionName)
-          .withExecutionType(executionType)
-          .withOrchestrationWorkflowType(orchestrationWorkflowType)
-          .withExecutionUuid(executionUuid)
-          .withParentInstanceId(parentInstanceId)
-          .withPrevInstanceId(prevInstanceId)
-          .withNextInstanceId(nextInstanceId)
-          .withCloneInstanceId(cloneInstanceId)
-          .withNotifyId(notifyId)
-          .withStatus(status)
-          .withStartTs(startTs)
-          .withEndTs(endTs)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .stateName(stateName)
+          .displayName(displayName)
+          .stateType(stateType)
+          .contextElement(contextElement)
+          .contextTransition(contextTransition)
+          .contextElements(contextElements)
+          .stateExecutionMap(stateExecutionMap)
+          .stateExecutionDataHistory(stateExecutionDataHistory)
+          .notifyElements(notifyElements)
+          .callback(callback)
+          .executionName(executionName)
+          .executionType(executionType)
+          .orchestrationWorkflowType(orchestrationWorkflowType)
+          .executionUuid(executionUuid)
+          .parentInstanceId(parentInstanceId)
+          .prevInstanceId(prevInstanceId)
+          .nextInstanceId(nextInstanceId)
+          .cloneInstanceId(cloneInstanceId)
+          .notifyId(notifyId)
+          .status(status)
+          .startTs(startTs)
+          .endTs(endTs)
+          .uuid(uuid)
+          .appId(appId)
+          .createdAt(createdAt)
+          .lastUpdatedAt(lastUpdatedAt);
     }
 
     public StateExecutionInstance build() {

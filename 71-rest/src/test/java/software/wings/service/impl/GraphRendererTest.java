@@ -54,20 +54,20 @@ public class GraphRendererTest extends WingsBaseTest {
   public void testIsSubWorkflow() {
     assertThat(GraphRenderer.isSubWorkflow(null)).isFalse();
     assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().build())).isFalse();
-    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().withStateType("SUB_WORKFLOW").build())).isTrue();
-    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().withStateType("PHASE").build())).isTrue();
-    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().withStateType("PHASE_STEP").build())).isTrue();
-    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().withStateType("COMMAND").build())).isFalse();
+    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().stateType("SUB_WORKFLOW").build())).isTrue();
+    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().stateType("PHASE").build())).isTrue();
+    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().stateType("PHASE_STEP").build())).isTrue();
+    assertThat(GraphRenderer.isSubWorkflow(aStateExecutionInstance().stateType("COMMAND").build())).isFalse();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testSanity() {
     List<StateExecutionInstance> stateExecutionInstances = asList(aStateExecutionInstance()
-                                                                      .withDisplayName("origin")
-                                                                      .withUuid(generateUuid())
-                                                                      .withStateType("PHASE")
-                                                                      .withStatus(SUCCESS)
+                                                                      .displayName("origin")
+                                                                      .uuid(generateUuid())
+                                                                      .stateType("PHASE")
+                                                                      .status(SUCCESS)
                                                                       .build());
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
@@ -80,40 +80,40 @@ public class GraphRendererTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateHierarchyNode() {
     final StateExecutionInstance parent = aStateExecutionInstance()
-                                              .withDisplayName("Deploy Service")
-                                              .withUuid("deploy")
-                                              .withStateType(PHASE.name())
-                                              .withContextTransition(true)
-                                              .withStatus(SUCCESS)
+                                              .displayName("Deploy Service")
+                                              .uuid("deploy")
+                                              .stateType(PHASE.name())
+                                              .contextTransition(true)
+                                              .status(SUCCESS)
                                               .build();
 
     final StateExecutionInstance repeat = aStateExecutionInstance()
-                                              .withDisplayName("Repeat deploy on hosts")
-                                              .withUuid("repeat")
-                                              .withStateType(REPEAT.name())
-                                              .withContextTransition(true)
-                                              .withStatus(SUCCESS)
-                                              .withParentInstanceId(parent.getUuid())
+                                              .displayName("Repeat deploy on hosts")
+                                              .uuid("repeat")
+                                              .stateType(REPEAT.name())
+                                              .contextTransition(true)
+                                              .status(SUCCESS)
+                                              .parentInstanceId(parent.getUuid())
                                               .build();
 
     final StateExecutionInstance host1 = aStateExecutionInstance()
-                                             .withDisplayName("install on host1")
-                                             .withUuid("host1")
-                                             .withStateType(COMMAND.name())
-                                             .withContextElement(aHostElement().withHostName("host1").build())
-                                             .withContextTransition(true)
-                                             .withStatus(SUCCESS)
-                                             .withParentInstanceId(repeat.getUuid())
+                                             .displayName("install on host1")
+                                             .uuid("host1")
+                                             .stateType(COMMAND.name())
+                                             .contextElement(aHostElement().withHostName("host1").build())
+                                             .contextTransition(true)
+                                             .status(SUCCESS)
+                                             .parentInstanceId(repeat.getUuid())
                                              .build();
 
     final StateExecutionInstance host2 = aStateExecutionInstance()
-                                             .withDisplayName("install on host 2")
-                                             .withUuid("host2")
-                                             .withStateType(COMMAND.name())
-                                             .withContextElement(aHostElement().withHostName("host2").build())
-                                             .withContextTransition(true)
-                                             .withStatus(SUCCESS)
-                                             .withParentInstanceId(repeat.getUuid())
+                                             .displayName("install on host 2")
+                                             .uuid("host2")
+                                             .stateType(COMMAND.name())
+                                             .contextElement(aHostElement().withHostName("host2").build())
+                                             .contextTransition(true)
+                                             .status(SUCCESS)
+                                             .parentInstanceId(repeat.getUuid())
                                              .build();
 
     List<StateExecutionInstance> stateExecutionInstances = asList(parent, repeat, host1, host2);
@@ -145,20 +145,20 @@ public class GraphRendererTest extends WingsBaseTest {
 
   private GraphNode getInfrastructureNode() {
     final StateExecutionInstance infrastructure = aStateExecutionInstance()
-                                                      .withDisplayName(Constants.INFRASTRUCTURE_NODE_NAME)
-                                                      .withUuid("infrastructure")
-                                                      .withStateType(PHASE_STEP.name())
-                                                      .withContextTransition(true)
-                                                      .withStatus(SUCCESS)
+                                                      .displayName(Constants.INFRASTRUCTURE_NODE_NAME)
+                                                      .uuid("infrastructure")
+                                                      .stateType(PHASE_STEP.name())
+                                                      .contextTransition(true)
+                                                      .status(SUCCESS)
                                                       .build();
 
     final StateExecutionInstance element = aStateExecutionInstance()
-                                               .withDisplayName("first")
-                                               .withUuid("first")
-                                               .withStateType(COMMAND.name())
-                                               .withContextTransition(true)
-                                               .withStatus(SUCCESS)
-                                               .withParentInstanceId(infrastructure.getUuid())
+                                               .displayName("first")
+                                               .uuid("first")
+                                               .stateType(COMMAND.name())
+                                               .contextTransition(true)
+                                               .status(SUCCESS)
+                                               .parentInstanceId(infrastructure.getUuid())
                                                .build();
 
     List<StateExecutionInstance> stateExecutionInstances = asList(infrastructure, element);
@@ -172,11 +172,11 @@ public class GraphRendererTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testConvertToNode() {
     final StateExecutionInstance instance = aStateExecutionInstance()
-                                                .withDisplayName("state name")
-                                                .withUuid("uuid")
-                                                .withStateType(PHASE_STEP.name())
-                                                .withContextTransition(true)
-                                                .withStatus(SUCCESS)
+                                                .displayName("state name")
+                                                .uuid("uuid")
+                                                .stateType(PHASE_STEP.name())
+                                                .contextTransition(true)
+                                                .status(SUCCESS)
                                                 .build();
 
     instance.setStateParams(ImmutableMap.of("key", "value"));

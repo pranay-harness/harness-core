@@ -131,7 +131,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Before
   public void setupContext() {
     StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance().withDisplayName("healthCheck1").withUuid(STATE_EXECUTION_ID).build();
+        aStateExecutionInstance().displayName("healthCheck1").uuid(STATE_EXECUTION_ID).build();
 
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     stateExecutionMap.put("healthCheck1", HttpStateExecutionData.builder().build());

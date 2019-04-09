@@ -68,7 +68,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
             .withServiceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
             .build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withDisplayName(STATE_NAME)
+                                                        .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
                                                         .addStateExecutionData(new PhaseStepExecutionData())
@@ -95,7 +95,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ServiceElement serviceElement = aServiceElement().withUuid(generateUuid()).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement().withUuid(generateUuid()).withServiceElement(serviceElement).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withDisplayName(STATE_NAME)
+                                                        .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
                                                         .addContextElement(ContainerServiceElement.builder()
@@ -131,7 +131,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldHandleAsyncPreDeploy() {
-    ExecutionContextImpl context = new ExecutionContextImpl(aStateExecutionInstance().withUuid(generateUuid()).build());
+    ExecutionContextImpl context = new ExecutionContextImpl(aStateExecutionInstance().uuid(generateUuid()).build());
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     Map<String, ResponseData> notifyResponse = new HashMap<>();
@@ -160,7 +160,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                     .withDeploymentType(DeploymentType.SSH.name())
                                     .build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withDisplayName(STATE_NAME)
+                                                        .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
                                                         .addStateExecutionData(new PhaseStepExecutionData())
@@ -198,7 +198,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ContainerServiceElement containerServiceElement =
         ContainerServiceElement.builder().uuid(serviceElement.getUuid()).resizeStrategy(RESIZE_NEW_FIRST).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withDisplayName(STATE_NAME)
+                                                        .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
                                                         .addStateExecutionData(new PhaseStepExecutionData())
@@ -231,7 +231,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                     .build();
 
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withDisplayName(STATE_NAME)
+                                                        .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
                                                         .addStateExecutionData(new PhaseStepExecutionData())
@@ -267,7 +267,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ContainerServiceElement containerServiceElement =
         ContainerServiceElement.builder().uuid(serviceElement.getUuid()).resizeStrategy(RESIZE_NEW_FIRST).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withDisplayName(STATE_NAME)
+                                                        .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
                                                         .addStateExecutionData(new PhaseStepExecutionData())
@@ -300,7 +300,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                     .build();
 
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withDisplayName(STATE_NAME)
+                                                        .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
                                                         .addStateExecutionData(new PhaseStepExecutionData())
