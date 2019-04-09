@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.URL_KEY;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -26,8 +27,10 @@ import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_FULL_DISPLAY_NAME;
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.common.Constants.IMAGE;
 import static software.wings.common.Constants.KEY;
-import static software.wings.common.Constants.URL;
+import static software.wings.common.Constants.TAG;
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -66,22 +69,18 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.expression.SecretFunctor;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
-import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.template.TemplateService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
@@ -98,14 +97,10 @@ public class ArtifactCollectionUtil {
   @Inject private SecretManager secretManager;
   @Inject private AwsHelperService awsHelperService;
   @Inject private AzureHelperService azureHelperService;
-  @Inject private EcrService ecrService;
   @Inject private EcrClassicService ecrClassicService;
-  @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
   @Inject private AppService appService;
   @Inject private ExpressionEvaluator evaluator;
-  @Inject private TemplateService templateService;
 
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionUtil.class);
 
@@ -150,7 +145,7 @@ public class ArtifactCollectionUtil {
         metadata.put(
             ARTIFACT_FILE_NAME, buildDetails.getNumber().substring(buildDetails.getNumber().lastIndexOf('/') + 1));
         if (isNotEmpty(buildDetails.getBuildUrl())) {
-          metadata.put(URL, buildDetails.getBuildUrl());
+          metadata.put(URL_KEY, buildDetails.getBuildUrl());
         }
         if (buildDetails.getArtifactFileSize() != null) {
           metadata.put(ARTIFACT_FILE_SIZE, buildDetails.getArtifactFileSize());
@@ -165,26 +160,26 @@ public class ArtifactCollectionUtil {
       metadata.put(BUILD_NO, buildParameters.get(BUILD_NO));
       metadata.put(BUCKET_NAME, buildParameters.get(BUCKET_NAME));
       metadata.put(KEY, buildParameters.get(KEY));
-      metadata.put(URL, buildParameters.get(URL));
+      metadata.put(URL_KEY, buildParameters.get(URL_KEY));
       metadata.put(ARTIFACT_FILE_SIZE, buildParameters.get(ARTIFACT_FILE_SIZE));
       return metadata;
     } else if (artifactStreamType.equals(JENKINS.name()) || artifactStreamType.equals(BAMBOO.name())) {
       metadata.putAll(buildDetails.getBuildParameters());
       metadata.put(BUILD_NO, buildDetails.getNumber());
       metadata.put(BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
-      metadata.put(URL, buildDetails.getBuildUrl());
+      metadata.put(URL_KEY, buildDetails.getBuildUrl());
       return metadata;
     } else if (artifactStreamType.equals(SMB.name()) || artifactStreamType.equals(SFTP.name())) {
       metadata.putAll(buildDetails.getBuildParameters());
       metadata.put(BUILD_NO, buildDetails.getNumber());
       metadata.put(ARTIFACT_PATH, metadata.get(ARTIFACT_PATH));
       metadata.put(BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
-      metadata.put(URL, buildDetails.getBuildUrl());
+      metadata.put(URL_KEY, buildDetails.getBuildUrl());
       return metadata;
     } else if (artifactStreamType.equals(NEXUS.name())) {
       metadata.put(BUILD_NO, buildDetails.getNumber());
       if (isNotEmpty(buildDetails.getBuildUrl())) {
-        metadata.put(URL, buildDetails.getBuildUrl());
+        metadata.put(URL_KEY, buildDetails.getBuildUrl());
       }
       return metadata;
     }
@@ -438,5 +433,17 @@ public class ArtifactCollectionUtil {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
           .addParam("message", "BuildNo. Path cannot be empty. Please refer the documentation.");
     }
+  }
+
+  public static BuildDetails prepareDockerBuildDetails(DockerConfig dockerConfig, String imageName, String tag) {
+    String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
+        ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
+        : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
+
+    String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
+    Map<String, String> metadata = new HashMap();
+    metadata.put(IMAGE, domainName + "/" + imageName + ":" + tag);
+    metadata.put(TAG, tag);
+    return aBuildDetails().withNumber(tag).withMetadata(metadata).withBuildUrl(tagUrl + tag).build();
   }
 }
