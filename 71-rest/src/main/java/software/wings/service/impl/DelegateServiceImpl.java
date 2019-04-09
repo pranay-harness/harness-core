@@ -472,6 +472,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createUpdateOperations(Delegate.class)
             .set("lastHeartBeat", System.currentTimeMillis())
             .set("connected", true));
+    touchExecutingTasks(delegate);
 
     Delegate existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
 
@@ -546,27 +547,28 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                 .filter(Delegate.ACCOUNT_ID_KEY, delegate.getAccountId())
                                 .filter(ID_KEY, delegate.getUuid()),
         updateOperations);
-
-    // Touch currently executing tasks.
-    if (delegate.getCurrentlyExecutingDelegateTasks() != null
-        && isNotEmpty(delegate.getCurrentlyExecutingDelegateTasks())) {
-      logger.info("Updating tasks");
-
-      Query<DelegateTask> delegateTaskQuery =
-          wingsPersistence.createQuery(DelegateTask.class)
-              .filter(DelegateTask.ACCOUNT_ID_KEY, delegate.getAccountId())
-              .filter(DelegateTask.DELEGATE_ID_KEY, delegate.getUuid())
-              .filter("status", DelegateTask.Status.STARTED)
-              .field(DelegateTask.LAST_UPDATED_AT_KEY)
-              .lessThan(System.currentTimeMillis())
-              .field(ID_KEY)
-              .in(delegate.getCurrentlyExecutingDelegateTasks().stream().map(DelegateTask::getUuid).collect(toList()));
-      wingsPersistence.update(delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class));
-    }
+    touchExecutingTasks(delegate);
 
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
     return get(delegate.getAccountId(), delegate.getUuid(), true);
+  }
+
+  private void touchExecutingTasks(Delegate delegate) {
+    // Touch currently executing tasks.
+    if (isNotEmpty(delegate.getCurrentlyExecutingDelegateTasks())) {
+      logger.info("Updating tasks");
+
+      Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                                  .filter(DelegateTask.ACCOUNT_ID_KEY, delegate.getAccountId())
+                                                  .filter(DelegateTask.DELEGATE_ID_KEY, delegate.getUuid())
+                                                  .filter("status", DelegateTask.Status.STARTED)
+                                                  .field(DelegateTask.LAST_UPDATED_AT_KEY)
+                                                  .lessThan(System.currentTimeMillis())
+                                                  .field(ID_KEY)
+                                                  .in(delegate.getCurrentlyExecutingDelegateTasks());
+      wingsPersistence.update(delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class));
+    }
   }
 
   @Override
@@ -1168,8 +1170,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private void updateBroadcastMessageIfEcsDelegate(
       StringBuilder message, Delegate delegate, Delegate registeredDelegate) {
     if (ECS.equals(delegate.getDelegateType())) {
-      logger.info(delegate.toString());
-      logger.info(delegate.getHostName());
       String hostName = getDelegateHostNameByRemovingSeqNum(registeredDelegate);
       String seqNum = getDelegateSeqNumFromHostName(registeredDelegate);
       DelegateSequenceConfig sequenceConfig =

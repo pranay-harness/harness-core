@@ -3,7 +3,6 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -57,7 +56,7 @@ public class Delegate extends Base {
 
   @Deprecated private List<String> supportedTaskTypes;
 
-  @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
+  @Transient private List<String> currentlyExecutingDelegateTasks;
 
   private List<DelegateScope> includeScopes;
   private List<DelegateScope> excludeScopes;
@@ -90,7 +89,7 @@ public class Delegate extends Base {
 
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
-    private List<DelegateTask> currentlyExecutingDelegateTasks;
+    private List<String> currentlyExecutingDelegateTasks;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -190,7 +189,7 @@ public class Delegate extends Base {
       return this;
     }
 
-    public Builder withCurrentlyExecutingDelegateTasks(List<DelegateTask> currentlyExecutingDelegateTasks) {
+    public Builder withCurrentlyExecutingDelegateTasks(List<String> currentlyExecutingDelegateTasks) {
       this.currentlyExecutingDelegateTasks = currentlyExecutingDelegateTasks;
       return this;
     }
