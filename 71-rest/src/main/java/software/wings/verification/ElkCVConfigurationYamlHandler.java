@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.WingsException;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.verification.log.ElkCVConfiguration;
@@ -12,9 +12,12 @@ import java.util.List;
 
 public class ElkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandler {
   @Override
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public LogsCVConfigurationYaml toYaml(LogsCVConfiguration bean, String appId) {
     final ElkCVConfigurationYaml yaml = (ElkCVConfigurationYaml) super.toYaml(bean, appId);
+    if (!(bean instanceof ElkCVConfiguration)) {
+      throw new WingsException("Unexpected type of cluster configuration");
+    }
+
     ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) bean;
     yaml.setQueryType(elkCVConfiguration.getQueryType().name());
     yaml.setIndex(elkCVConfiguration.getIndex());
