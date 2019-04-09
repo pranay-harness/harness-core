@@ -6,7 +6,9 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -382,17 +384,36 @@ public class SettingValidationService {
     return settingAttribute;
   }
 
+  private HelmRepoConfigValidationTaskParams getHelmRepoConfigValidationTaskParams(
+      SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
+    HelmRepoConfigValidationTaskParams taskParams = HelmRepoConfigValidationTaskParams.builder()
+                                                        .accountId(settingAttribute.getAccountId())
+                                                        .appId(settingAttribute.getAppId())
+                                                        .encryptedDataDetails(encryptedDataDetails)
+                                                        .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
+                                                        .build();
+
+    String connectorId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
+    if (isNotBlank(connectorId)) {
+      SettingAttribute connectorSettingAttribute = settingsService.get(settingAttribute.getAppId(), connectorId);
+      notNullCheck("Connector doesn't exist for id " + connectorId, connectorSettingAttribute);
+      List<EncryptedDataDetail> connectorEncryptedDataDetails =
+          fetchEncryptionDetails(connectorSettingAttribute.getValue());
+
+      taskParams.setConnectorConfig(connectorSettingAttribute.getValue());
+      taskParams.setConnectorEncryptedDataDetails(connectorEncryptedDataDetails);
+    }
+
+    return taskParams;
+  }
+
   private void validateHelmRepoConfig(
       SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     HelmRepoConfigValidationResponse repoConfigValidationResponse;
 
     try {
-      HelmRepoConfigValidationTaskParams taskParams = HelmRepoConfigValidationTaskParams.builder()
-                                                          .accountId(settingAttribute.getAccountId())
-                                                          .appId(settingAttribute.getAppId())
-                                                          .encryptedDataDetails(encryptedDataDetails)
-                                                          .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
-                                                          .build();
+      HelmRepoConfigValidationTaskParams taskParams =
+          getHelmRepoConfigValidationTaskParams(settingAttribute, encryptedDataDetails);
 
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(settingAttribute.getAccountId())

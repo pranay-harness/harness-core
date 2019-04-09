@@ -154,10 +154,10 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   }
 
   @SuppressWarnings("PMD.AvoidStringBufferField")
-  static class StringBufferOutputStream extends OutputStream {
+  public static class StringBufferOutputStream extends OutputStream {
     protected StringBuffer buffer;
 
-    StringBufferOutputStream(StringBuffer out) {
+    public StringBufferOutputStream(StringBuffer out) {
       buffer = out;
     }
 

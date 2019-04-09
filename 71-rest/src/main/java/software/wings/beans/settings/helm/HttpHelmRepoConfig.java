@@ -48,4 +48,9 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
     this.password = Arrays.copyOf(password, password.length);
     this.encryptedPassword = encryptedPassword;
   }
+
+  @Override
+  public String getConnectorId() {
+    return null;
+  }
 }
