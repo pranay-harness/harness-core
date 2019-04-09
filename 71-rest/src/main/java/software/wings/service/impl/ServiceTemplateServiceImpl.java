@@ -154,7 +154,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     ImmutableMap<String, ServiceTemplate> serviceTemplateMap =
         Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
 
-    List<Service> services = serviceResourceService.findServicesByApp(appId);
+    List<String> serviceIds = new ArrayList<>();
+    serviceTemplates.forEach(serviceTemplate -> {
+      if (serviceTemplate.getServiceId() != null) {
+        serviceIds.add(serviceTemplate.getServiceId());
+      }
+    });
+
+    List<Service> services = serviceResourceService.fetchServicesByUuids(appId, serviceIds);
     if (isNotEmpty(services)) {
       for (Service service : services) {
         if (isBlank(service.getUuid())) {
