@@ -112,6 +112,16 @@ public class UserRestUtil extends AbstractFunctionalTest {
     return completed.getResource();
   }
 
+  public User completeNewTrialUserSignup(String inviteId) {
+    RestResponse<User> completed = Setup.portal()
+                                       .auth()
+                                       .oauth2(bearerToken)
+                                       .put("/users/invites/trial/" + inviteId + "/new-signin")
+                                       .as(new GenericType<RestResponse<User>>() {}.getType());
+
+    return completed.getResource();
+  }
+
   public User completeTrialUserSignupAndSignin(String accountName, String companyName, UserInvite invite) {
     Registration registration = new Registration();
     registration.setAgreement(true);
@@ -138,6 +148,16 @@ public class UserRestUtil extends AbstractFunctionalTest {
                                                     .body(emailId)
                                                     .contentType(ContentType.TEXT)
                                                     .post("/users/trial")
+                                                    .as(new GenericType<RestResponse<Boolean>>() {}.getType());
+
+    return trialInviteResponse.getResource();
+  }
+
+  public Boolean createNewTrialInvite(UserInvite userInvite) {
+    RestResponse<Boolean> trialInviteResponse = Setup.portal()
+                                                    .body(userInvite, ObjectMapperType.GSON)
+                                                    .contentType(ContentType.JSON)
+                                                    .post("/users/new-trial")
                                                     .as(new GenericType<RestResponse<Boolean>>() {}.getType());
 
     return trialInviteResponse.getResource();

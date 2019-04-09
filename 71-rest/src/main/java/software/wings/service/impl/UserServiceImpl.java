@@ -258,6 +258,49 @@ public class UserServiceImpl implements UserService {
    * invitation completion.
    */
   @Override
+  public boolean trialSignup(UserInvite userInvite) {
+    final String emailAddress = userInvite.getEmail().toLowerCase();
+    validateTrialSignup(emailAddress);
+
+    UserInvite userInviteInDB = getUserInviteByEmail(emailAddress);
+    if (userInviteInDB == null) {
+      userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
+      userInvite.setCompleted(false);
+      String hashed = hashpw(new String(userInvite.getPassword()), BCrypt.gensalt());
+      userInvite.setPasswordHash(hashed);
+      String inviteId = wingsPersistence.save(userInvite);
+      userInvite.setUuid(inviteId);
+
+      String url = format("/activation.html?email=%s&userInviteId=%s", userInvite.getEmail(), inviteId);
+      // Send an email invitation for the trial user to finish up the sign-up with additional information
+      // such as password, account/company name information.
+      sendVerificationEmail(userInvite, url);
+      eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
+    } else if (userInviteInDB.isCompleted()) {
+      if (isTrialRegistrationSpam(userInviteInDB)) {
+        return false;
+      }
+      // HAR-7590: If user invite has completed. Send an email saying so and ask the user to login directly.
+      sendTrialSignupCompletedEmail(userInviteInDB);
+    } else {
+      if (isTrialRegistrationSpam(userInviteInDB)) {
+        return false;
+      }
+
+      String url =
+          format("/activation.html?email=%s&userInviteId=%s", userInviteInDB.getEmail(), userInviteInDB.getUuid());
+      // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
+      sendVerificationEmail(userInviteInDB, url);
+    }
+
+    return true;
+  }
+
+  /**
+   * Trial/Freemium user invitation won't create account. The freemium account will be created only at time of
+   * invitation completion.
+   */
+  @Override
   public boolean trialSignup(String email) {
     final String emailAddress = email.trim().toLowerCase();
     validateTrialSignup(emailAddress);
@@ -273,9 +316,10 @@ public class UserServiceImpl implements UserService {
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
 
+      String url = format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid());
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
-      sendVerificationEmail(userInvite);
+      sendVerificationEmail(userInvite, url);
       eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
     } else if (userInvite.isCompleted()) {
       if (isTrialRegistrationSpam(userInvite)) {
@@ -287,8 +331,10 @@ public class UserServiceImpl implements UserService {
       if (isTrialRegistrationSpam(userInvite)) {
         return false;
       }
+
+      String url = format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid());
       // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
-      sendVerificationEmail(userInvite);
+      sendVerificationEmail(userInvite, url);
     }
 
     return true;
@@ -844,11 +890,10 @@ public class UserServiceImpl implements UserService {
     return null;
   }
 
-  private Map<String, String> getEmailVerificationTemplateModel(UserInvite userInvite) throws URISyntaxException {
+  private Map<String, String> getEmailVerificationTemplateModel(String email, String url) throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    model.put("name", userInvite.getEmail());
-    model.put(
-        "url", buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid())));
+    model.put("name", email);
+    model.put("url", buildAbsoluteUrl(url));
     return model;
   }
 
@@ -870,9 +915,9 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void sendVerificationEmail(UserInvite userInvite) {
+  private void sendVerificationEmail(UserInvite userInvite, String url) {
     try {
-      Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite);
+      Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url);
       sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Verification email couldn't be sent ", e);
@@ -970,6 +1015,10 @@ public class UserServiceImpl implements UserService {
         .get();
   }
 
+  private UserInvite getInvite(String inviteId) {
+    return wingsPersistence.createQuery(UserInvite.class).filter(UserInvite.UUID_KEY, inviteId).get();
+  }
+
   @Override
   public UserInvite completeInvite(UserInvite userInvite) {
     UserInvite existingInvite = getInvite(userInvite.getAccountId(), userInvite.getUuid());
@@ -1012,6 +1061,28 @@ public class UserServiceImpl implements UserService {
   public User completeTrialSignupAndSignIn(User user, UserInvite userInvite) {
     completeTrialSignup(user, userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
+  }
+
+  @Override
+  public User completeTrialSignupAndSignIn(String userInviteId) {
+    UserInvite userInvite = getInvite(userInviteId);
+    if (userInvite == null) {
+      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+    }
+
+    String accountName = accountService.suggestAccountName(userInvite.getAccountName());
+    String companyName = userInvite.getCompanyName();
+
+    User user = User.Builder.anUser()
+                    .withEmail(userInvite.getEmail())
+                    .withName(userInvite.getName())
+                    .withPasswordHash(userInvite.getPasswordHash())
+                    .withAccountName(accountName)
+                    .withCompanyName(companyName != null ? companyName : accountName)
+                    .build();
+
+    completeTrialSignup(user, userInvite);
+    return authenticationManager.defaultLoginUsingPasswordHash(userInvite.getEmail(), userInvite.getPasswordHash());
   }
 
   @Override
@@ -1093,7 +1164,9 @@ public class UserServiceImpl implements UserService {
   private void saveUserAndUserGroups(User user, String email, Account account, List<UserGroup> accountAdminGroups) {
     user.setAppId(GLOBAL_APP_ID);
     user.setEmail(user.getEmail().trim().toLowerCase());
-    user.setPasswordHash(hashpw(new String(user.getPassword()), BCrypt.gensalt()));
+    if (isEmpty(user.getPasswordHash())) {
+      user.setPasswordHash(hashpw(new String(user.getPassword()), BCrypt.gensalt()));
+    }
     user.setEmailVerified(true);
     user.getAccounts().add(account);
     user.setUserGroups(accountAdminGroups);
@@ -1117,7 +1190,7 @@ public class UserServiceImpl implements UserService {
     if (user.getAccountName() == null || user.getCompanyName() == null) {
       throw new InvalidRequestException("Account/company name is not provided", USER);
     }
-    if (isEmpty(user.getName()) || isEmpty(user.getPassword())) {
+    if (isEmpty(user.getName()) || (isEmpty(user.getPassword()) && isEmpty(user.getPasswordHash()))) {
       throw new InvalidRequestException("User's name/password is not provided", USER);
     }
 

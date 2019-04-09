@@ -53,6 +53,13 @@ public interface UserService extends OwnedByAccount {
    */
   boolean trialSignup(String email);
 
+  /**
+   * Start the trial registration with an user invite.
+   *
+   * @param userInvite user invite with registration info
+   */
+  boolean trialSignup(UserInvite userInvite);
+
   UserInvite createUserInviteForMarketPlace();
 
   User getUserSummary(User user);
@@ -356,6 +363,15 @@ public interface UserService extends OwnedByAccount {
    * @return the completed user invite
    */
   User completeTrialSignupAndSignIn(User user, UserInvite userInvite);
+
+  /**
+   * Complete the trial user signup and signin. Both the trial account and the account admin user will be created
+   * as part of this operation.
+   *
+   * @param userInviteId the user invite id.
+   * @return the completed user invite
+   */
+  User completeTrialSignupAndSignIn(String userInviteId);
 
   /**
    * Delete invite user invite.

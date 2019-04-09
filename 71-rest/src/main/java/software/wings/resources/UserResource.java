@@ -187,6 +187,22 @@ public class UserResource {
     return new RestResponse<>(userService.trialSignup(email));
   }
 
+  /**
+   *  Start the trial registration with email and user info.
+   *  A verification email will be sent to the specified email address.
+   *  On successful verification, it creates the account and registers the user.
+   *
+   * @param userInvite user invite with email and user info
+   */
+  @PublicApi
+  @POST
+  @Path("new-trial")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> trialSignup(UserInvite userInvite) {
+    return new RestResponse<>(userService.trialSignup(userInvite));
+  }
+
   @POST
   @Path("account")
   @Timed
@@ -901,6 +917,15 @@ public class UserResource {
                     .withCompanyName(companyName)
                     .build();
     return new RestResponse<>(userService.completeTrialSignupAndSignIn(user, userInvite));
+  }
+
+  @PublicApi
+  @PUT
+  @Path("invites/trial/{inviteId}/new-signin")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> completeTrialSignupAndSignIn(@PathParam("inviteId") @NotEmpty String inviteId) {
+    return new RestResponse<>(userService.completeTrialSignupAndSignIn(inviteId));
   }
 
   /**
