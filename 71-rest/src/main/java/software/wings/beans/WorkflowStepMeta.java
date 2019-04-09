@@ -7,6 +7,6 @@ import lombok.Value;
 @Builder
 public class WorkflowStepMeta {
   private String name;
-  private boolean featured;
+  private boolean favorite;
   private boolean available;
 }

@@ -2748,7 +2748,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     for (StateType step : stateTypes) {
       final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
                                             .name(step.getName())
-                                            .featured(isNotEmpty(favorites) && favorites.contains(step.getType()))
+                                            .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
                                             .available(true)
                                             .build();
       steps.put(step.getType(), stepMeta);
@@ -2759,7 +2759,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (isNotEmpty(recent)) {
       List<String> stepIds = new ArrayList<>();
       recent.descendingIterator().forEachRemaining(stepId -> stepIds.add(stepId));
-      categories.add(WorkflowCategoryStepsMeta.builder().id("RECENT").name("Recent").stepIds(stepIds).build());
+      categories.add(
+          WorkflowCategoryStepsMeta.builder().id("RECENTLY_USED").name("Recently Used").stepIds(stepIds).build());
     }
 
     if (isNotEmpty(favorites)) {
@@ -2769,13 +2770,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           stepIds.add(step.getType());
         }
       }
-      categories.add(WorkflowCategoryStepsMeta.builder().id("FAVORITE").name("Favorite").stepIds(stepIds).build());
+      categories.add(
+          WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(stepIds).build());
     }
 
     for (StencilCategory category : stencilCategoryies) {
+      if (category.isHidden()) {
+        continue;
+      }
       List<String> stepIds = new ArrayList<>();
       for (StateType step : stateTypes) {
-        stepIds.add(step.getType());
+        if (step.getStencilCategory().equals(category)) {
+          stepIds.add(step.getType());
+        }
       }
       categories.add(WorkflowCategoryStepsMeta.builder()
                          .id(category.getName())

@@ -3412,8 +3412,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                          .stepIds(asList(HTTP.getType(), SHELL_SCRIPT.getType()))
                                                          .build();
 
-    final WorkflowCategoryStepsMeta categoryFavorites =
-        WorkflowCategoryStepsMeta.builder().id("FAVORITE").name("Favorite").stepIds(asList(HTTP.getType())).build();
+    final WorkflowCategoryStepsMeta categoryFavorites = WorkflowCategoryStepsMeta.builder()
+                                                            .id("MY_FAVORITES")
+                                                            .name("My Favorites")
+                                                            .stepIds(asList(HTTP.getType()))
+                                                            .build();
 
     WorkflowCategorySteps workflowCategorySteps =
         WorkflowServiceImpl.calculateCategorySteps(null, null, stateTypes, stencilCategory, workflow, null, null, 0);
@@ -3427,8 +3430,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     LinkedList<String> recent = new LinkedList();
     recent.add(SHELL_SCRIPT.getType());
 
-    final WorkflowCategoryStepsMeta categoryRecent =
-        WorkflowCategoryStepsMeta.builder().id("RECENT").name("Recent").stepIds(asList(SHELL_SCRIPT.getType())).build();
+    final WorkflowCategoryStepsMeta categoryRecent = WorkflowCategoryStepsMeta.builder()
+                                                         .id("RECENTLY_USED")
+                                                         .name("Recently Used")
+                                                         .stepIds(asList(SHELL_SCRIPT.getType()))
+                                                         .build();
 
     workflowCategorySteps =
         WorkflowServiceImpl.calculateCategorySteps(null, recent, stateTypes, stencilCategory, workflow, null, null, 0);
@@ -3450,9 +3456,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     ImmutableMap<String, WorkflowStepMeta> stepMetaMap =
         ImmutableMap.<String, WorkflowStepMeta>builder()
             .put(
-                HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).featured(false).available(true).build())
+                HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).favorite(false).available(true).build())
             .put(SHELL_SCRIPT.getType(),
-                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).featured(false).available(true).build())
+                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).favorite(false).available(true).build())
             .build();
 
     WorkflowCategorySteps workflowCategorySteps =
@@ -3465,9 +3471,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     stepMetaMap =
         ImmutableMap.<String, WorkflowStepMeta>builder()
-            .put(HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).featured(true).available(true).build())
+            .put(HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).favorite(true).available(true).build())
             .put(SHELL_SCRIPT.getType(),
-                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).featured(false).available(true).build())
+                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).favorite(false).available(true).build())
             .build();
 
     assertThat(workflowCategorySteps.getSteps()).isEqualTo(stepMetaMap);

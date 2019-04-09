@@ -29,11 +29,11 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.USER)
 @AuthRule(permissionType = ACCOUNT)
 public class PersonalizationResource {
-  private PersonalizationService PersonalizationService;
+  private PersonalizationService personalizationService;
 
   @Inject
   public PersonalizationResource(PersonalizationService PersonalizationService) {
-    this.PersonalizationService = PersonalizationService;
+    this.personalizationService = PersonalizationService;
   }
 
   @PUT
@@ -43,7 +43,7 @@ public class PersonalizationResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public void addFavorite(@PathParam("stepId") String stepId, @QueryParam("accountId") String accountId) {
     final User user = UserThreadLocal.get();
-    PersonalizationService.addFavoriteStep(StateType.valueOf(stepId), accountId, user.getUuid());
+    personalizationService.addFavoriteStep(StateType.valueOf(stepId), accountId, user.getUuid());
   }
 
   @DELETE
@@ -53,7 +53,7 @@ public class PersonalizationResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public void removeFavorite(@PathParam("stepId") String stepId, @QueryParam("accountId") String accountId) {
     final User user = UserThreadLocal.get();
-    PersonalizationService.addFavoriteStep(StateType.valueOf(stepId), accountId, user.getUuid());
+    personalizationService.removeFavoriteStep(StateType.valueOf(stepId), accountId, user.getUuid());
   }
 
   @PUT
@@ -63,6 +63,6 @@ public class PersonalizationResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public void addRecent(@PathParam("stepId") String stepId, @QueryParam("accountId") String accountId) {
     final User user = UserThreadLocal.get();
-    PersonalizationService.addFavoriteStep(StateType.valueOf(stepId), accountId, user.getUuid());
+    personalizationService.addRecentStep(StateType.valueOf(stepId), accountId, user.getUuid());
   }
 }
