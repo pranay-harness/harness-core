@@ -59,7 +59,6 @@ import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -1136,11 +1135,13 @@ public class DelegateServiceImpl implements DelegateService {
 
       // This will Add ECS delegate specific fields if delegateType = "ECS"
       updateBuilderIfEcsDelegate(builder);
-      Delegate delegate = builder.but()
-                              .withLastHeartBeat(clock.millis())
-                              .withConnected(true)
-                              .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
-                              .build();
+      Delegate delegate =
+          builder.but()
+              .withLastHeartBeat(clock.millis())
+              .withConnected(true)
+              .withCurrentlyExecutingDelegateTasks(
+                  currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()))
+              .build();
 
       try {
         timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegate)), 15L, TimeUnit.SECONDS, true);
@@ -1180,7 +1181,13 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Sending heartbeat...");
     try {
       updateBuilderIfEcsDelegate(builder);
-      Delegate delegate = builder.but().withKeepAlivePacket(false).withPolllingModeEnabled(true).build();
+      Delegate delegate =
+          builder.but()
+              .withKeepAlivePacket(false)
+              .withPolllingModeEnabled(true)
+              .withCurrentlyExecutingDelegateTasks(
+                  currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()))
+              .build();
       logger.info("SeqNum being sent to manager is: " + delegate.getSequenceNum());
       logger.info("DelegateToken being sent to manager is: " + delegate.getDelegateRandomToken());
 
@@ -1227,11 +1234,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void updateTokenAndSeqNumFromPollingResponse(Delegate delegate) {
     if (isEcsDelegate()) {
-      handleEcsDelegateSpecificMessage(new StringBuilder("[TOKEN]")
-                                           .append(delegate.getDelegateRandomToken())
-                                           .append("[SEQ]")
-                                           .append(delegate.getSequenceNum())
-                                           .toString());
+      handleEcsDelegateSpecificMessage(
+          "[TOKEN]" + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum());
     }
   }
 
@@ -1258,7 +1262,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
+  private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
