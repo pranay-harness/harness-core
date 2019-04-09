@@ -60,6 +60,7 @@ import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
 import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.MigrateCVMetadataApplicationId;
+import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.MigrateLogFeedbackRecordsToGoogle;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataBaselineMigration;
@@ -213,6 +214,7 @@ public class MigrationList {
         .add(Pair.of(238, MigrateLogFeedbackRecordsToGoogle.class))
         .add(Pair.of(239, ServiceNameMigrationIfEmpty.class))
         .add(Pair.of(240, DeleteCVAlertsMigration.class))
+        .add(Pair.of(241, MigrateLogDataRecordsToGoogle.class))
         .build();
   }
 }

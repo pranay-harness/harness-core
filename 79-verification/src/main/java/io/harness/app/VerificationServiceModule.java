@@ -86,6 +86,7 @@ public class VerificationServiceModule extends AbstractModule {
     if (configuration.getDataStorageMode() == null) {
       configuration.setDataStorageMode(DataStorageMode.MONGO);
     }
+
     switch (configuration.getDataStorageMode()) {
       case GOOGLE_CLOUD_DATA_STORE:
         bind(DataStoreService.class).to(GoogleDataStoreServiceImpl.class);
