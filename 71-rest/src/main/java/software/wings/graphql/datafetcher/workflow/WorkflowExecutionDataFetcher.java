@@ -5,7 +5,6 @@ import static software.wings.graphql.utils.GraphQLConstants.WORKFLOW_EXECUTION_T
 import static software.wings.graphql.utils.GraphQLConstants.WORKFLOW_TYPE;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import lombok.AccessLevel;
@@ -23,7 +22,6 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.WorkflowExecutionService;
 
-@Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<WorkflowExecutionInfo> {
@@ -47,13 +45,13 @@ public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<WorkflowEx
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     WorkflowExecutionInfo workflowExecutionType = WorkflowExecutionInfo.builder().build();
 
-    String appId = dataFetchingEnvironment.getArgument(GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     if (StringUtils.isBlank(appId)) {
       addInvalidInputInfo(workflowExecutionType, GraphQLConstants.APP_ID);
       return workflowExecutionType;
     }
 
-    String workflowId = dataFetchingEnvironment.getArgument(GraphQLConstants.WORKFLOW_ID);
+    String workflowId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.WORKFLOW_ID);
     if (StringUtils.isBlank(workflowId)) {
       addInvalidInputInfo(workflowExecutionType, GraphQLConstants.WORKFLOW_ID);
       return workflowExecutionType;

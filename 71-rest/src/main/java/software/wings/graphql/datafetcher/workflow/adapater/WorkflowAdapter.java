@@ -24,6 +24,8 @@ public class WorkflowAdapter {
         .workflowType(workflow.getWorkflowType())
         .templatized(workflow.isTemplatized())
         .services(workflow.getServices())
+        .envId(workflow.getEnvId())
+        .appId(workflow.getAppId())
         .build();
   }
 

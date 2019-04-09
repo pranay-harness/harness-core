@@ -19,4 +19,5 @@ public class ArtifactInfo implements BaseInfo {
   String lastDeployedBy;
   long lastDeployedAt;
   String debugInfo;
+  String appId;
 }

@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.application;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.beans.PageRequest;
@@ -22,7 +21,6 @@ import software.wings.service.intfc.AppService;
 
 import java.util.stream.Collectors;
 
-@Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApplicationListDataFetcher extends AbstractDataFetcher<PagedData<ApplicationInfo>> {
@@ -40,12 +38,11 @@ public class ApplicationListDataFetcher extends AbstractDataFetcher<PagedData<Ap
   @Override
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     PagedData<ApplicationInfo> pagedData = PagedData.<ApplicationInfo>builder().build();
-    PageResponse<Application> pageResponse = null;
     int limit = getPageLimit(dataFetchingEnvironment);
     int offset = getPageOffset(dataFetchingEnvironment);
 
     // TODO - remove this once accountID is available from the authentication
-    String accountID = dataFetchingEnvironment.getArgument(GraphQLConstants.ACCOUNT_ID);
+    String accountID = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ACCOUNT_ID);
     if (StringUtils.isBlank(accountID)) {
       addInvalidInputInfo(pagedData, GraphQLConstants.ACCOUNT_ID);
       return pagedData;

@@ -3,8 +3,6 @@ package software.wings.graphql.utils;
 import software.wings.beans.FeatureName;
 
 public class GraphQLConstants {
-  public static final String QUERY_API = "Query";
-  public static final String ENTITY_ID = "id";
   public static final String APP_ID = "appId";
   public static final String ACCOUNT_ID = "accountId";
   public static final String SERVICE_ID = "serviceId";

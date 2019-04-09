@@ -5,7 +5,6 @@ import static software.wings.graphql.utils.GraphQLConstants.APP_ID;
 import static software.wings.graphql.utils.GraphQLConstants.ENV_TYPE;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.beans.PageRequest;
@@ -25,7 +24,6 @@ import software.wings.service.intfc.EnvironmentService;
 
 import java.util.stream.Collectors;
 
-@Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EnvironmentListDataFetcher extends AbstractDataFetcher<PagedData<EnvironmentInfo>> {
@@ -44,9 +42,8 @@ public class EnvironmentListDataFetcher extends AbstractDataFetcher<PagedData<En
   @Override
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     PagedData<EnvironmentInfo> pagedData = PagedData.<EnvironmentInfo>builder().build();
-    String appId = dataFetchingEnvironment.getArgument(APP_ID);
-
-    String environmentType = dataFetchingEnvironment.getArgument(ENV_TYPE);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID);
+    String environmentType = (String) getArgumentValue(dataFetchingEnvironment, ENV_TYPE);
 
     if (StringUtils.isEmpty(appId)) {
       addInvalidInputInfo(pagedData, APP_ID);

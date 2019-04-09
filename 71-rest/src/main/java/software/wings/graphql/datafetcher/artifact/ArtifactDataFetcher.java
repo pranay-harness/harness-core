@@ -13,7 +13,6 @@ import static software.wings.graphql.utils.GraphQLConstants.ZERO_OFFSET_STR;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.beans.PageRequest;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>> {
@@ -105,19 +103,19 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>>
   public List<ArtifactInfo> get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     List<ArtifactInfo> deployedArtifactList = Lists.newArrayList();
 
-    String appId = dataFetchingEnvironment.getArgument(GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     if (StringUtils.isBlank(appId)) {
       addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.APP_ID);
       return deployedArtifactList;
     }
 
-    String serviceId = dataFetchingEnvironment.getArgument(GraphQLConstants.SERVICE_ID);
+    String serviceId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.SERVICE_ID);
     if (StringUtils.isBlank(serviceId)) {
       addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.SERVICE_ID);
       return deployedArtifactList;
     }
 
-    String envId = dataFetchingEnvironment.getArgument(GraphQLConstants.ENV_ID);
+    String envId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ENV_ID);
     if (StringUtils.isBlank(envId)) {
       addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.ENV_ID);
       return deployedArtifactList;
@@ -153,6 +151,7 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>>
                                        .buildNo(artifact != null ? artifact.getBuildNo() : null)
                                        .displayName(artifact != null ? artifact.getDisplayName() : null)
                                        .sourceName(artifact != null ? artifact.getArtifactSourceName() : null)
+                                       .appId(artifact != null ? artifact.getAppId() : null)
                                        .build();
                                  })
                                  .collect(Collectors.toList());
