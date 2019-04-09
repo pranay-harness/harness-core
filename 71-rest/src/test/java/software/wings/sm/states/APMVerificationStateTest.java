@@ -55,7 +55,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Before
   public void setupContext() {
     StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance().withDisplayName("healthCheck1").withUuid(STATE_EXECUTION_ID).build();
+        aStateExecutionInstance().displayName("healthCheck1").uuid(STATE_EXECUTION_ID).build();
     when(workflowStandardParams.getApp()).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     when(workflowStandardParams.getEnv())
         .thenReturn(

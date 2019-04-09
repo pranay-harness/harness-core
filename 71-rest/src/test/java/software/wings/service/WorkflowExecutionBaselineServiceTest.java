@@ -176,10 +176,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       String workflowExecutionId = wingsPersistence.save(workflowExecution);
       workflowExecutionIds.add(workflowExecutionId);
       workflowExecutions.add(workflowExecution);
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withExecutionUuid(workflowExecutionId)
-                                                          .withStateType(StateType.DYNA_TRACE.name())
-                                                          .build();
+      StateExecutionInstance stateExecutionInstance =
+          aStateExecutionInstance().executionUuid(workflowExecutionId).stateType(StateType.DYNA_TRACE.name()).build();
 
       createDataRecords(workflowExecutionId, appId);
       stateExecutionInstance.setAppId(appId);
@@ -317,10 +315,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         String workflowExecutionId = wingsPersistence.save(workflowExecution);
         workflowExecutionIds.get(i).add(workflowExecutionId);
         workflowExecutions.add(workflowExecution);
-        StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                            .withExecutionUuid(workflowExecutionId)
-                                                            .withStateType(StateType.DYNA_TRACE.name())
-                                                            .build();
+        StateExecutionInstance stateExecutionInstance =
+            aStateExecutionInstance().executionUuid(workflowExecutionId).stateType(StateType.DYNA_TRACE.name()).build();
         stateExecutionInstance.setAppId(appId);
         wingsPersistence.save(stateExecutionInstance);
       }
@@ -459,10 +455,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       String workflowExecutionId = wingsPersistence.save(workflowExecution);
       workflowExecutionIds.add(workflowExecutionId);
       workflowExecutions.add(workflowExecution);
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withExecutionUuid(workflowExecutionId)
-                                                          .withStateType(StateType.DYNA_TRACE.name())
-                                                          .build();
+      StateExecutionInstance stateExecutionInstance =
+          aStateExecutionInstance().executionUuid(workflowExecutionId).stateType(StateType.DYNA_TRACE.name()).build();
       stateExecutionInstance.setAppId(appId);
       wingsPersistence.save(stateExecutionInstance);
     }
@@ -550,10 +544,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       String workflowExecutionId = wingsPersistence.save(workflowExecution);
       workflowExecutionIds.add(workflowExecutionId);
       workflowExecutions.add(workflowExecution);
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withExecutionUuid(workflowExecutionId)
-                                                          .withStateType(StateType.DYNA_TRACE.name())
-                                                          .build();
+      StateExecutionInstance stateExecutionInstance =
+          aStateExecutionInstance().executionUuid(workflowExecutionId).stateType(StateType.DYNA_TRACE.name()).build();
       stateExecutionInstance.setAppId(appId);
       wingsPersistence.save(stateExecutionInstance);
     }
@@ -618,10 +610,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     workflowExecution.setAppId(appId);
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
 
-    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withExecutionUuid(workflowExecutionId)
-                                                        .withStateType(StateType.DYNA_TRACE.name())
-                                                        .build();
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().executionUuid(workflowExecutionId).stateType(StateType.DYNA_TRACE.name()).build();
     stateExecutionInstance.setAppId(appId);
     wingsPersistence.save(stateExecutionInstance);
 
@@ -686,10 +676,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       String workflowExecutionId = wingsPersistence.save(workflowExecution);
       workflowExecutionIds.add(workflowExecutionId);
       workflowExecutions.add(workflowExecution);
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withExecutionUuid(workflowExecutionId)
-                                                          .withStateType(StateType.DYNA_TRACE.name())
-                                                          .build();
+      StateExecutionInstance stateExecutionInstance =
+          aStateExecutionInstance().executionUuid(workflowExecutionId).stateType(StateType.DYNA_TRACE.name()).build();
       stateExecutionInstance.setAppId(appId);
       String stateExecutionId = wingsPersistence.save(stateExecutionInstance);
       stateExecutionIds.add(stateExecutionId);

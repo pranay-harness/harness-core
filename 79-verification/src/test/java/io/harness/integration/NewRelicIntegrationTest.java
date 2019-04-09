@@ -217,10 +217,10 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     String workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()
-                              .withExecutionUuid(workflowExecutionId)
-                              .withStateType(StateType.PHASE.name())
-                              .withAppId(appId)
-                              .withDisplayName(generateUuid())
+                              .executionUuid(workflowExecutionId)
+                              .stateType(StateType.PHASE.name())
+                              .appId(appId)
+                              .displayName(generateUuid())
                               .build());
     WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);

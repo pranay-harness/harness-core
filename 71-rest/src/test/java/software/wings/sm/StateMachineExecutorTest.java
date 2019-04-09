@@ -848,11 +848,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   public void shouldCleanForRetry() {
     List<ContextElement> originalNotifyElements = asList(anInstanceElement().withDisplayName("foo").build());
 
-    String prevStateExecutionInstanceId = wingsPersistence.save(aStateExecutionInstance()
-                                                                    .withAppId("appId")
-                                                                    .withDisplayName("state0")
-                                                                    .withNotifyElements(originalNotifyElements)
-                                                                    .build());
+    String prevStateExecutionInstanceId = wingsPersistence.save(
+        aStateExecutionInstance().appId("appId").displayName("state0").notifyElements(originalNotifyElements).build());
 
     HashMap<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     stateExecutionMap.put("state0", new StateExecutionData());
@@ -862,11 +859,11 @@ public class StateMachineExecutorTest extends WingsBaseTest {
         asList(anInstanceElement().withDisplayName("bar").build(), originalNotifyElements.get(0));
 
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withAppId("appId")
-                                                        .withDisplayName("state1")
-                                                        .withStateExecutionMap(stateExecutionMap)
-                                                        .withPrevInstanceId(prevStateExecutionInstanceId)
-                                                        .withStatus(FAILED)
+                                                        .appId("appId")
+                                                        .displayName("state1")
+                                                        .stateExecutionMap(stateExecutionMap)
+                                                        .prevInstanceId(prevStateExecutionInstanceId)
+                                                        .status(FAILED)
                                                         .build();
 
     wingsPersistence.save(stateExecutionInstance);

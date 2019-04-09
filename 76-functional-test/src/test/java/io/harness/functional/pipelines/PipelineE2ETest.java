@@ -146,7 +146,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     //    ExecutionArgs executionArgs = new ExecutionArgs();
     //    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
     //    executionArgs.setExecutionCredential(
-    //        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
+    //        SSHExecutionCredential.Builder.aSSHExecutionCredential().executionType(ExecutionType.SSH).build());
     //    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
     //    executionArgs.setArtifacts(Collections.singletonList(artifact));
     //    executionArgs.setServiceId(service.getUuid());

@@ -139,8 +139,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .thenReturn(Service.builder().uuid("service-2").name("Service Two").build());
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(stateExecutionInstanceQuery);
     when(stateExecutionInstanceQuery.filter(any(), any())).thenReturn(stateExecutionInstanceQuery);
-    when(stateExecutionInstanceQuery.get())
-        .thenReturn(aStateExecutionInstance().withStartTs(1234L).withEndTs(2345L).build());
+    when(stateExecutionInstanceQuery.get()).thenReturn(aStateExecutionInstance().startTs(1234L).endTs(2345L).build());
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
     when(workflowExecutionQuery.filter(any(), any())).thenReturn(workflowExecutionQuery);
   }
