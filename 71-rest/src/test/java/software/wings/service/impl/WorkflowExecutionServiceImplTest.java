@@ -34,6 +34,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
+import static software.wings.sm.StateType.EMAIL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -129,6 +130,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -556,8 +558,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private WorkflowElement getWorkflowElement(String appId, WorkflowExecution workflowExecution) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, appId)
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
+            .filter(StateExecutionInstanceKeys.appId, appId)
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
             .get();
 
     assertThat(stateExecutionInstance).isNotNull();
@@ -749,7 +751,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           GraphNode.builder()
                               .id("n2")
                               .name("email")
-                              .type(StateType.EMAIL.name())
+                              .type(EMAIL.name())
                               .properties(ImmutableMap.<String, Object>builder()
                                               .put("toAddress", "a@b.com")
                                               .put("subject", "testing")
@@ -1648,9 +1650,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         wingsPersistence
             .query(StateExecutionInstance.class,
                 PageRequestBuilder.aPageRequest()
-                    .addFilter(StateExecutionInstance.APP_ID_KEY, EQ, appId)
-                    .addFilter(StateExecutionInstance.EXECUTION_UUID_KEY, EQ, execution.getUuid())
-                    .addFilter(StateExecutionInstance.STATE_TYPE_KEY, EQ, "EMAIL")
+                    .addFilter(StateExecutionInstanceKeys.appId, EQ, appId)
+                    .addFilter(StateExecutionInstanceKeys.executionUuid, EQ, execution.getUuid())
+                    .addFilter(StateExecutionInstanceKeys.stateType, EQ, EMAIL.name())
                     .build())
             .getResponse();
     assertThat(response).isNotNull().isNotEmpty();

@@ -61,6 +61,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.util.List;
 import java.util.Map;
@@ -242,8 +243,8 @@ public class ExecutionInterruptManager {
               .withLimit("1")
               .addFilter("appId", EQ, executionInterrupt.getAppId())
               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
-              .addFilter(StateExecutionInstance.CREATED_AT_KEY, GE, workflowExecution.getCreatedAt())
-              .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.DESC)
+              .addFilter(StateExecutionInstanceKeys.createdAt, GE, workflowExecution.getCreatedAt())
+              .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.DESC)
               .withReadPref(ReadPref.CRITICAL)
               .build();
 

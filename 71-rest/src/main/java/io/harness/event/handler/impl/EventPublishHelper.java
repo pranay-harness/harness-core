@@ -51,6 +51,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
@@ -631,16 +632,15 @@ public class EventPublishHelper {
 
   private void publishIfExecutionHasVerificationState(
       String workflowExecutionId, List<String> appIds, String accountId, String userEmail) {
-    PageRequest<StateExecutionInstance> pageRequest =
-        PageRequestBuilder.aPageRequest()
-            .addFilter("appId", Operator.IN, appIds.toArray())
-            .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
-            .addFilter("stateType", Operator.IN, analysisStates.toArray())
-            .addFilter("status", Operator.EQ, "SUCCESS")
-            .addFieldsIncluded("_id")
-            .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.ASC)
-            .withLimit("1")
-            .build();
+    PageRequest<StateExecutionInstance> pageRequest = PageRequestBuilder.aPageRequest()
+                                                          .addFilter("appId", Operator.IN, appIds.toArray())
+                                                          .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
+                                                          .addFilter("stateType", Operator.IN, analysisStates.toArray())
+                                                          .addFilter("status", Operator.EQ, "SUCCESS")
+                                                          .addFieldsIncluded("_id")
+                                                          .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.ASC)
+                                                          .withLimit("1")
+                                                          .build();
     PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
     List<StateExecutionInstance> stateExecutionInstances = pageResponse.getResponse();
 
@@ -651,15 +651,14 @@ public class EventPublishHelper {
 
   private void publishIfExecutionHasRollbackState(
       String workflowExecutionId, List<String> appIds, String accountId, String userEmail) {
-    PageRequest<StateExecutionInstance> pageRequest =
-        PageRequestBuilder.aPageRequest()
-            .addFilter("appId", Operator.IN, appIds.toArray())
-            .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
-            .addFilter("rollback", Operator.EQ, true)
-            .addFieldsIncluded("_id")
-            .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.ASC)
-            .withLimit("1")
-            .build();
+    PageRequest<StateExecutionInstance> pageRequest = PageRequestBuilder.aPageRequest()
+                                                          .addFilter("appId", Operator.IN, appIds.toArray())
+                                                          .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
+                                                          .addFilter("rollback", Operator.EQ, true)
+                                                          .addFieldsIncluded("_id")
+                                                          .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.ASC)
+                                                          .withLimit("1")
+                                                          .build();
     PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
     List<StateExecutionInstance> stateExecutionInstances = pageResponse.getResponse();
 

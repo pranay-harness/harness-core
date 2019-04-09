@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -32,7 +33,7 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
              new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
                                  .field("validUntil")
                                  .doesNotExist()
-                                 .project(StateExecutionInstance.CREATED_AT_KEY, true)
+                                 .project(StateExecutionInstanceKeys.createdAt, true)
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         final StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
@@ -48,7 +49,7 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
 
         bulkWriteOperation
             .find(wingsPersistence.createQuery(StateExecutionInstance.class)
-                      .filter(StateExecutionInstance.ID_KEY, stateExecutionInstance.getUuid())
+                      .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstance.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject(
                 "$set", new BasicDBObject("validUntil", java.util.Date.from(zonedDateTime.toInstant()))));
