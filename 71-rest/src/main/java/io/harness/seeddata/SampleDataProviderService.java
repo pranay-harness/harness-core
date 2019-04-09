@@ -64,7 +64,7 @@ public class SampleDataProviderService {
 
     // Create Artifact Stream
     artifactStreamSampleDataProvider.createDockerArtifactStream(
-        kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector.getUuid());
+        kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector);
     // Create QA Environment
     Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
 
@@ -122,7 +122,7 @@ public class SampleDataProviderService {
     Service kubeService = serviceSampleDataProvider.createK8sV2Service(kubernetesApp.getUuid());
 
     artifactStreamSampleDataProvider.createDockerArtifactStream(
-        kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector.getUuid());
+        kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector);
 
     Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
 

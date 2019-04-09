@@ -7,7 +7,6 @@ import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_FULL_DISPLAY_NAME;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.KEY;
-import static software.wings.common.Constants.URL;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -54,6 +53,8 @@ public class Artifact extends Base {
   public static final String ARTIFACT_FILES_KEY = "artifactFiles";
   public static final String METADATA_KEY = "metadata";
   public static final String REVISION_KEY = "revision";
+
+  public static final String URL_KEY = "url";
 
   private String artifactStreamId;
   private String artifactSourceName;
@@ -124,7 +125,7 @@ public class Artifact extends Base {
    */
   public String getUrl() {
     if (getMetadata() != null) {
-      return getMetadata().get(URL);
+      return getMetadata().get(URL_KEY);
     }
     return null;
   }
