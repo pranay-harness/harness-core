@@ -23,9 +23,10 @@ import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -56,6 +57,8 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws Exception {
@@ -118,18 +121,12 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
-  @Ignore("Will be enabled once AWS Access Key in Datagen has access to lambda functions")
-  public void testGetLambdaFunctionNames() throws Exception {
+  public void testGetLambdaFunctionNamesPermissionsNotAvailable() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
-    RestResponse<List<String>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<String>>>() {});
-
-    List<String> lambdaFunctionNames = restResponse.getResource();
-
-    assertTrue("No lambda function found", lambdaFunctionNames.size() > 1);
+    thrown.expect(Exception.class);
+    getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<String>>>() {});
   }
 
   @Test

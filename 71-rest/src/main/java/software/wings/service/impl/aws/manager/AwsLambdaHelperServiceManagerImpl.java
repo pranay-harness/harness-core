@@ -61,9 +61,11 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData
-          || ((AwsLambdaFunctionResponse) notifyResponseData).getExecutionStatus().equals(ExecutionStatus.FAILED)) {
+      if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      } else if (notifyResponseData instanceof AwsLambdaFunctionResponse
+          && ((AwsLambdaFunctionResponse) notifyResponseData).getExecutionStatus().equals(ExecutionStatus.FAILED)) {
+        throw new WingsException(((AwsLambdaFunctionResponse) notifyResponseData).getErrorMessage());
       }
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
