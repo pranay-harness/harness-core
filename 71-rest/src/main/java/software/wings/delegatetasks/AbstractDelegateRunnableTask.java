@@ -64,7 +64,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     try (TaskLogContext ignore = new TaskLogContext(this.taskId)) {
       runDelegateTask();
     } catch (Throwable e) {
-      logger.error(format("Unexpected error executing delegate task %s", taskId), e);
+      logger.error(format("Unexpected error executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId), e);
     }
   }
 
@@ -113,7 +113,9 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
           ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
-      logger.error(format("Unexpected error executing delegate task %s", taskId), exception);
+      logger.error(
+          format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
+          exception);
       taskResponse.response(
           ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.FAILED);
