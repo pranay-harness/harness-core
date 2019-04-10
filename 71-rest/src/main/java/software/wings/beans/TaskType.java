@@ -58,10 +58,10 @@ import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.jira.JiraTask;
-import software.wings.delegatetasks.jira.ServicenowTask;
 import software.wings.delegatetasks.jira.ShellScriptApprovalTask;
 import software.wings.delegatetasks.k8s.K8sTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
+import software.wings.delegatetasks.servicenow.ServicenowTask;
 import software.wings.delegatetasks.shellscript.provisioner.ShellScriptProvisionTask;
 import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AcrValidation;
@@ -325,7 +325,8 @@ public enum TaskType {
       TaskGroup.CUSTOM, ServiceImplDelegateTask.class, CustomArtifactSourceValidation.class),
   SHELL_SCRIPT_PROVISION_TASK(
       TaskGroup.SHELL_SCRIPT_PROVISION, ShellScriptProvisionTask.class, AlwaysTrueValidation.class),
-  SERVICENOW(TaskGroup.SERVICENOW, ServicenowTask.class, ServicenowValidation.class),
+  SERVICENOW_ASYNC(TaskGroup.SERVICENOW, ServicenowTask.class, ServicenowValidation.class),
+  SERVICENOW_SYNC(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class),
   SERVICENOW_VALIDATION(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class),
   HELM_REPO_CONFIG_VALIDATION(
       TaskGroup.HELM_REPO_CONFIG_VALIDATION, HelmRepoConfigValidationTask.class, HelmRepoConfigValidation.class);

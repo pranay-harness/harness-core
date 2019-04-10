@@ -297,7 +297,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.delegatetasks.jira.JiraAction;
-import software.wings.delegatetasks.jira.ServiceNowAction;
+import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
@@ -537,6 +537,8 @@ import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusMetricDataResponse;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowState;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
@@ -1212,5 +1214,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmRepoConfigValidationResponse.class, 7160);
     kryo.register(TemplateReference.class, 7161);
     kryo.register(AmazonS3HelmRepoConfig.class, 7162);
+    kryo.register(ServiceNowTicketType.class, 7163);
+    kryo.register(ServiceNowState.class, 7164);
   }
 }

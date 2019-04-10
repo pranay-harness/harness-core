@@ -230,6 +230,7 @@ import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
 import software.wings.service.impl.splunk.SplunkAnalysisServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverServiceImpl;
 import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
@@ -382,6 +383,7 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
+import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.stackdriver.StackDriverService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
@@ -668,6 +670,7 @@ public class WingsModule extends DependencyModule {
     bind(MarketPlaceService.class).to(MarketPlaceServiceImpl.class);
     bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
 
+    bind(ServiceNowService.class).to(ServiceNowServiceImpl.class);
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);

@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.jira;
+package software.wings.delegatetasks.servicenow;
 
 public enum ServiceNowAction {
   CREATE("Create"),
