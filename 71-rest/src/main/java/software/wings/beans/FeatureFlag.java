@@ -16,6 +16,11 @@ import java.util.Set;
 @JsonIgnoreProperties({"obsolete", "accountIds"})
 public class FeatureFlag implements PersistentEntity, UpdatedAtAware {
   @Id private String name;
+  public enum Scope {
+    GLOBAL,
+    PER_ACCOUNT,
+  }
+
   private boolean enabled;
   private boolean obsolete;
   private Set<String> accountIds;

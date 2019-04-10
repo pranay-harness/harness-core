@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import lombok.Getter;
+import software.wings.beans.FeatureFlag.Scope;
+
 /**
  * Add your feature name here. When the feature is fully launched and no longer needs to be flagged,
  * delete the feature name.
@@ -32,5 +35,15 @@ public enum FeatureName {
   REMOVE_STENCILS,
   SERVICENOW,
   DISABLE_METRIC_NAME_CURLY_BRACE_CHECK,
-  STACK_DRIVER
+  STACK_DRIVER;
+
+  FeatureName() {
+    scope = Scope.PER_ACCOUNT;
+  }
+
+  FeatureName(Scope scope) {
+    this.scope = scope;
+  }
+
+  @Getter private FeatureFlag.Scope scope;
 }

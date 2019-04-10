@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import software.wings.beans.FeatureName;
 
 public interface FeatureFlagService {
+  boolean isGlobalEnabled(FeatureName featureName);
   boolean isEnabled(FeatureName featureName, String accountId);
 
   void initializeFeatureFlags();
