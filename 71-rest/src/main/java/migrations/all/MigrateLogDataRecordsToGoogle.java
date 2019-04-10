@@ -1,5 +1,8 @@
 package migrations.all;
 
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
@@ -45,6 +48,7 @@ public class MigrateLogDataRecordsToGoogle implements Migration {
           dataStoreService.save(LogDataRecord.class, recordsFromMongo, true);
           logger.info("Copied 1000 L2 records from Mongo to GoogleDataStore");
           recordsFromMongo = new ArrayList<>();
+          sleep(ofMillis(1500));
         }
       }
     }
