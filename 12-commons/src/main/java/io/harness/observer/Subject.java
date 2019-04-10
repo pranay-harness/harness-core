@@ -56,22 +56,56 @@ public class Subject<T> {
   }
 
   public void fireInform(Informant0<T> func) {
-    observers.forEach(observer -> func.inform(observer));
+    observers.forEach(observer -> {
+      if (observer instanceof AsyncInformObserver) {
+        ((AsyncInformObserver) observer).getInformExecutorService().submit(() -> func.inform(observer));
+      } else {
+        func.inform(observer);
+      }
+    });
   }
 
   public <U> void fireInform(Informant1<T, U> func, U arg) {
-    observers.forEach(observer -> func.inform(observer, arg));
+    observers.forEach(observer -> {
+      if (observer instanceof AsyncInformObserver) {
+        ((AsyncInformObserver) observer).getInformExecutorService().submit(() -> func.inform(observer, arg));
+      } else {
+        func.inform(observer, arg);
+      }
+    });
   }
 
   public <U1, U2> void fireInform(Informant2<T, U1, U2> func, U1 arg1, U2 arg2) {
-    observers.forEach(observer -> func.inform(observer, arg1, arg2));
+    observers.forEach(observer -> {
+      if (observer instanceof AsyncInformObserver) {
+        ((AsyncInformObserver) observer).getInformExecutorService().submit(() -> func.inform(observer, arg1, arg2));
+      } else {
+        func.inform(observer, arg1, arg2);
+      }
+    });
   }
 
   public <U1, U2, U3> void fireInform(Informant3<T, U1, U2, U3> func, U1 arg1, U2 arg2, U3 arg3) {
-    observers.forEach(observer -> func.inform(observer, arg1, arg2, arg3));
+    observers.forEach(observer -> {
+      if (observer instanceof AsyncInformObserver) {
+        ((AsyncInformObserver) observer)
+            .getInformExecutorService()
+            .submit(() -> func.inform(observer, arg1, arg2, arg3));
+      } else {
+        func.inform(observer, arg1, arg2, arg3);
+      }
+    });
   }
 
   public <U1, U2, U3, U4> void fireInform(Informant4<T, U1, U2, U3, U4> func, U1 arg1, U2 arg2, U3 arg3, U4 arg4) {
-    observers.forEach(observer -> func.inform(observer, arg1, arg2, arg3, arg4));
+    observers.forEach(observer -> {
+      if (observer instanceof AsyncInformObserver) {
+        ((AsyncInformObserver) observer)
+            .getInformExecutorService()
+            .submit(() -> func.inform(observer, arg1, arg2, arg3, arg4));
+      } else {
+        func.inform(observer, arg1, arg2, arg3, arg4);
+      }
+    });
   }
 }
