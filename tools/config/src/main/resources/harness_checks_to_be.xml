@@ -10,11 +10,6 @@
 
     <property name="fileExtensions" value="java, properties, xml"/>
 
-    <module name="TreeWalker">
-        <module name="MultipleStringLiterals"/>
-    </module>
-
-
     <module name="RegexpSingleline">
         <property name="format" value="[Hh]eartBeat"/>
         <property name="message" value="Heartbeat is a single word"/>
