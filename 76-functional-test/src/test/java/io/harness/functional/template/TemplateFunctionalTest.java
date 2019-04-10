@@ -29,7 +29,6 @@ import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -80,15 +79,12 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
   public void shouldExecuteShellScriptTemplateWorkflow() {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {
 
         };
 
-    Template shellScriptTemplate =
-        templateGenerator.ensurePredefined(seed, owners, TemplateGenerator.Templates.SHELL_SCRIPT);
     buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, WorkflowGenerator.Workflows.BUILD_SHELL_SCRIPT);
 
     resetCache();
