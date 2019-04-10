@@ -67,7 +67,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -1647,12 +1646,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return executionInterrupt;
   }
 
-  @SuppressFBWarnings("RpC_REPEATED_CONDITIONAL_TEST")
   @Override
   public RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs) {
     notNullCheck("workflowType", executionArgs.getWorkflowType());
 
-    if (executionArgs.getWorkflowType() == ORCHESTRATION || executionArgs.getWorkflowType() == ORCHESTRATION) {
+    if (executionArgs.getWorkflowType() == ORCHESTRATION) {
       logger.debug("Received an orchestrated execution request");
       notNullCheck("orchestrationId", executionArgs.getOrchestrationId());
 

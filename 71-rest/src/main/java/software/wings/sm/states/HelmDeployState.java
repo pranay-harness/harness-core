@@ -53,7 +53,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
@@ -94,7 +96,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KubernetesConvention;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +172,7 @@ public class HelmDeployState extends State {
         (ContainerInfrastructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
 
-    Activity activity = createActivity(context);
+    Activity activity = createActivity(context, getCommandUnits());
 
     String releaseName = obtainHelmReleaseNamePrefix(context);
     updateHelmReleaseNameInInfraMappingElement(context, releaseName);
@@ -256,6 +258,18 @@ public class HelmDeployState extends State {
         .withStateExecutionData(stateExecutionData)
         .withAsync(true)
         .build();
+  }
+
+  protected List<CommandUnit> getCommandUnits() {
+    List<CommandUnit> commandUnits = new ArrayList<>();
+
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Init));
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Prepare));
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.InstallUpgrade));
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.WaitForSteadyState));
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.WrapUp));
+
+    return commandUnits;
   }
 
   protected ImageDetails getImageDetails(ExecutionContext context, Application app, Artifact artifact) {
@@ -465,7 +479,7 @@ public class HelmDeployState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  protected Activity createActivity(ExecutionContext executionContext) {
+  protected Activity createActivity(ExecutionContext executionContext, List<CommandUnit> commandUnits) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
@@ -485,7 +499,7 @@ public class HelmDeployState extends State {
                                           .commandType(getStateType())
                                           .workflowExecutionId(executionContext.getWorkflowExecutionId())
                                           .workflowId(executionContext.getWorkflowId())
-                                          .commandUnits(Collections.emptyList())
+                                          .commandUnits(commandUnits)
                                           .status(ExecutionStatus.RUNNING)
                                           .commandUnitType(CommandUnitType.HELM)
                                           .triggeredBy(TriggeredBy.builder()

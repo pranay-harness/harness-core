@@ -117,6 +117,7 @@ public class ActivityServiceImpl implements ActivityService {
       switch (activity.getCommandUnitType()) {
         case KUBERNETES:
         case COMMAND:
+        case HELM:
           List<CommandUnit> commandUnits = activity.getCommandUnits();
           for (CommandUnit commandUnit : commandUnits) {
             rv.add(CommandUnitDetails.builder()
@@ -128,7 +129,6 @@ public class ActivityServiceImpl implements ActivityService {
           }
           break;
         case JENKINS:
-        case HELM:
         case KUBERNETES_STEADY_STATE_CHECK:
         case ECS_STEADY_STATE_CHECK:
         case AWS_AMI_SWITCH_ROUTES:

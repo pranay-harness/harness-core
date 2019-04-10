@@ -12,6 +12,8 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
@@ -23,6 +25,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -113,5 +116,16 @@ public class HelmRollbackState extends HelmDeployState {
   @Override
   public Map<String, String> validateFields() {
     return null;
+  }
+
+  @Override
+  protected List<CommandUnit> getCommandUnits() {
+    List<CommandUnit> commandUnits = new ArrayList<>();
+
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Init));
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Rollback));
+    commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.WaitForSteadyState));
+
+    return commandUnits;
   }
 }
