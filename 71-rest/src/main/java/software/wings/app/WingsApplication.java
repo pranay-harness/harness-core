@@ -44,6 +44,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
+import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.limits.LimitsMorphiaClasses;
@@ -93,7 +94,6 @@ import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
-import software.wings.health.WingsHealthCheck;
 import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
 import software.wings.licensing.LicenseService;
@@ -292,6 +292,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
+    registerHealthChecks(environment, injector);
+
     registerStores(configuration, injector);
 
     registerResources(environment, injector);
@@ -319,8 +321,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     // Register collection iterators
     registerIterators(injector);
-
-    environment.healthChecks().register("WingsApp", new WingsHealthCheck());
 
     environment.lifecycle().addServerLifecycleListener(server -> {
       for (Connector connector : server.getConnectors()) {
@@ -374,6 +374,13 @@ public class WingsApplication extends Application<MainConfiguration> {
     MaintenanceController.resetForceMaintenance();
 
     logger.info("Starting app done");
+  }
+
+  private void registerHealthChecks(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("WingsApp", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
+    healthService.registerMonitor(injector.getInstance(PersistentLocker.class));
   }
 
   private void registerStores(MainConfiguration configuration, Injector injector) {

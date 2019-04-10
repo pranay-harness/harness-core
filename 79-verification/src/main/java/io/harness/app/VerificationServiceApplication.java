@@ -37,7 +37,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.entities.VerificationMorphiaClasses;
 import io.harness.event.model.EventsMorphiaClasses;
-import io.harness.health.VerificationServiceHealthCheck;
 import io.harness.jobs.VerificationJob;
 import io.harness.jobs.VerificationMetricJob;
 import io.harness.limits.LimitsMorphiaClasses;
@@ -190,13 +189,20 @@ public class VerificationServiceApplication extends Application<VerificationServ
     // Authentication/Authorization filters
     registerAuthFilters(environment, injector);
 
-    environment.healthChecks().register("Verification Service", new VerificationServiceHealthCheck());
+    registerHealthChecks(environment, injector);
 
     registerCronJobs(injector);
 
     initializeServiceTaskPoll(injector);
 
     logger.info("Starting app done");
+  }
+
+  private void registerHealthChecks(Environment environment, Injector injector) {
+    // TODO: provide executor and initialize this
+    //    final HealthService healthService = injector.getInstance(HealthService.class);
+    //    environment.healthChecks().register("Verification Service", healthService);
+    //    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private void initMetrics() {

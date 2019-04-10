@@ -42,7 +42,6 @@ import software.wings.app.YamlModule;
 import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.common.Constants;
-import software.wings.health.WingsHealthCheck;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.utils.CacheHelper;
@@ -143,8 +142,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerStores(injector);
-
-    environment.healthChecks().register("WingsApp", new WingsHealthCheck());
 
     environment.lifecycle().addServerLifecycleListener(server -> {
       for (Connector connector : server.getConnectors()) {

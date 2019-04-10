@@ -19,26 +19,26 @@ import software.wings.utils.ResourceTestRule;
 import javax.ws.rs.core.GenericType;
 
 public class HealthResourceTest {
-  public static final MainConfiguration CONFIGURATION = mock(MainConfiguration.class);
-  public static final AsymmetricEncryptor ASYMMETRIC_ENCRYPTOR = mock(AsymmetricEncryptor.class);
+  public static final MainConfiguration configuration = mock(MainConfiguration.class);
+  public static final AsymmetricEncryptor asymmetricEncryptor = mock(AsymmetricEncryptor.class);
 
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new HealthResource(CONFIGURATION, ASYMMETRIC_ENCRYPTOR))
+          .addResource(new HealthResource(configuration, asymmetricEncryptor, null))
           .addProvider(WingsExceptionMapper.class)
           .build();
 
   @Test
   @Category(UnitTests.class)
   public void shouldGetMongoUri() throws Exception {
-    when(CONFIGURATION.getMongoConnectionFactory())
+    when(configuration.getMongoConnectionFactory())
         .thenReturn(MongoConfig.builder()
                         .uri("mongodb://localhost:27017/wings")
                         .locksUri("mongodb://localhost:27017/wings")
                         .build());
 
-    when(ASYMMETRIC_ENCRYPTOR.encryptText("mongodb://localhost:27017/wings"))
+    when(asymmetricEncryptor.encryptText("mongodb://localhost:27017/wings"))
         .thenReturn("mongodb://localhost:27017/wings".getBytes());
     RestResponse<MongoConfig> restResponse =
         RESOURCES.client()
