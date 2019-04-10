@@ -5,6 +5,8 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.cloud.datastore.Blob;
+import com.google.cloud.datastore.BlobValue;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
@@ -262,5 +264,14 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     }
 
     builder.set(key, StringValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
+  }
+
+  public static void addFieldIfNotEmpty(
+      com.google.cloud.datastore.Entity.Builder builder, String key, Blob value, boolean excludeFromIndex) {
+    if (value == null) {
+      return;
+    }
+
+    builder.set(key, BlobValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
   }
 }

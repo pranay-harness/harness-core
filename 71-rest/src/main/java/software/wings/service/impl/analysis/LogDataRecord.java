@@ -136,16 +136,17 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
     addFieldIfNotEmpty(dataStoreRecordBuilder, "stateExecutionId", stateExecutionId, true);
     dataStoreRecordBuilder.set("timeStamp", timeStamp);
     dataStoreRecordBuilder.set("logCollectionMinute", logCollectionMinute);
-    dataStoreRecordBuilder.set("timesLabeled", timesLabeled);
-    dataStoreRecordBuilder.set("query", query);
-    dataStoreRecordBuilder.set("clusterLabel", clusterLabel);
-    dataStoreRecordBuilder.set("logMD5Hash", logMD5Hash);
 
-    dataStoreRecordBuilder.set("clusterLevel", String.valueOf(clusterLevel));
-    dataStoreRecordBuilder.set("count", String.valueOf(count));
+    addFieldIfNotEmpty(dataStoreRecordBuilder, "timesLabeled", String.valueOf(timesLabeled), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, "query", query, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, "clusterLabel", clusterLabel, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, "logMD5Hash", logMD5Hash, true);
+
+    addFieldIfNotEmpty(dataStoreRecordBuilder, "clusterLevel", String.valueOf(clusterLevel), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, "count", String.valueOf(count), true);
     try {
       Blob compressedLog = Blob.copyFrom(compressString(logMessage));
-      dataStoreRecordBuilder.set("logMessage", compressedLog);
+      addFieldIfNotEmpty(dataStoreRecordBuilder, "logMessage", compressedLog, true);
     } catch (Exception ex) {
       return null;
     }
