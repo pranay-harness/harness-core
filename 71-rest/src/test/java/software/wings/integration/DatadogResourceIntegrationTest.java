@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
@@ -71,6 +72,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithNormalQuery() {
     long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
