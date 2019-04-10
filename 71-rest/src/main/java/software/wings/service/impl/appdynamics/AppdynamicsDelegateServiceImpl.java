@@ -2,7 +2,6 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.network.Http.validUrl;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
@@ -563,10 +562,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (!validUrl(appDynamicsConfig.getControllerUrl())) {
-      throw new WingsException("AppDynamics Controller URL must be a valid URL");
-    }
-    Response<List<NewRelicApplication>> response = null;
+    Response<List<NewRelicApplication>> response;
     try {
       final Call<List<NewRelicApplication>> request =
           getAppdynamicsRestClient(appDynamicsConfig)
