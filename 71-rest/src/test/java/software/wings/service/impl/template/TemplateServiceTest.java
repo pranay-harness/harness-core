@@ -3,6 +3,7 @@ package software.wings.service.impl.template;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -66,6 +67,10 @@ import javax.validation.ConstraintViolationException;
 
 public class TemplateServiceTest extends TemplateBaseTest {
   private static final String MY_START_COMMAND = "My Start Command";
+  private static final String MY_START_COMMAND_APP = "My Start Command App";
+  private static final String ANOTHER_MY_START_COMMAND_APP = "Another My Start Command App";
+  private static final String ANOTHER_MY_START_COMMAND_ANOTHER_APP = "Another My Start Command Another App";
+  private static final String ANOTHER_APP_ID = "ANOTHER_APP_ID";
   @Inject private TemplateVersionService templateVersionService;
 
   @Test
@@ -436,7 +441,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldGetCommandCategories() {
+  public void shouldGetCommandCategoriesAtAccountLevel() {
     Template template = getSshCommandTemplate();
 
     Template savedTemplate = templateService.save(template);
@@ -463,46 +468,40 @@ public class TemplateServiceTest extends TemplateBaseTest {
     templateService.save(template2);
 
     List<CommandCategory> commandTemplateCategories =
-        templateService.getCommandCategories(GLOBAL_ACCOUNT_ID, savedTemplate.getUuid());
-    assertThat(commandTemplateCategories).isNotEmpty();
-    assertThat(commandTemplateCategories).isNotEmpty();
-    assertThat(commandTemplateCategories)
-        .isNotEmpty()
-        .extracting(CommandCategory::getType)
-        .contains(CommandCategory.Type.values());
-    assertThat(commandTemplateCategories)
-        .isNotEmpty()
-        .extracting(CommandCategory::getDisplayName)
-        .contains(
-            COMMANDS.getDisplayName(), COPY.getDisplayName(), SCRIPTS.getDisplayName(), VERIFICATIONS.getDisplayName());
+        templateService.getCommandCategories(GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID, savedTemplate.getUuid());
+    validateCommandCategories(commandTemplateCategories);
+    validateCopyTemplateCategories(commandTemplateCategories);
+    validateScriptTemplateCategories(commandTemplateCategories);
+    validateCommandTemplateCommandCategories(
+        commandTemplateCategories, singletonList("My Install Command"), singletonList(MY_START_COMMAND));
+    validateVerifyTemplateCategories(commandTemplateCategories);
+  }
 
-    List<CommandCategory> copyTemplateCategories =
-        commandTemplateCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(COPY))
-            .collect(toList());
-    assertThat(copyTemplateCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
-    copyTemplateCategories.forEach(commandCategory -> {
-      assertThat(commandCategory.getType()).isEqualTo(COPY);
-      assertThat(commandCategory.getDisplayName()).isEqualTo(COPY.getDisplayName());
-      assertThat(commandCategory.getCommandUnits())
-          .isNotEmpty()
-          .extracting(CommandCategory.CommandUnit::getType)
-          .contains(COPY_CONFIGS, SCP);
-    });
-    List<CommandCategory> scriptTemplateCategories =
-        commandTemplateCategories.stream()
-            .filter(commandCategory -> commandCategory.getType().equals(SCRIPTS))
-            .collect(toList());
-    assertThat(scriptTemplateCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
-    scriptTemplateCategories.forEach(commandCategory -> {
-      assertThat(commandCategory.getType()).isEqualTo(SCRIPTS);
-      assertThat(commandCategory.getDisplayName()).isEqualTo(SCRIPTS.getDisplayName());
-      assertThat(commandCategory.getCommandUnits())
-          .isNotEmpty()
-          .extracting(CommandCategory.CommandUnit::getType)
-          .contains(EXEC, DOCKER_START, DOCKER_STOP);
-    });
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetCommandCategoriesAtAppLevel() {
+    // create 2 templates in app1, 1 in another app and 1 at account level
+    Template template1 = getSshCommandTemplate(MY_START_COMMAND_APP, APP_ID);
+    Template savedTemplate1 = templateService.save(template1);
+    Template template2 = getSshCommandTemplate(ANOTHER_MY_START_COMMAND_APP, APP_ID);
+    templateService.save(template2);
+    Template template3 = getSshCommandTemplate(ANOTHER_MY_START_COMMAND_ANOTHER_APP, ANOTHER_APP_ID);
+    templateService.save(template3);
+    Template template4 = getSshCommandTemplate();
+    templateService.save(template4);
 
+    List<CommandCategory> commandTemplateCategories =
+        templateService.getCommandCategories(GLOBAL_ACCOUNT_ID, APP_ID, savedTemplate1.getUuid());
+    validateCommandCategories(commandTemplateCategories);
+    validateCopyTemplateCategories(commandTemplateCategories);
+    validateScriptTemplateCategories(commandTemplateCategories);
+    validateCommandTemplateCommandCategories(commandTemplateCategories, singletonList(ANOTHER_MY_START_COMMAND_APP),
+        asList(MY_START_COMMAND, ANOTHER_MY_START_COMMAND_ANOTHER_APP));
+    validateVerifyTemplateCategories(commandTemplateCategories);
+  }
+
+  private void validateCommandTemplateCommandCategories(
+      List<CommandCategory> commandTemplateCategories, List<String> includeList, List<String> excludeList) {
     List<CommandCategory> commandTemplateCommandCategories =
         commandTemplateCategories.stream()
             .filter(commandCategory -> commandCategory.getType().equals(COMMANDS))
@@ -518,9 +517,28 @@ public class TemplateServiceTest extends TemplateBaseTest {
       assertThat(commandCategory.getCommandUnits())
           .isNotEmpty()
           .extracting(CommandCategory.CommandUnit::getName)
-          .contains("My Install Command");
+          .contains(includeList.toArray(new String[includeList.size()]))
+          .doesNotContain(excludeList.toArray(new String[excludeList.size()]));
     });
+  }
 
+  private void validateCopyTemplateCategories(List<CommandCategory> commandTemplateCategories) {
+    List<CommandCategory> copyTemplateCategories =
+        commandTemplateCategories.stream()
+            .filter(commandCategory -> commandCategory.getType().equals(COPY))
+            .collect(toList());
+    assertThat(copyTemplateCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
+    copyTemplateCategories.forEach(commandCategory -> {
+      assertThat(commandCategory.getType()).isEqualTo(COPY);
+      assertThat(commandCategory.getDisplayName()).isEqualTo(COPY.getDisplayName());
+      assertThat(commandCategory.getCommandUnits())
+          .isNotEmpty()
+          .extracting(CommandCategory.CommandUnit::getType)
+          .contains(COPY_CONFIGS, SCP);
+    });
+  }
+
+  private void validateVerifyTemplateCategories(List<CommandCategory> commandTemplateCategories) {
     List<CommandCategory> verifyTemplateCategories =
         commandTemplateCategories.stream()
             .filter(commandCategory -> commandCategory.getType().equals(VERIFICATIONS))
@@ -534,6 +552,36 @@ public class TemplateServiceTest extends TemplateBaseTest {
           .extracting(CommandCategory.CommandUnit::getType)
           .contains(PROCESS_CHECK_RUNNING, PORT_CHECK_CLEARED, PORT_CHECK_LISTENING);
     });
+  }
+
+  private void validateScriptTemplateCategories(List<CommandCategory> commandTemplateCategories) {
+    List<CommandCategory> scriptTemplateCategories =
+        commandTemplateCategories.stream()
+            .filter(commandCategory -> commandCategory.getType().equals(SCRIPTS))
+            .collect(toList());
+    assertThat(scriptTemplateCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
+    scriptTemplateCategories.forEach(commandCategory -> {
+      assertThat(commandCategory.getType()).isEqualTo(SCRIPTS);
+      assertThat(commandCategory.getDisplayName()).isEqualTo(SCRIPTS.getDisplayName());
+      assertThat(commandCategory.getCommandUnits())
+          .isNotEmpty()
+          .extracting(CommandCategory.CommandUnit::getType)
+          .contains(EXEC, DOCKER_START, DOCKER_STOP);
+    });
+  }
+
+  private void validateCommandCategories(List<CommandCategory> commandTemplateCategories) {
+    assertThat(commandTemplateCategories).isNotEmpty();
+    assertThat(commandTemplateCategories).isNotEmpty();
+    assertThat(commandTemplateCategories)
+        .isNotEmpty()
+        .extracting(CommandCategory::getType)
+        .contains(CommandCategory.Type.values());
+    assertThat(commandTemplateCategories)
+        .isNotEmpty()
+        .extracting(CommandCategory::getDisplayName)
+        .contains(
+            COMMANDS.getDisplayName(), COPY.getDisplayName(), SCRIPTS.getDisplayName(), VERIFICATIONS.getDisplayName());
   }
 
   @Test

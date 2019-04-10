@@ -329,8 +329,8 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
-  public List<CommandCategory> getCommandCategories(String accountId, String templateId) {
-    return templateHelper.getCommandCategories(accountId, templateId);
+  public List<CommandCategory> getCommandCategories(String accountId, String appId, String templateId) {
+    return templateHelper.getCommandCategories(accountId, appId, templateId);
   }
 
   @Override
