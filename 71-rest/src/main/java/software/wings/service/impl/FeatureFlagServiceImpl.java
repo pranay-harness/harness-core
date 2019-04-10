@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureFlag.Scope;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
@@ -49,6 +51,14 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
+  public boolean isGlobalEnabled(FeatureName featureName) {
+    if (featureName.getScope() != Scope.GLOBAL) {
+      logger.error(format("FeatureFlag %s is not global", featureName.name()), new Exception(""));
+    }
+    return isEnabled(featureName, null);
+  }
+
+  @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
     FeatureFlag featureFlag = null;
 
@@ -75,13 +85,20 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return true;
     }
 
-    if (isEmpty(accountId)) {
-      // we don't want to throw an exception - we just want to log the error
-      logger.warn("FeatureFlag isEnabled check without accountId", new Exception(""));
+    if (isEmpty(accountId) && featureName.getScope() == Scope.PER_ACCOUNT) {
+      logger.error("FeatureFlag isEnabled check without accountId", new Exception(""));
       return false;
     }
 
-    return isNotEmpty(featureFlag.getAccountIds()) && featureFlag.getAccountIds().contains(accountId);
+    if (isNotEmpty(featureFlag.getAccountIds())) {
+      if (featureName.getScope() == Scope.GLOBAL) {
+        logger.error("A global FeatureFlag isEnabled per specific accounts", new Exception(""));
+        return false;
+      }
+      return featureFlag.getAccountIds().contains(accountId);
+    }
+
+    return false;
   }
 
   @Override
