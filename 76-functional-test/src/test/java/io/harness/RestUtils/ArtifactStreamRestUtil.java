@@ -8,6 +8,7 @@ import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 
 import java.util.ArrayList;
@@ -77,5 +78,23 @@ public class ArtifactStreamRestUtil extends AbstractFunctionalTest {
                                                                   .as(artifactStreamType.getType());
 
     return savedServiceResponse.getResource();
+  }
+
+  /**
+   *
+   * @param appId
+   * @param artifactSource
+   * @return Docker Artifact steam response
+   */
+  public JsonPath configureArtifactory(String appId, ArtifactStream artifactStream) {
+    JsonPath savedServiceResponse = Setup.portal()
+                                        .auth()
+                                        .oauth2(bearerToken)
+                                        .queryParam("appId", appId)
+                                        .body(artifactStream, ObjectMapperType.GSON)
+                                        .contentType(ContentType.JSON)
+                                        .post("/artifactstreams")
+                                        .jsonPath();
+    return savedServiceResponse;
   }
 }

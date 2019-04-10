@@ -46,7 +46,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     String VERSION = "3.x";
     String USER_NAME = "admin";
 
-    SettingAttribute nexusAttribute =
+    SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(SettingCategory.CONNECTOR)
             .withName(CONNECTOR_NAME)
@@ -60,7 +60,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
                            .build())
             .build();
 
-    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, getAccount().getUuid(), nexusAttribute);
+    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
     connectorId = setAttrResponse.getString("resource.uuid").trim();
 

@@ -8,6 +8,7 @@ import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 
@@ -56,6 +57,22 @@ public class EnvironmentRestUtil extends AbstractFunctionalTest {
             .post("/infrastructure-mappings")
             .as(infraMappingType.getType());
     return savedApplicationResponse.getResource();
+  }
+
+  public JsonPath configureInfraMapping(
+      String applicationId, String environmentId, AwsInfrastructureMapping infrastructureMapping) {
+    JsonPath response = Setup.portal()
+                            .auth()
+                            .oauth2(bearerToken)
+                            .queryParam("accountId", getAccount().getUuid())
+                            .queryParam("appId", applicationId)
+                            .queryParam("envId", environmentId)
+                            .body(infrastructureMapping, ObjectMapperType.GSON)
+                            .contentType(ContentType.JSON)
+                            .post("/infrastructure-mappings")
+                            .jsonPath();
+
+    return response;
   }
 
   public String getServiceTemplateId(String applicationId, String environmentId) {

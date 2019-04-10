@@ -42,7 +42,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void TC1_createCloudProvider() {
-    SettingAttribute awsAttribute =
+    SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withName(CONNECTOR_NAME)
@@ -54,7 +54,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
                            .build())
             .build();
 
-    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, getAccount().getUuid(), awsAttribute);
+    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
     // System.out.println(setAttrResponse.prettyPrint());
     cloudProviderId = setAttrResponse.getString("resource.uuid").trim();

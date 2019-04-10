@@ -92,4 +92,20 @@ public class ExecutionRestUtil extends AbstractFunctionalTest {
     }
     return status;
   }
+
+  public String getWorkflowExecutionStatus(String appId, String executionId) {
+    JsonPath jsonPath = Setup.portal()
+                            .auth()
+                            .oauth2(bearerToken)
+                            .queryParam("appId", appId)
+                            .queryParam("accountId", getAccount().getUuid())
+                            .contentType(ContentType.JSON)
+                            .get("/executions/" + executionId)
+                            .getBody()
+                            .jsonPath();
+    Map<Object, Object> resource = jsonPath.getMap("resource");
+    String status = resource.get("status").toString();
+
+    return status;
+  }
 }
