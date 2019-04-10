@@ -375,24 +375,31 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             && isEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
             && isEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
             && isEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
-          throw new WingsException("No metric provided in Configuration for configId "
-              + cloudWatchCVServiceConfiguration.getUuid() + " and serviceId "
-              + cloudWatchCVServiceConfiguration.getServiceId());
+          throw new WingsException("No metric provided in Configuration for configId " + savedConfiguration.getUuid()
+              + " and serviceId " + savedConfiguration.getServiceId());
         }
         updateOperations.set("region", cloudWatchCVServiceConfiguration.getRegion());
 
         if (isNotEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())) {
           updateOperations.set("loadBalancerMetrics", cloudWatchCVServiceConfiguration.getLoadBalancerMetrics());
+        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getLoadBalancerMetrics())) {
+          updateOperations.unset("loadBalancerMetrics");
         }
         if (isNotEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())) {
           updateOperations.set("ec2InstanceName", cloudWatchCVServiceConfiguration.getEc2InstanceNames())
               .set("ec2Metrics", cloudWatchCVServiceConfiguration.getEc2Metrics());
+        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getEc2InstanceNames())) {
+          updateOperations.unset("ec2InstanceName").unset("ec2Metrics");
         }
         if (isNotEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())) {
           updateOperations.set("lambdaFunctionsMetrics", cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics());
+        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getLambdaFunctionsMetrics())) {
+          updateOperations.unset("lambdaFunctionsMetrics");
         }
         if (isNotEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
           updateOperations.set("ecsMetrics", cloudWatchCVServiceConfiguration.getEcsMetrics());
+        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getEcsMetrics())) {
+          updateOperations.unset("ecsMetrics");
         }
         break;
       case SUMO:

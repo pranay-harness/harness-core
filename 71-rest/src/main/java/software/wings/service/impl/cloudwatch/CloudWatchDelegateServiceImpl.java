@@ -84,6 +84,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                 new BasicAWSCredentials(config.getAccessKey(), String.valueOf(config.getSecretKey()))))
             .build();
 
+    // Fetch ELB Metrics
     if (!isEmpty(setupTestNodeData.getLoadBalancerMetricsByLBName())) {
       setupTestNodeData.getLoadBalancerMetricsByLBName().forEach(
           (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
@@ -99,21 +100,12 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
           }));
     }
 
-    List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> lBMetricsResults =
-        dataCollectionService.executeParrallel(callables);
-    List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
-
-    lBMetricsResults.forEach(metricDataRecordsOptional -> {
-      if (metricDataRecordsOptional.isPresent()) {
-        metricDataRecords.addAll(metricDataRecordsOptional.get().values());
-      }
-    });
-
+    // Fetch EC2 Metrics
     if (!isEmpty(setupTestNodeData.getEc2Metrics())) {
       setupTestNodeData.getEc2Metrics().forEach(cloudWatchMetric
           -> callables.add(()
                                -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, hostName,
-                                   NewRelicMetricDataRecord.DEFAULT_GROUP_NAME,
+                                   DEFAULT_GROUP_NAME,
                                    CloudWatchDataCollectionInfo.builder()
                                        .awsConfig(config)
                                        .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
@@ -122,15 +114,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                                    setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>())));
     }
 
-    List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> hostMetricsResults =
-        dataCollectionService.executeParrallel(callables);
-    List<NewRelicMetricDataRecord> metricDataRecordsForHostMetrics = new ArrayList<>();
-    hostMetricsResults.forEach(metricDataRecordsOptional -> {
-      if (metricDataRecordsOptional.isPresent()) {
-        metricDataRecordsForHostMetrics.addAll(metricDataRecordsOptional.get().values());
-      }
-    });
-
+    // Fetch ECS Metrics
     if (!isEmpty(setupTestNodeData.getEcsMetrics())) {
       setupTestNodeData.getEcsMetrics().forEach(
           (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
@@ -146,10 +130,27 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
           }));
     }
 
-    List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> ecsMetricsResults =
-        dataCollectionService.executeParrallel(callables);
+    // Fetch Lambda Metrics
+    if (!isEmpty(setupTestNodeData.getLambdaFunctionMetrics())) {
+      setupTestNodeData.getLambdaFunctionMetrics().forEach(
+          (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+            callables.add(()
+                              -> getMetricDataRecords(AwsNameSpace.LAMBDA, cloudWatchClient, cloudWatchMetric,
+                                  clusterName, DEFAULT_GROUP_NAME,
+                                  CloudWatchDataCollectionInfo.builder()
+                                      .awsConfig(config)
+                                      .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                                      .build(),
+                                  setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
+                                  setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
+          }));
+    }
 
-    ecsMetricsResults.forEach(metricDataRecordsOptional -> {
+    List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> metricsResults =
+        dataCollectionService.executeParrallel(callables);
+    List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
+
+    metricsResults.forEach(metricDataRecordsOptional -> {
       if (metricDataRecordsOptional.isPresent()) {
         metricDataRecords.addAll(metricDataRecordsOptional.get().values());
       }
@@ -161,7 +162,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                           .loadResponse(metricDataRecords)
                           .isLoadPresent(!metricDataRecords.isEmpty())
                           .build())
-        .dataForNode(metricDataRecordsForHostMetrics)
+        .dataForNode(metricDataRecords)
         .build();
   }
 
@@ -173,7 +174,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     switch (dataCollectionInfo.getAnalysisComparisonStrategy()) {
       case COMPARE_WITH_PREVIOUS:
         fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
-            startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog, COMPARE_WITH_PREVIOUS, is247Task,
+            startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog.copy(), COMPARE_WITH_PREVIOUS, is247Task,
             hostStartTimeMap);
         break;
       case COMPARE_WITH_CURRENT:
