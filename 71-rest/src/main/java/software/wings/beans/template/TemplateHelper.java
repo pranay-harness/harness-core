@@ -6,6 +6,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -276,12 +277,14 @@ public class TemplateHelper {
    * Get Command categories of service and service command
    * @return List of Command Categories
    */
-  public List<CommandCategory> getCommandCategories(@NotEmpty String accountId, @NotEmpty String templateId) {
+  public List<CommandCategory> getCommandCategories(
+      @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String templateId) {
     Template template = wingsPersistence.get(Template.class, templateId);
 
     Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                         .project("name", true)
                                         .filter(ACCOUNT_ID_KEY, accountId)
+                                        .filter(APP_ID_KEY, appId)
                                         .filter(FOLDER_ID_KEY, template.getFolderId())
                                         .filter(TYPE_KEY, template.getType())
                                         .field(NAME_KEY)

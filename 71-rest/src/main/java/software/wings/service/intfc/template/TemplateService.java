@@ -35,7 +35,8 @@ public interface TemplateService extends OwnedByAccount {
 
   Template loadYaml(TemplateType templateType, String yamlFilePath, String accountId, String accountName);
 
-  List<CommandCategory> getCommandCategories(@NotEmpty String accountId, @NotEmpty String templateId);
+  List<CommandCategory> getCommandCategories(
+      @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String templateId);
 
   TemplateFolder getTemplateTree(@NotEmpty String accountId, String keyword, List<String> templateTypes);
 

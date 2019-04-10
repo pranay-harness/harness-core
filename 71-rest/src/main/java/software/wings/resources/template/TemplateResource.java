@@ -127,9 +127,9 @@ public class TemplateResource {
   @Path("{templateId}/commands/categories")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<CommandCategory>> getCommandCategories(
-      @QueryParam("accountId") String accountId, @PathParam("templateId") String templateId) {
-    return new RestResponse<>(templateService.getCommandCategories(accountId, templateId));
+  public RestResponse<List<CommandCategory>> getCommandCategories(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
+    return new RestResponse<>(templateService.getCommandCategories(accountId, appId, templateId));
   }
 
   /**
