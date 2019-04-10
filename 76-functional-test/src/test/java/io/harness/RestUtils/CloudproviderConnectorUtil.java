@@ -1,5 +1,7 @@
 package io.harness.RestUtils;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.inject.Singleton;
 
 import io.harness.framework.Setup;
@@ -13,29 +15,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 @Singleton
-public class CloudProviderRestUtil {
+public class CloudproviderConnectorUtil {
+  private static String ACCOUNT_ID = "accountId";
+  private static String SETTINGS_ENDPOINT = "/settings";
+
   public static JsonPath create(String bearerToken, String accountId, SettingAttribute setAttr) {
     JsonPath response = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", accountId)
+                            .queryParam(ACCOUNT_ID, accountId)
                             .body(setAttr, ObjectMapperType.GSON)
                             .contentType(ContentType.JSON)
-                            .post("/settings")
+                            .post(SETTINGS_ENDPOINT)
                             .jsonPath();
     return response;
   }
 
-  public static JsonPath list(String bearerToken, String accountId) {
+  public static JsonPath listCloudproviderConnector(String bearerToken, String accountId, String category) {
     JsonPath response = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", accountId)
+                            .queryParam(ACCOUNT_ID, accountId)
                             .queryParam("search[0][field]", "category")
                             .queryParam("search[0][op]", "EQ")
-                            .queryParam("search[0][value]", "CLOUD_PROVIDER")
+                            .queryParam("search[0][value]", category)
                             .contentType(ContentType.JSON)
-                            .get("/settings")
+                            .get(SETTINGS_ENDPOINT)
                             .jsonPath();
     return response;
   }
@@ -44,7 +49,7 @@ public class CloudProviderRestUtil {
     JsonPath response = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", accountId)
+                            .queryParam(ACCOUNT_ID, accountId)
                             .body(setAttr, ObjectMapperType.GSON)
                             .contentType(ContentType.JSON)
                             .post("/validate-connectivity")
@@ -56,7 +61,7 @@ public class CloudProviderRestUtil {
     JsonPath response = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", accountId)
+                            .queryParam(ACCOUNT_ID, accountId)
                             .body(setAttr, ObjectMapperType.GSON)
                             .contentType(ContentType.JSON)
                             .post("/validate")
@@ -68,7 +73,7 @@ public class CloudProviderRestUtil {
     JsonPath response = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", accntId)
+                            .queryParam(ACCOUNT_ID, accntId)
                             .body("", ObjectMapperType.GSON)
                             .contentType(ContentType.JSON)
                             .post("/upload")
@@ -80,25 +85,54 @@ public class CloudProviderRestUtil {
     Setup.portal()
         .auth()
         .oauth2(bearerToken)
-        .queryParam("accountId", accountId)
+        .queryParam(ACCOUNT_ID, accountId)
         .queryParam("isPluginSetting", true)
-        .delete("/settings/" + settingAttrId);
+        .delete(SETTINGS_ENDPOINT + "/" + settingAttrId);
   }
 
   /*
-    This function verifies if the Setting Attributes are of type 'Cloud Providers' and It also Returns the number of
-    CloudProviders found.
+    Use this to check how many total number of cloudprovider/connectors are present. Use this in case of,
+    1. Should be handy in verifying the new connector created by count
+    2. Should be handy in verifying the existing connector is deleted
    */
-  public static int verifyCloudProviders(String bearerToken, String accountId, JsonPath cloudProviders) {
+  public static int getCloudproviderConnectorCount(String bearerToken, String accountId, String category) {
+    // Get all the cloudprovider/connectors
+    JsonPath connectors = CloudproviderConnectorUtil.listCloudproviderConnector(bearerToken, accountId, category);
+    assertThat(connectors).isNotNull();
+
     ArrayList<HashMap<String, String>> hashMaps =
-        (ArrayList<HashMap<String, String>>) cloudProviders.getMap("resource").get("response");
+        (ArrayList<HashMap<String, String>>) connectors.getMap("resource").get("response");
     for (HashMap<String, String> data : hashMaps) {
-      if (!data.get("category").equals("CLOUD_PROVIDER")) {
-        Assert.fail("ERROR: Found an Entry which is not of type 'CLOUD_PROVIDER'");
-      } else {
-        // System.out.println("CP :" + data.get("category"));
+      if (!data.get("category").equals(category)) {
+        Assert.fail("ERROR: Found an entry which is not of type '" + category + "'");
       }
     }
     return hashMaps.size();
+  }
+
+  /*
+    Use this function when you want to check if the cloudprovider/connector with specific name exist.
+    Use this in case of,
+    1. to check and create new connector (create only when it's not found)
+    2. to verify new connector created
+    3. to delete a connector and check if its deleted
+   */
+  public static boolean checkCloudproviderConnectorExist(
+      String bearerToken, String accountId, String category, String name) {
+    boolean connFound = false;
+    // Get all the cloudprovider/connectors
+    JsonPath connectors = CloudproviderConnectorUtil.listCloudproviderConnector(bearerToken, accountId, category);
+    assertThat(connectors).isNotNull();
+
+    ArrayList<HashMap<String, String>> hashMaps =
+        (ArrayList<HashMap<String, String>>) connectors.getMap("resource").get("response");
+
+    for (HashMap<String, String> data : hashMaps) {
+      if (data.get("name").equals(name)) {
+        connFound = true;
+        break;
+      }
+    }
+    return connFound;
   }
 }
