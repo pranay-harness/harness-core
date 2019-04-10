@@ -13,13 +13,15 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
@@ -59,6 +61,8 @@ public class AppdynamicsTest extends WingsBaseTest {
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
 
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
   @Before
   public void setup() {
     initMocks(this);
@@ -90,7 +94,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
   public void validateConfig() {
     ((AppDynamicsConfig) settingAttribute.getValue())
         .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
@@ -98,9 +101,20 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
+  public void validateConfigInvalidURL() {
+    ((AppDynamicsConfig) settingAttribute.getValue())
+        .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
+    ((AppDynamicsConfig) settingAttribute.getValue())
+        .setControllerUrl("https://appd-bi-alpha-test.company.intranet/controller");
+
+    thrown.expect(WingsException.class);
+    appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
+  }
+
+  @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
   public void getAllApplications() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertFalse(applications.isEmpty());
@@ -109,34 +123,29 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
   public void getTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertFalse(applications.isEmpty());
-    for (NewRelicApplication appDApp : applications) {
-      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), appDApp.getId());
-      assertFalse(tiers.isEmpty());
-    }
+    Set<AppdynamicsTier> tiers =
+        appdynamicsService.getTiers(settingAttribute.getUuid(), applications.iterator().next().getId());
+    assertFalse(tiers.isEmpty());
   }
 
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
   public void getDependentTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertFalse(applications.isEmpty());
-    for (NewRelicApplication appDApp : applications) {
-      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), appDApp.getId());
-      assertFalse(tiers.isEmpty());
+    NewRelicApplication app = applications.iterator().next();
+    Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), app.getId());
+    assertFalse(tiers.isEmpty());
 
-      for (AppdynamicsTier tier : tiers) {
-        if (tier.getName().equals("docker-tier")) {
-          Set<AppdynamicsTier> dependentTiers =
-              appdynamicsService.getDependentTiers(settingAttribute.getUuid(), appDApp.getId(), tier);
-          assertTrue(isEmpty(dependentTiers));
-        }
-      }
+    AppdynamicsTier tier = tiers.iterator().next();
+    if (tier.getName().equals("docker-tier")) {
+      Set<AppdynamicsTier> dependentTiers =
+          appdynamicsService.getDependentTiers(settingAttribute.getUuid(), app.getId(), tier);
+      assertTrue(isEmpty(dependentTiers));
     }
   }
 }
