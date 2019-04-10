@@ -5,6 +5,7 @@ import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
 import io.harness.annotation.StoreIn;
 import io.harness.exception.ExceptionUtils;
+import io.harness.health.HealthMonitor;
 import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface HPersistence {
+public interface HPersistence extends HealthMonitor {
   Store DEFAULT_STORE = Store.builder().name("default").build();
 
   /**

@@ -1,10 +1,12 @@
 package io.harness.lock;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -15,6 +17,7 @@ import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import io.harness.exception.WingsException;
+import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredDistributedLock.AcquiredDistributedLockBuilder;
 import io.harness.lock.AcquiredDistributedLock.CloseAction;
 import io.harness.persistence.HPersistence;
@@ -27,7 +30,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class PersistentLocker implements Locker {
+public class PersistentLocker implements Locker, HealthMonitor {
   private static final Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
 
   public static final Store LOCKS_STORE = Store.builder().name("locks").build();
@@ -141,5 +144,21 @@ public class PersistentLocker implements Locker {
     acquiredLock.release();
     throw new WingsException(GENERAL_ERROR, NOBODY)
         .addParam("message", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));
+  }
+
+  @Override
+  public Duration healthExpectedResponseTimeout() {
+    return ofSeconds(10);
+  }
+
+  @Override
+  public Duration healthValidFor() {
+    return ofSeconds(15);
+  }
+
+  @Override
+  public void isHealthy() throws Exception {
+    try (AcquiredLock dummy = acquireEphemeralLock("HEALTH_CHECK - " + generateUuid(), ofSeconds(1))) {
+    }
   }
 }

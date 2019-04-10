@@ -112,7 +112,7 @@ public class ManagerExecutor {
                                               .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
                                               .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000));
 
-      Setup.portal().config(config).when().get("/version").then().statusCode(HttpStatus.SC_OK);
+      Setup.portal().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {
       if (exception.getMessage().equals(previous.getMessage())) {
         logger.info("not healthy");

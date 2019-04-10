@@ -322,7 +322,9 @@ public enum ErrorCode {
 
   INVALID_TICKETING_SERVER,
 
-  SERVICENOW_ERROR;
+  SERVICENOW_ERROR,
+
+  HEALTH_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

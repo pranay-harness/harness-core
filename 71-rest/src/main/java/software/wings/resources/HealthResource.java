@@ -9,8 +9,11 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.codahale.metrics.health.HealthCheck.Result;
 import io.harness.configuration.ConfigurationType;
 import io.harness.exception.WingsException;
+import io.harness.health.HealthException;
+import io.harness.health.HealthService;
 import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
@@ -45,29 +48,38 @@ public class HealthResource {
 
   private MainConfiguration mainConfiguration;
   private AsymmetricEncryptor asymmetricEncryptor;
+  private HealthService healthService;
 
   @Inject
-  public HealthResource(MainConfiguration mainConfiguration, AsymmetricEncryptor asymmetricEncryptor) {
+  public HealthResource(
+      MainConfiguration mainConfiguration, AsymmetricEncryptor asymmetricEncryptor, HealthService healthService) {
     this.mainConfiguration = mainConfiguration;
     this.asymmetricEncryptor = asymmetricEncryptor;
+    this.healthService = healthService;
   }
 
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<String> get() {
+  public RestResponse<String> get() throws Exception {
     if (isMaintenance()) {
       logger.info("In maintenance mode. Throwing exception to prevent traffic.");
       throw new WingsException(RESOURCE_NOT_FOUND, USER);
     }
-    return new RestResponse<>("healthy");
+
+    final Result check = healthService.check();
+    if (check.isHealthy()) {
+      return new RestResponse<>("healthy");
+    }
+
+    throw new HealthException(check.getMessage(), check.getError());
   }
 
   @GET
   @Path("configuration")
   @Timed
   @ExceptionMetered
-  public RestResponse<Object> getConfiguraton(@QueryParam("configurationType") ConfigurationType configurationType)
+  public RestResponse<Object> getConfiguration(@QueryParam("configurationType") ConfigurationType configurationType)
       throws IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, NoSuchAlgorithmException,
              InvalidKeyException {
     // The following code can be refactored to move to service layer

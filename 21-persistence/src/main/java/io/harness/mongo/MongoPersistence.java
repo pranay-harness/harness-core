@@ -5,6 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.ReadPref.CRITICAL;
 import static io.harness.persistence.ReadPref.NORMAL;
 import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
@@ -36,6 +38,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,6 +68,24 @@ public class MongoPersistence implements HPersistence {
     datastoreMap = new HashMap<>();
     datastoreMap.put(key(DEFAULT_STORE, NORMAL), primaryDatastore);
     datastoreMap.put(key(DEFAULT_STORE, CRITICAL), secondaryDatastore);
+  }
+
+  @Override
+  public Duration healthExpectedResponseTimeout() {
+    return ofSeconds(5);
+  }
+
+  @Override
+  public Duration healthValidFor() {
+    return ofSeconds(15);
+  }
+
+  @Override
+  public void isHealthy() throws Exception {
+    final List<AdvancedDatastore> datastores = datastoreMap.values().stream().distinct().collect(toList());
+    for (AdvancedDatastore datastore : datastores) {
+      datastore.getDB().getStats();
+    }
   }
 
   private String key(Store store, ReadPref readPref) {
