@@ -1,7 +1,6 @@
 package software.wings.scheduler;
 
-import static software.wings.common.Constants.ACCOUNT_ID_KEY;
-import static software.wings.common.Constants.APP_ID_KEY;
+import static software.wings.scheduler.ServiceNowApprovalJob.scheduleJob;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -13,28 +12,22 @@ import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
 
-import java.util.Calendar;
-import java.util.Date;
-
 public class JiraPollingJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(JiraPollingJob.class);
 
   public static final String GROUP = "JIRA_POLLING_CRON_JOB";
-  private static final int POLL_INTERVAL_SECONDS = 60;
-  private static final int DELAY_START_SECONDS = 30;
   private static final String CONNECTOR_ID = "connectorId";
   private static final String ISSUE_ID = "issueId";
   private static final String APPROVAL_ID = "approvalId";
   private static final String WORKFLOW_EXECUTION_ID = "workflowExecutionId";
+  private static final String ACCOUNT_ID_KEY = "accountId";
+  private static final String APP_ID_KEY = "appId";
 
   @Inject private JiraHelperService jiraHelperService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -55,20 +48,7 @@ public class JiraPollingJob implements Job {
                         .usingJobData(WORKFLOW_EXECUTION_ID, workflowExecutionId)
                         .build();
 
-    Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.SECOND, DELAY_START_SECONDS);
-    Date delay_start = cal.getTime();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(approvalExecutionId, GROUP)
-                          .startAt(delay_start)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(POLL_INTERVAL_SECONDS)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .build();
-
-    jobScheduler.ensureJob__UnderConstruction(job, trigger);
+    scheduleJob(jobScheduler, approvalExecutionId, job, GROUP);
   }
 
   @Override

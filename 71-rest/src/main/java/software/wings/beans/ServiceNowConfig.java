@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 @JsonTypeName("SERVICENOW")
 @Data
 @Builder
+@ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
 public class ServiceNowConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Base URL", required = true) @NotEmpty private String baseUrl;

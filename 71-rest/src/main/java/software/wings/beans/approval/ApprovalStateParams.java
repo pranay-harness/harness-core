@@ -6,4 +6,5 @@ import lombok.Setter;
 public class ApprovalStateParams {
   @Getter @Setter private JiraApprovalParams jiraApprovalParams;
   @Getter @Setter private ShellScriptApprovalParams shellScriptApprovalParams;
+  @Getter @Setter private ServiceNowApprovalParams serviceNowApprovalParams;
 }

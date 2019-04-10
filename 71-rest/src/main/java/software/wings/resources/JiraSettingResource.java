@@ -7,7 +7,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.service.impl.JiraHelperService;
-import software.wings.service.intfc.SettingsService;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -19,7 +18,6 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 public class JiraSettingResource {
   @Inject JiraHelperService jiraHelperService;
-  @Inject SettingsService settingService;
 
   /**
    * List.

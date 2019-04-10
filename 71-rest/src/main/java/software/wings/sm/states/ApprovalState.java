@@ -64,6 +64,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.approval.ApprovalStateParams;
 import software.wings.beans.approval.JiraApprovalParams;
+import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.approval.ShellScriptApprovalParams;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
@@ -72,6 +73,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.scheduler.JiraPollingJob;
 import software.wings.scheduler.ScriptApprovalJob;
+import software.wings.scheduler.ServiceNowApprovalJob;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -83,6 +85,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -103,7 +106,7 @@ public class ApprovalState extends State {
   @Getter @Setter private List<String> userGroups = new ArrayList<>();
   @Getter @Setter private boolean disable;
 
-  public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT }
+  public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT, SERVICENOW }
 
   @Inject private AlertService alertService;
   @Inject private NotificationService notificationService;
@@ -115,6 +118,7 @@ public class ApprovalState extends State {
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
   @Inject private JiraHelperService jiraHelperService;
+  @Inject private ServiceNowService serviceNowService;
   @Inject private transient ActivityService activityService;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
@@ -172,13 +176,16 @@ public class ApprovalState extends State {
     switch (approvalStateType) {
       case JIRA:
         return executeJiraApproval(context, executionData, approvalId);
+      case SERVICENOW:
+        return executeServiceNowApproval(context, executionData, approvalId);
       case USER_GROUP:
         return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
       case SHELL_SCRIPT:
         return executeShellScriptApproval(context, app.getAccountId(), app.getUuid(), approvalId,
             approvalStateParams.getShellScriptApprovalParams(), executionData);
       default:
-        throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
+        throw new WingsException(
+            "Invalid ApprovalStateType, it should be one of ServiceNow, Jira, HarnessUi or Custom Shell script");
     }
   }
 
@@ -299,6 +306,43 @@ public class ApprovalState extends State {
         .build();
   }
 
+  private ExecutionResponse executeServiceNowApproval(
+      ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
+    ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
+    executionData.setApprovalField(servicenowApprovalParams.getApprovalField());
+    executionData.setApprovalValue(servicenowApprovalParams.getApprovalValue());
+    executionData.setRejectionField(servicenowApprovalParams.getRejectionField());
+    executionData.setRejectionValue(servicenowApprovalParams.getRejectionValue());
+
+    Application app = ((ExecutionContextImpl) context).getApp();
+
+    // Create a cron job which polls ServiceNow for approval status
+    ServiceNowApprovalJob.doPollingJob(serviceJobScheduler, servicenowApprovalParams, executionData.getApprovalId(),
+        app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(),
+        servicenowApprovalParams.getTicketType().toString());
+
+    try {
+      String issueUrl = serviceNowService.getIssueUrl(servicenowApprovalParams.getIssueNumber(),
+          servicenowApprovalParams.getSnowConnectorId(), servicenowApprovalParams.getTicketType(), app.getAppId(),
+          app.getAccountId());
+
+      executionData.setIssueUrl(issueUrl);
+      return anExecutionResponse()
+          .withAsync(true)
+          .withExecutionStatus(PAUSED)
+          .withErrorMessage("Waiting for approval on Ticket " + servicenowApprovalParams.getIssueNumber())
+          .withCorrelationIds(asList(approvalId))
+          .withStateExecutionData(executionData)
+          .build();
+    } catch (WingsException we) {
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage(we.getParams().get("message").toString())
+          .withStateExecutionData(executionData)
+          .build();
+    }
+  }
+
   private ExecutionResponse executeUserGroupApproval(List<String> userGroups, String accountId,
       Map<String, String> placeholderValues, String approvalId, ApprovalStateExecutionData executionData) {
     executionData.setUserGroups(userGroups);
@@ -346,6 +390,8 @@ public class ApprovalState extends State {
     switch (approvalStateType) {
       case JIRA:
         return handleAsyncJira(context, executionData, approvalNotifyResponse);
+      case SERVICENOW:
+        return handleAsyncServiceNow(context, executionData, approvalNotifyResponse);
       case USER_GROUP:
         return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
       case SHELL_SCRIPT:
@@ -408,6 +454,17 @@ public class ApprovalState extends State {
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
         .withErrorMessage(jiraExecutionData.getErrorMessage())
+        .build();
+  }
+
+  private ExecutionResponse handleAsyncServiceNow(ExecutionContext context, ApprovalStateExecutionData executionData,
+      ApprovalStateExecutionData approvalNotifyResponse) {
+    ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
+    setPipelineVariables(context);
+    return anExecutionResponse()
+        .withStateExecutionData(executionData)
+        .withExecutionStatus(approvalNotifyResponse.getStatus())
+        .withErrorMessage("Approval/Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
         .build();
   }
 
@@ -479,6 +536,9 @@ public class ApprovalState extends State {
       case JIRA:
         handleAbortEventJira(context, app);
         return;
+      case SERVICENOW:
+        handleAbortEventServiceNow(context, app);
+        return;
       case USER_GROUP:
         sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
         return;
@@ -500,6 +560,11 @@ public class ApprovalState extends State {
     jiraHelperService.deleteWebhook(
         approvalStateParams.getJiraApprovalParams(), executionData.getWebhookUrl(), app.getAppId(), app.getAccountId());
     // Todo@Pooja : delete JiraPolling job in case of pipeline abort.
+  }
+
+  private void handleAbortEventServiceNow(ExecutionContext context, Application app) {
+    ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
+    ServiceNowApprovalJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
   }
 
   @Override
