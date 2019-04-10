@@ -12,6 +12,7 @@ import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.ExecutionContext;
@@ -41,7 +42,7 @@ public class MLServiceUtil {
                                               .filter("appId", nodeData.getAppId())
                                               .filter("workflowId", nodeData.getWorkflowId())
                                               .filter("status", SUCCESS)
-                                              .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
+                                              .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
 
     if (workflowExecution == null) {

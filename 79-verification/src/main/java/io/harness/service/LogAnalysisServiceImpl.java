@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -961,7 +962,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                               .filter("appId", appId)
                                               .filter("workflowId", workflowId)
                                               .filter("status", SUCCESS)
-                                              .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
+                                              .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
 
     if (workflowExecution == null) {

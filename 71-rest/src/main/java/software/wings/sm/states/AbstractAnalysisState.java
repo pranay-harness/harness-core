@@ -56,6 +56,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
@@ -379,7 +380,7 @@ public abstract class AbstractAnalysisState extends State {
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
             .addFilter("envId", Operator.EQ, envId)
             .addFilter("status", Operator.EQ, SUCCESS)
-            .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
+            .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
             .withOffset(String.valueOf(offset))
             .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
             .build();

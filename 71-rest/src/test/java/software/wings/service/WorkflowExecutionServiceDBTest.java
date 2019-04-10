@@ -40,6 +40,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.WorkflowResource;
@@ -105,7 +106,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(WAITING).build());
 
     PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(
-        aPageRequest().addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, APP_ID).build(), false, true, false, true);
+        aPageRequest().addFilter(WorkflowExecutionKeys.appId, Operator.EQ, APP_ID).build(), false, true, false, true);
     assertThat(pageResponse).isNotNull();
     assertThat(pageResponse.size()).isEqualTo(7);
   }

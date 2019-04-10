@@ -9,6 +9,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.artifact.Artifact;
 
@@ -20,6 +21,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@FieldNameConstants(innerTypeName = "ExecutionArgsKeys")
 public class ExecutionArgs {
   private WorkflowType workflowType;
   private String serviceId;

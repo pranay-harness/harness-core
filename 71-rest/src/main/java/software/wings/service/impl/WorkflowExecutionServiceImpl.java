@@ -45,8 +45,6 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.WorkflowExecution.STATUS_KEY;
-import static software.wings.beans.WorkflowExecution.WORKFLOW_ID_KEY;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -155,6 +153,7 @@ import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
@@ -1348,12 +1347,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (workflowExecution.getPipelineExecutionId() != null) {
         WorkflowExecution pipelineExecution =
             wingsPersistence.createQuery(WorkflowExecution.class)
-                .project(WorkflowExecution.TRIGGERED_BY, true)
-                .project(WorkflowExecution.CREATED_BY_KEY, true)
-                .project(WorkflowExecution.DEPLOYMENT_TRIGGERED_ID_KEY, true)
-                .project(WorkflowExecution.ARTIFACTS_KEY, true)
-                .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
-                .filter(WorkflowExecution.ID_KEY, workflowExecution.getPipelineExecutionId())
+                .project(WorkflowExecutionKeys.triggeredBy, true)
+                .project(WorkflowExecutionKeys.createdBy, true)
+                .project(WorkflowExecutionKeys.deploymentTriggerId, true)
+                .project(WorkflowExecutionKeys.artifacts, true)
+                .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+                .filter(WorkflowExecutionKeys.uuid, workflowExecution.getPipelineExecutionId())
                 .get();
         if (pipelineExecution != null) {
           workflowExecution.setTriggeredBy(pipelineExecution.getTriggeredBy());
@@ -1435,15 +1434,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .filter(WorkflowExecution.APP_ID_KEY, appId)
-                                         .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
-                                         .field(WorkflowExecution.STATUS_KEY)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                         .field(WorkflowExecutionKeys.status)
                                          .in(asList(NEW, QUEUED));
 
-    UpdateOperations<WorkflowExecution> updateOps =
-        wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-            .set(WorkflowExecution.STATUS_KEY, status)
-            .set(WorkflowExecution.START_TS_KEY, System.currentTimeMillis());
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.status, status)
+                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis());
 
     wingsPersistence.update(query, updateOps);
   }
@@ -2566,13 +2564,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli) {
     final Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                               .field(WorkflowExecution.CREATED_AT_KEY)
+                                               .field(WorkflowExecutionKeys.createdAt)
                                                .greaterThanOrEq(epochMilli)
-                                               .field(WorkflowExecution.PIPELINE_EXECUTION_ID_KEY)
+                                               .field(WorkflowExecutionKeys.pipelineExecutionId)
                                                .doesNotExist()
-                                               .field(WorkflowExecution.APP_ID_KEY)
+                                               .field(WorkflowExecutionKeys.appId)
                                                .in(appIds)
-                                               .project(WorkflowExecution.STATE_MACHINE_KEY, false);
+                                               .project(WorkflowExecutionKeys.stateMachine, false);
     return new HIterator<>(query.fetch());
   }
 
@@ -2590,9 +2588,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private WorkflowExecution fetchLastSuccessDeployment(String appId, String workflowId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
-        .filter(WORKFLOW_ID_KEY, workflowId)
+        .filter(WorkflowExecutionKeys.workflowId, workflowId)
         .filter(APP_ID_KEY, appId)
-        .filter(STATUS_KEY, SUCCESS)
+        .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order("-createdAt")
         .get();
   }
@@ -2609,7 +2607,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .in(serviceIds)
         .field("envIds")
         .in(envIds)
-        .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
+        .order(Sort.descending(WorkflowExecutionKeys.createdAt))
         .get(new FindOptions().skip(1));
   }
 
@@ -2648,18 +2646,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     PageRequestBuilder pageRequestBuilder =
         aPageRequest()
-            .addFieldsIncluded(WorkflowExecution.APP_ID_KEY, WorkflowExecution.STATUS_KEY,
-                WorkflowExecution.WORKFLOW_ID_KEY, WorkflowExecution.CREATED_AT_KEY, WorkflowExecution.ID_KEY,
-                WorkflowExecution.START_TS_KEY, WorkflowExecution.END_TS_KEY, WorkflowExecution.NAME_KEY)
-            .addFilter(WorkflowExecution.APP_ID_KEY, EQ, appId)
-            .addFilter(WorkflowExecution.STATUS_KEY, IN, ExecutionStatus.activeStatuses().toArray())
-            .addFilter(WorkflowExecution.CREATED_AT_KEY, LT_EQ, workflowExecution.getCreatedAt())
-            .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC)
-            .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, workflowExecution.getWorkflowId());
+            .addFieldsIncluded(WorkflowExecutionKeys.appId, WorkflowExecutionKeys.status,
+                WorkflowExecutionKeys.workflowId, WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.uuid,
+                WorkflowExecutionKeys.startTs, WorkflowExecutionKeys.endTs, WorkflowExecutionKeys.name)
+            .addFilter(WorkflowExecutionKeys.appId, EQ, appId)
+            .addFilter(WorkflowExecutionKeys.status, IN, ExecutionStatus.activeStatuses().toArray())
+            .addFilter(WorkflowExecutionKeys.createdAt, LT_EQ, workflowExecution.getCreatedAt())
+            .addOrder(WorkflowExecutionKeys.createdAt, OrderType.ASC)
+            .addFilter(WorkflowExecutionKeys.workflowId, EQ, workflowExecution.getWorkflowId());
 
     if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
       pageRequestBuilder.addFilter(
-          WorkflowExecution.INFRA_MAPPING_IDS_KEY, IN, workflowExecution.getInfraMappingIds().toArray());
+          WorkflowExecutionKeys.infraMappingIds, IN, workflowExecution.getInfraMappingIds().toArray());
     }
     return wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
   }
@@ -2667,11 +2665,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public Long fetchWorkflowExecutionStartTs(String appId, String workflowExecutionId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                              .project(WorkflowExecution.START_TS_KEY, true)
-                                              .project(WorkflowExecution.APP_ID_KEY, true)
-                                              .project(WorkflowExecution.ID_KEY, true)
-                                              .filter(WorkflowExecution.APP_ID_KEY, appId)
-                                              .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+                                              .project(WorkflowExecutionKeys.startTs, true)
+                                              .project(WorkflowExecutionKeys.appId, true)
+                                              .project(WorkflowExecutionKeys.uuid, true)
+                                              .filter(WorkflowExecutionKeys.appId, appId)
+                                              .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
                                               .get();
     return workflowExecution == null ? null : workflowExecution.getStartTs();
   }
@@ -2699,35 +2697,35 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution getWorkflowExecutionSummary(String appId, String workflowExecutionId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
-        .project(WorkflowExecution.SERVICE_EXECUTION_SUMMARIES, false)
-        .project(WorkflowExecution.EXECUTION_ARGS, false)
-        .filter(WorkflowExecution.APP_ID_KEY, appId)
-        .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+        .project(WorkflowExecutionKeys.serviceExecutionSummaries, false)
+        .project(WorkflowExecutionKeys.executionArgs, false)
+        .filter(WorkflowExecutionKeys.appId, appId)
+        .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
         .get();
   }
 
   @Override
   public WorkflowExecution getWorkflowExecutionForVerificationService(String appId, String workflowExecutionId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
-        .project(WorkflowExecution.UUID_KEY, true)
-        .project(WorkflowExecution.ENV_ID_KEY, true)
-        .filter(WorkflowExecution.APP_ID_KEY, appId)
-        .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+        .project(WorkflowExecutionKeys.uuid, true)
+        .project(WorkflowExecutionKeys.envId, true)
+        .filter(WorkflowExecutionKeys.appId, appId)
+        .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
         .get();
   }
 
   @Override
   public void refreshCollectedArtifacts(String appId, String pipelineExecutionId, String workflowExecutionId) {
     WorkflowExecution pipelineWorkflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                      .project(WorkflowExecution.ARTIFACTS_KEY, true)
-                                                      .filter(WorkflowExecution.APP_ID_KEY, appId)
-                                                      .filter(WorkflowExecution.ID_KEY, pipelineExecutionId)
+                                                      .project(WorkflowExecutionKeys.artifacts, true)
+                                                      .filter(WorkflowExecutionKeys.appId, appId)
+                                                      .filter(WorkflowExecutionKeys.uuid, pipelineExecutionId)
                                                       .get();
 
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                              .project(WorkflowExecution.ARTIFACTS_KEY, true)
-                                              .filter(WorkflowExecution.APP_ID_KEY, appId)
-                                              .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+                                              .project(WorkflowExecutionKeys.artifacts, true)
+                                              .filter(WorkflowExecutionKeys.appId, appId)
+                                              .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
                                               .get();
 
     // Workflow Step Artifacts
@@ -2754,12 +2752,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         collectedArtifacts.stream().filter(distinctByKey(artifact -> artifact.getUuid())).collect(toList());
 
     Query<WorkflowExecution> updatedQuery = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                .project(WorkflowExecution.ARTIFACTS_KEY, true)
-                                                .filter(WorkflowExecution.APP_ID_KEY, appId)
-                                                .filter(WorkflowExecution.ID_KEY, pipelineExecutionId);
+                                                .project(WorkflowExecutionKeys.artifacts, true)
+                                                .filter(WorkflowExecutionKeys.appId, appId)
+                                                .filter(WorkflowExecutionKeys.uuid, pipelineExecutionId);
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                        .set(WorkflowExecution.ARTIFACTS_KEY, collectedArtifacts);
+                                                        .set(WorkflowExecutionKeys.artifacts, collectedArtifacts);
 
     wingsPersistence.update(updatedQuery, updateOps);
   }
@@ -2776,19 +2774,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution fetchLastWorkflowExecution(String appId, String workflowId, String serviceId, String envId) {
     Query<WorkflowExecution> workflowExecutionQuery = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                          .filter(WorkflowExecution.WORKFLOW_TYPE_ID_KEY, ORCHESTRATION)
-                                                          .filter(WorkflowExecution.WORKFLOW_ID_KEY, workflowId)
-                                                          .filter(WorkflowExecution.APP_ID_KEY, appId);
+                                                          .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
+                                                          .filter(WorkflowExecutionKeys.workflowId, workflowId)
+                                                          .filter(WorkflowExecutionKeys.appId, appId);
 
     if (StringUtils.isNotBlank(serviceId)) {
-      workflowExecutionQuery.field(WorkflowExecution.WORKFLOW_SERVICE_IDS_KEY).in(Arrays.asList(serviceId));
+      workflowExecutionQuery.field(WorkflowExecutionKeys.serviceIds).in(Arrays.asList(serviceId));
     }
 
     if (StringUtils.isNotBlank(envId)) {
-      workflowExecutionQuery.field(WorkflowExecution.WORKFLOW_ENV_IDS_KEY).in(Arrays.asList(envId));
+      workflowExecutionQuery.field(WorkflowExecutionKeys.envIds).in(Arrays.asList(envId));
     }
 
-    return workflowExecutionQuery.order(Sort.descending(WorkflowExecution.CREATED_AT_KEY)).get();
+    return workflowExecutionQuery.order(Sort.descending(WorkflowExecutionKeys.createdAt)).get();
   }
 
   @Override
@@ -2796,14 +2794,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String workflowId, String envId, int pageOffset, int pageLimit) {
     PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
-            .addFilter(WorkflowExecution.WORKFLOW_TYPE_ID_KEY, Operator.EQ, ORCHESTRATION)
-            .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, Operator.EQ, workflowId)
-            .addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, appId)
-            .addFilter(WorkflowExecution.WORKFLOW_ENV_IDS_KEY, Operator.IN, Arrays.asList(envId))
+            .addFilter(WorkflowExecutionKeys.workflowType, Operator.EQ, ORCHESTRATION)
+            .addFilter(WorkflowExecutionKeys.workflowId, Operator.EQ, workflowId)
+            .addFilter(WorkflowExecutionKeys.appId, Operator.EQ, appId)
+            .addFilter(WorkflowExecutionKeys.envIds, Operator.IN, Arrays.asList(envId))
             .withLimit(String.valueOf(pageLimit))
             .withOffset(String.valueOf(pageOffset))
-            .addOrder(
-                SortOrder.Builder.aSortOrder().withField(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC).build())
+            .addOrder(SortOrder.Builder.aSortOrder().withField(WorkflowExecutionKeys.createdAt, OrderType.DESC).build())
             .build();
 
     return wingsPersistence.query(WorkflowExecution.class, pageRequest);

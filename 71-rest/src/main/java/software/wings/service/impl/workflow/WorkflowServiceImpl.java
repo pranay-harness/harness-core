@@ -154,6 +154,7 @@ import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowCategoryStepsMeta;
 import software.wings.beans.WorkflowCreationFlags;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowStepMeta;
 import software.wings.beans.command.Command;
@@ -2510,7 +2511,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, SUCCESS)
-                                                           .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
+                                                           .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
                                                            .withOffset(String.valueOf(offset))
                                                            .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
                                                            .build();
@@ -2641,7 +2642,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-                                                           .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
+                                                           .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
                                                            .build();
     if (!isEmpty(serviceId)) {
       pageRequest.addFilter("serviceIds", Operator.CONTAINS, serviceId);

@@ -1,7 +1,6 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.beans.WorkflowExecution.STATUS_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_BRANCH_NAME_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_GIT_CONNECTOR_ID_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_WEBHOOK_SOURCE_KEY;
@@ -19,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.trigger.TriggerExecution;
@@ -64,7 +64,7 @@ public class WebhookTriggerProcessor {
         .filter(WEBHOOK_EVENT_DETAILS_BRANCH_NAME_KEY, webHookTriggerCondition.getBranchName())
         .filter(WEBHOOK_EVENT_DETAILS_GIT_CONNECTOR_ID_KEY, webHookTriggerCondition.getGitConnectorId())
         .filter(WEBHOOK_EVENT_DETAILS_WEBHOOK_SOURCE_KEY, webHookTriggerCondition.getWebhookSource().name())
-        .field(STATUS_KEY)
+        .field(WorkflowExecutionKeys.status)
         .in(EnumSet.<TriggerExecution.Status>of(Status.RUNNING, Status.SUCCESS))
         .order("-createdAt")
         .get();

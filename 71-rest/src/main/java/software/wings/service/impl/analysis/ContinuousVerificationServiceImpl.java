@@ -73,6 +73,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
@@ -458,7 +459,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                           .project("keywords", false)
                                                           .project("breakdown", false)
                                                           .project("statusInstanceBreakdownMap", false)
-                                                          .project(WorkflowExecution.STATE_MACHINE_KEY, false)
+                                                          .project(WorkflowExecutionKeys.stateMachine, false)
                                                           .project("executionArgs", false);
 
     try (HIterator<WorkflowExecution> records = new HIterator<>(workflowExecutionQuery.fetch())) {
