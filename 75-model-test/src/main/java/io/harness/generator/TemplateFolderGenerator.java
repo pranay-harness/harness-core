@@ -77,7 +77,7 @@ public class TemplateFolderGenerator {
     }
 
     if (templateFolder != null && templateFolder.getPathId() != null) {
-      builder.parentId(templateFolder.getPathId());
+      builder.pathId(templateFolder.getPathId());
     } else {
       String accId = (templateFolder != null && templateFolder.getAccountId() != null) ? templateFolder.getAccountId()
                                                                                        : account.getUuid();
