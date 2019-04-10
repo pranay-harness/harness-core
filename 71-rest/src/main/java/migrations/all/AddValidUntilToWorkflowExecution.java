@@ -11,6 +11,7 @@ import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Instant;
@@ -32,7 +33,7 @@ public class AddValidUntilToWorkflowExecution implements Migration {
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class)
                                  .field("validUntil")
                                  .doesNotExist()
-                                 .project(WorkflowExecution.CREATED_AT_KEY, true)
+                                 .project(WorkflowExecutionKeys.createdAt, true)
                                  .fetch())) {
       while (workflowExecutions.hasNext()) {
         final WorkflowExecution workflowExecution = workflowExecutions.next();
@@ -48,7 +49,7 @@ public class AddValidUntilToWorkflowExecution implements Migration {
 
         bulkWriteOperation
             .find(wingsPersistence.createQuery(WorkflowExecution.class)
-                      .filter(WorkflowExecution.ID_KEY, workflowExecution.getUuid())
+                      .filter(WorkflowExecutionKeys.uuid, workflowExecution.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject(
                 "$set", new BasicDBObject("validUntil", java.util.Date.from(zonedDateTime.toInstant()))));

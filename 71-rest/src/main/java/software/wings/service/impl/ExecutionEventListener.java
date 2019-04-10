@@ -26,6 +26,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -61,14 +62,14 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
 
       final Query<WorkflowExecution> runningQuery =
           wingsPersistence.createQuery(WorkflowExecution.class)
-              .filter(WorkflowExecution.APP_ID_KEY, message.getAppId())
-              .filter(WorkflowExecution.WORKFLOW_ID_KEY, message.getWorkflowId())
-              .field(WorkflowExecution.STATUS_KEY)
+              .filter(WorkflowExecutionKeys.appId, message.getAppId())
+              .filter(WorkflowExecutionKeys.workflowId, message.getWorkflowId())
+              .field(WorkflowExecutionKeys.status)
               .in(asList(RUNNING, PAUSED))
-              .project(WorkflowExecution.UUID_KEY, true);
+              .project(WorkflowExecutionKeys.uuid, true);
 
       if (isNotEmpty(message.getInfraMappingIds())) {
-        runningQuery.field(WorkflowExecution.INFRA_MAPPING_IDS_KEY).in(message.getInfraMappingIds());
+        runningQuery.field(WorkflowExecutionKeys.infraMappingIds).in(message.getInfraMappingIds());
       }
 
       WorkflowExecution runningWorkflowExecutions = runningQuery.get();
@@ -104,14 +105,13 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
         }
       }
 
-      final Query<WorkflowExecution> queueQuery =
-          wingsPersistence.createQuery(WorkflowExecution.class)
-              .filter(WorkflowExecution.APP_ID_KEY, message.getAppId())
-              .filter(WorkflowExecution.WORKFLOW_ID_KEY, message.getWorkflowId())
-              .filter(WorkflowExecution.STATUS_KEY, QUEUED)
-              .order(Sort.ascending(WorkflowExecution.CREATED_AT_KEY));
+      final Query<WorkflowExecution> queueQuery = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                      .filter(WorkflowExecutionKeys.appId, message.getAppId())
+                                                      .filter(WorkflowExecutionKeys.workflowId, message.getWorkflowId())
+                                                      .filter(WorkflowExecutionKeys.status, QUEUED)
+                                                      .order(Sort.ascending(WorkflowExecutionKeys.createdAt));
       if (isNotEmpty(message.getInfraMappingIds())) {
-        queueQuery.field(WorkflowExecution.INFRA_MAPPING_IDS_KEY).in(message.getInfraMappingIds());
+        queueQuery.field(WorkflowExecutionKeys.infraMappingIds).in(message.getInfraMappingIds());
       }
 
       WorkflowExecution workflowExecution = queueQuery.get();

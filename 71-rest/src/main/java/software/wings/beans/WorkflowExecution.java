@@ -22,6 +22,7 @@ import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -31,6 +32,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.sm.PipelineSummary;
@@ -51,33 +53,12 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
                                                                      , @Field("status") }))
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware {
-  public static final String APP_ID_KEY = "appId";
-  public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
-  public static final String ARTIFACTS_KEY = "artifacts";
-  public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
-  public static final String END_TS_KEY = "endTs";
-  public static final String ENV_ID_KEY = "envId";
-  public static final String EXECUTION_ARGS = "executionArgs";
-  public static final String INFRA_MAPPING_IDS_KEY = "infraMappingIds";
-  public static final String NAME_KEY = "name";
-  public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
-  public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";
-  public static final String START_TS_KEY = "startTs";
-  public static final String STATE_MACHINE_KEY = "stateMachine";
-  public static final String STATE_MACHINE_ID_KEY = "stateMachineId";
-  public static final String STATUS_KEY = "status";
-  public static final String TRIGGERED_BY = "triggeredBy";
-  public static final String UUID_KEY = "uuid";
-  public static final String WORKFLOW_ID_KEY = "workflowId";
-  public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
-  public static final String WORKFLOW_SERVICE_IDS_KEY = "serviceIds";
-  public static final String WORKFLOW_ENV_IDS_KEY = "envIds";
-
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
 
@@ -164,5 +145,10 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
                 .format(DateTimeFormatter.ofPattern(Constants.WORKFLOW_NAME_DATE_FORMAT));
     }
     return name + dateSuffix;
+  }
+
+  public static final class WorkflowExecutionKeys {
+    public static final String executionArgs_pipelinePhaseElementId =
+        executionArgs + "." + ExecutionArgsKeys.pipelinePhaseElementId;
   }
 }

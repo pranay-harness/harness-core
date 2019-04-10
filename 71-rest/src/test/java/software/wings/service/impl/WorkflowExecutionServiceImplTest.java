@@ -109,6 +109,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -604,10 +605,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String appId = app.getUuid();
     triggerWorkflow(appId, env);
     WorkflowExecution workflowExecution =
-        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecution.APP_ID_KEY, appId).get();
+        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecutionKeys.appId, appId).get();
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution =
-        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecution.APP_ID_KEY, appId).get();
+        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecutionKeys.appId, appId).get();
     assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
     logger.info("shouldUpdateFailedCount test done");
   }

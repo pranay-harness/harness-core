@@ -31,6 +31,7 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
@@ -77,7 +78,7 @@ public class WorkflowExecutionMonitorJob implements Job {
   public void checkForExpiryWorkflow() {
     try (HIterator<WorkflowExecution> workflowExecutions =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
-                                 .field(WorkflowExecution.STATUS_KEY)
+                                 .field(WorkflowExecutionKeys.status)
                                  .in(asList(RUNNING, NEW, STARTING, PAUSED, WAITING))
                                  .fetch())) {
       while (workflowExecutions.hasNext()) {

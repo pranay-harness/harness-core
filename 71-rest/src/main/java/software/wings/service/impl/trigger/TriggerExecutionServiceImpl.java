@@ -1,7 +1,5 @@
 package software.wings.service.impl.trigger;
 
-import static software.wings.beans.WorkflowExecution.STATUS_KEY;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -9,6 +7,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.dl.WingsPersistence;
@@ -43,7 +42,7 @@ public class TriggerExecutionServiceImpl implements TriggerExecutionService {
         .filter(TriggerExecution.APP_ID_KEY, appId)
         .filter(TriggerExecution.TRIGGER_ID_KEY, triggerId)
         .filter(TriggerExecution.WEBHOOK_TOKEN_KEY, webhookToken)
-        .field(STATUS_KEY)
+        .field(WorkflowExecutionKeys.status)
         .in(EnumSet.<TriggerExecution.Status>of(Status.RUNNING, Status.SUCCESS))
         .order("-createdAt")
         .get();

@@ -59,6 +59,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.SyncStatus;
@@ -848,7 +849,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                      .addFilter("appId", EQ, appId)
                                                      .addFilter("workflowType", EQ, ORCHESTRATION)
                                                      .addFilter("serviceIds", HAS, serviceId)
-                                                     .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
+                                                     .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
                                                      .withLimit("10")
                                                      .build();
 

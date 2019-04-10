@@ -36,6 +36,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.BarrierService;
@@ -115,10 +116,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       if (workflow.getWorkflowExecutionId() == null) {
         try (HKeyIterator<WorkflowExecution> keys = new HKeyIterator(
                  wingsPersistence.createQuery(WorkflowExecution.class)
-                     .filter(WorkflowExecution.APP_ID_KEY, barrierInstance.getAppId())
-                     .filter(WorkflowExecution.PIPELINE_EXECUTION_ID_KEY, pipeline.getExecutionId())
-                     .filter(WorkflowExecution.ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY, workflow.getPipelineStateId())
-                     .filter(WorkflowExecution.WORKFLOW_ID_KEY, workflow.getUuid())
+                     .filter(WorkflowExecutionKeys.appId, barrierInstance.getAppId())
+                     .filter(WorkflowExecutionKeys.pipelineExecutionId, pipeline.getExecutionId())
+                     .filter(WorkflowExecutionKeys.executionArgs_pipelinePhaseElementId, workflow.getPipelineStateId())
+                     .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
                      .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
@@ -228,9 +229,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
     if ("pipeline".equals(metadata.get(LEVEL))) {
       final WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                      .filter(WorkflowExecution.APP_ID_KEY, metadata.get(APP_ID))
-                                                      .filter(WorkflowExecution.ID_KEY, forcerId.getValue())
-                                                      .project(WorkflowExecution.STATUS_KEY, true)
+                                                      .filter(WorkflowExecutionKeys.appId, metadata.get(APP_ID))
+                                                      .filter(WorkflowExecutionKeys.uuid, forcerId.getValue())
+                                                      .project(WorkflowExecutionKeys.status, true)
                                                       .get();
       // The barriers are created before the pipeline is triggered. This creates a window in which barrier background
       // job might trigger update while the workflow is still missing. This will happen also if we failed to trigger
@@ -265,9 +266,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Override
   public String findByStep(String appId, String pipelineStateId, String workflowExecutionId, String identifier) {
     final String pipelineExecutionId = wingsPersistence.createQuery(WorkflowExecution.class)
-                                           .filter(WorkflowExecution.APP_ID_KEY, appId)
-                                           .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
-                                           .project(WorkflowExecution.PIPELINE_EXECUTION_ID_KEY, true)
+                                           .filter(WorkflowExecutionKeys.appId, appId)
+                                           .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                           .project(WorkflowExecutionKeys.pipelineExecutionId, true)
                                            .get()
                                            .getPipelineExecutionId();
 

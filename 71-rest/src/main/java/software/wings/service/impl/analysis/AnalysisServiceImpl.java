@@ -51,6 +51,7 @@ import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -994,7 +995,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                               .filter("appId", appId)
                                               .filter("workflowId", workflowId)
                                               .filter("status", SUCCESS)
-                                              .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
+                                              .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
 
     if (workflowExecution == null) {

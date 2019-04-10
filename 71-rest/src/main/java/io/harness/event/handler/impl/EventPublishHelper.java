@@ -33,6 +33,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.sso.LdapSettings;
@@ -615,7 +616,7 @@ public class EventPublishHelper {
     PageRequest<WorkflowExecution> executionPageRequest = PageRequestBuilder.aPageRequest()
                                                               .addFilter("appId", Operator.IN, appIds.toArray())
                                                               .addFilter("createdBy.email", Operator.EQ, userEmail)
-                                                              .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC)
+                                                              .addOrder(WorkflowExecutionKeys.createdAt, OrderType.ASC)
                                                               .withLimit("1")
                                                               .build();
 
