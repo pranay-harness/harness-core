@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
@@ -57,20 +58,13 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     HelmCommandRequest helmCommandRequest = (HelmCommandRequest) parameters[0];
     HelmCommandResponse commandResponse;
 
-    LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
-    helmCommandRequest.setExecutionLogCallback(executionLogCallback);
-
     try {
-      executionLogCallback.saveExecutionLog("Creating KubeConfig", LogLevel.INFO, CommandExecutionStatus.RUNNING);
-      String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(
-          helmCommandRequest.getContainerServiceParams());
-      helmCommandRequest.setKubeConfigLocation(configLocation);
-      executionLogCallback.saveExecutionLog(
-          "Setting KubeConfig\nKUBECONFIG_PATH=" + configLocation, LogLevel.INFO, CommandExecutionStatus.RUNNING);
+      init(helmCommandRequest, getExecutionLogCallback(helmCommandRequest, HelmDummyCommandUnit.Init));
 
-      ensureHelmCliAndTillerInstalled(helmCommandRequest);
+      helmCommandRequest.setExecutionLogCallback(
+          getExecutionLogCallback(helmCommandRequest, HelmDummyCommandUnit.Prepare));
 
-      executionLogCallback.saveExecutionLog(
+      helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
           helmCommandHelper.getDeploymentMessage(helmCommandRequest), LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
       switch (helmCommandRequest.getHelmCommandType()) {
@@ -88,6 +82,8 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       }
     } catch (Exception ex) {
       String errorMsg = ExceptionUtils.getMessage(ex);
+      helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
+          errorMsg + "\nFailed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       logger.error(
           format("Exception in processing helm task [%s] and error is %s", helmCommandRequest.toString(), errorMsg));
       return HelmCommandExecutionResponse.builder()
@@ -96,8 +92,9 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
-    executionLogCallback.saveExecutionLog("Command finished with status " + commandResponse.getCommandExecutionStatus(),
-        LogLevel.INFO, commandResponse.getCommandExecutionStatus());
+    helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
+        "Command finished with status " + commandResponse.getCommandExecutionStatus(), LogLevel.INFO,
+        commandResponse.getCommandExecutionStatus());
     logger.info(commandResponse.getOutput());
 
     return HelmCommandExecutionResponse.builder()
@@ -107,11 +104,23 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
         .build();
   }
 
-  protected LogCallback getExecutionLogCallback(HelmCommandRequest helmCommandRequest) {
-    return isAsync()
-        ? new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(), helmCommandRequest.getAppId(),
-              helmCommandRequest.getActivityId(), helmCommandRequest.getCommandName())
-        : new NoopExecutionCallback();
+  private void init(HelmCommandRequest helmCommandRequest, LogCallback executionLogCallback) throws Exception {
+    helmCommandRequest.setExecutionLogCallback(executionLogCallback);
+    executionLogCallback.saveExecutionLog("Creating KubeConfig", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+    String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(
+        helmCommandRequest.getContainerServiceParams());
+    helmCommandRequest.setKubeConfigLocation(configLocation);
+    executionLogCallback.saveExecutionLog(
+        "Setting KubeConfig\nKUBECONFIG_PATH=" + configLocation, LogLevel.INFO, CommandExecutionStatus.RUNNING);
+
+    ensureHelmCliAndTillerInstalled(helmCommandRequest);
+    executionLogCallback.saveExecutionLog("\nDone.", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  protected LogCallback getExecutionLogCallback(HelmCommandRequest helmCommandRequest, String name) {
+    return isAsync() ? new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(),
+                           helmCommandRequest.getAppId(), helmCommandRequest.getActivityId(), name)
+                     : new NoopExecutionCallback();
   }
 
   private void ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {

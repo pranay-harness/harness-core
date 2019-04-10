@@ -23,11 +23,14 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmDeployChartSpec;
@@ -68,6 +71,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   @Inject private HelmCommandHelper helmCommandHelper;
+  @Inject private DelegateLogService delegateLogService;
 
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployService.class);
 
@@ -104,6 +108,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
             .build();
       }
 
+      executionLogCallback =
+          markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.InstallUpgrade);
+
       if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
         commandResponse = helmClient.install(commandRequest);
@@ -113,14 +120,22 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       }
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
 
-      if (commandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
-        List<ContainerInfo> containerInfos = new ArrayList<>();
-        timeLimiter.callWithTimeout(
-            ()
-                -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
-            commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
-        commandResponse.setContainerInfoList(containerInfos);
+      if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return commandResponse;
       }
+
+      executionLogCallback =
+          markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
+
+      List<ContainerInfo> containerInfos = new ArrayList<>();
+      LogCallback finalExecutionLogCallback = executionLogCallback;
+      timeLimiter.callWithTimeout(
+          ()
+              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback)),
+          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
+      commandResponse.setContainerInfoList(containerInfos);
+
+      executionLogCallback = markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WrapUp);
 
       return commandResponse;
     } catch (UncheckedTimeoutException e) {
@@ -130,8 +145,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
     } catch (WingsException e) {
-      StringBuilder stringBuilder = new StringBuilder(e.getMessage()).append(' ').append(ExceptionUtils.getMessage(e));
-      executionLogCallback.saveExecutionLog(stringBuilder.toString(), LogLevel.ERROR);
       throw e;
     } catch (Exception e) {
       String exceptionMessage = ExceptionUtils.getMessage(e);
@@ -147,6 +160,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
+  private LogCallback markDoneAndStartNew(
+      HelmCommandRequest commandRequest, LogCallback executionLogCallback, String newName) {
+    executionLogCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+    executionLogCallback = getExecutionLogCallback(commandRequest, newName);
+    commandRequest.setExecutionLogCallback(executionLogCallback);
+    return executionLogCallback;
+  }
+
   private List<ContainerInfo> fetchContainerInfo(HelmCommandRequest commandRequest, LogCallback executionLogCallback) {
     ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
 
@@ -158,17 +179,27 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   @Override
   public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest) {
-    LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
+    LogCallback executionLogCallback = getExecutionLogCallback(commandRequest, HelmDummyCommandUnit.Rollback);
+    commandRequest.setExecutionLogCallback(executionLogCallback);
 
     try {
       HelmInstallCommandResponse commandResponse = helmClient.rollback(commandRequest);
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
+      if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return commandResponse;
+      }
+      executionLogCallback =
+          markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
+
       List<ContainerInfo> containerInfos = new ArrayList<>();
+      LogCallback finalExecutionLogCallback = executionLogCallback;
       timeLimiter.callWithTimeout(
           ()
-              -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
+              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback)),
           commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
       commandResponse.setContainerInfoList(containerInfos);
+
+      executionLogCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
       return commandResponse;
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for controller to reach in steady state";
@@ -510,5 +541,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           "Failed to update information about charts with message " + ExceptionUtils.getMessage(ex));
       throw ex;
     }
+  }
+
+  protected LogCallback getExecutionLogCallback(HelmCommandRequest helmCommandRequest, String name) {
+    return new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(),
+        helmCommandRequest.getAppId(), helmCommandRequest.getActivityId(), name);
   }
 }
