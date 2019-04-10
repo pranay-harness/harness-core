@@ -56,8 +56,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -325,6 +327,20 @@ public class MarketoHandler implements EventHandler {
     return marketoLeadId;
   }
 
+  private User updateUser(User user, EventType eventType) {
+    try (AcquiredLock lock =
+             persistentLocker.waitToAcquireLock(user.getEmail(), Duration.ofMinutes(2), Duration.ofMinutes(4))) {
+      User latestUser = userService.getUserFromCacheOrDB(user.getUuid());
+      Set<String> reportedMarketoCampaigns = latestUser.getReportedMarketoCampaigns();
+      if (reportedMarketoCampaigns == null) {
+        reportedMarketoCampaigns = new HashSet<>();
+      }
+      reportedMarketoCampaigns.add(eventType.name());
+      latestUser.setReportedMarketoCampaigns(reportedMarketoCampaigns);
+      return userService.update(latestUser);
+    }
+  }
+
   private User updateUser(User user, long marketoLeadId) {
     if (marketoLeadId == 0L) {
       return user;
@@ -392,9 +408,16 @@ public class MarketoHandler implements EventHandler {
         logger.error("Invalid lead id reported for user {}", userId);
         return;
       }
+
+      // Getting the latest copy since we had a sleep of 10 seconds.
+      user = userService.getUserFromCacheOrDB(userId);
     }
 
-    reportCampaignEvent(eventType, accessToken, Arrays.asList(Id.builder().id(marketoLeadId).build()));
+    boolean reported =
+        reportCampaignEvent(eventType, accessToken, Arrays.asList(Id.builder().id(marketoLeadId).build()));
+    if (reported) {
+      updateUser(user, eventType);
+    }
   }
 
   public String getAccessToken(String clientId, String clientSecret) throws IOException {
