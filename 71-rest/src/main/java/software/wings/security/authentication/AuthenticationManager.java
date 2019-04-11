@@ -182,10 +182,15 @@ public class AuthenticationManager {
    */
   public User loginUserForIdentityService(String email) {
     User user = userService.getUserByEmail(email);
-    if (user.isTwoFactorAuthenticationEnabled()) {
-      user = generate2faJWTToken(user);
+    // Null check just in case identity service might accidentally forwarded wrong user to this cluster.
+    if (user == null) {
+      logger.info("User {} doesn't exist in this manager cluster", email);
     } else {
-      user = authService.generateBearerTokenForUser(user);
+      if (user.isTwoFactorAuthenticationEnabled()) {
+        user = generate2faJWTToken(user);
+      } else {
+        user = authService.generateBearerTokenForUser(user);
+      }
     }
     return user;
   }
