@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
@@ -14,8 +15,10 @@ import java.util.Set;
 @Builder
 @Entity(value = "featureFlag", noClassnameStored = true)
 @JsonIgnoreProperties({"obsolete", "accountIds"})
-public class FeatureFlag implements PersistentEntity, UpdatedAtAware {
-  @Id private String name;
+public class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {
+  @Id private String uuid;
+
+  private String name;
   public enum Scope {
     GLOBAL,
     PER_ACCOUNT,
