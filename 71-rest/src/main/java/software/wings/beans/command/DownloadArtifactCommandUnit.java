@@ -4,6 +4,8 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -16,9 +18,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -84,7 +84,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     if (StringUtils.isEmpty(getCommandPath())) {
       saveExecutionLog(context, ERROR, "Artifact Download Directory cannot be null or empty");
-      throw new InvalidRequestException("Artifact Download Directory cannot be null or empty");
+      throw new InvalidRequestException("Artifact Download Directory cannot be null or empty", USER);
     }
     ArtifactStreamType artifactStreamType =
         ArtifactStreamType.valueOf(context.getArtifactStreamAttributes().getArtifactStreamType());
@@ -116,7 +116,10 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         return context.executeCommandString(command, false);
 
       default:
-        throw new WingsException(ErrorCode.UNKNOWN_ARTIFACT_TYPE);
+        saveExecutionLog(context, ERROR,
+            format("Download Artifact not supported for Artifact Stream Type %s", artifactStreamType.name()));
+        throw new InvalidRequestException(
+            format("Download Artifact not supported for Artifact Stream Type %s", artifactStreamType.name()), USER);
     }
   }
 
@@ -194,7 +197,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + "\"";
         break;
       default:
-        throw new WingsException("Invalid Script type");
+        throw new InvalidRequestException("Invalid Script type", USER);
     }
     return command;
   }
@@ -291,7 +294,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         command = "net use \\\\" + shareUrl + " " + userPassword + " /persistent:no\n " + roboCopyCommand;
         break;
       default:
-        throw new WingsException("Invalid Script type");
+        throw new InvalidRequestException("Invalid Script type", USER);
     }
     return command;
   }
@@ -358,7 +361,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         break;
 
       default:
-        throw new WingsException("Invalid Script type");
+        throw new InvalidRequestException("Invalid Script type", USER);
     }
     return command;
   }
@@ -409,7 +412,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         }
         break;
       default:
-        throw new WingsException("Invalid Script type");
+        throw new InvalidRequestException("Invalid Script type", USER);
     }
     return command;
   }
