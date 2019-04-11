@@ -26,7 +26,7 @@ import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
-import software.wings.helpers.ext.chartmuseum.ChartMuseumServerConfig;
+import software.wings.helpers.ext.chartmuseum.ChartMuseumServer;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -134,17 +134,17 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
-    ChartMuseumServerConfig chartMuseumServerConfig = null;
+    ChartMuseumServer chartMuseumServer = null;
     try {
-      chartMuseumServerConfig =
+      chartMuseumServer =
           chartMuseumClient.startChartMuseumServer(amazonS3HelmRepoConfig, taskParams.getConnectorConfig());
 
-      String repoAddCommand = getAmazonS3RepoAddCommand(amazonS3HelmRepoConfig, chartMuseumServerConfig.getPort());
+      String repoAddCommand = getAmazonS3RepoAddCommand(amazonS3HelmRepoConfig, chartMuseumServer.getPort());
       executeCommand(repoAddCommand);
 
     } finally {
-      if (chartMuseumServerConfig != null) {
-        chartMuseumClient.stopChartMuseumServer(chartMuseumServerConfig.getStartedProcess());
+      if (chartMuseumServer != null) {
+        chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
       }
     }
   }

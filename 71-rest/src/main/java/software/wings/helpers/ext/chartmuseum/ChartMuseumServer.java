@@ -6,7 +6,7 @@ import org.zeroturnaround.exec.StartedProcess;
 
 @Data
 @Builder
-public class ChartMuseumServerConfig {
+public class ChartMuseumServer {
   StartedProcess startedProcess;
   int port;
 }

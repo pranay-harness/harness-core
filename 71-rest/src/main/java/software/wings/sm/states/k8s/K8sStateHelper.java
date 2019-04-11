@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
@@ -42,6 +43,7 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
@@ -59,7 +61,9 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -68,6 +72,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -75,6 +80,10 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams.HelmChartConfigParamsBuilder;
+import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
+import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDelegateManifestConfigBuilder;
@@ -93,6 +102,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -159,21 +169,30 @@ public class K8sStateHelper {
     K8sDelegateManifestConfigBuilder manifestConfigBuilder =
         K8sDelegateManifestConfig.builder().manifestStoreTypes(appManifest.getStoreType());
 
-    if (StoreType.Local.equals(appManifest.getStoreType())) {
-      manifestConfigBuilder.manifestFiles(
-          applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid()));
-    } else {
-      GitFileConfig gitFileConfig =
-          gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
-      GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
-      notNullCheck("Git config not found", gitConfig);
-      List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
+    StoreType storeType = appManifest.getStoreType();
+    switch (storeType) {
+      case Local:
+        manifestConfigBuilder.manifestFiles(
+            applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid()));
+        break;
 
-      gitFileConfig.setFilePath(normalizeFolderPath(gitFileConfig.getFilePath()));
-      manifestConfigBuilder.gitFileConfig(gitFileConfig);
-      manifestConfigBuilder.gitConfig(gitConfig);
-      manifestConfigBuilder.encryptedDataDetails(encryptionDetails);
+      case Remote:
+      case HelmSourceRepo:
+        GitFileConfig gitFileConfig =
+            gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
+        GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+        notNullCheck("Git config not found", gitConfig);
+        List<EncryptedDataDetail> encryptionDetails =
+            secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
+
+        gitFileConfig.setFilePath(normalizeFolderPath(gitFileConfig.getFilePath()));
+        manifestConfigBuilder.gitFileConfig(gitFileConfig);
+        manifestConfigBuilder.gitConfig(gitConfig);
+        manifestConfigBuilder.encryptedDataDetails(encryptionDetails);
+        break;
+
+      default:
+        unhandled(storeType);
     }
 
     return manifestConfigBuilder.build();
@@ -502,7 +521,7 @@ public class K8sStateHelper {
       Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
           activityService, k8sStateExecutor.commandUnitList(valuesInGit));
 
-      if (isValuesInGit(appManifestMap)) {
+      if (valuesInGit) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
       } else {
         Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
@@ -662,7 +681,6 @@ public class K8sStateHelper {
 
     Map<K8sValuesLocation, String> valuesFiles = getValuesFilesFromGitResponse(executionResponse);
 
-    // ToDo anshul how to handle unhappy case
     return k8sStateExecutor.executeK8sTask(context, activityId, valuesFiles);
   }
 
@@ -722,5 +740,131 @@ public class K8sStateHelper {
             e, USER);
       }
     }
+  }
+
+  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
+    ApplicationManifest applicationManifest = getApplicationManifestForService(context);
+    if (!StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())) {
+      return null;
+    }
+
+    return HelmValuesFetchTaskParameters.builder()
+        .accountId(context.getAccountId())
+        .appId(context.getAppId())
+        .activityId(activityId)
+        .helmChartConfigTaskParams(getHelmChartConfigTaskParams(context, applicationManifest))
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .build();
+  }
+
+  private ApplicationManifest getApplicationManifestForService(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    Application app = appService.get(context.getAppId());
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getK8sManifestByServiceId(app.getUuid(), serviceElement.getUuid());
+    if (applicationManifest == null) {
+      throw new InvalidRequestException("Application manifest not found for service.");
+    }
+
+    return applicationManifest;
+  }
+
+  private boolean isHelmFetchTaskRequired(ExecutionContext context) {
+    ApplicationManifest applicationManifest = getApplicationManifestForService(context);
+
+    return StoreType.HelmChartRepo.equals(applicationManifest.getStoreType());
+  }
+
+  private ExecutionResponse handleAsyncResponseForHelmFetchTask(
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String activityId = getActivityId(context);
+    HelmValuesFetchTaskResponse executionResponse = (HelmValuesFetchTaskResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
+                                                                                             : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return anExecutionResponse().withExecutionStatus(executionStatus).build();
+    }
+
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.setHelmValuesContent(executionResponse.getValuesFileContent());
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = getApplicationManifests(context);
+
+    return executeGitTask(context, appManifestMap, activityId, k8sStateExecutor.commandName());
+  }
+
+  public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId, String commandName) {
+    Application app = appService.get(context.getAppId());
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters = getHelmValuesFetchTaskParameters(context, activityId);
+
+    String waitId = generateUuid();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .waitId(waitId)
+                                    .async(true)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.HELM_VALUES_FETCH.name())
+                                              .parameters(new Object[] {helmValuesFetchTaskParameters})
+                                              .timeout(TimeUnit.MINUTES.toMillis(10))
+                                              .build())
+                                    .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+
+    return ExecutionResponse.Builder.anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Arrays.asList(waitId))
+        .withStateExecutionData(K8sStateExecutionData.builder()
+                                    .activityId(activityId)
+                                    .commandName(commandName)
+                                    .currentTaskType(TaskType.HELM_VALUES_FETCH)
+                                    .build())
+        .withDelegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  private HelmChartConfigParams getHelmChartConfigTaskParams(
+      ExecutionContext context, ApplicationManifest applicationManifest) {
+    HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
+    if (helmChartConfig == null) {
+      return null;
+    }
+
+    String connectorId = helmChartConfig.getConnectorId();
+    SettingAttribute settingAttribute = settingsService.get(connectorId);
+    notNullCheck("Helm repo config not found with id " + connectorId, settingAttribute);
+
+    HelmRepoConfig helmRepoConfig = (HelmRepoConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDataDetails =
+        secretManager.getEncryptionDetails(helmRepoConfig, context.getAppId(), null);
+
+    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = HelmChartConfigParams.builder()
+                                                                    .chartName(helmChartConfig.getChartName())
+                                                                    .chartVersion(helmChartConfig.getChartVersion())
+                                                                    .helmRepoConfig(helmRepoConfig)
+                                                                    .encryptedDataDetails(encryptionDataDetails);
+
+    if (isNotBlank(helmRepoConfig.getConnectorId())) {
+      SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());
+      notNullCheck(
+          format("Parent connector with id %s not found for helm repo config", helmRepoConfig.getConnectorId()),
+          settingAttribute);
+
+      SettingValue value = connectorSettingAttribute.getValue();
+      List<EncryptedDataDetail> connectorEncryptedDataDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) value, context.getAppId(), null);
+
+      helmChartConfigParamsBuilder.connectorConfig(value).connectorEncryptedDataDetails(connectorEncryptedDataDetails);
+    }
+
+    return helmChartConfigParamsBuilder.build();
   }
 }

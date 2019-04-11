@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -11,10 +12,12 @@ import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.TaskType;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
+import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.util.List;
@@ -36,22 +39,14 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   public List<DelegateConnectionResult> validate() {
     logger.info(format("Running validation for task %s", delegateTaskId));
 
-    HelmRepoConfigValidationTaskParams taskParams = (HelmRepoConfigValidationTaskParams) getParameters()[0];
-    HelmRepoConfig helmRepoConfig = taskParams.getHelmRepoConfig();
+    HelmRepoConfig helmRepoConfig = getHelmRepoConfig();
 
-    boolean validated = validateHelmRepoConfig(helmRepoConfig);
-
-    if (!validated) {
-      return taskValidationResult(false);
-    }
-
-    return taskValidationResult(true);
+    return taskValidationResult(validateHelmRepoConfig(helmRepoConfig));
   }
 
   @Override
   public List<String> getCriteria() {
-    HelmRepoConfigValidationTaskParams taskParams = (HelmRepoConfigValidationTaskParams) getParameters()[0];
-    HelmRepoConfig helmRepoConfig = taskParams.getHelmRepoConfig();
+    HelmRepoConfig helmRepoConfig = getHelmRepoConfig();
 
     if (helmRepoConfig instanceof HttpHelmRepoConfig) {
       return singletonList("HTTP_HELM_REPO_CONFIG: " + ((HttpHelmRepoConfig) helmRepoConfig).getChartRepoUrl());
@@ -111,5 +106,25 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
     }
 
     return true;
+  }
+
+  private HelmRepoConfig getHelmRepoConfig() {
+    TaskType taskType = Enum.valueOf(TaskType.class, getTaskType());
+
+    switch (taskType) {
+      case HELM_REPO_CONFIG_VALIDATION:
+        HelmRepoConfigValidationTaskParams repoConfigTaskParams =
+            (HelmRepoConfigValidationTaskParams) getParameters()[0];
+        return repoConfigTaskParams.getHelmRepoConfig();
+
+      case HELM_VALUES_FETCH:
+        HelmValuesFetchTaskParameters valuesTaskParams = (HelmValuesFetchTaskParameters) getParameters()[0];
+        return valuesTaskParams.getHelmChartConfigTaskParams().getHelmRepoConfig();
+
+      default:
+        unhandled(taskType);
+    }
+
+    return null;
   }
 }

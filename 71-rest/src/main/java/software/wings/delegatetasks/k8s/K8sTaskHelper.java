@@ -34,6 +34,7 @@ import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KubernetesYamlException;
@@ -71,6 +72,8 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -95,6 +98,7 @@ public class K8sTaskHelper {
   @Inject private TimeLimiter timeLimiter;
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
+  @Inject private HelmTaskHelper helmTaskHelper;
 
   private static final Logger logger = LoggerFactory.getLogger(K8sTaskHelper.class);
 
@@ -780,5 +784,33 @@ public class K8sTaskHelper {
       logger.error("Exception while trying to get LoadBalancer service", e);
     }
     return null;
+  }
+
+  private List<ManifestFile> fetchManifestFilesFromChartRepo(
+      K8sDelegateManifestConfig delegateManifestConfig, ExecutionLogCallback executionLogCallback) {
+    HelmChartConfigParams helmChartConfigParams = delegateManifestConfig.getHelmChartConfigParams();
+
+    try {
+      executionLogCallback.saveExecutionLog(
+          color(format("%nFetching files from chart %s", helmChartConfigParams.getChartName()), White, Bold));
+      helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
+
+      List<FileData> files = helmTaskHelper.fetchChartFiles(helmChartConfigParams, null);
+
+      List<ManifestFile> manifestFiles = new ArrayList<>();
+      for (FileData fileData : files) {
+        manifestFiles.add(
+            ManifestFile.builder().fileName(fileData.getFilePath()).fileContent(fileData.getFileContent()).build());
+      }
+
+      executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
+      executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFiles));
+      executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
+
+      return manifestFiles;
+    } catch (Exception e) {
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      return null;
+    }
   }
 }
