@@ -47,6 +47,10 @@ public interface AccountService {
 
   Optional<String> getAccountType(String accountId);
 
+  String generateSampleDelegate(String accountId);
+
+  boolean sampleDelegateExists(String accountId);
+
   /**
    * List.
    *

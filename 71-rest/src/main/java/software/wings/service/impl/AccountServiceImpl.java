@@ -17,6 +17,9 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Delegate.ACCOUNT_ID_KEY;
+import static software.wings.beans.Delegate.DELEGATE_NAME_KEY;
+import static software.wings.beans.DelegateConnection.DELEGATE_ID_KEY;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
@@ -42,15 +45,21 @@ import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.LogOutputStream;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Delegate;
+import software.wings.beans.DelegateConnection;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
@@ -82,7 +91,6 @@ import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertNotificationRuleService;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -98,9 +106,13 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.utils.CacheHelper;
+import software.wings.utils.KubernetesConvention;
 import software.wings.verification.CVConfiguration;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -114,6 +126,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -129,6 +143,14 @@ public class AccountServiceImpl implements AccountService {
   private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
   private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
   private static final int MAX_ACCOUNT_NAME_LENGTH = 50;
+  private static final String GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING =
+      "curl -X POST -H 'content-type: application/json' "
+      + "--url https://app.harness.io/gateway/gratis/api/webhooks/cmnhGRyXyBP5RJzz8Ae9QP7mqUATVotr7v2knjOf "
+      + "-d '{\"application\":\"4qPkwP5dQI2JduECqGZpcg\","
+      + "\"parameters\":{\"Environment\":\"%s\",\"delegate\":\"delegate\","
+      + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\",\"expired_after\":\"%d\"}}'";
+  private static final long SAMPLE_DELEGATE_TTL = Duration.ofHours(1).getSeconds();
+  private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   @Inject protected AuthService authService;
   @Inject protected CacheHelper cacheHelper;
   @Inject private WingsPersistence wingsPersistence;
@@ -145,7 +167,6 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AppService appService;
   @Inject private AppContainerService appContainerService;
   @Inject private SystemCatalogService systemCatalogService;
-  @Inject private AlertService alertService;
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private GenericDbCache dbCache;
   @Inject private FeatureFlagService featureFlagService;
@@ -154,6 +175,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AlertNotificationRuleService notificationRuleService;
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private SSOSettingServiceImpl ssoSettingService;
+  @Inject private MainConfiguration mainConfiguration;
+  @Inject private Clock clock;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -556,6 +579,73 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean isAccountLite(String accountId) {
     return getAccountType(accountId).map(AccountType::isLite).orElse(false);
+  }
+
+  @Override
+  public String generateSampleDelegate(String accountId) {
+    Account account = get(accountId);
+
+    if (!AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType())) {
+      return "Not a trial account";
+    }
+
+    if (isBlank(mainConfiguration.getSampleTargetEnv())) {
+      String err = "Sample target env not configured";
+      logger.error(err);
+      return err;
+    }
+
+    long expiresAtSeconds = clock.instant().plusSeconds(SAMPLE_DELEGATE_TTL).toEpochMilli() / 1000L;
+    String script =
+        String.format(GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING, mainConfiguration.getSampleTargetEnv(),
+            accountId, KubernetesConvention.getAccountIdentifier(accountId), account.getAccountKey(), expiresAtSeconds);
+    Logger scriptLogger = LoggerFactory.getLogger("generate-delegate-" + accountId);
+    try {
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true)
+                                            .redirectOutput(new LogOutputStream() {
+                                              @Override
+                                              protected void processLine(String line) {
+                                                scriptLogger.info(line);
+                                              }
+                                            })
+                                            .redirectError(new LogOutputStream() {
+                                              @Override
+                                              protected void processLine(String line) {
+                                                scriptLogger.error(line);
+                                              }
+                                            });
+      int exitCode = processExecutor.execute().getExitValue();
+      if (exitCode == 0) {
+        return "SUCCESS";
+      }
+
+    } catch (IOException e) {
+      logger.error("Error executing generate delegate curl command", e);
+    } catch (InterruptedException e) {
+      logger.info("Interrupted", e);
+    } catch (TimeoutException e) {
+      logger.info("Timed out", e);
+    }
+
+    return "FAILED";
+  }
+
+  @Override
+  public boolean sampleDelegateExists(String accountId) {
+    Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
+                                    .filter(ACCOUNT_ID_KEY, accountId)
+                                    .filter(DELEGATE_NAME_KEY, SAMPLE_DELEGATE_NAME)
+                                    .getKey();
+
+    if (delegateKey == null) {
+      return false;
+    }
+
+    return wingsPersistence.createQuery(DelegateConnection.class).filter(DELEGATE_ID_KEY, delegateKey.getId()).getKey()
+        != null;
   }
 
   private boolean setAccountStatus(String accountId, String accountStatus) {

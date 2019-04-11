@@ -147,7 +147,7 @@ public class ServiceSampleDataProvider {
 
     ManifestFile valuesFile =
         applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), "values.yaml");
-    valuesFile.setFileContent("name: harness-example\n"
+    valuesFile.setFileContent("name: harness-example-${env.name}\n"
         + "replicas: 1\n"
         + "\n"
         + "image: ${artifact.metadata.image}\n"

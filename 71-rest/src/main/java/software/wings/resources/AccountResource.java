@@ -214,6 +214,22 @@ public class AccountResource {
     return response;
   }
 
+  @GET
+  @Path("delegate/sample-check/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> checkSampleDelegate(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.sampleDelegateExists(accountId));
+  }
+
+  @POST
+  @Path("delegate/generate/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> generateSampleDelegate(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.generateSampleDelegate(accountId));
+  }
+
   @DELETE
   @Path("delete/{accountId}")
   @Timed
