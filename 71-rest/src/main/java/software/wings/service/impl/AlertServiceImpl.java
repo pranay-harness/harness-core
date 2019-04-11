@@ -30,6 +30,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
@@ -79,6 +80,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
+    pageRequest.addFilter("type", Operator.NOT_EQ, AlertType.CONTINUOUS_VERIFICATION_ALERT);
     return wingsPersistence.query(Alert.class, pageRequest);
   }
 
