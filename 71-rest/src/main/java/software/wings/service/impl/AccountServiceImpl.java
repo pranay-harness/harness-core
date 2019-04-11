@@ -440,10 +440,6 @@ public class AccountServiceImpl implements AccountService {
             account.getAuthenticationMechanism(), AuthenticationMechanism.USER_PASSWORD, account.getUuid());
         account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
       }
-
-      if (licenseInfo.getAccountStatus() != null) {
-        setAccountStatus(account.getUuid(), account.getLicenseInfo().getAccountStatus());
-      }
     }
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
@@ -648,7 +644,8 @@ public class AccountServiceImpl implements AccountService {
         != null;
   }
 
-  private boolean setAccountStatus(String accountId, String accountStatus) {
+  @Override
+  public boolean setAccountStatus(String accountId, String accountStatus) {
     if (!AccountStatus.isValid(accountStatus)) {
       throw new WingsException("Invalid account status: " + accountStatus, USER);
     }

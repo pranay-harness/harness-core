@@ -84,6 +84,7 @@ public class MarketoHelper {
 
   private retrofit2.Response<Response> createLead(Retrofit retrofit, String email, String userName, Account account,
       String userInviteUrl, String accessToken, String oauthProvider) throws IOException {
+    logger.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
     LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
     leadBuilderWithEmail.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
 
@@ -110,11 +111,16 @@ public class MarketoHelper {
                                                     .input(Arrays.asList(leadBuilderWithEmail.build()))
                                                     .build();
 
-    return retrofit.create(MarketoRestClient.class).createLead(accessToken, leadRequestWithEmail).execute();
+    retrofit2.Response<Response> response =
+        retrofit.create(MarketoRestClient.class).createLead(accessToken, leadRequestWithEmail).execute();
+    logger.info("Created lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
+    return response;
   }
 
   private retrofit2.Response<Response> updateLead(Retrofit retrofit, int existingLeadId, String email, String userName,
       Account account, String userInviteUrl, String accessToken, String oauthProvider) throws IOException {
+    logger.info("Updating lead {} to marketo", existingLeadId);
+
     LeadBuilder leadBuilderWithId = Lead.builder();
     leadBuilderWithId.id(existingLeadId);
     leadBuilderWithId.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
@@ -142,7 +148,10 @@ public class MarketoHelper {
                                               .lookupField("id")
                                               .input(Arrays.asList(leadBuilderWithId.build()))
                                               .build();
-    return retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
+    retrofit2.Response<Response> response =
+        retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
+    logger.info("Updated lead {} to marketo", existingLeadId);
+    return response;
   }
 
   private long processLeadResponse(retrofit2.Response<Response> response) {
@@ -180,6 +189,7 @@ public class MarketoHelper {
       }
     }
 
+    logger.info("Marketo returned lead id {}", result.getId());
     return result.getId();
   }
 
