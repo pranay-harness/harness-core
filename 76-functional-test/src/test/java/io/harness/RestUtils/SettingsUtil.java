@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 @Singleton
-public class CloudproviderConnectorUtil {
+public class SettingsUtil {
   private static String ACCOUNT_ID = "accountId";
   private static String SETTINGS_ENDPOINT = "/settings";
 
@@ -97,7 +97,7 @@ public class CloudproviderConnectorUtil {
    */
   public static int getCloudproviderConnectorCount(String bearerToken, String accountId, String category) {
     // Get all the cloudprovider/connectors
-    JsonPath connectors = CloudproviderConnectorUtil.listCloudproviderConnector(bearerToken, accountId, category);
+    JsonPath connectors = SettingsUtil.listCloudproviderConnector(bearerToken, accountId, category);
     assertThat(connectors).isNotNull();
 
     ArrayList<HashMap<String, String>> hashMaps =
@@ -121,7 +121,7 @@ public class CloudproviderConnectorUtil {
       String bearerToken, String accountId, String category, String name) {
     boolean connFound = false;
     // Get all the cloudprovider/connectors
-    JsonPath connectors = CloudproviderConnectorUtil.listCloudproviderConnector(bearerToken, accountId, category);
+    JsonPath connectors = SettingsUtil.listCloudproviderConnector(bearerToken, accountId, category);
     assertThat(connectors).isNotNull();
 
     ArrayList<HashMap<String, String>> hashMaps =

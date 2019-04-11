@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import io.harness.RestUtils.CloudproviderConnectorUtil;
+import io.harness.RestUtils.SettingsUtil;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.OwnerRule.Owner;
@@ -33,8 +33,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void TC0_listAllConnectors() {
-    JsonPath connectors =
-        CloudproviderConnectorUtil.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
+    JsonPath connectors = SettingsUtil.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
     assertThat(connectors).isNotNull();
   }
 
@@ -60,13 +59,13 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
                            .build())
             .build();
 
-    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, getAccount().getUuid(), settingAttribute);
+    JsonPath setAttrResponse = SettingsUtil.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
     connectorId = setAttrResponse.getString("resource.uuid").trim();
 
     // Verify connector is created i.e connector with specific name exist
-    boolean connectorFound = CloudproviderConnectorUtil.checkCloudproviderConnectorExist(
-        bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
+    boolean connectorFound =
+        SettingsUtil.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
     assertTrue(connectorFound);
   }
 
@@ -74,11 +73,11 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void TC2_deleteConnector() {
-    CloudproviderConnectorUtil.delete(bearerToken, getAccount().getUuid(), connectorId);
+    SettingsUtil.delete(bearerToken, getAccount().getUuid(), connectorId);
 
     // Verify connector is deleted i.e connector with specific name doesn't exist
-    boolean connectorFound = CloudproviderConnectorUtil.checkCloudproviderConnectorExist(
-        bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
+    boolean connectorFound =
+        SettingsUtil.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
     assertFalse(connectorFound);
   }
 }
