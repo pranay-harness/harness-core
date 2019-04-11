@@ -3,6 +3,8 @@ package software.wings.common;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.k8s.model.AuditGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
@@ -42,8 +44,14 @@ public class AuditHelper {
   public AuditHeader create(AuditHeader header) {
     header = auditService.create(header);
     logger.debug("Saving auditHeader to thread local");
+    // TODO: should be removed later as we can rely on GlobalContextManager to get AuditId
     auditThreadLocal.set(header);
+    setGlobalContext(header);
     return header;
+  }
+
+  private void setGlobalContext(AuditHeader header) {
+    GlobalContextManager.upsertGlobalContextRecord(AuditGlobalContextData.builder().auditId(header.getUuid()).build());
   }
 
   /**
