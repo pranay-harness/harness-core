@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
+import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.beans.User;
 
 import java.io.InputStream;
@@ -70,4 +71,6 @@ public interface AuditService {
    * @param retentionMillis
    */
   void deleteAuditRecords(long retentionMillis);
+
+  AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String entityType);
 }

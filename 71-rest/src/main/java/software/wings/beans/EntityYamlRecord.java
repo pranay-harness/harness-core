@@ -1,4 +1,4 @@
-package software.wings.audit;
+package software.wings.beans;
 
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -10,11 +10,12 @@ import org.mongodb.morphia.annotations.Id;
 
 @Value
 @Builder
-@Entity(value = "entityAuditYamls", noClassnameStored = true)
-public class EntityAuditYaml implements PersistentEntity, UuidAccess, CreatedAtAccess {
+@Entity(value = "entityYamlRecord", noClassnameStored = true)
+public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess {
   @Id private String uuid;
   private long createdAt;
   private String entityId;
+  private String entityType;
   private String yamlSha;
   private String yamlContent;
 }

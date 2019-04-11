@@ -12,7 +12,6 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.InstanceChangeEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.audit.AuditHeader;
-import software.wings.audit.EntityAuditYaml;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -177,7 +176,7 @@ public class ManagerMorphiaClasses {
       Permit.class, LabeledLogRecord.class, AlertNotificationRule.class, CustomArtifactStream.class,
       NotificationReceiverInfo.class, DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class,
       HarnessApiKey.class, ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class,
-      Personalization.class, EntityAuditYaml.class);
+      Personalization.class, EntityYamlRecord.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);
