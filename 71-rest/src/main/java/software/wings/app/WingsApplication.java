@@ -8,6 +8,7 @@ import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.common.collect.ImmutableSet;
@@ -292,6 +293,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
+    initializeFeatureFlags(injector);
+
     registerHealthChecks(environment, injector);
 
     registerStores(configuration, injector);
@@ -336,8 +339,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
-    initializeFeatureFlags(injector);
-
     initializeServiceSecretKeys(injector);
 
     runMigrations(injector);
@@ -376,11 +377,18 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Starting app done");
   }
 
+  private void initializeFeatureFlags(Injector injector) {
+    injector.getInstance(FeatureFlagService.class).initializeFeatureFlags();
+  }
+
   private void registerHealthChecks(Environment environment, Injector injector) {
     final HealthService healthService = injector.getInstance(HealthService.class);
     environment.healthChecks().register("WingsApp", healthService);
-    healthService.registerMonitor(injector.getInstance(HPersistence.class));
-    healthService.registerMonitor(injector.getInstance(PersistentLocker.class));
+
+    if (!injector.getInstance(FeatureFlagService.class).isGlobalEnabled(GLOBAL_DISABLE_HEALTH_CHECK)) {
+      healthService.registerMonitor(injector.getInstance(HPersistence.class));
+      healthService.registerMonitor(injector.getInstance(PersistentLocker.class));
+    }
   }
 
   private void registerStores(MainConfiguration configuration, Injector injector) {
@@ -556,10 +564,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
-  }
-
-  private void initializeFeatureFlags(Injector injector) {
-    injector.getInstance(FeatureFlagService.class).initializeFeatureFlags();
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
