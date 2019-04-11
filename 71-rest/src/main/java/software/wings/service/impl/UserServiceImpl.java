@@ -274,7 +274,7 @@ public class UserServiceImpl implements UserService {
       String url = format("/activation.html?email=%s&userInviteId=%s", userInvite.getEmail(), inviteId);
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
-      sendVerificationEmail(userInvite, url);
+      sendVerificationEmail(userInvite, url, false);
       eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
     } else if (userInviteInDB.isCompleted()) {
       if (isTrialRegistrationSpam(userInviteInDB)) {
@@ -290,7 +290,7 @@ public class UserServiceImpl implements UserService {
       String url =
           format("/activation.html?email=%s&userInviteId=%s", userInviteInDB.getEmail(), userInviteInDB.getUuid());
       // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
-      sendVerificationEmail(userInviteInDB, url);
+      sendVerificationEmail(userInviteInDB, url, false);
     }
 
     return true;
@@ -319,7 +319,7 @@ public class UserServiceImpl implements UserService {
       String url = format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid());
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
-      sendVerificationEmail(userInvite, url);
+      sendVerificationEmail(userInvite, url, true);
       eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
     } else if (userInvite.isCompleted()) {
       if (isTrialRegistrationSpam(userInvite)) {
@@ -334,7 +334,7 @@ public class UserServiceImpl implements UserService {
 
       String url = format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid());
       // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
-      sendVerificationEmail(userInvite, url);
+      sendVerificationEmail(userInvite, url, true);
     }
 
     return true;
@@ -465,8 +465,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
-      String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),
-          account.getAccountName(), user.getEmail()));
+      String loginUrl = buildAbsoluteUrlWithFragment(format("/login?company=%s&account=%s&email=%s",
+          account.getCompanyName(), account.getAccountName(), user.getEmail()));
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
@@ -576,8 +576,8 @@ public class UserServiceImpl implements UserService {
     EmailVerificationToken emailVerificationToken =
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String verificationUrl =
-          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken());
+      String verificationUrl = buildAbsoluteUrlWithFragment(
+          configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken());
 
       Map<String, String> templateModel = new HashMap();
       templateModel.put("name", user.getName());
@@ -603,7 +603,15 @@ public class UserServiceImpl implements UserService {
     return user.getAccounts().get(0);
   }
 
-  private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
+  private String buildAbsoluteUrlWithFragment(String fragment) throws URISyntaxException {
+    return buildAbsoluteUrl(fragment, true);
+  }
+
+  private String buildAbsoluteUrlWithPath(String path) throws URISyntaxException {
+    return buildAbsoluteUrl(path, false);
+  }
+
+  private String buildAbsoluteUrl(String fragment, boolean isFragment) throws URISyntaxException {
     String baseUrl = configuration.getPortal().getUrl().trim();
     if (!baseUrl.endsWith("/")) {
       baseUrl += "/";
@@ -615,7 +623,12 @@ public class UserServiceImpl implements UserService {
     }
 
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
-    uriBuilder.setFragment(fragment);
+    if (isFragment) {
+      uriBuilder.setFragment(fragment);
+    } else {
+      uriBuilder.setPath(fragment);
+    }
+
     return uriBuilder.toString();
   }
 
@@ -866,8 +879,9 @@ public class UserServiceImpl implements UserService {
   }
 
   private String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException {
-    return buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-        account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+    return buildAbsoluteUrlWithFragment(
+        format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
   }
 
   @Override
@@ -877,29 +891,36 @@ public class UserServiceImpl implements UserService {
       return null;
     }
 
-    return buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-        account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+    return buildAbsoluteUrlWithFragment(
+        format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
   }
 
   @Override
   public String getUserInviteUrl(String email) throws URISyntaxException {
     UserInvite userInvite = getUserInviteByEmail(email);
     if (userInvite != null) {
-      return buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
+      return buildAbsoluteUrlWithFragment(
+          format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
     }
     return null;
   }
 
-  private Map<String, String> getEmailVerificationTemplateModel(String email, String url) throws URISyntaxException {
+  private Map<String, String> getEmailVerificationTemplateModel(String email, String url, boolean isFragment)
+      throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
     model.put("name", email);
-    model.put("url", buildAbsoluteUrl(url));
+    if (isFragment) {
+      model.put("url", buildAbsoluteUrlWithFragment(url));
+    } else {
+      model.put("url", buildAbsoluteUrlWithPath(url));
+    }
     return model;
   }
 
   private Map<String, String> getTrialSignupCompletedTemplatedModel(UserInvite userInvite) throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    String loginUrl = buildAbsoluteUrl("/login");
+    String loginUrl = buildAbsoluteUrlWithFragment("/login");
     model.put("name", userInvite.getEmail());
     model.put("url", loginUrl);
     return model;
@@ -915,9 +936,9 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void sendVerificationEmail(UserInvite userInvite, String url) {
+  private void sendVerificationEmail(UserInvite userInvite, String url, boolean isFragment) {
     try {
-      Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url);
+      Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url, isFragment);
       sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Verification email couldn't be sent ", e);
@@ -947,7 +968,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private Map<String, Object> getAddedRoleTemplateModel(User user, Account account) throws URISyntaxException {
-    String loginUrl = buildAbsoluteUrl(format(
+    String loginUrl = buildAbsoluteUrlWithFragment(format(
         "/login?company=%s&account=%s&email=%s", account.getCompanyName(), account.getAccountName(), user.getEmail()));
     Map<String, Object> model = new HashMap<>();
     model.put("name", user.getName());
@@ -1465,7 +1486,7 @@ public class UserServiceImpl implements UserService {
 
   private void sendResetPasswordEmail(User user, String token) {
     try {
-      String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
+      String resetPasswordUrl = buildAbsoluteUrlWithFragment("/reset-password/" + token);
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
