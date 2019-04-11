@@ -128,6 +128,18 @@ public class CapabilityHelper {
           encryptionConfigsMap.put(
               encryptedDataDetail.getEncryptionConfig().getUuid(), encryptedDataDetail.getEncryptionConfig());
         }
+      } else {
+        // TODO: For Task "SECRET_DECRYPT_REF", is argument is only EncryptedDataDetail.
+        // Actually it should be later changed to List to match all other apis
+        // can be done later
+        argument = Arrays.stream(taskData.getParameters())
+                       .filter(parameter -> parameter instanceof EncryptedDataDetail)
+                       .findFirst()
+                       .orElse(null);
+
+        EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) argument;
+        encryptionConfigsMap.put(
+            encryptedDataDetail.getEncryptionConfig().getUuid(), encryptedDataDetail.getEncryptionConfig());
       }
     } catch (Exception e) {
       logger.warn("Failed while generating Encryption Configs from EncryptionDataDetails: " + e);

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -21,6 +24,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by rsingh on 9/29/17.
  */
@@ -36,7 +42,7 @@ import org.mongodb.morphia.annotations.Transient;
 })
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessExportableEntity
-public class KmsConfig extends Base implements EncryptionConfig {
+public class KmsConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
@@ -59,5 +65,11 @@ public class KmsConfig extends Base implements EncryptionConfig {
   @SchemaIgnore
   public String getValidationCriteria() {
     return EncryptionType.KMS + "-" + getName() + "-" + getUuid();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(region));
   }
 }

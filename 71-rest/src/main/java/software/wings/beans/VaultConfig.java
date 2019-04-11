@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -20,6 +23,9 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by rsingh on 11/02/17.
@@ -41,7 +47,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)
-public class VaultConfig extends Base implements EncryptionConfig {
+public class VaultConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "Vault Url", required = true) private String vaultUrl;
@@ -75,5 +81,10 @@ public class VaultConfig extends Base implements EncryptionConfig {
   @SchemaIgnore
   public String getValidationCriteria() {
     return getVaultUrl();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl));
   }
 }
