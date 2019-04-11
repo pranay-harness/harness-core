@@ -2,8 +2,6 @@ package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_DEFAULT_NAMESPACE;
-import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_PROD_NAMESPACE;
-import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_QA_NAMESPACE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,6 +17,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Validator;
 
 @Singleton
@@ -126,15 +125,16 @@ public class SampleDataProviderService {
 
     Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
 
+    String namespace = "account-" + KubernetesConvention.getAccountIdentifier(account.getUuid());
     InfrastructureMapping qaInfraMapping =
         infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
-            qaEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), K8S_SERVICE_INFRA_QA_NAMESPACE);
+            qaEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
 
     Environment prodEnv = environmentSampleDataProvider.createProdEnvironment(kubernetesApp.getUuid());
 
-    InfrastructureMapping prodInfraMapping = infraMappingSampleDataProvider.createKubeServiceInfraStructure(
-        account.getUuid(), kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(),
-        kubernetesClusterConfig.getUuid(), K8S_SERVICE_INFRA_PROD_NAMESPACE);
+    InfrastructureMapping prodInfraMapping =
+        infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
+            prodEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
 
     String basicWorkflowId = workflowSampleDataProvider.createK8sV2RollingWorkflow(
         kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), qaInfraMapping.getUuid());

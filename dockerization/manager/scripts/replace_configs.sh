@@ -100,6 +100,10 @@ if [[ -v "FEATURES" ]]; then
     sed -i "s|featuresEnabled:|featuresEnabled: ${FEATURES}|" /opt/harness/config.yml
 fi
 
+if [[ -v "SAMPLE_TARGET_ENV" ]]; then
+    sed -i "s|sampleTargetEnv:|sampleTargetEnv: ${SAMPLE_TARGET_ENV}|" /opt/harness/config.yml
+fi
+
 if [[ -v "COMPANYNAME" ]]; then
    sed -i "s|manager-saas|manager-${COMPANYNAME}-${DEPLOY_MODE}|" /opt/harness/config.yml
 fi
