@@ -7,6 +7,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -37,10 +38,10 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       HelmChartSpecification chartSpecification, int newReleaseVersion, int prevReleaseVersion, String namespace,
       long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles,
       String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      LogCallback executionLogCallback, String commandFlags) {
+      LogCallback executionLogCallback, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
-        executionLogCallback, commandFlags);
+        executionLogCallback, commandFlags, sourceRepoConfig);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.namespace = namespace;

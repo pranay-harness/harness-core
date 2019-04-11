@@ -26,6 +26,6 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
       List<EncryptedDataDetail> encryptedDataDetails, LogCallback executionLogCallback, String commandFlags) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, null, null, gitConfig, encryptedDataDetails, executionLogCallback,
-        commandFlags);
+        commandFlags, null);
   }
 }
