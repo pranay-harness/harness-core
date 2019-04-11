@@ -52,6 +52,8 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -71,12 +73,14 @@ import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -123,6 +127,7 @@ public class HelmDeployState extends State {
   @Inject private transient ArtifactCollectionUtil artifactCollectionUtil;
   @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private transient GitConfigHelperService gitConfigHelperService;
+  @Inject private transient ApplicationManifestService applicationManifestService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -234,11 +239,25 @@ public class HelmDeployState extends State {
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 
+    K8sDelegateManifestConfig sourceRepoConfig = null;
+    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
+        app.getUuid(), env.getUuid(), serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
+    if (appManifest != null) {
+      GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
+      GitConfig sourceRepoGitConfig =
+          settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
+      sourceRepoConfig = K8sDelegateManifestConfig.builder()
+                             .gitFileConfig(sourceRepoGitFileConfig)
+                             .gitConfig(sourceRepoGitConfig)
+                             .encryptedDataDetails(fetchEncryptedDataDetail(context, sourceRepoGitConfig))
+                             .build();
+    }
+
     setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
         encryptedDataDetails, commandFlags);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping,
-        repoName, gitConfig, encryptedDataDetails, commandFlags);
+        repoName, gitConfig, encryptedDataDetails, commandFlags, sourceRepoConfig);
 
     delegateService.queueTask(DelegateTask.builder()
                                   .async(true)
@@ -300,7 +319,7 @@ public class HelmDeployState extends State {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags) {
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig) {
     List<String> helmValueOverridesYamlFiles =
         serviceTemplateService.helmValueOverridesYamlFiles(appId, infrastructureMapping.getServiceTemplateId());
     List<String> helmValueOverridesYamlFilesEvaluated = null;
@@ -340,7 +359,8 @@ public class HelmDeployState extends State {
             .repoName(repoName)
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
-            .commandFlags(commandFlags);
+            .commandFlags(commandFlags)
+            .sourceRepoConfig(sourceRepoConfig);
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);

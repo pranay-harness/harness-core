@@ -7,6 +7,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -32,6 +33,7 @@ public class HelmCommandRequest {
   private List<EncryptedDataDetail> encryptedDataDetails;
   @JsonIgnore private transient LogCallback executionLogCallback;
   private String commandFlags;
+  private K8sDelegateManifestConfig sourceRepoConfig;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;
