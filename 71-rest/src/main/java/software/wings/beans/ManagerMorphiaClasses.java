@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
@@ -179,5 +180,5 @@ public class ManagerMorphiaClasses {
       Personalization.class, EntityAuditYaml.class);
 
   public static final Set<Class> dependentClasses =
-      ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class);
+      ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);
 }
