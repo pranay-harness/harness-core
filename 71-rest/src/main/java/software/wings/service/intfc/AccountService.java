@@ -79,6 +79,8 @@ public interface AccountService {
    */
   Collection<FeatureFlag> getFeatureFlags(@NotBlank String accountId);
 
+  boolean setAccountStatus(String accountId, String accountStatus);
+
   boolean isFeatureFlagEnabled(String featureName, String accountId);
 
   PageResponse<CVEnabledService> getServices(

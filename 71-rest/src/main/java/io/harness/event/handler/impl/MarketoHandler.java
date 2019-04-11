@@ -359,6 +359,7 @@ public class MarketoHandler implements EventHandler {
   }
 
   public boolean reportCampaignEvent(EventType eventType, String accessToken, List<Id> leadIdList) throws IOException {
+    logger.info("Reporting campaign for event {} with leads {}", eventType, leadIdList);
     if (isEmpty(leadIdList)) {
       logger.error("No Leads reported for event {}", eventType);
       return false;
@@ -394,7 +395,7 @@ public class MarketoHandler implements EventHandler {
       return false;
     }
 
-    logger.info("Triggered Marketo campaign for eventType {} successfully", eventType);
+    logger.info("Reported campaign for event {} with leads {}", eventType, leadIdList);
     return true;
   }
 

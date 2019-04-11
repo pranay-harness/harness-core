@@ -42,7 +42,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     Account account = accountService.get(accountId);
     account.setNewClusterUrl(null);
     account.getLicenseInfo().setAccountStatus(AccountStatus.ACTIVE);
-    accountService.update(account);
+    accountService.setAccountStatus(accountId, AccountStatus.ACTIVE);
     account = accountService.get(accountId);
     assertEquals(AccountStatus.ACTIVE, account.getLicenseInfo().getAccountStatus());
   }
