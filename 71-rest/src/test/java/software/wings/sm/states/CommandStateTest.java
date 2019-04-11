@@ -635,8 +635,9 @@ public class CommandStateTest extends WingsBaseTest {
    * Should throw exception for unknown command.
    */
   @Test
-  @Owner(emails = "anubhaw@harness.io", intermittent = true)
+  @Owner(emails = "aaditi@harness.io", intermittent = true)
   @Category(UnitTests.class)
+  @Ignore
   public void shouldFailWhenNestedCommandNotFound() {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand()

@@ -3,7 +3,7 @@ package software.wings.delegatetasks.validation;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
+import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -87,13 +87,12 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
           } else {
             try {
               getSSHSession(
-                  getSshSessionConfig("HOST_CONNECTION_TEST",
+                  createSshSessionConfig("HOST_CONNECTION_TEST",
                       aCommandExecutionContext()
                           .withHostConnectionAttributes(connectionSetting)
                           .withExecutionCredential(executionCredential)
                           .withHost(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
-                          .build(),
-                      20))
+                          .build()))
                   .disconnect();
               resultBuilder.validated(true);
             } catch (Exception e) {
