@@ -156,7 +156,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     List<String> serviceIds = new ArrayList<>();
     serviceTemplates.forEach(serviceTemplate -> {
-      if (serviceTemplate.getServiceId() != null) {
+      if (serviceTemplate.getServiceId() != null && !serviceIds.contains(serviceTemplate.getServiceId())) {
         serviceIds.add(serviceTemplate.getServiceId());
       }
     });
