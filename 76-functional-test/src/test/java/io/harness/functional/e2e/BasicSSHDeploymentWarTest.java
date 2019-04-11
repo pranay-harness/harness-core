@@ -5,21 +5,18 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
-import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
-import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import io.harness.RestUtils.ApplicationRestUtil;
 import io.harness.RestUtils.ArtifactStreamRestUtil;
-import io.harness.RestUtils.CloudproviderConnectorUtil;
+import io.harness.RestUtils.CloudProviderUtil;
+import io.harness.RestUtils.ConnectorUtil;
 import io.harness.RestUtils.EnvironmentRestUtil;
 import io.harness.RestUtils.ExecutionRestUtil;
+import io.harness.RestUtils.SSHKeysUtil;
 import io.harness.RestUtils.ServiceRestUtil;
 import io.harness.RestUtils.WorkflowRestUtil;
 import io.harness.beans.WorkflowType;
@@ -27,8 +24,6 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.helper.GlobalSettingsDataStorage;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.scm.ScmSecret;
-import io.harness.scm.SecretName;
 import io.restassured.path.json.JsonPath;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -37,7 +32,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
-import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.Environment;
@@ -46,14 +40,11 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
-import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
@@ -107,9 +98,9 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void TC1_createApplication() {
     // Test data setup
-    createCloudProvider();
-    createConnector();
-    createSSHKey();
+    cloudProviderId = CloudProviderUtil.createAWSCloudProvider(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
+    artifactoryId = ConnectorUtil.createArtifactoryConnector(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
+    sshKeyId = SSHKeysUtil.createSSHKey(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
 
     Application warApp = anApplication().withName(APP_NAME).build();
     application = applicationRestUtil.createApplication(warApp);
@@ -221,64 +212,5 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
     if (!(status.equals("RUNNING") || status.equals("QUEUED"))) {
       Assert.fail("ERROR: Execution did not START");
     }
-  }
-
-  public static void createCloudProvider() {
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withName(CLOUD_PROVIDER_NAME)
-            .withAccountId(ACCNT_ID)
-            .withValue(AwsConfig.builder()
-                           .accessKey(new ScmSecret().decryptToString(new SecretName("aws_playground_access_key")))
-                           .secretKey(new ScmSecret().decryptToCharArray(new SecretName("aws_playground_secret_key")))
-                           .accountId(ACCNT_ID)
-                           .build())
-            .build();
-
-    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, ACCNT_ID, settingAttribute);
-    assertThat(setAttrResponse).isNotNull();
-    cloudProviderId = setAttrResponse.getString("resource.uuid").trim();
-  }
-
-  public static void createConnector() {
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(ARTIFACTORY_NAME)
-            .withCategory(CONNECTOR)
-            .withAccountId(ACCNT_ID)
-            .withValue(
-                ArtifactoryConfig.builder()
-                    .accountId(ACCNT_ID)
-                    .artifactoryUrl("https://harness.jfrog.io/harness")
-                    .username("admin")
-                    .password(new ScmSecret().decryptToCharArray(new SecretName("artifactory_connector_password")))
-                    .build())
-            .build();
-
-    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, ACCNT_ID, settingAttribute);
-    assertThat(setAttrResponse).isNotNull();
-    artifactoryId = setAttrResponse.getString("resource.uuid").trim();
-  }
-
-  public static void createSSHKey() {
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(Automation_SSH_KEY)
-            .withAccountId(ACCNT_ID)
-            .withCategory(SettingCategory.SETTING)
-            .withValue(aHostConnectionAttributes()
-                           .withConnectionType(SSH)
-                           .withAccessType(KEY)
-                           .withAccountId(ACCNT_ID)
-                           .withUserName("ec2-user")
-                           .withSshPort(22)
-                           .withKey(new ScmSecret().decryptToCharArray(new SecretName("ec2_qe_ssh_key")))
-                           .build())
-            .build();
-
-    JsonPath setAttrResponse = CloudproviderConnectorUtil.create(bearerToken, ACCNT_ID, settingAttribute);
-    assertThat(setAttrResponse).isNotNull();
-    sshKeyId = setAttrResponse.getString("resource.uuid").trim();
   }
 }
