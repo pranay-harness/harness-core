@@ -420,7 +420,13 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public String fetchTemplateIdFromUri(String accountId, String appId, String templateUri) {
     String folderPath = obtainTemplateFolderPath(templateUri);
-    TemplateFolder templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath);
+    TemplateFolder templateFolder;
+    if (folderPath.contains("/")) { // app level folder
+      templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath);
+    } else { // root level folder
+      templateFolder = templateFolderService.getByFolderPath(accountId, folderPath);
+    }
+
     if (templateFolder == null) {
       throw new WingsException("No template folder found with the uri  [" + templateUri + "]");
     }
