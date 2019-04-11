@@ -161,9 +161,9 @@ public class ContinuousVerificationDashboardResource {
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("cvConfigId") @Valid final String cvConfigId,
       @QueryParam("startTime") @Valid final long startTime, @QueryParam("endTime") @Valid final long endTime,
       @QueryParam("historyStartTime") @Valid final long historyStartTime,
-      @QueryParam("txnNames[]") @Valid final List<String> txnNames,
-      @QueryParam("metricNames[]") @Valid final List<String> metricNames,
-      @QueryParam("tags[]") @Valid final List<String> tags) {
+      @QueryParam("txnNames") @Valid final List<String> txnNames,
+      @QueryParam("metricNames") @Valid final List<String> metricNames,
+      @QueryParam("tags") @Valid final List<String> tags) {
     return new RestResponse<>(
         continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
                                                                      .cvConfigId(cvConfigId)
