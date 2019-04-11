@@ -1,12 +1,15 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.intfc.FileService.FileBucket;
 
@@ -17,7 +20,9 @@ import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
 import io.harness.persistence.ReadPref;
+import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
@@ -27,6 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
+import software.wings.audit.AuditHeaderYamlResponse;
+import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
+import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
@@ -35,8 +43,10 @@ import software.wings.service.intfc.FileService;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 /**
  * Audit Service Implementation class.
@@ -68,6 +78,53 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req) {
     return wingsPersistence.query(AuditHeader.class, req);
+  }
+
+  @Override
+  public AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String entityType) {
+    AuditHeader header = wingsPersistence.createQuery(AuditHeader.class)
+                             .filter(UuidAccess.ID_KEY, headerId)
+                             .project("entityAuditRecords", true)
+                             .get();
+
+    if (header == null) {
+      throw new WingsException("Audit Header Id does not exists")
+          .addParam("message", "Audit Header Id does not exists");
+    }
+
+    Set<String> yamlIds = new HashSet<>();
+    AuditHeaderYamlResponseBuilder builder = AuditHeaderYamlResponse.builder().auditHeaderId(headerId);
+    if (isEmpty(header.getEntityAuditRecords())) {
+      return builder.build();
+    }
+
+    header.getEntityAuditRecords().forEach(entityAuditRecord -> {
+      if (isNotEmpty(entityAuditRecord.getEntityNewYamlRecordId())) {
+        yamlIds.add(entityAuditRecord.getEntityNewYamlRecordId());
+      }
+      if (isNotEmpty(entityAuditRecord.getEntityOldYamlRecordId())) {
+        yamlIds.add(entityAuditRecord.getEntityOldYamlRecordId());
+      }
+    });
+
+    if (isNotEmpty(yamlIds)) {
+      Query<EntityYamlRecord> query =
+          wingsPersistence.createQuery(EntityYamlRecord.class).field(UuidAccess.ID_KEY).in(yamlIds);
+
+      if (isNotBlank(entityId)) {
+        if (isBlank(entityType)) {
+          throw new WingsException("EntityType is required, when entityId is set.")
+              .addParam("message", "EntityType is required, when entityId is set.");
+        }
+
+        query.filter("entityId", entityId).filter("entityType", entityType);
+      }
+
+      List<EntityYamlRecord> entityAuditYamls = query.asList();
+      builder.entityAuditYamls(entityAuditYamls);
+    }
+
+    return builder.build();
   }
 
   /**
