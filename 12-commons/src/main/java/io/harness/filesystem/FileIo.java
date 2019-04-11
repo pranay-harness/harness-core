@@ -9,6 +9,7 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.beans.FileData;
 import org.apache.commons.io.FileUtils;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -29,8 +30,11 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 public class FileIo {
   public static void createDirectoryIfDoesNotExist(final String directoryPath) throws IOException {
@@ -219,5 +223,42 @@ public class FileIo {
     }
 
     return System.getProperty("user.home", ".");
+  }
+
+  public static List<FileData> getFilesUnderPath(String filePath) throws IOException {
+    List<FileData> fileList = new ArrayList<>();
+
+    Path path = Paths.get(filePath);
+    try (Stream<Path> paths = Files.walk(path)) {
+      paths.filter(Files::isRegularFile).forEach(each -> addFiles(fileList, each, path.toString()));
+    }
+
+    return fileList;
+  }
+
+  private static void addFiles(List<FileData> fileList, Path path, String basePath) {
+    String filePath = getRelativePath(path, basePath);
+    String fileContent = getFileContent(path);
+
+    fileList.add(FileData.builder().filePath(filePath).fileContent(fileContent).build());
+  }
+
+  private static String getFileContent(Path path) {
+    StringBuilder contentBuilder = new StringBuilder();
+
+    try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
+      stream.forEach(s -> contentBuilder.append(s).append("\n"));
+
+      return contentBuilder.toString();
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  private static String getRelativePath(Path path, String basePath) {
+    Path fileAbsolutePath = path.toAbsolutePath();
+    Path baseAbsolutePath = Paths.get(basePath).toAbsolutePath();
+
+    return baseAbsolutePath.relativize(fileAbsolutePath).toString();
   }
 }

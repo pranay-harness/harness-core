@@ -39,7 +39,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
-  public ChartMuseumServerConfig startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)
+  public ChartMuseumServer startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)
       throws Exception {
     logger.info("Starting chart museum server");
 
@@ -50,8 +50,8 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
   }
 
-  private ChartMuseumServerConfig startAmazonS3ChartMuseumServer(
-      HelmRepoConfig helmRepoConfig, SettingValue connectorConfig) throws Exception {
+  private ChartMuseumServer startAmazonS3ChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)
+      throws Exception {
     AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
     AwsConfig awsConfig = (AwsConfig) connectorConfig;
 
@@ -71,7 +71,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     return startServer(builder.toString(), environment);
   }
 
-  private ChartMuseumServerConfig startServer(String command, Map<String, String> environment) throws Exception {
+  private ChartMuseumServer startServer(String command, Map<String, String> environment) throws Exception {
     int port = 0;
     StartedProcess process = null;
     int retries = 0;
@@ -105,7 +105,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
       throw new WingsException(getErrorMessage(stringBuffer.toString()));
     }
 
-    return ChartMuseumServerConfig.builder().startedProcess(process).port(port).build();
+    return ChartMuseumServer.builder().startedProcess(process).port(port).build();
   }
 
   private StartedProcess startProcess(String command, Map<String, String> environment, StringBuffer stringBuffer)

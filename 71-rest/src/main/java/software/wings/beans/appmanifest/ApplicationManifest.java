@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.yaml.BaseEntityYaml;
 
 @Entity("applicationManifests")
@@ -31,8 +32,9 @@ public class ApplicationManifest extends Base {
   private String serviceId;
   private String envId;
   private AppManifestKind kind;
-  @NonNull StoreType storeType;
-  GitFileConfig gitFileConfig;
+  @NonNull private StoreType storeType;
+  private GitFileConfig gitFileConfig;
+  private HelmChartConfig helmChartConfig;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()
@@ -41,6 +43,7 @@ public class ApplicationManifest extends Base {
                                        .storeType(this.storeType)
                                        .gitFileConfig(this.gitFileConfig)
                                        .kind(this.kind)
+                                       .helmChartConfig(helmChartConfig)
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;

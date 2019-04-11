@@ -6,6 +6,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -15,7 +16,12 @@ import java.util.List;
 public class K8sDelegateManifestConfig {
   StoreType manifestStoreTypes;
   List<ManifestFile> manifestFiles;
-  GitFileConfig gitFileConfig;
-  GitConfig gitConfig;
   List<EncryptedDataDetail> encryptedDataDetails;
+
+  // Applies to GitFileConfig
+  private GitFileConfig gitFileConfig;
+  private GitConfig gitConfig;
+
+  // Applies only to HelmRepoConfig
+  private HelmChartConfigParams helmChartConfigParams;
 }

@@ -57,6 +57,7 @@ import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
+import software.wings.delegatetasks.helm.HelmValuesFetchTask;
 import software.wings.delegatetasks.jira.JiraTask;
 import software.wings.delegatetasks.jira.ShellScriptApprovalTask;
 import software.wings.delegatetasks.k8s.K8sTask;
@@ -329,7 +330,8 @@ public enum TaskType {
   SERVICENOW_SYNC(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class),
   SERVICENOW_VALIDATION(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class),
   HELM_REPO_CONFIG_VALIDATION(
-      TaskGroup.HELM_REPO_CONFIG_VALIDATION, HelmRepoConfigValidationTask.class, HelmRepoConfigValidation.class);
+      TaskGroup.HELM_REPO_CONFIG_VALIDATION, HelmRepoConfigValidationTask.class, HelmRepoConfigValidation.class),
+  HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK, HelmValuesFetchTask.class, HelmRepoConfigValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

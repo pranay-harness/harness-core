@@ -31,6 +31,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
   private TaskType currentTaskType;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
   private String loadBalancer;
+  private String helmValuesContent;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

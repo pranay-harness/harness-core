@@ -5,7 +5,7 @@ import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.settings.SettingValue;
 
 public interface ChartMuseumClient {
-  ChartMuseumServerConfig startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)
+  ChartMuseumServer startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)
       throws Exception;
 
   void stopChartMuseumServer(StartedProcess process) throws Exception;
