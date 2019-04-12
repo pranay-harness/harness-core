@@ -47,6 +47,8 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
@@ -77,7 +79,7 @@ public class PluginServiceTest {
   @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(30)
+        .hasSize(32)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -317,6 +319,22 @@ public class PluginServiceTest {
                 .withDisplayName("Jira")
                 .withType("JIRA")
                 .withPluginCategories(asList(Collaboration))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(HttpHelmRepoConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.getDisplayName())
+                .withType(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.name())
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(AmazonS3HelmRepoConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.getDisplayName())
+                .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.name())
+                .withPluginCategories(asList(Artifact))
                 .build());
   }
 
@@ -324,10 +342,10 @@ public class PluginServiceTest {
   @Category(UnitTests.class)
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(30)
+        .hasSize(32)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP");
+            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO_CONFIG", "AMAZON_S3_HELM_REPO_CONFIG");
   }
 }
