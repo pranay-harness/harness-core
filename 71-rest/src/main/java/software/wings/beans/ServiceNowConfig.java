@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -20,13 +23,14 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CollaborationProviderYaml;
 
 import java.util.Arrays;
+import java.util.List;
 
 @JsonTypeName("SERVICENOW")
 @Data
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
-public class ServiceNowConfig extends SettingValue implements EncryptableSetting {
+public class ServiceNowConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(title = "Base URL", required = true) @NotEmpty private String baseUrl;
 
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
@@ -61,6 +65,11 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
     this.password = Arrays.copyOf(password, password.length);
     this.encryptedPassword = encryptedPassword;
     this.accountId = accountId;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl));
   }
 
   @Data
