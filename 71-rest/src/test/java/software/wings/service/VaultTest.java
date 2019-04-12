@@ -555,10 +555,12 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
     updatedVaultConfig.setDefault(false);
 
-    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
-
-    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
-    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
+    try {
+      vaultService.saveVaultConfig(accountId, updatedVaultConfig);
+      fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.VAULT_OPERATION_ERROR, e.getCode());
+    }
   }
 
   @Test

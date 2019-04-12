@@ -71,6 +71,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
   private static final String REASON_KEY = "reason";
+
   @Inject private AlertService alertService;
   @Inject private AccountService accountService;
 
@@ -266,10 +267,14 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     if (isLiteAccount) {
       if (isNewVaultConfig) {
         throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Can't create new Vault secret manager for a Lite account!");
-      } else if (vaultConfig.isDefault() && !getSavedVaultConfig(vaultConfigId).isDefault()) {
+            .addParam(REASON_KEY, "Cannot add new HashiCorp Vault Secret Manager in Harness Lite.");
+      }
+
+      VaultConfig savedVaultConfig = getSavedVaultConfig(vaultConfigId);
+      if ((vaultConfig.isDefault() && !savedVaultConfig.isDefault())
+          || (!vaultConfig.isDefault() && savedVaultConfig.isDefault())) {
         throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Can't update Vault secret manager to default for a Lite account!");
+            .addParam(REASON_KEY, "Cannot change default Secret Manager in Harness Lite.");
       }
     }
   }

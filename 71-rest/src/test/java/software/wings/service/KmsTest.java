@@ -602,10 +602,12 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
     updatedKmsConfig.setDefault(false);
 
-    kmsService.saveKmsConfig(accountId, updatedKmsConfig);
-
-    assertEquals(updatedKmsConfig.getUuid(), kmsService.getKmsConfig(accountId, kmsConfigId).getUuid());
-    assertEquals(updatedKmsConfig.isDefault(), kmsService.getKmsConfig(accountId, kmsConfigId).isDefault());
+    try {
+      kmsService.saveKmsConfig(accountId, updatedKmsConfig);
+      fail();
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getCode());
+    }
   }
 
   @Test
