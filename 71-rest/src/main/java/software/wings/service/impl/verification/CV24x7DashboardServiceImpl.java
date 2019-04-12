@@ -249,7 +249,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   }
 
   public LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, Long startTime, Long endTime, String appId) {
-    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    LogsCVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
     if (!VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())) {
       logger.error("Incorrect CVConfigID to fetch logAnalysisSummary {}", cvConfigId);
       return null;
@@ -287,6 +287,24 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       unknownFrequency += getUnexpectedFrequency(record.getTest_clusters());
       analysisSummary.setQuery(record.getQuery());
       totalScore += record.getScore();
+    }
+
+    // if empty response and is not baseline then send baseline data
+    if (analysisSummary.isEmptyResult()
+        && TimeUnit.MILLISECONDS.toMinutes(endTime) > cvConfiguration.getBaselineEndMinute()) {
+      LogMLAnalysisRecord record = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                       .filter("cvConfigId", cvConfigId)
+                                       .filter("appId", appId)
+                                       .field("logCollectionMinute")
+                                       .lessThanOrEq(cvConfiguration.getBaselineEndMinute())
+                                       .filter("deprecated", false)
+                                       .order("-logCollectionMinute")
+                                       .get();
+      if (record != null) {
+        record.decompressLogAnalysisRecord();
+        analysisSummary.setControlClusters(
+            analysisService.computeCluster(record.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
+      }
     }
 
     analysisSummary.setScore(totalScore / analysisRecords.size() * 100);
