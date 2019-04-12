@@ -1,13 +1,19 @@
 package io.harness.delegate.task.shell;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Data
 @Builder
-public class ShellScriptApprovalTaskParameters implements TaskParameters {
+public class ShellScriptApprovalTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
   private String activityId;
@@ -17,4 +23,9 @@ public class ShellScriptApprovalTaskParameters implements TaskParameters {
   private final String outputVars;
   @Expression private final String script;
   private String workingDirectory;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+  }
 }
