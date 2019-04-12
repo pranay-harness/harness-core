@@ -58,9 +58,17 @@ public class AuthenticationUtil {
     return user.getAccounts().get(0);
   }
 
+  public URI buildAbsoluteUrl(String baseUrl, String path, Map<String, String> params) {
+    return buildAbsoluteUrlInternal(baseUrl, path, params);
+  }
+
   public URI buildAbsoluteUrl(String path, Map<String, String> params) {
+    String baseUrl = getBaseUrl();
+    return buildAbsoluteUrlInternal(baseUrl, path, params);
+  }
+
+  private URI buildAbsoluteUrlInternal(String baseUrl, String path, Map<String, String> params) {
     try {
-      String baseUrl = getBaseUrl();
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setPath(path);
       if (params != null) {
