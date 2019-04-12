@@ -213,6 +213,7 @@
         <!-- Best practices -->
 
         <module name="io.harness.checks.TestAnnotationsCheck"/>
+        <module name="io.harness.checks.AnnotationParametersCheck"/>
 
         <!-- *** -->
 

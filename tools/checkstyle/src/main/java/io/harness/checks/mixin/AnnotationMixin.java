@@ -3,6 +3,8 @@ package io.harness.checks.mixin;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -26,13 +28,13 @@ public class AnnotationMixin {
     return result;
   }
 
-  public static Set<String> parameters(DetailAST annotationNode) {
-    final Set<String> annotationParameters = new TreeSet<>();
+  public static Map<String, DetailAST> parameters(DetailAST annotationNode) {
+    final Map<String, DetailAST> annotationParameters = new HashMap<>();
     DetailAST annotationChildNode = annotationNode.getFirstChild();
 
     while (annotationChildNode != null) {
       if (annotationChildNode.getType() == TokenTypes.ANNOTATION_MEMBER_VALUE_PAIR) {
-        annotationParameters.add(annotationChildNode.getFirstChild().getText());
+        annotationParameters.put(annotationChildNode.getFirstChild().getText(), annotationChildNode);
       }
       annotationChildNode = annotationChildNode.getNextSibling();
     }
