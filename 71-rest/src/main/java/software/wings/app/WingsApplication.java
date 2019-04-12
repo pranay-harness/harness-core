@@ -107,6 +107,7 @@ import software.wings.scheduler.ArtifactCollectionHandler;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.InstanceStatsMetricsJob;
+import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.LicenseCheckJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.ResourceConstraintBackupJob;
@@ -538,6 +539,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         YamlChangeSetPruneJob.add(jobScheduler);
         ExecutionLogsPruneJob.addJob(jobScheduler);
         InstanceStatsMetricsJob.addJob(jobScheduler);
+        InstancesPurgeJob.add(jobScheduler);
         AccountIdAdditionJob.addJob(jobScheduler);
       }
     }

@@ -39,6 +39,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -247,6 +248,16 @@ public class InstanceServiceImpl implements InstanceService {
 
     wingsPersistence.update(query, updateOperations);
     return true;
+  }
+
+  @Override
+  public boolean purgeDeletedUpTo(Instant timestamp) {
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class)
+                                .filter("isDeleted", true)
+                                .field("deletedAt")
+                                .lessThan(timestamp.toEpochMilli());
+
+    return wingsPersistence.delete(query);
   }
 
   @Override

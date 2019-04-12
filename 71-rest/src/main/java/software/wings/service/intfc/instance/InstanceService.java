@@ -16,6 +16,7 @@ import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.ownership.OwnedByService;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -67,6 +68,13 @@ public interface InstanceService
    * @return
    */
   boolean delete(Set<String> instanceIdSet);
+
+  /**
+   * Purge the instances which were deleted up-to a given timestamp
+   *
+   * @param timestamp   - exclusive
+   */
+  boolean purgeDeletedUpTo(Instant timestamp);
 
   /**
    * Get the container deployment info of all the container services that belong to the same family

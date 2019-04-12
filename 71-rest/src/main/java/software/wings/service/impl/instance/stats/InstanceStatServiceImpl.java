@@ -66,6 +66,14 @@ public class InstanceStatServiceImpl implements InstanceStatService {
   }
 
   @Override
+  public boolean purgeUpTo(Instant timestamp) {
+    Query<InstanceStatsSnapshot> query =
+        persistence.createQuery(InstanceStatsSnapshot.class).field("timestamp").lessThan(timestamp);
+
+    return persistence.delete(query);
+  }
+
+  @Override
   public InstanceTimeline aggregate(String accountId, long fromTsMillis, long toTsMillis) {
     Instant from = Instant.ofEpochMilli(fromTsMillis);
     Instant to = Instant.ofEpochMilli(toTsMillis);

@@ -224,7 +224,7 @@ public class DashboardStatisticsResource {
                                  .monthlyRanges(firstTs, Instant.now())
                                  .stream()
                                  .sorted(Comparator.comparing(TimeRange::getFrom).reversed())
-                                 .limit(5)
+                                 .limit(6)
                                  .collect(toList());
 
     return new RestResponse<>(ranges);

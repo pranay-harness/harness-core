@@ -19,9 +19,17 @@ public interface InstanceStatService {
   boolean save(InstanceStatsSnapshot stats);
 
   /**
+   * Purge all stats up-to a given instant
+   *
+   * @param timestamp   - exclusive
+   */
+  boolean purgeUpTo(Instant timestamp);
+
+  /**
    * Get a "timeline" of instance history usage.
-   *  @param from - inclusive
-   * @param to - exclusive
+   *
+   * @param from - inclusive
+   * @param to   - exclusive
    */
   InstanceTimeline aggregate(String accountId, long from, long to);
 
@@ -39,6 +47,7 @@ public interface InstanceStatService {
 
   /**
    * Calculate percentile of instance usage values
+   *
    * @param p percentile number. eg 95 for 95th percentile
    * @return percentile over given time period
    */
