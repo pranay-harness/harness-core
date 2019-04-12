@@ -1,0 +1,10 @@
+package io.harness.checks;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Value;
+
+import lombok.experimental.FieldNameConstants;
+
+@FieldNameConstants
+public class Class {
+}
