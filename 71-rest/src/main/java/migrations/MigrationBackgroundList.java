@@ -15,6 +15,7 @@ import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SendInviteUrlForAllUserInvites;
+import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -52,6 +53,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(21, AddIsDefaultFlagToUserGroup.class))
         .add(Pair.of(22, AddInfraMappingNameToInstanceData.class))
         .add(Pair.of(23, MigrateLogDataRecordsToGoogle.class))
+        .add(Pair.of(24, SetEmailToIndividualMemberFlag.class))
         .build();
   }
 }
