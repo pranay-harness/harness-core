@@ -51,7 +51,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
   @SchemaIgnore
   @Transient
   private static final String FETCH_EVENTS_URL =
-      "projects/:projectId:/events?filters[event.since][][value]=${iso_start_time}&filters[event.since][][type]=eq&full_reports=true&per_page=1000";
+      "projects/:projectId:/events?filters[event.since][][value]=${iso_start_time}&filters[event.before][][value]=${iso_end_time}&full_reports=true&per_page=1000";
   @SchemaIgnore @Transient @Inject private EncryptionService encryptionService;
 
   public BugsnagState(String name) {
@@ -214,7 +214,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .startMinute(0)
-            .responseDefinition(constructLogDefinitions(context))
+            .responseDefinition(constructLogDefinitions(projectId, releaseStage))
             .shouldInspectHosts(!isBrowserApplication())
             .collectionFrequency(1)
             .collectionTime(Integer.parseInt(getTimeDuration()))
@@ -249,7 +249,8 @@ public class BugsnagState extends AbstractLogAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  protected Map<String, Map<String, ResponseMapper>> constructLogDefinitions(final ExecutionContext context) {
+  public static Map<String, Map<String, ResponseMapper>> constructLogDefinitions(
+      String projectId, String releaseStage) {
     Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
     if (isEmpty(projectId)) {
       throw new WingsException("ProjectID is empty in Bugsnag State. Unable to fetch data");

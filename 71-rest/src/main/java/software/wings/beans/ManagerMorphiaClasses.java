@@ -108,6 +108,7 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -162,12 +163,12 @@ public class ManagerMorphiaClasses {
       ContinuousVerificationExecutionMetaData.class, CommandUnit.class, CloudWatchCVServiceConfiguration.class,
       DelayEvent.class, ExperimentalLogMLAnalysisRecord.class, NewRelicMetricAnalysisRecord.class, CollectEvent.class,
       SecretChangeLog.class, TimeSeriesMLScores.class, AppDynamicsCVServiceConfiguration.class,
-      EncryptableSetting.class, DeploymentSummary.class, LearningEngineExperimentalAnalysisTask.class,
-      StateMachine.class, CVConfiguration.class, DelegateConnectionResult.class, DeploymentEvent.class,
-      AuditHeader.class, TimeSeriesMetricTemplates.class, SecretUsageLog.class, DynaTraceCVServiceConfiguration.class,
-      LogDataRecord.class, InstanceChangeEvent.class, YamlChangeSet.class, YamlHistory.class,
-      LearningEngineAnalysisTask.class, ExperimentalMetricAnalysisRecord.class, Comparable.class,
-      LogMLAnalysisRecord.class, TimeSeriesMLAnalysisRecord.class, StateExecutionInstance.class,
+      BugsnagCVConfiguration.class, EncryptableSetting.class, DeploymentSummary.class,
+      LearningEngineExperimentalAnalysisTask.class, StateMachine.class, CVConfiguration.class,
+      DelegateConnectionResult.class, DeploymentEvent.class, AuditHeader.class, TimeSeriesMetricTemplates.class,
+      SecretUsageLog.class, DynaTraceCVServiceConfiguration.class, LogDataRecord.class, InstanceChangeEvent.class,
+      YamlChangeSet.class, YamlHistory.class, LearningEngineAnalysisTask.class, ExperimentalMetricAnalysisRecord.class,
+      Comparable.class, LogMLAnalysisRecord.class, TimeSeriesMLAnalysisRecord.class, StateExecutionInstance.class,
       DatadogCVServiceConfiguration.class, MetricAnalysisRecord.class, YamlVersion.class, Principal.class,
       PrometheusCVServiceConfiguration.class, EncryptedData.class, NewRelicCVServiceConfiguration.class,
       ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class, YamlGitConfig.class,

@@ -516,6 +516,7 @@ import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesResponse;
 import software.wings.service.impl.aws.model.AwsRoute53Request;
 import software.wings.service.impl.aws.model.AwsRoute53Request.AwsRoute53RequestType;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
+import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -1222,5 +1223,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmValuesFetchTaskParameters.class, 7165);
     kryo.register(HelmValuesFetchTaskResponse.class, 7166);
     kryo.register(HelmChartConfigParams.class, 7167);
+    kryo.register(BugsnagSetupTestData.class, 7168);
   }
 }

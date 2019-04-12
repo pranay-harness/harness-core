@@ -1,9 +1,14 @@
 package software.wings.service.impl.bugsnag;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.common.Constants.URL_STRING;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
+
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,11 +17,17 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BugsnagConfig;
+import software.wings.delegatetasks.CustomDataCollectionUtil;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +42,11 @@ import java.util.concurrent.TimeUnit;
 public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
   private static final String organizationsUrl = "user/organizations";
   private static final String projectsUrl = "organizations/orgId/projects";
+  private static final String FETCH_EVENTS_URL =
+      "projects/:projectId:/events?filters[event.since][][value]=${iso_start_time}&filters[event.before][][value]=${iso_end_time}&full_reports=true&per_page=1";
   private static final Logger logger = LoggerFactory.getLogger(BugsnagDelegateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService delegateLogService;
 
   public Set<BugsnagApplication> getOrganizations(
       BugsnagConfig config, List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) {
@@ -80,6 +94,46 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
       logger.error("Exception while fetching projects from bugsnag");
     }
     return null;
+  }
+
+  @Override
+  public Object search(BugsnagConfig config, String accountId, BugsnagSetupTestData bugsnagSetupTestData,
+      List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    if (apiCallLog == null) {
+      apiCallLog = createApiCallLog(accountId, GLOBAL_APP_ID, null);
+    }
+    try {
+      Map<String, Object> hMap = HashBiMap.create();
+      APMRestClient client = getAPMRestClient(config, encryptedDataDetails);
+      for (Map.Entry<String, String> entry : config.headersMap().entrySet()) {
+        hMap.put(entry.getKey(), entry.getValue());
+      }
+
+      String url = FETCH_EVENTS_URL.replaceAll(":projectId:", bugsnagSetupTestData.getProjectId());
+      String resolvedUrl = CustomDataCollectionUtil.resolvedUrl(
+          url, null, bugsnagSetupTestData.getFromTime(), bugsnagSetupTestData.getToTime());
+
+      Call<Object> request = client.collect(resolvedUrl, hMap, HashBiMap.create());
+      apiCallLog.setTitle("Fetch request to " + resolvedUrl);
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                       .name(URL_STRING)
+                                       .value(request.request().url().toString())
+                                       .type(FieldType.URL)
+                                       .build());
+      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      Response<Object> response = request.execute();
+      if (response.isSuccessful()) {
+        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+        delegateLogService.save(accountId, apiCallLog);
+        return response.body();
+      } else {
+        apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
+        delegateLogService.save(accountId, apiCallLog);
+        throw new WingsException("Exception while fetching logs from provider. Error code " + response.code());
+      }
+    } catch (Exception ex) {
+      throw new WingsException(ex.getMessage());
+    }
   }
 
   private APMRestClient getAPMRestClient(final BugsnagConfig config, List<EncryptedDataDetail> encryptedDataDetails) {

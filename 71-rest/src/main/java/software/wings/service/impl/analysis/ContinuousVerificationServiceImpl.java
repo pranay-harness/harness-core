@@ -60,6 +60,7 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
@@ -116,6 +117,7 @@ import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AppDynamicsState;
+import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
@@ -129,6 +131,7 @@ import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -1353,6 +1356,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         task = createElkDelegateTask(elkCVConfiguration, waitId, startTime, endTime);
         isLogCollection = true;
         break;
+      case BUG_SNAG:
+        BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
+        task = createBugSnagDelegateTask(bugsnagCVConfiguration, waitId, startTime, endTime);
+        isLogCollection = true;
+        break;
       default:
         logger.error("Calling collect 24x7 data for an unsupported state");
         return false;
@@ -1458,6 +1466,37 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .build();
     return createDelegateTask(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+  }
+
+  private DelegateTask createBugSnagDelegateTask(
+      BugsnagCVConfiguration config, String waitId, long startTime, long endTime) {
+    BugsnagConfig bugsnagConfig = (BugsnagConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final CustomLogDataCollectionInfo dataCollectionInfo =
+        CustomLogDataCollectionInfo.builder()
+            .baseUrl(bugsnagConfig.getUrl())
+            .validationUrl(BugsnagConfig.validationUrl)
+            .cvConfidId(config.getUuid())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .headers(bugsnagConfig.headersMap())
+            .options(bugsnagConfig.optionsMap())
+            .query(config.getQuery())
+            .encryptedDataDetails(secretManager.getEncryptionDetails(bugsnagConfig, config.getAppId(), null))
+            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .stateType(StateType.BUG_SNAG)
+            .applicationId(config.getAppId())
+            .serviceId(config.getServiceId())
+            .startTime(startTime)
+            .endTime(endTime)
+            .startMinute(0)
+            .responseDefinition(BugsnagState.constructLogDefinitions(config.getProjectId(), config.getReleaseStage()))
+            .shouldInspectHosts(!config.isBrowserApplication())
+            .collectionFrequency(1)
+            .collectionTime(timeDuration)
+            .accountId(config.getAccountId())
+            .build();
+    return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
+        new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
   private DelegateTask createNewRelicDelegateTask(
