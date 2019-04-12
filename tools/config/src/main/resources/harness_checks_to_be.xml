@@ -20,8 +20,17 @@
         <property name="message" value="Password is a single word"/>
     </module>
 
+    <module name="RegexpSingleline">
+        <property name="format" value="public static final String [A-Z_]+_KEY = &quot;.*&quot;;"/>
+        <property name="message" value="Do not define your own constants, use lombok @FieldNameConstants(innerTypeName = &quot;&lt;class&gt;Keys&quot;)"/>
+    </module>
+
     <module name="RegexpOnFilename">
         <property name="fileNamePattern" value="Util\."/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="io.harness.checks.StringLiteralsCheck"/>
     </module>
 
 </module>
