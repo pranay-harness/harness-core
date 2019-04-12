@@ -49,10 +49,10 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
     HelmRepoConfig helmRepoConfig = getHelmRepoConfig();
 
     if (helmRepoConfig instanceof HttpHelmRepoConfig) {
-      return singletonList("HTTP_HELM_REPO_CONFIG: " + ((HttpHelmRepoConfig) helmRepoConfig).getChartRepoUrl());
+      return singletonList("HTTP_HELM_REPO: " + ((HttpHelmRepoConfig) helmRepoConfig).getChartRepoUrl());
     } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
       AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
-      return singletonList("AMAZON_S3_HELM_REPO_CONFIG: " + amazonS3HelmRepoConfig.getBucketName() + ":"
+      return singletonList("AMAZON_S3_HELM_REPO: " + amazonS3HelmRepoConfig.getBucketName() + ":"
           + amazonS3HelmRepoConfig.getFolderPath() + ":" + amazonS3HelmRepoConfig.getRegion());
     }
 

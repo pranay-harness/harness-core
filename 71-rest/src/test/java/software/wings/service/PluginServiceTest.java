@@ -324,16 +324,16 @@ public class PluginServiceTest {
                 .withSettingClass(HttpHelmRepoConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.getDisplayName())
-                .withType(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.name())
+                .withDisplayName(SettingVariableTypes.HTTP_HELM_REPO.getDisplayName())
+                .withType(SettingVariableTypes.HTTP_HELM_REPO.name())
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
                 .withSettingClass(AmazonS3HelmRepoConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.getDisplayName())
-                .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.name())
+                .withDisplayName(SettingVariableTypes.AMAZON_S3_HELM_REPO.getDisplayName())
+                .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO.name())
                 .withPluginCategories(asList(Artifact))
                 .build());
   }
@@ -346,6 +346,6 @@ public class PluginServiceTest {
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO_CONFIG", "AMAZON_S3_HELM_REPO_CONFIG");
+            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO");
   }
 }
