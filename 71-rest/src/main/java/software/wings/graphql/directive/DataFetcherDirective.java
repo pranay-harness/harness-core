@@ -8,6 +8,7 @@ import com.google.inject.name.Names;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.idl.SchemaDirectiveWiring;
@@ -19,6 +20,7 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 /**
  * Injecting the data fetcher at runtime based on directive defined
@@ -29,6 +31,7 @@ import java.util.Map;
 public class DataFetcherDirective implements SchemaDirectiveWiring {
   public static final String DATA_FETCHER_NAME = "name";
   public static final String CONTEXT_FIELD_ARGS_MAP = "contextFieldArgsMap";
+  public static final String DATA_LOADER_NAME = "batchLoader";
 
   private Injector injector;
 
@@ -39,16 +42,18 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
 
   @Override
   public GraphQLFieldDefinition onField(SchemaDirectiveWiringEnvironment<GraphQLFieldDefinition> environment) {
-    String dataFetcherName = (String) environment.getDirective().getArgument(DATA_FETCHER_NAME).getValue();
+    String dataFetcherName = (String) getArgumentValue(DATA_FETCHER_NAME, environment);
     Map<String, String> contextFieldArgsMap = getContextFieldArgsMap(environment);
-
-    GraphQLFieldDefinition field = environment.getElement();
-    GraphQLFieldsContainer parentType = environment.getFieldsContainer();
 
     AbstractDataFetcher dataFetcher =
         injector.getInstance(Key.get(AbstractDataFetcher.class, Names.named(dataFetcherName)));
     dataFetcher.setContextFieldArgsMap(contextFieldArgsMap);
 
+    String batchedDataLoaderName = (String) getArgumentValue(DATA_LOADER_NAME, environment);
+    dataFetcher.setBatchedDataLoaderName(batchedDataLoaderName);
+
+    GraphQLFieldDefinition field = environment.getElement();
+    GraphQLFieldsContainer parentType = environment.getFieldsContainer();
     environment.getCodeRegistry().dataFetcher(parentType, field, dataFetcher);
 
     return field;
@@ -67,5 +72,15 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
       }
     }
     return contextFieldArgsMap;
+  }
+
+  private Object getArgumentValue(
+      @NotNull String argumentName, @NotNull SchemaDirectiveWiringEnvironment<GraphQLFieldDefinition> environment) {
+    Object argumentValue = null;
+    GraphQLArgument graphQLArgument = environment.getDirective().getArgument(argumentName);
+    if (graphQLArgument != null) {
+      argumentValue = graphQLArgument.getValue();
+    }
+    return argumentValue;
   }
 }

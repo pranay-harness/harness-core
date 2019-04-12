@@ -1,17 +1,18 @@
 package software.wings.app;
 
+import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Names;
-import com.google.inject.spi.InjectionListener;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
 
 import graphql.GraphQL;
+import org.dataloader.MappedBatchLoader;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationListDataFetcher;
+import software.wings.graphql.datafetcher.application.batchloader.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentListDataFetcher;
@@ -23,8 +24,11 @@ import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
 
+import java.util.Collections;
+import java.util.Set;
+
 /**
- * Created a new module as part of code review comment.q
+ * Created a new module as part of code review comment
  */
 public class GraphQLModule extends AbstractModule {
   public static final String WORKFLOW = "workflow";
@@ -37,61 +41,54 @@ public class GraphQLModule extends AbstractModule {
   public static final String ENVIRONMENT = "environment";
   public static final String ENVIRONMENTS = "environments";
 
-  @Override
-  protected void configure() {
-    bind(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}).to(GraphQLProvider.class);
+  /***
+   * This collection is mainly required to inject batched loader at app start time.
+   * I was not getting a handle to Annotation Name at runtime hence I am taking this approach.
+   */
+  private static final Set<String> BATCH_DATA_LOADER_NAMES = Sets.newHashSet();
 
-    bindPostContructInitializationForGraphQL();
-
-    bind(DataFetcherDirective.class);
-
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(WORKFLOW)).to(WorkflowDataFetcher.class);
-
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(WORKFLOWS)).to(WorkflowListDataFetcher.class);
-
-    bind(AbstractDataFetcher.class)
-        .annotatedWith(Names.named(WORKFLOW_EXECUTION))
-        .to(WorkflowExecutionDataFetcher.class);
-
-    bind(AbstractDataFetcher.class)
-        .annotatedWith(Names.named(WORKFLOW_EXECUTIONS))
-        .to(WorkflowExecutionListDataFetcher.class);
-
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(DEPLOYED_ARTIFACTS)).to(ArtifactDataFetcher.class);
-
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(APPLICATION)).to(ApplicationDataFetcher.class);
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(ENVIRONMENT)).to(EnvironmentDataFetcher.class);
-
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(ENVIRONMENTS)).to(EnvironmentListDataFetcher.class);
-
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(APPLICATIONS)).to(ApplicationListDataFetcher.class);
+  public static Set<String> getBatchDataLoaderNames() {
+    return Collections.unmodifiableSet(BATCH_DATA_LOADER_NAMES);
   }
 
-  /***
-   * Custom logic for <code>@PostConstruct</code> initialization of a class.
-   *
-   * TODO
-   * This method can be made generic
-   */
-  private void bindPostContructInitializationForGraphQL() {
-    bindListener(
-        new AbstractMatcher<TypeLiteral<?>>() {
-          @Override
-          public boolean matches(TypeLiteral<?> typeLiteral) {
-            return typeLiteral.equals(TypeLiteral.get(GraphQLProvider.class));
-          }
-        },
-        new TypeListener() {
-          @Override
-          public <I> void hear(final TypeLiteral<I> typeLiteral, TypeEncounter<I> typeEncounter) {
-            typeEncounter.register(new InjectionListener<I>() {
-              @Override
-              public void afterInjection(Object i) {
-                GraphQLProvider m = (GraphQLProvider) i;
-                m.init();
-              }
-            });
-          }
-        });
+  @Override
+  protected void configure() {
+    bind(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}).to(GraphQLProvider.class).in(Scopes.SINGLETON);
+
+    bind(DataFetcherDirective.class).in(Scopes.SINGLETON);
+
+    bind(DataLoaderRegistryHelper.class).in(Scopes.SINGLETON);
+
+    // DATA FETCHERS ARE NOT SINGLETON AS THEY CAN HAVE DIFFERENT CONTEXT MAP
+    bindDataFetchers();
+
+    // Add all batched data fetchers are SINGLETON .
+    bindBatchedDataLoaders();
+  }
+
+  private void bindDataFetchers() {
+    bindDataFetcherWithAnnotation(WORKFLOW, WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(WORKFLOWS, WorkflowListDataFetcher.class);
+    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTION, WorkflowExecutionDataFetcher.class);
+    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTIONS, WorkflowExecutionListDataFetcher.class);
+    bindDataFetcherWithAnnotation(DEPLOYED_ARTIFACTS, ArtifactDataFetcher.class);
+    bindDataFetcherWithAnnotation(APPLICATION, ApplicationDataFetcher.class);
+    bindDataFetcherWithAnnotation(ENVIRONMENT, EnvironmentDataFetcher.class);
+    bindDataFetcherWithAnnotation(ENVIRONMENTS, EnvironmentListDataFetcher.class);
+    bindDataFetcherWithAnnotation(APPLICATIONS, ApplicationListDataFetcher.class);
+  }
+
+  private void bindBatchedDataLoaders() {
+    bindBatchedDataLoaderWithAnnotation(APPLICATION, ApplicationBatchDataLoader.class);
+  }
+
+  private void bindDataFetcherWithAnnotation(String annotationName, Class<? extends AbstractDataFetcher> childClass) {
+    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(childClass);
+  }
+
+  private void bindBatchedDataLoaderWithAnnotation(
+      String annotationName, Class<? extends MappedBatchLoader> childClass) {
+    BATCH_DATA_LOADER_NAMES.add(annotationName);
+    bind(MappedBatchLoader.class).annotatedWith(Names.named(annotationName)).to(childClass).in(Scopes.SINGLETON);
   }
 }

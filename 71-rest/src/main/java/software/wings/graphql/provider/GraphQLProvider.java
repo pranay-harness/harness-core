@@ -6,6 +6,9 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import graphql.GraphQL;
+import graphql.analysis.MaxQueryDepthInstrumentation;
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
@@ -26,6 +29,7 @@ import javax.validation.constraints.NotNull;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private static final String GRAPHQL_SCHEMA_FILE_PATH = "graphql/schema.graphql";
+  private static final int MAX_QUERY_DEPTH = 4;
 
   GraphQL graphQL;
 
@@ -42,11 +46,9 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     this.injector = injector;
     this.dataFetcherDirective = dataFetcherDirective;
   }
-  /**
-   * Not synchronizing this method as it will be only
-   * called at app bootstrapping.
-   */
-  public synchronized void init() {
+
+  @Inject
+  public void init() {
     if (graphQL == null) {
       SchemaParser schemaParser = new SchemaParser();
       TypeDefinitionRegistry typeDefinitionRegistry = schemaParser.parse(loadSchemaFile());
@@ -54,9 +56,18 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
       RuntimeWiring runtimeWiring = buildRuntimeWiring();
 
       SchemaGenerator schemaGenerator = new SchemaGenerator();
+
       GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
 
-      graphQL = GraphQL.newGraphQL(graphQLSchema).build();
+      DataLoaderDispatcherInstrumentationOptions options =
+          DataLoaderDispatcherInstrumentationOptions.newOptions().includeStatistics(false);
+
+      DataLoaderDispatcherInstrumentation dispatcherInstrumentation = new DataLoaderDispatcherInstrumentation(options);
+
+      graphQL = GraphQL.newGraphQL(graphQLSchema)
+                    .instrumentation(dispatcherInstrumentation)
+                    .instrumentation(new MaxQueryDepthInstrumentation(MAX_QUERY_DEPTH))
+                    .build();
     }
   }
 
