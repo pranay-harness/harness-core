@@ -17,18 +17,20 @@ import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.common.Constants.HARNESS_IO_KEY_;
 import static software.wings.common.Constants.HARNESS_SUPPORT_EMAIL_KEY;
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import groovy.lang.Singleton;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -61,10 +63,11 @@ import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
+import org.eclipse.jgit.transport.RemoteSession;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
@@ -73,7 +76,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
-import software.wings.beans.SettingAttribute;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCheckoutResult;
 import software.wings.beans.yaml.GitCloneResult;
@@ -88,7 +91,6 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.intfc.yaml.GitClient;
 
 import java.io.File;
@@ -112,6 +114,7 @@ import java.util.stream.Stream;
 
 @Singleton
 public class GitClientImpl implements GitClient {
+  private static final String TEMP_SSH_KEY_DIR = "./repository/.ssh";
   private static final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
 
   private static final Logger logger = LoggerFactory.getLogger(GitClientImpl.class);
@@ -965,28 +968,87 @@ public class GitClientImpl implements GitClient {
 
   private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {
     if (!gitConfig.isKeyAuth()) {
-      gitCommand.setCredentialsProvider(getCredentialsProvider(gitConfig));
+      setHttpAuthCredential(gitCommand, gitConfig);
     } else {
-      gitCommand.setTransportConfigCallback(transport -> {
-        SshTransport sshTransport = (SshTransport) transport;
-        sshTransport.setSshSessionFactory(getSshSessionFactory(gitConfig.getSshSettingAttribute()));
-      });
+      setSshAuthCredentials(gitCommand, gitConfig);
     }
     return gitCommand;
   }
 
-  private SshSessionFactory getSshSessionFactory(SettingAttribute settingAttribute) {
+  private void setSshAuthCredentials(TransportCommand gitCommand, GitConfig gitConfig) {
+    String keyPath = null;
+    try {
+      String sshKey = new String(((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue()).getKey());
+
+      keyPath = getTempSshKeyPath(sshKey);
+
+      char[] passphrase = ((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue()).getPassphrase();
+      SshSessionFactory sshSessionFactory = getSshSessionFactory(keyPath, passphrase);
+
+      gitCommand.setTransportConfigCallback(transport -> {
+        SshTransport sshTransport = (SshTransport) transport;
+        sshTransport.setSshSessionFactory(sshSessionFactory);
+      });
+    } catch (Exception e) {
+      if (isNotEmpty(keyPath)) {
+        boolean deleted = new File(keyPath).delete();
+        if (!deleted) {
+          logger.warn("File {} can't be deleted.", keyPath);
+        }
+      }
+      throw new InvalidRequestException("Error setting SSH credentials", e);
+    }
+  }
+
+  private void setHttpAuthCredential(TransportCommand gitCommand, GitConfig gitConfig) {
+    gitCommand.setCredentialsProvider(getCredentialsProvider(gitConfig));
+  }
+
+  private SshSessionFactory getSshSessionFactory(String sshKeyPath, char[] passphrase) {
     return new JschConfigSessionFactory() {
       @Override
-      protected Session createSession(Host hc, String user, String host, int port, FS fs) throws JSchException {
-        SshSessionConfig sshSessionConfig = createSshSessionConfig(settingAttribute, host);
-        sshSessionConfig.setPort(port); // use port from repo URL
-        return getSSHSession(sshSessionConfig);
+      protected void configure(OpenSshConfig.Host host, Session session) {
+        session.setConfig("StrictHostKeyChecking", "no");
       }
 
       @Override
-      protected void configure(Host hc, Session session) {}
+      protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
+        JSch jsch = super.getJSch(hc, fs);
+        jsch.removeAllIdentity();
+        if (isNotEmpty(passphrase)) {
+          jsch.addIdentity(sshKeyPath, new String(passphrase));
+        } else {
+          jsch.addIdentity(sshKeyPath);
+        }
+
+        return jsch;
+      }
+
+      @Override
+      public void releaseSession(RemoteSession session) {
+        super.releaseSession(session);
+        boolean deleted = new File(sshKeyPath).delete();
+        if (!deleted) {
+          logger.warn("File {} can't be deleted.", sshKeyPath);
+        }
+        // TODO: try-catch security exception
+      }
     };
+  }
+
+  private String getTempSshKeyPath(String sshKey) throws IOException {
+    String keyFilePath = TEMP_SSH_KEY_DIR + "/" + UUIDGenerator.generateUuid();
+    File keyFile = new File(keyFilePath);
+
+    File sshDirectory = keyFile.getParentFile();
+    // Ideally we should not be deleting the entire directory. We should delete only the keyFilePath if it exists
+    if (sshDirectory.exists()) {
+      FileIo.deleteDirectoryAndItsContentIfExists(sshDirectory.getAbsolutePath());
+    }
+
+    FileUtils.forceMkdir(sshDirectory);
+    FileUtils.writeStringToFile(keyFile, sshKey, UTF_8);
+    return keyFilePath;
   }
 
   private UsernamePasswordCredentialsProviderWithSkipSslVerify getCredentialsProvider(GitConfig gitConfig) {

@@ -3,7 +3,7 @@ package software.wings.utils;
 import static io.harness.govern.Switch.noop;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
-import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
+import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 import static software.wings.utils.WinRmHelperUtil.buildErrorDetailsFromWinRmClientException;
 
@@ -97,7 +97,7 @@ public class HostValidationServiceImpl implements HostValidationService {
             .withExecutionCredential(executionCredential)
             .withHost(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
             .build();
-    SshSessionConfig sshSessionConfig = createSshSessionConfig("HOST_CONNECTION_TEST", commandExecutionContext);
+    SshSessionConfig sshSessionConfig = getSshSessionConfig("HOST_CONNECTION_TEST", commandExecutionContext, 60);
 
     HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
                                           .withHostName(hostName)

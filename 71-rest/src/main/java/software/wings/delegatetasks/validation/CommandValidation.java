@@ -6,7 +6,7 @@ import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
+import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 
 import com.google.inject.Inject;
 
@@ -94,7 +94,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     }
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     try {
-      SshSessionConfig host_connection_test = createSshSessionConfig("HOST_CONNECTION_TEST", context);
+      SshSessionConfig host_connection_test = getSshSessionConfig("HOST_CONNECTION_TEST", context, 20);
       getSSHSession(host_connection_test).disconnect();
       resultBuilder.validated(true);
     } catch (Exception e) {
