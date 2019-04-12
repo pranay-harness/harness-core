@@ -1,4 +1,4 @@
-directive @dataFetcher(name : String!, contextFieldArgsMap: String) on FIELD_DEFINITION
+directive @dataFetcher(name : String!, contextFieldArgsMap: String, batchLoader: String) on FIELD_DEFINITION
 
 schema {
   query: Query
@@ -140,7 +140,7 @@ type Artifact implements BaseInfo {
     # Debug info useful to troubleshoot issues
     debugInfo: String
     # Application of the artifact
-    application: Application @dataFetcher(name : "application", contextFieldArgsMap: "{ \"appId\": \"appId\"}")
+    application: Application @dataFetcher(name : "application", contextFieldArgsMap: "{ \"appId\": \"appId\"}", batchLoader: "application")
 }
 
 type Application implements BaseInfo {

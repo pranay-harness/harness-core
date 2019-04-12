@@ -37,6 +37,7 @@ import javax.validation.constraints.NotNull;
 public abstract class AbstractDataFetcher<T> implements DataFetcher {
   @NotNull final AuthHandler authHandler;
   @Setter Map<String, String> contextFieldArgsMap;
+  @Getter @Setter String batchedDataLoaderName;
 
   protected boolean isAuthorizedToView(String appId, PermissionAttribute permissionAttribute, String entityId) {
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);

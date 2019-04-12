@@ -10,8 +10,11 @@ import graphql.ExecutionResultImpl;
 import graphql.GraphQL;
 import graphql.GraphqlErrorBuilder;
 import io.swagger.annotations.Api;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
+import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.annotations.PublicApi;
@@ -31,16 +34,20 @@ import javax.ws.rs.core.MediaType;
 @PublicApi
 @Singleton
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLResource {
-  private GraphQL graphQL;
+  GraphQL graphQL;
 
-  private FeatureFlagService featureFlagService;
+  FeatureFlagService featureFlagService;
+
+  DataLoaderRegistryHelper dataLoaderRegistryHelper;
 
   @Inject
-  public GraphQLResource(
-      @NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider, @NotNull FeatureFlagService featureFlagService) {
+  public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
+      @NotNull FeatureFlagService featureFlagService, DataLoaderRegistryHelper dataLoaderRegistryHelper) {
     this.graphQL = queryLanguageProvider.getQL();
     this.featureFlagService = featureFlagService;
+    this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
   }
 
   @POST
@@ -82,6 +89,7 @@ public class GraphQLResource {
         .query(graphQLQuery.getQuery())
         .variables(graphQLQuery.getVariables() == null ? Maps.newHashMap() : graphQLQuery.getVariables())
         .operationName(graphQLQuery.getOperationName())
+        .dataLoaderRegistry(dataLoaderRegistryHelper.getDataLoaderRegistry())
         .build();
   }
 }
