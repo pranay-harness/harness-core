@@ -13,8 +13,6 @@ import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BASTION_HOST;
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
@@ -27,7 +25,6 @@ import io.netty.channel.ConnectTimeoutException;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
@@ -41,18 +38,20 @@ import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Created by anubhaw on 2/23/17.
  */
 public class SshHelperUtil {
-  private static ExecutorType getExecutorType(
-      SettingAttribute hostConnectionSetting, SettingAttribute bastionHostConnectionSetting) {
+  public static ExecutorType getExecutorType(CommandExecutionContext commandExecutionContext) {
     ExecutorType executorType;
-    if (bastionHostConnectionSetting != null) {
+    if (commandExecutionContext.getBastionConnectionAttributes() != null) {
       executorType = BASTION_HOST;
     } else {
-      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) hostConnectionSetting.getValue();
+      SettingAttribute settingAttribute = commandExecutionContext.getHostConnectionAttributes();
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
       AccessType accessType = hostConnectionAttributes.getAccessType();
       if (accessType.equals(AccessType.KEY) || accessType.equals(KEY_SU_APP_USER)
           || accessType.equals(KEY_SUDO_APP_USER)) {
@@ -108,12 +107,10 @@ public class SshHelperUtil {
     return errorConst;
   }
 
-  public static SshSessionConfig createSshSessionConfig(SettingAttribute settingAttribute, String hostName) {
-    Builder builder = aSshSessionConfig().withAccountId(settingAttribute.getAccountId()).withHost(hostName);
-    populateBuilderWithCredentials(builder, settingAttribute, null);
-    return builder.build();
-  }
-  public static SshSessionConfig createSshSessionConfig(String commandName, CommandExecutionContext context) {
+  public static SshSessionConfig getSshSessionConfig(
+      String commandName, CommandExecutionContext context, @Nullable Integer connectTimeoutSeconds) {
+    ExecutorType executorType = getExecutorType(context);
+
     SSHExecutionCredential sshExecutionCredential = (SSHExecutionCredential) context.getExecutionCredential();
 
     String hostName = context.getHost().getPublicDns();
@@ -121,6 +118,7 @@ public class SshHelperUtil {
                           .withAccountId(context.getAccountId())
                           .withAppId(context.getAppId())
                           .withExecutionId(context.getActivityId())
+                          .withExecutorType(executorType)
                           .withHost(hostName)
                           .withCommandUnitName(commandName)
                           .withUserName(sshExecutionCredential.getSshUser())
@@ -128,51 +126,57 @@ public class SshHelperUtil {
                           .withSudoAppName(sshExecutionCredential.getAppAccount())
                           .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword());
 
-    populateBuilderWithCredentials(
-        builder, context.getHostConnectionAttributes(), context.getBastionConnectionAttributes());
-    return builder.build();
-  }
-
-  private static void populateBuilderWithCredentials(
-      Builder builder, SettingAttribute hostConnectionSetting, SettingAttribute bastionHostConnectionSetting) {
-    ExecutorType executorType = getExecutorType(hostConnectionSetting, bastionHostConnectionSetting);
-
-    builder.withExecutorType(executorType);
-    HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) hostConnectionSetting.getValue();
-
     if (executorType.equals(KEY_AUTH)) {
+      SettingAttribute settingAttribute = context.getHostConnectionAttributes();
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
       builder.withKey(hostConnectionAttributes.getKey())
           .withUserName(hostConnectionAttributes.getUserName())
           .withPort(hostConnectionAttributes.getSshPort())
-          .withKeyName(hostConnectionSetting.getUuid())
+          .withKeyName(settingAttribute.getUuid())
           .withPassword(null)
           .withKeyLess(hostConnectionAttributes.isKeyless())
           .withKeyPath(hostConnectionAttributes.getKeyPath())
           .withKeyPassphrase(hostConnectionAttributes.getPassphrase());
-    } else if (KERBEROS.equals(hostConnectionAttributes.getAuthenticationScheme())) {
-      KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
-      builder.withPassword(hostConnectionAttributes.getKerberosPassword())
-          .withAuthenticationScheme(KERBEROS)
-          .withKerberosConfig(kerberosConfig)
-          .withPort(hostConnectionAttributes.getSshPort());
-    } else if (USER_PASSWORD.equals(hostConnectionAttributes.getAccessType())) {
-      builder.withAuthenticationScheme(AuthenticationScheme.SSH_KEY)
-          .withAccessType(hostConnectionAttributes.getAccessType())
-          .withUserName(hostConnectionAttributes.getUserName())
-          .withSshPassword(hostConnectionAttributes.getSshPassword())
-          .withPort(hostConnectionAttributes.getSshPort());
     }
 
-    if (bastionHostConnectionSetting != null) {
-      BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) bastionHostConnectionSetting.getValue();
+    if (context.getBastionConnectionAttributes() != null) {
+      SettingAttribute settingAttribute = context.getBastionConnectionAttributes();
+      BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) settingAttribute.getValue();
       Builder sshSessionConfig = aSshSessionConfig()
                                      .withHost(bastionAttrs.getHostName())
                                      .withKey(bastionAttrs.getKey())
-                                     .withKeyName(bastionHostConnectionSetting.getUuid())
+                                     .withKeyName(settingAttribute.getUuid())
                                      .withUserName(bastionAttrs.getUserName())
                                      .withPort(bastionAttrs.getSshPort())
                                      .withKeyPassphrase(bastionAttrs.getPassphrase());
+      if (connectTimeoutSeconds != null) {
+        sshSessionConfig.withSshConnectionTimeout((int) TimeUnit.SECONDS.toMillis(connectTimeoutSeconds));
+      }
       builder.withBastionHostConfig(sshSessionConfig.build());
     }
+
+    if (context.getHostConnectionAttributes() != null) {
+      SettingAttribute settingAttribute = context.getHostConnectionAttributes();
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+      if (hostConnectionAttributes.getAuthenticationScheme() != null) {
+        if (hostConnectionAttributes.getAuthenticationScheme().equals(
+                HostConnectionAttributes.AuthenticationScheme.KERBEROS)) {
+          KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
+          builder.withPassword(hostConnectionAttributes.getKerberosPassword())
+              .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS)
+              .withKerberosConfig(kerberosConfig)
+              .withPort(hostConnectionAttributes.getSshPort());
+        } else {
+          if (hostConnectionAttributes.getAccessType().equals(AccessType.USER_PASSWORD)) {
+            builder.withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
+                .withAccessType(hostConnectionAttributes.getAccessType())
+                .withUserName(hostConnectionAttributes.getUserName())
+                .withSshPassword(hostConnectionAttributes.getSshPassword())
+                .withPort(hostConnectionAttributes.getSshPort());
+          }
+        }
+      }
+    }
+    return builder.build();
   }
 }
