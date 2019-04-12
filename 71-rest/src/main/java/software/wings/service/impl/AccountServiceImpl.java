@@ -112,7 +112,6 @@ import software.wings.verification.CVConfiguration;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.Clock;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -148,8 +147,7 @@ public class AccountServiceImpl implements AccountService {
       + "--url https://app.harness.io/gateway/gratis/api/webhooks/cmnhGRyXyBP5RJzz8Ae9QP7mqUATVotr7v2knjOf "
       + "-d '{\"application\":\"4qPkwP5dQI2JduECqGZpcg\","
       + "\"parameters\":{\"Environment\":\"%s\",\"delegate\":\"delegate\","
-      + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\",\"expired_after\":\"%d\"}}'";
-  private static final long SAMPLE_DELEGATE_TTL = Duration.ofHours(1).getSeconds();
+      + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\"}}'";
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   @Inject protected AuthService authService;
   @Inject protected CacheHelper cacheHelper;
@@ -591,10 +589,9 @@ public class AccountServiceImpl implements AccountService {
       return err;
     }
 
-    long expiresAtSeconds = clock.instant().plusSeconds(SAMPLE_DELEGATE_TTL).toEpochMilli() / 1000L;
     String script =
         String.format(GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING, mainConfiguration.getSampleTargetEnv(),
-            accountId, KubernetesConvention.getAccountIdentifier(accountId), account.getAccountKey(), expiresAtSeconds);
+            accountId, KubernetesConvention.getAccountIdentifier(accountId), account.getAccountKey());
     Logger scriptLogger = LoggerFactory.getLogger("generate-delegate-" + accountId);
     try {
       ProcessExecutor processExecutor = new ProcessExecutor()
