@@ -87,6 +87,8 @@ public class VerificationConstants {
   public static final String DATA_COLLECTION_TASKS_PER_MINUTE = "data_collection_tasks_per_min";
   public static final String LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_task_queued_time_in_seconds";
+  public static final String LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS =
+      "learning_engine_exp_task_queued_time_in_seconds";
   public static final String IGNORED_ERRORS_METRIC_NAME = "ignored_errors";
 
   public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";

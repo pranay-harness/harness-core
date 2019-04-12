@@ -3,6 +3,7 @@ package io.harness.jobs;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
 
 import com.google.inject.Inject;
@@ -23,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 
 import java.util.concurrent.TimeUnit;
 
@@ -61,6 +63,19 @@ public class VerificationMetricJob implements Job {
         : 0;
     logger.info("Learning Engine task has been queued for {} Seconds", taskQueuedTimeInSeconds);
     metricRegistry.recordGaugeValue(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+
+    // Do the same for experimental
+    LearningEngineExperimentalAnalysisTask lastQueuedExpAnalysisTask =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class, excludeAuthority)
+            .filter("executionStatus", QUEUED)
+            .order(Sort.ascending("createdAt"))
+            .get();
+
+    long taskQueuedTimeInSecondsExp = lastQueuedExpAnalysisTask != null
+        ? TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastQueuedExpAnalysisTask.getCreatedAt())
+        : 0;
+    logger.info("Learning Engine Experimental task has been queued for {} Seconds", taskQueuedTimeInSecondsExp);
+    metricRegistry.recordGaugeValue(LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSecondsExp);
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
