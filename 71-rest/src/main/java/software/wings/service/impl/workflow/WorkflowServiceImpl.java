@@ -1134,7 +1134,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()));
+
+      stateMachine.validate();
+
       wingsPersistence.save(stateMachine);
+
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
 
