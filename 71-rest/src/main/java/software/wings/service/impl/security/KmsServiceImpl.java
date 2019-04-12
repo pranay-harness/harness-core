@@ -150,9 +150,12 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     boolean isLiteAccount = accountService.isAccountLite(accountId);
     if (isLiteAccount) {
       if (isNewKmsConfig) {
-        throw new KmsOperationException("Can't create new KMS secret manager for a Lite account!", USER);
-      } else if (kmsConfig.isDefault() && !getSavedKmsConfig(kmsConfigId).isDefault()) {
-        throw new KmsOperationException("Can't update KMS secret manager to default for a Lite account!", USER);
+        throw new KmsOperationException("Cannot add new KMS Secret Manager in Harness Lite.", USER);
+      }
+      KmsConfig savedKmsConfig = getSavedKmsConfig(kmsConfigId);
+      if ((kmsConfig.isDefault() && !savedKmsConfig.isDefault())
+          || (!kmsConfig.isDefault() && savedKmsConfig.isDefault())) {
+        throw new KmsOperationException("Cannot change default Secret Manager in Harness Lite.", USER);
       }
     }
   }
