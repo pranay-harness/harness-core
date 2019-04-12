@@ -22,6 +22,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.TaskType;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -67,7 +68,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected boolean is24X7Task() {
-    return false;
+    return getTaskType().equals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA.name());
   }
 
   @Override
@@ -125,9 +126,11 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         String delegateTaskId, CustomLogDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;
-      this.logCollectionMinute = dataCollectionInfo.getStartMinute();
-      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-          + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+      this.logCollectionMinute = is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
+                                              : dataCollectionInfo.getStartMinute();
+      this.collectionStartTime = is24X7Task() ? dataCollectionInfo.getStartTime()
+                                              : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
+              + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
       this.taskResult = taskResult;
     }
 
@@ -161,7 +164,8 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         BiMap<String, Object> headersBiMap = resolveDollarReferences(headers);
         BiMap<String, Object> optionsBiMap = resolveDollarReferences(options);
         final long startTime = collectionStartTime;
-        final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1);
+        final long endTime =
+            is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
 
         String resolvedUrl = CustomDataCollectionUtil.resolvedUrl(url, null, startTime, endTime);
         final Call<Object> request =
@@ -228,16 +232,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             }
 
             for (String host : dataCollectionInfo.getHosts()) {
-              // add heartbeat
-              logs.add(LogElement.builder()
-                           .query(dataCollectionInfo.getQuery())
-                           .clusterLabel("-1")
-                           .host(host)
-                           .count(0)
-                           .logMessage("")
-                           .timeStamp(0)
-                           .logCollectionMinute(logCollectionMinute)
-                           .build());
+              addHeartBeat(host, dataCollectionInfo, logCollectionMinute, logs);
             }
 
             boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),

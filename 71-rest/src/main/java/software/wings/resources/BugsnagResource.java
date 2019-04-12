@@ -6,15 +6,19 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import software.wings.common.VerificationConstants;
-import software.wings.security.annotations.LearningEngineAuth;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.security.annotations.DelegateAuth;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
+import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.analysis.LogVerificationService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.Set;
+import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -25,39 +29,52 @@ import javax.ws.rs.QueryParam;
  * @author Praveen
  */
 
-@Api("log-verification")
-@Path("/log-verification")
+@Api("bugsnag")
+@Path("/bugsnag")
 @Produces("application/json")
 public class BugsnagResource {
-  @Inject private LogVerificationService apmVerificationService;
+  private static final Logger logger = LoggerFactory.getLogger(BugsnagResource.class);
+  @Inject private LogVerificationService logVerificationService;
 
   @GET
-  @Path("/bugsnag-applications")
+  @Path("/applications")
   @Timed
   @ExceptionMetered
   public RestResponse<Set<BugsnagApplication>> getBugsnagApplications(@QueryParam("accountId") String accountId,
       @QueryParam("settingId") final String settingId, @QueryParam("organizationId") final String orgId)
       throws IOException {
+    logger.info("Fetching bugsnag Applications for accountId {}, orgId {}", accountId, orgId);
     return new RestResponse<>(
-        apmVerificationService.getOrgProjectListBugsnag(settingId, orgId, StateType.BUG_SNAG, true));
+        logVerificationService.getOrgProjectListBugsnag(settingId, orgId, StateType.BUG_SNAG, true));
   }
 
   @GET
-  @Path("/bugsnag-orgs")
+  @Path("/orgs")
   @Timed
   @ExceptionMetered
   public RestResponse<Set<BugsnagApplication>> getBugsnagOrganizations(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
+    logger.info("Fetching bugsnag Organizations for accountId {}", accountId);
     return new RestResponse<>(
-        apmVerificationService.getOrgProjectListBugsnag(settingId, "", StateType.BUG_SNAG, false));
+        logVerificationService.getOrgProjectListBugsnag(settingId, "", StateType.BUG_SNAG, false));
   }
 
+  /**
+   * API to get log Records based on provided node data.
+   *
+   * @param accountId : account id.
+   * @param bugsnagSetupTestData : configuration details for test node.
+   * @return {@link VerificationNodeDataSetupResponse}
+   */
   @POST
-  @Path(VerificationConstants.NOTIFY_LOG_STATE)
+  @Path(LogAnalysisResource.TEST_NODE_DATA)
   @Timed
-  @LearningEngineAuth
-  public RestResponse<Boolean> sendNotifyForLogAnalysis(
-      @QueryParam("correlationId") String correlationId, LogAnalysisResponse response) {
-    return new RestResponse<>(apmVerificationService.sendNotifyForLogAnalysis(correlationId, response));
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(
+      @QueryParam("accountId") String accountId, @Valid BugsnagSetupTestData bugsnagSetupTestData) {
+    logger.info("Fetching log Records for verification for accountId : " + accountId
+        + " and BugsnagSetupTestData :" + bugsnagSetupTestData);
+    return new RestResponse<>(logVerificationService.getTestLogData(accountId, bugsnagSetupTestData));
   }
 }

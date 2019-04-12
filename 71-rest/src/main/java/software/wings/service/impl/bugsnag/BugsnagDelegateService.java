@@ -6,8 +6,10 @@ import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 public interface BugsnagDelegateService {
   @DelegateTaskType(TaskType.BUGSNAG_GET_APP_TASK)
@@ -16,4 +18,7 @@ public interface BugsnagDelegateService {
   @DelegateTaskType(TaskType.BUGSNAG_GET_APP_TASK)
   Set<BugsnagApplication> getProjects(BugsnagConfig config, String orgId,
       List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog);
+  @DelegateTaskType(TaskType.BUGSNAG_GET_RECORDS)
+  Object search(@NotNull BugsnagConfig config, String accountId, BugsnagSetupTestData bugsnagSetupTestData,
+      List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
 }

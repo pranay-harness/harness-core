@@ -43,6 +43,7 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -104,6 +105,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
         cvValidationService.validateELKQuery(accountId, appId, elkCVConfiguration.getConnectorId(),
             elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex());
+        break;
+      case BUG_SNAG:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), BugsnagCVConfiguration.class);
         break;
 
       default:
@@ -228,6 +232,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) updatedConfig;
         cvValidationService.validateELKQuery(accountId, appId, elkCVConfiguration.getConnectorId(),
             elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex());
+        break;
+      case BUG_SNAG:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), BugsnagCVConfiguration.class);
         break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
@@ -424,6 +431,18 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
         resetBaselineIfNecessary(elkCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
+      case BUG_SNAG:
+        BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
+        updateOperations.set("query", bugsnagCVConfiguration.getQuery())
+            .set("orgId", bugsnagCVConfiguration.getOrgId())
+            .set("projectId", bugsnagCVConfiguration.getProjectId())
+            .set("browserApplication", bugsnagCVConfiguration.isBrowserApplication());
+        if (isNotEmpty(bugsnagCVConfiguration.getReleaseStage())) {
+          updateOperations.set("releaseStage", bugsnagCVConfiguration.getReleaseStage());
+        } else if (isNotEmpty(((BugsnagCVConfiguration) savedConfiguration).getReleaseStage())) {
+          updateOperations.unset("releaseStage");
+        }
+        break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
     }
@@ -508,6 +527,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case SUMO:
       case ELK:
+      case BUG_SNAG:
         return;
 
       default:
