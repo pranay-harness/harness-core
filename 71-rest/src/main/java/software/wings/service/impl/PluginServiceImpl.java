@@ -361,19 +361,19 @@ public class PluginServiceImpl implements PluginService {
                        .withSettingClass(HttpHelmRepoConfig.class)
                        .withAccountId(accountId)
                        .withIsEnabled(true)
-                       .withDisplayName(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.getDisplayName())
-                       .withType(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.name())
+                       .withDisplayName(SettingVariableTypes.HTTP_HELM_REPO.getDisplayName())
+                       .withType(SettingVariableTypes.HTTP_HELM_REPO.name())
                        .withPluginCategories(asList(Artifact))
-                       .withUiSchema(readUiSchema(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.name()))
+                       .withUiSchema(readUiSchema(SettingVariableTypes.HTTP_HELM_REPO.name()))
                        .build());
     pluginList.add(anAccountPlugin()
                        .withSettingClass(AmazonS3HelmRepoConfig.class)
                        .withAccountId(accountId)
                        .withIsEnabled(true)
-                       .withDisplayName(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.getDisplayName())
-                       .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.name())
+                       .withDisplayName(SettingVariableTypes.AMAZON_S3_HELM_REPO.getDisplayName())
+                       .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO.name())
                        .withPluginCategories(asList(Artifact))
-                       .withUiSchema(readUiSchema(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.name()))
+                       .withUiSchema(readUiSchema(SettingVariableTypes.AMAZON_S3_HELM_REPO.name()))
                        .build());
     boolean serviceNowEnabled = featureFlagService.isEnabled(FeatureName.SERVICENOW, accountId);
     if (serviceNowEnabled) {

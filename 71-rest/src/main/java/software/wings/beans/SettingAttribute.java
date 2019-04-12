@@ -4,7 +4,7 @@ import static java.util.Arrays.stream;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
@@ -24,7 +24,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.GCR;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HTTP_HELM_REPO_CONFIG;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HTTP_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JIRA;
 import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
@@ -106,7 +106,7 @@ public class SettingAttribute extends Base {
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
         BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3,
-        GCS, GIT, SMB, JIRA, SFTP, SERVICENOW, HTTP_HELM_REPO_CONFIG, AMAZON_S3_HELM_REPO_CONFIG)),
+        GCS, GIT, SMB, JIRA, SFTP, SERVICENOW, HTTP_HELM_REPO, AMAZON_S3_HELM_REPO)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 

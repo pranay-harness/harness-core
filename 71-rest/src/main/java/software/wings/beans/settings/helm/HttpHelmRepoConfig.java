@@ -18,7 +18,7 @@ import software.wings.settings.SettingValue;
 
 import java.util.Arrays;
 
-@JsonTypeName("HTTP_HELM_REPO_CONFIG")
+@JsonTypeName("HTTP_HELM_REPO")
 @Data
 @Builder
 @ToString(exclude = {"password"})
@@ -35,12 +35,12 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   public HttpHelmRepoConfig() {
-    super(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.name());
+    super(SettingVariableTypes.HTTP_HELM_REPO.name());
   }
 
   public HttpHelmRepoConfig(String accountId, String repoName, String chartRepoUrl, String username,
       final char[] password, String encryptedPassword) {
-    super(SettingVariableTypes.HTTP_HELM_REPO_CONFIG.name());
+    super(SettingVariableTypes.HTTP_HELM_REPO.name());
     this.accountId = accountId;
     this.repoName = repoName;
     this.chartRepoUrl = chartRepoUrl;

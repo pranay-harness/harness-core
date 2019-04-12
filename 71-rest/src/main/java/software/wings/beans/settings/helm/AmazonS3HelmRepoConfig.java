@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 
-@JsonTypeName("AMAZON_S3_HELM_REPO_CONFIG")
+@JsonTypeName("AMAZON_S3_HELM_REPO")
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -28,12 +28,12 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
   @NotEmpty private String region;
 
   public AmazonS3HelmRepoConfig() {
-    super(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.name());
+    super(SettingVariableTypes.AMAZON_S3_HELM_REPO.name());
   }
 
   public AmazonS3HelmRepoConfig(
       String accountId, String connectorId, String repoName, String bucketName, String folderPath, String region) {
-    super(SettingVariableTypes.AMAZON_S3_HELM_REPO_CONFIG.name());
+    super(SettingVariableTypes.AMAZON_S3_HELM_REPO.name());
     this.accountId = accountId;
     this.connectorId = connectorId;
     this.repoName = repoName;
