@@ -5,6 +5,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
 
@@ -90,9 +91,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Test
   @Category(IntegrationTests.class)
   public void testMongoRegisterTentativeAssumptions() {
-    Idempotent tentativeIdempotent = new Idempotent();
-    tentativeIdempotent.setUuid(id.getValue());
-    tentativeIdempotent.setState(TENTATIVE);
+    Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
     wingsPersistence.save(tentativeIdempotent);
 
     Idempotent previousIdempotent = wingsPersistence.findAndModify(idempotentRegistry.query(id),
@@ -106,9 +105,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoRegisterSucceededAssumptions() {
-    Idempotent doneIdempotent = new Idempotent();
-    doneIdempotent.setUuid(id.getValue());
-    doneIdempotent.setState(SUCCEEDED);
+    Idempotent doneIdempotent = Idempotent.builder().uuid(id.getValue()).state(SUCCEEDED).build();
     wingsPersistence.save(doneIdempotent);
 
     assertThatThrownBy(()
@@ -127,28 +124,24 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
         MongoIdempotentRegistry.unregisterOptions);
-    assertEquals(null, wingsPersistence.get(Idempotent.class, id.getValue()));
+    assertNull(wingsPersistence.get(Idempotent.class, id.getValue()));
   }
 
   @Test
   @Category(IntegrationTests.class)
   public void testMongoUnregisterTentativeAssumptions() {
-    Idempotent tentativeIdempotent = new Idempotent();
-    tentativeIdempotent.setUuid(id.getValue());
-    tentativeIdempotent.setState(TENTATIVE);
+    Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
     wingsPersistence.save(tentativeIdempotent);
 
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
         MongoIdempotentRegistry.unregisterOptions);
-    assertEquals(null, wingsPersistence.get(Idempotent.class, id.getValue()));
+    assertNull(wingsPersistence.get(Idempotent.class, id.getValue()));
   }
 
   @Test
   @Category(IntegrationTests.class)
   public void testMongoUnregisterSucceededAssumptions() {
-    Idempotent doneIdempotent = new Idempotent();
-    doneIdempotent.setUuid(id.getValue());
-    doneIdempotent.setState(SUCCEEDED);
+    Idempotent doneIdempotent = Idempotent.builder().uuid(id.getValue()).state(SUCCEEDED).build();
     wingsPersistence.save(doneIdempotent);
 
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
