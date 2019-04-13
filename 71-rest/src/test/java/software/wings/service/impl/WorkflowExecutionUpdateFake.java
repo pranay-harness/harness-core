@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.sm.ExecutionContext;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class WorkflowExecutionUpdateFake extends WorkflowExecutionUpdate {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdateFake.class);
 
-  private static Map<String, CountDownLatch> signalIdsMap = new HashMap<>();
+  private static Map<String, CountDownLatch> signalIdsMap = new ConcurrentHashMap<>();
 
   private String signalId;
 
