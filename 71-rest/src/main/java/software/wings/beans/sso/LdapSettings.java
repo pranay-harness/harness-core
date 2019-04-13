@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "LdapSettingsKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapSettings extends SSOSettings {
   @NotBlank String accountId;

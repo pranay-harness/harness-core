@@ -232,7 +232,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             }
 
             for (String host : dataCollectionInfo.getHosts()) {
-              addHeartBeat(host, dataCollectionInfo, logCollectionMinute, logs);
+              addHeartbeat(host, dataCollectionInfo, logCollectionMinute, logs);
             }
 
             boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),

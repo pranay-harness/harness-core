@@ -10,8 +10,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
-import static software.wings.beans.Account.COMPANY_NAME_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -55,6 +53,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
@@ -383,7 +382,8 @@ public class AccountServiceImpl implements AccountService {
     String suggestedAccountName = accountName;
     Random rand = new Random();
     do {
-      Account res = wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, suggestedAccountName).get();
+      Account res =
+          wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, suggestedAccountName).get();
       if (res == null) {
         return suggestedAccountName;
       }
@@ -394,7 +394,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean exists(String accountName) {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
-               .field(ACCOUNT_NAME_KEY)
+               .field(AccountKeys.accountName)
                .equal(accountName)
                .getKey()
         != null;
@@ -458,7 +458,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account getByName(String companyName) {
-    return wingsPersistence.createQuery(Account.class).filter("companyName", companyName).get();
+    return wingsPersistence.createQuery(Account.class).filter(AccountKeys.companyName, companyName).get();
   }
 
   @Override
@@ -513,8 +513,8 @@ public class AccountServiceImpl implements AccountService {
   public List<Account> listAllAccountWithDefaultsWithoutLicenseInfo() {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
         .project(ID_KEY, true)
-        .project(ACCOUNT_NAME_KEY, true)
-        .project(COMPANY_NAME_KEY, true)
+        .project(AccountKeys.accountName, true)
+        .project(AccountKeys.companyName, true)
         .filter(APP_ID_KEY, GLOBAL_APP_ID)
         .asList();
   }
@@ -529,14 +529,14 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account getByAccountName(String accountName) {
-    return wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, accountName).get();
+    return wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, accountName).get();
   }
 
   @Override
   public Account getAccountWithDefaults(String accountId) {
     Account account = wingsPersistence.createQuery(Account.class)
-                          .project(ACCOUNT_NAME_KEY, true)
-                          .project(COMPANY_NAME_KEY, true)
+                          .project(AccountKeys.accountName, true)
+                          .project(AccountKeys.companyName, true)
                           .filter(ID_KEY, accountId)
                           .get();
     if (account != null) {

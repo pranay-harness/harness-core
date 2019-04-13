@@ -184,7 +184,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     return COLLECTION_PERIOD_MINS;
   }
 
-  protected void addHeartBeat(String host, LogDataCollectionInfo logDataCollectionInfo, long logCollectionMinute,
+  protected void addHeartbeat(String host, LogDataCollectionInfo logDataCollectionInfo, long logCollectionMinute,
       List<LogElement> logElements) {
     if (!is24X7Task()) {
       logElements.add(LogElement.builder()
@@ -197,16 +197,16 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
                           .logCollectionMinute(logCollectionMinute)
                           .build());
     } else {
-      for (long heartBeatMin = TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getStartTime());
-           heartBeatMin <= TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getEndTime()); heartBeatMin++) {
+      for (long heartbeatMin = TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getStartTime());
+           heartbeatMin <= TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getEndTime()); heartbeatMin++) {
         logElements.add(LogElement.builder()
                             .query(logDataCollectionInfo.getQuery())
                             .clusterLabel("-3")
                             .host(host)
                             .count(0)
                             .logMessage("")
-                            .timeStamp(TimeUnit.MINUTES.toMillis(heartBeatMin))
-                            .logCollectionMinute((int) heartBeatMin)
+                            .timeStamp(TimeUnit.MINUTES.toMillis(heartbeatMin))
+                            .logCollectionMinute((int) heartbeatMin)
                             .build());
       }
     }
