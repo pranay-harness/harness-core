@@ -41,7 +41,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.common.Constants;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
@@ -129,11 +128,17 @@ public class WingsPersistenceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldQueryListObjectByINOperator() {
-    TestEntityB b11 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b11"));
-    TestEntityB b12 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b12"));
-    TestEntityB b21 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b21"));
-    TestEntityB b22 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b22"));
-    TestEntityB b31 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b31"));
+    TestEntityB b11 = new TestEntityB("b11");
+    wingsPersistence.save(b11);
+    TestEntityB b12 = new TestEntityB("b12");
+    wingsPersistence.save(b12);
+    TestEntityB b21 = new TestEntityB("b21");
+    wingsPersistence.save(b21);
+    TestEntityB b22 = new TestEntityB("b22");
+    wingsPersistence.save(b22);
+    TestEntityB b31 = new TestEntityB("b31");
+    wingsPersistence.save(b31);
+
     TestEntity entity = new TestEntity();
     entity.setTestEntityBList(Lists.newArrayList(b11, b12));
     wingsPersistence.save(entity);
@@ -357,7 +362,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     TestEntity entity1 = wingsPersistence.get(TestEntity.class, entity.getUuid());
 
     Map<String, String> map2 = new HashMap<>();
-    map2.put("abcd", "1234");
+    map2.put("abc2", "1234");
 
     Map fieldMap = new HashMap<>();
     fieldMap.put("mapField", map2);
@@ -388,7 +393,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     UpdateOperations<TestEntity> operations = wingsPersistence.createUpdateOperations(TestEntity.class);
     operations.set("mapField.abc", "1234");
-    operations.set("mapField.abcd", "2345");
+    operations.set("mapField.abc2", "2345");
     operations.unset("mapField.def");
 
     wingsPersistence.update(query, operations);
@@ -397,7 +402,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(entity2.getMapField())
         .isNotNull()
         .containsEntry("abc", "1234")
-        .containsEntry("abcd", "2345")
+        .containsEntry("abc2", "2345")
         .doesNotContainKeys("def");
   }
 
@@ -576,7 +581,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                         .jenkinsUrl("https://jenkins.wings.software")
                                         .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                         .username("wingsbuild")
-                                        .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                        .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
                                         .password(password.toCharArray())
                                         .build();
       SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -618,7 +623,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                             .withValue(jenkinsConfig)
                                             .build();
     String settingId = wingsPersistence.save(settingAttribute);
-    char[] newPassword = "newpass".toCharArray();
+    char[] newPassword = "newPass".toCharArray();
     jenkinsConfig.setPassword(newPassword);
     settingAttribute.setValue(jenkinsConfig);
     wingsPersistence.updateField(SettingAttribute.class, settingId, "value", jenkinsConfig);

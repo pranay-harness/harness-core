@@ -26,7 +26,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.common.Constants;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
@@ -115,7 +114,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
                                                    .accountId(ACCOUNT_ID)
                                                    .password(password.toCharArray())
                                                    .token(token.toCharArray())
-                                                   .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                                   .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
                                                    .build())
                                     .withUsageRestrictions(usageRestrictions)
                                     .build());

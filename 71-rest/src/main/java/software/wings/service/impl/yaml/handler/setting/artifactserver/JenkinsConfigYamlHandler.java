@@ -9,7 +9,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.common.Constants;
 
 import java.util.List;
 
@@ -42,7 +41,7 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     if (isEmpty(yaml.getAuthMechanism())) {
-      yaml.setAuthMechanism(Constants.USERNAME_PASSWORD_FIELD);
+      yaml.setAuthMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD);
     }
 
     JenkinsConfig config = JenkinsConfig.builder()

@@ -78,10 +78,11 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
       assertTrue(e instanceof HarnessException);
     }
 
-    changeContext = aChangeContext()
-                        .withYaml(VerificationYaml.builder().authMechanism(Constants.USERNAME_PASSWORD_FIELD).build())
-                        .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
-                        .build();
+    changeContext =
+        aChangeContext()
+            .withYaml(VerificationYaml.builder().authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD).build())
+            .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
+            .build();
     try {
       yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
@@ -126,7 +127,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
                                                    .accountId(ACCOUNT_ID)
                                                    .password(password.toCharArray())
                                                    .token(token.toCharArray())
-                                                   .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                                   .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
                                                    .build())
                                     .build());
   }
