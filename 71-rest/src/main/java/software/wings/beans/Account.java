@@ -11,6 +11,7 @@ import io.harness.validation.Create;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -27,16 +28,10 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by peeyushaggarwal on 10/11/16.
- */
+@FieldNameConstants(innerTypeName = "AccountKeys")
 @HarnessExportableEntity
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
-  public static final String ACCOUNT_ID_KEY = "accountId";
-  public static final String ACCOUNT_NAME_KEY = "accountName";
-  public static final String COMPANY_NAME_KEY = "companyName";
-
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @NotNull private String companyName;

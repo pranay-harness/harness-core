@@ -586,7 +586,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           logger.error(errorMsg);
           throw new WingsException(errorMsg);
         }
-        // HeartBeat
+        // Heartbeat
         int heartbeatCounter = 0;
         records.put(HARNESS_HEARTBEAT_METRIC_NAME + group, (long) heartbeatCounter++,
             NewRelicMetricDataRecord.builder()

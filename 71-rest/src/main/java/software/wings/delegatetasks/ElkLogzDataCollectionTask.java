@@ -192,7 +192,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               /**
                * Heart beat.
                */
-              addHeartBeat(hostName, dataCollectionInfo, logCollectionMinute, logElements);
+              addHeartbeat(hostName, dataCollectionInfo, logCollectionMinute, logElements);
               boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),
                   dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
                   dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),

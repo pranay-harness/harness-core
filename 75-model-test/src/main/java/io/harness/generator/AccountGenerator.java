@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
-import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.User.Builder.anUser;
@@ -32,6 +31,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
@@ -115,7 +115,7 @@ public class AccountGenerator {
   }
 
   public Account exists(Account account) {
-    return wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, account.getAccountName()).get();
+    return wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, account.getAccountName()).get();
   }
 
   public Account ensureGenericTest() {
@@ -214,7 +214,7 @@ public class AccountGenerator {
     UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
     accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName(secretName)));
     wingsPersistence.update(
-        wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, account.getAccountName()),
+        wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, account.getAccountName()),
         accountUpdateOperations);
   }
 

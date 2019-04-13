@@ -7,7 +7,6 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 import static org.mongodb.morphia.aggregation.Projection.projection;
-import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 
@@ -22,6 +21,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -85,7 +85,7 @@ public class UsageMetricsHelper {
 
   public List<Account> listAllAccountsWithDefaults() {
     PageRequest<Account> pageRequest = aPageRequest()
-                                           .addFieldsIncluded(ID_KEY, ACCOUNT_NAME_KEY)
+                                           .addFieldsIncluded(ID_KEY, AccountKeys.accountName)
                                            .addFilter(APP_ID_KEY, Operator.EQ, GLOBAL_APP_ID)
                                            .build();
     return wingsPersistence.getAllEntities(pageRequest, () -> wingsPersistence.query(Account.class, pageRequest));
