@@ -7,6 +7,7 @@ import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
+import static software.wings.beans.PluginCategory.HelmRepo;
 import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
@@ -363,7 +364,7 @@ public class PluginServiceImpl implements PluginService {
                        .withIsEnabled(true)
                        .withDisplayName(SettingVariableTypes.HTTP_HELM_REPO.getDisplayName())
                        .withType(SettingVariableTypes.HTTP_HELM_REPO.name())
-                       .withPluginCategories(asList(Artifact))
+                       .withPluginCategories(asList(HelmRepo))
                        .withUiSchema(readUiSchema(SettingVariableTypes.HTTP_HELM_REPO.name()))
                        .build());
     pluginList.add(anAccountPlugin()
@@ -372,7 +373,7 @@ public class PluginServiceImpl implements PluginService {
                        .withIsEnabled(true)
                        .withDisplayName(SettingVariableTypes.AMAZON_S3_HELM_REPO.getDisplayName())
                        .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO.name())
-                       .withPluginCategories(asList(Artifact))
+                       .withPluginCategories(asList(HelmRepo))
                        .withUiSchema(readUiSchema(SettingVariableTypes.AMAZON_S3_HELM_REPO.name()))
                        .build());
     boolean serviceNowEnabled = featureFlagService.isEnabled(FeatureName.SERVICENOW, accountId);

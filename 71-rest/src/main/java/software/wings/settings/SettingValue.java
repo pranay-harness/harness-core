@@ -281,9 +281,9 @@ public abstract class SettingValue {
 
     INFRASTRUCTURE_MAPPING,
 
-    HTTP_HELM_REPO("Http Helm Repo"),
+    HTTP_HELM_REPO("HTTP Helm Repository"),
 
-    AMAZON_S3_HELM_REPO("Amazon S3 Helm Repo");
+    AMAZON_S3_HELM_REPO("Amazon S3 Helm Repository");
 
     @Getter private String displayName;
 

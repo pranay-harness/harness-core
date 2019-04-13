@@ -9,6 +9,7 @@ import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
+import static software.wings.beans.PluginCategory.HelmRepo;
 import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
@@ -326,7 +327,7 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName(SettingVariableTypes.HTTP_HELM_REPO.getDisplayName())
                 .withType(SettingVariableTypes.HTTP_HELM_REPO.name())
-                .withPluginCategories(asList(Artifact))
+                .withPluginCategories(asList(HelmRepo))
                 .build(),
             anAccountPlugin()
                 .withSettingClass(AmazonS3HelmRepoConfig.class)
@@ -334,7 +335,7 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName(SettingVariableTypes.AMAZON_S3_HELM_REPO.getDisplayName())
                 .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO.name())
-                .withPluginCategories(asList(Artifact))
+                .withPluginCategories(asList(HelmRepo))
                 .build());
   }
 
