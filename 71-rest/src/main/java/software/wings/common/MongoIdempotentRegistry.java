@@ -23,6 +23,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Idempotent;
+import software.wings.beans.Idempotent.IdempotentKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.sql.Date;
@@ -40,8 +41,8 @@ public class MongoIdempotentRegistry<T extends IdempotentResult> implements Idem
 
   public UpdateOperations<Idempotent> registerUpdateOperation(Duration ttl) {
     return wingsPersistence.createUpdateOperations(Idempotent.class)
-        .set(Idempotent.STATE_KEY, TENTATIVE)
-        .set(Idempotent.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
+        .set(IdempotentKeys.state, TENTATIVE)
+        .set(IdempotentKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
   }
 
   public UpdateOperations<Idempotent> unregisterUpdateOperation() {
@@ -60,8 +61,9 @@ public class MongoIdempotentRegistry<T extends IdempotentResult> implements Idem
 
   public Query<Idempotent> query(IdempotentId id) {
     return wingsPersistence.createQuery(Idempotent.class)
-        .filter(Idempotent.ID_KEY, id.getValue())
-        .filter("state !=", SUCCEEDED);
+        .filter(IdempotentKeys.uuid, id.getValue())
+        .field(IdempotentKeys.state)
+        .notEqual(SUCCEEDED);
   }
 
   @Override
@@ -98,10 +100,8 @@ public class MongoIdempotentRegistry<T extends IdempotentResult> implements Idem
 
   @Override
   public <T extends IdempotentResult> void finish(IdempotentId id, T data) {
-    Idempotent newIdempotent = new Idempotent();
-    newIdempotent.setUuid(id.getValue());
-    newIdempotent.setState(SUCCEEDED);
-    newIdempotent.setResult(singletonList(data));
+    Idempotent newIdempotent =
+        Idempotent.builder().uuid(id.getValue()).state(SUCCEEDED).result(singletonList(data)).build();
     wingsPersistence.save(newIdempotent);
   }
 }
