@@ -303,6 +303,8 @@ PLUGIN_CATEGORY:
       value: APP_DYNAMICS
     - name: Source Repository
       value: SourceRepo
+    - name: Helm Repository
+      value: HelmRepo
 
 CLOUD_PROVIDERS:
     - name: Google Cloud Platform
@@ -512,3 +514,9 @@ TEMPLATE_TYPE:
       value: SSH
     - name: HTTP
       value: HTTP
+
+HELM_REPO:
+    - name: HTTP Helm Repository
+      value: HTTP_HELM_REPO
+    - name: Amazon S3 Helm Repository
+      value: AMAZON_S3_HELM_REPO

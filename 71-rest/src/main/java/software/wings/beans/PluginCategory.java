@@ -10,5 +10,6 @@ public enum PluginCategory {
   CloudProvider,
   ConnectionAttributes,
   LoadBalancer,
-  SourceRepo
+  SourceRepo,
+  HelmRepo
 }
