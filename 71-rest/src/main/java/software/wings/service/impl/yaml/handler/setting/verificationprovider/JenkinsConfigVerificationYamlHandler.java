@@ -9,7 +9,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.common.Constants;
 
 import java.util.List;
 
@@ -43,7 +42,7 @@ public class JenkinsConfigVerificationYamlHandler
     String accountId = changeContext.getChange().getAccountId();
 
     if (isEmpty(yaml.getAuthMechanism())) {
-      yaml.setAuthMechanism(Constants.USERNAME_PASSWORD_FIELD);
+      yaml.setAuthMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD);
     }
     JenkinsConfig config = JenkinsConfig.builder()
                                .accountId(accountId)

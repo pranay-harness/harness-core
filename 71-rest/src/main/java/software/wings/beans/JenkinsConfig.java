@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static software.wings.common.Constants.TOKEN_FIELD;
-import static software.wings.common.Constants.USERNAME_PASSWORD_FIELD;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -30,15 +29,14 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 5/26/16.
- */
 @JsonTypeName("JENKINS")
 @Data
 @ToString(exclude = {"password", "token"})
 @EqualsAndHashCode(callSuper = false)
 public class JenkinsConfig
     extends SettingValue implements EncryptableSetting, ArtifactSourceable, ExecutionCapabilityDemander {
+  public static final String USERNAME_PASSWORD_FIELD = "UserName/Password";
+
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
   @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_PASSWORD_FIELD, TOKEN_FIELD})
   @NotEmpty

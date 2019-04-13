@@ -42,7 +42,6 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.SettingsService;
@@ -317,7 +316,7 @@ public class SettingGenerator {
                            .jenkinsUrl("https://jenkinsint.harness.io")
                            .username("wingsbuild")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
-                           .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                           .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();

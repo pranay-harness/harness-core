@@ -29,7 +29,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.NexusConfig;
-import software.wings.common.Constants;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -74,7 +73,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                             .jenkinsUrl(JENKINS_URL)
                                             .username(JENKINS_USERNAME)
                                             .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
-                                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                            .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
                                             .build())
                              .build(),
                       APPLICATION_JSON),
@@ -102,7 +101,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                             .jenkinsUrl("BAD_URL")
                                             .username(JENKINS_USERNAME)
                                             .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
-                                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                            .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
                                             .build())
                              .build(),
                 APPLICATION_JSON));
