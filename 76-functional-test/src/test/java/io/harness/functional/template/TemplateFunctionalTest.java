@@ -140,7 +140,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
                             .appId(Application.GLOBAL_APP_ID)
-                            .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                            .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
 
@@ -204,7 +204,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                    .templateObject(shellScriptTemplate)
                    .folderId(parentFolder.getUuid())
                    .appId(Application.GLOBAL_APP_ID)
-                   .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                   .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                    .version(savedTemplate.getVersion())
                    .build();
     savedTemplateResponse = Setup.portal()
@@ -270,7 +270,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
                             .appId(Application.GLOBAL_APP_ID)
-                            .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                            .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
 
@@ -330,7 +330,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                    .templateObject(shellScriptTemplate)
                    .folderId(parentFolder.getUuid())
                    .appId(Application.GLOBAL_APP_ID)
-                   .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                   .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                    .version(savedTemplate.getVersion())
                    .build();
 
@@ -416,7 +416,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
                             .appId(Application.GLOBAL_APP_ID)
-                            .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                            .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
 

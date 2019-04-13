@@ -211,13 +211,12 @@ public class CommandStateTest extends WingsBaseTest {
 
   private AbstractCommandUnit commandUnit =
       anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("rm -f $HOME/jetty").build();
-  private Command command =
-      aCommand()
-          .withName(COMMAND_NAME)
-          .addCommandUnits(commandUnit)
-          .withTemplateVariables(asList(aVariable().withName("var1").withValue("var1Value").build(),
-              aVariable().withName("var2").withValue("var2Value").build()))
-          .build();
+  private Command command = aCommand()
+                                .withName(COMMAND_NAME)
+                                .addCommandUnits(commandUnit)
+                                .withTemplateVariables(asList(aVariable().name("var1").value("var1Value").build(),
+                                    aVariable().name("var2").value("var2Value").build()))
+                                .build();
   @Mock ArtifactStream artifactStream;
   @Inject private ExecutorService executorService;
 

@@ -482,7 +482,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSavePipelineWebhookTriggerNoArtifactSelections() {
     setPipelineStages(pipeline);
-    pipeline.getPipelineVariables().add(aVariable().withName("MyVar").build());
+    pipeline.getPipelineVariables().add(aVariable().name("MyVar").build());
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
     Trigger trigger = triggerService.save(webhookConditionTrigger);
@@ -505,9 +505,9 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSavePipelineWebhookTriggerWithArtifactSelections() {
     setPipelineStages(pipeline);
-    pipeline.getPipelineVariables().add(aVariable().withName("MyVar").build());
+    pipeline.getPipelineVariables().add(aVariable().name("MyVar").build());
 
-    pipeline.getPipelineVariables().add(aVariable().withName("MyVar").build());
+    pipeline.getPipelineVariables().add(aVariable().name("MyVar").build());
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
     setWebhookArtifactSelections();
 
@@ -1089,7 +1089,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void shouldTriggerTemplateWorkflowExecution() {
     Workflow workflow = buildWorkflow();
     workflow.getOrchestrationWorkflow().getUserVariables().add(
-        aVariable().withName("Environment").withValue(ENV_ID).withEntityType(ENVIRONMENT).build());
+        aVariable().name("Environment").value(ENV_ID).entityType(ENVIRONMENT).build());
 
     workflowArtifactConditionTrigger.setArtifactSelections(
         asList(ArtifactSelection.builder().serviceId(SERVICE_ID).type(ARTIFACT_SOURCE).build(),
@@ -1573,7 +1573,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldListPipelineWebhookParameters() {
     setPipelineStages(pipeline);
-    pipeline.getPipelineVariables().add(aVariable().withName("MyVar").build());
+    pipeline.getPipelineVariables().add(aVariable().name("MyVar").build());
 
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
@@ -1765,11 +1765,10 @@ public class TriggerServiceTest extends WingsBaseTest {
             .build()));
 
     workflow.getOrchestrationWorkflow().getUserVariables().add(
-        aVariable().withEntityType(ENVIRONMENT).withName("Environment").build());
+        aVariable().entityType(ENVIRONMENT).name("Environment").build());
+    workflow.getOrchestrationWorkflow().getUserVariables().add(aVariable().entityType(SERVICE).name("Service").build());
     workflow.getOrchestrationWorkflow().getUserVariables().add(
-        aVariable().withEntityType(SERVICE).withName("Service").build());
-    workflow.getOrchestrationWorkflow().getUserVariables().add(
-        aVariable().withEntityType(INFRASTRUCTURE_MAPPING).withName("ServiceInfra_Ssh").build());
+        aVariable().entityType(INFRASTRUCTURE_MAPPING).name("ServiceInfra_Ssh").build());
     when(workflowService.readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
@@ -1803,9 +1802,9 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     final Pipeline pipeline = Pipeline.builder().appId(APP_ID).uuid(PIPELINE_ID).build();
 
-    pipeline.getPipelineVariables().add(aVariable().withEntityType(ENVIRONMENT).withName("ENV").build());
-    pipeline.getPipelineVariables().add(aVariable().withEntityType(SERVICE).withName("SERVICE").build());
-    pipeline.getPipelineVariables().add(aVariable().withEntityType(INFRASTRUCTURE_MAPPING).withName("INFRA").build());
+    pipeline.getPipelineVariables().add(aVariable().entityType(ENVIRONMENT).name("ENV").build());
+    pipeline.getPipelineVariables().add(aVariable().entityType(SERVICE).name("SERVICE").build());
+    pipeline.getPipelineVariables().add(aVariable().entityType(INFRASTRUCTURE_MAPPING).name("INFRA").build());
 
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 

@@ -8,11 +8,6 @@ import static software.wings.beans.EntityType.valueOf;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.ENTITY;
 import static software.wings.beans.VariableType.TEXT;
-import static software.wings.common.Constants.ARTIFACT_TYPE;
-import static software.wings.common.Constants.ENTITY_TYPE;
-import static software.wings.common.Constants.PARENT_FIELDS;
-import static software.wings.common.Constants.RELATED_FIELD;
-import static software.wings.common.Constants.STATE_TYPE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -22,7 +17,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.Variable.VariableBuilder;
-import software.wings.common.Constants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.State;
@@ -177,14 +171,14 @@ public abstract class OrchestrationWorkflow {
       String relatedField = null;
       Map<String, Object> metadata = templateExpression.getMetadata();
       if (metadata != null) {
-        if (metadata.get(ENTITY_TYPE) != null) {
-          entityType = valueOf((String) metadata.get(ENTITY_TYPE));
+        if (metadata.get(Variable.ENTITY_TYPE) != null) {
+          entityType = valueOf((String) metadata.get(Variable.ENTITY_TYPE));
         }
-        if (metadata.get(ARTIFACT_TYPE) != null) {
-          artifactType = (String) metadata.get(ARTIFACT_TYPE);
+        if (metadata.get(Variable.ARTIFACT_TYPE) != null) {
+          artifactType = (String) metadata.get(Variable.ARTIFACT_TYPE);
         }
-        if (metadata.get(RELATED_FIELD) != null) {
-          relatedField = (String) metadata.get(RELATED_FIELD);
+        if (metadata.get(Variable.RELATED_FIELD) != null) {
+          relatedField = (String) metadata.get(Variable.RELATED_FIELD);
         }
       }
 
@@ -207,16 +201,16 @@ public abstract class OrchestrationWorkflow {
           state == null ? null : state.parentTemplateFields(templateExpression.getFieldName());
       if (variable == null) {
         VariableBuilder variableBuilder = aVariable()
-                                              .withName(expression)
-                                              .withEntityType(entityType)
-                                              .withArtifactType(artifactType)
-                                              .withRelatedField(relatedField)
-                                              .withType(entityType != null ? ENTITY : TEXT)
-                                              .withMandatory(entityType != null);
+                                              .name(expression)
+                                              .entityType(entityType)
+                                              .artifactType(artifactType)
+                                              .relatedField(relatedField)
+                                              .type(entityType != null ? ENTITY : TEXT)
+                                              .mandatory(entityType != null);
 
-        variableBuilder.withParentFields(parentTemplateFields);
+        variableBuilder.parentFields(parentTemplateFields);
         if (isNotEmpty(stateType)) {
-          variableBuilder.withStateType(stateType);
+          variableBuilder.stateType(stateType);
         }
         // Set the description
         variable = variableBuilder.build();
@@ -227,21 +221,21 @@ public abstract class OrchestrationWorkflow {
         if (variableMetadata == null) {
           variableMetadata = new HashMap<>();
         }
-        variableMetadata.put(ENTITY_TYPE, entityType);
+        variableMetadata.put(Variable.ENTITY_TYPE, entityType);
         if (isNotEmpty(artifactType)) {
-          variableMetadata.put(ARTIFACT_TYPE, artifactType);
+          variableMetadata.put(Variable.ARTIFACT_TYPE, artifactType);
         }
         if (isNotEmpty(relatedField)) {
-          variableMetadata.put(RELATED_FIELD, relatedField);
+          variableMetadata.put(Variable.RELATED_FIELD, relatedField);
         }
         if (ENVIRONMENT != entityType && isNotEmpty(stateType)) {
-          variableMetadata.put(STATE_TYPE, stateType);
+          variableMetadata.put(Variable.STATE_TYPE, stateType);
         }
         variable.setMandatory(entityType != null);
         if (isEmpty(parentTemplateFields)) {
-          variableMetadata.remove(Constants.PARENT_FIELDS);
+          variableMetadata.remove(Variable.PARENT_FIELDS);
         } else {
-          variableMetadata.put(PARENT_FIELDS, parentTemplateFields);
+          variableMetadata.put(Variable.PARENT_FIELDS, parentTemplateFields);
         }
         setVariableDescription(variable, name);
       }

@@ -237,8 +237,8 @@ public class TemplateHelper {
   public static List<Variable> convertToEntityVariables(List<NameValuePair> entityTemplateVariables) {
     List<Variable> templateVariables = new ArrayList<>();
     if (isNotEmpty(entityTemplateVariables)) {
-      entityTemplateVariables.forEach(variable
-          -> templateVariables.add(aVariable().withName(variable.getName()).withValue(variable.getValue()).build()));
+      entityTemplateVariables.forEach(
+          variable -> templateVariables.add(aVariable().name(variable.getName()).value(variable.getValue()).build()));
     }
     return templateVariables;
   }

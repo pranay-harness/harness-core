@@ -78,8 +78,8 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
                             .appId(GLOBAL_APP_ID)
                             .accountId(GLOBAL_ACCOUNT_ID)
                             .name("Enable Instance")
-                            .variables(asList(aVariable().withType(TEXT).withName("Url").withMandatory(true).build(),
-                                aVariable().withType(TEXT).withName("Header").withMandatory(true).build()))
+                            .variables(asList(aVariable().type(TEXT).name("Url").mandatory(true).build(),
+                                aVariable().type(TEXT).name("Header").mandatory(true).build()))
                             .build();
     Template savedTemplate = templateService.save(template);
     assertSavedTemplate(template, savedTemplate);
@@ -211,8 +211,8 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
         .appId(appId)
         .accountId(GLOBAL_ACCOUNT_ID)
         .name("Enable Instance")
-        .variables(asList(aVariable().withType(TEXT).withName("Url").withMandatory(true).build(),
-            aVariable().withType(TEXT).withName("Header").withMandatory(true).build()))
+        .variables(asList(aVariable().type(TEXT).name("Url").mandatory(true).build(),
+            aVariable().type(TEXT).name("Header").mandatory(true).build()))
         .build();
   }
 

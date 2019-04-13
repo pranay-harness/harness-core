@@ -60,8 +60,6 @@ public class Activity
   @NotEmpty private String commandName;
   @Default @NotNull private List<CommandUnit> commandUnits = new ArrayList<>();
   private Map<String, Integer> commandNameVersionMap;
-  // TODO: remove
-  @Deprecated private Map<String, String> serviceVariables;
   private String commandType;
   private String serviceId;
   private String serviceName;

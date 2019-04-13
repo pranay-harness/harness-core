@@ -485,31 +485,9 @@ public interface Constants {
   String WHITELIST_CACHE = "whitelistCache";
 
   /**
-   * Template expression constants
-   */
-  String ENTITY_TYPE = "entityType";
-  /**
-   * The constant ARTIFACT_TYPE.
-   */
-  String ARTIFACT_TYPE = "artifactType";
-  /**
-   * The constant RELATED_FIELD.
-   */
-  String RELATED_FIELD = "relatedField";
-  /**
-   * The constant STATE_TYPE.
-   */
-  String STATE_TYPE = "stateType";
-
-  /**
    * The constant GIT_USER.
    */
   String GIT_USER = "git";
-
-  /**
-   * The constant STATE_TYPE.
-   */
-  String PARENT_FIELDS = "parentFields";
 
   String DEPLOYMENT_TYPE_FIELD = "deploymentType";
 

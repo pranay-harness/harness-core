@@ -131,7 +131,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
         .accountId(GLOBAL_ACCOUNT_ID)
         .templateObject(commandTemplate)
         .appId(GLOBAL_APP_ID)
-        .variables(asList(aVariable().withName("MyVar").withValue("MyValue").build()))
+        .variables(asList(aVariable().name("MyVar").value("MyValue").build()))
         .build();
   }
 
@@ -146,8 +146,8 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
 
     savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
 
-    savedTemplate.setVariables(asList(aVariable().withName("MyVar").withValue("MyValue").build(),
-        aVariable().withName("MySecondVar").withValue("MySecondValue").build()));
+    savedTemplate.setVariables(asList(aVariable().name("MyVar").value("MyValue").build(),
+        aVariable().name("MySecondVar").value("MySecondValue").build()));
     savedTemplate.setName("Another Template");
     Template updatedTemplate = templateService.update(savedTemplate);
     assertThat(updatedTemplate).isNotNull();
@@ -188,8 +188,8 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
 
     savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
 
-    savedTemplate.setVariables(asList(aVariable().withName("MyVar").withValue("MyValue").build(),
-        aVariable().withName("MySecondVar").withValue("MySecondValue").build()));
+    savedTemplate.setVariables(asList(aVariable().name("MyVar").value("MyValue").build(),
+        aVariable().name("MySecondVar").value("MySecondValue").build()));
 
     on(sshCommandTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(sshCommandTemplateProcessor).set("serviceResourceService", serviceResourceService);
@@ -253,9 +253,9 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
         .isEqualTo("hello3");
 
     // update top-level variable and check if its reflected in templateVariablesList
-    installCommand.setVariables(asList(aVariable().withName("V3").withValue("hello3-updated").build(),
-        aVariable().withName("V4").withValue("world4").build(), aVariable().withName("V5").withValue("bye").build(),
-        aVariable().withName("V2").withValue("there2").build()));
+    installCommand.setVariables(
+        asList(aVariable().name("V3").value("hello3-updated").build(), aVariable().name("V4").value("world4").build(),
+            aVariable().name("V5").value("bye").build(), aVariable().name("V2").value("there2").build()));
     Template updatedTemplate = templateService.update(installCommand);
     SshCommandTemplate updatedSshCommandTemplate = (SshCommandTemplate) updatedTemplate.getTemplateObject();
     assertThat(updatedSshCommandTemplate.getCommandUnits().size()).isEqualTo(4);
@@ -298,21 +298,21 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     Template myAnotherCommand = createMyAnotherCommand();
     // Create command MyInstall composed of other commands from template library
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    List<Variable> myStopVariables = asList(
-        aVariable().withName("V3").withValue("hello3").build(), aVariable().withName("V4").withValue("world4").build());
-    List<Variable> myStartVariables = asList(
-        aVariable().withName("V1").withValue("${V3}").build(), aVariable().withName("V2").withValue("there2").build());
+    List<Variable> myStopVariables =
+        asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build());
+    List<Variable> myStartVariables =
+        asList(aVariable().name("V1").value("${V3}").build(), aVariable().name("V2").value("there2").build());
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop, myStopVariables, MY_STOP), createStandaloneExec(),
                 createCommand(myStart, myStartVariables, MY_START),
                 createCommand(
-                    myAnotherCommand, asList(aVariable().withName("V3").withValue("hello4").build()), ANOTHER_COMMAND)))
+                    myAnotherCommand, asList(aVariable().name("V3").value("hello4").build()), ANOTHER_COMMAND)))
             .commandType(CommandType.OTHER)
             .build();
-    List<Variable> myInstallVariables = asList(aVariable().withName("V3").withValue("hello3").build(),
-        aVariable().withName("V4").withValue("world4").build(), aVariable().withName("V5").withValue("bye").build(),
-        aVariable().withName("V2").withValue("there2").build());
+    List<Variable> myInstallVariables =
+        asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build(),
+            aVariable().name("V5").value("bye").build(), aVariable().name("V2").value("there2").build());
     Template template = Template.builder()
                             .name(MY_INSTALL)
                             .folderId(parentFolder.getUuid())
@@ -349,11 +349,11 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     Template myAnotherCommand = createMyAnotherCommand();
     // Create command MyInstall composed of other commands from template library
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    List<Variable> myStopVariables = asList(
-        aVariable().withName("V3").withValue("hello3").build(), aVariable().withName("V4").withValue("world4").build());
-    List<Variable> myStartVariables = asList(
-        aVariable().withName("V1").withValue("hi").build(), aVariable().withName("V2").withValue("there2").build());
-    List<Variable> anotherCommandVariables = asList(aVariable().withName("V3").withValue("${V1}").build());
+    List<Variable> myStopVariables =
+        asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build());
+    List<Variable> myStartVariables =
+        asList(aVariable().name("V1").value("hi").build(), aVariable().name("V2").value("there2").build());
+    List<Variable> anotherCommandVariables = asList(aVariable().name("V3").value("${V1}").build());
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop, myStopVariables, MY_STOP), createStandaloneExec(),
@@ -361,9 +361,9 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
                 createCommand(myAnotherCommand, anotherCommandVariables, ANOTHER_COMMAND)))
             .commandType(CommandType.OTHER)
             .build();
-    List<Variable> installCommandVariables = asList(aVariable().withName("V3").withValue("hello3").build(),
-        aVariable().withName("V4").withValue("world4").build(), aVariable().withName("V5").withValue("bye").build(),
-        aVariable().withName("V2").withValue("there2").build());
+    List<Variable> installCommandVariables =
+        asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build(),
+            aVariable().name("V5").value("bye").build(), aVariable().name("V2").value("there2").build());
     Template template = Template.builder()
                             .name(MY_INSTALL)
                             .folderId(parentFolder.getUuid())
@@ -413,8 +413,8 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
                             .appId(appId)
                             .accountId(GLOBAL_ACCOUNT_ID)
                             .templateObject(commandTemplate)
-                            .variables(asList(aVariable().withName("V3").withValue("hello").build(),
-                                aVariable().withName("V4").withValue("world").build()))
+                            .variables(asList(aVariable().name("V3").value("hello").build(),
+                                aVariable().name("V4").value("world").build()))
                             .build();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
@@ -446,8 +446,8 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
                             .appId(GLOBAL_APP_ID)
                             .accountId(GLOBAL_ACCOUNT_ID)
                             .templateObject(commandTemplate)
-                            .variables(asList(aVariable().withName("V1").withValue("hi").build(),
-                                aVariable().withName("V2").withValue("world").build()))
+                            .variables(asList(aVariable().name("V1").value("hi").build(),
+                                aVariable().name("V2").value("world").build()))
                             .build();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
@@ -473,7 +473,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
                             .appId(GLOBAL_APP_ID)
                             .accountId(GLOBAL_ACCOUNT_ID)
                             .templateObject(commandTemplate)
-                            .variables(asList(aVariable().withName("V3").withValue("hi").build()))
+                            .variables(asList(aVariable().name("V3").value("hi").build()))
                             .build();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
@@ -487,30 +487,30 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop,
-                                     asList(aVariable().withName("V3").withValue("hello3").build(),
-                                         aVariable().withName("V4").withValue("world4").build()),
+                                     asList(aVariable().name("V3").value("hello3").build(),
+                                         aVariable().name("V4").value("world4").build()),
                                      MY_STOP),
                 createStandaloneExec(),
                 createCommand(myStart,
-                    asList(aVariable().withName("V1").withValue("${V3}").build(),
-                        aVariable().withName("V2").withValue("there2").build()),
+                    asList(
+                        aVariable().name("V1").value("${V3}").build(), aVariable().name("V2").value("there2").build()),
                     MY_START),
                 createCommand(
-                    myAnotherCommand, asList(aVariable().withName("V3").withValue("hello3").build()), ANOTHER_COMMAND)))
+                    myAnotherCommand, asList(aVariable().name("V3").value("hello3").build()), ANOTHER_COMMAND)))
             .commandType(CommandType.OTHER)
             .build();
-    Template template = Template.builder()
-                            .name(MY_INSTALL)
-                            .folderId(parentFolder.getUuid())
-                            .appId(GLOBAL_APP_ID)
-                            .accountId(GLOBAL_ACCOUNT_ID)
-                            .type("SSH")
-                            .templateObject(commandTemplate)
-                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
-                                aVariable().withName("V4").withValue("world4").build(),
-                                aVariable().withName("V5").withValue("bye").build(),
-                                aVariable().withName("V2").withValue("there2").build()))
-                            .build();
+    Template template =
+        Template.builder()
+            .name(MY_INSTALL)
+            .folderId(parentFolder.getUuid())
+            .appId(GLOBAL_APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .type("SSH")
+            .templateObject(commandTemplate)
+            .variables(
+                asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build(),
+                    aVariable().name("V5").value("bye").build(), aVariable().name("V2").value("there2").build()))
+            .build();
     return templateService.save(template);
   }
 
@@ -525,27 +525,27 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop,
-                                     asList(aVariable().withName("V3").withValue("hello3").build(),
-                                         aVariable().withName("V4").withValue("world4").build()),
+                                     asList(aVariable().name("V3").value("hello3").build(),
+                                         aVariable().name("V4").value("world4").build()),
                                      MY_STOP),
                 createCommand(myStart,
-                    asList(aVariable().withName("V1").withValue("${V3}").build(),
-                        aVariable().withName("V2").withValue("there2").build()),
+                    asList(
+                        aVariable().name("V1").value("${V3}").build(), aVariable().name("V2").value("there2").build()),
                     MY_START)))
             .commandType(CommandType.OTHER)
             .build();
-    Template template = Template.builder()
-                            .name(MY_INSTALL)
-                            .folderId(parentFolder.getUuid())
-                            .appId(GLOBAL_APP_ID)
-                            .accountId(GLOBAL_ACCOUNT_ID)
-                            .type("SSH")
-                            .templateObject(commandTemplate)
-                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
-                                aVariable().withName("V4").withValue("world4").build(),
-                                aVariable().withName("V5").withValue("bye").build(),
-                                aVariable().withName("V2").withValue("there2").build()))
-                            .build();
+    Template template =
+        Template.builder()
+            .name(MY_INSTALL)
+            .folderId(parentFolder.getUuid())
+            .appId(GLOBAL_APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .type("SSH")
+            .templateObject(commandTemplate)
+            .variables(
+                asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build(),
+                    aVariable().name("V5").value("bye").build(), aVariable().name("V2").value("there2").build()))
+            .build();
     templateService.save(template);
   }
 
@@ -556,25 +556,25 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     Template myStop = createMyStopCommand(ANOTHER_APP_ID);
 
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
-                                             .commandUnits(asList(createCommand(myStop,
-                                                 asList(aVariable().withName("V3").withValue("hello3").build(),
-                                                     aVariable().withName("V4").withValue("world4").build()),
-                                                 MY_STOP)))
-                                             .commandType(CommandType.OTHER)
-                                             .build();
-    Template template = Template.builder()
-                            .name(MY_INSTALL)
-                            .folderId(parentFolder.getUuid())
-                            .appId(APP_ID)
-                            .accountId(GLOBAL_ACCOUNT_ID)
-                            .type("SSH")
-                            .templateObject(commandTemplate)
-                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
-                                aVariable().withName("V4").withValue("world4").build(),
-                                aVariable().withName("V5").withValue("bye").build(),
-                                aVariable().withName("V2").withValue("there2").build()))
-                            .build();
+    SshCommandTemplate commandTemplate =
+        SshCommandTemplate.builder()
+            .commandUnits(asList(createCommand(myStop,
+                asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build()),
+                MY_STOP)))
+            .commandType(CommandType.OTHER)
+            .build();
+    Template template =
+        Template.builder()
+            .name(MY_INSTALL)
+            .folderId(parentFolder.getUuid())
+            .appId(APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .type("SSH")
+            .templateObject(commandTemplate)
+            .variables(
+                asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build(),
+                    aVariable().name("V5").value("bye").build(), aVariable().name("V2").value("there2").build()))
+            .build();
     templateService.save(template);
   }
 
@@ -592,8 +592,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     SshCommandTemplate savedCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
     Template myStop = createMyStopCommand(ANOTHER_APP_ID);
     savedCommandTemplate.getCommandUnits().add(createCommand(myStop,
-        asList(aVariable().withName("V3").withValue("hello3").build(),
-            aVariable().withName("V4").withValue("world4").build()),
+        asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build()),
         MY_STOP));
     savedTemplate.setTemplateObject(savedCommandTemplate);
     templateService.update(savedTemplate);
@@ -603,25 +602,25 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     Template myStop = createMyStopCommand();
 
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
-                                             .commandUnits(asList(createCommand(myStop,
-                                                 asList(aVariable().withName("V3").withValue("hello3").build(),
-                                                     aVariable().withName("V4").withValue("world4").build()),
-                                                 MY_STOP)))
-                                             .commandType(CommandType.OTHER)
-                                             .build();
-    Template template = Template.builder()
-                            .name(MY_INSTALL)
-                            .folderId(parentFolder.getUuid())
-                            .appId(APP_ID)
-                            .accountId(GLOBAL_ACCOUNT_ID)
-                            .type("SSH")
-                            .templateObject(commandTemplate)
-                            .variables(asList(aVariable().withName("V3").withValue("hello3").build(),
-                                aVariable().withName("V4").withValue("world4").build(),
-                                aVariable().withName("V5").withValue("bye").build(),
-                                aVariable().withName("V2").withValue("there2").build()))
-                            .build();
+    SshCommandTemplate commandTemplate =
+        SshCommandTemplate.builder()
+            .commandUnits(asList(createCommand(myStop,
+                asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build()),
+                MY_STOP)))
+            .commandType(CommandType.OTHER)
+            .build();
+    Template template =
+        Template.builder()
+            .name(MY_INSTALL)
+            .folderId(parentFolder.getUuid())
+            .appId(APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .type("SSH")
+            .templateObject(commandTemplate)
+            .variables(
+                asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build(),
+                    aVariable().name("V5").value("bye").build(), aVariable().name("V2").value("there2").build()))
+            .build();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
     assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(APP_ID);

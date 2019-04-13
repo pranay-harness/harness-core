@@ -169,7 +169,7 @@ public class TriggerServiceTestHelper {
 
   public static Workflow buildWorkflow() {
     List<Variable> userVariables = new ArrayList<>();
-    userVariables.add(aVariable().withName("MyVar").withValue("MyVal").build());
+    userVariables.add(aVariable().name("MyVar").value("MyVal").build());
     return aWorkflow()
         .envId(ENV_ID)
         .name(WORKFLOW_NAME)

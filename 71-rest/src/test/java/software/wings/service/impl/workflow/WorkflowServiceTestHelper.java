@@ -738,8 +738,7 @@ public class WorkflowServiceTestHelper {
         .templateVersion(LATEST_TAG)
         .properties(constructHttpProperties())
         .templateVariables(
-            asList(aVariable().withName("url").withValue("https://harness.io?q=${artifact.name}").build(),
-                aVariable().build()))
+            asList(aVariable().name("url").value("https://harness.io?q=${artifact.name}").build(), aVariable().build()))
         .build();
   }
 
@@ -749,8 +748,7 @@ public class WorkflowServiceTestHelper {
         .templateUuid(TEMPLATE_ID)
         .properties(constructShellScriptProperties())
         .templateVersion(LATEST_TAG)
-        .templateVariables(
-            asList(aVariable().withName("name").withValue("${artifact.name}").build(), aVariable().build()))
+        .templateVariables(asList(aVariable().name("name").value("${artifact.name}").build(), aVariable().build()))
         .build();
   }
 
@@ -760,8 +758,7 @@ public class WorkflowServiceTestHelper {
         .templateUuid(TEMPLATE_ID)
         .properties(constructCommandTemplateProperties())
         .templateVersion(LATEST_TAG)
-        .templateVariables(
-            asList(aVariable().withName("name").withValue("${artifact.name}").build(), aVariable().build()))
+        .templateVariables(asList(aVariable().name("name").value("${artifact.name}").build(), aVariable().build()))
         .build();
   }
 
@@ -873,7 +870,7 @@ public class WorkflowServiceTestHelper {
     assertThat(templateVariables).isNotEmpty();
 
     preDeploymentStep.setTemplateVersion("1");
-    preDeploymentStep.setTemplateVariables(asList(aVariable().withName("url").withValue("https://google.com").build()));
+    preDeploymentStep.setTemplateVariables(asList(aVariable().name("url").value("https://google.com").build()));
   }
 
   public static void assertPhaseNode(GraphNode updatedPhaseNode) {
