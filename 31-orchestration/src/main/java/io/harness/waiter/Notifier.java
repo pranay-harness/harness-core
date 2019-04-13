@@ -19,6 +19,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
+import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,8 +74,8 @@ public class Notifier implements Runnable {
   public void executeUnderLock() {
     logger.debug("Execute Notifier response processing");
     final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                                                     .project(NotifyResponse.ID_KEY, true)
-                                                     .project(NotifyResponse.CREATED_AT_KEY, true)
+                                                     .project(NotifyResponseKeys.uuid, true)
+                                                     .project(NotifyResponseKeys.createdAt, true)
                                                      .asList(new FindOptions().limit(1000));
 
     if (isEmpty(notifyResponses)) {
@@ -120,7 +121,7 @@ public class Notifier implements Runnable {
       if (isNotEmpty(deleteResponses)) {
         logger.warn("Deleting zombie responses {}", correlationIds.toString());
         persistence.delete(persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                               .field(NotifyResponse.ID_KEY)
+                               .field(NotifyResponseKeys.uuid)
                                .in(deleteResponses));
       }
     }

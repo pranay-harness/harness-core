@@ -2,7 +2,6 @@ package io.harness.event.usagemetrics;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.persistence.UuidAccess.ID_KEY;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
@@ -85,7 +84,7 @@ public class UsageMetricsHelper {
 
   public List<Account> listAllAccountsWithDefaults() {
     PageRequest<Account> pageRequest = aPageRequest()
-                                           .addFieldsIncluded(ID_KEY, AccountKeys.accountName)
+                                           .addFieldsIncluded(Account.ID_KEY, AccountKeys.accountName)
                                            .addFilter(APP_ID_KEY, Operator.EQ, GLOBAL_APP_ID)
                                            .build();
     return wingsPersistence.getAllEntities(pageRequest, () -> wingsPersistence.query(Account.class, pageRequest));

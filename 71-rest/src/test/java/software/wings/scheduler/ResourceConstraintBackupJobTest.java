@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ResourceConstraint;
-import software.wings.beans.ResourceConstraintInstance;
+import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.ResourceConstraintService;
@@ -57,10 +57,10 @@ public class ResourceConstraintBackupJobTest extends WingsBaseTest {
     final String workflowExecutionId = generateUuid();
 
     Map<String, Object> constraintContext = new HashMap();
-    constraintContext.put(ResourceConstraintInstance.APP_ID_KEY, appId);
-    constraintContext.put(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY, "WORKFLOW");
-    constraintContext.put(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY, workflowExecutionId);
-    constraintContext.put(ResourceConstraintInstance.ORDER_KEY, 1);
+    constraintContext.put(ResourceConstraintInstanceKeys.appId, appId);
+    constraintContext.put(ResourceConstraintInstanceKeys.releaseEntityType, "WORKFLOW");
+    constraintContext.put(ResourceConstraintInstanceKeys.releaseEntityId, workflowExecutionId);
+    constraintContext.put(ResourceConstraintInstanceKeys.order, 1);
 
     final Consumer.State state = constraint.registerConsumer(
         new ConstraintUnit("1"), new ConsumerId("1"), 1, constraintContext, resourceConstraintService.getRegistry());

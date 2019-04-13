@@ -18,6 +18,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.QueueListener;
+import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -55,7 +56,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     final long limit = now - MAX_CALLBACK_PROCESSING_TIME.toMillis();
 
     final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class, ReadPref.CRITICAL)
-                                                      .filter(WaitInstance.ID_KEY, waitInstanceId)
+                                                      .filter(WaitInstanceKeys.uuid, waitInstanceId)
                                                       .filter(WaitInstance.STATUS_KEY, ExecutionStatus.NEW)
                                                       .field(WaitInstance.CALLBACK_PROCESSING_AT_KEY)
                                                       .lessThan(limit);

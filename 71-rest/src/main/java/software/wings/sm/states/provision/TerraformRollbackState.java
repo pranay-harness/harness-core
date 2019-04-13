@@ -27,7 +27,8 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
-import software.wings.beans.infrastructure.TerraformfConfig;
+import software.wings.beans.infrastructure.TerraformConfig;
+import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.sm.ExecutionContext;
@@ -72,11 +73,11 @@ public class TerraformRollbackState extends TerraformProvisionState {
     String path = context.renderExpression(terraformProvisioner.getPath());
 
     String entityId = generateEntityId(context);
-    Iterator<TerraformfConfig> configIterator = wingsPersistence.createQuery(TerraformfConfig.class)
-                                                    .filter(TerraformfConfig.APP_ID_KEY, context.getAppId())
-                                                    .filter(TerraformfConfig.ENTITY_ID_KEY, entityId)
-                                                    .order(Sort.descending(TerraformfConfig.CREATED_AT_KEY))
-                                                    .iterator();
+    Iterator<TerraformConfig> configIterator = wingsPersistence.createQuery(TerraformConfig.class)
+                                                   .filter(TerraformConfig.APP_ID_KEY, context.getAppId())
+                                                   .filter(TerraformConfig.ENTITY_ID_KEY, entityId)
+                                                   .order(Sort.descending(TerraformConfigKeys.createdAt))
+                                                   .iterator();
 
     if (!configIterator.hasNext()) {
       return anExecutionResponse()
@@ -85,8 +86,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
           .build();
     }
 
-    TerraformfConfig configParameter = null;
-    TerraformfConfig currentConfig = null;
+    TerraformConfig configParameter = null;
+    TerraformConfig currentConfig = null;
     while (configIterator.hasNext()) {
       configParameter = configIterator.next();
 
@@ -191,10 +192,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
       if (terraformExecutionData.getCommandExecuted() == TerraformCommand.APPLY) {
         saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
       } else if (terraformExecutionData.getCommandExecuted() == TerraformCommand.DESTROY) {
-        Query<TerraformfConfig> query =
-            wingsPersistence.createQuery(TerraformfConfig.class)
-                .filter(TerraformfConfig.ENTITY_ID_KEY, generateEntityId((ExecutionContextImpl) context))
-                .filter(TerraformfConfig.WORKFLOW_EXECUTION_ID_KEY, context.getWorkflowExecutionId());
+        Query<TerraformConfig> query =
+            wingsPersistence.createQuery(TerraformConfig.class)
+                .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId((ExecutionContextImpl) context))
+                .filter(TerraformConfig.WORKFLOW_EXECUTION_ID_KEY, context.getWorkflowExecutionId());
 
         wingsPersistence.delete(query);
       }

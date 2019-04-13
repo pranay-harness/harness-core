@@ -7,6 +7,7 @@ import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -29,6 +30,7 @@ import javax.validation.constraints.NotNull;
   }, options = @IndexOptions(unique = true, name = "delegateConnectionResultsIdx"))
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants(innerTypeName = "DelegateConnectionResultKeys")
 public class DelegateConnectionResult implements UuidAware, PersistentEntity, UpdatedAtAware {
   @Id private String uuid;
 

@@ -7,6 +7,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -22,6 +23,7 @@ import java.util.Date;
 @Entity(value = "notifyResponses", noClassnameStored = true)
 @Value
 @Builder
+@FieldNameConstants(innerTypeName = "NotifyResponseKeys")
 public class NotifyResponse<T extends ResponseData> implements PersistentEntity, UuidAccess, CreatedAtAccess {
   public static final String STATUS_KEY = "status";
 

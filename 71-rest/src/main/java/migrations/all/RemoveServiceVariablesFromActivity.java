@@ -43,7 +43,7 @@ public class RemoveServiceVariablesFromActivity implements Migration {
         bulkWriteOperation
             .find(wingsPersistence.createQuery(Activity.class)
                       .filter(ActivityKeys.appId, activity.getAppId())
-                      .filter(Activity.ID_KEY, activity.getUuid())
+                      .filter(ActivityKeys.uuid, activity.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$unset", new BasicDBObject("serviceVariables", "")));
       }

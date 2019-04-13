@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.persistence.UuidAccess.ID_KEY;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
@@ -96,7 +95,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
   private Optional<AlertNotificationRule> getById(String accountId, String ruleId) {
     List<AlertNotificationRule> rules = wingsPersistence.createQuery(AlertNotificationRule.class)
                                             .filter(ACCOUNT_ID_KEY, accountId)
-                                            .filter(ID_KEY, ruleId)
+                                            .filter(AlertNotificationRule.ID_KEY, ruleId)
                                             .asList();
     return rules.isEmpty() ? Optional.empty() : Optional.of(rules.get(0));
   }
@@ -117,7 +116,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
     }
     wingsPersistence.delete(wingsPersistence.createQuery(AlertNotificationRule.class)
                                 .filter(ACCOUNT_ID_KEY, accountId)
-                                .filter(ID_KEY, ruleId));
+                                .filter(AlertNotificationRule.ID_KEY, ruleId));
   }
 
   @Override

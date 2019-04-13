@@ -1,7 +1,6 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.UuidAccess.ID_KEY;
 
 import com.google.inject.Inject;
 
@@ -40,7 +39,7 @@ public class AddAccountIdToAppEntities implements Migration {
   @Override
   public void migrate() {
     try (HIterator<Account> accounts =
-             new HIterator<>(wingsPersistence.createQuery(Account.class).project(ID_KEY, true).fetch())) {
+             new HIterator<>(wingsPersistence.createQuery(Account.class).project(Account.ID_KEY, true).fetch())) {
       while (accounts.hasNext()) {
         final Account account = accounts.next();
 
@@ -69,7 +68,7 @@ public class AddAccountIdToAppEntities implements Migration {
                                                      .doesNotExist()
                                                      .field("appId")
                                                      .in(appIdSet)
-                                                     .project(ID_KEY, true)
+                                                     .project(Base.ID_KEY, true)
                                                      .fetch())) {
       while (entities.hasNext()) {
         final T entity = entities.next();
@@ -81,7 +80,8 @@ public class AddAccountIdToAppEntities implements Migration {
         }
         ++i;
 
-        bulkWriteOperation.find(wingsPersistence.createQuery(clazz).filter(ID_KEY, entity.getUuid()).getQueryObject())
+        bulkWriteOperation
+            .find(wingsPersistence.createQuery(clazz).filter(Base.ID_KEY, entity.getUuid()).getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("accountId", accountId)));
       }
     }

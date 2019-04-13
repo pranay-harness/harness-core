@@ -8,6 +8,7 @@ import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
 import io.harness.waiter.WaitQueue;
+import io.harness.waiter.WaitQueue.WaitQueueKeys;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public class AddValidUntilToWaitQueue implements Migration {
     try (HIterator<WaitQueue> waitQueues = new HIterator<>(wingsPersistence.createQuery(WaitQueue.class)
                                                                .field("validUntil")
                                                                .doesNotExist()
-                                                               .project(WaitQueue.CREATED_AT_KEY, true)
+                                                               .project(WaitQueueKeys.createdAt, true)
                                                                .fetch())) {
       while (waitQueues.hasNext()) {
         final WaitQueue waitQueue = waitQueues.next();

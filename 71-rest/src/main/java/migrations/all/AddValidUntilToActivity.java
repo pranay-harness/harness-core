@@ -48,7 +48,7 @@ public class AddValidUntilToActivity implements Migration {
 
         bulkWriteOperation
             .find(wingsPersistence.createQuery(Activity.class)
-                      .filter(Activity.ID_KEY, activity.getUuid())
+                      .filter(ActivityKeys.uuid, activity.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject(
                 "$set", new BasicDBObject("validUntil", java.util.Date.from(zonedDateTime.toInstant()))));

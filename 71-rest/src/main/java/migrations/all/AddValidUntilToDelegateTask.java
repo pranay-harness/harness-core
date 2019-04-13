@@ -6,6 +6,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
 import migrations.Migration;
@@ -31,7 +32,7 @@ public class AddValidUntilToDelegateTask implements Migration {
     try (HIterator<DelegateTask> delegateTasks = new HIterator<>(wingsPersistence.createQuery(DelegateTask.class)
                                                                      .field("validUntil")
                                                                      .doesNotExist()
-                                                                     .project(DelegateTask.CREATED_AT_KEY, true)
+                                                                     .project(DelegateTaskKeys.createdAt, true)
                                                                      .fetch())) {
       while (delegateTasks.hasNext()) {
         final DelegateTask delegateTask = delegateTasks.next();
@@ -47,7 +48,7 @@ public class AddValidUntilToDelegateTask implements Migration {
 
         bulkWriteOperation
             .find(wingsPersistence.createQuery(DelegateTask.class)
-                      .filter(DelegateTask.ID_KEY, delegateTask.getUuid())
+                      .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject(
                 "$set", new BasicDBObject("validUntil", java.util.Date.from(zonedDateTime.toInstant()))));

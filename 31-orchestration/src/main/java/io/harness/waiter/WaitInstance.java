@@ -5,6 +5,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -21,6 +22,7 @@ import java.util.List;
 @Entity(value = "waitInstances", noClassnameStored = true)
 @Value
 @Builder
+@FieldNameConstants(innerTypeName = "WaitInstanceKeys")
 public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final String CALLBACK_PROCESSING_AT_KEY = "callbackProcessingAt";
   public static final String STATUS_KEY = "status";

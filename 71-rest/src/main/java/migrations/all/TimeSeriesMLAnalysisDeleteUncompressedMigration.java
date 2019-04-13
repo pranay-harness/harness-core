@@ -1,7 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.UuidAware.ID_KEY;
-
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -34,7 +32,7 @@ public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migratio
         logger.info("saving " + mlAnalysisRecord.getUuid());
         bulkWriteOperation
             .find(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                      .filter(ID_KEY, mlAnalysisRecord.getUuid())
+                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY, mlAnalysisRecord.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$unset", new BasicDBObject("transactions", "")));
         batched++;

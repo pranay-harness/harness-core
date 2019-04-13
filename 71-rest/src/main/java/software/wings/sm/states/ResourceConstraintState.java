@@ -32,7 +32,7 @@ import software.wings.beans.Application;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.ResourceConstraint;
-import software.wings.beans.ResourceConstraintInstance;
+import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
 import software.wings.beans.ResourceConstraintNotification;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope;
@@ -139,11 +139,11 @@ public class ResourceConstraintState extends State {
     }
 
     Map<String, Object> constraintContext = new HashMap();
-    constraintContext.put(ResourceConstraintInstance.APP_ID_KEY, context.getAppId());
-    constraintContext.put(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY, holdingScope);
-    constraintContext.put(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY, releaseEntityId);
+    constraintContext.put(ResourceConstraintInstanceKeys.appId, context.getAppId());
+    constraintContext.put(ResourceConstraintInstanceKeys.releaseEntityType, holdingScope);
+    constraintContext.put(ResourceConstraintInstanceKeys.releaseEntityId, releaseEntityId);
     constraintContext.put(
-        ResourceConstraintInstance.ORDER_KEY, resourceConstraintService.getMaxOrder(resourceConstraintId) + 1);
+        ResourceConstraintInstanceKeys.order, resourceConstraintService.getMaxOrder(resourceConstraintId) + 1);
 
     ConstraintUnit renderedResourceUnit = new ConstraintUnit(context.renderExpression(resourceUnit));
 

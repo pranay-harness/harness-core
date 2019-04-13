@@ -6,6 +6,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -15,6 +16,7 @@ import java.util.Set;
 @Builder
 @Entity(value = "featureFlag", noClassnameStored = true)
 @JsonIgnoreProperties({"obsolete", "accountIds"})
+@FieldNameConstants(innerTypeName = "FeatureFlagKeys")
 public class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {
   @Id private String uuid;
 

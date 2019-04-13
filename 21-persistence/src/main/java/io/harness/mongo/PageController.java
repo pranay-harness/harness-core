@@ -22,7 +22,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.CreatedAtAccess;
+import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.Mapper;
@@ -148,7 +148,7 @@ public class PageController {
       // Add default sorting if none present
       if (req.getOrders().isEmpty()) {
         SortOrder sortOrder = new SortOrder();
-        sortOrder.setFieldName(CreatedAtAccess.CREATED_AT_KEY);
+        sortOrder.setFieldName(SampleEntityKeys.createdAt);
         sortOrder.setOrderType(OrderType.DESC);
         req.addOrder(sortOrder);
       }

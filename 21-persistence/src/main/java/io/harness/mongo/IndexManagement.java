@@ -18,7 +18,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
-import io.harness.persistence.CreatedAtAccess;
+import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -134,7 +134,7 @@ public class IndexManagement {
         // Temporary exclude indexes that coming from Base class. Currently we have no flexibility to enable/disable
         // such for different objects.
         .filter(entry -> !entry.getKey().startsWith("appId"))
-        .filter(entry -> !entry.getKey().startsWith(CreatedAtAccess.CREATED_AT_KEY))
+        .filter(entry -> !entry.getKey().startsWith(SampleEntityKeys.createdAt))
         // Alert for every index that left:
         .forEach(entry -> {
           Duration passed = Duration.between(entry.getValue().getSince().toInstant(), ZonedDateTime.now().toInstant());
