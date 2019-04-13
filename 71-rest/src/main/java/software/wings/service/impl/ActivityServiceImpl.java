@@ -23,6 +23,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Log;
@@ -183,7 +184,7 @@ public class ActivityServiceImpl implements ActivityService {
     pruneQueue.send(new PruneEvent(Activity.class, appId, activityId));
 
     return wingsPersistence.delete(
-        wingsPersistence.createQuery(Activity.class).filter(Activity.APP_ID_KEY, appId).filter(ID_KEY, activityId));
+        wingsPersistence.createQuery(Activity.class).filter(ActivityKeys.appId, appId).filter(ID_KEY, activityId));
   }
 
   @Override
