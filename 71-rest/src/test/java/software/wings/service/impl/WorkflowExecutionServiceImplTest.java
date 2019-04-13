@@ -534,7 +534,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(emails = "george@harness.io", intermittent = true)
+  @Owner(emails = "george@harness.io")
   @Category(UnitTests.class)
   public void shouldTriggerWorkflowWithRelease() throws InterruptedException {
     String appId = app.getUuid();
