@@ -1849,7 +1849,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Command expectedCommand =
         aCommand()
             .withName("START")
-            .withTemplateVariables(asList(aVariable().withName("MyVar").withValue("MyValue").build()))
+            .withTemplateVariables(asList(aVariable().name("MyVar").value("MyValue").build()))
             .addCommandUnits(
                 anExecCommandUnit().withCommandPath("/home/xxx/tomcat1").withCommandString("bin/startup.sh").build())
             .build();

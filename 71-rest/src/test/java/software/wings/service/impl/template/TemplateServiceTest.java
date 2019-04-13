@@ -255,10 +255,10 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(savedTemplate.getVariables()).isNullOrEmpty();
 
     Variable var1 = VariableBuilder.aVariable()
-                        .withType(VariableType.TEXT)
-                        .withName("var1")
-                        .withMandatory(false)
-                        .withDescription("var 1 original")
+                        .type(VariableType.TEXT)
+                        .name("var1")
+                        .mandatory(false)
+                        .description("var 1 original")
                         .build();
     savedTemplate.setVariables(asList(var1));
 

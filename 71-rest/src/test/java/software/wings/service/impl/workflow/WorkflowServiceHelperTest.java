@@ -292,8 +292,8 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestWorkflowOverrideVariables() {
     List<Variable> variables =
-        asList(aVariable().withName("Environment").build(), aVariable().withName("OverrideVariable").build(),
-            aVariable().withName("MyOwnVariable").build(), aVariable().withName("NewlyCreatedVariable").build());
+        asList(aVariable().name("Environment").build(), aVariable().name("OverrideVariable").build(),
+            aVariable().name("MyOwnVariable").build(), aVariable().name("NewlyCreatedVariable").build());
 
     Map<String, String> pipelineVariables = new HashMap<>();
     pipelineVariables.put("Env", "EnvironmentValue");
@@ -323,14 +323,14 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     assertThat(overrideWorkflowVariables).containsValues("${Env}", "myValue", "MyOwnVariableValue");
 
     // Case 3: Pipeline Step has variable, however Workflow does not have that variable anymore
-    variables = asList(aVariable().withName("Environment").build(), aVariable().withName("OverrideVariable").build());
+    variables = asList(aVariable().name("Environment").build(), aVariable().name("OverrideVariable").build());
     overrideWorkflowVariables =
         WorkflowServiceHelper.overrideWorkflowVariables(variables, pipelineStepVariables, pipelineVariables);
     assertThat(overrideWorkflowVariables).doesNotContainKey("MyOwnVariable");
 
     // Case 4: Pipeline step does not have variable, however pipeline variable has the value
-    variables = asList(aVariable().withName("Environment").build(), aVariable().withName("OverrideVariable").build(),
-        aVariable().withName("MyOwnVariable").build());
+    variables = asList(aVariable().name("Environment").build(), aVariable().name("OverrideVariable").build(),
+        aVariable().name("MyOwnVariable").build());
     overrideWorkflowVariables =
         WorkflowServiceHelper.overrideWorkflowVariables(variables, pipelineStepVariables, pipelineVariables);
     assertThat(overrideWorkflowVariables).doesNotContainKey("Service");

@@ -44,15 +44,14 @@ public class ShellScriptStateIntegrationTest extends WingsBaseTest {
                                                   .outputVars("A,B")
                                                   .build();
 
-    Template template =
-        Template.builder()
-            .templateObject(shellScriptTemplate)
-            .folderId(parentFolder.getUuid())
-            .appId(GLOBAL_APP_ID)
-            .accountId(GLOBAL_ACCOUNT_ID)
-            .name("Integration State - Sample Script" + UUID.randomUUID().toString())
-            .variables(Arrays.asList(aVariable().withType(TEXT).withName("var").withMandatory(true).build()))
-            .build();
+    Template template = Template.builder()
+                            .templateObject(shellScriptTemplate)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .name("Integration State - Sample Script" + UUID.randomUUID().toString())
+                            .variables(Arrays.asList(aVariable().type(TEXT).name("var").mandatory(true).build()))
+                            .build();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
     assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
@@ -69,7 +68,7 @@ public class ShellScriptStateIntegrationTest extends WingsBaseTest {
     ShellScriptTemplate anotherShellScriptTemplate =
         ShellScriptTemplate.builder().scriptString("echo ${var1}\n export A=\"aaa\"\n export B=\"bbb\"\n").build();
     savedTemplate.setTemplateObject(anotherShellScriptTemplate);
-    savedTemplate.setVariables(Arrays.asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()));
+    savedTemplate.setVariables(Arrays.asList(aVariable().type(TEXT).name("var1").mandatory(true).build()));
     Template updatedTemplate = templateService.update(savedTemplate);
     assertThat(updatedTemplate).isNotNull();
     assertThat(updatedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);

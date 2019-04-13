@@ -320,7 +320,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetWorkflowVariablesExpressions() {
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
     Workflow workflow = buildCanaryWorkflow(userVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
@@ -345,8 +345,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetWorkflowStateExpressions() {
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build(),
-        aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build(),
+        aVariable().name("Environment").entityType(EntityType.ENVIRONMENT).build());
     Workflow workflow = aWorkflow()
                             .name(WORKFLOW_NAME)
                             .appId(APP_ID)
@@ -386,8 +386,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetWorkflowNotificationGroupExpressions() {
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build(),
-        aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build(),
+        aVariable().name("Environment").entityType(EntityType.ENVIRONMENT).build());
     Workflow workflow = aWorkflow()
                             .name(WORKFLOW_NAME)
                             .appId(APP_ID)
@@ -436,7 +436,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
         .thenReturn(aPageResponse().build());
 
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
     Workflow workflow = aWorkflow()
                             .name(WORKFLOW_NAME)
                             .appId(APP_ID)
@@ -465,7 +465,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetWorkflowCodeDeployStateExpressions() {
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
     Workflow workflow = buildCanaryWorkflow(userVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
@@ -494,7 +494,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetWorkflowCommandStateExpressions() {
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
     Workflow workflow = buildCanaryWorkflow(userVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);

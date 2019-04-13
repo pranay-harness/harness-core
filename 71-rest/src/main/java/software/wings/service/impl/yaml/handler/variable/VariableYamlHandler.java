@@ -24,12 +24,12 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
     Yaml yaml = changeContext.getYaml();
     VariableType variableType = Util.getEnumFromString(VariableType.class, yaml.getType());
     return VariableBuilder.aVariable()
-        .withDescription(yaml.getDescription())
-        .withFixed(yaml.isFixed())
-        .withMandatory(yaml.isMandatory())
-        .withName(yaml.getName())
-        .withType(variableType)
-        .withValue(yaml.getValue())
+        .description(yaml.getDescription())
+        .fixed(yaml.isFixed())
+        .mandatory(yaml.isMandatory())
+        .name(yaml.getName())
+        .type(variableType)
+        .value(yaml.getValue())
         .build();
   }
 

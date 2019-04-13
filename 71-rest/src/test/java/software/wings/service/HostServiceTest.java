@@ -211,7 +211,7 @@ public class HostServiceTest extends WingsBaseTest {
     /*
         ServiceTemplate serviceTemplate = aServiceTemplate().uuid(TEMPLATE_ID).build();
         SettingAttribute hostConnAttr =
-            aSettingAttribute().uuid(HOST_CONN_ATTR_ID).withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
+            aSettingAttribute().uuid(HOST_CONN_ATTR_ID).value(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
 
         Host requestHost =
        aHost().appId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(hostConnAttr.getUuid())

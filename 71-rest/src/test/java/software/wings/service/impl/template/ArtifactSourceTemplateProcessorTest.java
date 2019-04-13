@@ -61,8 +61,8 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTest {
 
     savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
 
-    savedTemplate.setVariables(asList(aVariable().withName("MyVar").withValue("MyValue").build(),
-        aVariable().withName("MySecondVar").withValue("MySecondValue").build()));
+    savedTemplate.setVariables(asList(aVariable().name("MyVar").value("MyValue").build(),
+        aVariable().name("MySecondVar").value("MySecondValue").build()));
 
     on(artifactSourceTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(artifactSourceTemplateProcessor).set("artifactStreamService", artifactStreamService);
@@ -104,7 +104,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTest {
         .appId(GLOBAL_APP_ID)
         .accountId(GLOBAL_ACCOUNT_ID)
         .name("Custom Artifact Template 1")
-        .variables(asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()))
+        .variables(asList(aVariable().type(TEXT).name("var1").mandatory(true).build()))
         .build();
   }
 }

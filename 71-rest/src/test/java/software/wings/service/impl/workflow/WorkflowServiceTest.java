@@ -2148,7 +2148,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateUserVariables() {
     Workflow workflow1 = createCanaryWorkflow();
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
 
     workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
 
@@ -2163,7 +2163,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateUserVariablesValidationFixedEmptyValue() {
     Workflow workflow1 = createCanaryWorkflow();
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("").withFixed(true).build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("").fixed(true).build());
 
     workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
   }
@@ -2172,9 +2172,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateUserVariablesValidationDuplicateNames() {
     Workflow workflow1 = createCanaryWorkflow();
-    List<Variable> userVariables =
-        newArrayList(aVariable().withName("name1").withValue("value").withFixed(true).build(),
-            aVariable().withName("name1").withValue("value").withFixed(true).build());
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value").fixed(true).build(),
+        aVariable().name("name1").value("value").fixed(true).build());
 
     workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
   }
@@ -3106,7 +3105,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<Variable> templateVariables = preDeploymentStep.getTemplateVariables();
     assertThat(templateVariables).isNotEmpty();
 
-    preDeploymentStep.setTemplateVariables(asList(aVariable().withName("url").withValue("https://google.com").build()));
+    preDeploymentStep.setTemplateVariables(asList(aVariable().name("url").value("https://google.com").build()));
 
     Workflow oldWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
 

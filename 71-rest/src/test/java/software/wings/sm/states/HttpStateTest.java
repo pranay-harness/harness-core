@@ -178,9 +178,9 @@ public class HttpStateTest extends WingsBaseTest {
             .withUrl("http://${url}")
             .withHeader("Content-Type: ${contentType}, Accept: */*")
             .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${buildNo}")
-            .withTemplateVariables(asList(aVariable().withName("url").withValue("localhost:8088/health/status").build(),
-                aVariable().withName("buildNo").withValue("2.31.0-MASTER-SNAPSHOT").build(),
-                aVariable().withName("contentType").withValue("application/json").build()));
+            .withTemplateVariables(asList(aVariable().name("url").value("localhost:8088/health/status").build(),
+                aVariable().name("buildNo").value("2.31.0-MASTER-SNAPSHOT").build(),
+                aVariable().name("contentType").value("application/json").build()));
     List<String> patternsForRequiredContextElementType =
         getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
     assertThat(patternsForRequiredContextElementType).isNotEmpty();
@@ -265,9 +265,9 @@ public class HttpStateTest extends WingsBaseTest {
             .withUrl("http://${url}")
             .withHeader("Content-Type: ${contentType}, Accept: */*")
             .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${buildNo}")
-            .withTemplateVariables(asList(aVariable().withName("url").withValue("localhost:8088/health/status").build(),
-                aVariable().withName("buildNo").withValue("2.31.0-MASTER-SNAPSHOT").build(),
-                aVariable().withName("contentType").withValue("application/json").build()));
+            .withTemplateVariables(asList(aVariable().name("url").value("localhost:8088/health/status").build(),
+                aVariable().name("buildNo").value("2.31.0-MASTER-SNAPSHOT").build(),
+                aVariable().name("contentType").value("application/json").build()));
 
     ExecutionResponse response = getHttpState(jsonHttpStateBuilder.but(), context).execute(context);
 
@@ -338,7 +338,7 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withBody("<health><status>Enabled</status></health>")
                                              .withHeader("Content-Type", "text/xml")));
 
-    httpStateBuilder.withTemplateVariables(asList(aVariable().withName("status").withValue("Enabled").build()));
+    httpStateBuilder.withTemplateVariables(asList(aVariable().name("status").value("Enabled").build()));
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);

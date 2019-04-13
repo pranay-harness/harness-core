@@ -67,8 +67,7 @@ public class TemplateGenerator {
             .templateObject(shellScriptTemplate)
             .folderId(parentFolder.getUuid())
             .appId(GLOBAL_APP_ID)
-            .variables(Arrays.asList(
-                aVariable().withType(TEXT).withName("var1").withMandatory(true).withValue("Hello World").build()))
+            .variables(Arrays.asList(aVariable().type(TEXT).name("var1").mandatory(true).value("Hello World").build()))
             .build());
   }
 
@@ -115,7 +114,7 @@ public class TemplateGenerator {
     if (template != null && isNotEmpty(template.getVariables())) {
       builder.variables(template.getVariables());
     } else {
-      builder.variables(Arrays.asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()));
+      builder.variables(Arrays.asList(aVariable().type(TEXT).name("var1").mandatory(true).build()));
     }
     if (template != null && template.getGalleryId() != null) {
       builder.gallery(template.getGallery());

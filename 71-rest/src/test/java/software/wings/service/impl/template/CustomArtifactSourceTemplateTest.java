@@ -151,7 +151,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
         .appId(GLOBAL_APP_ID)
         .accountId(GLOBAL_ACCOUNT_ID)
         .name("Sample Script")
-        .variables(asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()))
+        .variables(asList(aVariable().type(TEXT).name("var1").mandatory(true).build()))
         .build();
   }
 }
