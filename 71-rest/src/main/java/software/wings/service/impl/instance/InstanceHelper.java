@@ -537,7 +537,7 @@ public class InstanceHelper {
       notNullCheck("params are null for workflow " + workflowExecution.getUuid(), workflowStandardParams);
 
       PhaseStepExecutionData phaseStepExecutionData =
-          (PhaseStepExecutionData) stateExecutionInstance.getStateExecutionData();
+          (PhaseStepExecutionData) stateExecutionInstance.fetchStateExecutionData();
       notNullCheck("phase step execution data is null for phase step " + phaseStepSubWorkflow.getId(),
           phaseStepExecutionData, USER_SRE);
 
@@ -545,7 +545,7 @@ public class InstanceHelper {
           workflowExecution.getAppId(), stateExecutionInstance.getParentInstanceId());
 
       if (phaseStateExecutionInstance != null) {
-        StateExecutionData stateExecutionData = phaseStateExecutionInstance.getStateExecutionData();
+        StateExecutionData stateExecutionData = phaseStateExecutionInstance.fetchStateExecutionData();
         notNullCheck("state execution data is null for " + phaseStepSubWorkflow.getParentId(), stateExecutionData);
 
         if (stateExecutionData instanceof PhaseExecutionData) {

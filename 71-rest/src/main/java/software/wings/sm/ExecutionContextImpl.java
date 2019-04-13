@@ -195,7 +195,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public StateExecutionData getStateExecutionData() {
-    return stateExecutionInstance.getStateExecutionData();
+    return stateExecutionInstance.fetchStateExecutionData();
   }
 
   @Override

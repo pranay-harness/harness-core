@@ -183,7 +183,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     SettingAttribute settingAttribute = settingsService.get(
-        ((LogAnalysisExecutionData) stateExecutionInstance.getStateExecutionData()).getServerConfigId());
+        ((LogAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData()).getServerConfigId());
 
     if (settingAttribute.getName().toLowerCase().endsWith("dev")
         || settingAttribute.getName().toLowerCase().endsWith("prod")) {
