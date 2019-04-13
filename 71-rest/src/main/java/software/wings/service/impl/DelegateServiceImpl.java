@@ -18,7 +18,6 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.UpdatedAtAccess.LAST_UPDATED_AT_KEY;
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -84,6 +83,7 @@ import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.UUIDGenerator;
@@ -563,7 +563,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                   .filter(DelegateTask.ACCOUNT_ID_KEY, delegate.getAccountId())
                                                   .filter(DelegateTask.DELEGATE_ID_KEY, delegate.getUuid())
                                                   .filter("status", DelegateTask.Status.STARTED)
-                                                  .field(DelegateTask.LAST_UPDATED_AT_KEY)
+                                                  .field(DelegateTaskKeys.lastUpdatedAt)
                                                   .lessThan(System.currentTimeMillis())
                                                   .field(ID_KEY)
                                                   .in(delegate.getCurrentlyExecutingDelegateTasks());
@@ -2352,7 +2352,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     return delegateSequenceConfigQuery.project(ID_KEY, true)
         .project(SEQUENCE_NUM, true)
-        .project(LAST_UPDATED_AT_KEY, true)
+        .project(DelegateSequenceConfig.LAST_UPDATED_AT_KEY, true)
         .project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
         .project(DelegateSequenceConfig.HOST_NAME_KEY, true)
         .project(DELEGATE_TOKEN, true)

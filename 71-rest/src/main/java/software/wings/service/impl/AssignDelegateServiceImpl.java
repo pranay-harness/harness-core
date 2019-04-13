@@ -33,6 +33,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
@@ -278,7 +279,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                                         .filter("criteria", criteria);
             UpdateOperations<DelegateConnectionResult> updateOperations =
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
-                    .set(DelegateConnectionResult.LAST_UPDATED_AT_KEY, clock.millis());
+                    .set(DelegateConnectionResultKeys.lastUpdatedAt, clock.millis());
             DelegateConnectionResult result =
                 wingsPersistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {

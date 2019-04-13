@@ -60,7 +60,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
-import software.wings.beans.infrastructure.TerraformfConfig;
+import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitConfigHelperService;
@@ -639,18 +639,18 @@ public abstract class TerraformProvisionState extends State {
 
   protected void saveTerraformConfig(
       ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
-    TerraformfConfig terraformfConfig = TerraformfConfig.builder()
-                                            .entityId(generateEntityId(context))
-                                            .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
-                                            .sourceRepoReference(executionData.getSourceRepoReference())
-                                            .variables(executionData.getVariables())
-                                            .backendConfigs(executionData.getBackendConfigs())
-                                            .tfVarFiles(executionData.getTfVarFiles())
-                                            .workflowExecutionId(context.getWorkflowExecutionId())
-                                            .targets(executionData.getTargets())
-                                            .command(executionData.getCommandExecuted())
-                                            .appId(context.getAppId())
-                                            .build();
+    TerraformConfig terraformfConfig = TerraformConfig.builder()
+                                           .entityId(generateEntityId(context))
+                                           .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
+                                           .sourceRepoReference(executionData.getSourceRepoReference())
+                                           .variables(executionData.getVariables())
+                                           .backendConfigs(executionData.getBackendConfigs())
+                                           .tfVarFiles(executionData.getTfVarFiles())
+                                           .workflowExecutionId(context.getWorkflowExecutionId())
+                                           .targets(executionData.getTargets())
+                                           .command(executionData.getCommandExecuted())
+                                           .appId(context.getAppId())
+                                           .build();
     wingsPersistence.save(terraformfConfig);
   }
 
@@ -660,8 +660,8 @@ public abstract class TerraformProvisionState extends State {
   }
 
   protected void deleteTerraformConfig(ExecutionContext context) {
-    Query<TerraformfConfig> query = wingsPersistence.createQuery(TerraformfConfig.class)
-                                        .filter(TerraformfConfig.ENTITY_ID_KEY, generateEntityId(context));
+    Query<TerraformConfig> query = wingsPersistence.createQuery(TerraformConfig.class)
+                                       .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId(context));
 
     wingsPersistence.delete(query);
   }

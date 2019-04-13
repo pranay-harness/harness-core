@@ -41,6 +41,7 @@ import com.google.inject.Inject;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import freemarker.template.TemplateException;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
@@ -394,7 +395,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get())
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(null);
     verify(waitNotifyEngine)
         .notify(delegateTask.getWaitId(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
@@ -421,7 +422,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get())
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(null);
   }
 
@@ -476,7 +477,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
     DelegateTask updatedDelegateTask =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get();
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
 
     assertThat(updatedDelegateTask != null);
     assertThat(updatedDelegateTask.getDelegateId() == null);
@@ -512,7 +513,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
     DelegateTask updatedDelegateTask =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get();
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
     assertThat(updatedDelegateTask).isEqualTo(null);
   }
 

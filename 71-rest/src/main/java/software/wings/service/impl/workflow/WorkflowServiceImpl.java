@@ -200,6 +200,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
+import software.wings.sm.StateMachine.StateMachineKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
@@ -1277,7 +1278,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return wingsPersistence.createQuery(StateMachine.class)
         .filter(StateMachine.APP_ID_KEY, appId)
         .filter(StateMachine.ORIGIN_ID_KEY, originId)
-        .order(Sort.descending(StateMachine.CREATED_AT_KEY))
+        .order(Sort.descending(StateMachineKeys.createdAt))
         .get();
   }
 

@@ -16,6 +16,7 @@ import com.google.inject.name.Named;
 import com.mongodb.DBCollection;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.HPersistence;
@@ -308,11 +309,11 @@ public class MongoPersistence implements HPersistence {
     final long currentTime = currentTimeMillis();
 
     if (CreatedByAware.class.isAssignableFrom(query.getEntityClass())) {
-      MongoUtils.setUnset(updateOperations, CreatedByAware.CREATED_BY_KEY, userProvider.activeUser());
+      MongoUtils.setUnset(updateOperations, SampleEntityKeys.createdBy, userProvider.activeUser());
     }
 
     if (CreatedAtAware.class.isAssignableFrom(query.getEntityClass())) {
-      updateOperations.setOnInsert(CreatedAtAware.CREATED_AT_KEY, currentTime);
+      updateOperations.setOnInsert(SampleEntityKeys.createdAt, currentTime);
     }
 
     onUpdate(query, updateOperations, currentTime);
@@ -324,11 +325,11 @@ public class MongoPersistence implements HPersistence {
   private <T extends PersistentEntity> void onUpdate(
       Query<T> query, UpdateOperations<T> updateOperations, long currentTime) {
     if (UpdatedByAware.class.isAssignableFrom(query.getEntityClass())) {
-      MongoUtils.setUnset(updateOperations, UpdatedByAware.LAST_UPDATED_BY_KEY, userProvider.activeUser());
+      MongoUtils.setUnset(updateOperations, SampleEntityKeys.lastUpdatedBy, userProvider.activeUser());
     }
 
     if (UpdatedAtAware.class.isAssignableFrom(query.getEntityClass())) {
-      updateOperations.set(UpdatedAtAware.LAST_UPDATED_AT_KEY, currentTime);
+      updateOperations.set(SampleEntityKeys.lastUpdatedAt, currentTime);
     }
   }
 

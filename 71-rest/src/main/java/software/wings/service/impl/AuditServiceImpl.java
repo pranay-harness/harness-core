@@ -22,7 +22,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.persistence.ReadPref;
-import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
@@ -35,6 +34,7 @@ import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
 import software.wings.beans.EntityYamlRecord;
+import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
@@ -83,7 +83,7 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String entityType) {
     AuditHeader header = wingsPersistence.createQuery(AuditHeader.class)
-                             .filter(UuidAccess.ID_KEY, headerId)
+                             .filter(AuditHeader.ID_KEY, headerId)
                              .project("entityAuditRecords", true)
                              .get();
 
@@ -109,7 +109,7 @@ public class AuditServiceImpl implements AuditService {
 
     if (isNotEmpty(yamlIds)) {
       Query<EntityYamlRecord> query =
-          wingsPersistence.createQuery(EntityYamlRecord.class).field(UuidAccess.ID_KEY).in(yamlIds);
+          wingsPersistence.createQuery(EntityYamlRecord.class).field(EntityYamlRecordKeys.uuid).in(yamlIds);
 
       if (isNotBlank(entityId)) {
         if (isBlank(entityType)) {

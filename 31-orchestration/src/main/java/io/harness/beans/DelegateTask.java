@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
@@ -33,6 +34,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
+@FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String APP_ID_KEY = "appId";

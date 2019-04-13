@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureFlag.FeatureFlagKeys;
 import software.wings.beans.FeatureFlag.Scope;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
@@ -122,7 +123,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     // Delete flags that were marked obsolete more than ten days ago
     wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
                                 .filter("obsolete", true)
-                                .field(FeatureFlag.LAST_UPDATED_AT_KEY)
+                                .field(FeatureFlagKeys.lastUpdatedAt)
                                 .lessThan(clock.millis() - TimeUnit.DAYS.toMillis(10)));
 
     // Persist new flags initialized as enabled false

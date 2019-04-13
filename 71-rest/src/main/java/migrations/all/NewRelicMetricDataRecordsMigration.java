@@ -1,7 +1,6 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.persistence.UuidAccess.ID_KEY;
 
 import com.google.inject.Inject;
 
@@ -45,7 +44,9 @@ public class NewRelicMetricDataRecordsMigration implements Migration {
         continue;
       }
       bulkWriteOperation
-          .find(wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter(ID_KEY, uuId).getQueryObject())
+          .find(wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                    .filter(NewRelicMetricDataRecord.ID_KEY, uuId)
+                    .getQueryObject())
           .updateOne(new BasicDBObject("$set", new BasicDBObject("appId", appId)));
       updated++;
       batched++;

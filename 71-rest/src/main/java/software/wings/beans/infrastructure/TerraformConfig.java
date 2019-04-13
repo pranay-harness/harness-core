@@ -9,6 +9,7 @@ import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
@@ -23,7 +24,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "terraformConfig")
 @HarnessExportableEntity
-public class TerraformfConfig implements PersistentEntity, UuidAware, CreatedAtAware {
+@FieldNameConstants(innerTypeName = "TerraformConfigKeys")
+public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAware {
   public static final String APP_ID_KEY = "appId";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

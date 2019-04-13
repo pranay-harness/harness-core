@@ -2,11 +2,21 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -14,6 +24,7 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
+import javax.validation.constraints.NotNull;
 
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @Data
@@ -21,14 +32,16 @@ import java.util.Date;
 @Indexes(@Index(options = @IndexOptions(unique = true, name = "uniqueUnitOrder"),
     fields = { @Field("resourceConstraintId")
                , @Field("resourceUnit"), @Field("order") }))
-public class ResourceConstraintInstance extends Base {
-  public static final String ACQUIRED_AT_KEY = "acquiredAt";
-  public static final String ORDER_KEY = "order";
-  public static final String RELEASE_ENTITY_ID_KEY = "releaseEntityId";
-  public static final String RELEASE_ENTITY_TYPE_KEY = "releaseEntityType";
-  public static final String RESOURCE_CONSTRAINT_ID_KEY = "resourceConstraintId";
-  public static final String RESOURCE_UNIT_KEY = "resourceUnit";
-  public static final String STATE_KEY = "state";
+@FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
+public class ResourceConstraintInstance
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @Indexed private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   private String accountId;
 

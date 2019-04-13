@@ -2,7 +2,6 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.UuidAware.ID_KEY;
 import static java.lang.Integer.max;
 
 import com.google.inject.Inject;
@@ -41,13 +40,13 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
         logger.info("saving " + mlAnalysisRecord.getUuid());
         bulkWriteOperation
             .find(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                      .filter(ID_KEY, mlAnalysisRecord.getUuid())
+                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY, mlAnalysisRecord.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$set",
                 new BasicDBObject("transactionsCompressedJson", mlAnalysisRecord.getTransactionsCompressedJson())));
         bulkWriteOperation
             .find(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                      .filter(ID_KEY, mlAnalysisRecord.getUuid())
+                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY, mlAnalysisRecord.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("aggregatedRisk", aggregatedRisk)));
         batched++;

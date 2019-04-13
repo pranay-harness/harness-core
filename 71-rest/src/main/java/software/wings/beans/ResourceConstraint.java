@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -37,6 +38,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ResourceConstraintKeys")
 public class ResourceConstraint
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   public static final String ACCOUNT_ID_KEY = "accountId";

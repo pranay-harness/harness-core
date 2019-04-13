@@ -12,7 +12,6 @@ import static software.wings.beans.Service.IS_K8S_V2_KEY;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.UuidAccess;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -93,8 +92,8 @@ public class K8sV2ServiceInfraReleaseNameMigration implements Migration {
         wingsPersistence.createUpdateOperations(InfrastructureMapping.class)
             .set(RELEASE_NAME_KEY, INFRA_KUBERNETES_INFRAID_EXPRESSION);
 
-    Query<InfrastructureMapping> query =
-        wingsPersistence.createQuery(InfrastructureMapping.class).filter(UuidAccess.ID_KEY, infraMapping.getUuid());
+    Query<InfrastructureMapping> query = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                             .filter(InfrastructureMapping.ID_KEY, infraMapping.getUuid());
 
     wingsPersistence.update(query, updateOperations);
   }

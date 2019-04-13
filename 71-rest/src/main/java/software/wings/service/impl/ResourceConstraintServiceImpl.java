@@ -46,8 +46,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResourceConstraint;
+import software.wings.beans.ResourceConstraint.ResourceConstraintKeys;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceBuilder;
+import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope.ActiveScopeBuilder;
@@ -144,14 +146,14 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   public Set<String> updateActiveConstraints(String appId, String workflowExecutionId) {
     final Query<ResourceConstraintInstance> query =
         wingsPersistence.createQuery(ResourceConstraintInstance.class, appId == null ? excludeAuthority : allChecks)
-            .filter(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name());
+            .filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name());
 
     if (appId != null) {
-      query.filter(ResourceConstraintInstance.APP_ID_KEY, appId);
+      query.filter(ResourceConstraintInstanceKeys.appId, appId);
     }
     if (workflowExecutionId != null) {
-      query.filter(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY, WORKFLOW.name())
-          .filter(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY, workflowExecutionId);
+      query.filter(ResourceConstraintInstanceKeys.releaseEntityType, WORKFLOW.name())
+          .filter(ResourceConstraintInstanceKeys.releaseEntityId, workflowExecutionId);
     }
 
     Set<String> constraintIds = new HashSet<>();
@@ -165,7 +167,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                 workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
             if (workflowExecution == null || ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
               Map<String, Object> constraintContext =
-                  ImmutableMap.of(ResourceConstraintInstance.APP_ID_KEY, instance.getAppId());
+                  ImmutableMap.of(ResourceConstraintInstanceKeys.appId, instance.getAppId());
 
               if (getRegistry().consumerFinished(new ConstraintId(instance.getResourceConstraintId()),
                       new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()),
@@ -190,7 +192,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     Set<String> excludeConstraintIds = new HashSet<>();
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
              wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
-                 .field(ResourceConstraintInstance.STATE_KEY)
+                 .field(ResourceConstraintInstanceKeys.state)
                  .notEqual(State.FINISHED.name())
                  .fetch())) {
       while (iterator.hasNext()) {
@@ -214,15 +216,15 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   private Query<ResourceConstraintInstance> runnableQuery(String constraintId) {
     return wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
-        .filter(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY, constraintId)
-        .field(ResourceConstraintInstance.STATE_KEY)
+        .filter(ResourceConstraintInstanceKeys.resourceConstraintId, constraintId)
+        .field(ResourceConstraintInstanceKeys.state)
         .in(asList(State.BLOCKED.name(), State.ACTIVE.name()));
   }
 
   private List<ConstraintUnit> units(ResourceConstraint constraint) {
     Set<String> units = new HashSet<>();
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
-             runnableQuery(constraint.getUuid()).project(ResourceConstraintInstance.RESOURCE_UNIT_KEY, true).fetch())) {
+             runnableQuery(constraint.getUuid()).project(ResourceConstraintInstanceKeys.resourceUnit, true).fetch())) {
       while (iterator.hasNext()) {
         ResourceConstraintInstance instance = iterator.next();
         units.add(instance.getResourceUnit());
@@ -239,7 +241,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
     try (HIterator<ResourceConstraint> iterator =
              new HIterator<ResourceConstraint>(wingsPersistence.createQuery(ResourceConstraint.class, excludeAuthority)
-                                                   .field(ResourceConstraint.ID_KEY)
+                                                   .field(ResourceConstraintKeys.uuid)
                                                    .in(constraintIds)
                                                    .fetch())) {
       while (iterator.hasNext()) {
@@ -270,10 +272,10 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
              wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
-                 .field(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY)
+                 .field(ResourceConstraintInstanceKeys.resourceConstraintId)
                  .in(resourceConstraintIds)
-                 .filter(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name())
-                 .order(Sort.ascending(ResourceConstraintInstance.ORDER_KEY))
+                 .filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name())
+                 .order(Sort.ascending(ResourceConstraintInstanceKeys.order))
                  .fetch())) {
       while (iterator.hasNext()) {
         ResourceConstraintInstance instance = iterator.next();
@@ -321,8 +323,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   public int getMaxOrder(String resourceConstraintId) {
     final ResourceConstraintInstance resourceConstraintInstance =
         wingsPersistence.createQuery(ResourceConstraintInstance.class)
-            .filter(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY, resourceConstraintId)
-            .order(Sort.descending(ResourceConstraintInstance.ORDER_KEY))
+            .filter(ResourceConstraintInstanceKeys.resourceConstraintId, resourceConstraintId)
+            .order(Sort.descending(ResourceConstraintInstanceKeys.order))
             .get(new FindOptions().limit(1));
 
     if (resourceConstraintInstance == null) {
@@ -347,8 +349,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
              runnableQuery(id.getValue())
-                 .filter(ResourceConstraintInstance.RESOURCE_UNIT_KEY, unit.getValue())
-                 .order(Sort.ascending(ResourceConstraintInstance.ORDER_KEY))
+                 .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue())
+                 .order(Sort.ascending(ResourceConstraintInstanceKeys.order))
                  .fetch())) {
       while (iterator.hasNext()) {
         ResourceConstraintInstance instance = iterator.next();
@@ -356,8 +358,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                           .id(new ConsumerId(instance.getUuid()))
                           .state(State.valueOf(instance.getState()))
                           .permits(instance.getPermits())
-                          .context(ImmutableMap.of(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY,
-                              instance.getReleaseEntityType(), ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY,
+                          .context(ImmutableMap.of(ResourceConstraintInstanceKeys.releaseEntityType,
+                              instance.getReleaseEntityType(), ResourceConstraintInstanceKeys.releaseEntityId,
                               instance.getReleaseEntityId()))
                           .build());
       }
@@ -368,9 +370,9 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public boolean overlappingScope(Consumer consumer, Consumer blockedConsumer) {
-    String releaseScope = (String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY);
+    String releaseScope = (String) consumer.getContext().get(ResourceConstraintInstanceKeys.releaseEntityType);
     String blockedReleaseScope =
-        (String) blockedConsumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY);
+        (String) blockedConsumer.getContext().get(ResourceConstraintInstanceKeys.releaseEntityType);
 
     if (!WORKFLOW.name().equals(releaseScope)) {
       unhandled(releaseScope);
@@ -381,9 +383,9 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       return false;
     }
 
-    String workflowExecutionId = (String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY);
+    String workflowExecutionId = (String) consumer.getContext().get(ResourceConstraintInstanceKeys.releaseEntityId);
     String blockedWorkflowExecutionId =
-        (String) blockedConsumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY);
+        (String) blockedConsumer.getContext().get(ResourceConstraintInstanceKeys.releaseEntityId);
 
     return workflowExecutionId.equals(blockedWorkflowExecutionId);
   }
@@ -399,14 +401,14 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     final ResourceConstraintInstanceBuilder builder =
         ResourceConstraintInstance.builder()
             .uuid(consumer.getId().getValue())
-            .appId((String) consumer.getContext().get(ResourceConstraintInstance.APP_ID_KEY))
+            .appId((String) consumer.getContext().get(ResourceConstraintInstanceKeys.appId))
             .resourceConstraintId(id.getValue())
             .resourceUnit(unit.getValue())
-            .releaseEntityType((String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY))
-            .releaseEntityId((String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY))
+            .releaseEntityType((String) consumer.getContext().get(ResourceConstraintInstanceKeys.releaseEntityType))
+            .releaseEntityId((String) consumer.getContext().get(ResourceConstraintInstanceKeys.releaseEntityId))
             .permits(consumer.getPermits())
             .state(consumer.getState().name())
-            .order((int) consumer.getContext().get(ResourceConstraintInstance.ORDER_KEY));
+            .order((int) consumer.getContext().get(ResourceConstraintInstanceKeys.order));
 
     if (consumer.getState() == State.ACTIVE) {
       builder.acquiredAt(currentTimeMillis());
@@ -424,10 +426,10 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public boolean adjustRegisterConsumerContext(ConstraintId id, Map<String, Object> context) {
     final int order = getMaxOrder(id.getValue()) + 1;
-    if (order == (int) context.get(ResourceConstraintInstance.ORDER_KEY)) {
+    if (order == (int) context.get(ResourceConstraintInstanceKeys.order)) {
       return false;
     }
-    context.put(ResourceConstraintInstance.ORDER_KEY, order);
+    context.put(ResourceConstraintInstanceKeys.order, order);
     return true;
   }
 
@@ -438,18 +440,18 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
     final Query<ResourceConstraintInstance> query =
         wingsPersistence.createQuery(ResourceConstraintInstance.class)
-            .filter(ResourceConstraintInstance.ID_KEY, consumerId.getValue())
-            .filter(ResourceConstraintInstance.RESOURCE_UNIT_KEY, unit.getValue())
-            .filter(ResourceConstraintInstance.STATE_KEY, State.BLOCKED.name());
+            .filter(ResourceConstraintInstanceKeys.uuid, consumerId.getValue())
+            .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue())
+            .filter(ResourceConstraintInstanceKeys.state, State.BLOCKED.name());
 
-    if (context != null && context.containsKey(ResourceConstraintInstance.APP_ID_KEY)) {
-      query.filter(ResourceConstraintInstance.APP_ID_KEY, context.get(ResourceConstraintInstance.APP_ID_KEY));
+    if (context != null && context.containsKey(ResourceConstraintInstanceKeys.appId)) {
+      query.filter(ResourceConstraintInstanceKeys.appId, context.get(ResourceConstraintInstanceKeys.appId));
     }
 
     final UpdateOperations<ResourceConstraintInstance> ops =
         wingsPersistence.createUpdateOperations(ResourceConstraintInstance.class)
-            .set(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name())
-            .set(ResourceConstraintInstance.ACQUIRED_AT_KEY, currentTimeMillis());
+            .set(ResourceConstraintInstanceKeys.state, State.ACTIVE.name())
+            .set(ResourceConstraintInstanceKeys.acquiredAt, currentTimeMillis());
 
     wingsPersistence.update(query, ops);
     return true;
@@ -460,14 +462,14 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
     final Query<ResourceConstraintInstance> query =
         wingsPersistence.createQuery(ResourceConstraintInstance.class)
-            .filter(ResourceConstraintInstance.APP_ID_KEY, context.get(ResourceConstraintInstance.APP_ID_KEY))
-            .filter(ResourceConstraintInstance.ID_KEY, consumerId.getValue())
-            .filter(ResourceConstraintInstance.RESOURCE_UNIT_KEY, unit.getValue())
-            .filter(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name());
+            .filter(ResourceConstraintInstanceKeys.appId, context.get(ResourceConstraintInstanceKeys.appId))
+            .filter(ResourceConstraintInstanceKeys.uuid, consumerId.getValue())
+            .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue())
+            .filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name());
 
     final UpdateOperations<ResourceConstraintInstance> ops =
         wingsPersistence.createUpdateOperations(ResourceConstraintInstance.class)
-            .set(ResourceConstraintInstance.STATE_KEY, State.FINISHED.name());
+            .set(ResourceConstraintInstanceKeys.state, State.FINISHED.name());
 
     final UpdateResults updateResults = wingsPersistence.update(query, ops);
     if (updateResults == null || updateResults.getUpdatedCount() == 0) {

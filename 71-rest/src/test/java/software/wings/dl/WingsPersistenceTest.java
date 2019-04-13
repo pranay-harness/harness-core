@@ -25,7 +25,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
-import io.harness.persistence.CreatedAtAccess;
+import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -278,7 +278,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public void shouldWorkWithQueryWithNumberValues() {
     UriInfo uriInfo = mock(UriInfo.class);
     Map<String, List<String>> queryParams = new HashMap<>();
-    queryParams.put("search[0][field]", Lists.newArrayList(CreatedAtAccess.CREATED_AT_KEY));
+    queryParams.put("search[0][field]", Lists.newArrayList(SampleEntityKeys.createdAt));
     queryParams.put("search[0][op]", Lists.newArrayList("GT"));
     queryParams.put("search[0][value]", Lists.newArrayList("10"));
 

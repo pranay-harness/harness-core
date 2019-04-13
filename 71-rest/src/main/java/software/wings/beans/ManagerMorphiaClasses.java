@@ -46,7 +46,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.TerraformfConfig;
+import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
@@ -129,7 +129,7 @@ public class ManagerMorphiaClasses {
 
   public static final Set<Class> classes = ImmutableSet.<Class>of(FeatureFlag.class, InfrastructureProvisioner.class,
       ContainerTask.class, DeploymentTrigger.class, AmazonS3ArtifactStream.class, HelmChartSpecification.class,
-      ManagerConfiguration.class, DelegateProfile.class, TerraformfConfig.class, DelegateScope.class,
+      ManagerConfiguration.class, DelegateProfile.class, TerraformConfig.class, DelegateScope.class,
       SystemCatalog.class, SamlSettings.class, ArtifactoryArtifactStream.class, ContainerDeploymentInfo.class,
       Template.class, Instance.class, NexusArtifactStream.class, ExternalServiceAuthToken.class,
       CodeDeployInfrastructureMapping.class, Idempotent.class, GcrArtifactStream.class, EntityVersionCollection.class,

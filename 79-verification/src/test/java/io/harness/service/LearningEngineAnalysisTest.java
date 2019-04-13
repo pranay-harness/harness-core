@@ -2,7 +2,6 @@ package io.harness.service;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.UuidAccess.ID_KEY;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
@@ -12,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;

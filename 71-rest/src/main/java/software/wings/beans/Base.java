@@ -45,8 +45,13 @@ import javax.validation.constraints.NotNull;
 // To implement these interfaces simply define the respective field
 public class Base
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+  public static final String ID_KEY = "_id";
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";
+  public static final String CREATED_AT_KEY = "createdAt";
+  public static final String CREATED_BY_KEY = "createdBy";
+  public static final String LAST_UPDATED_BY_KEY = "lastUpdatedBy";
+  public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;

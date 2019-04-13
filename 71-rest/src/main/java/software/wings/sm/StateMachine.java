@@ -26,6 +26,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.serializer.MapperUtils;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
@@ -68,6 +69,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "stateMachines", noClassnameStored = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "StateMachineKeys")
 public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware {
   private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
 
