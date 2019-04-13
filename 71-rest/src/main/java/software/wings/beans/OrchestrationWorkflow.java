@@ -13,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.Variable.VariableBuilder;
@@ -159,7 +158,6 @@ public abstract class OrchestrationWorkflow {
   /***
    * Add template expressions to workflow variables
    */
-  @SuppressFBWarnings("UC_USELESS_OBJECT")
   public void addToUserVariables(
       List<TemplateExpression> templateExpressions, String stateType, String name, State state) {
     if (isEmpty(templateExpressions)) {
@@ -220,6 +218,7 @@ public abstract class OrchestrationWorkflow {
         Map<String, Object> variableMetadata = variable.getMetadata();
         if (variableMetadata == null) {
           variableMetadata = new HashMap<>();
+          variable.setMetadata(variableMetadata);
         }
         variableMetadata.put(Variable.ENTITY_TYPE, entityType);
         if (isNotEmpty(artifactType)) {
