@@ -46,6 +46,7 @@ import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionInterruptType.RETRY;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
@@ -208,26 +209,22 @@ public class StateMachineExecutor implements StateInspectionListener {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "State machine is null");
     }
 
-    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setExecutionName(executionName);
-    stateExecutionInstance.setExecutionUuid(executionUuid);
+    StateExecutionInstance.Builder stateExecutionInstanceBuilder =
+        aStateExecutionInstance().executionName(executionName).executionUuid(executionUuid);
 
     LinkedList<ContextElement> contextElements = new LinkedList<>();
     if (contextParams != null) {
       contextElements.addAll(contextParams);
     }
-    stateExecutionInstance.setContextElements(contextElements);
+    stateExecutionInstanceBuilder.contextElements(contextElements)
+        .callback(callback)
+        .stateName(sm.getInitialStateName())
+        .displayName(sm.getInitialStateName());
 
-    stateExecutionInstance.setCallback(callback);
-
-    if (stateExecutionInstance.getDisplayName() == null) {
-      stateExecutionInstance.setStateName(sm.getInitialStateName());
-      stateExecutionInstance.setDisplayName(sm.getInitialStateName());
-    }
     if (executionEventAdvisor != null) {
-      stateExecutionInstance.setExecutionEventAdvisors(asList(executionEventAdvisor));
+      stateExecutionInstanceBuilder.executionEventAdvisors(asList(executionEventAdvisor));
     }
-    return triggerExecution(sm, stateExecutionInstance);
+    return triggerExecution(sm, stateExecutionInstanceBuilder.build());
   }
 
   /**
@@ -1655,7 +1652,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     public void run() {
       try (ExecutionLogContext ctx = new ExecutionLogContext(context.getWorkflowExecutionId())) {
         if (asyncError) {
-          StateExecutionData stateExecutionData = context.getStateExecutionInstance().getStateExecutionData();
+          StateExecutionData stateExecutionData = context.getStateExecutionInstance().fetchStateExecutionData();
           ErrorNotifyResponseData errorNotifyResponseData =
               (ErrorNotifyResponseData) response.values().iterator().next();
           stateExecutionData.setErrorMsg(errorNotifyResponseData.getErrorMessage());

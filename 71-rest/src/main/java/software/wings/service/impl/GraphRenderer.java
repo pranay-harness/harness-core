@@ -200,7 +200,7 @@ public class GraphRenderer {
 
       if (elementStateExecutionData != null) {
         final List<StateExecutionData> executionDataList = instances.stream()
-                                                               .map(StateExecutionInstance::getStateExecutionData)
+                                                               .map(StateExecutionInstance::fetchStateExecutionData)
                                                                .filter(Objects::nonNull)
                                                                .collect(toList());
 
@@ -225,7 +225,7 @@ public class GraphRenderer {
 
         Collection<String> elements = null;
         Collection<String> aggregateElements = null;
-        StateExecutionData sed = instance.getStateExecutionData();
+        StateExecutionData sed = instance.fetchStateExecutionData();
         if (sed instanceof ForkStateExecutionData) {
           elements = ((ForkStateExecutionData) sed).getElements();
         } else if (sed instanceof RepeatStateExecutionData) {
@@ -427,8 +427,8 @@ public class GraphRenderer {
     }
     builder.interruptHistoryCount(interrupts);
 
-    if (instance.getStateExecutionData() != null) {
-      StateExecutionData executionData = instance.getStateExecutionData();
+    if (instance.fetchStateExecutionData() != null) {
+      StateExecutionData executionData = instance.fetchStateExecutionData();
       injector.injectMembers(executionData);
       try {
         builder.executionSummary(executionData.getExecutionSummary());

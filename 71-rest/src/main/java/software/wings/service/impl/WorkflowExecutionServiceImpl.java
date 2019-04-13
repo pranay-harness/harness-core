@@ -455,7 +455,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           wingsPersistence.createQuery(StateExecutionInstance.class).filter(ID_KEY, stateExecutionId).get();
 
       ApprovalStateExecutionData approvalStateExecutionData =
-          (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionData();
+          (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
       // Check for Approval Id in PAUSED status
       if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
           && approvalStateExecutionData.getApprovalId().equals(approvalId)) {
@@ -464,9 +464,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } else {
       List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
       for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-        if (stateExecutionInstance.getStateExecutionData() instanceof ApprovalStateExecutionData) {
+        if (stateExecutionInstance.fetchStateExecutionData() instanceof ApprovalStateExecutionData) {
           ApprovalStateExecutionData approvalStateExecutionData =
-              (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionData();
+              (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
           // Check for Approval Id in PAUSED status
           if (approvalStateExecutionData != null
               && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
@@ -528,7 +528,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                         .startTs(stateExecutionInstance.getStartTs())
                                                         .endTs(stateExecutionInstance.getEndTs())
                                                         .build();
-            StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+            StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
             if (stateExecutionData instanceof ApprovalStateExecutionData) {
               stageExecution.setStateExecutionData(stateExecutionData);
@@ -553,7 +553,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                         .startTs(stateExecutionInstance.getStartTs())
                                                         .endTs(stateExecutionInstance.getEndTs())
                                                         .build();
-            StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+            StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
             if (stateExecutionData instanceof EnvStateExecutionData) {
               EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
@@ -1613,7 +1613,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
     for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-      StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+      StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
       if (!(stateExecutionData instanceof EnvStateExecutionData)) {
         continue;
       }
@@ -1781,7 +1781,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
 
-    StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+    StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
     Validator.notNullCheck("stateExecutionData", stateExecutionData);
     if (!(stateExecutionData instanceof RepeatStateExecutionData)) {
       throw new InvalidRequestException("Request for elements of instance that is not repeated", USER);
@@ -1979,7 +1979,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     for (StateExecutionInstance stateExecutionInstance : pageResponse.getResponse()) {
-      if (!(stateExecutionInstance.getStateExecutionData() instanceof ElementStateExecutionData)) {
+      if (!(stateExecutionInstance.fetchStateExecutionData() instanceof ElementStateExecutionData)) {
         continue;
       }
       if (stateExecutionInstance.isRollback()) {
@@ -1987,7 +1987,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       ElementStateExecutionData elementStateExecutionData =
-          (ElementStateExecutionData) stateExecutionInstance.getStateExecutionData();
+          (ElementStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
       if (isEmpty(elementStateExecutionData.getElementStatusSummary())) {
         continue;
       }
@@ -2133,7 +2133,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       breakdown.setSuccess(0);
     }
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
-      StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+      StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
       if (!(stateExecutionData instanceof PhaseExecutionData)) {
         continue;
       }
@@ -2235,9 +2235,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         if ((nextStateType == StateType.REPEAT || nextStateType == StateType.FORK || nextStateType == StateType.PHASE
                 || nextStateType == PHASE_STEP || nextStateType == StateType.SUB_WORKFLOW)
-            && next.getStateExecutionData() instanceof ElementStateExecutionData) {
+            && next.fetchStateExecutionData() instanceof ElementStateExecutionData) {
           ElementStateExecutionData elementStateExecutionData =
-              (ElementStateExecutionData) next.getStateExecutionData();
+              (ElementStateExecutionData) next.fetchStateExecutionData();
           instanceStatusSummaries.addAll(elementStateExecutionData.getElementStatusSummary()
                                              .stream()
                                              .filter(e -> e.getInstanceStatusSummaries() != null)
@@ -2245,17 +2245,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                              .collect(toList()));
         } else if ((nextStateType == StateType.ECS_SERVICE_DEPLOY || nextStateType == StateType.KUBERNETES_DEPLOY
                        || nextStateType == StateType.AWS_CODEDEPLOY_STATE)
-            && next.getStateExecutionData() instanceof CommandStateExecutionData) {
+            && next.fetchStateExecutionData() instanceof CommandStateExecutionData) {
           CommandStateExecutionData commandStateExecutionData =
-              (CommandStateExecutionData) next.getStateExecutionData();
+              (CommandStateExecutionData) next.fetchStateExecutionData();
           instanceStatusSummaries.addAll(commandStateExecutionData.getNewInstanceStatusSummaries());
         } else if (nextStateType == StateType.AWS_AMI_SERVICE_DEPLOY
-            && next.getStateExecutionData() instanceof AwsAmiDeployStateExecutionData) {
+            && next.fetchStateExecutionData() instanceof AwsAmiDeployStateExecutionData) {
           AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
-              (AwsAmiDeployStateExecutionData) next.getStateExecutionData();
+              (AwsAmiDeployStateExecutionData) next.fetchStateExecutionData();
           instanceStatusSummaries.addAll(awsAmiDeployStateExecutionData.getNewInstanceStatusSummaries());
         } else if (nextStateType == StateType.HELM_DEPLOY) {
-          StateExecutionData stateExecutionData = next.getStateExecutionData();
+          StateExecutionData stateExecutionData = next.fetchStateExecutionData();
           if (stateExecutionData instanceof HelmDeployStateExecutionData) {
             HelmDeployStateExecutionData helmDeployStateExecutionData =
                 (HelmDeployStateExecutionData) stateExecutionData;
@@ -2265,13 +2265,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           }
         } else if (nextStateType == StateType.KUBERNETES_STEADY_STATE_CHECK) {
           KubernetesSteadyStateCheckExecutionData kubernetesSteadyStateCheckExecutionData =
-              (KubernetesSteadyStateCheckExecutionData) next.getStateExecutionData();
+              (KubernetesSteadyStateCheckExecutionData) next.fetchStateExecutionData();
           if (isNotEmpty(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries())) {
             instanceStatusSummaries.addAll(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries());
           }
         } else if (nextStateType == StateType.K8S_DEPLOYMENT_ROLLING || nextStateType == StateType.K8S_CANARY_DEPLOY
             || nextStateType == StateType.K8S_BLUE_GREEN_DEPLOY || nextStateType == StateType.K8S_SCALE) {
-          StateExecutionData stateExecutionData = next.getStateExecutionData();
+          StateExecutionData stateExecutionData = next.fetchStateExecutionData();
           if (stateExecutionData instanceof K8sStateExecutionData) {
             K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) stateExecutionData;
             if (isNotEmpty(k8sStateExecutionData.getNewInstanceStatusSummaries())) {
@@ -2332,7 +2332,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     allStateExecutionInstances.forEach(instance -> {
-      StateExecutionData stateExecutionData = instance.getStateExecutionData();
+      StateExecutionData stateExecutionData = instance.fetchStateExecutionData();
       if (stateExecutionData instanceof PhaseStepExecutionData) {
         PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) stateExecutionData;
         phaseExecutionSummary.getPhaseStepExecutionSummaryMap().put(
@@ -2378,7 +2378,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               || StateType.FORK.name().equals(instance.getStateType())) {
             parentInstanceIds.add(instance.getUuid());
           } else {
-            stepExecutionSummaryList.add(instance.getStateExecutionData().getStepExecutionSummary());
+            stepExecutionSummaryList.add(instance.fetchStateExecutionData().getStepExecutionSummary());
           }
         }
       }
@@ -2407,7 +2407,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<Artifact> artifacts = new ArrayList<>();
     allStateExecutionInstances.forEach(stateExecutionInstance -> {
       ArtifactCollectionExecutionData artifactCollectionExecutionData =
-          (ArtifactCollectionExecutionData) stateExecutionInstance.getStateExecutionData();
+          (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
       artifacts.add(artifactService.get(appId, artifactCollectionExecutionData.getArtifactId()));
     });
     return artifacts;

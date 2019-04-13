@@ -114,7 +114,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
-  public StateExecutionData getStateExecutionData() {
+  public StateExecutionData fetchStateExecutionData() {
     return stateExecutionMap.get(displayName);
   }
 
@@ -131,6 +131,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
     private LinkedList<ContextElement> contextElements = new LinkedList<>();
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
+    private List<ExecutionEventAdvisor> executionEventAdvisors;
     private List<ContextElement> notifyElements;
     private StateMachineExecutionCallback callback;
     private String executionName;
@@ -215,6 +216,11 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
     public Builder stateExecutionDataHistory(List<StateExecutionData> stateExecutionDataHistory) {
       this.stateExecutionDataHistory = stateExecutionDataHistory;
+      return this;
+    }
+
+    public Builder executionEventAdvisors(List<ExecutionEventAdvisor> executionEventAdvisors) {
+      this.executionEventAdvisors = executionEventAdvisors;
       return this;
     }
 
@@ -359,6 +365,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
       stateExecutionInstance.setContextElements(contextElements);
       stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
       stateExecutionInstance.setStateExecutionDataHistory(stateExecutionDataHistory);
+      stateExecutionInstance.setExecutionEventAdvisors(executionEventAdvisors);
       stateExecutionInstance.setNotifyElements(notifyElements);
       stateExecutionInstance.setCallback(callback);
       stateExecutionInstance.setExecutionName(executionName);

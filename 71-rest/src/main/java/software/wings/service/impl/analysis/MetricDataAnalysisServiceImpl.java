@@ -277,7 +277,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
 
     SettingAttribute settingAttribute = settingsService.get(
-        ((MetricAnalysisExecutionData) stateExecutionInstance.getStateExecutionData()).getServerConfigId());
+        ((MetricAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData()).getServerConfigId());
 
     if (settingAttribute.getName().toLowerCase().endsWith("dev")
         || settingAttribute.getName().toLowerCase().endsWith("prod")) {

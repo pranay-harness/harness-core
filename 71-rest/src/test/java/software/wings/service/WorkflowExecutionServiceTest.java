@@ -442,7 +442,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(statequery.get()).thenReturn(stateExecutionInstance);
     when(statequery.filter(any(), any())).thenReturn(statequery);
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(statequery);
-    when(stateExecutionInstance.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+    when(stateExecutionInstance.fetchStateExecutionData()).thenReturn(approvalStateExecutionData);
     when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 
@@ -467,7 +467,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(statequery.get()).thenReturn(stateExecutionInstance);
     when(statequery.filter(any(), any())).thenReturn(statequery);
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(statequery);
-    when(stateExecutionInstance.getStateExecutionData()).thenReturn(null);
+    when(stateExecutionInstance.fetchStateExecutionData()).thenReturn(null);
     when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 

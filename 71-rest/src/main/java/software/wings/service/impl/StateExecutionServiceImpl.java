@@ -107,7 +107,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
-        StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+        StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
         if (CurrentPhase.EXCLUDE.equals(curentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
           return executionDataList;
         }
@@ -183,7 +183,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                                         .project(StateExecutionInstanceKeys.displayName, true)
                                                         .project(StateExecutionInstanceKeys.stateExecutionMap, true)
                                                         .get();
-    return stateExecutionInstance.getStateExecutionData();
+    return stateExecutionInstance.fetchStateExecutionData();
   }
 
   @Override
