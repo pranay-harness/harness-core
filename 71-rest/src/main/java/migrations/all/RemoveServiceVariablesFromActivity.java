@@ -11,6 +11,7 @@ import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.dl.WingsPersistence;
 
 public class RemoveServiceVariablesFromActivity implements Migration {
@@ -27,7 +28,7 @@ public class RemoveServiceVariablesFromActivity implements Migration {
     try (HIterator<Activity> activities = new HIterator<>(wingsPersistence.createQuery(Activity.class)
                                                               .field("serviceVariables")
                                                               .exists()
-                                                              .project("appId", true)
+                                                              .project(ActivityKeys.appId, true)
                                                               .fetch())) {
       while (activities.hasNext()) {
         final Activity activity = activities.next();
@@ -41,7 +42,7 @@ public class RemoveServiceVariablesFromActivity implements Migration {
 
         bulkWriteOperation
             .find(wingsPersistence.createQuery(Activity.class)
-                      .filter(Activity.APP_ID_KEY, activity.getAppId())
+                      .filter(ActivityKeys.appId, activity.getAppId())
                       .filter(Activity.ID_KEY, activity.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$unset", new BasicDBObject("serviceVariables", "")));

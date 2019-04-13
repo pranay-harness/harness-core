@@ -11,6 +11,7 @@ import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Instant;
@@ -29,9 +30,9 @@ public class AddValidUntilToActivity implements Migration {
 
     int i = 1;
     try (HIterator<Activity> activities = new HIterator<>(wingsPersistence.createQuery(Activity.class)
-                                                              .field("validUntil")
+                                                              .field(ActivityKeys.validUntil)
                                                               .doesNotExist()
-                                                              .project(Activity.CREATED_AT_KEY, true)
+                                                              .project(ActivityKeys.createdAt, true)
                                                               .fetch())) {
       while (activities.hasNext()) {
         final Activity activity = activities.next();

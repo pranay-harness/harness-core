@@ -6,13 +6,22 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Version;
@@ -27,19 +36,21 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by peeyushaggarwal on 5/27/16.
- */
 @Entity(value = "activities", noClassnameStored = true)
 @Data
+@Builder
+@FieldNameConstants(innerTypeName = "ActivityKeys")
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-public class Activity extends Base {
-  public static final String ARTIFACT_ID_KEY = "artifactId";
-  public static final String SERVICE_INSTANCE_ID_KEY = "serviceInstanceId";
-  public static final String STATUS_KEY = "status";
-  public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
+public class Activity
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @Indexed private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   private Type type;
   @NotEmpty private String applicationName;
@@ -47,7 +58,7 @@ public class Activity extends Base {
   @NotEmpty private String environmentName;
   @NotNull private EnvironmentType environmentType;
   @NotEmpty private String commandName;
-  @NotNull private List<CommandUnit> commandUnits = new ArrayList<>();
+  @Default @NotNull private List<CommandUnit> commandUnits = new ArrayList<>();
   private Map<String, Integer> commandNameVersionMap;
   // TODO: remove
   @Deprecated private Map<String, String> serviceVariables;
@@ -67,7 +78,7 @@ public class Activity extends Base {
   @NotEmpty private String stateExecutionInstanceName;
   @Version private Long version; // Morphia managed for optimistic locking. don't remove
 
-  private CommandUnitType commandUnitType = CommandUnitType.COMMAND;
+  @Default private CommandUnitType commandUnitType = CommandUnitType.COMMAND;
   private boolean logPurged;
 
   private String artifactStreamId;
@@ -75,12 +86,13 @@ public class Activity extends Base {
   private boolean isPipeline;
   private String artifactId;
   private String artifactName;
-  private ExecutionStatus status = ExecutionStatus.RUNNING;
+  @Default private ExecutionStatus status = ExecutionStatus.RUNNING;
   private TriggeredBy triggeredBy;
 
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   /**
@@ -99,50 +111,5 @@ public class Activity extends Base {
      * None of the above.
      */
     Other
-  }
-
-  @Builder
-  public Activity(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath, Type type, String applicationName, String environmentId,
-      String environmentName, EnvironmentType environmentType, String commandName, List<CommandUnit> commandUnits,
-      Map<String, Integer> commandNameVersionMap, String commandType, String serviceId, String serviceName,
-      String serviceTemplateId, String serviceTemplateName, String hostName, String publicDns, String serviceInstanceId,
-      String workflowExecutionId, String workflowId, String workflowExecutionName, WorkflowType workflowType,
-      String stateExecutionInstanceId, String stateExecutionInstanceName, Long version, CommandUnitType commandUnitType,
-      boolean logPurged, String artifactStreamId, String artifactStreamName, boolean isPipeline, String artifactId,
-      String artifactName, ExecutionStatus status, TriggeredBy triggeredBy) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
-    this.type = type;
-    this.applicationName = applicationName;
-    this.environmentId = environmentId;
-    this.environmentName = environmentName;
-    this.environmentType = environmentType;
-    this.commandName = commandName;
-    this.commandUnits = commandUnits == null ? new ArrayList<>() : commandUnits;
-    this.commandNameVersionMap = commandNameVersionMap;
-    this.commandType = commandType;
-    this.serviceId = serviceId;
-    this.serviceName = serviceName;
-    this.serviceTemplateId = serviceTemplateId;
-    this.serviceTemplateName = serviceTemplateName;
-    this.hostName = hostName;
-    this.publicDns = publicDns;
-    this.serviceInstanceId = serviceInstanceId;
-    this.workflowExecutionId = workflowExecutionId;
-    this.workflowId = workflowId;
-    this.workflowExecutionName = workflowExecutionName;
-    this.workflowType = workflowType;
-    this.stateExecutionInstanceId = stateExecutionInstanceId;
-    this.stateExecutionInstanceName = stateExecutionInstanceName;
-    this.version = version;
-    this.commandUnitType = commandUnitType == null ? CommandUnitType.COMMAND : commandUnitType;
-    this.logPurged = logPurged;
-    this.artifactStreamId = artifactStreamId;
-    this.artifactStreamName = artifactStreamName;
-    this.isPipeline = isPipeline;
-    this.artifactId = artifactId;
-    this.artifactName = artifactName;
-    this.status = status == null ? ExecutionStatus.RUNNING : status;
-    this.triggeredBy = triggeredBy;
   }
 }

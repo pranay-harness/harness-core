@@ -47,6 +47,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CommandUnit;
@@ -110,7 +111,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
-    assertThat(activityService.list(aPageRequest().addFilter(Activity.APP_ID_KEY, Operator.EQ, APP_ID).build()))
+    assertThat(activityService.list(aPageRequest().addFilter(ActivityKeys.appId, Operator.EQ, APP_ID).build()))
         .hasSize(1)
         .containsExactly(activity);
   }

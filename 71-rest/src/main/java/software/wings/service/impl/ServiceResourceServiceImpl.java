@@ -76,6 +76,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CommandCategory;
@@ -1775,14 +1776,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement) {
     final Activity activity = wingsPersistence.createQuery(Activity.class)
-                                  .filter(Activity.APP_ID_KEY, appId)
-                                  .filter(Activity.SERVICE_INSTANCE_ID_KEY, instanceElement.getUuid())
-                                  .filter(Activity.STATUS_KEY, ExecutionStatus.SUCCESS)
-                                  .field(Activity.WORKFLOW_EXECUTION_ID_KEY)
+                                  .filter(ActivityKeys.appId, appId)
+                                  .filter(ActivityKeys.serviceInstanceId, instanceElement.getUuid())
+                                  .filter(ActivityKeys.status, ExecutionStatus.SUCCESS)
+                                  .field(ActivityKeys.workflowExecutionId)
                                   .notEqual(workflowExecutionId)
-                                  .field(Activity.ARTIFACT_ID_KEY)
+                                  .field(ActivityKeys.artifactId)
                                   .exists()
-                                  .order(Sort.descending(Activity.CREATED_AT_KEY))
+                                  .order(Sort.descending(ActivityKeys.createdAt))
                                   .get();
 
     if (activity == null) {
