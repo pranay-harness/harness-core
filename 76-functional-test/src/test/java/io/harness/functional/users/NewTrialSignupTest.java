@@ -4,6 +4,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.google.inject.Inject;
 
@@ -54,12 +55,32 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   @Owner(emails = "rama@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignup() {
+    UserInvite invite = constructInvite("password");
+    Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);
+    assertTrue(isTrialInviteDone);
+
+    User user = urUtil.completeNewTrialUserSignup(invite.getUuid());
+    assertNotNull(user);
+    assertEquals(user.getEmail(), invite.getEmail());
+  }
+
+  @Test()
+  @Owner(emails = "rama@harness.io", resent = false)
+  @Category(FunctionalTests.class)
+  public void verifyTrialUserSignupInvalidPassword() {
+    UserInvite invite = constructInvite("pass");
+
+    Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);
+    assertNull(isTrialInviteDone);
+  }
+
+  private UserInvite constructInvite(String password) {
     String domainName = "@harness.mailinator.com";
     String emailId = testUtils.generateUniqueInboxId();
     String fullEmailId = emailId + domainName;
     logger.info("Generating the email id for trial user : " + fullEmailId);
     String inviteId = UUIDGenerator.generateUuid();
-    String password = "password";
+
     UserInvite invite = new UserInvite();
     invite.setEmail(fullEmailId);
     invite.setName(emailId.replace("@harness.mailinator.com", ""));
@@ -69,12 +90,6 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
     invite.setAccountName(accountName);
     invite.setCompanyName(companyName);
     invite.setPassword(password.toCharArray());
-
-    Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);
-    assertTrue(isTrialInviteDone);
-
-    User user = urUtil.completeNewTrialUserSignup(invite.getUuid());
-    assertNotNull(user);
-    assertEquals(user.getEmail(), fullEmailId);
+    return invite;
   }
 }
