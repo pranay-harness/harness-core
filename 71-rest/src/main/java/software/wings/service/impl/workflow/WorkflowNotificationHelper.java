@@ -12,6 +12,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
@@ -47,6 +48,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -186,6 +188,18 @@ public class WorkflowNotificationHelper {
     } else {
       notificationService.sendNotificationAsync(notification, notificationRules);
     }
+  }
+
+  public void sendApprovalNotification(String accountId, NotificationMessageType notificationMessageType,
+      Map<String, String> placeHolderValues, ExecutionContextImpl context) {
+    List<NotificationRule> rules = obtainNotificationApplicableToScope(context, WORKFLOW, PAUSED);
+    notificationService.sendNotificationAsync(anInformationNotification()
+                                                  .withAppId(GLOBAL_APP_ID)
+                                                  .withAccountId(accountId)
+                                                  .withNotificationTemplateId(notificationMessageType.name())
+                                                  .withNotificationTemplateVariables(placeHolderValues)
+                                                  .build(),
+        rules);
   }
 
   List<NotificationRule> obtainNotificationApplicableToScope(
