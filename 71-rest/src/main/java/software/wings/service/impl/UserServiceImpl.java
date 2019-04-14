@@ -263,6 +263,7 @@ public class UserServiceImpl implements UserService {
   public boolean trialSignup(UserInvite userInvite) {
     final String emailAddress = userInvite.getEmail().toLowerCase();
     validateTrialSignup(emailAddress);
+    validatePassword(userInvite.getPassword());
 
     UserInvite userInviteInDB = getUserInviteByEmail(emailAddress);
 
@@ -368,6 +369,16 @@ public class UserServiceImpl implements UserService {
         throw new WingsException(GENERAL_ERROR, USER)
             .addParam("message", "The domain of the email used for trial registration is not allowed.");
       }
+    }
+  }
+
+  private void validatePassword(char[] password) {
+    if (isEmpty(password)) {
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Empty password has been provided.");
+    }
+
+    if (password.length < 8) {
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Password should at least be 8 characters");
     }
   }
 
