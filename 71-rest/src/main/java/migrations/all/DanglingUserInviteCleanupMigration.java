@@ -34,7 +34,7 @@ public class DanglingUserInviteCleanupMigration implements Migration {
         if (user == null) {
           // User has been deleted already. Remove corresponding user invites!
           wingsPersistence.delete(userInvite);
-          log.info("User '{}' has been deleted. Deleting it's corresponding user invite.", email);
+          logger.info("User '{}' has been deleted. Deleting it's corresponding user invite.", email);
         }
       }
     }

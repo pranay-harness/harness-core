@@ -85,9 +85,9 @@ public class AccountExportImportResourceTest {
 
     String usersJson = users.toString();
     String newUsersJson = accountExportImportResource.replaceClashedUserIds(usersJson, userIdMapping);
-    log.info(userIdMapping.toString());
-    log.info(usersJson);
-    log.info(newUsersJson);
+    logger.info(userIdMapping.toString());
+    logger.info(usersJson);
+    logger.info(newUsersJson);
 
     assertNotEquals(newUsersJson, usersJson);
     assertTrue(newUsersJson.indexOf(userId) < 0);

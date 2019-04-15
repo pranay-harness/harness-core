@@ -92,9 +92,9 @@ public class WingsMongoExportImport {
     }
 
     if (importedRecords + idClashCount > 0) {
-      log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
-      log.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords, totalRecords,
-          collectionName, mode);
+      logger.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
+      logger.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords,
+          totalRecords, collectionName, mode);
     }
     return ImportStatus.builder()
         .collectionName(collectionName)

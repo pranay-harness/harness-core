@@ -103,13 +103,13 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
         fieldValue = pd.getReadMethod().invoke(obj);
       }
     } catch (NoSuchFieldException e) {
-      log.warn("NoSuchFieldException occured while fetching value for field {}", fieldName);
+      logger.warn("NoSuchFieldException occured while fetching value for field {}", fieldName);
     } catch (IllegalAccessException e) {
-      log.warn("IllegalAccessException occured while fetching value for field {}", fieldName);
+      logger.warn("IllegalAccessException occured while fetching value for field {}", fieldName);
     } catch (IntrospectionException e) {
-      log.warn("IntrospectionException occured while fetching value for field {}", fieldName);
+      logger.warn("IntrospectionException occured while fetching value for field {}", fieldName);
     } catch (InvocationTargetException e) {
-      log.warn("InvocationTargetException occured while fetching value for field {}", fieldName);
+      logger.warn("InvocationTargetException occured while fetching value for field {}", fieldName);
     }
 
     return fieldValue;
