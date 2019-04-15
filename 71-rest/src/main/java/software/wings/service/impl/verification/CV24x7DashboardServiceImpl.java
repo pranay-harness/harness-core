@@ -15,11 +15,13 @@ import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -291,12 +293,12 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     if (analysisSummary.isEmptyResult()
         && TimeUnit.MILLISECONDS.toMinutes(endTime) > cvConfiguration.getBaselineEndMinute()) {
       LogMLAnalysisRecord record = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                       .filter("cvConfigId", cvConfigId)
+                                       .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
                                        .filter("appId", appId)
-                                       .field("logCollectionMinute")
+                                       .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                        .lessThanOrEq(cvConfiguration.getBaselineEndMinute())
-                                       .filter("deprecated", false)
-                                       .order("-logCollectionMinute")
+                                       .filter(LogMLAnalysisRecordKeys.deprecated, false)
+                                       .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
                                        .get();
       if (record != null) {
         record.decompressLogAnalysisRecord();
