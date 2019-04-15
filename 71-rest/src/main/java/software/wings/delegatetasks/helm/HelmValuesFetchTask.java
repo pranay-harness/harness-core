@@ -6,6 +6,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.WARN;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FileData;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -51,11 +53,11 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
     logger.info(
         format("Running HelmValuesFetchTask for account %s app %s", taskParams.getAccountId(), taskParams.getAppId()));
 
+    ExecutionLogCallback executionLogCallback = getExecutionLogCallback(taskParams, FetchFiles);
     try {
-      HelmChartConfigParams helmChartConfigParams = taskParams.getHelmChartConfigTaskParams();
+      executionLogCallback.saveExecutionLog(color("\nFetching values.yaml from helm chart for Service", White, Bold));
 
-      ExecutionLogCallback executionLogCallback = getExecutionLogCallback(taskParams, FetchFiles);
-      executionLogCallback.saveExecutionLog(color("\nFetching values.yaml", White, Bold));
+      HelmChartConfigParams helmChartConfigParams = taskParams.getHelmChartConfigTaskParams();
       helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
       List<FileData> files = helmTaskHelper.fetchChartFiles(helmChartConfigParams, asList(VALUES_YAML));
@@ -64,7 +66,7 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
       if (isEmpty(files)) {
         executionLogCallback.saveExecutionLog("No values.yaml found", WARN);
       } else {
-        executionLogCallback.saveExecutionLog("Found values.yaml");
+        executionLogCallback.saveExecutionLog("\nSuccessfully fetched values.yaml");
         valuesFileContent = files.get(0).getFileContent();
       }
 
@@ -75,6 +77,7 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
     } catch (Exception e) {
       String exceptionMessage = ExceptionUtils.getMessage(e);
       logger.error("HelmValuesFetchTask execution failed with exception " + exceptionMessage);
+      executionLogCallback.saveExecutionLog(exceptionMessage, ERROR, CommandExecutionStatus.FAILURE);
 
       return HelmValuesFetchTaskResponse.builder()
           .commandExecutionStatus(FAILURE)

@@ -191,6 +191,10 @@ public class K8sStateHelper {
         manifestConfigBuilder.encryptedDataDetails(encryptionDetails);
         break;
 
+      case HelmChartRepo:
+        manifestConfigBuilder.helmChartConfigParams(getHelmChartConfigTaskParams(context, appManifest));
+        break;
+
       default:
         unhandled(storeType);
     }
@@ -221,6 +225,12 @@ public class K8sStateHelper {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
+    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    if (stateExecutionData != null) {
+      valuesFiles.putAll(stateExecutionData.getValuesFiles());
+    }
+
     return ExecutionResponse.Builder.anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Arrays.asList(waitId))
@@ -228,6 +238,7 @@ public class K8sStateHelper {
                                     .activityId(activityId)
                                     .commandName(commandName)
                                     .currentTaskType(TaskType.GIT_COMMAND)
+                                    .valuesFiles(valuesFiles)
                                     .build())
         .withDelegateTaskId(delegateTaskId)
         .build();
@@ -379,8 +390,14 @@ public class K8sStateHelper {
     }
   }
 
-  public List<String> getRenderedValuesFiles(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
-      ExecutionContext context, Map<K8sValuesLocation, String> valuesFiles) {
+  public List<String> getRenderedValuesFiles(
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, ExecutionContext context) {
+    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    if (stateExecutionData != null) {
+      valuesFiles.putAll(stateExecutionData.getValuesFiles());
+    }
+
     populateValuesFiles(appManifestMap, valuesFiles);
 
     List<String> result = new ArrayList<>();
@@ -517,15 +534,17 @@ public class K8sStateHelper {
 
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap = getApplicationManifests(context);
       boolean valuesInGit = isValuesInGit(appManifestMap);
+      boolean valuesInHelmChartRepo = isValuesInHelmChartRepo(context);
 
       Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
-          activityService, k8sStateExecutor.commandUnitList(valuesInGit));
+          activityService, k8sStateExecutor.commandUnitList(valuesInGit || valuesInHelmChartRepo));
 
-      if (valuesInGit) {
+      if (valuesInHelmChartRepo) {
+        return executeHelmValuesFetchTask(context, activity.getUuid(), k8sStateExecutor.commandName());
+      } else if (valuesInGit) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
       } else {
-        Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
-        return k8sStateExecutor.executeK8sTask(context, activity.getUuid(), valuesFiles);
+        return k8sStateExecutor.executeK8sTask(context, activity.getUuid());
       }
     } catch (WingsException e) {
       throw e;
@@ -541,6 +560,9 @@ public class K8sStateHelper {
 
       TaskType taskType = k8sStateExecutionData.getCurrentTaskType();
       switch (taskType) {
+        case HELM_VALUES_FETCH:
+          return handleAsyncResponseForHelmFetchTask(k8sStateExecutor, context, response);
+
         case GIT_COMMAND:
           return handleAsyncResponseForGitTaskWrapper(k8sStateExecutor, context, response);
 
@@ -564,7 +586,7 @@ public class K8sStateHelper {
 
       Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
           activityService, k8sStateExecutor.commandUnitList(false));
-      return k8sStateExecutor.executeK8sTask(context, activity.getUuid(), null);
+      return k8sStateExecutor.executeK8sTask(context, activity.getUuid());
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -680,8 +702,10 @@ public class K8sStateHelper {
     }
 
     Map<K8sValuesLocation, String> valuesFiles = getValuesFilesFromGitResponse(executionResponse);
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
 
-    return k8sStateExecutor.executeK8sTask(context, activityId, valuesFiles);
+    return k8sStateExecutor.executeK8sTask(context, activityId);
   }
 
   private Map<K8sValuesLocation, String> getValuesFilesFromGitResponse(GitCommandExecutionResponse executionResponse) {
@@ -771,7 +795,7 @@ public class K8sStateHelper {
     return applicationManifest;
   }
 
-  private boolean isHelmFetchTaskRequired(ExecutionContext context) {
+  private boolean isValuesInHelmChartRepo(ExecutionContext context) {
     ApplicationManifest applicationManifest = getApplicationManifestForService(context);
 
     return StoreType.HelmChartRepo.equals(applicationManifest.getStoreType());
@@ -792,12 +816,19 @@ public class K8sStateHelper {
       return anExecutionResponse().withExecutionStatus(executionStatus).build();
     }
 
-    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-    k8sStateExecutionData.setHelmValuesContent(executionResponse.getValuesFileContent());
+    if (isNotBlank(executionResponse.getValuesFileContent())) {
+      K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+      k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, executionResponse.getValuesFileContent());
+    }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = getApplicationManifests(context);
 
-    return executeGitTask(context, appManifestMap, activityId, k8sStateExecutor.commandName());
+    boolean valuesInGit = isValuesInGit(appManifestMap);
+    if (valuesInGit) {
+      return executeGitTask(context, appManifestMap, activityId, k8sStateExecutor.commandName());
+    } else {
+      return k8sStateExecutor.executeK8sTask(context, activityId);
+    }
   }
 
   public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId, String commandName) {
