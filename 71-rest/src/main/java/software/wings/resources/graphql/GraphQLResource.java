@@ -75,7 +75,7 @@ public class GraphQLResource {
     if (featureFlagService.isEnabled(FeatureName.GRAPHQL, null)) {
       executionResult = graphQL.execute(executionInput);
     } else {
-      log.info(GraphQLConstants.FEATURE_NOT_ENABLED);
+      logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
       executionResult =
           ExecutionResultImpl.newExecutionResult()
               .addError(GraphqlErrorBuilder.newError().message(GraphQLConstants.FEATURE_NOT_ENABLED).build())
