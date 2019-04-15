@@ -31,6 +31,8 @@ export JAVA_OPTS_MANAGER="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemo
 export JAVA_OPTS_VERIFICATION="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:verificationgclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8"
 export LICENSE_INFO=$(getProperty $CONFIG_PROPERTY_FILE licenseInfo)
 export learning_env="on_prem"
+DEPLOY_MODE=ONPREM
+export DEPLOY_MODE
 
 function replaceconfigs(){
     mongoUrl=$(getProperty "$runtime_dir/savedState" "mongoUrl")
@@ -44,7 +46,6 @@ function replaceconfigs(){
     CAPSULE_JAR=$(getProperty "config/manager/manager.properties" "CAPSULE_JAR")
     MEMORY=$(getProperty "config/manager/manager.properties" "MEMORY")
     LOGGING_LEVEL=$(getProperty "config/manager/manager.properties" "LOGGING_LEVEL")
-    DEPLOY_MODE=ONPREM
     WATCHER_METADATA_URL=$loadBalancerUrl/storage/wingswatchers/watcherprod.txt
     HAZELCAST_PORT=$(getProperty "config/manager/manager.properties" "HAZELCAST_PORT")
     SKIP_LOGS=true
