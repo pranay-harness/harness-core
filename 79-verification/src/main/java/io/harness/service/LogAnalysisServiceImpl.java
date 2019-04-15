@@ -29,6 +29,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.entities.AnomalousLogRecord;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
@@ -71,6 +72,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
+import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
@@ -566,7 +568,50 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }
+    saveAnomalousLogRecordsToGoogleDataStore(mlAnalysisResponse, stateType);
     return true;
+  }
+
+  private void saveAnomalousLogRecordsToGoogleDataStore(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType) {
+    if (!(dataStoreService instanceof GoogleDataStoreServiceImpl)) {
+      return;
+    }
+    mlAnalysisResponse.decompressLogAnalysisRecord();
+
+    List<AnomalousLogRecord> anomalousLogRecords = new ArrayList<>();
+    if (isEmpty(mlAnalysisResponse.getUnknown_clusters())) {
+      logger.info(
+          "Unknown clusters is empty for cvConfigId {}, stateExecutionId {}. Nothing to save to GoogleDataStore.",
+          mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getStateExecutionId());
+      return;
+    }
+    AnalysisContext context = null;
+    CVConfiguration cvConfiguration = null;
+    if (isEmpty(mlAnalysisResponse.getCvConfigId())) {
+      context = wingsPersistence.createAuthorizedQuery(AnalysisContext.class)
+                    .filter("stateExecutionId", mlAnalysisResponse.getStateExecutionId())
+                    .filter("appId", mlAnalysisResponse.getAppId())
+                    .get();
+    } else {
+      cvConfiguration = wingsPersistence.get(CVConfiguration.class, mlAnalysisResponse.getCvConfigId());
+    }
+
+    final String serviceId = context == null ? cvConfiguration.getServiceId() : context.getServiceId();
+    mlAnalysisResponse.getUnknown_clusters().forEach((label, hostMap) -> {
+      hostMap.forEach((host, clusteredData) -> {
+        AnomalousLogRecord record = AnomalousLogRecord.builder()
+                                        .analysisMinute(mlAnalysisResponse.getLogCollectionMinute())
+                                        .cvConfigId(mlAnalysisResponse.getCvConfigId())
+                                        .serviceId(serviceId)
+                                        .stateType(stateType)
+                                        .logMessage(clusteredData.getText())
+                                        .riskLevel(clusteredData.getRisk_level())
+                                        .build();
+        anomalousLogRecords.add(record);
+      });
+    });
+
+    dataStoreService.save(AnomalousLogRecord.class, anomalousLogRecords, true);
   }
 
   @Override
@@ -595,6 +640,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       learningEngineService.markCompleted(taskId.get());
     }
     continuousVerificationService.triggerAlertIfNecessary(cvConfigId, mlAnalysisResponse.getScore(), analysisMinute);
+    saveAnomalousLogRecordsToGoogleDataStore(mlAnalysisResponse, null);
     return true;
   }
 

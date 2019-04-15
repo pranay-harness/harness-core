@@ -25,4 +25,5 @@ public class SplunkAnalysisCluster {
   private double control_score;
   private double freq_score;
   private int control_label;
+  private double risk_level = 1.0;
 }
