@@ -16,10 +16,9 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -35,8 +34,8 @@ import java.io.IOException;
 import java.util.Collections;
 
 @NoArgsConstructor
+@Slf4j
 public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(K8sRollingDeployRollbackTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;

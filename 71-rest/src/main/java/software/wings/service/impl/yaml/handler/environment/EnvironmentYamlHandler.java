@@ -17,9 +17,8 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -52,8 +51,8 @@ import java.util.Optional;
  * @author rktummala on 11/07/17
  */
 @Singleton
+@Slf4j
 public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, Environment> {
-  private static final Logger logger = LoggerFactory.getLogger(EnvironmentYamlHandler.class);
   @Inject YamlHelper yamlHelper;
   @Inject EnvironmentService environmentService;
   @Inject SecretManager secretManager;

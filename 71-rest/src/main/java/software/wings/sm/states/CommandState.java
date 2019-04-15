@@ -34,10 +34,9 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
@@ -123,9 +122,8 @@ import java.util.stream.Stream;
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
+@Slf4j
 public class CommandState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(CommandState.class);
-
   public static final String RUNTIME_PATH = "RUNTIME_PATH";
   public static final String BACKUP_PATH = "BACKUP_PATH";
   public static final String STAGING_PATH = "STAGING_PATH";

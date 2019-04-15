@@ -33,8 +33,7 @@ import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
@@ -52,9 +51,8 @@ import javax.annotation.Nullable;
  * Created by bzane on 2/21/17
  */
 @Singleton
+@Slf4j
 public class GkeClusterServiceImpl implements GkeClusterService {
-  private static final Logger logger = LoggerFactory.getLogger(GkeClusterServiceImpl.class);
-
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
   @Inject private TimeLimiter timeLimiter;
 

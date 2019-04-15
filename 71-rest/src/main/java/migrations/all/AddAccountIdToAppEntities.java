@@ -9,10 +9,9 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -31,9 +30,8 @@ import java.util.stream.Collectors;
  * Add accountId to app child entities like service/env/provisioner/workflow/pipeline.
  * @author rktummala on 02/26/19
  */
+@Slf4j
 public class AddAccountIdToAppEntities implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddAccountIdToAppEntities.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

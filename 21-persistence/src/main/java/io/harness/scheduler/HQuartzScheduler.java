@@ -16,6 +16,7 @@ import com.mongodb.client.model.IndexOptions;
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceListener;
 import io.harness.mongo.MongoModule;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.quartz.JobDetail;
@@ -25,15 +26,12 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Properties;
 
+@Slf4j
 public class HQuartzScheduler implements PersistentScheduler, MaintenanceListener {
-  private static final Logger logger = LoggerFactory.getLogger(HQuartzScheduler.class);
-
   protected Injector injector;
   protected Scheduler scheduler;
 

@@ -11,9 +11,8 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
@@ -46,8 +45,8 @@ import javax.ws.rs.ext.Provider;
 @Singleton
 @Provider
 @Priority(1500) // Authorization > Audit > Authentication
+@Slf4j
 public class AuditRequestFilter implements ContainerRequestFilter {
-  private static final Logger logger = LoggerFactory.getLogger(AuditRequestFilter.class);
   @Context private ResourceContext resourceContext;
   @Context private ResourceInfo resourceInfo;
 

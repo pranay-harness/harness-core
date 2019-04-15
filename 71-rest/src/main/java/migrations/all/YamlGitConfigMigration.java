@@ -8,9 +8,8 @@ import static software.wings.yaml.gitSync.YamlGitConfig.SYNC_MODE_KEY;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -19,9 +18,8 @@ import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class YamlGitConfigMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(YamlGitConfigMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

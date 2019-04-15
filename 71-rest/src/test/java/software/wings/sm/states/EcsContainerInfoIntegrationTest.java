@@ -22,14 +22,13 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.context.ContextElementType;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
@@ -66,9 +65,8 @@ import java.util.UUID;
 /**
  * Created by rsingh on 4/9/18.
  */
+@Slf4j
 public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(EcsContainerInfoIntegrationTest.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SettingsService settingsService;

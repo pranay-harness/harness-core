@@ -21,6 +21,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Field;
@@ -28,8 +29,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -41,9 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 public class IndexManagement {
-  private static final Logger logger = LoggerFactory.getLogger(IndexManagement.class);
-
   private interface IndexCreator { void create(); }
 
   @Value

@@ -11,10 +11,9 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.sm.ContextElement;
@@ -32,9 +31,8 @@ import java.util.List;
  *
  * @author Rishi
  */
+@Slf4j
 public class RepeatStateTest {
-  private static final Logger logger = LoggerFactory.getLogger(RepeatStateTest.class);
-
   /**
    * Should execute serial.
    */

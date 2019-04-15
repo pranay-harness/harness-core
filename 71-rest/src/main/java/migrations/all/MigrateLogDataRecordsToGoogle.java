@@ -7,10 +7,9 @@ import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -20,9 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class MigrateLogDataRecordsToGoogle implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(MigrateLogDataRecordsToGoogle.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DataStoreService dataStoreService;
 

@@ -15,8 +15,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
@@ -55,8 +55,8 @@ import java.util.regex.Pattern;
 /**
  * Created by rsingh on 5/18/17.
  */
+@Slf4j
 public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDataCollectionTask.class);
   private AppdynamicsDataCollectionInfo dataCollectionInfo;
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;

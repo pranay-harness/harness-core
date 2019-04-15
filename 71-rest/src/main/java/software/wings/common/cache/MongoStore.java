@@ -15,12 +15,11 @@ import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
 import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryFactory;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.CacheEntity;
 import software.wings.dl.WingsPersistence;
 
@@ -29,8 +28,8 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Singleton
+@Slf4j
 public class MongoStore implements DistributedStore {
-  private static final Logger logger = LoggerFactory.getLogger(MongoStore.class);
   private static final int version = 1;
 
   @Inject WingsPersistence wingsPersistence;

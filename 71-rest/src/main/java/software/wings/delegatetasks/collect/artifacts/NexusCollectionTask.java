@@ -6,9 +6,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
@@ -23,9 +22,8 @@ import java.util.function.Supplier;
 /**
  * Created by srinivas on 4/4/17.
  */
+@Slf4j
 public class NexusCollectionTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(NexusCollectionTask.class);
-
   @Inject private NexusService nexusService;
 
   @Inject private DelegateFileManager delegateFileManager;

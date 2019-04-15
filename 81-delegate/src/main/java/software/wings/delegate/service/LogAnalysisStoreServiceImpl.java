@@ -5,8 +5,7 @@ import static io.harness.network.SafeHttpCall.execute;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -19,8 +18,8 @@ import java.util.List;
  * Created by rsingh on 06/20/17.
  */
 @Singleton
+@Slf4j
 public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
-  private static final Logger logger = LoggerFactory.getLogger(LogAnalysisStoreServiceImpl.class);
   @Inject private VerificationServiceClient verificationServiceClient;
 
   @Override

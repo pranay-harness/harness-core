@@ -8,9 +8,8 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -26,9 +25,8 @@ import software.wings.sm.StateType;
  * Utility files used by Verification services
  * Created by Pranjal on 08/17/2018
  */
+@Slf4j
 public class MLServiceUtil {
-  private static final Logger logger = LoggerFactory.getLogger(MLServiceUtil.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionContextFactory executionContextFactory;
 

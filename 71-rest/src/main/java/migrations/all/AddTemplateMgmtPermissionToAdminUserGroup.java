@@ -6,9 +6,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -21,9 +20,8 @@ import java.util.Set;
  * Add new TEMPLATE_MANAGEMENT permission type to admin user groups.
  * @author rktummala on 03/16/19
  */
+@Slf4j
 public class AddTemplateMgmtPermissionToAdminUserGroup implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddTemplateMgmtPermissionToAdminUserGroup.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserGroupService userGroupService;
 

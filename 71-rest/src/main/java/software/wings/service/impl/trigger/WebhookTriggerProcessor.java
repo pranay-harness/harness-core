@@ -13,9 +13,8 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -42,8 +41,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class WebhookTriggerProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(WebhookTriggerProcessor.class);
   public static final int TRIGGER_TASK_TIMEOUT = 30;
 
   @Inject private TriggerExecutionService triggerExecutionService;

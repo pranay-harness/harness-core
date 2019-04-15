@@ -38,6 +38,7 @@ import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
@@ -45,8 +46,6 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -88,9 +87,8 @@ import javax.ws.rs.NotFoundException;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactStreamService.class);
-
   private static final String SETTING_ID_KEY = "settingId";
 
   @Inject private WingsPersistence wingsPersistence;

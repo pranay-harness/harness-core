@@ -7,8 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -23,9 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class MigrationUtil {
-  private static final Logger logger = LoggerFactory.getLogger(MigrationUtil.class);
-
   /*
    * Be sure to make corresponding changes in UI that reference the old state type.
    *

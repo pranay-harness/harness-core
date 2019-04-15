@@ -25,11 +25,10 @@ import io.harness.delegate.message.MessageService;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
@@ -50,9 +49,8 @@ import java.util.logging.Level;
 /**
  * Created by peeyushaggarwal on 11/29/16.
  */
+@Slf4j
 public class DelegateApplication {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
-
   private static String processId;
 
   public static String getProcessId() {

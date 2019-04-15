@@ -6,9 +6,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.NameValuePair;
 import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -28,9 +27,8 @@ import java.util.Map;
 /**
  * Created by rishi on 12/16/16.
  */
+@Slf4j
 public class SubWorkflowState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(SubWorkflowState.class);
-
   private List<NameValuePair> variableOverrides;
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;

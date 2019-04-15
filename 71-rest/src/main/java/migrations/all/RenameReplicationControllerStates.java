@@ -7,15 +7,13 @@ import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 
+@Slf4j
 public class RenameReplicationControllerStates implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(RenameReplicationControllerStates.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 

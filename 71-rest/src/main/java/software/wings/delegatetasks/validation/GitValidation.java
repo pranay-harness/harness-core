@@ -6,8 +6,7 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -19,8 +18,8 @@ import java.util.function.Consumer;
 /**
  * Created by anubhaw on 11/6/17.
  */
+@Slf4j
 public class GitValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(GitValidation.class);
   @Inject private transient GitClient gitClient;
   @Inject private transient EncryptionService encryptionService;
 

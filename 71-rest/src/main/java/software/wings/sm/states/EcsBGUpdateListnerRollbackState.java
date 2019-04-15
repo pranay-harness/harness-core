@@ -1,14 +1,12 @@
 package software.wings.sm.states;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ContainerServiceElement;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.sm.StateType;
 
+@Slf4j
 public class EcsBGUpdateListnerRollbackState extends EcsBGUpdateListnerState {
-  private static final Logger logger = LoggerFactory.getLogger(EcsBGUpdateListnerRollbackState.class);
-
   public EcsBGUpdateListnerRollbackState(String name) {
     super(name, StateType.ECS_LISTENER_UPDATE_ROLLBACK.name());
   }

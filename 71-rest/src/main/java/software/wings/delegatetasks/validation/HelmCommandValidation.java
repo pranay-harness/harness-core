@@ -7,8 +7,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -26,9 +25,8 @@ import java.util.function.Consumer;
 /**
  * Created by anubhaw on 4/10/18.
  */
+@Slf4j
 public class HelmCommandValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(HelmCommandValidation.class);
-
   @Inject private transient HelmDeployService helmDeployService;
   @Inject private transient ContainerValidationHelper containerValidationHelper;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

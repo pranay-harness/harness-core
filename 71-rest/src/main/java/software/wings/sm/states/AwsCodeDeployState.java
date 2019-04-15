@@ -25,9 +25,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
@@ -82,9 +81,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by brett on 6/22/17
  */
+@Slf4j
 public class AwsCodeDeployState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployState.class);
-
   @Attributes(title = "Bucket", required = true) private String bucket;
   @Attributes(title = "Key", required = true) private String key;
   @Attributes(title = "Steady State Timeout") @DefaultValue("10") private int steadyStateTimeout = 10;

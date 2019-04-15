@@ -3,8 +3,7 @@ package software.wings.delegate.service;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -12,9 +11,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by peeyushaggarwal on 1/4/17.
  */
 @Singleton
+@Slf4j
 public class SignalService {
-  private static final Logger logger = LoggerFactory.getLogger(SignalService.class);
-
   private AtomicReference<State> state = new AtomicReference<>(State.RUNNING);
 
   @Inject private DelegateService delegateService;

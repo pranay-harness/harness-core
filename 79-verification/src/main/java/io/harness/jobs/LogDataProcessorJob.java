@@ -3,18 +3,16 @@ package io.harness.jobs;
 import com.google.inject.Inject;
 
 import io.harness.service.intfc.ContinuousVerificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Handles scheduling jobs related to APM
  * Created by Pranjal on 10/04/2018
  */
+@Slf4j
 public class LogDataProcessorJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(LogDataProcessorJob.class);
-
   public static final String LOG_DATA_PROCESSOR_CRON_GROUP = "LOG_DATA_PROCESSOR_CRON_GROUP";
   @Inject private ContinuousVerificationService continuousVerificationService;
 

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -15,8 +16,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Random;
@@ -27,9 +26,8 @@ import java.util.concurrent.TimeUnit;
  *
  * @author rktummala on 09/14/17
  */
+@Slf4j
 public class InstanceSyncJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(InstanceSyncJob.class);
-
   public static final String GROUP = "INSTANCE_SYNC_CRON_GROUP";
   private static final int POLL_INTERVAL = 600;
 

@@ -96,6 +96,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.mongodb.morphia.query.FindOptions;
@@ -103,8 +104,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
@@ -243,9 +242,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionServiceImpl.class);
-
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BarrierService barrierService;
   @Inject private StateMachineExecutor stateMachineExecutor;

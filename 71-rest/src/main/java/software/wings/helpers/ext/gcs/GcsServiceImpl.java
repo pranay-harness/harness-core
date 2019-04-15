@@ -25,9 +25,8 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -44,8 +43,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class GcsServiceImpl implements GcsService {
-  private static final Logger logger = LoggerFactory.getLogger(software.wings.helpers.ext.gcs.GcsServiceImpl.class);
   private GcpHelperService gcpHelperService;
   private static int MAX_GCS_ARTIFACT_PATH_LIMIT = 1000;
   private static int MAX_GCS_BUILD_DETAILS_LIMIT = 100;

@@ -10,12 +10,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
@@ -36,9 +35,8 @@ import java.util.Properties;
  * Created by rsingh on 1/9/18.
  */
 @Singleton
+@Slf4j
 public class LearningEngineAnalysisServiceImpl implements LearningEngineService {
-  private static final Logger logger = LoggerFactory.getLogger(LearningEngineAnalysisServiceImpl.class);
-
   private static final String SERVICE_VERSION_FILE = "/service_version.properties";
 
   @Inject private WingsPersistence wingsPersistence;

@@ -33,12 +33,11 @@ import io.harness.rest.RestResponse;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.SumoConfig;
@@ -69,8 +68,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class ContinuousVerificationServiceTest extends VerificationBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceTest.class);
   private String accountId, appId, envId, serviceId, connectorId, query, cvConfigId, workflowId, workflowExecutionId,
       stateExecutionId;
 

@@ -7,9 +7,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -25,9 +24,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 
 @Singleton
+@Slf4j
 public class TemplateExpressionProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(TemplateExpressionProcessor.class);
-
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;

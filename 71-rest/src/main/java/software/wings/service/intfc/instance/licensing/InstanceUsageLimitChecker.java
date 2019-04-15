@@ -1,4 +1,5 @@
 package software.wings.service.intfc.instance.licensing;
+
 public interface InstanceUsageLimitChecker {
   /**
    * Tells whether the instance usage of a given account is within the limits of license or not.

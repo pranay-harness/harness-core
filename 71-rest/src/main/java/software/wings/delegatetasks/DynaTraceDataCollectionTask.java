@@ -16,8 +16,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.TaskType;
@@ -49,8 +49,8 @@ import java.util.function.Supplier;
 /**
  * Created by rsingh on 2/6/18.
  */
+@Slf4j
 public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(DynaTraceDataCollectionTask.class);
   private DynaTraceDataCollectionInfo dataCollectionInfo;
 
   @Inject private DynaTraceDelegateService dynaTraceDelegateService;

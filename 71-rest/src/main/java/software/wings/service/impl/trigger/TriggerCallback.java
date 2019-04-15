@@ -9,8 +9,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
@@ -18,9 +17,8 @@ import software.wings.service.intfc.TriggerService;
 
 import java.util.Map;
 
+@Slf4j
 public class TriggerCallback implements NotifyCallback {
-  private static final Logger logger = LoggerFactory.getLogger(TriggerCallback.class);
-
   private String accountId;
   private String appId;
   private String triggerExecutionId;

@@ -9,8 +9,7 @@ import io.harness.exception.CauseCollection;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.QueueListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -38,9 +37,8 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
+@Slf4j
 public class PruneEntityListener extends QueueListener<PruneEvent> {
-  private static final Logger logger = LoggerFactory.getLogger(PruneEntityListener.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private ActivityService activityService;

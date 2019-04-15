@@ -29,6 +29,7 @@ import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,8 +43,6 @@ import org.jfrog.artifactory.client.model.PackageType;
 import org.jfrog.artifactory.client.model.RepoPath;
 import org.jfrog.artifactory.client.model.Repository;
 import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
@@ -71,8 +70,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 @Singleton
+@Slf4j
 public class ArtifactoryServiceImpl implements ArtifactoryService {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactoryServiceImpl.class);
   private static final int MSG_BUFF_LENGTH = 4096;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Inject private EncryptionService encryptionService;

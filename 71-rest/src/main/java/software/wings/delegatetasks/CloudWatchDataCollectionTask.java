@@ -17,8 +17,8 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import io.harness.beans.DelegateTask;
 import io.harness.exception.ExceptionUtils;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -46,8 +46,8 @@ import java.util.function.Supplier;
 /**
  * Created by rsingh on 5/18/17.
  */
+@Slf4j
 public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(CloudWatchDataCollectionTask.class);
   private CloudWatchDataCollectionInfo dataCollectionInfo;
 
   @Inject private MetricDataStoreService metricStoreService;

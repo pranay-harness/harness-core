@@ -14,20 +14,19 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentIterable;
 import io.harness.queue.QueueController;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 
 @Builder
+@Slf4j
 public class MongoPersistenceIterator<T extends PersistentIterable> implements PersistenceIterator<T> {
-  private static final Logger logger = LoggerFactory.getLogger(MongoPersistenceIterator.class);
   private static final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().returnNew(false);
   private static final Duration QUERY_TIME = ofMillis(200);
 

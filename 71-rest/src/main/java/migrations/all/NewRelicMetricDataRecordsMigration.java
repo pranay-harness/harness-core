@@ -10,18 +10,16 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
 /**
  * Created by rsingh on 3/26/18.
  */
+@Slf4j
 public class NewRelicMetricDataRecordsMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(NewRelicMetricDataRecordsMigration.class);
-
   @Inject WingsPersistence wingsPersistence;
 
   @Override

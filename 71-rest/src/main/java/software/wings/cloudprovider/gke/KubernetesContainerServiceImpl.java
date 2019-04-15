@@ -74,6 +74,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
 import me.snowdrop.istio.api.model.DoneableIstioResource;
 import me.snowdrop.istio.api.model.IstioResource;
@@ -84,8 +85,6 @@ import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -115,9 +114,8 @@ import java.util.stream.Collectors;
  * Created by brett on 2/9/17
  */
 @Singleton
+@Slf4j
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerServiceImpl.class);
-
   private static final String RUNNING = "Running";
 
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();

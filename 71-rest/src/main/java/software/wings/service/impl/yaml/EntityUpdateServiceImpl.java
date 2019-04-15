@@ -13,8 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -53,9 +52,8 @@ import java.util.List;
  * @author bsollish
  */
 @Singleton
+@Slf4j
 public class EntityUpdateServiceImpl implements EntityUpdateService {
-  private static final Logger logger = LoggerFactory.getLogger(EntityUpdateServiceImpl.class);
-
   @Inject private YamlResourceService yamlResourceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;

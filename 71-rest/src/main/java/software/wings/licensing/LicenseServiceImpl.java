@@ -16,11 +16,10 @@ import com.google.inject.Singleton;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -58,8 +57,8 @@ import java.util.concurrent.ExecutorService;
  * @author rktummala on 11/10/18
  */
 @Singleton
+@Slf4j
 public class LicenseServiceImpl implements LicenseService {
-  private static final Logger logger = LoggerFactory.getLogger(LicenseServiceImpl.class);
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private GenericDbCache dbCache;

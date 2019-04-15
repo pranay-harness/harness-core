@@ -32,12 +32,11 @@ import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.category.element.IntegrationTests;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,9 +46,8 @@ import java.util.List;
  */
 
 @Ignore
+@Slf4j
 public class EcsIntegrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(EcsIntegrationTest.class);
-
   private AmazonECSClient ecsClient =
       new AmazonECSClient(new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
   private ObjectMapper mapper = new ObjectMapper();

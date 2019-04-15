@@ -70,10 +70,9 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -123,8 +122,8 @@ import java.util.zip.ZipFile;
  * @author rktummala on 10/16/17
  */
 @Singleton
+@Slf4j
 public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements YamlService<Y, B> {
-  private static final Logger logger = LoggerFactory.getLogger(YamlServiceImpl.class);
   /**
    * We need to evict UserPermissionCache and UserRestrictionCache for some yaml operations.
    * All the rbac*YamlTypes define the entity types in which we have to refresh the cache.

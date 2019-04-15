@@ -6,11 +6,10 @@ import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
 import io.harness.threading.Morpheus;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -19,9 +18,8 @@ import software.wings.sm.StateMachine;
 
 import java.time.Duration;
 
+@Slf4j
 public class AddStateMachineToWorkflowExecutions implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddStateMachineToWorkflowExecutions.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
 

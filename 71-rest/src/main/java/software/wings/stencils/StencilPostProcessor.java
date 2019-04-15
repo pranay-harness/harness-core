@@ -16,8 +16,7 @@ import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.harness.serializer.JsonUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
@@ -34,9 +33,8 @@ import java.util.stream.Stream;
  * Created by peeyushaggarwal on 6/27/16.
  */
 @Singleton
+@Slf4j
 public class StencilPostProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(StencilPostProcessor.class);
-
   @Inject private Injector injector;
 
   private static String getField(Method method) {

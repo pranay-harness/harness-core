@@ -23,9 +23,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.HttpMethod;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -40,8 +39,8 @@ import javax.ws.rs.core.MultivaluedMap;
  * Created by anubhaw on 4/20/16.
  */
 @Singleton
+@Slf4j
 public class AuthResponseFilter implements ContainerResponseFilter {
-  private static final Logger logger = LoggerFactory.getLogger(AuthResponseFilter.class);
   private static final Set<String> restResourcesCreateURIs =
       Sets.newHashSet(RESOURCE_URI_CREATE_APP, RESOURCE_URI_CREATE_SERVICE, RESOURCE_URI_CREATE_PROVISIONER,
           RESOURCE_URI_CREATE_ENVIRONMENT, RESOURCE_URI_CREATE_WORKFLOW, RESOURCE_URI_CREATE_PIPELINE);

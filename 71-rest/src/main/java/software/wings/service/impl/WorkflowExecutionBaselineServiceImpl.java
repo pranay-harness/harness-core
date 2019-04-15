@@ -8,8 +8,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Base;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
@@ -31,8 +30,8 @@ import java.util.Map;
 /**
  * Created by rsingh on 2/16/18.
  */
+@Slf4j
 public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBaselineService {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionBaselineServiceImpl.class);
   public static final Date BASELINE_TTL = Date.from(OffsetDateTime.now().plusYears(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Inject private WingsPersistence wingsPersistence;

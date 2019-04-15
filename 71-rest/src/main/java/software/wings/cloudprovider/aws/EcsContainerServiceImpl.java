@@ -60,10 +60,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -93,9 +92,8 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 12/28/16.
  */
 @Singleton
+@Slf4j
 public class EcsContainerServiceImpl implements EcsContainerService {
-  private static final Logger logger = LoggerFactory.getLogger(EcsContainerServiceImpl.class);
-
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   @Inject private TimeLimiter timeLimiter;
 

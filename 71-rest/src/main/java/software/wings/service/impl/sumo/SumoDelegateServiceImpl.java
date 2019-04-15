@@ -22,11 +22,10 @@ import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SumoConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -56,8 +55,8 @@ import java.util.concurrent.TimeUnit;
  * Created by sriram_parthasarathy on 9/11/17.
  */
 @Singleton
+@Slf4j
 public class SumoDelegateServiceImpl implements SumoDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(SumoDelegateServiceImpl.class);
   private static final long DEFAULT_SLEEP_TIME_IN_MILLIS = 5000;
   private static final int SUMO_RATE_LIMIT_STATUS = 429;
   @Inject private EncryptionService encryptionService;

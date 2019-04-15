@@ -18,10 +18,10 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -65,8 +65,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
+@Slf4j
 public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(APMDataCollectionTask.class);
   private static final int CANARY_DAYS_TO_COLLECT = 7;
 
   private static final String BATCH_REGEX = "\\$harness_batch\\{([^,]*),([^}]*)\\}";

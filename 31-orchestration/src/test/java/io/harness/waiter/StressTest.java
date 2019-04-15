@@ -13,10 +13,9 @@ import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -24,9 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Slf4j
 public class StressTest extends OrchestrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(StressTest.class);
-
   @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 

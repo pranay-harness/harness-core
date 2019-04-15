@@ -7,8 +7,7 @@ import com.google.common.collect.Multimap;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.apm.VerificationResponseParser;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
@@ -22,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 public class LogResponseParser {
-  private static final Logger logger = LoggerFactory.getLogger(LogResponseParser.class);
   private static final String TIMESTAMP_FIELD = "timestamp";
   private static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   private static final int MAX_CONCAT_JSON_FIELDS = 100;

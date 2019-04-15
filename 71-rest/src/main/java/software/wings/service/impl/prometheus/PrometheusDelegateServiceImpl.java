@@ -9,8 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -30,8 +29,8 @@ import java.time.OffsetDateTime;
  * Created by rsingh on 3/14/18.
  */
 @Singleton
+@Slf4j
 public class PrometheusDelegateServiceImpl implements PrometheusDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(PrometheusDelegateServiceImpl.class);
   @Inject private DelegateLogService delegateLogService;
 
   @Override

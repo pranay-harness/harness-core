@@ -33,10 +33,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Base;
 import software.wings.beans.template.Template;
@@ -60,8 +59,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class TemplateFolderServiceImpl implements TemplateFolderService {
-  private static final Logger logger = LoggerFactory.getLogger(TemplateFolderServiceImpl.class);
   private static final String ACCOUNT = "Account";
   private static final String APPLICATION = "Application";
 

@@ -9,8 +9,7 @@ import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.rest.RestResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.MediaType;
@@ -22,9 +21,8 @@ import javax.ws.rs.ext.ExceptionMapper;
  *
  * @param <T> the generic type
  */
+@Slf4j
 public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
-  private static final Logger logger = LoggerFactory.getLogger(GenericExceptionMapper.class);
-
   @Override
   public Response toResponse(Throwable exception) {
     logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);

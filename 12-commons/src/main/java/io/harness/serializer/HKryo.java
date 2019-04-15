@@ -54,11 +54,10 @@ import io.harness.exception.WingsException;
 import io.harness.reflection.CodeUtils;
 import io.harness.rest.RestResponse;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.objenesis.strategy.StdInstantiatorStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.math.BigDecimal;
@@ -81,9 +80,8 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+@Slf4j
 public class HKryo extends Kryo {
-  private static final Logger logger = LoggerFactory.getLogger(HKryo.class);
-
   @Setter private String currentLocation;
 
   public HKryo(ClassResolver classResolver) {

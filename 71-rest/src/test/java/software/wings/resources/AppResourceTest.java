@@ -10,12 +10,11 @@ import static software.wings.beans.Application.Builder.anApplication;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.ResourceTestRule;
@@ -25,8 +24,8 @@ import javax.ws.rs.core.GenericType;
 /**
  * The Class AppResourceTest.
  */
+@Slf4j
 public class AppResourceTest {
-  private static final Logger logger = LoggerFactory.getLogger(AppResourceTest.class);
   private static final AppService appService = mock(AppService.class);
   private static final LimitCheckerFactory limitCheckerFactory = mock(LimitCheckerFactory.class);
 

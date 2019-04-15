@@ -20,12 +20,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
 import org.sonatype.nexus.rest.model.RepositoryListResource;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
@@ -67,9 +66,8 @@ import javax.net.ssl.HttpsURLConnection;
  * Created by sgurubelli on 11/18/17.
  */
 @Singleton
+@Slf4j
 public class NexusTwoServiceImpl {
-  private static final Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
-
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutorService executorService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;

@@ -1,14 +1,12 @@
 package software.wings.sm.states.provision;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.sm.StateType;
 
+@Slf4j
 public class AdjustTerraformProvisionState extends TerraformProvisionState {
-  private static final Logger logger = LoggerFactory.getLogger(AdjustTerraformProvisionState.class);
-
   public AdjustTerraformProvisionState(String name) {
     super(name, StateType.TERRAFORM_PROVISION.name());
   }

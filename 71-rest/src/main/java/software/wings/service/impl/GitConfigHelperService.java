@@ -14,9 +14,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
@@ -35,9 +34,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class GitConfigHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(GitConfigHelperService.class);
-
   @Inject private DelegateService delegateService;
   @Inject private SettingsService settingsService;
   @Inject private ManagerDecryptionService managerDecryptionService;

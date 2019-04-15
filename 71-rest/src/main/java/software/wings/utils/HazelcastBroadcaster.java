@@ -5,12 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
+import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.util.AbstractBroadcasterProxy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,9 +18,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Created by peeyushaggarwal on 1/11/17.
  */
+@Slf4j
 public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
-  private static final Logger logger = LoggerFactory.getLogger(HazelcastBroadcaster.class);
-
   public static final AtomicReference<HazelcastInstance> HAZELCAST_INSTANCE = new AtomicReference<>();
 
   private final AtomicBoolean isClosed = new AtomicBoolean();

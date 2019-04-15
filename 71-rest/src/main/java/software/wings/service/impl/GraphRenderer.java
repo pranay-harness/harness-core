@@ -30,8 +30,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
@@ -58,8 +57,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class GraphRenderer {
-  private static final Logger logger = LoggerFactory.getLogger(GraphRenderer.class);
   // TODO: this feature is disabled in the name of the cache
   private static final int AGGREGATION_LIMIT = 1000000;
 

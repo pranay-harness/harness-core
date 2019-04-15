@@ -3,9 +3,8 @@ package migrations.all;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.UserService;
@@ -15,9 +14,8 @@ import software.wings.service.intfc.UserService;
  * Going forward, the correct last login time would be set.
  * @author rktummala on 12/18/18
  */
+@Slf4j
 public class SetLastLoginTimeToAllUsers implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(SetLastLoginTimeToAllUsers.class);
-
   @Inject private UserService userService;
   @Inject private WingsPersistence wingsPersistence;
 

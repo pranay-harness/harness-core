@@ -12,8 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KmsOperationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
@@ -30,8 +29,8 @@ import java.util.List;
  * Created by rsingh on 10/18/17.
  */
 @Singleton
+@Slf4j
 public class EncryptionServiceImpl implements EncryptionService {
-  private static final Logger logger = LoggerFactory.getLogger(EncryptionServiceImpl.class);
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override

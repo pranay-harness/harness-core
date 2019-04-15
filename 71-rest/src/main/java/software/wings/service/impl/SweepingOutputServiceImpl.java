@@ -11,10 +11,9 @@ import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutput.Scope;
 import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SweepingOutputService;
 
@@ -22,9 +21,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class SweepingOutputServiceImpl implements SweepingOutputService {
-  private static final Logger logger = LoggerFactory.getLogger(SweepingOutputServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

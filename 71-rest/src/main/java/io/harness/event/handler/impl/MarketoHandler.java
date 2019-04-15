@@ -42,8 +42,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.network.Http;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Account;
@@ -66,9 +65,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 11/20/18
  */
 @Singleton
+@Slf4j
 public class MarketoHandler implements EventHandler {
-  private static final Logger logger = LoggerFactory.getLogger(MarketoHandler.class);
-
   @Inject private UserService userService;
   @Inject private AccountService accountService;
   @Inject private MarketoHelper marketoHelper;

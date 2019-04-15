@@ -13,9 +13,8 @@ import static software.wings.common.VerificationConstants.LOGS_MEDIUM_RISK_THRES
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -49,9 +48,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
-  private static final Logger logger = LoggerFactory.getLogger(CV24x7DashboardServiceImpl.class);
-
   @Inject WingsPersistence wingsPersistence;
   @Inject CVConfigurationService cvConfigurationService;
   @Inject AnalysisService analysisService;

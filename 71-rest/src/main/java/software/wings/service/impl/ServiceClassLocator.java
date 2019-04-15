@@ -1,8 +1,7 @@
 package software.wings.service.impl;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -31,9 +30,8 @@ import java.util.List;
  * In our case, both ECR and S3 services use AwsConfig.
  * @author rktummala on 08/17/17
  */
+@Slf4j
 public class ServiceClassLocator {
-  private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
-
   public Class<? extends BuildService> getBuildServiceClass(String artifactStreamTypeStr) {
     ArtifactStreamType artifactStreamType = ArtifactStreamType.valueOf(artifactStreamTypeStr);
     switch (artifactStreamType) {

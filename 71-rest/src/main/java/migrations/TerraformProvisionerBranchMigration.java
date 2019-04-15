@@ -3,9 +3,8 @@ package migrations;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.SettingAttribute;
@@ -13,9 +12,8 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 
+@Slf4j
 public class TerraformProvisionerBranchMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionerBranchMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingService;
 

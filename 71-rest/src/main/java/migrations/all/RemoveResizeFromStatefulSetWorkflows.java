@@ -10,9 +10,8 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -29,9 +28,8 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 
+@Slf4j
 public class RemoveResizeFromStatefulSetWorkflows implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(RemoveResizeFromStatefulSetWorkflows.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private ServiceResourceService serviceResourceService;

@@ -17,10 +17,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -62,9 +61,8 @@ import java.util.Set;
  * 09/Oct/2018
  */
 @Singleton
+@Slf4j
 public class CVConfigurationServiceImpl implements CVConfigurationService {
-  private static final Logger logger = LoggerFactory.getLogger(CVConfigurationServiceImpl.class);
-
   @Inject WingsPersistence wingsPersistence;
   @Inject CvValidationService cvValidationService;
 

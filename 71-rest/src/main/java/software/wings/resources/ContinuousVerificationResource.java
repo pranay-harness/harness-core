@@ -6,8 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.APMFetchConfig;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.common.VerificationConstants;
@@ -26,9 +25,8 @@ import javax.ws.rs.QueryParam;
 @Api("apm")
 @Path("/apm")
 @Produces("application/json")
+@Slf4j
 public class ContinuousVerificationResource {
-  private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationResource.class);
-
   @Inject private ContinuousVerificationService verificationService;
 
   /**

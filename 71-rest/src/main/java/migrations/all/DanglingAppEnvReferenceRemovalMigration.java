@@ -3,9 +3,8 @@ package migrations.all;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -13,9 +12,8 @@ import software.wings.service.intfc.UsageRestrictionsService;
 /**
  * @author marklu on 11/5/18
  */
+@Slf4j
 public class DanglingAppEnvReferenceRemovalMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(DanglingAppEnvReferenceRemovalMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UsageRestrictionsService usageRestrictionsService;
 

@@ -48,6 +48,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.jexl3.JxltEngine.Exception;
@@ -58,8 +59,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -108,9 +107,8 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 8/31/16.
  */
+@Slf4j
 public class SecureResourceTest {
-  private static final Logger logger = LoggerFactory.getLogger(SecureResourceTest.class);
-
   /**
    * The constant TOKEN_EXPIRY_IN_MILLIS.
    */

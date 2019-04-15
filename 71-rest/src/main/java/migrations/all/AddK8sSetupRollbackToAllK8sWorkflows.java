@@ -14,9 +14,8 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -30,9 +29,8 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 
+@Slf4j
 public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddK8sSetupRollbackToAllK8sWorkflows.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 

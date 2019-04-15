@@ -5,9 +5,8 @@ import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 import static java.lang.String.format;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.delegate.app.DelegateConfiguration;
@@ -17,9 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class InstallUtils {
-  private static final Logger logger = LoggerFactory.getLogger(InstallUtils.class);
-
   private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
 

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -14,8 +15,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 
 import java.util.Date;
@@ -24,9 +23,8 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @DisallowConcurrentExecution
+@Slf4j
 public class LimitVicinityCheckerJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(LimitVicinityCheckerJob.class);
-
   public static final String GROUP = "LIMIT_VICINITY_CHECKER_CRON_GROUP";
 
   private static final int SYNC_INTERVAL_IN_MINUTES = 30;

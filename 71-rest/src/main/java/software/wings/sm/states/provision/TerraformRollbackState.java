@@ -13,11 +13,10 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
@@ -44,8 +43,8 @@ import java.util.Map.Entry;
 
 @Getter
 @Setter
+@Slf4j
 public class TerraformRollbackState extends TerraformProvisionState {
-  private static final Logger logger = LoggerFactory.getLogger(TerraformRollbackState.class);
   private TerraformCommand rollbackCommand;
 
   /**

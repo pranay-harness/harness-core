@@ -10,9 +10,8 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.security.SecretManager.JWT_CATEGORY;
@@ -23,9 +22,8 @@ import software.wings.service.intfc.UserService;
 import java.util.Optional;
 
 @Singleton
+@Slf4j
 public class TwoFactorAuthenticationManager {
-  private static final Logger logger = LoggerFactory.getLogger(TwoFactorAuthenticationManager.class);
-
   @Inject private TOTPAuthHandler totpHandler;
   @Inject private UserService userService;
   @Inject private AccountService accountService;

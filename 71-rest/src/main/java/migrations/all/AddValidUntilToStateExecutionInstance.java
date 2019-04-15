@@ -7,9 +7,8 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
@@ -18,9 +17,8 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+@Slf4j
 public class AddValidUntilToStateExecutionInstance implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddValidUntilToStateExecutionInstance.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

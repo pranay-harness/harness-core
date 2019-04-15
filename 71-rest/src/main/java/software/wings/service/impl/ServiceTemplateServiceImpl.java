@@ -26,13 +26,12 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -73,8 +72,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceTemplateServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
   @Inject private ServiceVariableService serviceVariableService;

@@ -37,13 +37,12 @@ import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraint.ResourceConstraintKeys;
@@ -70,9 +69,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class ResourceConstraintServiceImpl implements ResourceConstraintService, ConstraintRegistry {
-  private static final Logger logger = LoggerFactory.getLogger(ResourceConstraintServiceImpl.class);
-
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;

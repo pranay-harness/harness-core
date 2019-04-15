@@ -11,9 +11,8 @@ import com.google.common.base.Charsets;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -30,9 +29,8 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by anubhaw on 2/8/16.
  */
+@Slf4j
 public class SshSessionFactory {
-  private static final Logger logger = LoggerFactory.getLogger(SshSessionFactory.class);
-
   /**
    * Gets the SSH session with jumpbox.
    *

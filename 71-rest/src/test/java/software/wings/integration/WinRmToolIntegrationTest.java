@@ -6,9 +6,8 @@ import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.rules.Integration;
 
 import java.io.StringWriter;
@@ -19,9 +18,8 @@ import java.io.StringWriter;
 This test class is making calls to WinRM. The purpose is to do directed testing for WinRM APIs.
 This is not to be run as an automated test[hence the @Ignore].
  */
+@Slf4j
 public class WinRmToolIntegrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(WinRmToolIntegrationTest.class);
-
   private static void setUp() {}
 
   public static void main(String[] args) {

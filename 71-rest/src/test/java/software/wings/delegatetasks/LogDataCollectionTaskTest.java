@@ -12,12 +12,11 @@ import static org.powermock.reflect.Whitebox.setInternalState;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
@@ -38,9 +37,8 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class LogDataCollectionTaskTest {
-  private static final Logger logger = LoggerFactory.getLogger(LogDataCollectionTaskTest.class);
-
   CustomLogDataCollectionInfo dataCollectionInfo;
   @Mock private LogAnalysisStoreService logAnalysisStoreService;
   @Mock private DelegateLogService delegateLogService;

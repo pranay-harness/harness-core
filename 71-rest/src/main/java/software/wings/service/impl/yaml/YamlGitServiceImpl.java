@@ -56,11 +56,10 @@ import io.harness.persistence.HIterator;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -128,9 +127,8 @@ import javax.ws.rs.core.HttpHeaders;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class YamlGitServiceImpl implements YamlGitService {
-  private static final Logger logger = LoggerFactory.getLogger(YamlGitServiceImpl.class);
-
   /**
    * The constant SETUP_ENTITY_ID.
    */

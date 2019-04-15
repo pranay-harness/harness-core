@@ -8,9 +8,8 @@ import io.harness.event.handler.impl.MarketoHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.app.MainConfiguration;
@@ -28,9 +27,8 @@ import java.io.IOException;
  * Migration script to set inviteUrl to marketo leads for all existing pending user invites.
  * @author rktummala on 02/22/19
  */
+@Slf4j
 public class SendInviteUrlForAllUserInvites implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(SendInviteUrlForAllUserInvites.class);
-
   @Inject private UserService userService;
   @Inject private AccountService accountService;
   @Inject private MarketoHelper marketoHelper;

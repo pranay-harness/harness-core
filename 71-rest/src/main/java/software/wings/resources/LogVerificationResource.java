@@ -5,8 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.common.VerificationConstants;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
@@ -23,8 +22,8 @@ import javax.ws.rs.QueryParam;
 @Api("log-verification")
 @Path("/log-verification")
 @Produces("application/json")
+@Slf4j
 public class LogVerificationResource {
-  private static final Logger logger = LoggerFactory.getLogger(LogVerificationResource.class);
   @Inject private LogVerificationService logVerificationService;
 
   @POST

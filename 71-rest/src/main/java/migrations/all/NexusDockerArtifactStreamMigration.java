@@ -10,9 +10,8 @@ import com.mongodb.DBCollection;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -21,8 +20,8 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 
+@Slf4j
 public class NexusDockerArtifactStreamMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(NexusDockerArtifactStreamMigration.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
 

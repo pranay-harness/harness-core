@@ -6,6 +6,7 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -40,8 +41,6 @@ import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.TokenProvider;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,9 +58,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
+@Slf4j
 public class PcfClientImpl implements PcfClient {
-  private static final Logger logger = LoggerFactory.getLogger(PcfClientImpl.class);
-
   public CloudFoundryOperations getCloudFoundryOperations(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
     try {

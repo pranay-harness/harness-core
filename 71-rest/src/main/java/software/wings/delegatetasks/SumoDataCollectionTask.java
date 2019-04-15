@@ -8,8 +8,8 @@ import com.google.inject.Inject;
 import com.sumologic.client.SumoLogicClient;
 import io.harness.beans.DelegateTask;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -30,8 +30,8 @@ import java.util.function.Supplier;
 /**
  * Created by sriram_parthasarathy on 9/12/17.
  */
+@Slf4j
 public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(SumoDataCollectionTask.class);
   private SumoDataCollectionInfo dataCollectionInfo;
   private SumoLogicClient sumoClient;
   public static final String DEFAULT_TIME_ZONE = "UTC";

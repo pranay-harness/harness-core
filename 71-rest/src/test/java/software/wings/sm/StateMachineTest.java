@@ -18,10 +18,9 @@ import io.harness.threading.ThreadPool;
 import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.InstanceExpressionProcessor;
@@ -39,9 +38,8 @@ import java.util.Objects;
  * The Class StateMachineTest.
  */
 @Listeners(NotifyEventListener.class)
+@Slf4j
 public class StateMachineTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(StateMachineTest.class);
-
   /**
    * Should validate.
    */

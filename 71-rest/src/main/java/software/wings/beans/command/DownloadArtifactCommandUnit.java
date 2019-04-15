@@ -21,10 +21,9 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SftpConfig;
@@ -54,8 +53,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 @JsonTypeName("DOWNLOAD_ARTIFACT")
 @EqualsAndHashCode(callSuper = true)
+@Slf4j
 public class DownloadArtifactCommandUnit extends ExecCommandUnit {
-  private static final Logger logger = LoggerFactory.getLogger(DownloadArtifactCommandUnit.class);
   private static final String ALGORITHM = "HmacSHA1";
   private static final Charset ENCODING = Charsets.UTF_8;
 

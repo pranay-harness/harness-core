@@ -12,8 +12,7 @@ import com.google.inject.Inject;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -33,8 +32,8 @@ import java.util.stream.Collectors;
 /**
  * @author bsollish on 09/26/17
  */
+@Slf4j
 public class GitChangeSetRunnable implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(GitChangeSetRunnable.class);
   private static AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
 
   @Inject private YamlGitService yamlGitSyncService;

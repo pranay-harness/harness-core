@@ -28,10 +28,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -78,9 +77,8 @@ import javax.annotation.Nullable;
  * Created by anubhaw on 4/7/17.
  */
 @Singleton
+@Slf4j
 public class WorkflowNotificationHelper {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowNotificationHelper.class);
-
   @Inject private WorkflowService workflowService;
   @Inject private NotificationService notificationService;
   @Inject private ServiceResourceService serviceResourceService;

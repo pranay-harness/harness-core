@@ -52,9 +52,8 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.ReadPref;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.WingsPersistence;
@@ -71,9 +70,8 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@Slf4j
 public class ExecutionInterruptManager {
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionInterruptManager.class);
-
   @Inject private AlertService alertService;
   @Inject private Injector injector;
   @Inject private StateExecutionService stateExecutionService;

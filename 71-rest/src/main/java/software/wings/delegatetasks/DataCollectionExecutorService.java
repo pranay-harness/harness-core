@@ -5,8 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +23,8 @@ import java.util.concurrent.TimeoutException;
  * Created by rsingh on 5/20/18.
  */
 @Singleton
+@Slf4j
 public class DataCollectionExecutorService {
-  private static final Logger logger = LoggerFactory.getLogger(DataCollectionExecutorService.class);
-
   @Inject @Named("verificationDataCollector") protected ExecutorService dataCollectionService;
 
   public <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) {

@@ -7,9 +7,8 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.security.UserGroup;
@@ -24,9 +23,8 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 @Singleton
+@Slf4j
 public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleService {
-  private static final Logger logger = LoggerFactory.getLogger(AlertNotificationRuleServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserGroupService userGroupService;
 

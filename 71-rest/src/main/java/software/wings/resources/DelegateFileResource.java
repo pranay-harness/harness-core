@@ -21,11 +21,10 @@ import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FileMetadata;
 import software.wings.common.MongoIdempotentRegistry;
@@ -56,9 +55,8 @@ import javax.ws.rs.core.StreamingOutput;
 @Path("/delegateFiles")
 @Produces("application/json")
 @Scope(DELEGATE)
+@Slf4j
 public class DelegateFileResource {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateFileResource.class);
-
   @Inject private FileService fileService;
   @Inject private MainConfiguration configuration;
   @Inject private ConfigService configService;

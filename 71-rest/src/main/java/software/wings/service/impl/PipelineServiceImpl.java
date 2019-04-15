@@ -44,11 +44,10 @@ import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -96,8 +95,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class PipelineServiceImpl implements PipelineService {
-  private static final Logger logger = LoggerFactory.getLogger(PipelineServiceImpl.class);
   private static final Set<Character> ALLOWED_CHARS_SET_PIPELINE_STAGE =
       Sets.newHashSet(Lists.charactersOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ()"));
 

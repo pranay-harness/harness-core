@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -20,8 +21,6 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
@@ -35,9 +34,8 @@ import java.util.concurrent.TimeUnit;
  */
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
+@Slf4j
 public class VerificationMetricJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(VerificationMetricJob.class);
-
   // Cron name to uniquely identify the cron
   public static final String VERIFICATION_METRIC_CRON_NAME = "VERIFICATION_METRIC_CRON_NAME";
   // Cron Group name

@@ -15,6 +15,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
@@ -43,9 +44,8 @@ import java.util.concurrent.Callable;
  */
 
 @DisallowConcurrentExecution
+@Slf4j
 public class LogAnalysisManagerJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(LogAnalysisManagerJob.class);
-
   @Transient @Inject private LogAnalysisService analysisService;
 
   @Transient @Inject private LearningEngineService learningEngineService;

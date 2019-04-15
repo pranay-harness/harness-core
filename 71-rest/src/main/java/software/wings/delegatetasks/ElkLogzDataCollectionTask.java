@@ -12,10 +12,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -43,9 +43,8 @@ import java.util.function.Supplier;
  * Created by rsingh on 5/18/17.
  */
 
+@Slf4j
 public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(ElkLogzDataCollectionTask.class);
-
   @Inject private ElkDelegateService elkDelegateService;
   @Inject private LogzDelegateService logzDelegateService;
   @Inject private LogAnalysisStoreService logAnalysisStoreService;

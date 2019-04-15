@@ -7,11 +7,10 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.CommonsMethodRule;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -22,9 +21,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+@Slf4j
 public class AsymmetricTest extends CategoryTest {
-  private static final Logger logger = LoggerFactory.getLogger(AsymmetricTest.class);
-
   @Rule public CommonsMethodRule commonsMethodRule = new CommonsMethodRule();
 
   @Inject AsymmetricDecryptor asymmetricDecryptor;

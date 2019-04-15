@@ -1,9 +1,8 @@
 package software.wings.service.impl.ldap;
 
+import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.LdapException;
 import org.ldaptive.SearchResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.helpers.ext.ldap.LdapGroupConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
@@ -14,9 +13,8 @@ import java.util.function.Function;
 /**
  * Function to fetch ldap group search results
  */
+@Slf4j
 public class ExecuteLdapGroupsSearchRequest implements Function<LdapListGroupsRequest, LdapListGroupsResponse> {
-  private static final Logger logger = LoggerFactory.getLogger(ExecuteLdapGroupsSearchRequest.class);
-
   @Override
   public LdapListGroupsResponse apply(LdapListGroupsRequest ldapListGroupsRequest) {
     Status searchStatus = Status.FAILURE;

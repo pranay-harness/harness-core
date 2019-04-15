@@ -3,9 +3,8 @@ package migrations.all;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -13,9 +12,8 @@ import software.wings.verification.CVConfiguration;
 
 import java.util.List;
 
+@Slf4j
 public class AppDTemplateMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AppDTemplateMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

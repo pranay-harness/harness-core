@@ -18,8 +18,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.security.annotations.PublicApi;
 
@@ -43,9 +42,8 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @PublicApi
+@Slf4j
 public class HealthResource {
-  private static final Logger logger = LoggerFactory.getLogger(HealthResource.class);
-
   private MainConfiguration mainConfiguration;
   private AsymmetricEncryptor asymmetricEncryptor;
   private HealthService healthService;

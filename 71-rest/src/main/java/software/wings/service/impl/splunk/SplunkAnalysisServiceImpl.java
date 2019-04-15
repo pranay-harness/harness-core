@@ -9,8 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
@@ -32,9 +31,8 @@ import java.util.List;
  * Created by Pranjal on 08/31/2018
  */
 @Singleton
+@Slf4j
 public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements SplunkAnalysisService {
-  private static final Logger logger = LoggerFactory.getLogger(SplunkAnalysisServiceImpl.class);
-
   @Inject private MLServiceUtil mlServiceUtil;
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(

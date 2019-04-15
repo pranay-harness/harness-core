@@ -3,14 +3,12 @@ package io.harness.time;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class TimestampTest {
-  private static final Logger logger = LoggerFactory.getLogger(TimestampTest.class);
-
   @Test
   @Category(UnitTests.class)
   public void testCurrentMinuteBoundary() {

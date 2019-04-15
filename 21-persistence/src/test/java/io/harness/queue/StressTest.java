@@ -15,19 +15,17 @@ import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Puller;
 import io.harness.version.VersionInfoManager;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
 
+@Slf4j
 public class StressTest extends PersistenceTest {
-  private static final Logger logger = LoggerFactory.getLogger(StressTest.class);
-
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 

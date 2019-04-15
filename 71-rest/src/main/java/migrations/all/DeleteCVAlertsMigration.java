@@ -4,10 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.alert.Alert;
 import software.wings.dl.WingsPersistence;
@@ -15,9 +14,8 @@ import software.wings.dl.WingsPersistence;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class DeleteCVAlertsMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(DeleteCVAlertsMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

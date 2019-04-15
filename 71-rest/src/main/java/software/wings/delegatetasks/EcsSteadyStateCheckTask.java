@@ -10,9 +10,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log.LogLevel;
@@ -31,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(EcsSteadyStateCheckTask.class);
   @Inject private AwsHelperService awsHelperService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private EcsContainerService ecsContainerService;

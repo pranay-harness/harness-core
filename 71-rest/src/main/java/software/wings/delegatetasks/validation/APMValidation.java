@@ -6,8 +6,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -26,9 +25,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+@Slf4j
 public class APMValidation extends AbstractSecretManagerValidation {
-  private static final Logger logger = LoggerFactory.getLogger(APMValidation.class);
-
   public APMValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
     super(delegateId, delegateTask, postExecute);

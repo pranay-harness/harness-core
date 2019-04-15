@@ -5,13 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogItem;
 import software.wings.service.intfc.CatalogService;
@@ -25,8 +23,8 @@ import java.util.Map;
  *
  * @author Rishi.
  */
+@Slf4j
 public class CatalogServiceTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   @Mock private FeatureFlagService mockFeatureFlagService;
   @Inject @InjectMocks private CatalogService catalogService;
 

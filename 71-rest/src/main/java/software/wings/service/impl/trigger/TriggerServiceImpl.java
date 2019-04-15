@@ -55,10 +55,9 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.TriggerKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -122,9 +121,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class TriggerServiceImpl implements TriggerService {
-  private static final Logger logger = LoggerFactory.getLogger(TriggerServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private WorkflowExecutionService workflowExecutionService;

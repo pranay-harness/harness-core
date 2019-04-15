@@ -31,10 +31,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
@@ -44,9 +43,8 @@ import software.wings.sm.StateExecutionInstance;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class GraphRendererTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(GraphRendererTest.class);
-
   @Inject GraphRenderer graphRenderer;
 
   @Test

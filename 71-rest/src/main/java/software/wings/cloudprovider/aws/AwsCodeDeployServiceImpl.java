@@ -39,8 +39,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -59,9 +58,8 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 6/22/17.
  */
 @Singleton
+@Slf4j
 public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
-  private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceImpl.class);
-
   @Inject private AwsHelperService awsHelperService;
   @Inject private TimeLimiter timeLimiter;
 

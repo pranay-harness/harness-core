@@ -71,6 +71,7 @@ import io.harness.threading.ThreadPool;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEventListener;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -78,8 +79,6 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.ManagerMorphiaClasses;
@@ -160,9 +159,8 @@ import javax.ws.rs.Path;
  *
  * @author Rishi
  */
+@Slf4j
 public class WingsApplication extends Application<MainConfiguration> {
-  private static final Logger logger = LoggerFactory.getLogger(WingsApplication.class);
-
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(ManagerMorphiaClasses.dependentClasses)

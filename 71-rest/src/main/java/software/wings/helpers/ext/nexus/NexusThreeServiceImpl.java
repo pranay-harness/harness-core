@@ -16,9 +16,8 @@ import com.google.inject.Singleton;
 
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -40,9 +39,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class NexusThreeServiceImpl {
-  private static final Logger logger = LoggerFactory.getLogger(NexusThreeServiceImpl.class);
-
   @Inject EncryptionService encryptionService;
 
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)

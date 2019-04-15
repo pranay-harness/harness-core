@@ -7,8 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.security.annotations.HarnessApiKeyAuth;
 
@@ -31,9 +30,8 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @HarnessApiKeyAuth(clientTypes = ClientType.PROMETHEUS)
+@Slf4j
 public class MetricResource {
-  private static final Logger logger = LoggerFactory.getLogger(HealthResource.class);
-
   @Inject private HarnessMetricRegistry metricRegistry;
 
   @GET

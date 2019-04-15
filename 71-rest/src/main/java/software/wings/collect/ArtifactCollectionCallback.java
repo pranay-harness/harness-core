@@ -13,8 +13,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.artifact.Artifact;
@@ -28,9 +27,8 @@ import java.util.Map;
 /**
  * Created by rishi on 12/20/16.
  */
+@Slf4j
 public class ArtifactCollectionCallback implements NotifyCallback {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionCallback.class);
-
   @Inject private ArtifactService artifactService;
   @Inject private EventEmitter eventEmitter;
   @Inject private NotificationService notificationService;

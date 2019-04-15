@@ -41,11 +41,10 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.queue.Queue;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -94,9 +93,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class AppServiceImpl implements AppService {
-  private static final Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
-
   // key = appId, value = accountId
   private Cache<String, String> appIdToAccountIdCache = CacheBuilder.newBuilder().maximumSize(1000).build();
 

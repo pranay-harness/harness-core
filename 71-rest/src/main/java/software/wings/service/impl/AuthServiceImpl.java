@@ -41,12 +41,11 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -111,9 +110,8 @@ import javax.crypto.spec.SecretKeySpec;
  * Created by peeyushaggarwal on 8/18/16.
  */
 @Singleton
+@Slf4j
 public class AuthServiceImpl implements AuthService {
-  private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
-
   private GenericDbCache dbCache;
   private WingsPersistence wingsPersistence;
   private UserService userService;

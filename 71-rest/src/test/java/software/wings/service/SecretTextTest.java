@@ -37,6 +37,7 @@ import io.harness.persistence.UuidAware;
 import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,8 +49,6 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
@@ -114,9 +113,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
+@Slf4j
 public class SecretTextTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(SecretTextTest.class);
-
   @Parameter public EncryptionType encryptionType;
   @Mock private AccountService accountService;
   @Inject @InjectMocks private VaultService vaultService;

@@ -20,8 +20,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityReference;
@@ -81,9 +80,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
-  private static final Logger logger = LoggerFactory.getLogger(UsageRestrictionsServiceImpl.class);
-
   @Inject private AuthHandler authHandler;
   @Inject private UserGroupService userGroupService;
   @Inject private AppService appService;

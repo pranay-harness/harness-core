@@ -36,13 +36,12 @@ import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,9 +66,8 @@ import javax.net.ssl.HostnameVerifier;
 /**
  * The Class JenkinsImpl.
  */
+@Slf4j
 public class JenkinsImpl implements Jenkins {
-  private static final Logger logger = LoggerFactory.getLogger(JenkinsImpl.class);
-
   private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
 
   @Inject private ExecutorService executorService;

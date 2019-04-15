@@ -8,10 +8,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
@@ -28,9 +27,8 @@ import java.util.Set;
 import javax.validation.Valid;
 
 @Singleton
+@Slf4j
 public class DeploymentServiceImpl implements DeploymentService {
-  private static final Logger logger = LoggerFactory.getLogger(DeploymentServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
 

@@ -8,9 +8,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest;
@@ -25,8 +24,8 @@ import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class AwsEcrTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(AwsEcrTask.class);
   @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
 
   public AwsEcrTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,

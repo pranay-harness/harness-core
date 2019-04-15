@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.auth.AuthScope;
@@ -19,8 +20,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Converter;
 import retrofit2.Response;
@@ -39,8 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceNowDelegateServiceImpl.class);
   private static final int TIMEOUT = 10 * 1000;
   @Inject private EncryptionService encryptionService;
 

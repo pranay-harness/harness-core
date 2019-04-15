@@ -25,9 +25,8 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.common.Constants;
 import software.wings.service.impl.instance.InstanceHelper;
@@ -59,9 +58,8 @@ import java.util.Optional;
 /**
  * Created by rishi on 1/24/17.
  */
+@Slf4j
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
-  private static final Logger logger = LoggerFactory.getLogger(CanaryWorkflowExecutionAdvisor.class);
-
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;

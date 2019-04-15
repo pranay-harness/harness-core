@@ -8,8 +8,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -82,9 +81,8 @@ import java.util.Set;
  * @author rktummala on 10/19/17
  */
 @Singleton
+@Slf4j
 public class YamlHandlerFactory {
-  private static final Logger logger = LoggerFactory.getLogger(YamlHandlerFactory.class);
-
   private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
   private static final Set<String> entitiesWithActualFiles = new HashSet(obtainUseRealFileEntities());
   private static final Set<String> leafEntities = new HashSet<>(obtainLeafEntities());

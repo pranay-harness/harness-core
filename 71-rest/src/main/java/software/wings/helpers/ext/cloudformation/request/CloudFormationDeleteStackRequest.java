@@ -1,4 +1,5 @@
 package software.wings.helpers.ext.cloudformation.request;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

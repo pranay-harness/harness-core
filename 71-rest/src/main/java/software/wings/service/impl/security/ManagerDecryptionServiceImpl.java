@@ -12,8 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KmsOperationException;
 import io.harness.security.encryption.EncryptionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -30,8 +29,8 @@ import java.util.stream.Collectors;
  * Created by rsingh on 6/7/18.
  */
 @Singleton
+@Slf4j
 public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
-  private static final Logger logger = LoggerFactory.getLogger(ManagerDecryptionServiceImpl.class);
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override

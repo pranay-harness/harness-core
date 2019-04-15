@@ -1,6 +1,4 @@
-package io.harness.cache;
-
-// Cacheable in the key value sense object.
+package io.harness.cache; // Cacheable in the key value sense object.
 //
 // Using key value storage is very commonly used to store cache objects. It is a nice separation of the
 // concern between the system that store the values and the systems that generate it.

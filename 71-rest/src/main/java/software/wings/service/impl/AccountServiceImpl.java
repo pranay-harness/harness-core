@@ -42,6 +42,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
@@ -135,8 +136,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class AccountServiceImpl implements AccountService {
-  private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
   private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
   private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";

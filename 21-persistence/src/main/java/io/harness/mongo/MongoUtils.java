@@ -3,19 +3,17 @@ package io.harness.mongo;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.PageRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The Class MongoUtils.
  */
+@Slf4j
 public class MongoUtils {
-  private static final Logger logger = LoggerFactory.getLogger(MongoUtils.class);
-
   /**
    * Get count.
    *

@@ -19,9 +19,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.AwsLambdaExecutionData;
 import software.wings.api.AwsLambdaFunctionElement;
@@ -53,9 +52,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class AwsLambdaVerification extends State {
-  private static final Logger logger = LoggerFactory.getLogger(AwsLambdaVerification.class);
-
   @Attributes(title = "Function Test Events") private List<LambdaTestEvent> lambdaTestEvents = new ArrayList<>();
 
   @Transient @Inject private ActivityService activityService;

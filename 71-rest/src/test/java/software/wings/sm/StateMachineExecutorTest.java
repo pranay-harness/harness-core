@@ -32,14 +32,13 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.waiter.NotifyEventListener;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Notification;
@@ -68,9 +67,8 @@ import java.util.Map;
  * Created by rishi on 2/25/17.
  */
 @Listeners(NotifyEventListener.class)
+@Slf4j
 public class StateMachineExecutorTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutorTest.class);
-
   @Inject WingsPersistence wingsPersistence;
   @Inject StateMachineExecutor stateMachineExecutor;
 

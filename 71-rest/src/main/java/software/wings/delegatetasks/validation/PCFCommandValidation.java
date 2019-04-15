@@ -5,8 +5,7 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -16,8 +15,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Slf4j
 public class PCFCommandValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(PCFCommandValidation.class);
   public static final String CONNECTION_TIMED_OUT = "connection timed out";
 
   @Inject private transient PcfDeploymentManager pcfDeploymentManager;

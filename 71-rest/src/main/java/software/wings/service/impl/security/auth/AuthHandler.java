@@ -39,11 +39,10 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
@@ -109,9 +108,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 3/7/18
  */
 @Singleton
+@Slf4j
 public class AuthHandler {
-  private static final Logger logger = LoggerFactory.getLogger(AuthHandler.class);
-
   @Inject private PipelineService pipelineService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;

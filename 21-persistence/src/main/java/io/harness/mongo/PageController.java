@@ -23,21 +23,19 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class PageController {
-  private static final Logger logger = LoggerFactory.getLogger(PageController.class);
-
   /**
    * Query page request.
    *

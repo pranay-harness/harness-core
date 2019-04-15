@@ -39,12 +39,11 @@ import io.harness.persistence.HIterator;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.WorkflowExecution;
@@ -89,8 +88,8 @@ import java.util.Set;
 /**
  * Created by Praveen
  */
+@Slf4j
 public class LogAnalysisServiceImpl implements LogAnalysisService {
-  private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
   private static final double HIGH_RISK_THRESHOLD = 50;
   private static final double MEDIUM_RISK_THRESHOLD = 25;
 

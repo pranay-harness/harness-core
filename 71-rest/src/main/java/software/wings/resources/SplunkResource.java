@@ -6,8 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
@@ -31,9 +30,8 @@ import javax.ws.rs.QueryParam;
 @Path("/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL)
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
+@Slf4j
 public class SplunkResource implements LogAnalysisResource {
-  private static final Logger logger = LoggerFactory.getLogger(SplunkResource.class);
-
   @Inject private SplunkAnalysisService analysisService;
 
   /**

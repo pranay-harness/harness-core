@@ -5,8 +5,7 @@ import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARA
 import static software.wings.api.AwsLambdaFunctionElement.Builder.anAwsLambdaFunctionElement;
 
 import io.harness.context.ContextElementType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaFunctionElement;
 import software.wings.sm.ExecutionContext;
@@ -16,9 +15,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(AwsLambdaFunctionProcessor.class);
-
   /**
    * The Expression start pattern.
    */

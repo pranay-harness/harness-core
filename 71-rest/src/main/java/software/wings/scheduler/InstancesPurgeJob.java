@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.DateBuilder;
 import org.quartz.DisallowConcurrentExecution;
@@ -15,8 +16,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
@@ -27,9 +26,8 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.concurrent.TimeUnit;
 
 @DisallowConcurrentExecution
+@Slf4j
 public class InstancesPurgeJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(InstancesPurgeJob.class);
-
   private static final String INSTANCES_PURGE_CRON_NAME = "INSTANCES_PURGE_CRON_NAME";
   private static final String INSTANCES_PURGE_CRON_GROUP = "INSTANCES_PURGE_CRON_GROUP";
 

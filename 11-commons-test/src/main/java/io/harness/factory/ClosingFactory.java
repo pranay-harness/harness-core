@@ -1,15 +1,13 @@
 package io.harness.factory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+@Slf4j
 public class ClosingFactory {
-  private static final Logger logger = LoggerFactory.getLogger(ClosingFactory.class);
-
   private LinkedList<Closeable> servers = new LinkedList<>();
 
   public synchronized void addServer(Closeable server) {

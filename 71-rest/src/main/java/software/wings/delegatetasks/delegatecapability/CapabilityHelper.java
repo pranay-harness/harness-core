@@ -16,8 +16,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -33,9 +32,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class CapabilityHelper {
-  private static final Logger logger = LoggerFactory.getLogger(CapabilityHelper.class);
-
   public static void embedCapabilitiesInDelegateTask(
       DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {
     if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {

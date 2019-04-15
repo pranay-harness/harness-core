@@ -21,8 +21,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
@@ -49,8 +48,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
-  private static final Logger logger = LoggerFactory.getLogger(SshCommandUnitExecutorServiceImpl.class);
   /**
    * The Log service.
    */

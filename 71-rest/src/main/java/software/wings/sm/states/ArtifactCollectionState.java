@@ -20,9 +20,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.artifact.Artifact;
@@ -42,9 +41,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class ArtifactCollectionState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionState.class);
-
   @EnumData(enumDataProvider = ArtifactSourceProvider.class)
   @Attributes(title = "Artifact Source")
   @NotEmpty

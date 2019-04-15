@@ -20,6 +20,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptionType;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -28,8 +29,6 @@ import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
@@ -55,8 +54,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 @Ignore
 @Integration
+@Slf4j
 public class KmsKeysRotationTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(KmsKeysRotationTest.class);
   private static final String AWS_ACCESS_KEY = "aws_access_key";
   private static final String AWS_SECRET_KEY = "aws_secret_key";
   private static final String AWS_SECRET_ARN = "aws_secret_arn";

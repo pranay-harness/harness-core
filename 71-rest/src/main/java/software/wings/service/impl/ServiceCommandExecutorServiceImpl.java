@@ -10,8 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
@@ -39,9 +38,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceCommandExecutorServiceImpl.class);
-
   @Inject private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
   @Inject private EncryptionService encryptionService;
 

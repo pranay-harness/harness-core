@@ -34,6 +34,7 @@ import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,8 +46,6 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
@@ -108,9 +107,8 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
+@Slf4j
 public class VaultTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(VaultTest.class);
-
   private static String VAULT_TOKEN = UUID.randomUUID().toString();
 
   private final int numOfEncryptedValsForKms = 3;

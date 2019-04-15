@@ -18,13 +18,12 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -53,9 +52,8 @@ import java.util.regex.Pattern;
  * Created by anubhaw on 11/29/16.
  */
 @Singleton
+@Slf4j
 public class BambooServiceImpl implements BambooService {
-  private static final Logger logger = LoggerFactory.getLogger(BambooServiceImpl.class);
-
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
 

@@ -12,8 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -34,9 +33,8 @@ import javax.ws.rs.NotSupportedException;
  * Created by sgurubelli on 6/28/17.
  */
 @Singleton
+@Slf4j
 public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactoryBuildServiceImpl.class);
-
   @Inject private ArtifactoryService artifactoryService;
 
   @Override

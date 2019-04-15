@@ -11,13 +11,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -30,9 +29,8 @@ import software.wings.dl.WingsPersistence;
  *
  * @author Rishi
  */
+@Slf4j
 public class ExecutionInterruptManagerTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionInterruptManagerTest.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @InjectMocks @Inject private ExecutionInterruptManager executionInterruptManager;
   @Mock private StateMachineExecutor stateMachineExecutor;

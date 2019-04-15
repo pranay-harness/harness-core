@@ -11,8 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.EcsResizeParams;
@@ -35,8 +34,8 @@ import java.util.Map;
 import java.util.Objects;
 
 @Singleton
+@Slf4j
 public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(EcsDeployCommandHandler.class);
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsClusterService awsClusterService;
   static final String DASH_STRING = "----------";

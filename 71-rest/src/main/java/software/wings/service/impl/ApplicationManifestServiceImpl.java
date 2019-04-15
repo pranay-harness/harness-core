@@ -26,9 +26,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -68,9 +67,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class ApplicationManifestServiceImpl implements ApplicationManifestService {
-  private static final Logger logger = LoggerFactory.getLogger(ApplicationManifestServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;

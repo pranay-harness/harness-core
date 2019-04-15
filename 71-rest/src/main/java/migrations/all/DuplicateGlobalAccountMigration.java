@@ -4,14 +4,12 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.template.TemplateGalleryService;
 
+@Slf4j
 public class DuplicateGlobalAccountMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(DuplicateGlobalAccountMigration.class);
-
   @Inject private TemplateGalleryService templateGalleryService;
   @Override
   public void migrate() {

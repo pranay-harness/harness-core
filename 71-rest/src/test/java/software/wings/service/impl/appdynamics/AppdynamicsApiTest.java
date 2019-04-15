@@ -29,6 +29,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import okhttp3.internal.http.RealResponseBody;
 import org.apache.http.HttpStatus;
@@ -37,8 +38,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.WingsBaseTest;
@@ -72,8 +71,8 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 4/24/18.
  */
+@Slf4j
 public class AppdynamicsApiTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsApiTest.class);
   @Inject private AppdynamicsResource appdynamicsResource;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;

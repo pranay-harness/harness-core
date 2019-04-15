@@ -13,8 +13,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -32,8 +31,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class AwsIamHelperServiceManagerImpl implements AwsIamHelperServiceManager {
-  private static final Logger logger = LoggerFactory.getLogger(AwsIamHelperServiceManagerImpl.class);
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;
 

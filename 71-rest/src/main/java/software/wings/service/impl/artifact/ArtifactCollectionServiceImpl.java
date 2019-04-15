@@ -28,8 +28,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -57,9 +56,8 @@ import java.util.stream.Collectors;
  * Service responsible to glue all artifact
  */
 @Singleton
+@Slf4j
 public class ArtifactCollectionServiceImpl implements ArtifactCollectionService {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionServiceImpl.class);
-
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private BuildSourceService buildSourceService;

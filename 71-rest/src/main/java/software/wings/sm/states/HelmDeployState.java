@@ -30,8 +30,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InfraMappingElement;
@@ -112,9 +111,8 @@ import java.util.stream.Collectors;
 /**
  * Created by anubhaw on 3/25/18.
  */
+@Slf4j
 public class HelmDeployState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(HelmDeployState.class);
-
   @Inject private transient AppService appService;
   @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;

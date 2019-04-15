@@ -13,9 +13,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.beans.AwsConfig;
@@ -36,9 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(HelmRepoConfigValidationTask.class);
-
   @Inject private EncryptionService encryptionService;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private ChartMuseumClient chartMuseumClient;

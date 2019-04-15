@@ -17,11 +17,10 @@ import io.harness.queue.QueueController;
 import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -29,9 +28,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class PersistenceIteratorTest extends PersistenceTest {
-  private static final Logger logger = LoggerFactory.getLogger(PersistenceIteratorTest.class);
-
   @Inject private HPersistence persistence;
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);

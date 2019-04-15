@@ -26,13 +26,12 @@ import com.google.inject.Singleton;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronScheduleBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
@@ -67,8 +66,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Singleton
+@Slf4j
 public class TriggerServiceHelper {
-  private static final Logger logger = LoggerFactory.getLogger(TriggerServiceHelper.class);
   @Inject private WingsPersistence wingsPersistence;
 
   public void deletePipelineCompletionTriggers(String appId, String pipelineId) {

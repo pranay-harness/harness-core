@@ -16,13 +16,12 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -45,9 +44,8 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 1/6/17.
  */
 @Singleton
+@Slf4j
 public class DockerRegistryServiceImpl implements DockerRegistryService {
-  private static final Logger logger = LoggerFactory.getLogger(DockerRegistryServiceImpl.class);
-
   @Inject private EncryptionService encryptionService;
   @Inject private DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
 

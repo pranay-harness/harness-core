@@ -11,9 +11,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.ExceptionUtils;
 import io.harness.notifications.NotificationReceiverInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -37,8 +36,8 @@ import java.util.Objects;
  * Created by rishi on 10/30/16.
  */
 @Singleton
+@Slf4j
 public class NotificationDispatcherServiceImpl implements NotificationDispatcherService {
-  private static final Logger logger = LoggerFactory.getLogger(NotificationDispatcherServiceImpl.class);
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private UserGroupService userGroupService;
   @Inject @UseNotificationGroup private NotificationDispatcher<NotificationGroup> notificationGroupDispatcher;

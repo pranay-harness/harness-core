@@ -16,10 +16,9 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -46,9 +45,8 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 6/30/17.
  */
 @Singleton
+@Slf4j
 public class SplunkDelegateServiceImpl implements SplunkDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(SplunkDelegateServiceImpl.class);
-
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
   private final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   @Inject private EncryptionService encryptionService;

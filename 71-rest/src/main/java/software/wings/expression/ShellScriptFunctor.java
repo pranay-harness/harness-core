@@ -5,12 +5,11 @@ import io.harness.expression.ExpressionFunctor;
 import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
 import lombok.Builder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 @Builder
+@Slf4j
 public class ShellScriptFunctor implements ExpressionFunctor {
-  private static final Logger logger = LoggerFactory.getLogger(ShellScriptFunctor.class);
   private ScriptType scriptType;
 
   public String escape(SecretString input) {

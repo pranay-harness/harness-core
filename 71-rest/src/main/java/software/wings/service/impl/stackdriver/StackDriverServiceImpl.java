@@ -14,8 +14,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -41,9 +40,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class StackDriverServiceImpl implements StackDriverService {
-  private static final Logger logger = LoggerFactory.getLogger(StackDriverServiceImpl.class);
-
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;

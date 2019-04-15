@@ -14,9 +14,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
@@ -42,9 +41,8 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(GitFetchFilesTask.class);
-
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;

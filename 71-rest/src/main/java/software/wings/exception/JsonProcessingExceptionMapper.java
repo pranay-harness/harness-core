@@ -9,8 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -20,16 +19,15 @@ import javax.ws.rs.ext.Provider;
  * Created by peeyushaggarwal on 6/8/16.
  */
 @Provider
+@Slf4j
 public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProcessingException> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(JsonProcessingExceptionMapper.class);
-
   @Override
   public Response toResponse(JsonProcessingException exception) {
     /*
      * If the error is in the JSON generation, it's a server error.
      */
     if (exception instanceof JsonGenerationException) {
-      LOGGER.warn("Error generating JSON", exception);
+      logger.warn("Error generating JSON", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(ResponseMessage.builder()
@@ -48,7 +46,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      * server error and we should inform the developer.
      */
     if (message.startsWith("No suitable constructor found")) {
-      LOGGER.error("Unable to deserialize the specific type", exception);
+      logger.error("Unable to deserialize the specific type", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(ResponseMessage.builder()
@@ -63,7 +61,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
     /*
      * Otherwise, it's those pesky users.
      */
-    LOGGER.info("Unable to process JSON", exception);
+    logger.info("Unable to process JSON", exception);
     return Response.status(BAD_REQUEST)
         .entity(aRestResponse()
                     .withResponseMessages(singletonList(ResponseMessage.builder()

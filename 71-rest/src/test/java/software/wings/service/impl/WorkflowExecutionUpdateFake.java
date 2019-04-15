@@ -3,8 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.ExecutionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.sm.ExecutionContext;
 
 import java.time.Duration;
@@ -16,9 +15,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * The type Workflow execution update fake.
  */
+@Slf4j
 public class WorkflowExecutionUpdateFake extends WorkflowExecutionUpdate {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdateFake.class);
-
   private static Map<String, CountDownLatch> signalIdsMap = new ConcurrentHashMap<>();
 
   private String signalId;

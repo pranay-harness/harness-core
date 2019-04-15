@@ -6,15 +6,13 @@ import com.google.inject.Injector;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
+@Slf4j
 public class VerificationJobScheduler extends HQuartzScheduler {
-  private static final Logger logger = LoggerFactory.getLogger(VerificationJobScheduler.class);
-
   /**
    * Instantiates a new Cron scheduler.
    *

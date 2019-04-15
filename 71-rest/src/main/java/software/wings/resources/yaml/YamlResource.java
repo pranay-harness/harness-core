@@ -16,12 +16,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jvnet.hk2.annotations.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -85,9 +84,8 @@ import javax.ws.rs.core.HttpHeaders;
 @Path("setup-as-code/yaml")
 @Produces(APPLICATION_JSON)
 @Scope(SETTING)
+@Slf4j
 public class YamlResource {
-  private static final Logger logger = LoggerFactory.getLogger(YamlResource.class);
-
   private YamlResourceService yamlResourceService;
   private AppYamlResourceService appYamlResourceService;
   private YamlArtifactStreamService yamlArtifactStreamService;

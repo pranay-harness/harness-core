@@ -20,13 +20,12 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.FeatureName;
@@ -51,9 +50,8 @@ import java.util.concurrent.TimeUnit;
  * Created by brett on 7/20/17
  */
 @Singleton
+@Slf4j
 public class AssignDelegateServiceImpl implements AssignDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(AssignDelegateServiceImpl.class);
-
   private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
   private static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
   private static final long WHITELIST_REFRESH_INTERVAL = TimeUnit.MINUTES.toMillis(10);

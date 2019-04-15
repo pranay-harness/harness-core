@@ -8,9 +8,8 @@ import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -25,9 +24,8 @@ import software.wings.sm.StateType;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class FixMaxInstancesFieldInContainerSetup implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(FixMaxInstancesFieldInContainerSetup.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 

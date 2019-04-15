@@ -12,8 +12,7 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
@@ -33,8 +32,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Singleton
+@Slf4j
 public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(EcsSetupCommandHandler.class);
   @Inject private AwsHelperService awsHelperService;
   @Inject private EcsContainerService ecsContainerService;
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;

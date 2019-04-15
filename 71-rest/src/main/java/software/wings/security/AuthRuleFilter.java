@@ -15,11 +15,10 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.Action;
@@ -64,9 +63,8 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 @Singleton
 @Priority(AUTHORIZATION)
+@Slf4j
 public class AuthRuleFilter implements ContainerRequestFilter {
-  private static final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
-
   private static final String[] NO_FILTERING_URIS_PREFIXES = new String[] {"users/user", "users/sso/zendesk",
       "users/account", "users/two-factor-auth", "users/disable-two-factor-auth", "users/enable-two-factor-auth",
       "users/refresh-token", "account/new", "harness-api-keys", "users/set-default-account", "graphql"};

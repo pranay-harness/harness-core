@@ -4,13 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.wings.utils.Util;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -19,9 +17,8 @@ import javax.crypto.Cipher;
 /**
  * Created by mike@ on 4/24/17.
  */
+@Slf4j
 public class SimpleEncryptionTest {
-  private static final Logger logger = LoggerFactory.getLogger(Util.class);
-
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test

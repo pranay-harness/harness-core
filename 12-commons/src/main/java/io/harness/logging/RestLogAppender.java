@@ -17,8 +17,7 @@ import io.harness.flow.Flow;
 import io.harness.network.Http;
 import lombok.AllArgsConstructor;
 import lombok.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -30,9 +29,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class RestLogAppender<E> extends AppenderBase<E> {
-  private static final Logger logger = LoggerFactory.getLogger(RestLogAppender.class);
-
   private static final int MAX_BATCH_SIZE = 1000;
   private static final String LOGDNA_HOST_DIRECT = "https://logs.logdna.com";
   private static final String LOGDNA_HOST_PROXY = "https://app.harness.io/storage/applogs/";

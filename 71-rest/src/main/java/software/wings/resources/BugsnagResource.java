@@ -6,8 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
@@ -32,8 +31,8 @@ import javax.ws.rs.QueryParam;
 @Api("bugsnag")
 @Path("/bugsnag")
 @Produces("application/json")
+@Slf4j
 public class BugsnagResource {
-  private static final Logger logger = LoggerFactory.getLogger(BugsnagResource.class);
   @Inject private LogVerificationService logVerificationService;
 
   @GET

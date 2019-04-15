@@ -9,9 +9,8 @@ import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -26,9 +25,8 @@ import java.util.Optional;
 
 @Integration
 @Ignore
+@Slf4j
 public class KubernetesIntegrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesIntegrationTest.class);
-
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withUuid("GCP_ID")

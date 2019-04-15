@@ -20,8 +20,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
@@ -47,9 +46,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class ContainerServiceImpl implements ContainerService {
-  private static final Logger logger = LoggerFactory.getLogger(ContainerServiceImpl.class);
-
   @Inject private GkeClusterService gkeClusterService;
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private AwsClusterService awsClusterService;

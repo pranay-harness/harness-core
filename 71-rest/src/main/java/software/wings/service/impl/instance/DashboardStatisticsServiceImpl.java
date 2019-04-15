@@ -41,13 +41,12 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
@@ -113,8 +112,8 @@ import javax.annotation.Nonnull;
  * @author rktummala on 8/13/17
  */
 @Singleton
+@Slf4j
 public class DashboardStatisticsServiceImpl implements DashboardStatisticsService {
-  private static final Logger logger = LoggerFactory.getLogger(DashboardStatisticsServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InstanceService instanceService;
   @Inject private AppService appService;

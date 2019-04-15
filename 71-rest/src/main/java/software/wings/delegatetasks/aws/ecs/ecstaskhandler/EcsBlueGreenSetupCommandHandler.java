@@ -17,8 +17,7 @@ import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -40,8 +39,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Singleton
+@Slf4j
 public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(EcsBlueGreenSetupCommandHandler.class);
   private static final String DELIMITER = "__";
   @Inject private AwsHelperService awsHelperService;
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;

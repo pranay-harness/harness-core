@@ -9,18 +9,16 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+@Slf4j
 public class AddValidUntilToDelegateTask implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddValidUntilToDelegateTask.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

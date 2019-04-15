@@ -24,9 +24,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.ExecutionArgs;
@@ -60,9 +59,8 @@ import java.util.Map;
  * @author Rishi
  */
 @Attributes(title = "Env")
+@Slf4j
 public class EnvState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(EnvState.class);
-
   @Expand(dataProvider = EnvironmentServiceImpl.class)
   @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")

@@ -12,10 +12,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.joor.ReflectException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 
 import java.util.function.Consumer;
@@ -24,9 +23,8 @@ import java.util.function.Supplier;
 /**
  * Created by peeyushaggarwal on 1/12/17.
  */
+@Slf4j
 public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateRunnableTask.class);
-
   @Inject private Injector injector;
 
   public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask,

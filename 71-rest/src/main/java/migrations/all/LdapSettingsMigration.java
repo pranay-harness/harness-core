@@ -4,10 +4,9 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
@@ -22,9 +21,8 @@ import software.wings.dl.WingsPersistence;
  * list of user & group queries.
  *
  */
+@Slf4j
 public class LdapSettingsMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(LdapSettingsMigration.class);
-
   @Inject WingsPersistence wingsPersistence;
 
   @Override

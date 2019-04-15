@@ -18,8 +18,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.YamlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMValidateCollectorConfig;
@@ -71,9 +70,8 @@ import javax.cache.Cache;
  * Created by rsingh on 8/28/17.
  */
 @Singleton
+@Slf4j
 public class NewRelicServiceImpl implements NewRelicService {
-  private static final Logger logger = LoggerFactory.getLogger(NewRelicServiceImpl.class);
-
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;

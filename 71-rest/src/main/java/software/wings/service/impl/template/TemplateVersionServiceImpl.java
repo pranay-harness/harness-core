@@ -10,16 +10,15 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateVersionService;
 
 @Singleton
+@Slf4j
 public class TemplateVersionServiceImpl implements TemplateVersionService {
-  private static final Logger logger = LoggerFactory.getLogger(TemplateVersionServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

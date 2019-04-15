@@ -28,9 +28,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -46,8 +45,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class AmazonS3ServiceImpl implements AmazonS3Service {
-  private static final Logger logger = LoggerFactory.getLogger(AmazonS3ServiceImpl.class);
   @Inject AwsHelperService awsHelperService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   private static final int MAX_FILES_TO_SHOW_IN_UI = 1000;

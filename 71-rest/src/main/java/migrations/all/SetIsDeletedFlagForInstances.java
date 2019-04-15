@@ -4,12 +4,11 @@ import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
 
@@ -22,9 +21,8 @@ import java.util.stream.Collectors;
  *
  * @author rktummala on 10/07/18
  */
+@Slf4j
 public class SetIsDeletedFlagForInstances implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(SetIsDeletedFlagForInstances.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

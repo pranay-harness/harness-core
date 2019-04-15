@@ -66,13 +66,12 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
@@ -180,8 +179,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
   private static final String IISWEBSITE_KEYWORD = "iiswebsite";
   private static final String IISAPP_KEYWORD = "iisapp";
   private static final String IIS_INSTALL_COMMAND_NAME = "Install";

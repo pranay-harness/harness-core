@@ -14,13 +14,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.jobs.MetricDataProcessorJob;
 import io.harness.jobs.VerificationJob;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -39,9 +38,8 @@ import java.util.concurrent.TimeoutException;
  * Created by Pranjal on 10/05/2018
  */
 @Ignore
+@Slf4j
 public class VerificationJobIntegrationTest extends VerificationBaseIntegrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(VerificationJobIntegrationTest.class);
-
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private VerificationJob job;

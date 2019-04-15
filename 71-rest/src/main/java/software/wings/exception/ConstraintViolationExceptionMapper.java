@@ -15,12 +15,11 @@ import io.dropwizard.validation.ValidationMethod;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -49,9 +48,8 @@ import javax.ws.rs.ext.Provider;
  * Created by peeyushaggarwal on 6/8/16.
  */
 @Provider
+@Slf4j
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
-  private static final Logger logger = LoggerFactory.getLogger(ConstraintViolationExceptionMapper.class);
-
   private static final Cache<Pair<Path, ? extends ConstraintDescriptor<?>>, String> MESSAGES_CACHE =
       CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).build();
   private static final Joiner DOT_JOINER = Joiner.on('.');

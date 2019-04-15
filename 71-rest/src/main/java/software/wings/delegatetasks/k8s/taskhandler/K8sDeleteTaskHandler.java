@@ -21,10 +21,9 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResourceId;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -36,8 +35,8 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import java.util.List;
 
 @NoArgsConstructor
+@Slf4j
 public class K8sDeleteTaskHandler extends K8sTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(K8sDeleteTaskHandler.class);
   @Inject private transient K8sTaskHelper k8sTaskHelper;
 
   private Kubectl client;

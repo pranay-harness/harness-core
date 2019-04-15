@@ -8,19 +8,17 @@ import com.google.inject.name.Named;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
 
+@Slf4j
 public class JiraPollingJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(JiraPollingJob.class);
-
   public static final String GROUP = "JIRA_POLLING_CRON_JOB";
   private static final String CONNECTOR_ID = "connectorId";
   private static final String ISSUE_ID = "issueId";

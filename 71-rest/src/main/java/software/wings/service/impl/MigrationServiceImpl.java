@@ -21,6 +21,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import migrations.MigrationBackgroundList;
 import migrations.MigrationList;
@@ -29,8 +30,6 @@ import migrations.SeedDataMigrationList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Schema;
 import software.wings.dl.WingsPersistence;
@@ -43,9 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class MigrationServiceImpl implements MigrationService {
-  private static final Logger logger = LoggerFactory.getLogger(MigrationServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Injector injector;

@@ -22,8 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -54,8 +53,8 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 12/14/16.
  */
 @Singleton
+@Slf4j
 public class CloudWatchServiceImpl implements CloudWatchService {
-  private static final Logger logger = LoggerFactory.getLogger(CloudWatchServiceImpl.class);
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private SecretManager secretManager;

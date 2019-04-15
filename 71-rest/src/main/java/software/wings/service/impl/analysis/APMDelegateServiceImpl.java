@@ -8,8 +8,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -26,9 +25,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class APMDelegateServiceImpl implements APMDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(APMDelegateServiceImpl.class);
-
   @Inject private EncryptionService encryptionService;
   private Map<String, String> decryptedFields = new HashMap<>();
 

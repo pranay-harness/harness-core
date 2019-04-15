@@ -13,6 +13,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.ReadPref;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -20,8 +21,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
@@ -29,9 +28,8 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 
+@Slf4j
 public class PersistentLockCleanupJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(PersistentLockCleanupJob.class);
-
   public static final String NAME = "MAINTENANCE";
   public static final String GROUP = "PERSISTENT_LOCK_CRON_GROUP";
 

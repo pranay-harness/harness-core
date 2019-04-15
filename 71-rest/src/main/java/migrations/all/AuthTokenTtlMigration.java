@@ -6,17 +6,15 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.dl.WingsPersistence;
 
 import java.util.Date;
 
+@Slf4j
 public class AuthTokenTtlMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(RenameReplicationControllerStates.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Override
   public void migrate() {

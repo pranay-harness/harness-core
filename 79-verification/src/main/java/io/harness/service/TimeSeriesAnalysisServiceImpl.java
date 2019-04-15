@@ -31,11 +31,10 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -85,9 +84,8 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 9/26/17.
  */
+@Slf4j
 public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService {
-  private static final Logger logger = LoggerFactory.getLogger(TimeSeriesAnalysisServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
   @Inject private VerificationManagerClient managerClient;

@@ -41,8 +41,7 @@ import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
@@ -72,9 +71,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
 @Singleton
+@Slf4j
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
-
   private TimeLimiter timeLimiter;
 
   @Inject

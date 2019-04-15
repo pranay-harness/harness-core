@@ -1,4 +1,5 @@
 package software.wings.security.authentication;
+
 import lombok.Builder;
 import lombok.Data;
 

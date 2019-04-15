@@ -15,11 +15,10 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -61,8 +60,8 @@ import java.util.stream.Collectors;
  * Created by rsingh on 4/17/17.
  */
 @Singleton
+@Slf4j
 public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
   public static final String BT_PERFORMANCE_PATH_PREFIX = "Business Transaction Performance|Business Transactions|";
   public static final String EXTERNAL_CALLS = "External Calls";
   public static final String INDIVIDUAL_NODES = "Individual Nodes";

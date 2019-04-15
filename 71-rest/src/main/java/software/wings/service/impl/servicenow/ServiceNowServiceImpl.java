@@ -14,10 +14,9 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
@@ -36,8 +35,8 @@ import software.wings.service.intfc.servicenow.ServiceNowService;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class ServiceNowServiceImpl implements ServiceNowService {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceNowServiceImpl.class);
   @Inject @Transient private transient SecretManager secretManager;
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject WaitNotifyEngine waitNotifyEngine;

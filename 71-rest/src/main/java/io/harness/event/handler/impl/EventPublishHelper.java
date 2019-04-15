@@ -24,8 +24,7 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
@@ -68,8 +67,8 @@ import java.util.concurrent.ExecutorService;
  * @author rktummala on 11/27/18
  */
 @Singleton
+@Slf4j
 public class EventPublishHelper {
-  private static final Logger logger = LoggerFactory.getLogger(EventPublishHelper.class);
   @Inject private EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
   @Inject private WorkflowExecutionService workflowExecutionService;

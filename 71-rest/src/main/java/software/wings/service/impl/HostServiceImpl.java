@@ -12,11 +12,10 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.queue.Queue;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
@@ -42,8 +41,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class HostServiceImpl implements HostService {
-  private static final Logger logger = LoggerFactory.getLogger(HostServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
   @Inject private NotificationService notificationService;

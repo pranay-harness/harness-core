@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import com.google.common.collect.Sets;
 
 import com.mongodb.DBCollection;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Criteria;
@@ -16,8 +17,6 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.MorphiaKeyIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -29,9 +28,8 @@ import java.util.Set;
  *
  * @param <T> the type parameter
  */
+@Slf4j
 public class HQuery<T> extends QueryImpl<T> {
-  private static final Logger logger = LoggerFactory.getLogger(HQuery.class);
-
   public enum QueryChecks { VALIDATE, AUTHORITY, COUNT }
 
   public static final Set<QueryChecks> allChecks = EnumSet.<QueryChecks>of(VALIDATE, AUTHORITY, COUNT);

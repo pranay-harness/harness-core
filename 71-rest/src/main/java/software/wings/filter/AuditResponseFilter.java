@@ -3,8 +3,7 @@ package software.wings.filter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.common.AuditHelper;
 
@@ -24,9 +23,8 @@ import javax.servlet.http.HttpServletResponse;
  * @author Rishi
  */
 @Singleton
+@Slf4j
 public class AuditResponseFilter implements Filter {
-  private static final Logger logger = LoggerFactory.getLogger(AuditResponseFilter.class);
-
   @Inject private AuditHelper auditHelper;
 
   /* (non-Javadoc)

@@ -8,9 +8,8 @@ import com.google.inject.Inject;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.K8sPod;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -23,8 +22,8 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import java.util.List;
 
 @NoArgsConstructor
+@Slf4j
 public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(K8sInstanceSyncTaskHandler.class);
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
 

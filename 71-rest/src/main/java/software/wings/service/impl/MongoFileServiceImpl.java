@@ -24,11 +24,10 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
 import io.harness.persistence.ReadPref;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
@@ -52,9 +51,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class MongoFileServiceImpl implements FileService {
-  private static final Logger logger = LoggerFactory.getLogger(MongoFileServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   /**

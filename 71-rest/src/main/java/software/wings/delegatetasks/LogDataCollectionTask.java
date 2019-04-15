@@ -13,10 +13,10 @@ import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -48,9 +48,8 @@ import java.util.function.Supplier;
 /**
  * @author Praveen
  */
+@Slf4j
 public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(LogDataCollectionTask.class);
-
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private DelegateLogService delegateLogService;
   private CustomLogDataCollectionInfo dataCollectionInfo;

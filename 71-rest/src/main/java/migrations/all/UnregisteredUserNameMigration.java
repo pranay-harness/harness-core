@@ -2,19 +2,17 @@ package migrations.all;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 
 import java.util.Iterator;
 
+@Slf4j
 public class UnregisteredUserNameMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(UnregisteredUserNameMigration.class);
-
   @Inject WingsPersistence wingsPersistence;
   @Override
   public void migrate() {

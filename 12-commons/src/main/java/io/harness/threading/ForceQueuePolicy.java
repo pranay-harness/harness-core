@@ -1,7 +1,6 @@
 package io.harness.threading;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -14,9 +13,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  * threadpool executor that forces the Java to raise the current pool size, if it has still not
  * reached the max threshold, in case existing ones are busy processing other jobs.
  */
+@Slf4j
 public class ForceQueuePolicy implements RejectedExecutionHandler {
-  private static final Logger logger = LoggerFactory.getLogger(ForceQueuePolicy.class);
-
   @Override
   public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
     try {

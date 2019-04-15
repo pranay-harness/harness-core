@@ -23,12 +23,11 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.persistence.ReadPref;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditHeaderYamlResponse;
@@ -54,9 +53,8 @@ import java.util.concurrent.TimeUnit;
  * @author Rishi
  */
 @Singleton
+@Slf4j
 public class AuditServiceImpl implements AuditService {
-  private static final Logger logger = LoggerFactory.getLogger(AuditServiceImpl.class);
-
   @Inject private FileService fileService;
   @Inject private TimeLimiter timeLimiter;
 

@@ -35,11 +35,10 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import io.harness.waiter.ErrorNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.api.TerraformExecutionData;
@@ -97,9 +96,8 @@ import javax.ws.rs.core.StreamingOutput;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class InfrastructureProvisionerServiceImpl implements InfrastructureProvisionerService {
-  private static final Logger logger = LoggerFactory.getLogger(InfrastructureProvisionerServiceImpl.class);
-
   @Inject private ManagerExpressionEvaluator evaluator;
 
   @Inject InfrastructureMappingService infrastructureMappingService;

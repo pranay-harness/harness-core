@@ -19,10 +19,10 @@ import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -54,8 +54,8 @@ import java.util.function.Supplier;
 /**
  * Created by Pranjal on 11/30/18.
  */
+@Slf4j
 public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  private static final Logger logger = LoggerFactory.getLogger(StackDriverDataCollectionTask.class);
   private StackDriverDataCollectionInfo dataCollectionInfo;
 
   @Inject private StackDriverDelegateService stackDriverDelegateService;

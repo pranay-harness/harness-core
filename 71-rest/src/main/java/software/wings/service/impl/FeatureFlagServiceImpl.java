@@ -13,8 +13,7 @@ import com.google.api.client.repackaged.com.google.common.base.Splitter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureFlag;
@@ -35,9 +34,8 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@Slf4j
 public class FeatureFlagServiceImpl implements FeatureFlagService {
-  private static final Logger logger = LoggerFactory.getLogger(FeatureFlagServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
   @Inject private MainConfiguration mainConfiguration;

@@ -13,9 +13,8 @@ import com.google.inject.Singleton;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.queue.QueueController;
 import io.harness.version.VersionInfoManager;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ManagerConfiguration;
 import software.wings.dl.WingsPersistence;
 
@@ -27,8 +26,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
+@Slf4j
 public class ConfigurationController implements Managed, QueueController {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigurationController.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ExecutorService executorService;

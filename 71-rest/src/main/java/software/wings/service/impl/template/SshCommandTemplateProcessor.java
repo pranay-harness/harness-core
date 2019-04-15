@@ -30,9 +30,8 @@ import de.danielbechler.diff.node.DiffNode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Variable;
@@ -59,8 +58,8 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@Slf4j
 public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(SshCommandTemplateProcessor.class);
   private static final String COMMAND_UNITS = "commandUnits";
   private static final String REFERENCED_TEMPLATE_LIST = "referencedTemplateList";
   private static final String COMMAND_TYPE = "commandType";

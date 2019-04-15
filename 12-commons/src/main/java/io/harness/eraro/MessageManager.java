@@ -2,9 +2,8 @@ package io.harness.eraro;
 
 import com.google.common.collect.ImmutableMap;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StrSubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,9 +11,8 @@ import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Properties;
 
+@Slf4j
 public class MessageManager {
-  private static final Logger logger = LoggerFactory.getLogger(MessageManager.class);
-
   private static final MessageManager instance = new MessageManager();
 
   private final Properties messages = new Properties();

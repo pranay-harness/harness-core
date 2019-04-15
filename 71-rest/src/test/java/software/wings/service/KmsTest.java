@@ -46,6 +46,7 @@ import io.harness.rule.RepeatRule.Repeat;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,8 +55,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
@@ -133,9 +132,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 9/29/17.
  */
+@Slf4j
 public class KmsTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(KmsTest.class);
-
   private static final String accessKey = generateUuid();
   private static final String secretKey = generateUuid();
   private static final String arn = generateUuid();

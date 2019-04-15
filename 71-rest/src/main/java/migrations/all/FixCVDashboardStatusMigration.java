@@ -6,10 +6,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.sm.StateExecutionInstance;
@@ -17,9 +16,8 @@ import software.wings.sm.StateExecutionInstance;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class FixCVDashboardStatusMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(FixCVDashboardStatusMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

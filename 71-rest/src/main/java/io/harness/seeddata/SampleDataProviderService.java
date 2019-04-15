@@ -9,8 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -21,9 +20,8 @@ import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Validator;
 
 @Singleton
+@Slf4j
 public class SampleDataProviderService {
-  private static final Logger logger = LoggerFactory.getLogger(SampleDataProviderService.class);
-
   @Inject private CloudProviderSampleDataProvider cloudProviderSeedDataProvider;
   @Inject private ConnectorSampleDataProvider connectorGenerator;
   @Inject private ApplicationSampleDataProvider applicationSampleDataProvider;

@@ -9,18 +9,16 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 
 import java.util.List;
 
+@Slf4j
 public class MigrateCVMetadataApplicationId implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(MigrateCVMetadataApplicationId.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

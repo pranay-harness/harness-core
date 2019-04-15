@@ -32,11 +32,10 @@ import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.mindrot.jbcrypt.BCrypt;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -55,9 +54,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
+@Slf4j
 public class UserResourceRestClient {
-  private static final Logger logger = LoggerFactory.getLogger(UserResourceRestClient.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private RoleService roleService;

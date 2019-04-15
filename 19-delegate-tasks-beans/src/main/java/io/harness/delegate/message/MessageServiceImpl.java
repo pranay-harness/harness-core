@@ -18,6 +18,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.AndFileFilter;
@@ -25,8 +26,6 @@ import org.apache.commons.io.filefilter.NotFileFilter;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,9 +47,8 @@ import javax.annotation.Nullable;
  *
  * Created by brett on 10/26/17
  */
+@Slf4j
 public class MessageServiceImpl implements MessageService {
-  private static final Logger logger = LoggerFactory.getLogger(MessageServiceImpl.class);
-
   private static final String ROOT = "msg/";
   private static final String IO = "io/";
   private static final String DATA = "data/";

@@ -12,9 +12,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.helpers.ext.bamboo.BambooService;
@@ -32,9 +31,8 @@ import java.util.function.Supplier;
 /**
  * Created by sgurubelli on 8/29/17.
  */
+@Slf4j
 public class BambooTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(BambooTask.class);
-
   @Inject private BambooService bambooService;
 
   public BambooTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,

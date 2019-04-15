@@ -8,10 +8,9 @@ import io.harness.event.handler.impl.MarketoHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Account;
@@ -31,9 +30,8 @@ import java.util.List;
  *
  * @author rktummala on 11/02/18
  */
+@Slf4j
 public class MarketoLeadDataMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(MarketoLeadDataMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private LicenseService licenseService;

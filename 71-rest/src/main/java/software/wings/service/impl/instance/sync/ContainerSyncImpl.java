@@ -7,8 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -39,9 +38,8 @@ import java.util.Set;
 /**
  * Created by brett on 9/6/17
  */
+@Slf4j
 public class ContainerSyncImpl implements ContainerSync {
-  private static final Logger logger = LoggerFactory.getLogger(ContainerSyncImpl.class);
-
   @Inject private SettingsService settingsService;
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infraMappingService;

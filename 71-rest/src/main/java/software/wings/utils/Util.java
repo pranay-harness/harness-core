@@ -5,8 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
@@ -22,9 +21,8 @@ import java.util.Map;
  *
  * @author rktummala on 10/11/17
  */
+@Slf4j
 public class Util {
-  private static final Logger logger = LoggerFactory.getLogger(Util.class);
-
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();
     for (String element : elements) {

@@ -12,9 +12,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactFile;
@@ -38,8 +37,8 @@ import java.util.Map;
  * @author rktummala
  */
 @Singleton
+@Slf4j
 public class ArtifactCollectionTaskHelper {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionTaskHelper.class);
   @Inject private DelegateFileManager delegateFileManager;
   @Inject private AmazonS3Service amazonS3Service;
   @Inject private DelegateLogService logService;

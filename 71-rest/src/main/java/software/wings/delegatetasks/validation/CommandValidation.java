@@ -13,8 +13,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
@@ -45,9 +44,8 @@ import java.util.function.Consumer;
 /**
  * Created by brett on 11/5/17
  */
+@Slf4j
 public class CommandValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(CommandValidation.class);
-
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient AzureHelperService azureHelperService;

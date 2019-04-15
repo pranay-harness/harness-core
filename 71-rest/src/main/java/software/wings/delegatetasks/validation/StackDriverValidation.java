@@ -10,8 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
@@ -27,9 +26,8 @@ import java.util.function.Consumer;
 /**
  * Created by Pranjal on 11/27/2018
  */
+@Slf4j
 public class StackDriverValidation extends AbstractSecretManagerValidation {
-  private static final Logger logger = LoggerFactory.getLogger(StackDriverValidation.class);
-
   @Inject private transient EncryptionService encryptionService;
 
   public StackDriverValidation(

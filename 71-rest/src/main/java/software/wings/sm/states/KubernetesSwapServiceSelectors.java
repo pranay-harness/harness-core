@@ -24,9 +24,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.KubernetesSwapServiceSelectorsExecutionData;
@@ -61,9 +60,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
+@Slf4j
 public class KubernetesSwapServiceSelectors extends State {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesSwapServiceSelectors.class);
-
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
   @Inject private transient AppService appService;

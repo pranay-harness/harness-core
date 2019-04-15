@@ -3,17 +3,15 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
 import java.util.List;
 import java.util.function.Consumer;
 
+@Slf4j
 public class TerraformValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(TerraformValidation.class);
-
   public TerraformValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
     super(delegateId, delegateTask, consumer);

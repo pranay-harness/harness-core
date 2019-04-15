@@ -20,6 +20,7 @@ import com.amazonaws.services.ec2.model.Reservation;
 import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -27,8 +28,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -43,8 +42,8 @@ import java.util.List;
  * Created by anubhaw on 6/22/17.
  */
 @Ignore
+@Slf4j
 public class AwsCodeDeployServiceTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceTest.class);
   @InjectMocks @Inject private AwsCodeDeployService awsCodeDeployService;
   @Inject private ScmSecret scmSecret;
   @Mock private AwsHelperService awsHelperService;

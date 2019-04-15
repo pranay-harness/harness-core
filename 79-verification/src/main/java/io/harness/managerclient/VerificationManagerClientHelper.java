@@ -7,8 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.network.SafeHttpCall;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -18,8 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class VerificationManagerClientHelper {
-  private static final Logger logger = LoggerFactory.getLogger(VerificationManagerClientHelper.class);
   private static final int MAX_RETRY = 3;
   @Inject private VerificationManagerClient managerClient;
 

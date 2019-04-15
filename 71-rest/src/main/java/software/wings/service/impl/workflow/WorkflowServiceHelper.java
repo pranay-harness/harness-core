@@ -110,8 +110,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -163,9 +162,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class WorkflowServiceHelper {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceHelper.class);
-
   private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
 
   private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";

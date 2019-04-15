@@ -10,8 +10,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SmbConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -21,8 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class SmbServiceImpl implements SmbService {
-  private static final Logger logger = LoggerFactory.getLogger(software.wings.helpers.ext.smb.SmbServiceImpl.class);
   @Inject private SmbHelperService smbHelperService;
 
   @Override

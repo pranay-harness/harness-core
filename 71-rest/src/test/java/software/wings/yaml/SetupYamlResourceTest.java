@@ -5,9 +5,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
@@ -23,9 +22,8 @@ import java.util.List;
  *
  * @author bsollish
  */
+@Slf4j
 public class SetupYamlResourceTest {
-  private static final Logger logger = LoggerFactory.getLogger(SetupYamlResourceTest.class);
-
   // create mocks
   private static final AppService appService = mock(AppService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);

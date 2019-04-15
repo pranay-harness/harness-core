@@ -2,15 +2,13 @@ package io.harness.manage;
 
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
 import java.io.IOException;
 
+@Slf4j
 public class GlobalContextManager {
-  private static final Logger logger = LoggerFactory.getLogger(GlobalContextManager.class);
   public static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal();
 
   public static class GlobalContextGuard implements Closeable {

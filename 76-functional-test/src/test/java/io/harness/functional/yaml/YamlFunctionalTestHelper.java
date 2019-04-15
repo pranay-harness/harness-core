@@ -20,8 +20,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ResourceUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -59,9 +58,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 @Singleton
+@Slf4j
 public class YamlFunctionalTestHelper {
-  private static final Logger logger = LoggerFactory.getLogger(YamlFunctionalTestHelper.class);
-
   @Inject private ScmSecret scmSecret;
   @Inject private SettingsService settingsService;
   @Inject private AppService appService;

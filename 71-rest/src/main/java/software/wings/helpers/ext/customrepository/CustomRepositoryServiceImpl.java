@@ -18,8 +18,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
 import io.harness.shell.ShellExecutionService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse;
@@ -37,8 +36,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Singleton
+@Slf4j
 public class CustomRepositoryServiceImpl implements CustomRepositoryService {
-  private static final Logger logger = LoggerFactory.getLogger(CustomRepositoryServiceImpl.class);
   private static final String ARTIFACT_RESULT_PATH = "ARTIFACT_RESULT_PATH";
 
   @Inject private ShellExecutionService shellExecutionService;

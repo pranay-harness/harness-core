@@ -3,10 +3,9 @@ package migrations.all;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceVariableService;
@@ -14,8 +13,8 @@ import software.wings.service.intfc.ServiceVariableService;
 /**
  * Created by rsingh on 6/1/18.
  */
+@Slf4j
 public class SecretTextFilterMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(SecretTextFilterMigration.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceVariableService serviceVariableService;
 

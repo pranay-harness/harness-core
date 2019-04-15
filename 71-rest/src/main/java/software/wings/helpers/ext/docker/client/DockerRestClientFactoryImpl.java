@@ -4,13 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DockerConfig;
@@ -27,9 +26,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class DockerRestClientFactoryImpl implements DockerRestClientFactory {
-  private static final Logger logger = LoggerFactory.getLogger(DockerRestClientFactoryImpl.class);
-
   @Inject private EncryptionService encryptionService;
   private static ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 

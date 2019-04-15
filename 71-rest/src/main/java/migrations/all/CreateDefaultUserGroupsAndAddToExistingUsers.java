@@ -7,10 +7,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -23,9 +22,8 @@ import java.util.List;
  * This script is meant to be idempotent, so it could be run any number of times.
  * @author rktummala on 3/15/18
  */
+@Slf4j
 public class CreateDefaultUserGroupsAndAddToExistingUsers implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(CreateDefaultUserGroupsAndAddToExistingUsers.class);
-
   @Inject private AuthHandler authHandler;
   @Inject private UserService userService;
 

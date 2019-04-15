@@ -7,9 +7,8 @@ import com.google.inject.Inject;
 
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Account;
 import software.wings.beans.GitConfig;
@@ -28,9 +27,8 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
 
+@Slf4j
 public class YamlGitConfigRefactoringMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(YamlGitConfigRefactoringMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private SecretManager secretManager;
