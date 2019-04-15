@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -115,13 +116,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfiguration.setAccountId(accountId);
     cvConfiguration.setAppId(appId);
     cvConfiguration.setStateType(stateType);
+    cvConfiguration.setUuid(generateUuid());
     try {
+      saveMetricTemplate(appId, accountId, cvConfiguration, stateType);
       wingsPersistence.save(cvConfiguration);
     } catch (DuplicateKeyException ex) {
       throw new WingsException("A Service Verification with the name " + cvConfiguration.getName()
           + " already exists. Please choose a unique name.");
     }
-    saveMetricTemplate(appId, accountId, cvConfiguration, stateType);
+
     return cvConfiguration.getUuid();
   }
 
@@ -504,9 +507,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                              .build();
         break;
       case DATA_DOG:
-        List<String> metricNames =
-            Arrays.asList(((DatadogCVServiceConfiguration) cvConfiguration).getMetrics().split(","));
-        metricTemplates = DatadogState.metricDefinitions(DatadogState.metrics(metricNames).values());
+        DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
+        List<String> metricNames = isNotEmpty(datadogCVServiceConfiguration.getMetrics())
+            ? Arrays.asList(datadogCVServiceConfiguration.getMetrics().split(","))
+            : new ArrayList<>();
+        metricTemplates = DatadogState.metricDefinitions(
+            DatadogState.metrics(metricNames, datadogCVServiceConfiguration.getDatadogServiceName()).values());
         metricTemplate = TimeSeriesMetricTemplates.builder()
                              .stateType(stateType)
                              .metricTemplates(metricTemplates)

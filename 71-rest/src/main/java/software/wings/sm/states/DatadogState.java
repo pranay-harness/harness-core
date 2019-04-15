@@ -118,7 +118,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
       MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     List<String> metricNames = Arrays.asList(metrics.split(","));
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
-        context.getStateExecutionInstanceId(), null, metricDefinitions(metrics(metricNames).values()));
+        context.getStateExecutionInstanceId(), null,
+        metricDefinitions(metrics(metricNames, datadogServiceName).values()));
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;
@@ -240,13 +241,16 @@ public class DatadogState extends AbstractMetricAnalysisState {
   }
 
   public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(
-      String serviceName, List<String> metricNames, String applicationFilter) {
+      String datadogServiceName, List<String> metricNames, String applicationFilter) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog.yml");
     try {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       Map<String, MetricInfo> metricInfos = yamlUtils.read(yaml, new TypeReference<Map<String, MetricInfo>>() {});
-      Map<String, Metric> metricMap = metrics(metricNames);
+      if (isNotEmpty(datadogServiceName) && metricNames == null) {
+        metricNames = new ArrayList<>();
+      }
+      Map<String, Metric> metricMap = metrics(metricNames, datadogServiceName);
       List<Metric> metrics = new ArrayList<>();
       for (String metricName : metricNames) {
         if (!metricMap.containsKey(metricName)) {
@@ -259,7 +263,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
         APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
         MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
         String metricUrl = metricInfo.getUrl();
-        if (isNotEmpty(applicationFilter)) {
+        if (isNotEmpty(applicationFilter) || isNotEmpty(datadogServiceName)) {
           metricUrl = metricInfo.getUrl24x7();
         }
         newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
@@ -285,11 +289,15 @@ public class DatadogState extends AbstractMetricAnalysisState {
           }
           result.get(metricUrl).add(newMetricInfoBuilder.build());
         } else if (metric.getDatadogMetricType().equals("Servlet")) {
-          metricUrl =
-              metricUrl.replace("${datadogServiceName}", serviceName).replace("${query}", metric.getMetricName());
-          if (isNotEmpty(applicationFilter)) {
-            metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+          // today we support servlet metrics only in 24/7
+          metricUrl = metricUrl.replace("${datadogServiceName}", datadogServiceName)
+                          .replace("${query}", metric.getMetricName());
+
+          if (applicationFilter == null) {
+            applicationFilter = "";
           }
+          metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+
           if (!result.containsKey(metricUrl)) {
             result.put(metricUrl, new ArrayList<>());
           }
@@ -317,12 +325,21 @@ public class DatadogState extends AbstractMetricAnalysisState {
     return metricTypeMap;
   }
 
-  public static Map<String, Metric> metrics(List<String> metricNames) {
+  public static Map<String, Metric> metrics(List<String> metricNames, String datadogServiceName) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
     try {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       Map<String, List<Metric>> metrics = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
+      if (isNotEmpty(datadogServiceName) && isEmpty(metricNames)) {
+        // add the servlet metrics to this list.
+        List<String> servletMetrics = new ArrayList<>();
+        metrics.get("Servlet").forEach(servletMetric -> { servletMetrics.add(servletMetric.getMetricName()); });
+        if (metricNames == null) {
+          metricNames = new ArrayList<>();
+        }
+        metricNames.addAll(servletMetrics);
+      }
       Map<String, Metric> metricMap = new HashMap<>();
       Set<String> metricNamesSet = Sets.newHashSet(metricNames);
       for (Map.Entry<String, List<Metric>> entry : metrics.entrySet()) {
