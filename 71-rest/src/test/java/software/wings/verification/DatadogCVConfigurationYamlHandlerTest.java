@@ -199,6 +199,25 @@ public class DatadogCVConfigurationYamlHandlerTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testUpsertMissingAppFilterHasServiceName() throws Exception {
+    when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
+    when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
+    when(yamlHelper.getNameFromYamlFilePath("TestAppDConfig.yaml")).thenReturn("TestAppDConfig");
+
+    ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
+    Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
+    changeContext.setChange(c);
+    DatadogCVConfigurationYaml yaml = buildYaml();
+    changeContext.setYaml(yaml);
+    yaml.setApplicationFilter(null);
+    yaml.setDatadogServiceName("todolist");
+    DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
+
+    assertEquals("Service name matches", "todolist", bean.getDatadogServiceName());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);

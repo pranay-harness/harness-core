@@ -72,12 +72,12 @@ public class DatadogCvConfigurationYamlHandler
     DatadogCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
-    if (isEmpty(yaml.getApplicationFilter()) || isEmpty(yaml.getMetrics())) {
+    if ((isEmpty(yaml.getApplicationFilter()) || isEmpty(yaml.getMetrics())) && isEmpty(yaml.getDatadogServiceName())) {
       throw new WingsException("Invalid Datadog yaml. Please set valid application filter and metrics");
     }
     // validate if the metrics in yaml are actually supported by Harness.
     List<String> metricList = Arrays.asList(yaml.getMetrics().split(","));
-    Map<String, Metric> metrics = DatadogState.metrics(metricList);
+    Map<String, Metric> metrics = DatadogState.metrics(metricList, "");
     if (metrics.size() != metricList.size()) {
       throw new WingsException("Invalid/Unsupported metrics found in the yaml: " + yaml.getMetrics());
     }

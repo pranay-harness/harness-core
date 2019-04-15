@@ -1555,6 +1555,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
     Map<String, String> hostsMap = new HashMap<>();
     hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    List<String> ddMetricNames =
+        isNotEmpty(config.getMetrics()) ? Arrays.asList(config.getMetrics().split(",")) : new ArrayList<>();
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
@@ -1568,8 +1570,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .startTime(startTime)
             .cvConfigId(config.getUuid())
             .dataCollectionMinute(0)
-            .metricEndpoints(DatadogState.metricEndpointsInfo(config.getDatadogServiceName(),
-                Arrays.asList(config.getMetrics().split(",")), config.getApplicationFilter()))
+            .metricEndpoints(DatadogState.metricEndpointsInfo(
+                config.getDatadogServiceName(), ddMetricNames, config.getApplicationFilter()))
             .accountId(config.getAccountId())
             .strategy(AnalysisComparisonStrategy.PREDICTIVE)
             .dataCollectionFrequency(1)
