@@ -6,7 +6,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import graphql.GraphQL;
-import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import graphql.schema.GraphQLSchema;
@@ -17,6 +16,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import software.wings.graphql.directive.DataFetcherDirective;
+import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLScalars;
 import software.wings.graphql.schema.type.resolvers.TypeResolverHelper;
 
@@ -29,7 +29,6 @@ import javax.validation.constraints.NotNull;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private static final String GRAPHQL_SCHEMA_FILE_PATH = "graphql/schema.graphql";
-  private static final int MAX_QUERY_DEPTH = 4;
 
   GraphQL graphQL;
 
@@ -66,7 +65,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
       graphQL = GraphQL.newGraphQL(graphQLSchema)
                     .instrumentation(dispatcherInstrumentation)
-                    .instrumentation(new MaxQueryDepthInstrumentation(MAX_QUERY_DEPTH))
+                    .instrumentation(new QueryDepthInstrumentation(QueryDepthInstrumentation.MAX_QUERY_DEPTH))
                     .build();
     }
   }
