@@ -43,6 +43,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -1155,8 +1156,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCleanup() {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(AnalysisContext.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
+                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId));
     int numOfRecords = 10;
     for (int i = 0; i < numOfRecords; i++) {
       LogDataRecord logDataRecord = new LogDataRecord();

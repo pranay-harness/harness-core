@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -35,6 +36,7 @@ import java.util.Map;
   }, options = @IndexOptions(unique = true, name = "taskUniqueIdx"))
 })
 @Data
+@FieldNameConstants(innerTypeName = "AnalysisContextKeys")
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
