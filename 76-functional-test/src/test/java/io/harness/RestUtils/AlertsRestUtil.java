@@ -44,4 +44,17 @@ public class AlertsRestUtil {
                              .getStatusCode();
     assertTrue(returnCode == 200);
   }
+
+  public AlertNotificationRule updateAlert(
+      String accountId, String bearerToken, String alertRuleId, AlertNotificationRule alertNotificationRule) {
+    RestResponse<AlertNotificationRule> alertRule =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .queryParam("accountId", accountId)
+            .body(alertNotificationRule, ObjectMapperType.GSON)
+            .put("/alert-notification-rules/" + alertRuleId)
+            .as(new GenericType<RestResponse<AlertNotificationRule>>() {}.getType());
+    return alertRule.getResource();
+  }
 }
