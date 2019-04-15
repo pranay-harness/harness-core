@@ -53,6 +53,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
@@ -589,7 +590,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     CVConfiguration cvConfiguration = null;
     if (isEmpty(mlAnalysisResponse.getCvConfigId())) {
       context = wingsPersistence.createAuthorizedQuery(AnalysisContext.class)
-                    .filter("stateExecutionId", mlAnalysisResponse.getStateExecutionId())
+                    .filter(AnalysisContextKeys.stateExecutionId, mlAnalysisResponse.getStateExecutionId())
                     .filter("appId", mlAnalysisResponse.getAppId())
                     .get();
     } else {
