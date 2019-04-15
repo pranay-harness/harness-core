@@ -13,6 +13,8 @@ import java.util.List;
 public class HelmChartConfigParams {
   private HelmRepoConfig helmRepoConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  private String repoDisplayName;
+  private String repoName;
 
   private SettingValue connectorConfig;
   private List<EncryptedDataDetail> connectorEncryptedDataDetails;

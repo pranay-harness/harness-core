@@ -1,11 +1,11 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
+import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
 
 import com.google.inject.Inject;
 
@@ -15,31 +15,23 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTaskResponse;
-import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
-import software.wings.beans.settings.helm.HttpHelmRepoConfig;
-import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
-import software.wings.helpers.ext.chartmuseum.ChartMuseumServer;
+import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Slf4j
 public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
-  @Inject private K8sGlobalConfigService k8sGlobalConfigService;
-  @Inject private ChartMuseumClient chartMuseumClient;
+  @Inject private HelmTaskHelper helmTaskHelper;
 
   public HelmRepoConfigValidationTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -54,7 +46,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
       logger.info(format("Running HelmRepoConfigValidationTask for account %s app %s", taskParams.getAccountId(),
           taskParams.getAppId()));
 
-      validateHelmRepoConfig(taskParams);
+      tryAddingHelmRepo(taskParams);
 
       return HelmRepoConfigValidationResponse.builder().commandExecutionStatus(SUCCESS).build();
     } catch (Exception e) {
@@ -71,92 +63,50 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     throw new NotImplementedException("not implemented");
   }
 
-  private void validateHelmRepoConfig(HelmRepoConfigValidationTaskParams taskParams) throws Exception {
+  private void tryAddingHelmRepo(HelmRepoConfigValidationTaskParams taskParams) throws Exception {
     HelmRepoConfig helmRepoConfig = taskParams.getHelmRepoConfig();
     List<EncryptedDataDetail> encryptedDataDetails = taskParams.getEncryptedDataDetails();
     encryptionService.decrypt(helmRepoConfig, encryptedDataDetails);
 
-    if (helmRepoConfig instanceof HttpHelmRepoConfig) {
-      validateHttpHelmRepoConfig(helmRepoConfig);
-      return;
-    } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
-      validateAmazonS3HelmRepoConfig(helmRepoConfig, taskParams);
-      return;
-    }
+    String repoName = convertBase64UuidToCanonicalForm(generateUuid());
+    try {
+      switch (helmRepoConfig.getSettingType()) {
+        case HTTP_HELM_REPO:
+          tryAddingHttpHelmRepo(helmRepoConfig, repoName, taskParams.getRepoDisplayName());
+          break;
 
-    throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
-  }
+        case AMAZON_S3_HELM_REPO:
+          tryAddingAmazonS3HelmRepo(helmRepoConfig, repoName, taskParams);
+          break;
 
-  private void validateHttpHelmRepoConfig(HelmRepoConfig helmRepoConfig) throws Exception {
-    HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
-
-    String repoAddCommand = getHttpRepoAddCommand(httpHelmRepoConfig);
-    executeCommand(repoAddCommand);
-  }
-
-  private void executeCommand(String command) throws Exception {
-    ProcessExecutor processExecutor =
-        new ProcessExecutor().timeout(1, TimeUnit.MINUTES).commandSplit(command).readOutput(true);
-
-    ProcessResult processResult = processExecutor.execute();
-    if (processResult.getExitValue() != 0) {
-      throw new WingsException("Failed to validate helm repo config. " + processResult.getOutput().getUTF8());
-    }
-  }
-
-  private String getHttpRepoAddCommand(HttpHelmRepoConfig httpHelmRepoConfig) {
-    StringBuilder builder = new StringBuilder(128);
-
-    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath()))
-        .append(" repo add ")
-        .append(httpHelmRepoConfig.getRepoName())
-        .append(' ')
-        .append(httpHelmRepoConfig.getChartRepoUrl());
-
-    if (isNotBlank(httpHelmRepoConfig.getUsername())) {
-      builder.append(" --username ").append(httpHelmRepoConfig.getUsername());
-
-      if (httpHelmRepoConfig.getPassword() != null) {
-        builder.append(" --password ").append(httpHelmRepoConfig.getPassword());
+        default:
+          unhandled(helmRepoConfig.getSettingType());
+          throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
       }
+    } finally {
+      removeRepo(repoName);
     }
-
-    return builder.toString();
   }
 
-  private void validateAmazonS3HelmRepoConfig(
-      HelmRepoConfig helmRepoConfig, HelmRepoConfigValidationTaskParams taskParams) throws Exception {
-    AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
+  private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName)
+      throws Exception {
+    helmTaskHelper.addHttpRepo(helmRepoConfig, repoName, repoDisplayName, null);
+  }
 
+  private void tryAddingAmazonS3HelmRepo(
+      HelmRepoConfig helmRepoConfig, String repoName, HelmRepoConfigValidationTaskParams taskParams) throws Exception {
     AwsConfig awsConfig = (AwsConfig) taskParams.getConnectorConfig();
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
-    ChartMuseumServer chartMuseumServer = null;
-    try {
-      chartMuseumServer =
-          chartMuseumClient.startChartMuseumServer(amazonS3HelmRepoConfig, taskParams.getConnectorConfig());
-
-      String repoAddCommand = getAmazonS3RepoAddCommand(amazonS3HelmRepoConfig, chartMuseumServer.getPort());
-      executeCommand(repoAddCommand);
-
-    } finally {
-      if (chartMuseumServer != null) {
-        chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
-      }
-    }
+    helmTaskHelper.addAmazonS3HelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName());
   }
 
-  private String getAmazonS3RepoAddCommand(AmazonS3HelmRepoConfig amazonS3HelmRepoConfig, int port) {
-    String repoUrl = CHART_MUSEUM_SERVER_URL.replace("${PORT}", Integer.toString(port));
-    StringBuilder builder = new StringBuilder(128);
-
-    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath()))
-        .append(" repo add ")
-        .append(amazonS3HelmRepoConfig.getRepoName())
-        .append(' ')
-        .append(repoUrl);
-
-    return builder.toString();
+  private void removeRepo(String repoName) {
+    try {
+      helmTaskHelper.removeRepo(repoName);
+    } catch (Exception ex) {
+      logger.warn(ExceptionUtils.getMessage(ex));
+    }
   }
 }

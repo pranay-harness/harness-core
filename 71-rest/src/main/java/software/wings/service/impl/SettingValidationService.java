@@ -389,6 +389,7 @@ public class SettingValidationService {
                                                         .appId(settingAttribute.getAppId())
                                                         .encryptedDataDetails(encryptedDataDetails)
                                                         .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
+                                                        .repoDisplayName(settingAttribute.getName())
                                                         .build();
 
     String connectorId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
