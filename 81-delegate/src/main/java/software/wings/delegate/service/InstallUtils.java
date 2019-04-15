@@ -302,6 +302,28 @@ public class InstallUtils {
         + "/amd64/helm";
   }
 
+  private static boolean initHelmClient() throws Exception {
+    logger.info("Init helm client only");
+
+    String helmDirectory = helmBaseDir + helmVersion;
+    String script = "./helm init -c \n";
+
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .timeout(10, TimeUnit.MINUTES)
+                                          .directory(new File(helmDirectory))
+                                          .command("/bin/bash", "-c", script)
+                                          .readOutput(true);
+    ProcessResult result = processExecutor.execute();
+    if (result.getExitValue() == 0) {
+      logger.info("Successfully init helm client");
+      return true;
+    } else {
+      logger.error("Helm client init failed");
+      logger.error(result.outputString());
+      return false;
+    }
+  }
+
   static boolean installHelm(DelegateConfiguration configuration) {
     try {
       if (isNotEmpty(configuration.getHelmPath())) {
@@ -319,7 +341,8 @@ public class InstallUtils {
       if (validateHelmExists(helmDirectory)) {
         helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
         logger.info(format("helm version %s already installed", helmVersion));
-        return true;
+
+        return initHelmClient();
       }
 
       logger.info("Installing helm");
@@ -330,7 +353,8 @@ public class InstallUtils {
 
       String script = "curl $PROXY_CURL -LO " + downloadUrl + " \n"
           + "chmod +x ./helm \n"
-          + "./helm version -c \n";
+          + "./helm version -c \n"
+          + "./helm init -c \n";
 
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .timeout(10, TimeUnit.MINUTES)
