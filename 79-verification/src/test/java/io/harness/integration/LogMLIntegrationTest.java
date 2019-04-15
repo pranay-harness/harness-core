@@ -210,6 +210,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
+    // save dummy analysis context
+    AnalysisContext context =
+        AnalysisContext.builder().stateExecutionId(stateExecutionId).serviceId(serviceId).appId(appId).build();
+    wingsPersistence.save(context);
+
     WebTarget target = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
         + "&applicationId=" + appId + "&stateExecutionId=" + stateExecutionId + "&logCollectionMinute=" + 0

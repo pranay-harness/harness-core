@@ -152,6 +152,10 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     setInternalState(cv24x7DashboardService, "cvConfigurationService", cvConfigurationService);
 
     setInternalState(cvConfigurationService, "wingsPersistence", wingsPersistence);
+
+    AnalysisContext context =
+        AnalysisContext.builder().serviceId(serviceId).stateExecutionId(stateExecutionId).appId(appId).build();
+    wingsPersistence.save(context);
   }
 
   @Test
@@ -962,6 +966,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     String stateExecutionId = UUID.randomUUID().toString();
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
+    AnalysisContext context =
+        AnalysisContext.builder().appId(appId).stateExecutionId(stateExecutionId).serviceId(serviceId).build();
+    wingsPersistence.save(context);
     analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2, Optional.empty());
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -1148,6 +1155,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCleanup() {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(AnalysisContext.class).filter("stateExecutionId", stateExecutionId));
     int numOfRecords = 10;
     for (int i = 0; i < numOfRecords; i++) {
       LogDataRecord logDataRecord = new LogDataRecord();

@@ -12,6 +12,7 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StringValue;
@@ -253,6 +254,10 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     return entity.contains(fieldName) ? entity.getLong(fieldName) : 0;
   }
 
+  public static double readDouble(Entity entity, String fieldName) {
+    return entity.contains(fieldName) ? entity.getDouble(fieldName) : 0.0;
+  }
+
   public static byte[] readBlob(Entity entity, String fieldName) {
     return entity.contains(fieldName) ? entity.getBlob(fieldName).toByteArray() : null;
   }
@@ -264,6 +269,11 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     }
 
     builder.set(key, StringValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
+  }
+
+  public static void addFieldIfNotEmpty(
+      com.google.cloud.datastore.Entity.Builder builder, String key, long value, boolean excludeFromIndex) {
+    builder.set(key, LongValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
   }
 
   public static void addFieldIfNotEmpty(

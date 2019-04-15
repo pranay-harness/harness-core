@@ -9,5 +9,5 @@ public class VerificationMorphiaClasses {
   //       Step by step this should be split in different dedicated sections
 
   public static final Set<Class> classes =
-      ImmutableSet.<Class>of(TimeSeriesAnomaliesRecord.class, TimeSeriesCumulativeSums.class);
+      ImmutableSet.<Class>of(TimeSeriesAnomaliesRecord.class, TimeSeriesCumulativeSums.class, AnomalousLogRecord.class);
 }
