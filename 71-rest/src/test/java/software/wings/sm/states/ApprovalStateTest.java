@@ -44,7 +44,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
@@ -56,7 +55,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -84,7 +82,6 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private NotificationSetupService notificationSetupService;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
-  @Mock private WorkflowNotificationHelper workflowNotificationHelper;
 
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
   @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
@@ -96,8 +93,6 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);
-    //    when(workflowNotificationHelper.sendApprovalNotification(Mockito.anyString(), Mockito.any(),  Mockito.any(),
-    //    Mockito.any())).then(Mockito.doNothing());
 
     when(workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(WorkflowExecution.builder()
@@ -134,9 +129,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse.isAsync()).isTrue();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
-    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(
-            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+    verifyNotificationArguments(APPROVAL_NEEDED_NOTIFICATION);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
   }
 
