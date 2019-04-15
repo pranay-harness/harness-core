@@ -52,6 +52,9 @@ public class HelmTaskHelper {
   private static final String WORKING_DIR_BASE = "./repository/helm-values/";
 
   private static final String HELM_REPO_ADD_COMMAND_FOR_CHART_MUSEUM = "${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL}";
+  private static final String HELM_REPO_ADD_COMMAND_FOR_HTTP =
+      "${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL} ${USERNAME} ${PASSWORD}";
+
   private static final String HELM_FETCH_COMMAND =
       "${HELM_PATH} fetch ${REPO_NAME}/${CHART_NAME} --untar ${CHART_VERSION}";
 
@@ -76,6 +79,9 @@ public class HelmTaskHelper {
 
       if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
         fetchChartUsingChartMuseumServer(helmRepoConfig, connectorConfig, helmChartConfigParams.getChartName(),
+            helmChartConfigParams.getChartVersion(), workingDirectory);
+      } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
+        fetchChartFromHttpServer(helmRepoConfig, helmChartConfigParams.getChartName(),
             helmChartConfigParams.getChartVersion(), workingDirectory);
       }
 
@@ -112,7 +118,7 @@ public class HelmTaskHelper {
 
     ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory);
     if (processResult.getExitValue() != 0) {
-      throw new WingsException("Failed to add helm repo. Error: " + processResult.getOutput().getUTF8());
+      throw new WingsException("Failed to add helm repo. " + processResult.getOutput().getUTF8());
     }
   }
 
@@ -214,13 +220,69 @@ public class HelmTaskHelper {
     executionLogCallback.saveExecutionLog("Chart version: " + helmChartConfigParams.getChartVersion());
     executionLogCallback.saveExecutionLog("Repo name: " + helmChartConfigParams.getHelmRepoConfig().getRepoName());
 
-    if (helmChartConfigParams.getConnectorConfig() instanceof AmazonS3HelmRepoConfig) {
+    if (helmChartConfigParams.getHelmRepoConfig() instanceof AmazonS3HelmRepoConfig) {
       AmazonS3HelmRepoConfig amazonS3HelmRepoConfig =
-          (AmazonS3HelmRepoConfig) helmChartConfigParams.getConnectorConfig();
+          (AmazonS3HelmRepoConfig) helmChartConfigParams.getHelmRepoConfig();
       executionLogCallback.saveExecutionLog("Chart bucket: " + amazonS3HelmRepoConfig.getBucketName());
-    } else if (helmChartConfigParams.getConnectorConfig() instanceof HttpHelmRepoConfig) {
+    } else if (helmChartConfigParams.getHelmRepoConfig() instanceof HttpHelmRepoConfig) {
       executionLogCallback.saveExecutionLog(
-          "Repo url: " + ((HttpHelmRepoConfig) helmChartConfigParams.getConnectorConfig()).getChartRepoUrl());
+          "Repo url: " + ((HttpHelmRepoConfig) helmChartConfigParams.getHelmRepoConfig()).getChartRepoUrl());
     }
+  }
+
+  private String getUsername(HelmRepoConfig helmRepoConfig) {
+    HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
+
+    return isBlank(httpHelmRepoConfig.getUsername()) ? StringUtils.EMPTY
+                                                     : "--username " + httpHelmRepoConfig.getUsername();
+  }
+
+  private String getPassword(HelmRepoConfig helmRepoConfig) {
+    HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
+
+    return isEmpty(httpHelmRepoConfig.getPassword()) ? StringUtils.EMPTY
+                                                     : "--password " + new String(httpHelmRepoConfig.getPassword());
+  }
+
+  private String getHttpRepoAddCommand(HelmRepoConfig helmRepoConfig) {
+    String addRepoCommand =
+        HELM_REPO_ADD_COMMAND_FOR_HTTP
+            .replace("${HELM_PATH}", encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath()))
+            .replace("${REPO_NAME}", helmRepoConfig.getRepoName())
+            .replace("${REPO_URL}", ((HttpHelmRepoConfig) helmRepoConfig).getChartRepoUrl());
+
+    String userName = getUsername(helmRepoConfig);
+    String password = getPassword(helmRepoConfig);
+
+    printRepoAddCommand(addRepoCommand, userName, password);
+    return addRepoCommand.replace("${USERNAME}", userName).replace("${PASSWORD}", password);
+  }
+
+  private void addHttpRepo(HelmRepoConfig helmRepoConfig, String chartDirectory) throws Exception {
+    String repoAddCommand = getHttpRepoAddCommand(helmRepoConfig);
+
+    ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory);
+    if (processResult.getExitValue() != 0) {
+      throw new WingsException("Failed to add helm repo. " + processResult.getOutput().getUTF8());
+    }
+  }
+
+  private void fetchChartFromHttpServer(
+      HelmRepoConfig helmRepoConfig, String chartName, String chartVersion, String chartDirectory) throws Exception {
+    addHttpRepo(helmRepoConfig, chartDirectory);
+    fetchChartFromRepo(helmRepoConfig, chartName, chartVersion, chartDirectory);
+  }
+
+  private void printRepoAddCommand(String repoAddCommand, String username, String password) {
+    StringBuilder output = new StringBuilder(repoAddCommand.replace("${USERNAME}", "").replace("${PASSWORD}", ""));
+
+    if (isNotBlank(username)) {
+      output.append(" --username *******");
+    }
+    if (isNotBlank(password)) {
+      output.append(" --password *******");
+    }
+
+    logger.info(output.toString());
   }
 }

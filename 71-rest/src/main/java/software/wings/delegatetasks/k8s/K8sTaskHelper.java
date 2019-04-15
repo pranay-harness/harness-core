@@ -478,6 +478,7 @@ public class K8sTaskHelper {
             k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(), valuesFiles, executionLogCallback);
 
       case HelmSourceRepo:
+      case HelmChartRepo:
         return renderTemplateForHelm(k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(), valuesFiles,
             releaseName, namespace, executionLogCallback);
 
@@ -618,6 +619,9 @@ public class K8sTaskHelper {
       case Remote:
       case HelmSourceRepo:
         return fetchManifestFilesFromGit(delegateManifestConfig, executionLogCallback);
+
+      case HelmChartRepo:
+        return fetchManifestFilesFromChartRepo(delegateManifestConfig, executionLogCallback);
 
       default:
         unhandled(storeType);
@@ -791,8 +795,7 @@ public class K8sTaskHelper {
     HelmChartConfigParams helmChartConfigParams = delegateManifestConfig.getHelmChartConfigParams();
 
     try {
-      executionLogCallback.saveExecutionLog(
-          color(format("%nFetching files from chart %s", helmChartConfigParams.getChartName()), White, Bold));
+      executionLogCallback.saveExecutionLog(color(format("%nFetching files from helm chart repo"), White, Bold));
       helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
       List<FileData> files = helmTaskHelper.fetchChartFiles(helmChartConfigParams, null);

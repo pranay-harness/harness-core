@@ -8,10 +8,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.TaskType;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +33,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
   private TaskType currentTaskType;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
   private String loadBalancer;
-  private String helmValuesContent;
+  Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

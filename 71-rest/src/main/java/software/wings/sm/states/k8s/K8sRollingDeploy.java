@@ -81,8 +81,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     return k8sStateHelper.executeWrapperWithManifest(this, context);
   }
 
-  public ExecutionResponse executeK8sTask(
-      ExecutionContext context, String activityId, Map<K8sValuesLocation, String> valuesFiles) {
+  public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
@@ -102,7 +101,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
             .timeoutIntervalInMin(10)
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
-            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context, valuesFiles))
+            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
