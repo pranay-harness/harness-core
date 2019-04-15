@@ -15,6 +15,7 @@ public class HelmRepoConfigValidationTaskParams implements TaskParameters {
   private String appId;
   private HelmRepoConfig helmRepoConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  private String repoDisplayName;
 
   private SettingValue connectorConfig;
   private List<EncryptedDataDetail> connectorEncryptedDataDetails;

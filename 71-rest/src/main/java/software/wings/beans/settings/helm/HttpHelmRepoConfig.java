@@ -1,12 +1,8 @@
 package software.wings.beans.settings.helm;
 
-import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
-import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -26,9 +22,6 @@ import java.util.Arrays;
 public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @NotEmpty
-  @EntityName(charSetString = ALLOWED_CHARS_SERVICE_VARIABLE_STRING, message = ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE)
-  private String repoName;
   @NotEmpty private String chartRepoUrl;
   private String username;
   @Encrypted private char[] password;
@@ -38,11 +31,10 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
     super(SettingVariableTypes.HTTP_HELM_REPO.name());
   }
 
-  public HttpHelmRepoConfig(String accountId, String repoName, String chartRepoUrl, String username,
-      final char[] password, String encryptedPassword) {
+  public HttpHelmRepoConfig(
+      String accountId, String chartRepoUrl, String username, final char[] password, String encryptedPassword) {
     super(SettingVariableTypes.HTTP_HELM_REPO.name());
     this.accountId = accountId;
-    this.repoName = repoName;
     this.chartRepoUrl = chartRepoUrl;
     this.username = username;
     this.password = Arrays.copyOf(password, password.length);

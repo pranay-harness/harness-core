@@ -877,11 +877,14 @@ public class K8sStateHelper {
     List<EncryptedDataDetail> encryptionDataDetails =
         secretManager.getEncryptionDetails(helmRepoConfig, context.getAppId(), null);
 
-    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = HelmChartConfigParams.builder()
-                                                                    .chartName(helmChartConfig.getChartName())
-                                                                    .chartVersion(helmChartConfig.getChartVersion())
-                                                                    .helmRepoConfig(helmRepoConfig)
-                                                                    .encryptedDataDetails(encryptionDataDetails);
+    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder =
+        HelmChartConfigParams.builder()
+            .chartName(helmChartConfig.getChartName())
+            .chartVersion(helmChartConfig.getChartVersion())
+            .helmRepoConfig(helmRepoConfig)
+            .encryptedDataDetails(encryptionDataDetails)
+            .repoDisplayName(settingAttribute.getName())
+            .repoName(convertBase64UuidToCanonicalForm(settingAttribute.getUuid()));
 
     if (isNotBlank(helmRepoConfig.getConnectorId())) {
       SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());
