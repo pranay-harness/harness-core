@@ -107,6 +107,7 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -114,8 +115,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
@@ -237,8 +236,8 @@ import javax.validation.executable.ValidateOnExecution;
 @SuppressWarnings("ALL")
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
   private static final List<String> kubernetesArtifactNeededStateTypes =
       Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name());
 

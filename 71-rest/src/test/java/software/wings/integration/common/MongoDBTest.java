@@ -9,20 +9,18 @@ import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.threading.Concurrent;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 
 @Integration
+@Slf4j
 public class MongoDBTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(MongoDBTest.class);
-
   @Entity(value = "!!!testMongo", noClassnameStored = true)
   public static class MongoEntity extends Base {
     @Getter @Setter private String data;

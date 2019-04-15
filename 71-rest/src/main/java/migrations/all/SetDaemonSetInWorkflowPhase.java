@@ -9,9 +9,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -24,9 +23,8 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
 
+@Slf4j
 public class SetDaemonSetInWorkflowPhase implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(SetDaemonSetInWorkflowPhase.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private ServiceResourceService serviceResourceService;

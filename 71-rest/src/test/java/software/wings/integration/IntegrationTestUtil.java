@@ -3,10 +3,9 @@ package software.wings.integration;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.String.format;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -25,9 +24,8 @@ import javax.ws.rs.core.Response.Status;
 /**
  * Created by anubhaw on 5/11/16.
  */
+@Slf4j
 public class IntegrationTestUtil {
-  private static final Logger logger = LoggerFactory.getLogger(IntegrationTestUtil.class);
-
   private static Random random = new Random();
 
   /**

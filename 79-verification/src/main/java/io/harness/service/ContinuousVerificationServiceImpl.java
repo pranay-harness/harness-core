@@ -47,9 +47,8 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -82,9 +81,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by rsingh on 10/9/18.
  */
+@Slf4j
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
-  private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
-
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;

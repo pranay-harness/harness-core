@@ -14,14 +14,13 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
@@ -29,9 +28,8 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.util.List;
 
+@Slf4j
 public class SecretsFunctionalTest extends AbstractFunctionalTest {
-  private static final Logger logger = LoggerFactory.getLogger(SecretsFunctionalTest.class);
-
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   VaultRestUtils vrUtils = new VaultRestUtils();

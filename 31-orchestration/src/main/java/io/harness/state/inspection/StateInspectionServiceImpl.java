@@ -8,19 +8,16 @@ import com.google.inject.Singleton;
 
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
-import io.harness.reflection.ReflectionUtils;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class StateInspectionServiceImpl implements StateInspectionService {
-  private static final Logger logger = LoggerFactory.getLogger(ReflectionUtils.class);
-
   @Inject HPersistence persistence;
 
   @Getter Subject<StateInspectionListener> subject = new Subject<>();

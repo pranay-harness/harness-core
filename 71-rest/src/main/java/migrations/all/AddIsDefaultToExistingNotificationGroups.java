@@ -9,18 +9,16 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.NotificationGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationSetupService;
 
 import java.util.List;
 
+@Slf4j
 public class AddIsDefaultToExistingNotificationGroups implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddIsDefaultToExistingNotificationGroups.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private NotificationSetupService notificationSetupService;
 

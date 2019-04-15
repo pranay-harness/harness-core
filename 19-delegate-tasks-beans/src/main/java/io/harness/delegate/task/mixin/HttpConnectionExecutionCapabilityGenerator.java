@@ -5,16 +5,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.amazonaws.regions.Regions;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.expression.DummySubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class HttpConnectionExecutionCapabilityGenerator {
-  private static final Logger logger = LoggerFactory.getLogger(HttpConnectionExecutionCapabilityGenerator.class);
-
   private static final Map<Regions, String> AWS_REGION_URL_MAP = new ConcurrentHashMap<>();
   static {
     // See AWS doc https://docs.aws.amazon.com/general/latest/gr/rande.html

@@ -19,9 +19,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.FileData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.annotation.EncryptableSetting;
@@ -46,9 +45,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class HelmTaskHelper {
-  private static final Logger logger = LoggerFactory.getLogger(HelmTaskHelper.class);
-
   private static final String WORKING_DIR_BASE = "./repository/helm-values/";
 
   private static final String HELM_REPO_ADD_COMMAND_FOR_CHART_MUSEUM = "${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL}";

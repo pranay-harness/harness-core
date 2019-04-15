@@ -5,8 +5,6 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class AnnotationMixin {
   public static String name(DetailAST annotationNode) {

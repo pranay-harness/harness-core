@@ -4,9 +4,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.cloudformation.ServiceNowExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
@@ -15,9 +14,8 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class ServicenowTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(ServicenowTask.class);
-
   public ServicenowTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);

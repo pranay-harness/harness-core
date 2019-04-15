@@ -15,8 +15,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.integration.UserResourceRestClient;
 
@@ -28,9 +27,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
+@Slf4j
 public class AppResourceRestClient {
-  private static final Logger logger = LoggerFactory.getLogger(AppResourceRestClient.class);
-
   @Inject private UserResourceRestClient userResourceRestClient;
 
   private ConcurrentHashMap<String, Application> cachedEntity = new ConcurrentHashMap<>();

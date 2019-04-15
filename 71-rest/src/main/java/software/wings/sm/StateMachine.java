@@ -27,13 +27,12 @@ import io.harness.persistence.UuidAware;
 import io.harness.serializer.MapperUtils;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphLink;
@@ -70,9 +69,8 @@ import javax.validation.constraints.NotNull;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
+@Slf4j
 public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware {
-  private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
-
   public static final String APP_ID_KEY = "appId";
   public static final String ORIGIN_ID_KEY = "originId";
   public static final String ORIGIN_VERSION_KEY = "originVersion";

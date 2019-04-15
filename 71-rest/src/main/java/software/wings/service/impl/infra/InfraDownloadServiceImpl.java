@@ -9,9 +9,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.utils.GcsUtil;
 
 import java.io.File;
@@ -20,9 +19,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class InfraDownloadServiceImpl implements InfraDownloadService {
-  private static final Logger logger = LoggerFactory.getLogger(InfraDownloadServiceImpl.class);
-
   private static final String BUILDS_PATH = "/builds/";
 
   @Inject private GcsUtil gcsUtil;

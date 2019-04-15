@@ -20,9 +20,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -36,9 +35,8 @@ import java.util.Set;
  *
  * @author Rishi
  */
+@Slf4j
 public class Notifier implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(Notifier.class);
-
   @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Queue<NotifyEvent> notifyQueue;

@@ -2,15 +2,13 @@ package io.harness.context;
 
 import static java.lang.String.format;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class GlobalContext {
-  private static final Logger logger = LoggerFactory.getLogger(GlobalContext.class);
-
   private Map<String, GlobalContextData> map = new ConcurrentHashMap<>();
 
   public GlobalContextData get(String key) {

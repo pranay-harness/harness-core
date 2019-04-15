@@ -8,9 +8,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
@@ -26,8 +25,8 @@ import software.wings.settings.SettingValue;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class K8sValidationHelper {
-  private static final Logger logger = LoggerFactory.getLogger(K8sValidationHelper.class);
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient private transient EncryptionService encryptionService;

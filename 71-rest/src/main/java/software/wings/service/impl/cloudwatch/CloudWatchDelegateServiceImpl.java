@@ -24,10 +24,9 @@ import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
@@ -59,8 +58,8 @@ import java.util.concurrent.TimeUnit;
  * Created by Pranjal on 09/04/2018
  */
 @Singleton
+@Slf4j
 public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(CloudWatchDelegateServiceImpl.class);
   private static final int CANARY_DAYS_TO_COLLECT = 7;
 
   @Inject private DataCollectionExecutorService dataCollectionService;

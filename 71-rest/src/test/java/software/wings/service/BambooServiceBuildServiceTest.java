@@ -7,13 +7,12 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
@@ -23,9 +22,8 @@ import software.wings.service.intfc.SettingsService;
 import java.io.InputStream;
 
 @Ignore
+@Slf4j
 public class BambooServiceBuildServiceTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(BambooServiceBuildServiceTest.class);
-
   @Inject BambooService bambooService;
   @Inject SettingsService settingsService;
   @Inject private ScmSecret scmSecret;

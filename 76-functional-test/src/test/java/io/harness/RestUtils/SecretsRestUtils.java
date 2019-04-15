@@ -9,8 +9,7 @@ import io.harness.beans.PageResponse;
 import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
 import io.restassured.mapper.ObjectMapperType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
@@ -20,8 +19,8 @@ import java.io.File;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
+@Slf4j
 public class SecretsRestUtils {
-  private static final Logger logger = LoggerFactory.getLogger(SecretsRestUtils.class);
   public List<VaultConfig> getListConfigs(String accountId, String bearerToken) {
     RestResponse<List<VaultConfig>> secretsResponse =
         Setup.portal()

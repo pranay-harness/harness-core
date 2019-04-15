@@ -7,8 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.rest.RestResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.verification.VerificationServiceClient;
@@ -20,9 +19,8 @@ import java.util.concurrent.TimeUnit;
  * Created by raghu on 5/19/17.
  */
 @Singleton
+@Slf4j
 public class MetricDataStoreServiceImpl implements MetricDataStoreService {
-  private static final Logger logger = LoggerFactory.getLogger(MetricDataStoreServiceImpl.class);
-
   @Inject private VerificationServiceClient verificationClient;
   @Inject private TimeLimiter timeLimiter;
 

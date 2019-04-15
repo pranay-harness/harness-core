@@ -13,9 +13,8 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -37,9 +36,8 @@ import java.util.List;
  * Migration script to set namespace for kubernetes instances.
  * @author rktummala on 11/13/18
  */
+@Slf4j
 public class SetNamespaceToKubernetesInstanceInfo implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(SetNamespaceToKubernetesInstanceInfo.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private AppService appService;

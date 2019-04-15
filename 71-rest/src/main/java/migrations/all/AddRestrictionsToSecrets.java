@@ -11,9 +11,8 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.security.EnvFilter;
 import software.wings.security.EnvFilter.FilterType;
@@ -32,8 +31,8 @@ import java.util.List;
  * This script is meant to be idempotent, so it could be run any number of times.
  * @author rktummala on 6/20/18
  */
+@Slf4j
 public class AddRestrictionsToSecrets implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddRestrictionsToSecrets.class);
   @Inject private SecretManager secretManager;
   @Inject private AccountService accountService;
 

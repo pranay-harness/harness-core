@@ -9,8 +9,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
@@ -32,9 +31,8 @@ import java.util.function.Consumer;
 /**
  * Created by brett on 11/2/17
  */
+@Slf4j
 public class HostValidationValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(HostValidationValidation.class);
-
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient TimeLimiter timeLimiter;
   @Inject private transient Clock clock;

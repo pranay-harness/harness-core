@@ -6,8 +6,7 @@ package io.harness.serializer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -24,9 +23,8 @@ import javax.xml.xpath.XPathFactory;
 /**
  * The Class XmlUtils.
  */
+@Slf4j
 public class XmlUtils {
-  private static final Logger logger = LoggerFactory.getLogger(XmlUtils.class);
-
   /**
    * Xpath.
    *

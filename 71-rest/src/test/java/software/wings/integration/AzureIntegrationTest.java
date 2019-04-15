@@ -10,11 +10,10 @@ import com.microsoft.azure.management.containerservice.OSType;
 import io.harness.category.element.IntegrationTests;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
@@ -31,9 +30,8 @@ import java.util.Map;
 import java.util.Set;
 
 @Integration
+@Slf4j
 public class AzureIntegrationTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(AzureIntegrationTest.class);
-
   private String clientId = "";
   private String tenantId = "";
   private String key = "";

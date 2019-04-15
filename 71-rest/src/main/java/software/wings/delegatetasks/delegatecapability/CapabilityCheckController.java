@@ -12,8 +12,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheckFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
@@ -22,8 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Slf4j
 public class CapabilityCheckController extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(CapabilityCheckController.class);
   @Inject CapabilityCheckFactory capabilityCheckFactory;
 
   public CapabilityCheckController(

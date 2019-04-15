@@ -111,6 +111,7 @@ import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -123,8 +124,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -205,9 +204,8 @@ import javax.ws.rs.NotFoundException;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class DelegateServiceImpl implements DelegateService, Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
-
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);

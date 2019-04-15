@@ -17,11 +17,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.message.MessageService;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.managerclient.ManagerClientModule;
 import software.wings.watcher.service.WatcherService;
@@ -40,9 +39,8 @@ import java.util.logging.Level;
 /**
  * Created by brett on 10/26/17
  */
+@Slf4j
 public class WatcherApplication {
-  private static final Logger logger = LoggerFactory.getLogger(WatcherApplication.class);
-
   private static String processId;
 
   public static String getProcessId() {

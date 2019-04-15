@@ -11,12 +11,11 @@ import io.harness.persistence.ReadPref;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Date;
@@ -24,9 +23,8 @@ import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class MongoQueue<T extends Queuable> implements Queue<T> {
-  private static final Logger logger = LoggerFactory.getLogger(MongoQueue.class);
-
   private final Class<T> klass;
   private int resetDurationInSeconds;
   private final boolean filterWithVersion;

@@ -18,8 +18,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -48,8 +47,8 @@ import java.util.Map;
  * @author rktummala on 10/28/17
  */
 @Singleton
+@Slf4j
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
-  private static final Logger logger = LoggerFactory.getLogger(StepYamlHandler.class);
   private static final String APP_PREFIX = "App/";
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;

@@ -6,8 +6,7 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -20,8 +19,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 
+@Slf4j
 public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(GitValidation.class);
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
 

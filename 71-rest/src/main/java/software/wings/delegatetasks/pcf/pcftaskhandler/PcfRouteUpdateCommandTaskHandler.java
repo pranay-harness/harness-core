@@ -6,10 +6,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
@@ -26,9 +25,8 @@ import java.util.List;
 
 @NoArgsConstructor
 @Singleton
+@Slf4j
 public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(PcfRouteUpdateCommandTaskHandler.class);
-
   /**
    * Performs RouteSwapping for Blue-Green deployment
    * @param pcfCommandRequest

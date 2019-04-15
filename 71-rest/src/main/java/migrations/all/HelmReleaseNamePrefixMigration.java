@@ -8,9 +8,8 @@ import static software.wings.sm.StateType.HELM_DEPLOY;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -25,9 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class HelmReleaseNamePrefixMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(HelmReleaseNamePrefixMigration.class);
-
   private static final String HELM_RELEASE_NAME_PREFIX_KEY = "helmReleaseNamePrefix";
   private static final String HELM_RELEASE_NAME_PREFIX_DEFAULT_VALUE = "${app.name}-${service.name}-${env.name}";
 

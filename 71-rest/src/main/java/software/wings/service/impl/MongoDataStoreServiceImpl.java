@@ -12,9 +12,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.GoogleDataStoreAware;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DataStoreService;
@@ -23,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class MongoDataStoreServiceImpl implements DataStoreService {
-  private static final Logger logger = LoggerFactory.getLogger(MongoDataStoreServiceImpl.class);
   private WingsPersistence wingsPersistence;
 
   @Inject

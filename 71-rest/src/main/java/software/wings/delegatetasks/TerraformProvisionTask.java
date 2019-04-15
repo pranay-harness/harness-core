@@ -25,13 +25,12 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -73,8 +72,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionTask.class);
   private static final String USER_DIR_KEY = "user.dir";
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
   private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";

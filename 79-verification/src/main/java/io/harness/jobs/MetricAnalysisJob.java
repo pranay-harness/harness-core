@@ -18,12 +18,11 @@ import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;
@@ -62,8 +61,8 @@ import java.util.Set;
  * Created by rsingh on 9/11/17.
  */
 @DisallowConcurrentExecution
+@Slf4j
 public class MetricAnalysisJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(MetricAnalysisJob.class);
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
 

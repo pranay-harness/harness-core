@@ -13,9 +13,8 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ClusterElement;
 import software.wings.api.DeploymentType;
@@ -41,8 +40,8 @@ import java.util.List;
 /**
  * Created by brett on 4/14/17
  */
+@Slf4j
 public class GcpClusterSetup extends State {
-  private static final Logger logger = LoggerFactory.getLogger(GcpClusterSetup.class);
   @Attributes(title = "Zone") private String zone;
 
   @Attributes(title = "Node Count") private int nodeCount;

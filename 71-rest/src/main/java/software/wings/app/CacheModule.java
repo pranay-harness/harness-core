@@ -1,7 +1,54 @@
 package software.wings.app;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.Matchers;
+
+import com.hazelcast.cache.HazelcastCachingProvider;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import org.aopalliance.intercept.MethodInvocation;
+import org.jsr107.ri.annotations.CacheContextSource;
+import org.jsr107.ri.annotations.DefaultCacheKeyGenerator;
+import org.jsr107.ri.annotations.DefaultCacheResolverFactory;
+import org.jsr107.ri.annotations.guice.CacheLookupUtil;
+import org.jsr107.ri.annotations.guice.CachePutInterceptor;
+import org.jsr107.ri.annotations.guice.CacheRemoveAllInterceptor;
+import org.jsr107.ri.annotations.guice.CacheRemoveEntryInterceptor;
+import org.jsr107.ri.annotations.guice.CacheResultInterceptor;
+
+import java.util.Properties;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+import javax.cache.annotation.CacheKeyGenerator;
+import javax.cache.annotation.CachePut;
+import javax.cache.annotation.CacheRemove;
+import javax.cache.annotation.CacheRemoveAll;
+import javax.cache.annotation.CacheResolverFactory;
+import javax.cache.annotation.CacheResult;
+import javax.cache.spi.CachingProvider;
+
 /**
  * Created by peeyushaggarwal on 1/11/17.
+ * <p>
+ * Copyright 2011-2013 Terracotta, Inc.
+ * Copyright 2011-2013 Oracle America Incorporated
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  * <p>
  * Copyright 2011-2013 Terracotta, Inc.
  * Copyright 2011-2013 Oracle America Incorporated
@@ -34,38 +81,6 @@ package software.wings.app;
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
-
-import com.hazelcast.cache.HazelcastCachingProvider;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import org.aopalliance.intercept.MethodInvocation;
-import org.jsr107.ri.annotations.CacheContextSource;
-import org.jsr107.ri.annotations.DefaultCacheKeyGenerator;
-import org.jsr107.ri.annotations.DefaultCacheResolverFactory;
-import org.jsr107.ri.annotations.guice.CacheLookupUtil;
-import org.jsr107.ri.annotations.guice.CachePutInterceptor;
-import org.jsr107.ri.annotations.guice.CacheRemoveAllInterceptor;
-import org.jsr107.ri.annotations.guice.CacheRemoveEntryInterceptor;
-import org.jsr107.ri.annotations.guice.CacheResultInterceptor;
-
-import java.util.Properties;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import javax.cache.annotation.CacheKeyGenerator;
-import javax.cache.annotation.CachePut;
-import javax.cache.annotation.CacheRemove;
-import javax.cache.annotation.CacheRemoveAll;
-import javax.cache.annotation.CacheResolverFactory;
-import javax.cache.annotation.CacheResult;
-import javax.cache.spi.CachingProvider;
 
 /**
  * Standard cache module for binding all cache interceptors to their respective annotations. This module needs to be

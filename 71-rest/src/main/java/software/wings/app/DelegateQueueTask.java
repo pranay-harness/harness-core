@@ -21,6 +21,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
@@ -28,8 +29,6 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.mongodb.morphia.query.WhereCriteria;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
@@ -45,9 +44,8 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Rishi
  */
+@Slf4j
 public class DelegateQueueTask implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateQueueTask.class);
-
   private static final long REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(2);
 
   @Inject private WingsPersistence wingsPersistence;

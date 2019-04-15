@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -22,8 +23,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -49,9 +48,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author brett on 10/17/17
  */
+@Slf4j
 public class AlertCheckJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(AlertCheckJob.class);
-
   public static final String GROUP = "ALERT_CHECK_CRON_GROUP";
 
   private static final int POLL_INTERVAL = 300;

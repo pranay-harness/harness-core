@@ -10,14 +10,13 @@ import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SumoConfig;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.intfc.security.EncryptionService;
@@ -29,9 +28,8 @@ import java.util.Collections;
  * Created by sriram_parthasarathy on 9/12/17.
  */
 @RunWith(MockitoJUnitRunner.class)
+@Slf4j
 public class SumoDelegateServiceImplTest {
-  private static final Logger logger = LoggerFactory.getLogger(SumoDelegateServiceImplTest.class);
-
   @Mock SumoConfig sumoConfig;
 
   @Mock SumoLogicClient sumoLogicClient;

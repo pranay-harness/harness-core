@@ -12,9 +12,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -31,9 +30,8 @@ import java.util.Set;
  * This script is meant to be idempotent, so it could be run any number of times.
  * @author rktummala on 3/21/18
  */
+@Slf4j
 public class CreateSupportUserGroupsAndRenameAccountAdmin implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(CreateSupportUserGroupsAndRenameAccountAdmin.class);
-
   private static final String DEFAULT_OLD_USER_GROUP_NAME = "ADMIN";
 
   @Inject private AuthHandler authHandler;

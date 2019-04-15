@@ -5,9 +5,8 @@ import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import com.google.inject.Inject;
 
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 
 /**
@@ -15,8 +14,8 @@ import software.wings.dl.WingsPersistence;
  *
  * @author marklu on 2019-03-17
  */
+@Slf4j
 public class DropMongoGcsFileIdMappingCollectionMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(DropDelegateScopeCollectionMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

@@ -22,9 +22,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.service.intfc.LearningEngineService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
@@ -44,8 +43,8 @@ import javax.ws.rs.core.HttpHeaders;
 
 @Singleton
 @Priority(AUTHENTICATION)
+@Slf4j
 public class VerificationServiceAuthenticationFilter implements ContainerRequestFilter {
-  private static final Logger logger = LoggerFactory.getLogger(VerificationServiceAuthenticationFilter.class);
   @Context private ResourceInfo resourceInfo;
   @Inject private LearningEngineService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;

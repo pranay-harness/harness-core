@@ -15,10 +15,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateProfile;
 import software.wings.dl.WingsPersistence;
@@ -32,8 +31,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class DelegateProfileServiceImpl implements DelegateProfileService {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateProfileServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

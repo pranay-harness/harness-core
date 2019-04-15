@@ -24,9 +24,8 @@ import com.google.api.services.container.model.NodePoolAutoscaling;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.Service;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -42,9 +41,8 @@ import java.util.Optional;
 
 @Integration
 @Ignore
+@Slf4j
 public class KubernetesYamlIntegrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesYamlIntegrationTest.class);
-
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withUuid("GCP_ID")

@@ -9,8 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
@@ -30,8 +29,8 @@ import java.util.List;
  * Created by Pranjal on 09/12/2018
  */
 @Singleton
+@Slf4j
 public class DynaTraceServiceImpl implements DynaTraceService {
-  private static final Logger logger = LoggerFactory.getLogger(DynaTraceServiceImpl.class);
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;

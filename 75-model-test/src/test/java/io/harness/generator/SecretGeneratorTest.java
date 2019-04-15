@@ -8,16 +8,14 @@ import com.google.inject.Inject;
 import io.harness.ModelTest;
 import io.harness.category.element.UnitTests;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Ignore
+@Slf4j
 public class SecretGeneratorTest extends ModelTest {
-  private static final Logger logger = LoggerFactory.getLogger(SecretGeneratorTest.class);
-
   @Inject SecretGenerator secretGenerator;
 
   @Test

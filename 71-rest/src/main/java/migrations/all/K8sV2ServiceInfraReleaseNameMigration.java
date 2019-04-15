@@ -12,11 +12,10 @@ import static software.wings.beans.Service.IS_K8S_V2_KEY;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -28,8 +27,8 @@ import software.wings.dl.WingsPersistence;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class K8sV2ServiceInfraReleaseNameMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(K8sV2ServiceInfraReleaseNameMigration.class);
   private static final String RELEASE_NAME_KEY = "releaseName";
   private static final String INFRA_KUBERNETES_INFRAID_EXPRESSION = "${infra.kubernetes.infraId}";
 

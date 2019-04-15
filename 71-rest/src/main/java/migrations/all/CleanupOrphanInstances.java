@@ -5,11 +5,10 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -28,9 +27,8 @@ import java.util.stream.Collectors;
  *
  * @author rktummala on 08/01/18
  */
+@Slf4j
 public class CleanupOrphanInstances implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(CleanupOrphanInstances.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InstanceService instanceService;
 

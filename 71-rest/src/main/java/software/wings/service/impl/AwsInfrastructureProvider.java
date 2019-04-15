@@ -26,8 +26,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
@@ -61,9 +60,8 @@ import java.util.Set;
  * Created by anubhaw on 10/4/16.
  */
 @Singleton
+@Slf4j
 public class AwsInfrastructureProvider implements InfrastructureProvider {
-  private static final Logger logger = LoggerFactory.getLogger(AwsInfrastructureProvider.class);
-
   @Inject private AwsUtils awsUtils;
   @Inject private HostService hostService;
   @Inject private MainConfiguration mainConfiguration;

@@ -24,12 +24,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
@@ -62,9 +61,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by rsingh on 2/16/18.
  */
+@Slf4j
 public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionBaselineServiceTest.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
 

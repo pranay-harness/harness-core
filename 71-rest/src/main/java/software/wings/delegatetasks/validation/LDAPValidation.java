@@ -5,8 +5,7 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
@@ -22,8 +21,8 @@ import java.util.function.Consumer;
  * Class used for LDAP related validations.
  * Created by Pranjal on 08/21/2018
  */
+@Slf4j
 public class LDAPValidation extends AbstractSecretManagerValidation {
-  private static final Logger logger = LoggerFactory.getLogger(LDAPValidation.class);
   @Inject private EncryptionService encryptionService;
 
   public LDAPValidation(final String delegateId, final DelegateTask delegateTask,

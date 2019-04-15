@@ -19,6 +19,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.junit.Before;
@@ -32,8 +33,6 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
@@ -62,9 +61,8 @@ import javax.ws.rs.core.Response;
  * Created by peeyushaggarwal on 11/2/16.
  */
 @RunWith(Parameterized.class)
+@Slf4j
 public class DelegateResourceTest {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateResourceTest.class);
-
   private static DelegateService DELEGATE_SERVICE = mock(DelegateService.class);
   private static DelegateScopeService DELEGATE_SCOPE_SERVICE = mock(DelegateScopeService.class);
   private static DownloadTokenService DOWNLOAD_TOKEN_SERVICE = mock(DownloadTokenService.class);

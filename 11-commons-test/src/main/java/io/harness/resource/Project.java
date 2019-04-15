@@ -1,15 +1,13 @@
 package io.harness.resource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
+@Slf4j
 public class Project {
-  private static final Logger logger = LoggerFactory.getLogger(Project.class);
-
   public static String rootDirectory(Class clazz) {
     try {
       File someFile = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI())

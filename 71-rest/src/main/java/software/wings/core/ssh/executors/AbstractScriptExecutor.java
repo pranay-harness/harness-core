@@ -1,9 +1,5 @@
 package software.wings.core.ssh.executors;
 
-/**
- * Created by anubhaw on 2019-03-11.
- */
-
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
@@ -41,6 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.validation.executable.ValidateOnExecution;
+
+/**
+ * Created by anubhaw on 2019-03-11.
+ */
 
 @ValidateOnExecution
 public abstract class AbstractScriptExecutor implements ScriptExecutor {

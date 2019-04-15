@@ -9,12 +9,11 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
@@ -33,9 +32,8 @@ import java.util.List;
 
 @NoArgsConstructor
 @Singleton
+@Slf4j
 public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(PcfDeployCommandTaskHandler.class);
-
   /**
    * This method is responsible for upsizing new application instances and downsizing previous application instances.
    * @param pcfCommandRequest

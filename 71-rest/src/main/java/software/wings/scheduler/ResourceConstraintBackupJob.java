@@ -10,6 +10,7 @@ import io.fabric8.utils.Strings;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -18,15 +19,12 @@ import org.quartz.JobExecutionException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.ResourceConstraintService;
 
 import java.util.Set;
 
+@Slf4j
 public class ResourceConstraintBackupJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(ResourceConstraintBackupJob.class);
-
   public static final String NAME = "BACKUP";
   public static final String GROUP = "RESOURCE_CONSTRAINT_GROUP";
   private static final int POLL_INTERVAL = 60;

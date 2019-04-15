@@ -9,6 +9,11 @@
     <artifactId>15-api-services</artifactId>
     <dependencies>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>14-api-services-beans</artifactId>
             <version>${project.parent.version}</version>

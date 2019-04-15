@@ -1,10 +1,9 @@
 package software.wings.service.impl.ldap;
 
+import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.LdapException;
 import org.ldaptive.auth.SearchDnResolver;
 import org.ldaptive.auth.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
 import software.wings.helpers.ext.ldap.LdapSearch;
@@ -12,9 +11,8 @@ import software.wings.helpers.ext.ldap.LdapUserConfig;
 
 import java.util.function.Function;
 
+@Slf4j
 public class ExecuteLdapUserExistsRequest implements Function<LdapUserExistsRequest, LdapUserExistsResponse> {
-  private static final Logger logger = LoggerFactory.getLogger(ExecuteLdapUserExistsRequest.class);
-
   @Override
   public LdapUserExistsResponse apply(LdapUserExistsRequest ldapUserExistsRequest) {
     Status searchStatus;

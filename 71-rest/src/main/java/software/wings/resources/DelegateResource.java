@@ -26,10 +26,9 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
@@ -78,9 +77,8 @@ import javax.ws.rs.core.Response;
 @Path("/delegates")
 @Produces("application/json")
 @Scope(DELEGATE)
+@Slf4j
 public class DelegateResource {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateResource.class);
-
   private DelegateService delegateService;
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;

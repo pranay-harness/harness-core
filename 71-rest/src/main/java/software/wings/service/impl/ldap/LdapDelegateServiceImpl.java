@@ -5,14 +5,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.LdapException;
 import org.ldaptive.ResultCode;
 import org.ldaptive.SearchResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
@@ -39,8 +38,8 @@ import java.util.stream.Collectors;
  * Created by Pranjal on 08/21/2018
  */
 @Singleton
+@Slf4j
 public class LdapDelegateServiceImpl implements LdapDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(LdapDelegateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
 
   @Override

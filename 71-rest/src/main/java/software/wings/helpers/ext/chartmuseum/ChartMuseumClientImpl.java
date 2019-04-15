@@ -15,8 +15,7 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.S3_COM
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import software.wings.beans.AwsConfig;
@@ -33,9 +32,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class ChartMuseumClientImpl implements ChartMuseumClient {
-  private static final Logger logger = LoggerFactory.getLogger(ChartMuseumClientImpl.class);
-
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override

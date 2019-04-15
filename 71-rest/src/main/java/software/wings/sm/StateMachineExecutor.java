@@ -73,11 +73,10 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -131,9 +130,8 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Singleton
+@Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
-  private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
-
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
   @Inject private AlertService alertService;

@@ -8,9 +8,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 
 /**
@@ -19,8 +18,8 @@ import software.wings.dl.WingsPersistence;
  *
  * Created by Pranjal on 03/18/2019
  */
+@Slf4j
 public class VerificationMetricJobMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(VerificationMetricJobMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

@@ -29,9 +29,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.LineIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.stencils.EnumData;
@@ -51,9 +50,8 @@ import java.util.regex.Pattern;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("KUBERNETES")
 @EqualsAndHashCode(callSuper = true)
+@Slf4j
 public class KubernetesContainerTask extends ContainerTask {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerTask.class);
-
   public static final String CONFIG_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{CONFIG_MAP_NAME}";
   public static final String SECRET_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_MAP_NAME}";
 

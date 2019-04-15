@@ -6,10 +6,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
@@ -20,9 +19,8 @@ import java.util.List;
  * Migration script to remove support@harness.io from salesContacts info from all accounts
  * @author rktummala on 01/14/19
  */
+@Slf4j
 public class RemoveSupportEmailFromSalesContacts implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(LicenseDataMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LicenseService licenseService;
 

@@ -35,11 +35,10 @@ import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -105,8 +104,8 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by rsingh on 4/17/17.
  */
 @ValidateOnExecution
+@Slf4j
 public class AnalysisServiceImpl implements AnalysisService {
-  private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
   private static final double HIGH_RISK_THRESHOLD = 50;
   private static final double MEDIUM_RISK_THRESHOLD = 25;
 

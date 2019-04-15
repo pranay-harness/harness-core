@@ -8,19 +8,17 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.spec.SecretKeySpec;
 
+@Slf4j
 public class TokenGenerator {
-  private static final Logger logger = LoggerFactory.getLogger(TokenGenerator.class);
-
   private String accountId;
   private String accountSecret;
 

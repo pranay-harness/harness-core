@@ -10,10 +10,9 @@ import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.util.IntMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.reflection.CodeUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -22,9 +21,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 @SuppressFBWarnings("DM_EXIT")
+@Slf4j
 public class KryoUtils {
-  private static final Logger logger = LoggerFactory.getLogger(KryoUtils.class);
-
   private static synchronized Kryo kryo() {
     final ClassResolver classResolver = new ClassResolver();
     HKryo kryo = new HKryo(classResolver);

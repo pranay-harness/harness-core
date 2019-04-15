@@ -9,8 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.persistence.UuidAware;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -23,8 +22,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class YamlPushServiceImpl implements YamlPushService {
-  private static final Logger logger = LoggerFactory.getLogger(YamlPushServiceImpl.class);
   private static final String YAML_PUSH_SERVICE_LOG = "YAML_PUSH_SERVICE_LOG";
 
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;

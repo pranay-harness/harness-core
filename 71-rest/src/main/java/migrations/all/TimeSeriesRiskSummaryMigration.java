@@ -13,12 +13,11 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
@@ -34,9 +33,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Praveen
  */
+@Slf4j
 public class TimeSeriesRiskSummaryMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(TimeSeriesRiskSummaryMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
   private int completedCount;
 

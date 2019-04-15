@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,17 +18,14 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 
 /**
  * Created by anubhaw on 10/21/16.
  */
 @Ignore
+@Slf4j
 public class JobSchedulerTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(JobSchedulerTest.class);
-
   @Inject private BackgroundJobScheduler jobScheduler;
 
   @Before

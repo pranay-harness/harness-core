@@ -39,6 +39,7 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
+import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -80,9 +81,8 @@ import javax.cache.Caching;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
+@Slf4j
 public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
-  private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
-
   protected ClosingFactory closingFactory = new ClosingFactory();
 
   protected Injector injector;

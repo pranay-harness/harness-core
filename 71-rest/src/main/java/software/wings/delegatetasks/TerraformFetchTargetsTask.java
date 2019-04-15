@@ -13,8 +13,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.delegation.TerraformProvisionParameters;
@@ -33,8 +32,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(TerraformFetchTargetsTask.class);
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   private static final String TERRAFORM_FILE_EXTENSION = ".tf";

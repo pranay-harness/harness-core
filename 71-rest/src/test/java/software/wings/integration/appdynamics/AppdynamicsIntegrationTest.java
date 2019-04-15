@@ -26,13 +26,12 @@ import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.HostElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
@@ -61,9 +60,8 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by rsingh on 5/11/17.
  */
+@Slf4j
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsIntegrationTest.class);
-
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
   @Inject private ScmSecret scmSecret;
   @Mock private EncryptionService encryptionService;

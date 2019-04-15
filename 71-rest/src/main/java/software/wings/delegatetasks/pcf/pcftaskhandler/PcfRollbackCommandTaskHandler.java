@@ -10,12 +10,11 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
@@ -38,9 +37,8 @@ import java.util.Set;
 
 @NoArgsConstructor
 @Singleton
+@Slf4j
 public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(PcfRollbackCommandTaskHandler.class);
-
   /**
    * This method performs Rollback operation
    * @param pcfCommandRequest

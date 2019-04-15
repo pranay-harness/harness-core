@@ -37,10 +37,9 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
@@ -64,8 +63,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 @Singleton
+@Slf4j
 public class AlertServiceImpl implements AlertService {
-  private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
   public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(Arrays.asList(
       NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT,
       INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT,

@@ -22,10 +22,9 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -99,9 +98,8 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 5/1/17.
  */
 @Singleton
+@Slf4j
 public class SettingValidationService {
-  private static final Logger logger = LoggerFactory.getLogger(SettingValidationService.class);
-
   @Inject private AppService appService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsHelperService awsHelperService;

@@ -38,9 +38,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
 import software.wings.api.JenkinsExecutionData;
 import software.wings.api.PhaseElement;
@@ -73,9 +72,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class JenkinsState extends State implements SweepingOutputStateMixin {
-  private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
-
   public static final String COMMAND_UNIT_NAME = "Console Output";
   public static final String JENKINS_CONFIG_ID_KEY = "jenkinsConfigId";
   public static final String JOB_NAME_KEY = "jobName";

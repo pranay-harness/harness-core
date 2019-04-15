@@ -1,11 +1,10 @@
 package software.wings.service;
 
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.helpers.ext.helm.HelmClient;
 import software.wings.helpers.ext.helm.HelmClientImpl;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -19,9 +18,8 @@ import java.util.concurrent.TimeoutException;
  * Created by anubhaw on 3/22/18.
  */
 @Ignore
+@Slf4j
 public class HelmClientTest {
-  private static final Logger logger = LoggerFactory.getLogger(HelmClientTest.class);
-
   private HelmClient helmClient = new HelmClientImpl();
   @Test
   @Category(UnitTests.class)

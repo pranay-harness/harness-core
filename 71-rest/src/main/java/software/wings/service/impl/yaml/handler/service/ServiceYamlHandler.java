@@ -11,9 +11,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
@@ -44,8 +43,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/22/17
  */
 @Singleton
+@Slf4j
 public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceYamlHandler.class);
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
   @Inject ServiceVariableService serviceVariableService;

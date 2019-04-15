@@ -14,8 +14,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.service.impl.DelayEventHelper;
@@ -31,9 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class ArtifactCheckState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCheckState.class);
-
   @Inject private transient ArtifactService artifactService;
   @Inject private transient DelayEventHelper delayEventHelper;
 

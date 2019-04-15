@@ -5,15 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Preference;
 import software.wings.dl.WingsPersistence;
 
+@Slf4j
 public class PreferenceUserIdRemoveDollarSignMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(PreferenceUserIdRemoveDollarSignMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

@@ -11,8 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 
 import java.io.UnsupportedEncodingException;
@@ -25,9 +24,8 @@ import javax.ws.rs.core.GenericType;
  * @author rktummala on 09/25/18
  */
 @Singleton
+@Slf4j
 public class AccountResourceRestClient {
-  private static final Logger logger = LoggerFactory.getLogger(AccountResourceRestClient.class);
-
   @Inject private software.wings.integration.UserResourceRestClient userResourceRestClient;
 
   public Account getAccountByName(Client client, String userToken, String accountId, String accountName)

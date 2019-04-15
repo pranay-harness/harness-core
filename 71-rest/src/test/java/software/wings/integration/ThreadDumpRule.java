@@ -1,9 +1,8 @@
 package software.wings.integration;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -11,9 +10,8 @@ import java.io.InputStreamReader;
 /**
  * Created by rsingh on 5/23/17.
  */
+@Slf4j
 public class ThreadDumpRule extends TestWatcher {
-  private static final Logger logger = LoggerFactory.getLogger(ThreadDumpRule.class);
-
   @Override
   protected void failed(Throwable e, Description description) {
     logger.info(description.getDisplayName() + " failed. taking thread dumps");

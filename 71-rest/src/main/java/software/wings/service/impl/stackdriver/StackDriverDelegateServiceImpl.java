@@ -17,9 +17,8 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.FastDateFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -43,9 +42,8 @@ import java.util.TimeZone;
  * Created by Pranjal on 11/27/2018
  */
 @Singleton
+@Slf4j
 public class StackDriverDelegateServiceImpl implements StackDriverDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(StackDriverDelegateServiceImpl.class);
-
   private static final FastDateFormat rfc3339 =
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
 

@@ -9,9 +9,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -31,8 +30,8 @@ import java.io.File;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class ContainerValidationHelper {
-  private static final Logger logger = LoggerFactory.getLogger(ContainerValidationHelper.class);
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient private transient EncryptionService encryptionService;

@@ -20,6 +20,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -28,8 +29,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -43,9 +42,8 @@ import software.wings.sm.StateMachineExecutor;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 
+@Slf4j
 public class WorkflowExecutionMonitorJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionMonitorJob.class);
-
   public static final String NAME = "OBSERVER";
   public static final String GROUP = "WORKFLOW_MONITOR_CRON_GROUP";
   private static final Duration POLL_INTERVAL = Duration.ofMinutes(1);

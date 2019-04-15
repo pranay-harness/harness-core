@@ -10,8 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
@@ -23,9 +22,8 @@ import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Slf4j
 public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(HelmRepoConfigValidation.class);
-
   private static final String UNHANDLED_CONFIG_MSG = "Unhandled type of helm repo config. Type : ";
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;

@@ -17,9 +17,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -36,9 +35,8 @@ import java.util.Objects;
  * Created by anubhaw on 7/14/16.
  */
 @JsonTypeName("COPY_CONFIGS")
+@Slf4j
 public class CopyConfigCommandUnit extends SshCommandUnit {
-  private static final Logger logger = LoggerFactory.getLogger(CopyConfigCommandUnit.class);
-
   @Attributes(title = "Destination Parent Path")
   @DefaultValue("$WINGS_RUNTIME_PATH")
   private String destinationParentPath;

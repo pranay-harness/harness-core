@@ -47,10 +47,9 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogColor;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -70,8 +69,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
+@Slf4j
 public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(K8sBlueGreenDeployTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;

@@ -19,8 +19,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.PhaseElement;
@@ -52,8 +51,8 @@ import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Slf4j
 public class EcsBlueGreenServiceSetupRoute53DNS extends State {
-  private static final Logger logger = LoggerFactory.getLogger(EcsBlueGreenServiceSetupRoute53DNS.class);
   public static final String ECS_SERVICE_SETUP_COMMAND_ROUTE53 = "ECS Service Setup Route 53";
 
   @Getter @Setter private String roleArn;

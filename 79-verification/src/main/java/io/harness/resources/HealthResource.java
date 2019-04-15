@@ -4,8 +4,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.security.annotations.PublicApi;
 
 import javax.ws.rs.Consumes;
@@ -23,9 +22,8 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @PublicApi
+@Slf4j
 public class HealthResource {
-  private static final Logger logger = LoggerFactory.getLogger(HealthResource.class);
-
   @GET
   @Timed
   @ExceptionMetered

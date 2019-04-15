@@ -13,11 +13,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
@@ -33,9 +32,8 @@ import java.util.List;
 
 @NoArgsConstructor
 @Singleton
+@Slf4j
 public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(PcfDataFetchCommandTaskHandler.class);
-
   /**
    * Fetches Organization, Spaces, RouteMap data
    */

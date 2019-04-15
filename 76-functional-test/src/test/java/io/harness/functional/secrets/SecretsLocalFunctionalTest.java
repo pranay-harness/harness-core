@@ -11,20 +11,19 @@ import io.harness.Utils.SecretsUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 
 import java.util.List;
 
+@Slf4j
 public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
-  private static final Logger logger = LoggerFactory.getLogger(SecretsLocalFunctionalTest.class);
   @Inject private ManagerDecryptionService managerDecryptionService;
   SecretsRestUtils srUtils = new SecretsRestUtils();
 

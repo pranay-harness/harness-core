@@ -11,8 +11,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
@@ -38,9 +37,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class AppdynamicsServiceImpl implements AppdynamicsService {
-  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsServiceImpl.class);
-
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;

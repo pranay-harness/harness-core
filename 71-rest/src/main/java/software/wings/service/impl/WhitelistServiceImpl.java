@@ -16,12 +16,11 @@ import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
@@ -43,8 +42,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class WhitelistServiceImpl implements WhitelistService {
-  private static final Logger logger = LoggerFactory.getLogger(WhitelistServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FeatureFlagService featureFlagService;

@@ -5,11 +5,10 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -19,8 +18,8 @@ import software.wings.yaml.errorhandling.GitSyncError;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class UpdateGitSyncErrorMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(UpdateGitSyncErrorMigration.class);
   @Inject WingsPersistence wingsPersistence;
   @Inject YamlHelper yamlHelper;
   @Inject AppService appService;

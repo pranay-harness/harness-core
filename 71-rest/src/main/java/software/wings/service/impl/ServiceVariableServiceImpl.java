@@ -30,11 +30,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -68,8 +67,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class ServiceVariableServiceImpl implements ServiceVariableService {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceVariableServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;

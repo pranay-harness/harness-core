@@ -16,8 +16,7 @@ import com.hierynomus.smbj.auth.AuthenticationContext;
 import com.hierynomus.smbj.connection.Connection;
 import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.BuildMetadataKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -35,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 @Singleton
+@Slf4j
 public class SmbHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(SmbHelperService.class);
   @Inject private EncryptionService encryptionService;
   private String buildNo = "";
 

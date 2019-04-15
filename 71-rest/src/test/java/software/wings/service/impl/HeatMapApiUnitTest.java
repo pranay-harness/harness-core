@@ -21,13 +21,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -81,9 +80,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Vaibhav Tulsyan
  * 19/Oct/2018
  */
+@Slf4j
 public class HeatMapApiUnitTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(HeatMapApiUnitTest.class);
-
   //@Mock private SettingsService mockSettingsService;
   @Inject WingsPersistence wingsPersistence;
   @Inject ContinuousVerificationService continuousVerificationService;

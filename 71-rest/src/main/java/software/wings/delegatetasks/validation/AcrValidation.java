@@ -5,8 +5,7 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.azure.AcrService;
@@ -16,9 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Slf4j
 public class AcrValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(AcrValidation.class);
-
   @Inject private transient AcrService acrService;
 
   public AcrValidation(

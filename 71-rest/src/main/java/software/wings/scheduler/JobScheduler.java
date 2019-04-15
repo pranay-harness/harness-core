@@ -12,18 +12,16 @@ import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.scheduler.HQuartzScheduler;
 import io.harness.scheduler.SchedulerConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
 
 import java.util.List;
 
+@Slf4j
 public class JobScheduler extends HQuartzScheduler implements ConfigChangeListener {
-  private static final Logger logger = LoggerFactory.getLogger(JobScheduler.class);
-
   @Inject
   public JobScheduler(Injector injector, SchedulerConfig schedulerConfig, String defaultMongoUri) {
     super(injector, schedulerConfig, defaultMongoUri);

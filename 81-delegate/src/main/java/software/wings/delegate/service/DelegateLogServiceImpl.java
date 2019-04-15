@@ -28,8 +28,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rest.RestResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.delegatetasks.DelegateLogService;
@@ -53,8 +52,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class DelegateLogServiceImpl implements DelegateLogService {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateLogServiceImpl.class);
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
   private ManagerClient managerClient;

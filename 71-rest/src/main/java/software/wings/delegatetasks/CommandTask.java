@@ -7,9 +7,8 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -23,9 +22,8 @@ import java.util.function.Supplier;
 /**
  * Created by peeyushaggarwal on 1/6/17.
  */
+@Slf4j
 public class CommandTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(CommandTask.class);
-
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

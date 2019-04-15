@@ -16,8 +16,7 @@ import io.harness.event.model.marketo.LeadRequestWithId.Lead;
 import io.harness.event.model.marketo.LeadRequestWithId.Lead.LeadBuilder;
 import io.harness.event.model.marketo.LoginResponse;
 import io.harness.event.model.marketo.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Retrofit;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
@@ -34,9 +33,8 @@ import java.util.List;
  * @author rktummala on 11/20/18
  */
 @Singleton
+@Slf4j
 public class MarketoHelper {
-  private static final Logger logger = LoggerFactory.getLogger(MarketoHelper.class);
-
   @Inject private UserService userService;
 
   public long createOrUpdateLead(Account account, String userName, String email, String accessToken,

@@ -59,12 +59,11 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
@@ -161,9 +160,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
-  private static final Logger logger = LoggerFactory.getLogger(InfrastructureMappingServiceImpl.class);
-
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final String INFRA_KUBERNETES_INFRAID_EXPRESSION = "${infra.kubernetes.infraId}";
 

@@ -30,12 +30,11 @@ import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
@@ -84,8 +83,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ShellScriptState extends State implements SweepingOutputStateMixin {
-  private static final Logger logger = LoggerFactory.getLogger(ShellScriptState.class);
   @Inject @Transient private transient ActivityHelperService activityHelperService;
   @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;

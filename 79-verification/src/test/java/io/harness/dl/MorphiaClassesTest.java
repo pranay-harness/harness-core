@@ -8,21 +8,19 @@ import io.harness.category.element.UnitTests;
 import io.harness.entities.VerificationMorphiaClasses;
 import io.harness.mongo.HObjectFactory;
 import io.harness.reflection.CodeUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.integration.common.MongoDBTest.MongoEntity;
 import software.wings.integration.dl.PageRequestTest.Dummy;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 public class MorphiaClassesTest {
-  private static final Logger logger = LoggerFactory.getLogger(MorphiaClassesTest.class);
-
   @Test
   @Category(UnitTests.class)
   public void testSearchAndList() {

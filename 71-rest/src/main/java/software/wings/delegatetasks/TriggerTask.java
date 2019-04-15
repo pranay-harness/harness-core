@@ -10,9 +10,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
@@ -33,9 +32,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class TriggerTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(TriggerTask.class);
-
   @Inject private EncryptionService encryptionService;
   @Inject private GitService gitService;
 

@@ -4,20 +4,17 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesClusterConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.impl.yaml.handler.inframapping.DirectKubernetesInfraMappingYamlHandler;
 
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler<Yaml, KubernetesClusterConfig> {
-  private static final Logger logger = LoggerFactory.getLogger(DirectKubernetesInfraMappingYamlHandler.class);
-
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();

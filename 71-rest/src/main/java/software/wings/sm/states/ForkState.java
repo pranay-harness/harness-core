@@ -9,8 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.serializer.KryoUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.ForkElement;
 import software.wings.common.Constants;
@@ -32,9 +31,8 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@Slf4j
 public class ForkState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(ForkState.class);
-
   @SchemaIgnore private List<String> forkStateNames = new ArrayList<>();
 
   /**

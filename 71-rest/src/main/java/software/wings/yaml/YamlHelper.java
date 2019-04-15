@@ -14,8 +14,7 @@ import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -38,9 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class YamlHelper {
-  private static final Logger logger = LoggerFactory.getLogger(YamlHelper.class);
-
   public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
 
   public static void addResponseMessage(RestResponse rr, ErrorCode errorCode, Level level, String message) {

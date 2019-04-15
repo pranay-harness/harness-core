@@ -24,6 +24,7 @@ import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSeque
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,8 +32,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateSequenceConfig;
@@ -43,9 +42,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class EcsDelegateRegistrationTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(EcsDelegateRegistrationTest.class);
-
   DelegateServiceImpl delegateService;
   @Mock WingsPersistence wingsPersistence;
   @Mock Query query;

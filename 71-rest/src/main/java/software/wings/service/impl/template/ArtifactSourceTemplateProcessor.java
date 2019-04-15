@@ -15,9 +15,8 @@ import de.danielbechler.diff.node.DiffNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -33,8 +32,8 @@ import software.wings.service.intfc.ArtifactStreamService;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactSourceTemplateProcessor.class);
   @Inject ArtifactStreamService artifactStreamService;
   @Inject TemplateHelper templateHelper;
 

@@ -17,12 +17,11 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.KmsOperationException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
@@ -46,9 +45,8 @@ import java.util.UUID;
 /**
  * Created by rsingh on 11/3/17.
  */
+@Slf4j
 public class KmsAlertTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(KmsAlertTest.class);
-
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
   @Inject private VaultService vaultService;

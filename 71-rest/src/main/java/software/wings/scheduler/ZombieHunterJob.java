@@ -1,5 +1,59 @@
 package software.wings.scheduler;
 
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.ReadPref;
+import io.harness.scheduler.PersistentScheduler;
+import lombok.AllArgsConstructor;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.map.LRUMap;
+import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.SimpleTrigger;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.Exterminator;
+
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+
 /*
 mmmmmmmyoddddddddddddddddddddddddddddddddddddddddd-mdddddddd
 mmmmmmms+mdddddddddddddddddddddddddddddddddddddddd-ddddddddd
@@ -34,64 +88,8 @@ mmmmmmmmmmmhdmd/.+.`hm: dm. ommmm/ .mmmmy``/:/dmdmmmmmmmmmmm
 mmmmmmmmmmmmmmmmmshdNm+-hm/`ommmd+`/dmmmdhhmmmmmmmmmmmmmmmmm
 */
 
-import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import io.harness.exception.WingsException;
-import io.harness.lock.AcquiredLock;
-import io.harness.lock.PersistentLocker;
-import io.harness.logging.ExceptionLogger;
-import io.harness.persistence.ReadPref;
-import io.harness.scheduler.PersistentScheduler;
-import lombok.AllArgsConstructor;
-import lombok.Value;
-import org.apache.commons.collections.map.LRUMap;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.SimpleTrigger;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ServiceTemplate;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.Exterminator;
-
-import java.security.SecureRandom;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-
+@Slf4j
 public class ZombieHunterJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(ZombieHunterJob.class);
-
   public static final String GROUP = "ZOMBIE_HUNTER_GROUP";
   public static final String INDEX_KEY = "index";
   public static final Duration TIMEOUT = Duration.ofMinutes(2);

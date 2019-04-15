@@ -2,18 +2,16 @@ package migrations.all;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;
 
+@Slf4j
 public class TrimYamlMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(TrimYamlMigration.class);
-
   @Inject WingsPersistence wingsPersistence;
 
   @Override

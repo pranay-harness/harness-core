@@ -15,8 +15,7 @@ import com.amazonaws.services.marketplacemetering.model.AWSMarketplaceMeteringEx
 import com.amazonaws.services.marketplacemetering.model.ResolveCustomerRequest;
 import com.amazonaws.services.marketplacemetering.model.ResolveCustomerResult;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AccountStatus;
@@ -49,8 +48,8 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 @Singleton
+@Slf4j
 public class MarketPlaceServiceImpl implements MarketPlaceService {
-  private static final Logger logger = LoggerFactory.getLogger(MarketPlaceServiceImpl.class);
   @Inject private AccountService accountService;
   @Inject private UserService userService;
   @Inject private MainConfiguration configuration;

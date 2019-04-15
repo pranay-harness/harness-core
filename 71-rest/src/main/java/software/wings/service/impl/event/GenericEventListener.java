@@ -12,8 +12,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.EventType;
 import io.harness.event.model.QueableEvent;
 import io.harness.queue.QueueListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Set;
@@ -22,9 +21,8 @@ import java.util.Set;
  * @author rktummala on 11/20/2018
  */
 @Singleton
+@Slf4j
 public class GenericEventListener extends QueueListener<QueableEvent> implements EventListener {
-  private static final Logger logger = LoggerFactory.getLogger(GenericEventListener.class);
-
   private Multimap<EventType, EventHandler> handlerRegistry;
 
   //  @Inject private EventHandler eventHandler;

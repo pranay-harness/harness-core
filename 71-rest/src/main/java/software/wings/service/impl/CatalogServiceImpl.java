@@ -14,8 +14,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.CatalogItem;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -32,8 +31,8 @@ import java.util.Map;
  * @author Rishi
  */
 @Singleton
+@Slf4j
 public class CatalogServiceImpl implements CatalogService {
-  private static final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
   private Map<String, List<CatalogItem>> catalogs;
 
   /**

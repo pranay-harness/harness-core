@@ -22,20 +22,18 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 /**
  * The Class PersistentLockerTest.
  */
+@Slf4j
 public class PersistentLockerDBTest extends PersistenceTest {
-  private static final Logger logger = LoggerFactory.getLogger(PersistentLockerDBTest.class);
-
   @Inject private DistributedLockSvc distributedLockSvc;
   @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;

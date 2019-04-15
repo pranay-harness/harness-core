@@ -16,12 +16,11 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.yaml.YamlFunctionalTestHelper;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -29,9 +28,8 @@ import software.wings.service.intfc.AppService;
 
 import java.nio.file.Paths;
 
+@Slf4j
 public class HelmWorkflowYamlFunctionalTest extends AbstractFunctionalTest {
-  private static final Logger logger = LoggerFactory.getLogger(HelmWorkflowYamlFunctionalTest.class);
-
   @Inject private AppService appService;
   @Inject YamlFunctionalTestHelper yamlFunctionalTestHelper;
 

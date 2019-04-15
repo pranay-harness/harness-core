@@ -20,6 +20,7 @@ import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -28,8 +29,6 @@ import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -45,9 +44,8 @@ import java.util.Map;
  */
 @AtmosphereHandlerService(path = "/stream/ui/{channel}", interceptors = {AtmosphereResourceLifecycleInterceptor.class},
     broadcasterCache = UUIDBroadcasterCache.class)
+@Slf4j
 public class UiStreamHandler extends AtmosphereHandlerAdapter {
-  private static final Logger logger = LoggerFactory.getLogger(UiStreamHandler.class);
-
   public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
   @Inject private AuthService authService;
 

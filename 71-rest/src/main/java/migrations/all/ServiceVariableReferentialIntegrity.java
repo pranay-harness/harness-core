@@ -7,10 +7,9 @@ import static software.wings.common.Constants.APP_ID_KEY;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ServiceVariable;
@@ -21,9 +20,8 @@ import java.util.List;
 /**
  * Created by brett on 5/1/18.
  */
+@Slf4j
 public class ServiceVariableReferentialIntegrity implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceVariableReferentialIntegrity.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

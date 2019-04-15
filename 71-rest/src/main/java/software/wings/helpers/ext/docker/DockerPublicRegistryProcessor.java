@@ -13,9 +13,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
@@ -30,9 +29,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class DockerPublicRegistryProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(DockerPublicRegistryProcessor.class);
-
   @Inject private DockerRestClientFactory dockerRestClientFactory;
 
   public boolean verifyImageName(

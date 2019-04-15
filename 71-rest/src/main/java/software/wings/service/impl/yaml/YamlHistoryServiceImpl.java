@@ -6,8 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.Validator;
@@ -25,9 +24,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class YamlHistoryServiceImpl implements YamlHistoryService {
-  private static final Logger logger = LoggerFactory.getLogger(YamlHistoryServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)

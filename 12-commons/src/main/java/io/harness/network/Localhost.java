@@ -4,8 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 
 import java.io.IOException;
@@ -15,9 +14,8 @@ import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.concurrent.ExecutionException;
 
+@Slf4j
 public class Localhost {
-  private static final Logger logger = LoggerFactory.getLogger(Localhost.class);
-
   private static String ipAddressCache;
   private static String hostnameCache;
 

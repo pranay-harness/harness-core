@@ -12,9 +12,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
@@ -39,8 +38,8 @@ import java.util.stream.Collectors;
  * Created by bzane on 2/22/17
  */
 @Singleton
+@Slf4j
 public class PcfHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(PcfHelperService.class);
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
 

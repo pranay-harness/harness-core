@@ -18,10 +18,9 @@ import io.harness.notifications.beans.Conditions.Operator;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.AlertType;
@@ -32,8 +31,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
-  private static final Logger logger = LoggerFactory.getLogger(AlertsSetupCRUDTest.class);
   UserGroupRestUtil userGroupRestUtil = new UserGroupRestUtil();
   AlertsRestUtil arUtil = new AlertsRestUtil();
 

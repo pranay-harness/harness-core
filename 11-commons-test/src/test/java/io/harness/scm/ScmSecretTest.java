@@ -9,12 +9,11 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.CommonsMethodRule;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -24,9 +23,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+@Slf4j
 public class ScmSecretTest {
-  private static final Logger logger = LoggerFactory.getLogger(ScmSecretTest.class);
-
   @Rule public CommonsMethodRule commonsMethodRule = new CommonsMethodRule();
   @Inject ScmSecret scmSecret;
 

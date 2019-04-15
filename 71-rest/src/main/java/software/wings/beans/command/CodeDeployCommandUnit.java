@@ -18,9 +18,8 @@ import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -36,9 +35,8 @@ import java.util.Optional;
 /**
  * Created by anubhaw on 6/23/17.
  */
+@Slf4j
 public class CodeDeployCommandUnit extends AbstractCommandUnit {
-  private static final Logger logger = LoggerFactory.getLogger(CodeDeployCommandUnit.class);
-
   @Inject @Transient private transient AwsCodeDeployService awsCodeDeployService;
   @Inject @Transient private transient DelegateLogService logService;
 

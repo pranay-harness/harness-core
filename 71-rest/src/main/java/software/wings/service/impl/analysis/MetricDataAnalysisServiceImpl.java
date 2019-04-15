@@ -25,12 +25,11 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -68,9 +67,8 @@ import java.util.stream.Collectors;
  * Created by rsingh on 9/26/17.
  */
 @Singleton
+@Slf4j
 public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService {
-  private static final Logger logger = LoggerFactory.getLogger(MetricDataAnalysisServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private LearningEngineService learningEngineService;

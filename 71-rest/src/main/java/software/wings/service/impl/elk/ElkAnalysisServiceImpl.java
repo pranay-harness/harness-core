@@ -14,8 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
@@ -41,9 +40,8 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 8/23/17.
  */
 @Singleton
+@Slf4j
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
-  private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisServiceImpl.class);
-
   @Inject private MLServiceUtil mlServiceUtil;
 
   @Override

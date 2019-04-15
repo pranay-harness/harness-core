@@ -13,9 +13,8 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
@@ -34,9 +33,8 @@ import java.util.List;
  * @author Rishi
  */
 @Attributes
+@Slf4j
 public class EmailState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(EmailState.class);
-
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
 
   @Attributes(required = true, title = "To") private String toAddress;

@@ -10,9 +10,8 @@ import static software.wings.common.TemplateConstants.SHELL_SCRIPT_EXAMPLE;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.SeedDataMigration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
@@ -21,8 +20,8 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+@Slf4j
 public class ShellScriptTemplateMigration implements SeedDataMigration {
-  private static final Logger logger = LoggerFactory.getLogger(ShellScriptTemplateMigration.class);
   @Inject private TemplateGalleryService templateGalleryService;
   private TemplateService templateService;
   private TemplateFolderService templateFolderService;

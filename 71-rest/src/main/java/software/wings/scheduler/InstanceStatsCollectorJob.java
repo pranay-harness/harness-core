@@ -9,6 +9,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -16,8 +17,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.instance.dashboard.InstanceStatsUtil;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
@@ -32,9 +31,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
 @DisallowConcurrentExecution
+@Slf4j
 public class InstanceStatsCollectorJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(InstanceStatsCollectorJob.class);
-
   public static final String GROUP = "INSTANCE_STATS_COLLECT_CRON_GROUP";
 
   // 10 minutes

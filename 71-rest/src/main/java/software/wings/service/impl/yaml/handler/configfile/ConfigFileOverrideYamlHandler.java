@@ -14,9 +14,8 @@ import com.google.inject.Singleton;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.ConfigFile;
@@ -41,8 +40,8 @@ import java.util.Optional;
  * @author rktummala on 12/08/17
  */
 @Singleton
+@Slf4j
 public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml, ConfigFile> {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigFileOverrideYamlHandler.class);
   @Inject private YamlHelper yamlHelper;
   @Inject private ConfigService configService;
   @Inject private ServiceResourceService serviceResourceService;

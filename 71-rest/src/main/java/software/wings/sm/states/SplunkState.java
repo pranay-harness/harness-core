@@ -8,10 +8,9 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.ResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.SplunkStateExecutionData;
 import software.wings.beans.SettingAttribute;
@@ -34,9 +33,8 @@ import java.util.Map.Entry;
 /**
  * Created by peeyushaggarwal on 7/15/16.
  */
+@Slf4j
 public class SplunkState extends HttpState {
-  private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
-
   @Transient @Inject private SettingsService settingsService;
 
   @Attributes(required = true, title = "Query") private String query;

@@ -35,11 +35,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.HttpStateExecutionData.HttpStateExecutionDataBuilder;
 import software.wings.api.PhaseElement;
@@ -76,9 +75,8 @@ import java.util.Map;
  * @author Rishi
  */
 @Attributes
+@Slf4j
 public class HttpState extends State implements SweepingOutputStateMixin {
-  private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
-
   private static final String ASSERTION_ERROR_MSG =
       "Assertion should return true/false (Expression syntax is based on java language).";
 

@@ -66,6 +66,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.threading.Puller;
 import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -74,8 +75,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.WorkflowElement;
@@ -147,8 +146,8 @@ import java.util.concurrent.ScheduledExecutorService;
  * @author Rishi
  */
 @Listeners({NotifyEventListener.class, ExecutionEventListener.class})
+@Slf4j
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionServiceImplTest.class);
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Mock private BackgroundJobScheduler jobScheduler;

@@ -59,6 +59,7 @@ import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.seeddata.SampleDataProviderService;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TemporaryFolder;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -67,8 +68,6 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
@@ -120,8 +119,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class DataGenService {
-  private static final Logger logger = LoggerFactory.getLogger(DataGenService.class);
   private static final String NEW_RELIC_CONNECTOR_NAME = "NewRelic";
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */

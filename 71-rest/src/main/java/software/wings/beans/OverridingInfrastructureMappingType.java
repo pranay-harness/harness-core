@@ -1,8 +1,5 @@
 package software.wings.beans;
 
-/**
- * Created by peeyushaggarwal on 4/11/17.
- */
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,6 +8,10 @@ import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
 import java.util.Optional;
+
+/**
+ * Created by peeyushaggarwal on 4/11/17.
+ */
 
 /**
  * Created by peeyushaggarwal on 6/28/16.

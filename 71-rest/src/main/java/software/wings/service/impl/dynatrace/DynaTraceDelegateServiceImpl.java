@@ -9,10 +9,9 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -40,9 +39,8 @@ import java.util.concurrent.Callable;
  * Created by rsingh on 1/29/18.
  */
 @Singleton
+@Slf4j
 public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
-  private static final Logger logger = LoggerFactory.getLogger(DynaTraceDelegateServiceImpl.class);
-
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private DataCollectionExecutorService dataCollectionService;

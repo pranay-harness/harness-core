@@ -9,8 +9,7 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.common.VerificationConstants;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.states.NewRelicState;
@@ -29,9 +28,8 @@ import java.util.Set;
  * @author Vaibhav Tulsyan
  * 26/Sep/2018
  */
+@Slf4j
 public class MetricUtilHelper {
-  private static final Logger logger = LoggerFactory.getLogger(MetricUtilHelper.class);
-
   public Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics) {
     Map<String, TimeSeriesMetricDefinition> metricDefinitionByName = new HashMap<>();
     for (Metric metric : metrics) {

@@ -15,8 +15,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.ConfigFile;
@@ -43,9 +42,8 @@ import java.util.Optional;
  * @author rktummala on 12/08/17
  */
 @Singleton
+@Slf4j
 public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigFileYamlHandler.class);
-
   @Inject private EnvironmentService environmentService;
   @Inject private ConfigService configService;
   @Inject private YamlHelper yamlHelper;

@@ -24,10 +24,9 @@ import com.google.inject.Singleton;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -51,8 +50,8 @@ import java.util.concurrent.TimeoutException;
  * Created by anubhaw on 3/22/18.
  */
 @Singleton
+@Slf4j
 public class HelmClientImpl implements HelmClient {
-  private static final Logger logger = LoggerFactory.getLogger(HelmClientImpl.class);
   private static final String OVERRIDE_FILE_PATH = "./repository/helm/overrides/${CONTENT_HASH}.yaml";
 
   @Override

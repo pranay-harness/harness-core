@@ -10,11 +10,10 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.EnvFilter;
@@ -34,9 +33,8 @@ import java.util.Set;
  * secrets
  * @author rktummala on 05/03/18
  */
+@Slf4j
 public class UsageRestrictionsMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(UsageRestrictionsMigration.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UsageRestrictionsService usageRestrictionsService;
 

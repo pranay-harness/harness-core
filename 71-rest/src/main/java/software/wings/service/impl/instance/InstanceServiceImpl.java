@@ -19,11 +19,10 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
@@ -51,9 +50,8 @@ import javax.validation.Valid;
  * @author rktummala on 8/13/17
  */
 @Singleton
+@Slf4j
 public class InstanceServiceImpl implements InstanceService {
-  private static final Logger logger = LoggerFactory.getLogger(InstanceServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private PersistentLocker persistentLocker;

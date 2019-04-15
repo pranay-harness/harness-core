@@ -6,10 +6,9 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 
 /**
@@ -17,8 +16,8 @@ import software.wings.WingsBaseTest;
  *
  * @author Rishi
  */
+@Slf4j
 public class ApplicationTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
   @Inject private JsonUtils jsonUtils;
 
   /**

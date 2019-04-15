@@ -10,8 +10,7 @@ import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.instance.InstanceHelper;
@@ -24,8 +23,8 @@ import java.util.concurrent.TimeUnit;
  * Handler class that syncs all the instances of an inframapping.
  * @author rktummala on 02/13/19
  */
+@Slf4j
 public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
-  private static final Logger logger = LoggerFactory.getLogger(InstanceSyncHandler.class);
   @Inject private InstanceHelper instanceHelper;
 
   public static class InstanceSyncExecutor {

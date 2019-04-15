@@ -14,6 +14,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -39,9 +40,8 @@ import java.util.Set;
  * Created by sriram_parthasarathy on 8/24/17.
  */
 @DisallowConcurrentExecution
+@Slf4j
 public class LogClusterManagerJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(LogClusterManagerJob.class);
-
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
 

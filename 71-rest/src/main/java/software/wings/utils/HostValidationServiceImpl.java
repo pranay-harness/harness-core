@@ -17,8 +17,7 @@ import com.jcraft.jsch.Session;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationResponse;
@@ -39,9 +38,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class HostValidationServiceImpl implements HostValidationService {
-  private static final Logger logger = LoggerFactory.getLogger(HostValidationServiceImpl.class);
-
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
 

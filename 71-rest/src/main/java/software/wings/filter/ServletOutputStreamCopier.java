@@ -1,7 +1,6 @@
 package software.wings.filter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,8 +15,8 @@ import javax.servlet.WriteListener;
  *
  * @author Rishi
  */
+@Slf4j
 public class ServletOutputStreamCopier extends ServletOutputStream {
-  private static final Logger logger = LoggerFactory.getLogger(ServletOutputStreamCopier.class);
   private OutputStream outputStream;
   private ByteArrayOutputStream copy;
 

@@ -39,9 +39,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -69,9 +68,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class AzureHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(AzureHelperService.class);
-
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
   private static final int READ_TIMEOUT = 10;
   @Inject private EncryptionService encryptionService;

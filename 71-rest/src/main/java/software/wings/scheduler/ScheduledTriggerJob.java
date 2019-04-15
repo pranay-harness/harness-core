@@ -9,14 +9,13 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
@@ -26,9 +25,8 @@ import software.wings.service.intfc.TriggerService;
 /**
  * Created by sgurubelli on 10/26/17.
  */
+@Slf4j
 public class ScheduledTriggerJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(ScheduledTriggerJob.class);
-
   public static final String GROUP = "SCHEDULED_TRIGGER_CRON_GROUP";
 
   // 'Second' unit prefix to convert unix to quartz cron expression

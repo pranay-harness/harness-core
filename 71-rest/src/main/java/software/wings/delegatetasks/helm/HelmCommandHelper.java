@@ -8,8 +8,7 @@ import com.google.inject.Singleton;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 
@@ -17,8 +16,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @Singleton
+@Slf4j
 public class HelmCommandHelper {
-  private static final Logger logger = LoggerFactory.getLogger(HelmCommandHelper.class);
   public static final String URL = "url";
   public static final String NAME = "name";
   public static final String VERSION = "version";

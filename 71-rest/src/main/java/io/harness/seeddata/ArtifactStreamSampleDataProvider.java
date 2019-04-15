@@ -5,8 +5,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_I
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
@@ -17,8 +16,8 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 
 @Singleton
+@Slf4j
 public class ArtifactStreamSampleDataProvider {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactStreamSampleDataProvider.class);
   @Inject public ArtifactStreamService artifactStreamService;
   @Inject public BuildSourceService buildSourceService;
 

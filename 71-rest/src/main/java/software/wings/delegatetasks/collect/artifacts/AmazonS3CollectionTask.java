@@ -8,9 +8,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
@@ -24,9 +23,8 @@ import java.util.function.Supplier;
 /**
  * Created by rktummala on 7/30/17.
  */
+@Slf4j
 public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(AmazonS3CollectionTask.class);
-
   @Inject private AmazonS3Service amazonS3Service;
 
   public AmazonS3CollectionTask(String delegateId, DelegateTask delegateTask,

@@ -16,11 +16,10 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
 import software.wings.app.MainConfiguration;
@@ -44,8 +43,8 @@ import java.util.Objects;
  * All Jira apis should be accessed via this object.
  */
 @Singleton
+@Slf4j
 public class JiraHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(JiraHelperService.class);
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
   private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 60 * 1000;
   @Inject private DelegateServiceImpl delegateService;

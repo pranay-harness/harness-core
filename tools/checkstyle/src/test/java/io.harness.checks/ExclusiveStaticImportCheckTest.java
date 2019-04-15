@@ -3,6 +3,7 @@ package io.harness.checks;
 import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.TreeWalker;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 public class ExclusiveStaticImportCheckTest extends AbstractModuleTestSupport {
@@ -26,6 +27,7 @@ public class ExclusiveStaticImportCheckTest extends AbstractModuleTestSupport {
   @Test
   public void testNonStaticLoggerIssues() throws Exception {
     final String[] expected = {"3:1: Use asList method from package java.util.Arrays."};
+import lombok.extern.slf4j.Slf4j;
     verify(config(), getPath("ExclusiveStaticImportIssues.jv"), expected);
   }
 

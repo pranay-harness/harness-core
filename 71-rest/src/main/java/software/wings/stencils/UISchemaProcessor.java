@@ -6,9 +6,8 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 
 import java.beans.IntrospectionException;
@@ -22,9 +21,8 @@ import java.util.stream.Stream;
 /**
  * Created by peeyushaggarwal on 4/6/17.
  */
+@Slf4j
 public class UISchemaProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(UISchemaProcessor.class);
-
   public static <T> Map<String, Object> generate(Class<T> stencilClass) throws IntrospectionException {
     List<String> order = processFieldOrder(stencilClass);
     return ImmutableMap.of("ui:order", order);

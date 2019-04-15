@@ -3,8 +3,7 @@ package software.wings.service.impl.yaml;
 import com.google.inject.Inject;
 
 import groovy.lang.Singleton;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -26,9 +25,8 @@ import java.util.List;
  * Created by anubhaw on 12/3/17.
  */
 @Singleton
+@Slf4j
 public class YamlChangeSetHelper {
-  private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetHelper.class);
-
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;

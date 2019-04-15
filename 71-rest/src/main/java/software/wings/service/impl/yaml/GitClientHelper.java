@@ -19,11 +19,10 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.TransportException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -40,8 +39,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 @Singleton
+@Slf4j
 public class GitClientHelper {
-  private static final Logger logger = LoggerFactory.getLogger(GitClientHelper.class);
   public static final String REPOSITORY = "./repository";
   private static final String GIT_REPO_BASE_DIR = "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${REPO_NAME}";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS = "./repository/gitFileDownloads";

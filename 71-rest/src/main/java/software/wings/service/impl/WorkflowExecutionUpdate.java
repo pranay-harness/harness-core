@@ -19,11 +19,10 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -50,8 +49,8 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Rishi
  */
+@Slf4j
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdate.class);
   private String appId;
   private String workflowExecutionId;
   private boolean needToNotifyPipeline;

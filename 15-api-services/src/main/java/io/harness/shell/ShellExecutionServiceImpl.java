@@ -9,8 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.shell.ShellExecutionResponse.ShellExecutionResponseBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -29,8 +28,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Singleton
+@Slf4j
 public class ShellExecutionServiceImpl implements ShellExecutionService {
-  private static final Logger logger = LoggerFactory.getLogger(ShellExecutionServiceImpl.class);
   private static final String defaultParentWorkingDirectory = "./local-scripts/";
   private static final String ARTIFACT_RESULT_PATH = "ARTIFACT_RESULT_PATH";
   private static final Pattern pattern = Pattern.compile("harness-(.*).sh: line ([0-9]*):");

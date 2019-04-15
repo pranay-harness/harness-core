@@ -8,10 +8,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JenkinsConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
@@ -29,9 +28,8 @@ import java.util.function.Supplier;
 /**
  * Created by rishi on 12/14/16.
  */
+@Slf4j
 public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(JenkinsCollectionTask.class);
-
   @Inject private JenkinsUtil jenkinsUtil;
   @Inject private EncryptionService encryptionService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;

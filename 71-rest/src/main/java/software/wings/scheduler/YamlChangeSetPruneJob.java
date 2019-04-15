@@ -12,6 +12,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -19,8 +20,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -33,9 +32,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+@Slf4j
 public class YamlChangeSetPruneJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetPruneJob.class);
-
   public static final String GROUP = "YAML_CHANGE_SET_PRUNE_GROUP";
   public static final String NAME = "MAINTENANCE";
   public static final String ACCOUNT_ID = "accountId";

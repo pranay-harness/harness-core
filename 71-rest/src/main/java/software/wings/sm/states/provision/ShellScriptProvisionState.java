@@ -21,8 +21,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.Activity;
@@ -56,8 +55,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
-  private static final Logger logger = LoggerFactory.getLogger(ShellScriptProvisionState.class);
   private static final int TIMEOUT_IN_MINUTES = 20;
   private static final String COMMAND_UNIT = "Shell Script Provision";
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;

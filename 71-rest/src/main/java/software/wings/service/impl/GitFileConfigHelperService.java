@@ -7,17 +7,15 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
 
 @Singleton
+@Slf4j
 public class GitFileConfigHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(GitFileConfigHelperService.class);
-
   @Inject private SettingsService settingsService;
 
   public GitFileConfig getGitFileConfigFromYaml(String accountId, String appId, GitFileConfig gitFileConfig) {

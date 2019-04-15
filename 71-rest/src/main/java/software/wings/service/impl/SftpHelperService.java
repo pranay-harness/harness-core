@@ -9,14 +9,13 @@ import com.google.api.client.util.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import lombok.extern.slf4j.Slf4j;
 import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.DisconnectReason;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.transport.TransportException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SftpConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.BuildMetadataKeys;
@@ -33,8 +32,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class SftpHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(SftpHelperService.class);
   private static final String ROOT_DIR_ARTIFACT_PATH = ".";
   @Inject private EncryptionService encryptionService;
 

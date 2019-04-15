@@ -13,12 +13,11 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
@@ -37,8 +36,8 @@ import java.util.Optional;
 import java.util.Random;
 
 @Singleton
+@Slf4j
 public class LogLabelingServiceImpl implements LogLabelingService {
-  private static final Logger logger = LoggerFactory.getLogger(LogLabelingServiceImpl.class);
   private static final int MAX_CASSIFICATION_COUNT = 3;
   private static final int MAX_LOG_RETURN_SIZE = 10;
   private static final int SAMPLE_SIZE = 2;

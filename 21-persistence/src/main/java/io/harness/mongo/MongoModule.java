@@ -16,16 +16,14 @@ import com.mongodb.MongoClientURI;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
+@Slf4j
 public class MongoModule extends AbstractModule {
-  private static final Logger logger = LoggerFactory.getLogger(MongoModule.class);
-
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;

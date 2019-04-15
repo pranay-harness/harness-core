@@ -17,8 +17,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitNotifyEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Event.Type;
@@ -52,9 +51,8 @@ import software.wings.service.intfc.security.SecretManager;
  * @see CollectEvent
  */
 @Singleton
+@Slf4j
 public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectEventListener.class);
-
   @Inject private AppService appService;
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;

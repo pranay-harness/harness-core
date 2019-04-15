@@ -16,9 +16,8 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -40,9 +39,8 @@ import javax.xml.stream.XMLStreamException;
  * Created by srinivas on 3/28/17.
  */
 @Singleton
+@Slf4j
 public class NexusServiceImpl implements NexusService {
-  private static final Logger logger = LoggerFactory.getLogger(NexusServiceImpl.class);
-
   @Inject private NexusThreeServiceImpl nexusThreeService;
   @Inject private NexusTwoServiceImpl nexusTwoService;
   @Inject private TimeLimiter timeLimiter;

@@ -10,8 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
@@ -30,8 +29,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Singleton
+@Slf4j
 public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile> {
-  private static final Logger logger = LoggerFactory.getLogger(ManifestFileYamlHandler.class);
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
   @Inject ApplicationManifestService applicationManifestService;

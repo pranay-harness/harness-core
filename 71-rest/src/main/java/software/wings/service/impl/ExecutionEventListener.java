@@ -16,10 +16,9 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.QueueListener;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -34,9 +33,8 @@ import software.wings.sm.StateMachineExecutor;
 
 import java.time.Duration;
 
+@Slf4j
 public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionEventListener.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private StateMachineExecutor stateMachineExecutor;

@@ -9,14 +9,13 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 
+@Slf4j
 public class ServiceNameMigrationIfEmpty implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceNameMigrationIfEmpty.class);
   public static final String HARNESS_SERVICE = "HARNESS_SERVICE";
 
   @Inject private WingsPersistence wingsPersistence;

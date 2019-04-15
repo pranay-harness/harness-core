@@ -12,8 +12,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
@@ -27,9 +26,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
-  private static final Logger logger = LoggerFactory.getLogger(ContainerCommandUnitExecutorServiceImpl.class);
-
   @Inject private DelegateLogService logService;
   @Inject private Injector injector;
 

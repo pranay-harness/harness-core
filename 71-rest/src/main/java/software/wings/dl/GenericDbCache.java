@@ -9,8 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.persistence.ReadPref;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
 
@@ -20,8 +19,8 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 3/18/16.
  */
 @Singleton
+@Slf4j
 public class GenericDbCache {
-  private static final Logger logger = LoggerFactory.getLogger(GenericDbCache.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   private LoadingCache<String, Object> cache =

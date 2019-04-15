@@ -15,9 +15,8 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.Constants;
@@ -46,9 +45,8 @@ import java.util.Objects;
  * @author Rishi
  */
 @Attributes
+@Slf4j
 public class RepeatState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
-
   @SchemaIgnore private ContextElementType repeatElementType;
   @DefaultValue("")
   @Attributes(required = true, title = "Repeat Element Expression")

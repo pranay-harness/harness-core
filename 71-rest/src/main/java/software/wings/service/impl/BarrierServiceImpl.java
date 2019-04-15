@@ -29,8 +29,7 @@ import io.harness.persistence.HKeyIterator;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BarrierInstance;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -52,8 +51,8 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 @Singleton
+@Slf4j
 public class BarrierServiceImpl implements BarrierService, ForceProctor {
-  private static final Logger logger = LoggerFactory.getLogger(BarrierServiceImpl.class);
   private static final String APP_ID = "appId";
   private static final String LEVEL = "level";
 

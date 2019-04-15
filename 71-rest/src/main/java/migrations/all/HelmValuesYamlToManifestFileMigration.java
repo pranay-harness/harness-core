@@ -5,9 +5,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Environment;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -22,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+@Slf4j
 public class HelmValuesYamlToManifestFileMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(HelmValuesYamlToManifestFileMigration.class);
   private static final String HELM_VALUE_YAML_KEY = "helmValueYaml";
   private static final String HELM_VALUE_YAML_BY_SERVICE_TEMPLATE_ID_KEY = "helmValueYamlByServiceTemplateId";
 

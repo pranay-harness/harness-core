@@ -45,11 +45,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
@@ -85,8 +84,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class TemplateServiceImpl implements TemplateService {
-  private static final Logger logger = LoggerFactory.getLogger(TemplateServiceImpl.class);
   private static final String ACCOUNT = "Account";
   private static final String APPLICATION = "Application";
 

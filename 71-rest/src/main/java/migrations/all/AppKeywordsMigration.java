@@ -9,17 +9,16 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;
 
+@Slf4j
 public class AppKeywordsMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AppKeywordsMigration.class);
   public static final int BATCH_SIZE = 50;
 
   @Inject private WingsPersistence wingsPersistence;

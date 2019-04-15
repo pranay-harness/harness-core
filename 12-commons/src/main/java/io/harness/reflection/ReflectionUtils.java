@@ -1,8 +1,7 @@
 package io.harness.reflection;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -12,8 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Slf4j
 public class ReflectionUtils {
-  private static final Logger logger = LoggerFactory.getLogger(ReflectionUtils.class);
   public static Field getFieldByName(Class<?> clazz, String fieldName) {
     while (clazz.getSuperclass() != null) {
       try {

@@ -17,9 +17,8 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
@@ -42,8 +41,8 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(ShellScriptProvisionTask.class);
   private static final String PROVISIONER_OUTPUT_PATH_KEY = "PROVISIONER_OUTPUT_PATH";
   @Inject private DelegateLogService logService;
   @Inject private ShellExecutorFactory shellExecutorFactory;

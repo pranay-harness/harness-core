@@ -45,6 +45,7 @@ import io.fabric8.kubernetes.client.utils.Utils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
 import me.snowdrop.istio.api.model.v1.networking.VirtualService;
@@ -102,9 +103,8 @@ import javax.net.ssl.X509TrustManager;
  * Created by brett on 2/22/17
  */
 @Singleton
+@Slf4j
 public class KubernetesHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesHelperService.class);
-
   @Inject private EncryptionService encryptionService;
 
   public static void validateNamespace(String namespace) {

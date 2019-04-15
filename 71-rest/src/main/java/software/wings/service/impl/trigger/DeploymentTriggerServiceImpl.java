@@ -12,8 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.Condition.Type;
@@ -28,9 +27,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
-  private static final Logger logger = LoggerFactory.getLogger(DeploymentTriggerServiceImpl.class);
-
   @Inject private Map<String, TriggerProcessor> triggerProcessorMapBinder;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PipelineService pipelineService;

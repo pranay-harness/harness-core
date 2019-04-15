@@ -18,8 +18,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -30,9 +29,8 @@ import java.util.List;
  * No entry in the waitQueue found for the correlationIds:
  */
 @Singleton
+@Slf4j
 public class WaitNotifyEngine {
-  private static final Logger logger = LoggerFactory.getLogger(WaitNotifyEngine.class);
-
   private static final long NO_TIMEOUT = 0L;
 
   @Inject private HPersistence wingsPersistence;

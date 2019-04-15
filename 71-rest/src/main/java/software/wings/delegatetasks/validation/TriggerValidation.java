@@ -8,8 +8,7 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
@@ -21,9 +20,8 @@ import software.wings.service.intfc.yaml.GitClient;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Slf4j
 public class TriggerValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(TriggerValidation.class);
-
   @Inject private transient GitClient gitClient;
   @Inject private transient EncryptionService encryptionService;
 

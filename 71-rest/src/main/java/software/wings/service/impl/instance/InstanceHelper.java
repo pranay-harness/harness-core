@@ -26,9 +26,8 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.Queue;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -92,9 +91,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 09/11/17
  */
 @Singleton
+@Slf4j
 public class InstanceHelper {
-  private static final Logger logger = LoggerFactory.getLogger(InstanceHelper.class);
-
   // This queue is used to asynchronously process all the instance information that the workflow touched upon.
   @Inject private Queue<DeploymentEvent> deploymentEventQueue;
   @Inject private InfrastructureMappingService infraMappingService;

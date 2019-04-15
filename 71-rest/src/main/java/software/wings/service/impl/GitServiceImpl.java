@@ -3,8 +3,7 @@ package software.wings.service.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
@@ -17,9 +16,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class GitServiceImpl implements GitService {
-  private static final Logger logger = LoggerFactory.getLogger(GitServiceImpl.class);
-
   @Inject private GitClient gitClient;
 
   @Override

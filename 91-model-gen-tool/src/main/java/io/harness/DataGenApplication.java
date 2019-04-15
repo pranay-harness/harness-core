@@ -23,11 +23,10 @@ import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CacheModule;
 import software.wings.app.DeployMode;
@@ -56,9 +55,8 @@ import javax.cache.configuration.Configuration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
+@Slf4j
 public class DataGenApplication extends Application<MainConfiguration> {
-  private static final Logger logger = LoggerFactory.getLogger(DataGenApplication.class);
-
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(ManagerMorphiaClasses.dependentClasses)

@@ -10,9 +10,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.DeploymentPreference;
 import software.wings.beans.Preference;
@@ -20,8 +19,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PreferenceService;
 
 @Singleton
+@Slf4j
 public class PreferenceServiceImpl implements PreferenceService {
-  private static final Logger logger = LoggerFactory.getLogger(PreferenceServiceImpl.class);
   public static final String USER_ID_KEY = "userId";
   @Inject private WingsPersistence wingsPersistence;
 

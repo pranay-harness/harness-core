@@ -9,12 +9,11 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStream;
@@ -34,9 +33,8 @@ import java.util.List;
  */
 @Ignore
 @Integration
+@Slf4j
 public class DockerBuildServiceImplTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(DockerBuildServiceImplTest.class);
-
   @Inject private DockerRegistryService dockerRegistryService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ScmSecret scmSecret;

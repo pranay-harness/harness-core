@@ -4,15 +4,14 @@ import io.harness.context.GlobalContext;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import lombok.Builder;
 import lombok.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
 @Value
 @Builder
+@Slf4j
 public class GlobalContextTaskWrapper implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(GlobalContextTaskWrapper.class);
   private Runnable task;
   private GlobalContext context;
 

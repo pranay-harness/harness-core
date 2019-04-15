@@ -9,8 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -25,9 +24,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @Singleton
+@Slf4j
 public class SmbBuildServiceImpl implements SmbBuildService {
-  private static final Logger logger = LoggerFactory.getLogger(SmbBuildServiceImpl.class);
-
   @Inject private SmbService smbService;
   @Inject private SmbHelperService smbHelperService;
 

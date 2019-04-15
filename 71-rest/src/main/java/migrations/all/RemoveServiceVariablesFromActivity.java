@@ -7,16 +7,14 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
 import software.wings.dl.WingsPersistence;
 
+@Slf4j
 public class RemoveServiceVariablesFromActivity implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(RemoveServiceVariablesFromActivity.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

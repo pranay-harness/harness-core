@@ -23,16 +23,14 @@ import io.harness.lock.AcquiredDistributedLock.CloseAction;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class PersistentLocker implements Locker, HealthMonitor {
-  private static final Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
-
   public static final Store LOCKS_STORE = Store.builder().name("locks").build();
 
   @Inject private DistributedLockSvc distributedLockSvc;

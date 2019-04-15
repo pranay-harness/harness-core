@@ -13,9 +13,8 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -31,9 +30,8 @@ import java.util.List;
  * Migration script to add inframapping name to instance data
  * @author rktummala on 04/03/19
  */
+@Slf4j
 public class AddInfraMappingNameToInstanceData implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddInfraMappingNameToInstanceData.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private AppService appService;

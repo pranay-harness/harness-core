@@ -13,12 +13,11 @@ import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -30,9 +29,8 @@ import software.wings.service.intfc.EntityVersionService;
  * Created by rishi on 10/18/16.
  */
 @Singleton
+@Slf4j
 public class EntityVersionServiceImpl implements EntityVersionService {
-  private static final Logger logger = LoggerFactory.getLogger(EntityVersionServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

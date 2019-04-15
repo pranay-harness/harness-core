@@ -8,6 +8,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -15,8 +16,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.service.intfc.servicenow.ServiceNowService;
@@ -24,9 +23,8 @@ import software.wings.service.intfc.servicenow.ServiceNowService;
 import java.util.Calendar;
 import java.util.Date;
 
+@Slf4j
 public class ServiceNowApprovalJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceNowApprovalJob.class);
-
   public static final String GROUP = "SERVICE_NOW_POLLING_CRON_JOB";
   private static final int POLL_INTERVAL_SECONDS = 60;
   private static final int DELAY_START_SECONDS = 30;

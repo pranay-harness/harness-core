@@ -7,9 +7,8 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.SeedDataMigration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.dl.WingsPersistence;
@@ -18,8 +17,8 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 /**
  * Created by anubhaw on 8/20/18.
  */
+@Slf4j
 public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigration {
-  private static final Logger logger = LoggerFactory.getLogger(TemplateGalleryDefaultTemplatesMigration.class);
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private WingsPersistence wingsPersistence;
 

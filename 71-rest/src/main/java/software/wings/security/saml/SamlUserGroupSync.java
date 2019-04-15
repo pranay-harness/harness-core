@@ -2,8 +2,7 @@ package software.wings.security.saml;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
@@ -16,9 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 public class SamlUserGroupSync {
-  private static final Logger logger = LoggerFactory.getLogger(SamlUserGroupSync.class);
-
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
 

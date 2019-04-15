@@ -21,8 +21,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.KryoUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.HostConnectionAttributes;
@@ -51,9 +50,8 @@ import java.util.stream.Collectors;
  * @author Rishi
  */
 @Singleton
+@Slf4j
 public class StateMachineExecutionSimulator {
-  private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutionSimulator.class);
-
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private ServiceInstanceService serviceInstanceService;

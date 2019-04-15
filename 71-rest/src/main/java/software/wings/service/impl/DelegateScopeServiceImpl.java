@@ -17,10 +17,9 @@ import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.dl.WingsPersistence;
@@ -35,8 +34,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class DelegateScopeServiceImpl implements DelegateScopeService {
-  private static final Logger logger = LoggerFactory.getLogger(DelegateScopeServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateService delegateService;
 

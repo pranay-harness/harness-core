@@ -3,16 +3,14 @@ package software.wings.integration;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.rules.Integration;
 
 @Integration
 @Ignore
+@Slf4j
 public class KubernetesCertificateIntegrationTest {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesCertificateIntegrationTest.class);
-
   public static void main(String[] args) {
     String caCertData = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMxekNDQWIrZ0F3SUJBZ0lRUmpMcStZa3hP\n"
         + "WHhmYVB5TlBWK0MwakFOQmdrcWhraUc5dzBCQVFzRkFEQVYKTVJNd0VRWURWUVFERXdwcmRXSmxj\n"

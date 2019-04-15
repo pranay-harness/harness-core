@@ -21,8 +21,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -57,8 +56,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 11/2/17
  */
 @Singleton
+@Slf4j
 public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
-  private static final Logger logger = LoggerFactory.getLogger(PipelineStageYamlHandler.class);
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
   @Inject EnvironmentService environmentService;

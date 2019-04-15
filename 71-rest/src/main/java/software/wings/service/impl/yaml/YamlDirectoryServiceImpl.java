@@ -46,9 +46,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -144,9 +143,8 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class YamlDirectoryServiceImpl implements YamlDirectoryService {
-  private static final Logger logger = LoggerFactory.getLogger(YamlDirectoryServiceImpl.class);
-
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;

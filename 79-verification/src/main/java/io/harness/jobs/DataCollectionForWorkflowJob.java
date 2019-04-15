@@ -4,19 +4,17 @@ import com.google.inject.Inject;
 
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.ContinuousVerificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.service.impl.analysis.AnalysisContext;
 
 /**
  * Created by Pranjal on 02/06/2019
  */
+@Slf4j
 public class DataCollectionForWorkflowJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(DataCollectionForWorkflowJob.class);
-
   @Inject private ContinuousVerificationService continuousVerificationService;
 
   @Override

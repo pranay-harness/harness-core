@@ -5,16 +5,14 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 
+@Slf4j
 public class AddOrchestrationToWorkflows implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddOrchestrationToWorkflows.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 

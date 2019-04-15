@@ -17,14 +17,13 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -63,9 +62,8 @@ import java.util.stream.Collectors;
  *
  * @author Swapnil
  */
+@Slf4j
 public class LdapGroupSyncJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(LdapGroupSyncJob.class);
-
   private static final String SSO_PROVIDER_ID_KEY = "ssoId";
 
   public static final String GROUP = "LDAP_GROUP_SYNC_CRON_JOB";

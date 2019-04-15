@@ -6,12 +6,10 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.sumo.SumoLogicSetupTestNodedata;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -34,8 +32,8 @@ import javax.ws.rs.QueryParam;
 @Path("/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL)
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
+@Slf4j
 public class SumoLogicResource implements LogAnalysisResource {
-  private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
   private static final String DEFAULT_DURATION = "10"; // in minutes
 
   @Inject private SumoLogicAnalysisService analysisService;

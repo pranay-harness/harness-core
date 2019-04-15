@@ -6,11 +6,10 @@ import static java.util.Arrays.asList;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,9 +17,8 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 public class OwnerRule extends RepeatRule {
-  private static final Logger logger = LoggerFactory.getLogger(OwnerRule.class);
-
   private static List<String> active = asList("aaditi.joag@harness.io", "adwait.bhandare@harness.io",
       "anshul@harness.io", "anubhaw@harness.io", "george@harness.io", "jatin@harness.io", "mark.lu@harness.io",
       "raghu@harness.io", "rathnakara.malatesha@harness.io", "pooja@harness.io", "pranjal@harness.io",

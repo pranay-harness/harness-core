@@ -19,10 +19,9 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -43,8 +42,8 @@ import java.util.stream.Stream;
  * Created by anubhaw on 7/14/16.
  */
 @JsonTypeName("SCP")
+@Slf4j
 public class ScpCommandUnit extends SshCommandUnit {
-  private static final Logger logger = LoggerFactory.getLogger(ScpCommandUnit.class);
   @Inject @Transient private transient DelegateLogService delegateLogService;
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)

@@ -76,13 +76,12 @@ import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
@@ -121,9 +120,8 @@ import java.util.stream.Stream;
  * Created by brett on 10/26/17
  */
 @Singleton
+@Slf4j
 public class WatcherServiceImpl implements WatcherService {
-  private static final Logger logger = LoggerFactory.getLogger(WatcherServiceImpl.class);
-
   private static final long WATCHER_STARTUP_GRACE = TimeUnit.SECONDS.toMillis(30);
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);

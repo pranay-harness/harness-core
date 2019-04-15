@@ -26,11 +26,10 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
@@ -60,9 +59,8 @@ import java.util.stream.Collectors;
  * @author marklu on 11/16/18
  */
 @Singleton
+@Slf4j
 public class GoogleCloudFileServiceImpl implements FileService {
-  private static final Logger logger = LoggerFactory.getLogger(GoogleCloudFileServiceImpl.class);
-
   private static final String METADATA_FILE_NAME = "fileName";
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
 

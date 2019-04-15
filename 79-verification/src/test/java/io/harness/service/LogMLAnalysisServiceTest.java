@@ -25,14 +25,13 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LogAnalysisService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
@@ -93,9 +92,8 @@ import java.util.UUID;
 /**
  * Created by rsingh on 9/27/17.
  */
+@Slf4j
 public class LogMLAnalysisServiceTest extends VerificationBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisServiceTest.class);
-
   private String accountId;
   private String appId;
   private String stateExecutionId;

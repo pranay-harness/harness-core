@@ -16,8 +16,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
@@ -34,9 +33,8 @@ import java.util.Map;
  * Created by anubhaw on 12/29/16.
  */
 @Singleton
+@Slf4j
 public class AwsClusterServiceImpl implements AwsClusterService {
-  private static final Logger logger = LoggerFactory.getLogger(AwsClusterServiceImpl.class);
-
   @Inject private EcsContainerService ecsContainerService;
 
   @Override
