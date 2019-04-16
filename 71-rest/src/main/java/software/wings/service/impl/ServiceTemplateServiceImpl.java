@@ -100,46 +100,84 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     setArtifactTypeAndInfraMappings(serviceTemplates);
 
     if (withDetails) {
-      serviceTemplates.forEach(serviceTemplate -> {
-        try {
-          populateServiceAndOverrideConfigFiles(serviceTemplate);
-        } catch (Exception e) {
-          logger.error(
-              "Failed to populate the service and override config files for service template {} ", serviceTemplate, e);
-        }
-        try {
-          populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
-        } catch (Exception e) {
-          logger.error("Failed to populate the service and service variable overrides for service template {} ",
-              serviceTemplate, e);
-        }
-        try {
-          populateServiceAndOverrideConfigMapYamls(serviceTemplate);
-        } catch (Exception e) {
-          logger.error("Failed to populate the service and override config map yamls for service template {} ",
-              serviceTemplate, e);
-        }
-        try {
-          populateServiceAndOverrideHelmValueYamls(serviceTemplate);
-        } catch (Exception e) {
-          logger.error("Failed to populate the service and override helm value yamls for service template {} ",
-              serviceTemplate, e);
-        }
-        try {
-          populateServiceAndOverrideValuesAppManifest(serviceTemplate);
-        } catch (Exception e) {
-          logger.error("Failed to populate the service and override application manifest for service template {} ",
-              serviceTemplate, e);
-        }
-        try {
-          populateServiceAndOverrideValuesManifestFile(serviceTemplate);
-        } catch (Exception e) {
-          logger.error(
-              "Failed to populate the service and override manifest file for service template {} ", serviceTemplate, e);
-        }
-      });
+      long startTime = System.currentTimeMillis();
+      setConfigs(encryptedFieldMode, serviceTemplates);
+      logger.info("Total time taken to load all the configs {}", System.currentTimeMillis() - startTime);
     }
 
+    return pageResponse;
+  }
+
+  private void setConfigs(EncryptedFieldMode encryptedFieldMode, List<ServiceTemplate> serviceTemplates) {
+    serviceTemplates.forEach(serviceTemplate -> {
+      long startTime;
+      try {
+        startTime = System.currentTimeMillis();
+        populateServiceAndOverrideConfigFiles(serviceTemplate);
+        logger.info("Total time taken to load ServiceOverrideConfigFiles for one ServiceTemplate Id {} is {},",
+            serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
+      } catch (Exception e) {
+        logger.error(
+            "Failed to populate the service and override config files for service template {} ", serviceTemplate, e);
+      }
+      try {
+        startTime = System.currentTimeMillis();
+        populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
+        logger.info("Total time taken to load ServiceAndOverrideServiceVariables for one ServiceTemplate Id {} is {},",
+            serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
+
+      } catch (Exception e) {
+        logger.error("Failed to populate the service and service variable overrides for service template {} ",
+            serviceTemplate, e);
+      }
+      try {
+        startTime = System.currentTimeMillis();
+        populateServiceAndOverrideConfigMapYamls(serviceTemplate);
+        logger.info("Total time taken to load ServiceAndOverrideConfigMapYaml for one ServiceTemplate Id {} is {},",
+            serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
+      } catch (Exception e) {
+        logger.error("Failed to populate the service and override config map yamls for service template {} ",
+            serviceTemplate, e);
+      }
+      try {
+        startTime = System.currentTimeMillis();
+        populateServiceAndOverrideHelmValueYamls(serviceTemplate);
+        logger.info("Total time taken to load ServiceAndOverrideHelmValueYamls for one ServiceTemplate Id {} is {},",
+            serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
+      } catch (Exception e) {
+        logger.error("Failed to populate the service and override helm value yamls for service template {} ",
+            serviceTemplate, e);
+      }
+      try {
+        startTime = System.currentTimeMillis();
+        populateServiceAndOverrideValuesAppManifest(serviceTemplate);
+        logger.info("Total time taken to load ServiceAndOverrideValuesAppManifest for one ServiceTemplate Id {} is {},",
+            serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
+      } catch (Exception e) {
+        logger.error("Failed to populate the service and override application manifest for service template {} ",
+            serviceTemplate, e);
+      }
+      try {
+        startTime = System.currentTimeMillis();
+        populateServiceAndOverrideValuesManifestFile(serviceTemplate);
+        logger.info("Total time taken to load ServiceAndOverrideValuesManifestFil for one ServiceTemplate Id {} is {},",
+            serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
+      } catch (Exception e) {
+        logger.error(
+            "Failed to populate the service and override manifest file for service template {} ", serviceTemplate, e);
+      }
+    });
+  }
+
+  @Override
+  public PageResponse<ServiceTemplate> listWithoutServiceAndInfraMappingSummary(
+      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, EncryptedFieldMode encryptedFieldMode) {
+    PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
+    List<ServiceTemplate> serviceTemplates = pageResponse.getResponse();
+    //    setArtifactTypeAndInfraMappings(serviceTemplates, false);
+    if (withDetails) {
+      setConfigs(encryptedFieldMode, serviceTemplates);
+    }
     return pageResponse;
   }
 
@@ -334,6 +372,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private void populateServiceAndOverrideConfigMapYamls(ServiceTemplate template) {
     Environment env = environmentService.get(template.getAppId(), template.getEnvId(), false);
+    if (env == null) {
+      return;
+    }
     Map<String, String> envConfigMaps = env.getConfigMapYamlByServiceTemplateId();
     if (isNotEmpty(envConfigMaps) && isNotBlank(envConfigMaps.get(template.getUuid()))) {
       template.setConfigMapYamlOverride(envConfigMaps.get(template.getUuid()));
@@ -342,6 +383,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private void populateServiceAndOverrideHelmValueYamls(ServiceTemplate template) {
     Environment env = environmentService.get(template.getAppId(), template.getEnvId(), false);
+    if (env == null) {
+      return;
+    }
     Map<String, String> envHelmValues = env.getHelmValueYamlByServiceTemplateId();
     if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(template.getUuid()))) {
       template.setHelmValueYamlOverride(envHelmValues.get(template.getUuid()));

@@ -34,13 +34,21 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @Entity(value = "serviceVariables", noClassnameStored = true)
-@Indexes(@Index(fields =
-    {
-      @Field("entityId")
-      , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
-          @Field("name")
-    },
-    options = @IndexOptions(unique = true, name = "serviceVariableUniqueIdx")))
+@Indexes({
+  @Index(fields =
+      {
+        @Field("entityId")
+        , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
+            @Field("name")
+      },
+      options = @IndexOptions(unique = true, name = "serviceVariableUniqueIdx"))
+  ,
+      @Index(fields = { @Field("appId")
+                        , @Field("entityId") }, options = @IndexOptions(name = "app_entityId")),
+      @Index(fields = {
+        @Field("appId"), @Field("envId"), @Field("templateId")
+      }, options = @IndexOptions(name = "app_env_templateId"))
+})
 @HarnessExportableEntity
 @Data
 @Builder

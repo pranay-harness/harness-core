@@ -33,6 +33,9 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
   PageResponse<ServiceTemplate> list(
       PageRequest<ServiceTemplate> pageRequest, boolean withDetails, EncryptedFieldMode encryptedFieldMode);
 
+  PageResponse<ServiceTemplate> listWithoutServiceAndInfraMappingSummary(
+      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, EncryptedFieldMode encryptedFieldMode);
+
   /**
    * Save.
    *

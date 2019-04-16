@@ -62,7 +62,8 @@ public class ServiceTemplateResource {
       @QueryParam("details") @DefaultValue("true") boolean details) {
     pageRequest.addFilter("appId", EQ, appId);
     pageRequest.addFilter("envId", EQ, envId);
-    return new RestResponse<>(serviceTemplateService.list(pageRequest, details, MASKED));
+    return new RestResponse<>(
+        serviceTemplateService.listWithoutServiceAndInfraMappingSummary(pageRequest, details, MASKED));
   }
 
   /**
