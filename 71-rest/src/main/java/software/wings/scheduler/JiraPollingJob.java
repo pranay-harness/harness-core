@@ -45,7 +45,7 @@ public class JiraPollingJob implements Job {
                         .usingJobData("rejectionValue", jiraApprovalParams.getRejectionValue())
                         .usingJobData(WORKFLOW_EXECUTION_ID, workflowExecutionId)
                         .build();
-
+    logger.info("Issue Id in the JiraPollingJob = {}", jiraApprovalParams.getIssueId());
     scheduleJob(jobScheduler, approvalExecutionId, job, GROUP);
   }
 
@@ -64,7 +64,14 @@ public class JiraPollingJob implements Job {
 
     boolean isTerminalState = false;
 
-    logger.info("Polling Approval Status for approvalId {}", approvalId);
+    if (rejectionField != null && rejectionValue != null) {
+      logger.info(
+          "Polling Approval Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} , rejectionField {}, RejectionValue {}",
+          approvalId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
+    } else {
+      logger.info("Polling Approval Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} ",
+          approvalId, issueId, approvalField, approvalValue);
+    }
     try {
       ExecutionStatus approval = jiraHelperService.getApprovalStatus(
           connectorId, accountId, appId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);

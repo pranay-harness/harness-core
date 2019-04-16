@@ -48,6 +48,7 @@ import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
 import software.wings.api.ShellScriptApprovalExecutionData;
@@ -101,6 +102,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class ApprovalState extends State {
   @Getter @Setter private String groupName;
   @Getter @Setter private List<String> userGroups = new ArrayList<>();
@@ -282,6 +284,7 @@ public class ApprovalState extends State {
     executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
 
     // Create a cron job which polls JIRA for approval status
+    logger.info("IssueId = {} while creating Jira polling Job", jiraApprovalParams.getIssueId());
     JiraPollingJob.doPollingJob(serviceJobScheduler, jiraApprovalParams, executionData.getApprovalId(),
         app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId());
 
