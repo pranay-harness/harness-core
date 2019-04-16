@@ -452,18 +452,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return results;
     }
 
-    Query<WorkflowExecution> workflowExecutionQuery = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                          .filter("appId", service.getAppId())
-                                                          .field("startTs")
-                                                          .greaterThanOrEq(startTime)
-                                                          .field("startTs")
-                                                          .lessThan(endTime)
-                                                          .project("serviceExecutionSummaries", false)
-                                                          .project("keywords", false)
-                                                          .project("breakdown", false)
-                                                          .project("statusInstanceBreakdownMap", false)
-                                                          .project(WorkflowExecutionKeys.stateMachine, false)
-                                                          .project("executionArgs", false);
+    Query<WorkflowExecution> workflowExecutionQuery =
+        wingsPersistence.createQuery(WorkflowExecution.class)
+            .filter(WorkflowExecutionKeys.appId, service.getAppId())
+            .field(WorkflowExecutionKeys.startTs)
+            .greaterThanOrEq(startTime)
+            .field(WorkflowExecutionKeys.startTs)
+            .lessThan(endTime)
+            .project(WorkflowExecutionKeys.serviceExecutionSummaries, false)
+            .project(WorkflowExecutionKeys.keywords, false)
+            .project(WorkflowExecutionKeys.breakdown, false)
+            .project(WorkflowExecutionKeys.statusInstanceBreakdownMap, false)
+            .project(WorkflowExecutionKeys.stateMachine, false)
+            .project(WorkflowExecutionKeys.executionArgs, false);
 
     try (HIterator<WorkflowExecution> records = new HIterator<>(workflowExecutionQuery.fetch())) {
       while (records.hasNext()) {
