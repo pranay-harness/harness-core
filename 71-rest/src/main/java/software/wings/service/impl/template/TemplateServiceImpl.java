@@ -412,6 +412,12 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
+  public Object constructEntityFromTemplate(Template template, EntityType entityType) {
+    AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
+    return abstractTemplateProcessor.constructEntityFromTemplate(template, entityType);
+  }
+
+  @Override
   public String fetchTemplateIdFromUri(String accountId, String templateUri) {
     return fetchTemplateIdFromUri(accountId, GLOBAL_APP_ID, templateUri);
   }
@@ -599,8 +605,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
   }
 
-  public List<String> fetchTemplateProperties(@NotEmpty String templateId, String version) {
-    Template template = get(templateId, version);
+  public List<String> fetchTemplateProperties(Template template) {
     AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
     return abstractTemplateProcessor.fetchTemplateProperties();
   }

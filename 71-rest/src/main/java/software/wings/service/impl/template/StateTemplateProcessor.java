@@ -67,6 +67,16 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
                 }
               }
             }
+            // Update Rollback Phase Steps
+            if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
+              for (WorkflowPhase workflowPhase : orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
+                if (isNotEmpty(workflowPhase.getPhaseSteps())) {
+                  for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+                    updateNeeded = updateStep(template, updateNeeded, phaseStep);
+                  }
+                }
+              }
+            }
             if (updateNeeded) {
               workflowService.updateWorkflow(workflow);
             }
@@ -84,11 +94,6 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
         if (template.getUuid().equals(step.getTemplateUuid())
             && (step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))) {
           GraphNode templateStep = constructEntityFromTemplate(template, EntityType.WORKFLOW);
-          Map<String, Object> stepProperties = step.getProperties();
-          if (templateStep != null) {
-            stepProperties.putAll(templateStep.getProperties());
-          }
-          step.setProperties(stepProperties);
           step.setTemplateVariables(
               templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));
           updateNeeded = true;

@@ -215,7 +215,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     }
 
     return CommandYaml.builder()
-        .commandUnits(commandUnitYamlList)
+        .commandUnits(templateUri != null ? null : commandUnitYamlList)
         .commandUnitType(commandUnitType)
         .targetEnvs(envNameList)
         .targetToAllEnv(serviceCommand.isTargetToAllEnv())

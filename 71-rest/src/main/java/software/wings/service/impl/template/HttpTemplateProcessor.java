@@ -53,6 +53,6 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
   }
 
   public List<String> fetchTemplateProperties() {
-    return asList(URL, METHOD, HEADER, BODY, ASSERTION, SOCKET_TIMEOUT_MILLIS);
+    return asList(URL, METHOD, HEADER, BODY, ASSERTION);
   }
 }

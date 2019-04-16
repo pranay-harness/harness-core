@@ -51,6 +51,8 @@ public interface TemplateService extends OwnedByAccount {
 
   Object constructEntityFromTemplate(@NotEmpty String templateId, String version, EntityType entityType);
 
+  Object constructEntityFromTemplate(Template template, EntityType entityType);
+
   String fetchTemplateIdFromUri(@NotEmpty String accountId, @NotEmpty String templateUri);
 
   String fetchTemplateIdFromUri(@NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String templateUri);
@@ -67,5 +69,5 @@ public interface TemplateService extends OwnedByAccount {
 
   void loadDefaultTemplates(List<String> templateFiles, String accountId, String accountName);
 
-  List<String> fetchTemplateProperties(@NotEmpty String templateId, String version);
+  List<String> fetchTemplateProperties(Template template);
 }
