@@ -7,8 +7,8 @@ import com.google.inject.Module;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.OrchestrationModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
@@ -82,7 +82,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
     modules.add(new VersionModule());
     modules.add(new TimeModule());
-    modules.add(new MongoModule(datastore, datastore, distributedLockSvc));
+    modules.add(new TestMongoModule(datastore, datastore, distributedLockSvc));
     modules.addAll(new OrchestrationModule().cumulativeDependencies());
     return modules;
   }

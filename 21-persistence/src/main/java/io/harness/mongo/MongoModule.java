@@ -90,21 +90,6 @@ public class MongoModule extends AbstractModule {
     ensureIndex(primaryDatastore, morphia);
   }
 
-  /**
-   * Instantiates a new database module.
-   *
-   * @param primaryDatastore   the primary datastore
-   * @param secondaryDatastore the secondary datastore
-   * @param distributedLockSvc the distributed lock svc
-   */
-  public MongoModule(
-      AdvancedDatastore primaryDatastore, AdvancedDatastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
-    this.primaryDatastore = primaryDatastore;
-    this.secondaryDatastore = secondaryDatastore;
-
-    this.distributedLockSvc = distributedLockSvc;
-  }
-
   /* (non-Javadoc)
    * @see com.google.inject.AbstractModule#configure()
    */
@@ -120,14 +105,5 @@ public class MongoModule extends AbstractModule {
     // TODO: this should be enabled when all wingsPersistence functionality is promoted to MongoPersistence and the
     //       class is removed. Till then we are binding the HPersistence to the wingsPersistence instance.
     // bind(HPersistence.class).to(MongoPersistence.class);
-  }
-
-  /**
-   * Gets primary datastore.
-   *
-   * @return the primary datastore
-   */
-  public AdvancedDatastore getPrimaryDatastore() {
-    return primaryDatastore;
   }
 }
