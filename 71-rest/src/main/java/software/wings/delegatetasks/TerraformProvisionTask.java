@@ -175,6 +175,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
 
+      boolean entityIdTfVarFileCreated = false;
       if (isNotEmpty(parameters.getVariables()) || isNotEmpty(parameters.getEncryptedVariables())) {
         try (BufferedWriter writer =
                  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tfVariablesFile), "UTF-8"))) {
@@ -191,6 +192,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             }
           }
         }
+        entityIdTfVarFileCreated = true;
       } else {
         FileUtils.deleteQuietly(tfVariablesFile);
       }
@@ -217,7 +219,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       String targetArgs = getTargetArgs(parameters.getTargets());
       String tfVarFiles = getAllTfVarFilesArgument(
           System.getProperty(USER_DIR_KEY), gitClientHelper.getRepoDirectory(gitConfig), parameters.getTfVarFiles());
-      tfVarFiles = format("%s -var-file=\"%s\"", tfVarFiles, tfVariablesFile.toString());
+      if (entityIdTfVarFileCreated) {
+        tfVarFiles = format("%s -var-file=\"%s\"", tfVarFiles, tfVariablesFile.toString());
+      }
 
       int code;
       ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters);
