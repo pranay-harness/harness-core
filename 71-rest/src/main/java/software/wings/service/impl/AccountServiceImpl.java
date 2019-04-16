@@ -8,7 +8,6 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
@@ -40,6 +39,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import lombok.extern.slf4j.Slf4j;
@@ -453,7 +453,7 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
-    decryptLicenseInfo(singletonList(updatedAccount));
+    licenseService.decryptLicenseInfo(updatedAccount, false);
     return updatedAccount;
   }
 
@@ -466,6 +466,24 @@ public class AccountServiceImpl implements AccountService {
   public List<Account> list(PageRequest<Account> pageRequest) {
     List<Account> accountList = wingsPersistence.query(Account.class, pageRequest, excludeAuthority).getResponse();
     decryptLicenseInfo(accountList);
+    return accountList;
+  }
+
+  @Override
+  public List<Account> listAccounts(Set<String> excludedAccountIds) {
+    Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
+    if (isNotEmpty(excludedAccountIds)) {
+      query.field("_id").notIn(excludedAccountIds);
+    }
+
+    List<Account> accountList = new ArrayList<>();
+    try (HIterator<Account> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        Account account = iterator.next();
+        licenseService.decryptLicenseInfo(account, false);
+        accountList.add(account);
+      }
+    }
     return accountList;
   }
 

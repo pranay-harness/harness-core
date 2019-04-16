@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -227,13 +228,14 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
     List<Account> accounts = Arrays.asList(account1, account2);
 
     // Scenario 1
-    when(accountService.list(any())).thenReturn(accounts);
+    when(accountService.listAccounts(anySet())).thenReturn(accounts);
     List<Account> result = harnessUserGroupService.listAllowedSupportAccountsForUser(memberId1, Sets.newHashSet());
     assertNotNull(result);
     assertThat(result).size().isEqualTo(2);
     assertThat(result).containsExactlyInAnyOrder(accounts.toArray(new Account[0]));
 
     // Scenario 2
+    when(accountService.listAccounts(anySet())).thenReturn(Lists.newArrayList(account2));
     when(accountService.list(any())).thenReturn(Lists.newArrayList(account2));
     result = harnessUserGroupService.listAllowedSupportAccountsForUser(memberId2, Sets.newHashSet());
     assertNotNull(result);

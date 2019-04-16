@@ -62,6 +62,7 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,6 +237,7 @@ public class AccountServiceTest extends WingsBaseTest {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
     assertThat(accountService.listAllAccounts()).isNotEmpty();
+    assertThat(accountService.listAccounts(Collections.emptySet())).isNotEmpty();
     assertThat(accountService.listAllAccounts().get(0)).isNotNull();
     assertThat(accountService.listAllAccountWithDefaultsWithoutLicenseInfo()).isNotEmpty();
     assertThat(accountService.listAllAccountWithDefaultsWithoutLicenseInfo().get(0)).isNotNull();
