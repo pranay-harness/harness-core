@@ -16,6 +16,7 @@ import software.wings.service.impl.analysis.CVEnabledService;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -58,6 +59,8 @@ public interface AccountService {
    * @return the list of System Catalogs
    */
   List<Account> list(@NotNull PageRequest<Account> request);
+
+  List<Account> listAccounts(Set<String> excludedAccountIds);
 
   DelegateConfiguration getDelegateConfiguration(String accountId);
 

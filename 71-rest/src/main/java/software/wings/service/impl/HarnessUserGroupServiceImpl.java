@@ -78,10 +78,9 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
       // If any of the groups have all accounts selected, we just return all the accounts except the excluded ones
       if (harnessUserGroup.isApplyToAllAccounts()) {
         if (isNotEmpty(excludeAccountIds)) {
-          return accountService.list(
-              aPageRequest().addFilter("_id", Operator.NOT_IN, excludeAccountIds.toArray()).build());
+          return accountService.listAccounts(excludeAccountIds);
         } else {
-          return accountService.list(aPageRequest().build());
+          return accountService.listAccounts(Collections.emptySet());
         }
       } else {
         Set<String> accountIdsFromUserGroup = harnessUserGroup.getAccountIds();
