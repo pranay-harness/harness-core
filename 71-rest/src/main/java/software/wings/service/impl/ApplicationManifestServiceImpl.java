@@ -32,6 +32,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -409,6 +410,61 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
+  private void validateHelmChartRepoAppManifest(ApplicationManifest applicationManifest) {
+    if (applicationManifest.getGitFileConfig() != null) {
+      throw new InvalidRequestException(
+          "gitFileConfig cannot be used with HelmChartRepo. Use helmChartConfig instead.", USER);
+    }
+
+    HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
+
+    notNullCheck("helmChartConfig has to be specified for HelmChartRepo.", helmChartConfig, USER);
+
+    if (isBlank(helmChartConfig.getConnectorId())) {
+      throw new InvalidRequestException("Helm repository cannot be empty.", USER);
+    }
+
+    if (isBlank(helmChartConfig.getChartName())) {
+      throw new InvalidRequestException("Chart name cannot be empty.", USER);
+    }
+
+    if (isBlank(helmChartConfig.getChartVersion())) {
+      throw new InvalidRequestException("Chart version cannot be empty.", USER);
+    }
+  }
+
+  private void validateLocalAppManifest(ApplicationManifest applicationManifest) {
+    if (applicationManifest.getGitFileConfig() != null) {
+      throw new InvalidRequestException("gitFileConfig cannot be used for Local storeType.", USER);
+    }
+
+    if (applicationManifest.getHelmChartConfig() != null) {
+      throw new InvalidRequestException("helmChartConfig cannot be used for Local storeType.", USER);
+    }
+  }
+
+  private void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
+    if (applicationManifest.getHelmChartConfig() != null) {
+      throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
+    }
+
+    GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+
+    notNullCheck("gitFileConfig has to be specified for Remote", gitFileConfig, USER);
+
+    if (isBlank(gitFileConfig.getConnectorId())) {
+      throw new InvalidRequestException("Connector id cannot be empty. ", USER);
+    }
+
+    if (gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getBranch())) {
+      throw new InvalidRequestException("Branch cannot be empty if useBranch is selected.", USER);
+    }
+
+    if (!gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getCommitId())) {
+      throw new InvalidRequestException("CommitId cannot be empty if useBranch is not selected.", USER);
+    }
+  }
+
   private void validateApplicationManifest(ApplicationManifest applicationManifest) {
     if (isBlank(applicationManifest.getServiceId()) && isBlank(applicationManifest.getEnvId())) {
       throw new InvalidRequestException("Both envId and serviceId cannot be empty for application manifest", USER);
@@ -416,29 +472,22 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     validateAppManifestForEnvironment(applicationManifest);
 
-    GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+    switch (applicationManifest.getStoreType()) {
+      case Remote:
+      case HelmSourceRepo:
+        validateRemoteAppManifest(applicationManifest);
+        break;
 
-    if (StoreType.Remote.equals(applicationManifest.getStoreType())
-        || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
-      notNullCheck(
-          "Git file config cannot be null for store type " + applicationManifest.getStoreType(), gitFileConfig, USER);
+      case Local:
+        validateLocalAppManifest(applicationManifest);
+        break;
 
-      if (isBlank(gitFileConfig.getConnectorId())) {
-        throw new InvalidRequestException("Connector id cannot be empty", USER);
-      }
+      case HelmChartRepo:
+        validateHelmChartRepoAppManifest(applicationManifest);
+        break;
 
-      if (gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getBranch())) {
-        throw new InvalidRequestException("Branch cannot be empty if useBranch is selected", USER);
-      }
-
-      if (!gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getCommitId())) {
-        throw new InvalidRequestException("CommitId cannot be empty if useBranch is not selected", USER);
-      }
-    } else if (StoreType.Local.equals(applicationManifest.getStoreType())) {
-      if (gitFileConfig != null) {
-        throw new InvalidRequestException(
-            "Git file config should be null for store type " + applicationManifest.getStoreType(), USER);
-      }
+      default:
+        unhandled(applicationManifest.getStoreType());
     }
   }
 
