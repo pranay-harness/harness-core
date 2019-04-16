@@ -164,9 +164,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (isNotEmpty(host)) {
       query = query.filter("host", host);
     }
-    wingsPersistence.delete(query);
-    logger.info("Deleted clustered data for cvConfigId: {}, minute {}, fromLevel {}, toLevel {}", cvConfigId,
-        logCollectionMinute, fromLevel, toLevel);
+    boolean deleted = wingsPersistence.delete(query);
+    logger.info("Deleted clustered data for cvConfigId: {}, minute {}, fromLevel {}, toLevel {}, host {}, deleted {}",
+        cvConfigId, logCollectionMinute, fromLevel, toLevel, host, deleted);
     try {
       query = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                   .filter("cvConfigId", cvConfigId)
@@ -185,7 +185,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           wingsPersistence.createUpdateOperations(LogDataRecord.class)
               .set("clusterLevel", ClusterLevel.getHeartBeatLevel(toLevel)));
       if (updatedResults.getUpdatedCount() == 0 && host.equals(DUMMY_HOST_NAME)) {
-        logger.error("did not update heartbeat from {} to {}  for min {}", fromLevel, toLevel, logCollectionMinute);
+        logger.error("did not update heartbeat from {} to {}  for min {} host {}", fromLevel, toLevel,
+            logCollectionMinute, host);
       }
     } catch (DuplicateKeyException e) {
       logger.error("for {} for hosts {} for min {} level is already updated to {}", cvConfigId, host,
@@ -313,8 +314,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           LogDataRecord.generateDataRecords(logsCVConfiguration.getStateType(), appId, cvConfigId, null, null, null,
               logsCVConfiguration.getServiceId(), clusterLevel, ClusterLevel.getHeartBeatLevel(clusterLevel), logData);
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
-      logger.info("Saved clustered data for cvConfig: {}, minute {}, toLevel {}", cvConfigId, logCollectionMinute,
-          clusterLevel);
+      logger.info("Saved {} clustered data for cvConfig: {}, minute {}, toLevel {}, host {}", logDataRecords.size(),
+          cvConfigId, logCollectionMinute, clusterLevel, host);
 
       if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel.equals(ClusterLevel.L2)) {
         dataStoreService.save(LogDataRecord.class, logDataRecords, true);
