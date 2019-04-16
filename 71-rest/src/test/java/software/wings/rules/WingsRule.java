@@ -24,9 +24,9 @@ import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
+import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
@@ -304,7 +304,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.add(new MongoModule(datastore, datastore, distributedLockSvc));
+    modules.add(new TestMongoModule(datastore, datastore, distributedLockSvc));
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());

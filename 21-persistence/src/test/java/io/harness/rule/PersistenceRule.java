@@ -7,8 +7,8 @@ import com.google.inject.TypeLiteral;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.factory.ClosingFactory;
+import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.MongoQueue;
 import io.harness.mongo.QueryFactory;
@@ -107,7 +107,7 @@ public class PersistenceRule
 
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.add(new MongoModule(datastore, datastore, distributedLockSvc));
+    modules.add(new TestMongoModule(datastore, datastore, distributedLockSvc));
 
     return modules;
   }
