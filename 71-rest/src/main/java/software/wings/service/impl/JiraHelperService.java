@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.delegatetasks.jira.JiraAction.CHECK_APPROVAL;
 import static software.wings.delegatetasks.jira.JiraAction.CREATE_WEBHOOK;
 import static software.wings.delegatetasks.jira.JiraAction.DELETE_WEBHOOK;
 
@@ -223,7 +224,10 @@ public class JiraHelperService {
                                     .build();
 
     ResponseData responseData = delegateService.executeTask(delegateTask);
-
+    if (jiraTaskParameters.getJiraAction().equals(CHECK_APPROVAL) && delegateTask != null) {
+      logger.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
+          jiraTaskParameters.getIssueId());
+    }
     if (responseData instanceof JiraExecutionData) {
       return (JiraExecutionData) responseData;
     } else {
@@ -329,7 +333,7 @@ public class JiraHelperService {
                                                 .rejectionValue(rejectionValue)
                                                 .build();
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
-
+    logger.info("Polling Approval for IssueId = {}", issueId);
     return jiraExecutionData
         .getExecutionStatus(); // jiraExecutionData.getApprovedOn() != 0 && jiraExecutionData.getApprovedBy() != null;
     // TODO: Swagat: Fix above logic to clearly deduce Jira status. Error line ticket not found or ticket rejected

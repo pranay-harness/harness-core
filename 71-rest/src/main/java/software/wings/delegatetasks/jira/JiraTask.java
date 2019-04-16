@@ -413,7 +413,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
   private ResponseData checkJiraApproval(JiraTaskParameters parameters) {
     Issue issue;
-
+    logger.info("Checking approval for IssueId = {}", parameters.getIssueId());
     try {
       JiraClient jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
