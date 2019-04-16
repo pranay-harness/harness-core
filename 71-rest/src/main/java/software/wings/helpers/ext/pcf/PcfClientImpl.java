@@ -307,6 +307,9 @@ public class PcfClientImpl implements PcfClient {
       builder.addAllServices(applicationManifest.getServices());
     }
 
+    builder.healthCheckType(applicationManifest.getHealthCheckType());
+    builder.healthCheckHttpEndpoint(applicationManifest.getHealthCheckHttpEndpoint());
+
     // use Random route if provided no route-map is provided
     addRouteMapsToManifest(pcfRequestConfig, builder);
 
