@@ -9,7 +9,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -31,6 +30,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.artifact.Artifact;
@@ -55,17 +55,22 @@ import javax.validation.constraints.NotNull;
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
-@Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
-                                                                     , @Field("status") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
+                                                              , @Field("status") })
+  , @Index(options = @IndexOptions(name = "list"), fields = {
+    @Field("appId"), @Field(value = "createdAt", type = IndexType.DESC), @Field("pipelineExecutionId")
+  })
+})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware {
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
 
-  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
-  @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @Id @NotNull(groups = {Update.class}) private String uuid;
+  @Indexed @NotNull protected String appId;
+  private EmbeddedUser createdBy;
+  @Indexed private long createdAt;
 
   private String workflowId;
 
@@ -116,11 +121,10 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
 
   private List<Artifact> artifacts;
 
-  @SchemaIgnore @Indexed private List<String> keywords;
+  private List<String> keywords;
 
   @Default
   @JsonIgnore
-  @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
