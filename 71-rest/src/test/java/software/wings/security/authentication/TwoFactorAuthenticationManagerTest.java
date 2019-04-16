@@ -160,7 +160,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   public void shouldOverrideTwoFactorAuthentication() {
     Account account = getAccount(AccountType.PAID, false);
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
-    when(accountService.isAccountLite(account.getUuid())).thenReturn(false);
+    when(accountService.isCommunityAccount(account.getUuid())).thenReturn(false);
 
     when(userService.overrideTwoFactorforAccount(
              account.getUuid(), twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled()))
@@ -173,10 +173,10 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldNotEnableTwoFactorAuthenticationForLiteAccount() {
-    Account account = getAccount(AccountType.FREE, false);
+  public void shouldNotEnableTwoFactorAuthenticationForCommunityAccount() {
+    Account account = getAccount(AccountType.COMMUNITY, false);
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
-    when(accountService.isAccountLite(account.getUuid())).thenReturn(true);
+    when(accountService.isCommunityAccount(account.getUuid())).thenReturn(true);
 
     try {
       twoFactorAuthenticationManager.overrideTwoFactorAuthentication(account.getUuid(), twoFactorAdminOverrideSettings);
@@ -244,15 +244,15 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldNotEnableTwoFactorAuthenticationForUserWhosePrimaryAccountIsLite() {
-    Account account1 = getAccount(AccountType.FREE, false);
+  public void shouldNotEnableTwoFactorAuthenticationForUserWhosePrimaryAccountIsCommunity() {
+    Account account1 = getAccount(AccountType.COMMUNITY, false);
     Account account2 = getAccount(AccountType.PAID, false);
 
     User user = getUser(false);
     user.setAccounts(Arrays.asList(account1, account2));
 
-    when(accountService.isAccountLite(account1.getUuid())).thenReturn(true);
-    when(accountService.isAccountLite(account2.getUuid())).thenReturn(false);
+    when(accountService.isCommunityAccount(account1.getUuid())).thenReturn(true);
+    when(accountService.isCommunityAccount(account2.getUuid())).thenReturn(false);
 
     TwoFactorAuthenticationSettings settings =
         new TwoFactorAuthenticationSettingsBuilder().twoFactorAuthenticationEnabled(true).mechanism(TOTP).build();

@@ -360,7 +360,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     Validator.notNullCheck("userGroup", userGroup);
     if (userGroup.isDefault()) {
       throw new WingsException(ErrorCode.DELETE_NOT_ALLOWED)
-          .addParam("message", "Default user groups can not be deleted.");
+          .addParam("message", "Default User Groups cannot be deleted.");
     }
     Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
                                           .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
@@ -408,7 +408,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                                          .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
                                          .addFilter("memberIds", Operator.HAS, user.getUuid());
 
-    if (accountService.isAccountLite(accountId)) {
+    if (accountService.isCommunityAccount(accountId)) {
       pageRequest.addFilter(UserGroup.IS_DEFAULT_KEY, Operator.EQ, true);
     }
 

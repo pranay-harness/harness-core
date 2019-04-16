@@ -18,13 +18,13 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private GovernanceConfigServiceForLite governanceConfigServiceForLite;
+  @Inject private GovernanceConfigServiceForCommunity governanceConfigServiceForCommunity;
   @Inject private AccountService accountService;
 
   @Override
   public GovernanceConfig get(String accountId) {
-    if (accountService.isAccountLite(accountId)) {
-      return governanceConfigServiceForLite.get(accountId);
+    if (accountService.isCommunityAccount(accountId)) {
+      return governanceConfigServiceForCommunity.get(accountId);
     }
 
     GovernanceConfig governanceConfig =

@@ -263,18 +263,18 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     String vaultConfigId = vaultConfig.getUuid();
     boolean isNewVaultConfig = isEmpty(vaultConfigId);
-    boolean isLiteAccount = accountService.isAccountLite(accountId);
-    if (isLiteAccount) {
+    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
+    if (isCommunityAccount) {
       if (isNewVaultConfig) {
         throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Cannot add new HashiCorp Vault Secret Manager in Harness Lite.");
+            .addParam(REASON_KEY, "Cannot add new HashiCorp Vault Secret Manager in Harness Community.");
       }
 
       VaultConfig savedVaultConfig = getSavedVaultConfig(vaultConfigId);
       if ((vaultConfig.isDefault() && !savedVaultConfig.isDefault())
           || (!vaultConfig.isDefault() && savedVaultConfig.isDefault())) {
         throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Cannot change default Secret Manager in Harness Lite.");
+            .addParam(REASON_KEY, "Cannot change default Secret Manager in Harness Community.");
       }
     }
   }

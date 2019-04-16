@@ -498,12 +498,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(defaultUserGroup);
     wingsPersistence.save(nonDefaultUserGroup);
 
-    when(accountService.isAccountLite(ACCOUNT_ID)).thenReturn(true);
+    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(true);
 
     assertEquals(Collections.singletonList(defaultUserGroup.getUuid()),
         getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)));
 
-    when(accountService.isAccountLite(ACCOUNT_ID)).thenReturn(false);
+    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(false);
 
     assertEquals(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()),
         getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)));

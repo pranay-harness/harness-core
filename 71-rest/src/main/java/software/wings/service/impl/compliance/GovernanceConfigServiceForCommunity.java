@@ -13,10 +13,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 
 /**
- * This implementation should only be used for LITE accounts.
+ * This implementation should only be used for COMMUNITY accounts.
  */
 @Singleton
-public class GovernanceConfigServiceForLite extends GovernanceConfigServiceImpl implements GovernanceConfigService {
+public class GovernanceConfigServiceForCommunity
+    extends GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private WingsPersistence persistence;
 
   @Override

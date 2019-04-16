@@ -66,7 +66,7 @@ public class VerificationJobIntegrationTest extends VerificationBaseIntegrationT
   public void testMultiAccountCron() throws SchedulerException, TimeoutException, InterruptedException {
     Account account1 = createAccount(AccountType.PAID, AccountStatus.ACTIVE);
     Account account2 = createAccount(AccountType.TRIAL, AccountStatus.EXPIRED);
-    Account account3 = createAccount(AccountType.FREE, AccountStatus.ACTIVE);
+    Account account3 = createAccount(AccountType.COMMUNITY, AccountStatus.ACTIVE);
 
     job.addJob(jobScheduler);
 

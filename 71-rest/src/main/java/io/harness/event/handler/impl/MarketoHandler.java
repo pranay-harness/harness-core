@@ -1,13 +1,13 @@
 package io.harness.event.handler.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.event.model.EventType.COMMUNITY_TO_PAID;
 import static io.harness.event.model.EventType.COMPLETE_USER_REGISTRATION;
 import static io.harness.event.model.EventType.FIRST_DELEGATE_REGISTERED;
 import static io.harness.event.model.EventType.FIRST_DEPLOYMENT_EXECUTED;
 import static io.harness.event.model.EventType.FIRST_ROLLED_BACK_DEPLOYMENT;
 import static io.harness.event.model.EventType.FIRST_VERIFIED_DEPLOYMENT;
 import static io.harness.event.model.EventType.FIRST_WORKFLOW_CREATED;
-import static io.harness.event.model.EventType.FREE_TO_PAID;
 import static io.harness.event.model.EventType.LICENSE_UPDATE;
 import static io.harness.event.model.EventType.NEW_TRIAL_SIGNUP;
 import static io.harness.event.model.EventType.SETUP_2FA;
@@ -15,7 +15,7 @@ import static io.harness.event.model.EventType.SETUP_CV_24X7;
 import static io.harness.event.model.EventType.SETUP_IP_WHITELISTING;
 import static io.harness.event.model.EventType.SETUP_RBAC;
 import static io.harness.event.model.EventType.SETUP_SSO;
-import static io.harness.event.model.EventType.TRIAL_TO_FREE;
+import static io.harness.event.model.EventType.TRIAL_TO_COMMUNITY;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
@@ -112,8 +112,8 @@ public class MarketoHandler implements EventHandler {
 
     //    1801 installed delegate                 FIRST_DELEGATE_REGISTERED
     //    1811 Trial to Paid                      TRIAL_TO_PAID
-    //    1812 Trial to Free                      TRIAL_TO_FREE
-    //    1813 Free to Paid                       FREE_TO_PAID
+    //    1812 Trial to Community                 TRIAL_TO_COMMUNITY
+    //    1813 Community to Paid                  COMMUNITY_TO_PAID
 
     //    2015 User invited for trial signup
 
@@ -130,8 +130,8 @@ public class MarketoHandler implements EventHandler {
     campaignRegistry.put(SETUP_IP_WHITELISTING, 1809L);
     campaignRegistry.put(SETUP_RBAC, 1810L);
     campaignRegistry.put(TRIAL_TO_PAID, 1811L);
-    campaignRegistry.put(TRIAL_TO_FREE, 1812L);
-    campaignRegistry.put(FREE_TO_PAID, 1813L);
+    campaignRegistry.put(TRIAL_TO_COMMUNITY, 1812L);
+    campaignRegistry.put(COMMUNITY_TO_PAID, 1813L);
     campaignRegistry.put(NEW_TRIAL_SIGNUP, 2015L);
   }
 
@@ -139,8 +139,8 @@ public class MarketoHandler implements EventHandler {
     eventListener.registerEventHandler(this,
         Sets.newHashSet(USER_INVITED_FROM_EXISTING_ACCOUNT, COMPLETE_USER_REGISTRATION, FIRST_DELEGATE_REGISTERED,
             FIRST_WORKFLOW_CREATED, FIRST_DEPLOYMENT_EXECUTED, FIRST_VERIFIED_DEPLOYMENT, FIRST_ROLLED_BACK_DEPLOYMENT,
-            SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_FREE,
-            FREE_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE));
+            SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_COMMUNITY,
+            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE));
   }
 
   @Override
@@ -196,8 +196,8 @@ public class MarketoHandler implements EventHandler {
       Validator.notNullCheck("Account is null for accountId:" + accountId, account);
 
       switch (eventType) {
-        case FREE_TO_PAID:
-        case TRIAL_TO_FREE:
+        case COMMUNITY_TO_PAID:
+        case TRIAL_TO_COMMUNITY:
         case TRIAL_TO_PAID:
         case FIRST_DELEGATE_REGISTERED:
           reportToAllUsers(account, accessToken, eventType);

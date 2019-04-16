@@ -208,9 +208,9 @@ public class Account extends Base {
   }
 
   public AuthenticationMechanism getAuthenticationMechanism() {
-    boolean shouldBeDisabled = AuthenticationMechanism.DISABLED_FOR_LITE.contains(authenticationMechanism);
+    boolean shouldBeDisabled = AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(authenticationMechanism);
 
-    if (this.isLite() && shouldBeDisabled) {
+    if (this.isCommunity() && shouldBeDisabled) {
       return AuthenticationMechanism.USER_PASSWORD;
     }
 
@@ -218,8 +218,8 @@ public class Account extends Base {
   }
 
   @JsonIgnore
-  public boolean isLite() {
-    return licenseInfo != null && AccountType.isLite(licenseInfo.getAccountType());
+  public boolean isCommunity() {
+    return licenseInfo != null && AccountType.isCommunity(licenseInfo.getAccountType());
   }
 
   public void setAuthenticationMechanism(AuthenticationMechanism authenticationMechanism) {

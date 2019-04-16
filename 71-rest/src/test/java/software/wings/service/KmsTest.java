@@ -541,11 +541,11 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testNewKmsConfigForLiteAccount() {
-    Account account = getAccount(AccountType.FREE);
+    Account account = getAccount(AccountType.COMMUNITY);
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
 
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
@@ -565,12 +565,12 @@ public class KmsTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String kmsConfigId = kmsService.saveKmsConfig(accountId, getNonDefaultKmsConfig());
 
-    account.getLicenseInfo().setAccountType(AccountType.FREE);
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    account.getLicenseInfo().setAccountType(AccountType.COMMUNITY);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
 
     KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
     updatedKmsConfig.setDefault(true);
@@ -590,12 +590,12 @@ public class KmsTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String kmsConfigId = kmsService.saveKmsConfig(accountId, getDefaultKmsConfig());
 
-    account.getLicenseInfo().setAccountType(AccountType.FREE);
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    account.getLicenseInfo().setAccountType(AccountType.COMMUNITY);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
 
     KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
     updatedKmsConfig.setDefault(false);
@@ -615,7 +615,7 @@ public class KmsTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String kmsConfigId = kmsService.saveKmsConfig(accountId, getNonDefaultKmsConfig());
 
@@ -635,7 +635,7 @@ public class KmsTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String kmsConfigId = kmsService.saveKmsConfig(accountId, getDefaultKmsConfig());
 

@@ -14,8 +14,8 @@ public enum EventType {
   SETUP_IP_WHITELISTING,
   SETUP_RBAC,
   TRIAL_TO_PAID,
-  TRIAL_TO_FREE,
-  FREE_TO_PAID,
+  TRIAL_TO_COMMUNITY,
+  COMMUNITY_TO_PAID,
 
   /***
    * Usage metrics EventTypes
