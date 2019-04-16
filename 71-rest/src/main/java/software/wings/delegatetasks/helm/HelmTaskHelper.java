@@ -221,7 +221,10 @@ public class HelmTaskHelper {
       HelmChartConfigParams helmChartConfigParams, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Helm repository: " + helmChartConfigParams.getRepoDisplayName());
     executionLogCallback.saveExecutionLog("Chart name: " + helmChartConfigParams.getChartName());
-    executionLogCallback.saveExecutionLog("Chart version: " + helmChartConfigParams.getChartVersion());
+
+    if (isNotBlank(helmChartConfigParams.getChartVersion())) {
+      executionLogCallback.saveExecutionLog("Chart version: " + helmChartConfigParams.getChartVersion());
+    }
 
     if (helmChartConfigParams.getHelmRepoConfig() instanceof AmazonS3HelmRepoConfig) {
       AmazonS3HelmRepoConfig amazonS3HelmRepoConfig =
