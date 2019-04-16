@@ -248,4 +248,9 @@
         <property name="fileNamePattern" value="[Ww]orkFlow\."/>
     </module>
 
+    <module name="RegexpSingleline">
+        <property name="format" value="[wW]ithOut[^a-z_]"/>
+        <property name="message" value="Without is a single word"/>
+    </module>
+
 </module>

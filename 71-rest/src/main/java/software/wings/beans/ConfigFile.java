@@ -39,14 +39,20 @@ import javax.ws.rs.DefaultValue;
  * Created by anubhaw on 4/12/16.
  */
 @Entity(value = "configFiles", noClassnameStored = true)
-@Indexes(@Index(fields =
-    {
-      @Field("entityId")
-      , @Field("templateId"), @Field("relativeFilePath"), @Field("configOverrideType"), @Field("instances"),
-          @Field("configOverrideExpression")
-    },
-    options = @IndexOptions(
-        unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
+@Indexes({
+  @Index(fields =
+      {
+        @Field("entityId")
+        , @Field("templateId"), @Field("relativeFilePath"), @Field("configOverrideType"), @Field("instances"),
+            @Field("configOverrideExpression")
+      },
+      options = @IndexOptions(
+          unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1"))
+  ,
+      @Index(fields = {
+        @Field("appId"), @Field("templateId"), @Field("entityId")
+      }, options = @IndexOptions(name = "app_template_entityId"))
+})
 @HarnessExportableEntity
 @Data
 @Builder
