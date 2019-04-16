@@ -29,6 +29,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.api.DeploymentType;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.OrchestrationWorkflow;
@@ -38,6 +39,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.template.TemplateService;
@@ -58,6 +60,62 @@ public class WorkflowServiceTemplateHelper {
 
   public void updateLinkedPhaseStepTemplate(PhaseStep phaseStep, PhaseStep oldPhaseStep) {
     updateLinkedPhaseStepTemplate(phaseStep, oldPhaseStep, false);
+  }
+
+  public void populatePropertiesFromWorkflow(Workflow workflow) {
+    if (!(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
+      return;
+    }
+    // load Linked Pre-deployment steps
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    populatePropertiesFromWorkflow(canaryOrchestrationWorkflow.getPreDeploymentSteps());
+
+    // load Linked Post-deployment steps
+    populatePropertiesFromWorkflow(canaryOrchestrationWorkflow.getPostDeploymentSteps());
+
+    // Update Workflow Phase steps
+    if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+      for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+        List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+        if (isNotEmpty(phaseSteps)) {
+          for (PhaseStep phaseStep : phaseSteps) {
+            populatePropertiesFromWorkflow(phaseStep);
+          }
+        }
+      }
+    }
+
+    // Update Rollback Phase Steps
+    if (canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
+      canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
+        if (isNotEmpty(workflowPhase.getPhaseSteps())) {
+          for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+            populatePropertiesFromWorkflow(phaseStep);
+          }
+        }
+      });
+    }
+  }
+
+  private void populatePropertiesFromWorkflow(PhaseStep phaseStep) {
+    if (phaseStep != null && phaseStep.getSteps() != null) {
+      for (GraphNode step : phaseStep.getSteps()) {
+        if (step.getTemplateUuid() != null) {
+          Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
+          Validator.notNullCheck("Template does not exist", template, USER);
+          GraphNode templateStep =
+              (GraphNode) templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW);
+          List<String> templateProperties = templateService.fetchTemplateProperties(template);
+          if (templateProperties != null) {
+            if (!step.getType().equals("COMMAND")) {
+              step.getProperties().keySet().removeAll(templateProperties);
+              step.getProperties().putAll(templateStep.getProperties());
+            }
+          }
+        }
+      }
+    }
   }
 
   public void updateLinkedPhaseStepTemplate(PhaseStep phaseStep, PhaseStep oldPhaseStep, boolean fromYaml) {
@@ -86,35 +144,12 @@ public class WorkflowServiceTemplateHelper {
           oldTemplateVariables = oldTemplateStep.getTemplateVariables();
         }
         if (versionChanged || oldTemplateStep == null) {
-          GraphNode templateStep = (GraphNode) templateService.constructEntityFromTemplate(
-              step.getTemplateUuid(), step.getTemplateVersion(), EntityType.WORKFLOW);
-          Validator.notNullCheck("Template does not exist", templateStep, USER);
+          Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
+          Validator.notNullCheck("Template does not exist", template, USER);
+          GraphNode templateStep =
+              (GraphNode) templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW);
           step.setTemplateVariables(
               templateHelper.overrideVariables(templateStep.getTemplateVariables(), oldTemplateVariables));
-          if (step.getProperties() != null) {
-            if (templateStep.getProperties() != null) {
-              List<String> templateProperties =
-                  templateService.fetchTemplateProperties(step.getTemplateUuid(), step.getTemplateVersion());
-              step.getProperties().keySet().removeAll(templateProperties);
-              if (!step.getType().equals("COMMAND")) {
-                step.getProperties().putAll(templateStep.getProperties());
-              }
-            }
-          }
-        } else if (oldTemplateStep != null) {
-          // Do not change the template properties
-          List<String> templateProperties =
-              templateService.fetchTemplateProperties(step.getTemplateUuid(), step.getTemplateVersion());
-          if (step.getProperties() != null) {
-            step.getProperties().keySet().removeAll(templateProperties);
-            if (!step.getType().equals("COMMAND")) {
-              if (oldTemplateStep.getProperties() != null) {
-                for (String s : templateProperties) {
-                  step.getProperties().put(s, oldTemplateStep.getProperties().get(s));
-                }
-              }
-            }
-          }
         }
       });
     }

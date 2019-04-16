@@ -944,8 +944,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       // Add environment expressions
       WorkflowServiceTemplateHelper.transformEnvTemplateExpressions(workflow, orchestrationWorkflow);
       orchestrationWorkflow.onSave();
+      workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
 
-      //      updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()));
       wingsPersistence.save(stateMachine);
@@ -1131,6 +1131,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             workflow.getUuid(), workflow.getName(), EntityVersion.ChangeType.UPDATED, workflow.getNotes());
         workflow.setDefaultVersion(entityVersion.getVersion());
       }
+
+      workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
 
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap(workflow.getAppId()));

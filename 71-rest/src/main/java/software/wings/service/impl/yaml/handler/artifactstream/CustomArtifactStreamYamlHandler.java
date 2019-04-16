@@ -18,7 +18,9 @@ public class CustomArtifactStreamYamlHandler
   public Yaml toYaml(CustomArtifactStream bean, String appId) {
     CustomArtifactStream.Yaml yaml = CustomArtifactStream.Yaml.builder().build();
     super.toYaml(yaml, bean);
-    yaml.setScripts(bean.getScripts());
+    if (bean.getTemplateUuid() == null) {
+      yaml.setScripts(bean.getScripts());
+    }
     yaml.setTags(bean.getTags());
     return yaml;
   }

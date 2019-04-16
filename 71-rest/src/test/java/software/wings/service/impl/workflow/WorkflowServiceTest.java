@@ -236,8 +236,9 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
-import software.wings.common.TemplateConstants;
+import software.wings.beans.template.command.HttpTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
@@ -3148,6 +3149,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
+    final Template httpTemplate = Template.builder().templateObject(HttpTemplate.builder().build()).build();
+    when(templateService.get(TEMPLATE_ID, "1")).thenReturn(httpTemplate);
+    when(templateService.constructEntityFromTemplate(httpTemplate, EntityType.WORKFLOW)).thenReturn(templateStep);
     when(templateService.constructEntityFromTemplate(preDeploymentStep.getTemplateUuid(), "1", EntityType.WORKFLOW))
         .thenReturn(templateStep);
 
@@ -3174,8 +3178,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(postDeploymentStep.getTemplateUuid(), "1", EntityType.WORKFLOW))
-        .thenReturn(templateStep);
+    final Template httpTemplate =
+        Template.builder()
+            .templateObject(HttpTemplate.builder().url("MyUrl").method("MyMethod").assertion("Assertion").build())
+            .build();
+    when(templateService.get(TEMPLATE_ID, "1")).thenReturn(httpTemplate);
+    when(templateService.constructEntityFromTemplate(httpTemplate, EntityType.WORKFLOW)).thenReturn(templateStep);
 
     PhaseStep updatedPhaseStep =
         workflowService.updatePostDeployment(savedWorkflow.getAppId(), savedWorkflow.getUuid(), phaseStep);
@@ -3205,8 +3213,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1", EntityType.WORKFLOW))
-        .thenReturn(templateStep);
+    final Template httpTemplate = Template.builder().templateObject(HttpTemplate.builder().build()).build();
+    when(templateService.get(TEMPLATE_ID, "1")).thenReturn(httpTemplate);
+    when(templateService.constructEntityFromTemplate(httpTemplate, EntityType.WORKFLOW)).thenReturn(templateStep);
 
     WorkflowPhase updateWorkflowPhase =
         workflowService.updateWorkflowPhase(savedWorkflow.getAppId(), savedWorkflow.getUuid(), workflowPhase);
@@ -3241,8 +3250,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1", EntityType.WORKFLOW))
-        .thenReturn(templateStep);
+    final Template httpTemplate = Template.builder().templateObject(HttpTemplate.builder().build()).build();
+    when(templateService.get(TEMPLATE_ID, "1")).thenReturn(httpTemplate);
+    when(templateService.constructEntityFromTemplate(httpTemplate, EntityType.WORKFLOW)).thenReturn(templateStep);
 
     Workflow oldWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
 
@@ -3274,9 +3284,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     GraphNode templateStep = constructHttpTemplateStep();
 
-    when(templateService.constructEntityFromTemplate(
-             step.getTemplateUuid(), TemplateConstants.LATEST_TAG, EntityType.WORKFLOW))
-        .thenReturn(templateStep);
+    final Template httpTemplate =
+        Template.builder()
+            .templateObject(HttpTemplate.builder().url("MyUrl").method("MyMethod").assertion("Assertion").build())
+            .build();
+    when(templateService.get(TEMPLATE_ID, LATEST_TAG)).thenReturn(httpTemplate);
+    when(templateService.constructEntityFromTemplate(httpTemplate, EntityType.WORKFLOW)).thenReturn(templateStep);
 
     Workflow workflow = constructLinkedTemplate(step);
 
@@ -3390,9 +3403,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     } else if (templateType.equals(TemplateType.SSH)) {
       templateStep = constructCommandTemplateStep();
     }
-    when(templateService.constructEntityFromTemplate(TEMPLATE_ID, TemplateConstants.LATEST_TAG, EntityType.WORKFLOW))
-        .thenReturn(templateStep);
-
+    final Template httpTemplate =
+        Template.builder().name("Linked Template").templateObject(HttpTemplate.builder().build()).build();
+    when(templateService.get(TEMPLATE_ID, LATEST_TAG)).thenReturn(httpTemplate);
+    when(templateService.constructEntityFromTemplate(httpTemplate, EntityType.WORKFLOW)).thenReturn(templateStep);
     Workflow workflow = constructLinkedTemplate(templateStep);
 
     return workflowService.createWorkflow(workflow);

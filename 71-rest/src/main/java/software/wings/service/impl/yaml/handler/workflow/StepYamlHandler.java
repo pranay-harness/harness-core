@@ -43,6 +43,7 @@ import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
 import java.util.Map;
+
 /**
  * @author rktummala on 10/28/17
  */
@@ -173,12 +174,16 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         if (!template.getAppId().equals(GLOBAL_APP_ID)) {
           templateUri = APP_PREFIX + templateUri;
         }
+        List<String> templateProperties = templateService.fetchTemplateProperties(template);
+        if (templateProperties != null && outputProperties != null) {
+          outputProperties.keySet().removeAll(templateProperties);
+        }
       }
     }
 
     return StepYaml.builder()
         .name(step.getName())
-        .properties(outputProperties.isEmpty() ? null : outputProperties)
+        .properties(outputProperties == null || outputProperties.isEmpty() ? null : outputProperties)
         .type(step.getType())
         .templateExpressions(templateExprYamlList)
         .templateUri(templateUri)

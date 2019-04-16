@@ -46,6 +46,6 @@ public class ShellScriptTemplateProcessor extends StateTemplateProcessor {
 
   @Override
   public List<String> fetchTemplateProperties() {
-    return asList(SCRIPT_TYPE, SCRIPT_STRING, OUTPUT_VARS, TIMEOUT_MILLIS);
+    return asList(SCRIPT_TYPE, SCRIPT_STRING, OUTPUT_VARS);
   }
 }
