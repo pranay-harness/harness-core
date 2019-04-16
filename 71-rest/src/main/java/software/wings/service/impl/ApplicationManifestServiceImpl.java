@@ -427,10 +427,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (isBlank(helmChartConfig.getChartName())) {
       throw new InvalidRequestException("Chart name cannot be empty.", USER);
     }
-
-    if (isBlank(helmChartConfig.getChartVersion())) {
-      throw new InvalidRequestException("Chart version cannot be empty.", USER);
-    }
   }
 
   private void validateLocalAppManifest(ApplicationManifest applicationManifest) {
