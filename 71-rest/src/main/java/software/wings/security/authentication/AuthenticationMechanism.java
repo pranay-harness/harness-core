@@ -15,7 +15,7 @@ public enum AuthenticationMechanism {
     this.type = type;
   }
 
-  public static final List<AuthenticationMechanism> DISABLED_FOR_LITE = ImmutableList.of(SAML, LDAP);
+  public static final List<AuthenticationMechanism> DISABLED_FOR_COMMUNITY = ImmutableList.of(SAML, LDAP);
   public String getType() {
     return type;
   }

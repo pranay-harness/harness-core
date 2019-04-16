@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.LICENSE_EXPIRED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.common.Constants.DEFAULT_FREE_LICENSE_UNITS;
+import static software.wings.common.Constants.DEFAULT_COMMUNITY_LICENSE_UNITS;
 import static software.wings.common.Constants.DEFAULT_TRIAL_LICENSE_UNITS;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -111,7 +111,7 @@ public class LicenseServiceImpl implements LicenseService {
             continue;
           }
 
-          if (accountType.equals(AccountType.FREE)) {
+          if (accountType.equals(AccountType.COMMUNITY)) {
             continue;
           }
 
@@ -232,7 +232,7 @@ public class LicenseServiceImpl implements LicenseService {
       throw new WingsException("Invalid / Null license info account type", USER);
     }
 
-    if (licenseInfo.getAccountType().equals(AccountType.FREE)) {
+    if (licenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
       licenseInfo.setExpiryTime(-1L);
     } else {
       int expiryInDays = licenseInfo.getExpireAfterDays();
@@ -253,8 +253,8 @@ public class LicenseServiceImpl implements LicenseService {
 
     if (licenseInfo.getAccountType().equals(AccountType.TRIAL)) {
       licenseInfo.setLicenseUnits(DEFAULT_TRIAL_LICENSE_UNITS);
-    } else if (licenseInfo.getAccountType().equals(AccountType.FREE)) {
-      licenseInfo.setLicenseUnits(DEFAULT_FREE_LICENSE_UNITS);
+    } else if (licenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
+      licenseInfo.setLicenseUnits(DEFAULT_COMMUNITY_LICENSE_UNITS);
     }
 
     if (licenseInfo.getLicenseUnits() <= 0) {
@@ -304,8 +304,8 @@ public class LicenseServiceImpl implements LicenseService {
         if (AccountType.TRIAL.equals(newLicenseInfo.getAccountType())) {
           resetLicenseUnitsCount = Constants.DEFAULT_TRIAL_LICENSE_UNITS;
           resetExpiryTime = LicenseUtil.getDefaultTrialExpiryTime();
-        } else if (AccountType.FREE.equals(newLicenseInfo.getAccountType())) {
-          resetLicenseUnitsCount = Constants.DEFAULT_FREE_LICENSE_UNITS;
+        } else if (AccountType.COMMUNITY.equals(newLicenseInfo.getAccountType())) {
+          resetLicenseUnitsCount = Constants.DEFAULT_COMMUNITY_LICENSE_UNITS;
           resetExpiryTime = -1L;
         } else if (AccountType.PAID.equals(newLicenseInfo.getAccountType())) {
           resetExpiryTime = LicenseUtil.getDefaultPaidExpiryTime();
@@ -322,7 +322,7 @@ public class LicenseServiceImpl implements LicenseService {
       throw new WingsException("Null license info account type. Cannot proceed with update", USER);
     }
 
-    if (currentLicenseInfo.getAccountType().equals(AccountType.FREE)) {
+    if (currentLicenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
       currentLicenseInfo.setExpiryTime(-1L);
     } else {
       int expiryInDays = newLicenseInfo.getExpireAfterDays();
@@ -507,7 +507,7 @@ public class LicenseServiceImpl implements LicenseService {
       throw new WingsException("Account status is null for account :" + accountId);
     }
 
-    if (AccountType.FREE.equals(accountType)) {
+    if (AccountType.COMMUNITY.equals(accountType)) {
       return false;
     }
 

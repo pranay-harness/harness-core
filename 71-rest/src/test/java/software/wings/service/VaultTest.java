@@ -494,11 +494,11 @@ public class VaultTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testNewVaultConfigForLiteAccount() {
-    Account account = getAccount(AccountType.FREE);
+    Account account = getAccount(AccountType.COMMUNITY);
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
 
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setAccountId(accountId);
@@ -518,12 +518,12 @@ public class VaultTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String vaultConfigId = vaultService.saveVaultConfig(accountId, getNonDefaultVaultConfig());
 
-    account.getLicenseInfo().setAccountType(AccountType.FREE);
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    account.getLicenseInfo().setAccountType(AccountType.COMMUNITY);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
 
     VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
     updatedVaultConfig.setDefault(true);
@@ -543,12 +543,12 @@ public class VaultTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String vaultConfigId = vaultService.saveVaultConfig(accountId, getDefaultVaultConfig());
 
-    account.getLicenseInfo().setAccountType(AccountType.FREE);
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    account.getLicenseInfo().setAccountType(AccountType.COMMUNITY);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
 
     VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
     updatedVaultConfig.setDefault(false);
@@ -568,7 +568,7 @@ public class VaultTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String vaultConfigId = vaultService.saveVaultConfig(accountId, getNonDefaultVaultConfig());
 
@@ -588,7 +588,7 @@ public class VaultTest extends WingsBaseTest {
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isAccountLite(accountId)).thenReturn(false);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
 
     String vaultConfigId = vaultService.saveVaultConfig(accountId, getDefaultVaultConfig());
 

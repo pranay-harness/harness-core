@@ -154,7 +154,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   public void testIsValidIpAddressTrueForLite() {
     createWhitelists();
 
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
 
     boolean valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_1);
     assertTrue(valid);

@@ -147,8 +147,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     String kmsConfigId = kmsConfig.getUuid();
     boolean isNewKmsConfig = isEmpty(kmsConfigId);
-    boolean isLiteAccount = accountService.isAccountLite(accountId);
-    if (isLiteAccount) {
+    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
+    if (isCommunityAccount) {
       if (isNewKmsConfig) {
         throw new KmsOperationException("Cannot add new KMS Secret Manager in Harness Lite.", USER);
       }

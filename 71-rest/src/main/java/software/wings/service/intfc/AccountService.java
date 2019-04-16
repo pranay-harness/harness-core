@@ -103,5 +103,5 @@ public interface AccountService {
    */
   boolean completeAccountMigration(String accountId, String newClusterUrl);
 
-  boolean isAccountLite(String accountId);
+  boolean isCommunityAccount(String accountId);
 }

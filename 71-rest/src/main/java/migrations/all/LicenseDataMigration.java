@@ -76,13 +76,13 @@ public class LicenseDataMigration implements Migration {
               }
               break;
 
-            case AccountType.FREE:
+            case AccountType.COMMUNITY:
               if (expiryTime <= 0) {
                 licenseInfo.setExpiryTime(-1L);
               }
 
               if (licenseUnits <= 0) {
-                licenseInfo.setLicenseUnits(Constants.DEFAULT_FREE_LICENSE_UNITS);
+                licenseInfo.setLicenseUnits(Constants.DEFAULT_COMMUNITY_LICENSE_UNITS);
               }
               break;
 

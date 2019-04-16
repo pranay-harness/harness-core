@@ -99,8 +99,8 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public boolean isValidIPAddress(String accountId, String ipAddress) {
-    if (accountService.isAccountLite(accountId)) {
-      logger.debug("Account is LITE. No IP Whitelisting - So, all IPs are valid IPs. accountId={}", accountId);
+    if (accountService.isCommunityAccount(accountId)) {
+      logger.debug("Account is COMMUNITY. No IP Whitelisting - So, all IPs are valid IPs. accountId={}", accountId);
       return true;
     }
 

@@ -65,8 +65,8 @@ public class GovernanceConfigServiceTest extends WingsBaseTest {
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);
 
-    // treat the account as LITE
-    when(accountService.isAccountLite(accountId)).thenReturn(true);
+    // treat the account as COMMUNITY
+    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
     savedGovernanceConfig = governanceConfigService.get(accountId);
     assertFalse(savedGovernanceConfig.isDeploymentFreeze());
 

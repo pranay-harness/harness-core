@@ -16,7 +16,7 @@ public interface AccountType {
 
   String TRIAL = "TRIAL";
   String PAID = "PAID";
-  String FREE = "FREE";
+  String COMMUNITY = "COMMUNITY";
 
   static boolean isValid(String type) {
     if (isEmpty(type)) {
@@ -26,14 +26,14 @@ public interface AccountType {
     switch (StringUtils.upperCase(type)) {
       case TRIAL:
       case PAID:
-      case FREE:
+      case COMMUNITY:
         return true;
       default:
         return false;
     }
   }
 
-  static boolean isLite(String type) {
+  static boolean isCommunity(String type) {
     if (isEmpty(type)) {
       return false;
     }
@@ -43,6 +43,6 @@ public interface AccountType {
       return false;
     }
 
-    return StringUtils.equalsIgnoreCase(FREE, type);
+    return StringUtils.equalsIgnoreCase(COMMUNITY, type);
   }
 }

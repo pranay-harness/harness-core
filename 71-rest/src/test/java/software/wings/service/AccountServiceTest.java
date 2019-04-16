@@ -112,7 +112,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetAccountType() {
     LicenseInfo licenseInfo = getLicenseInfo();
-    licenseInfo.setAccountType(AccountType.FREE);
+    licenseInfo.setAccountType(AccountType.COMMUNITY);
 
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
@@ -121,7 +121,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withLicenseInfo(licenseInfo)
                                               .build());
 
-    assertThat(accountService.getAccountType(account.getUuid())).isEqualTo(Optional.of(AccountType.FREE));
+    assertThat(accountService.getAccountType(account.getUuid())).isEqualTo(Optional.of(AccountType.COMMUNITY));
   }
 
   @Test

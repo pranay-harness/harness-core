@@ -65,8 +65,8 @@ public class TwoFactorAuthenticationManager {
     }
     if (!isAllowed2FAEnable(user)) {
       throw new WingsException(GENERAL_ERROR, USER)
-          .addParam(
-              "message", "Two Factor authentication is not supported for Lite account. Please upgrade to Harness Pro.");
+          .addParam("message",
+              "Two Factor Authentication is not supported in Harness Community. Please upgrade to Harness Pro.");
     }
     settings.setTwoFactorAuthenticationEnabled(true);
     return applyTwoFactorAuthenticationSettings(user, settings);
@@ -104,7 +104,7 @@ public class TwoFactorAuthenticationManager {
   }
 
   private boolean isPrimaryAccountLite(User user) {
-    return getPrimaryAccount(user).map(account -> accountService.isAccountLite(account.getUuid())).orElse(false);
+    return getPrimaryAccount(user).map(account -> accountService.isCommunityAccount(account.getUuid())).orElse(false);
   }
 
   private Optional<Account> getPrimaryAccount(User user) {
@@ -126,10 +126,10 @@ public class TwoFactorAuthenticationManager {
   public boolean overrideTwoFactorAuthentication(String accountId, TwoFactorAdminOverrideSettings settings) {
     try {
       if (settings != null) {
-        if (accountService.isAccountLite(accountId) && settings.isAdminOverrideTwoFactorEnabled()) {
+        if (accountService.isCommunityAccount(accountId) && settings.isAdminOverrideTwoFactorEnabled()) {
           throw new WingsException(GENERAL_ERROR, USER)
               .addParam("message",
-                  "Two Factor authentication is not supported for Lite account. Please upgrade to Harness Pro.");
+                  "Two Factor Authentication is not supported in Harness Community. Please upgrade to Harness Pro.");
         }
         // Update 2FA enforce flag
         accountService.updateTwoFactorEnforceInfo(accountId, settings.isAdminOverrideTwoFactorEnabled());

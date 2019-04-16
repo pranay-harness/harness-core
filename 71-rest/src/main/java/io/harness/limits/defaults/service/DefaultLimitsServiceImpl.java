@@ -34,32 +34,36 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     // Application Limits
     defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT));
     defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.PAID), new StaticLimit(MAX_APP_COUNT));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.FREE), new StaticLimit(MAX_APP_COUNT));
+    defaultLimits.put(
+        new LimitKey(ActionType.CREATE_APPLICATION, AccountType.COMMUNITY), new StaticLimit(MAX_APP_COUNT));
 
     // Service Limits
     defaultLimits.put(new LimitKey(ActionType.CREATE_SERVICE, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT * 10));
     defaultLimits.put(new LimitKey(ActionType.CREATE_SERVICE, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 10));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_SERVICE, AccountType.FREE), new StaticLimit(MAX_APP_COUNT * 10));
+    defaultLimits.put(
+        new LimitKey(ActionType.CREATE_SERVICE, AccountType.COMMUNITY), new StaticLimit(MAX_APP_COUNT * 10));
 
     // Deployment Limits
     defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.TRIAL), new RateLimit(100, 24, TimeUnit.HOURS));
     defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.PAID), new RateLimit(100, 24, TimeUnit.HOURS));
-    defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.FREE), new RateLimit(5, 24, TimeUnit.HOURS));
+    defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.COMMUNITY), new RateLimit(5, 24, TimeUnit.HOURS));
 
     // User Limits
     defaultLimits.put(new LimitKey(ActionType.CREATE_USER, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT * 3));
     defaultLimits.put(new LimitKey(ActionType.CREATE_USER, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 3));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_USER, AccountType.FREE), new StaticLimit(MAX_APP_COUNT * 3));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_USER, AccountType.COMMUNITY), new StaticLimit(MAX_APP_COUNT * 3));
 
     // Pipeline Limits
     defaultLimits.put(new LimitKey(ActionType.CREATE_PIPELINE, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT * 10));
     defaultLimits.put(new LimitKey(ActionType.CREATE_PIPELINE, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 10));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_PIPELINE, AccountType.FREE), new StaticLimit(MAX_APP_COUNT * 10));
+    defaultLimits.put(
+        new LimitKey(ActionType.CREATE_PIPELINE, AccountType.COMMUNITY), new StaticLimit(MAX_APP_COUNT * 10));
 
     // Workflow Limits
     defaultLimits.put(new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT * 10));
     defaultLimits.put(new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 10));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.FREE), new StaticLimit(MAX_APP_COUNT * 10));
+    defaultLimits.put(
+        new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.COMMUNITY), new StaticLimit(MAX_APP_COUNT * 10));
 
     // Infrastructure Provisioner Limits
     defaultLimits.put(
@@ -67,7 +71,7 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     defaultLimits.put(
         new LimitKey(ActionType.CREATE_INFRA_PROVISIONER, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 10));
     defaultLimits.put(
-        new LimitKey(ActionType.CREATE_INFRA_PROVISIONER, AccountType.FREE), new StaticLimit(MAX_APP_COUNT * 10));
+        new LimitKey(ActionType.CREATE_INFRA_PROVISIONER, AccountType.COMMUNITY), new StaticLimit(MAX_APP_COUNT * 10));
 
     defaults = ImmutableMap.copyOf(defaultLimits);
   }

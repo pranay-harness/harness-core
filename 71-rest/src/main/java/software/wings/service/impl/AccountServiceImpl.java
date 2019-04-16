@@ -431,11 +431,11 @@ public class AccountServiceImpl implements AccountService {
       LicenseInfo licenseInfo = account.getLicenseInfo();
 
       AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
-      boolean shouldisableAuthMechanism = AuthenticationMechanism.DISABLED_FOR_LITE.contains(authMechanism);
-      boolean isLite = AccountType.isLite(licenseInfo.getAccountType());
+      boolean shouldisableAuthMechanism = AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(authMechanism);
+      boolean isCommunity = AccountType.isCommunity(licenseInfo.getAccountType());
 
-      if (isLite && shouldisableAuthMechanism) {
-        logger.info("[LITE_DOWNGRADE] Auth Mechanism. current={} new={} accountId={}",
+      if (isCommunity && shouldisableAuthMechanism) {
+        logger.info("[COMMUNITY_DOWNGRADE] Auth Mechanism. current={} new={} accountId={}",
             account.getAuthenticationMechanism(), AuthenticationMechanism.USER_PASSWORD, account.getUuid());
         account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
       }
@@ -590,8 +590,8 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean isAccountLite(String accountId) {
-    return getAccountType(accountId).map(AccountType::isLite).orElse(false);
+  public boolean isCommunityAccount(String accountId) {
+    return getAccountType(accountId).map(AccountType::isCommunity).orElse(false);
   }
 
   @Override

@@ -153,7 +153,7 @@ public class AccountResource {
 
   @PUT
   @Path("accountType")
-  public RestResponse<Boolean> makeLite(
+  public RestResponse<Boolean> makeCommunity(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("type") @NotEmpty String type) {
     if (!accountService.isFeatureFlagEnabled(FeatureName.HARNESS_LITE.name(), accountId)) {
       throw new InvalidRequestException("HARNESS_LITE feature is disabled");
@@ -166,7 +166,7 @@ public class AccountResource {
     cacheHelper.getUserPermissionInfoCache().clear();
     Account account = accountService.get(accountId);
 
-    if (type.equals(AccountType.FREE)) {
+    if (type.equals(AccountType.COMMUNITY)) {
       governanceConfigService.update(accountId, GovernanceConfig.builder().deploymentFreeze(false).build());
       accountService.updateTwoFactorEnforceInfo(accountId, false);
       List<User> usersWithThisPrimaryAccount = userService.getUsersOfAccount(accountId)

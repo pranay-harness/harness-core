@@ -108,10 +108,10 @@ public class EventPublishHelper {
 
     if (AccountType.TRIAL.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
       eventType = EventType.TRIAL_TO_PAID;
-    } else if (AccountType.TRIAL.equals(oldAccountType) && AccountType.FREE.equals(newAccountType)) {
-      eventType = EventType.TRIAL_TO_FREE;
-    } else if (AccountType.FREE.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
-      eventType = EventType.FREE_TO_PAID;
+    } else if (AccountType.TRIAL.equals(oldAccountType) && AccountType.COMMUNITY.equals(newAccountType)) {
+      eventType = EventType.TRIAL_TO_COMMUNITY;
+    } else if (AccountType.COMMUNITY.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
+      eventType = EventType.COMMUNITY_TO_PAID;
     }
 
     if (eventType != null) {

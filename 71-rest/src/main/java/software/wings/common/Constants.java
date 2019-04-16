@@ -723,7 +723,7 @@ public interface Constants {
   String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
 
   int DEFAULT_TRIAL_LICENSE_UNITS = 100;
-  int DEFAULT_FREE_LICENSE_UNITS = 5;
+  int DEFAULT_COMMUNITY_LICENSE_UNITS = 5;
 
   int DEFAULT_PAID_LICENSE_UNITS = 100;
 
