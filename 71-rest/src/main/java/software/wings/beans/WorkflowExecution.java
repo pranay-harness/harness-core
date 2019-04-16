@@ -33,6 +33,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.sm.PipelineSummary;
@@ -56,11 +57,17 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
-                                                              , @Field("status") })
-  , @Index(options = @IndexOptions(name = "list"), fields = {
-    @Field("appId"), @Field(value = "createdAt", type = IndexType.DESC), @Field("pipelineExecutionId")
-  })
+  @Index(options = @IndexOptions(name = "search"),
+      fields = { @Field(WorkflowExecutionKeys.workflowId)
+                 , @Field(WorkflowExecutionKeys.status) })
+  ,
+      @Index(options = @IndexOptions(name = "list"), fields = {
+        @Field(WorkflowExecutionKeys.appId)
+        , @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
+            @Field(WorkflowExecutionKeys.pipelineExecutionId)
+      }), @Index(options = @IndexOptions(name = "service_guard"), fields = {
+        @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.startTs)
+      })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware {
