@@ -34,7 +34,8 @@ public class GlobalContextManager {
   public static GlobalContextData get(String key) {
     GlobalContext globalContext = contextThreadLocal.get();
     if (globalContext == null) {
-      logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception());
+      logger.warn("Global Context was null. Seems thread was not initialized. ALERT....");
+      // logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception());
       return null;
     }
 
