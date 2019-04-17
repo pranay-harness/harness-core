@@ -29,4 +29,6 @@ public interface AwsHelperResourceService {
    * @return the list
    */
   Set<String> listTags(String appId, String computeProviderId, String region, String resourceType);
+
+  List<String> listBuckets(String awsSettingId);
 }
