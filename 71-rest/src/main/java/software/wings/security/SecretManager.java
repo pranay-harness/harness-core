@@ -20,12 +20,14 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
 
+@Slf4j
 @Singleton
 public class SecretManager {
   @Inject private MainConfiguration configuration;
@@ -89,10 +91,12 @@ public class SecretManager {
       verifier.verify(jwtToken);
       return JWT.decode(jwtToken).getClaims();
     } catch (UnsupportedEncodingException | JWTDecodeException | SignatureVerificationException e) {
-      throw new WingsException(INVALID_CREDENTIAL, USER)
+      logger.info("Failed to verify JWT token {} in category {} with error: {}", jwtToken, category, e.getMessage());
+      throw new WingsException(INVALID_CREDENTIAL, USER, e)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
-    } catch (InvalidClaimException invalidClaimException) {
-      throw new WingsException(EXPIRED_TOKEN, USER).addParam("message", "Token expired");
+    } catch (InvalidClaimException e) {
+      logger.info("Failed to verify JWT token {} in category {} with error: {}", jwtToken, category, e.getMessage());
+      throw new WingsException(EXPIRED_TOKEN, USER, e).addParam("message", "Token expired");
     }
   }
 
