@@ -560,6 +560,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     UpdateResults update = wingsPersistence.update(query, updateOperations);
     return update.getUpdatedCount() == 1;
   }
+
   public List<ArtifactStream> listBySettingId(String settingId) {
     return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
         .filter(SETTING_ID_KEY, settingId)

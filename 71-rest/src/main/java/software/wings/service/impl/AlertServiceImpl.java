@@ -51,7 +51,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -65,6 +64,7 @@ import java.util.concurrent.Future;
 @Singleton
 @Slf4j
 public class AlertServiceImpl implements AlertService {
+  // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
   public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(Arrays.asList(
       NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT,
       INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT,
@@ -75,7 +75,6 @@ public class AlertServiceImpl implements AlertService {
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private Injector injector;
   @Inject private EventPublisher eventPublisher;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {

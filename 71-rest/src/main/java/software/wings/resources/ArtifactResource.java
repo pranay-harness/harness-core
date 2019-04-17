@@ -12,12 +12,16 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PermitService;
@@ -51,6 +55,8 @@ public class ArtifactResource {
   private ArtifactService artifactService;
   private ArtifactStreamService artifactStreamService;
   private PermitService permitService;
+  private AppService appService;
+  private AlertService alertService;
 
   /**
    * Instantiates a new artifact resource.
@@ -59,11 +65,13 @@ public class ArtifactResource {
    * @param artifactStreamService
    */
   @Inject
-  public ArtifactResource(
-      ArtifactService artifactService, ArtifactStreamService artifactStreamService, PermitService permitService) {
+  public ArtifactResource(ArtifactService artifactService, ArtifactStreamService artifactStreamService,
+      PermitService permitService, AppService appService, AlertService alertService) {
     this.artifactService = artifactService;
     this.artifactStreamService = artifactStreamService;
     this.permitService = permitService;
+    this.appService = appService;
+    this.alertService = alertService;
   }
 
   /**
@@ -117,6 +125,12 @@ public class ArtifactResource {
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
+      alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+          ArtifactCollectionFailedAlert.builder()
+              .appId(appId)
+              .serviceId(artifactStream.getServiceId())
+              .artifactStreamId(artifactStream.getUuid())
+              .build());
     }
     return new RestResponse<>(savedArtifact);
   }

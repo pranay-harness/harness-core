@@ -38,7 +38,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
 
   private void executeInternal(String appId, ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
-    if (artifactStream.getFailedCronAttempts() > 100) {
+    if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
       logger.warn(
           "ASYNC_ARTIFACT_CRON: Artifact collection disabled for artifactStream:[id:{}, type:{}] due to too many failures [{}]",
           artifactStreamId, artifactStream.getArtifactStreamType(), artifactStream.getFailedCronAttempts());

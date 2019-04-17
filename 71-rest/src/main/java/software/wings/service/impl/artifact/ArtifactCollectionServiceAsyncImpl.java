@@ -32,6 +32,8 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -41,6 +43,9 @@ import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.impl.PermitServiceImpl;
+import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -71,6 +76,8 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private PermitService permitService;
+  @Inject private AppService appService;
+  @Inject private AlertService alertService;
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
@@ -88,6 +95,12 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
+      alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+          ArtifactCollectionFailedAlert.builder()
+              .appId(appId)
+              .serviceId(artifactStream.getServiceId())
+              .artifactStreamId(artifactStream.getUuid())
+              .build());
     }
     return artifact;
   }
@@ -159,8 +172,17 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
         logger.warn("Artifact Server {} was deleted of artifactStreamId {}", artifactStream.getSettingId(),
             artifactStream.getUuid());
         // TODO:: mark inactive maybe
+        int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
         artifactStreamService.updateFailedCronAttempts(
-            artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getFailedCronAttempts() + 1);
+            artifactStream.getAppId(), artifactStream.getUuid(), failedCronAttempts);
+        if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
+          alertService.openAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+              ArtifactCollectionFailedAlert.builder()
+                  .appId(appId)
+                  .serviceId(artifactStream.getServiceId())
+                  .artifactStreamId(artifactStream.getUuid())
+                  .build());
+        }
         return;
       }
 

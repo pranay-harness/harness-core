@@ -26,11 +26,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PermitService;
@@ -62,6 +66,7 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient TriggerService triggerService;
   @Inject private transient PermitService permitService;
+  @Inject private transient AlertService alertService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
 
   private static final Logger logger = LoggerFactory.getLogger(BuildSourceCallback.class);
@@ -116,17 +121,32 @@ public class BuildSourceCallback implements NotifyCallback {
 
   private void updatePermit(ArtifactStream artifactStream, boolean failed) {
     if (failed) {
+      int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
       artifactStreamService.updateFailedCronAttempts(
-          artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getFailedCronAttempts() + 1);
+          artifactStream.getAppId(), artifactStream.getUuid(), failedCronAttempts);
       logger.warn(
           "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds for artifactStream[{}], totalFailedAttempt:[{}]",
-          artifactStreamId, artifactStream.getFailedCronAttempts() + 1);
+          artifactStreamId, failedCronAttempts);
+      if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
+        alertService.openAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+            ArtifactCollectionFailedAlert.builder()
+                .appId(appId)
+                .serviceId(artifactStream.getServiceId())
+                .artifactStreamId(artifactStreamId)
+                .build());
+      }
     } else {
       if (artifactStream.getFailedCronAttempts() != 0) {
         logger.warn("ASYNC_ARTIFACT_COLLECTION: successfully fetched builds after [{}] failures for artifactStream[{}]",
             artifactStream.getFailedCronAttempts(), artifactStreamId);
         artifactStreamService.updateFailedCronAttempts(artifactStream.getAppId(), artifactStream.getUuid(), 0);
         permitService.releasePermitByKey(artifactStream.getUuid());
+        alertService.closeAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+            ArtifactCollectionFailedAlert.builder()
+                .appId(appId)
+                .serviceId(artifactStream.getServiceId())
+                .artifactStreamId(artifactStreamId)
+                .build());
       }
     }
   }
