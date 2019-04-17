@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.URL_KEY;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
@@ -45,11 +46,13 @@ import io.harness.network.Http;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
@@ -69,6 +72,8 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.expression.SecretFunctor;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
@@ -77,12 +82,14 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.util.HashMap;
@@ -101,6 +108,7 @@ public class ArtifactCollectionUtil {
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
   @Inject private AppService appService;
   @Inject private ExpressionEvaluator evaluator;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionUtil.class);
 
@@ -267,8 +275,8 @@ public class ArtifactCollectionUtil {
             getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId),
                 imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion(), appId));
       } else {
-        // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
-        // migration happens. The deployment code handles both the cases.
+        // There is a point when old ECR artifact streams would be using the old ECR Artifact Server
+        // definition until migration happens. The deployment code handles both the cases.
         EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
         imageDetailsBuilder.password(awsHelperService.getAmazonEcrAuthToken(
             ecrConfig, secretManager.getEncryptionDetails(ecrConfig, appId, workflowExecutionId)));
@@ -452,5 +460,95 @@ public class ArtifactCollectionUtil {
     metadata.put(IMAGE, domainName + "/" + imageName + ":" + tag);
     metadata.put(TAG, tag);
     return aBuildDetails().withNumber(tag).withMetadata(metadata).withBuildUrl(tagUrl + tag).build();
+  }
+
+  public static ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    artifactStreamAttributes.setArtifactType(service.getArtifactType());
+    return artifactStreamAttributes;
+  }
+
+  public Service getService(String appId, ArtifactStream artifactStream) {
+    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
+    if (service == null) {
+      artifactStreamService.delete(appId, artifactStream.getUuid());
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
+    }
+    return service;
+  }
+
+  private static boolean isArtifactoryDockerOrGenric(ArtifactStream artifactStream, ArtifactType artifactType) {
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+      return ArtifactType.DOCKER.equals(artifactType)
+          || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType());
+    }
+    return false;
+  }
+
+  private static boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream) {
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+      return ((ArtifactoryArtifactStream) artifactStream).getImageName() != null
+          || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType());
+    }
+    return false;
+  }
+
+  public static BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+
+    if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
+        || isArtifactoryDockerOrGenric(artifactStream, artifactType)) {
+      return BuildSourceRequestType.GET_BUILDS;
+    } else {
+      return BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD;
+    }
+  }
+
+  public static BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+
+    if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
+        || isArtifactoryDockerOrGeneric(artifactStream)) {
+      return BuildSourceRequestType.GET_BUILDS;
+    } else {
+      return BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD;
+    }
+  }
+
+  public static int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {
+    return ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS.equals(requestType) ? 25
+                                                                                                                  : -1;
+  }
+
+  public BuildSourceParameters getBuildSourceParameters(
+      String appId, ArtifactStream artifactStream, SettingAttribute settingAttribute) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    SettingValue settingValue = settingAttribute.getValue();
+
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
+
+    ArtifactStreamAttributes artifactStreamAttributes;
+    BuildSourceRequestType requestType;
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      Service service = getService(appId, artifactStream);
+      artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+      requestType = getRequestType(artifactStream, service.getArtifactType());
+    } else {
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      requestType = getRequestType(artifactStream);
+    }
+
+    return BuildSourceParameters.builder()
+        .accountId(settingAttribute.getAccountId())
+        .appId(artifactStream.getAppId())
+        .artifactStreamAttributes(artifactStreamAttributes)
+        .artifactStreamType(artifactStreamType)
+        .settingValue(settingValue)
+        .encryptedDataDetails(encryptedDataDetails)
+        .buildSourceRequestType(requestType)
+        .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
+        .build();
   }
 }

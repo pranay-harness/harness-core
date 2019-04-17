@@ -39,7 +39,7 @@ public class DockerPublicRegistryProcessor {
       DockerRegistryRestClient registryRestClient =
           dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig, encryptionDetails);
       Response<DockerPublicImageTagResponse> response =
-          registryRestClient.listPublicImageTags(imageName, null).execute();
+          registryRestClient.listPublicImageTags(imageName, null, 1).execute();
       if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
@@ -55,7 +55,8 @@ public class DockerPublicRegistryProcessor {
       String imageName, int maxNumberOfBuilds) throws IOException {
     DockerRegistryRestClient registryRestClient =
         dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig, encryptionDetails);
-    Response<DockerPublicImageTagResponse> response = registryRestClient.listPublicImageTags(imageName, null).execute();
+    Response<DockerPublicImageTagResponse> response =
+        registryRestClient.listPublicImageTags(imageName, null, maxNumberOfBuilds).execute();
     return paginate(response.body(), dockerConfig, imageName, registryRestClient, maxNumberOfBuilds);
   }
 
@@ -72,8 +73,8 @@ public class DockerPublicRegistryProcessor {
     // process first page
     List<BuildDetails> details = processPage(tagsPage, dockerConfig, imageName);
 
-    if (null == tagsPage.getNext()) {
-      return details;
+    if (details.size() >= limit || tagsPage.getNext() == null) {
+      return details.stream().limit(limit).collect(Collectors.toList());
     }
 
     HttpUrl nextPageUrl = HttpUrl.parse(tagsPage.getNext());
@@ -82,11 +83,11 @@ public class DockerPublicRegistryProcessor {
     // process rest of pages
     while (EmptyPredicate.isNotEmpty(nextPageNum)) {
       DockerPublicImageTagResponse page =
-          registryRestClient.listPublicImageTags(imageName, Integer.valueOf(nextPageNum)).execute().body();
+          registryRestClient.listPublicImageTags(imageName, Integer.valueOf(nextPageNum), limit).execute().body();
       List<BuildDetails> pageDetails = processPage(page, dockerConfig, imageName);
       details.addAll(pageDetails);
 
-      if (details.size() > limit || page.getNext() == null) {
+      if (details.size() >= limit || page.getNext() == null) {
         break;
       }
 

@@ -370,6 +370,31 @@ public class ArtifactServiceImpl implements ArtifactService {
     return true;
   }
 
+  @Override
+  public void deleteArtifacts(String appId, List<Artifact> artifacts) {
+    List<String> artifactIds = new ArrayList<>();
+    List<String> artifactIdsWithFiles = new ArrayList<>();
+    List<String> artifactFileIds = new ArrayList<>();
+    for (Artifact artifact : artifacts) {
+      if (isNotEmpty(artifact.getArtifactFiles())) {
+        artifactIdsWithFiles.add(artifact.getUuid());
+        List<String> ids = collectArtifactFileIds(artifact);
+        if (isNotEmpty(ids)) {
+          artifactFileIds.addAll(ids);
+        }
+      } else {
+        artifactIds.add(artifact.getUuid());
+      }
+    }
+    if (isNotEmpty(artifactIds)) {
+      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts")
+          .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds.toArray())));
+    }
+    if (isNotEmpty(artifactIdsWithFiles)) {
+      deleteArtifacts(artifactIdsWithFiles.toArray(), artifactFileIds);
+    }
+  }
+
   public boolean prune(String appId, String artifactId) {
     return wingsPersistence.delete(Artifact.class, appId, artifactId);
   }

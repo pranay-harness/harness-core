@@ -26,6 +26,6 @@ public interface DockerRegistryRestClient {
   Call<DockerImageTagResponse> listImageTagsByUrl(@Header("Authorization") String bearerAuthHeader, @Url String url);
 
   @GET("/v2/repositories/{imageName}/tags")
-  Call<DockerPublicImageTagResponse> listPublicImageTags(
-      @Path(value = "imageName", encoded = true) String imageName, @Query("page") Integer pageNum);
+  Call<DockerPublicImageTagResponse> listPublicImageTags(@Path(value = "imageName", encoded = true) String imageName,
+      @Query("page") Integer pageNum, @Query("page_size") int pageSize);
 }

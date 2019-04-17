@@ -16,14 +16,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.rules.Integration;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DockerBuildService;
-import software.wings.utils.ArtifactType;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,25 +31,34 @@ import java.util.List;
 @Integration
 @Slf4j
 public class DockerBuildServiceImplTest extends WingsBaseTest {
+  private static final String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
+
   @Inject private DockerRegistryService dockerRegistryService;
-  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ScmSecret scmSecret;
 
   @Inject @InjectMocks private DockerBuildService dockerBuildService;
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
-  public void shouldGetBuilds() {
-    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
-                                                    .appId("UXGI1f4vQa6nt5eXBcnv7A")
-                                                    .imageName("library/mysql")
-                                                    .settingId("knCLyrVjRjyUYM15RcjUQQ")
-                                                    .sourceName(ArtifactType.DOCKER.name())
-                                                    .serviceId("Yn57GaqwR9ioXq8YZ4V87Q")
-                                                    .build();
-    ArtifactStream artifactStream = artifactStreamService.create(dockerArtifactStream);
-    logger.info(artifactStream.toString());
+  public void shouldGetBuildsWithoutCredentials() {
+    DockerConfig dockerConfig = DockerConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).build();
+    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
+    logger.info(builds.toString());
+    assertThat(builds.size()).isEqualTo(5);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetBuildsWithCredentials() {
+    DockerConfig dockerConfig =
+        DockerConfig.builder()
+            .dockerRegistryUrl(DOCKER_REGISTRY_URL)
+            .username("anubhaw")
+            .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .build();
+    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
+    logger.info(builds.toString());
+    assertThat(builds.size()).isGreaterThanOrEqualTo(5);
   }
 
   @Test
@@ -61,12 +66,12 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   public void shouldGetLastSuccessfulBuild() {
     DockerConfig dockerConfig =
         DockerConfig.builder()
-            .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+            .dockerRegistryUrl(DOCKER_REGISTRY_URL)
             .username("anubhaw")
             .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
-    logger.info(builds.toString());
+    BuildDetails build = dockerRegistryService.getLastSuccessfulBuild(dockerConfig, null, "library/mysql");
+    logger.info(build.toString());
   }
 
   @Test
@@ -92,7 +97,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   public void shouldValidateCredentials() {
     DockerConfig dockerConfig =
         DockerConfig.builder()
-            .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+            .dockerRegistryUrl(DOCKER_REGISTRY_URL)
             .username("invalid")
             .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();

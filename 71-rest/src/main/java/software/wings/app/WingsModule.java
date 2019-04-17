@@ -185,6 +185,7 @@ import software.wings.service.impl.analysis.LearningEngineAnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogLabelingServiceImpl;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
+import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
@@ -265,6 +266,7 @@ import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.ArtifactCleanupService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -644,6 +646,9 @@ public class WingsModule extends DependencyModule {
     bind(ArtifactCollectionService.class)
         .annotatedWith(Names.named("ArtifactCollectionService"))
         .to(ArtifactCollectionServiceImpl.class);
+    bind(ArtifactCleanupService.class)
+        .annotatedWith(Names.named("AsyncArtifactCleanupService"))
+        .to(ArtifactCleanupServiceAsyncImpl.class);
     bind(CustomBuildSourceService.class).to(CustomBuildSourceServiceImpl.class);
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);

@@ -73,8 +73,8 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
       exception.addContext(ArtifactStream.class, artifactStreamId);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
-      logger.warn(
-          "Failed to collect artifacts for appId {}, artifactStream {}", appId, artifactStreamId, e.getMessage());
+      logger.warn("Failed to collect artifacts for appId {}, artifactStream {}. Reason {}", appId, artifactStreamId,
+          e.getMessage());
     }
   }
 }

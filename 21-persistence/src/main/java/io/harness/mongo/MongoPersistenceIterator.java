@@ -34,6 +34,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   @Inject private final QueueController queueController;
 
   public interface Handler<T> { void handle(T entity); }
+  public interface FilterExpander<T> { void filter(Query<T> query); }
 
   private Class<T> clazz;
   private String fieldName;
@@ -41,6 +42,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   private Duration maximumDaleyForCheck;
   private Duration acceptableDelay;
   private Handler<T> handler;
+  private FilterExpander<T> filterExpander;
   private ExecutorService executorService;
   private Semaphore semaphore;
   private boolean redistribute;
@@ -103,7 +105,12 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
           break;
         }
 
-        final T first = persistence.createQuery(clazz).order(Sort.ascending(fieldName)).project(fieldName, true).get();
+        final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName)).project(fieldName, true);
+        if (filterExpander != null) {
+          filterExpander.filter(query);
+        }
+
+        final T first = query.get();
 
         Duration sleepInterval = maximumDaleyForCheck == null ? targetInterval : maximumDaleyForCheck;
 
@@ -127,6 +134,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   public T next(long base) {
     final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
     query.or(query.criteria(fieldName).lessThan(currentTimeMillis()), query.criteria(fieldName).doesNotExist());
+    if (filterExpander != null) {
+      filterExpander.filter(query);
+    }
 
     final UpdateOperations<T> updateOperations =
         persistence.createUpdateOperations(clazz).set(fieldName, base + targetInterval.toMillis());
