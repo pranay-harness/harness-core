@@ -15,12 +15,18 @@ import org.mongodb.morphia.annotations.Indexes;
  * Created by sriram_parthasarathy on 9/22/17.
  */
 @Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
-@Indexes(@Index(fields =
-    {
-      @Field("workflowExecutionId")
-      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName"), @Field("cvConfigId"), @Field("tag")
-    },
-    options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
+@Indexes({
+  @Index(fields =
+      {
+        @Field("workflowExecutionId")
+        , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName"), @Field("cvConfigId"), @Field("tag")
+      },
+      options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx"))
+  ,
+      @Index(fields = {
+        @Field("analysisMinute"), @Field("appId"), @Field("cvConfigId")
+      }, options = @IndexOptions(name = "service_guard_idx"))
+})
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
