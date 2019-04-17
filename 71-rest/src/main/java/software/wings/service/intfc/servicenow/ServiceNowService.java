@@ -4,14 +4,18 @@ import io.harness.beans.EmbeddedUser;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.SettingAttribute;
-import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowState;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ServiceNowService {
   void validateCredential(SettingAttribute settingAttribute);
-  List<ServiceNowState> getStates(ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
+  List<ServiceNowMetaDTO> getStates(
+      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
+  Map<String, List<ServiceNowMetaDTO>> getCreateMeta(
+      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
   String getIssueUrl(
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId);
   ApprovalDetails.Action getApprovalStatus(String connectorId, String accountId, String appId, String issueNumber,

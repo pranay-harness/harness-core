@@ -63,6 +63,7 @@ import software.wings.api.ServiceArtifactElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.SimpleWorkflowParam;
@@ -251,6 +252,7 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
@@ -541,7 +543,7 @@ import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusMetricDataResponse;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
-import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowState;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
@@ -1219,10 +1221,12 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TemplateReference.class, 7161);
     kryo.register(AmazonS3HelmRepoConfig.class, 7162);
     kryo.register(ServiceNowTicketType.class, 7163);
-    kryo.register(ServiceNowState.class, 7164);
+    kryo.register(ServiceNowMetaDTO.class, 7164);
     kryo.register(HelmValuesFetchTaskParameters.class, 7165);
     kryo.register(HelmValuesFetchTaskResponse.class, 7166);
     kryo.register(HelmChartConfigParams.class, 7167);
     kryo.register(BugsnagSetupTestData.class, 7168);
+    kryo.register(ServiceNowFields.class, 7169);
+    kryo.register(ServiceNowExecutionData.class, 7170);
   }
 }
