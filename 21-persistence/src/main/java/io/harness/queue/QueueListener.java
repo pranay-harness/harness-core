@@ -14,17 +14,15 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public abstract class QueueListener<T extends Queuable> implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(QueueListener.class);
-
   @Inject @Getter @Setter private Queue<T> queue;
 
   @Setter private boolean runOnce;

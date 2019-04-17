@@ -12,8 +12,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
@@ -25,8 +24,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+@Slf4j
 public abstract class AbstractTemplateProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractTemplateProcessor.class);
   @Inject protected TemplateService templateService;
   @Inject protected WingsPersistence wingsPersistence;
 

@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import com.google.inject.Inject;
 
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -10,16 +11,14 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.concurrent.ExecutorService;
 
+@Slf4j
 public class AdministrativeJob implements Job {
   private static final String ADMINISTRATIVE_CRON_NAME = "ADMINISTRATIVE_CRON_NAME";
   private static final String ADMINISTRATIVE_CRON_GROUP = "ADMINISTRATIVE_CRON_GROUP";
-  private static final Logger logger = LoggerFactory.getLogger(AdministrativeJob.class);
 
   @Inject private SecretManager secretManager;
   @Inject private ExecutorService executorService;

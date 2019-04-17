@@ -10,15 +10,13 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.util.time.MonotonicSystemClock;
 import org.eclipse.jgit.util.time.ProposedTimestamp;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Builder
+@Slf4j
 public class AcquiredDistributedLock implements AcquiredLock {
-  private static Logger logger = LoggerFactory.getLogger(AcquiredDistributedLock.class);
-
   public static final MonotonicSystemClock monotonicSystemClock = new MonotonicSystemClock();
 
   @Getter private DistributedLock lock;

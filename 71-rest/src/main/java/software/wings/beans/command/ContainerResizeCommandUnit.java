@@ -15,9 +15,8 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -36,9 +35,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
-  private static final Logger logger = LoggerFactory.getLogger(ContainerResizeCommandUnit.class);
-
   static final String DASH_STRING = "----------";
 
   @Inject @Transient private transient DelegateLogService logService;

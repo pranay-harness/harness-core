@@ -9,8 +9,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.TaskLogContext;
 
 import java.util.List;
@@ -19,9 +18,8 @@ import java.util.function.Consumer;
 /**
  * Created by brett on 11/1/17
  */
+@Slf4j
 public abstract class AbstractDelegateValidateTask implements DelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateValidateTask.class);
-
   protected String delegateTaskId;
 
   private String accountId;

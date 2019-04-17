@@ -24,9 +24,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
@@ -61,9 +60,8 @@ import java.util.Map;
 /**
  * Created by brett on 10/10/17
  */
+@Slf4j
 public abstract class NodeSelectState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(NodeSelectState.class);
-
   private static final int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
 
   private int instanceCount;

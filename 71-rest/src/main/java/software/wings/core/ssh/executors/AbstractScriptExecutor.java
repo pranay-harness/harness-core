@@ -16,11 +16,10 @@ import com.google.inject.Inject;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateFile;
@@ -43,6 +42,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 
 @ValidateOnExecution
+@Slf4j
 public abstract class AbstractScriptExecutor implements ScriptExecutor {
   /**
    * The Config.
@@ -56,8 +56,6 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
    * The File service.
    */
   protected DelegateFileManager delegateFileManager;
-
-  public static final Logger logger = LoggerFactory.getLogger(AbstractScriptExecutor.class);
 
   /**
    * Instantiates a new abstract ssh executor.

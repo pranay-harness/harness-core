@@ -25,7 +25,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -104,7 +103,7 @@ public class PersistentLockerTest extends PersistenceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testAcquireLockNonLockedAtRelease() {
+  public void testAcquireLockNonLockedAtRelease() throws IllegalAccessException {
     Duration timeout = ofMillis(1000);
 
     DistributedLockOptions options = new DistributedLockOptions();
@@ -118,8 +117,7 @@ public class PersistentLockerTest extends PersistenceTest {
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger logger = mock(Logger.class);
-    Whitebox.setInternalState(
-        AcquiredDistributedLock.builder().lock(null).startTimestamp(0L).build(), "logger", logger);
+    setStaticFieldValue(AcquiredDistributedLock.class, "logger", logger);
 
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
     }

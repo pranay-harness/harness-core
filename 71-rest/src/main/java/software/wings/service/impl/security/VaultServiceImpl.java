@@ -30,6 +30,7 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import org.mongodb.morphia.query.CountOptions;
@@ -69,6 +70,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 11/2/17.
  */
 @Singleton
+@Slf4j
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
   private static final String REASON_KEY = "reason";
 

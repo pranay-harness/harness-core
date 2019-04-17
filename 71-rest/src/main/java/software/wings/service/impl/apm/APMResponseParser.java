@@ -9,8 +9,7 @@ import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
 import java.util.Collection;
@@ -19,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class APMResponseParser {
   @Data
   @Builder
@@ -29,8 +29,6 @@ public class APMResponseParser {
     private String text;
     private List<APMMetricInfo> metricInfos;
   }
-
-  private static final Logger logger = LoggerFactory.getLogger(APMResponseData.class);
 
   public static Collection<NewRelicMetricDataRecord> extract(List<APMResponseData> apmResponseData) {
     Map<String, NewRelicMetricDataRecord> resultMap = new HashMap<>();

@@ -11,9 +11,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -28,9 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class AddReplCtrlNameToKubeSetupProperties implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(AddReplCtrlNameToKubeSetupProperties.class);
-
   private static final String DEFAULT_REPLICATION_CONTROLLER_NAME = "${app.name}.${service.name}.${env.name}";
   private static final String REPLICATION_CONTROLLER_NAME_KEY = "replicationControllerName";
 

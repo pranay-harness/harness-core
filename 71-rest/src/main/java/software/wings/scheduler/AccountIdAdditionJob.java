@@ -12,6 +12,7 @@ import io.harness.persistence.HIterator;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -21,8 +22,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
@@ -38,11 +37,11 @@ import java.time.Duration;
  * @author rktummala on 03/05/19
  */
 @DisallowConcurrentExecution
+@Slf4j
 public class AccountIdAdditionJob implements Job {
   private static final String CRON_NAME = "ACCOUNT_ID_ADDITION_CRON_NAME";
   private static final String CRON_GROUP = "ACCOUNT_ID_ADDITION_CRON_GROUP";
   private static final String LOCK = "ACCOUNT_ID_ADDITION";
-  private static final Logger logger = LoggerFactory.getLogger(AccountIdAdditionJob.class);
 
   @Inject private BackgroundExecutorService executorService;
   @Inject private BackgroundSchedulerLocker persistentLocker;

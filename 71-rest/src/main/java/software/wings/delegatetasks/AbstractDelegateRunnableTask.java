@@ -16,8 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.ErrorNotifyResponseData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
@@ -30,9 +29,8 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateRunnableTask.class);
-
   private String delegateId;
   private String accountId;
   private String appId;

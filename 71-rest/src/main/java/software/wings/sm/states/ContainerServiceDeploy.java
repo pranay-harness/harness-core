@@ -24,10 +24,9 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -79,9 +78,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public abstract class ContainerServiceDeploy extends State {
-  private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
-
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient ServiceResourceService serviceResourceService;

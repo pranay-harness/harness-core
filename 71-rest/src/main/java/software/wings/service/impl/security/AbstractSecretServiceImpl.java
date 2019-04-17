@@ -4,8 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -18,8 +17,8 @@ import java.util.UUID;
 /**
  * Created by rsingh on 11/6/17.
  */
+@Slf4j
 public abstract class AbstractSecretServiceImpl {
-  protected static final Logger logger = LoggerFactory.getLogger(AbstractSecretServiceImpl.class);
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject private KmsService kmsService;

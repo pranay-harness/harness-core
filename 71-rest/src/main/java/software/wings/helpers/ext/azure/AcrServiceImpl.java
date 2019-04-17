@@ -13,8 +13,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -25,10 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@Slf4j
 public class AcrServiceImpl implements AcrService {
   private AzureHelperService azureHelperService;
-
-  private static final Logger logger = LoggerFactory.getLogger(AcrServiceImpl.class);
 
   @Inject
   public AcrServiceImpl(AzureHelperService azureHelperService) {

@@ -23,10 +23,9 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
@@ -87,9 +86,8 @@ import java.util.stream.Collectors;
  * Created by brett on 9/29/17
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Slf4j
 public abstract class ContainerServiceSetup extends State {
-  private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
-
   public static final String FIXED_INSTANCES = "fixedInstances";
   public static final String DESIRED_INSTANCE_COUNT_KEY = "desiredInstanceCount";
 
