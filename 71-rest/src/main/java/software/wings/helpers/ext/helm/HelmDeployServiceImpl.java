@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.replace;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -15,11 +16,14 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
@@ -47,11 +51,15 @@ import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.helm.response.RepoListInfo;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.yaml.GitClient;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,11 +80,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private EncryptionService encryptionService;
   @Inject private HelmCommandHelper helmCommandHelper;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private GitClient gitClient;
 
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployService.class);
+  private static final String ACTIVITY_ID = "ACTIVITY_ID";
+  private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
 
   @Override
-  public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest) {
+  public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest) throws IOException {
     LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
 
     try {
@@ -89,10 +100,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
-      addRepoForCommand(commandRequest);
-      repoUpdate(commandRequest);
+      if (commandRequest.getSourceRepoConfig() == null) {
+        addRepoForCommand(commandRequest);
+        repoUpdate(commandRequest);
+      }
+      fetchSourceRepo(commandRequest);
 
-      if (!helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
+      if (commandRequest.getSourceRepoConfig() == null
+          && !helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
         String msg =
             new StringBuilder("Couldn't find valid helm chart specification from service or values.yaml from git\n")
                 .append((commandRequest.getChartSpecification() != null) ? commandRequest.getChartSpecification() + "\n"
@@ -157,7 +172,42 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         executionLogCallback.saveExecutionLog("Deployment failed.");
         deleteAndPurgeHelmRelease(commandRequest, executionLogCallback);
       }
+      FileIo.deleteDirectoryAndItsContentIfExists(getWorkingDirectory(commandRequest));
     }
+  }
+
+  private void fetchSourceRepo(HelmInstallCommandRequest commandRequest) throws IOException {
+    K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getSourceRepoConfig();
+    if (sourceRepoConfig == null) {
+      return;
+    }
+    GitConfig gitConfig = sourceRepoConfig.getGitConfig();
+    GitFileConfig gitFileConfig = sourceRepoConfig.getGitFileConfig();
+    gitConfig.setGitRepoType(GitRepositoryType.HELM);
+    gitConfig.setBranch(gitFileConfig.getBranch());
+    if (!gitFileConfig.isUseBranch()) {
+      gitConfig.setReference(gitFileConfig.getCommitId());
+    }
+    encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails());
+    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
+        gitFileConfig.getCommitId(), gitFileConfig.getBranch(), Collections.singletonList(gitFileConfig.getFilePath()),
+        gitFileConfig.isUseBranch());
+
+    String workingDirectory = getWorkingDirectory(commandRequest);
+    FileIo.createDirectoryIfDoesNotExist(workingDirectory);
+    FileIo.waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
+    for (GitFile file : gitFetchFilesResult.getFiles()) {
+      Path filePath = Paths.get(workingDirectory, file.getFilePath());
+      Path parentPath = filePath.getParent();
+      if (parentPath == null) {
+        throw new WingsException("Parent path not found for file: " + file.getFilePath());
+      }
+      FileIo.createDirectoryIfDoesNotExist(parentPath.toString());
+      FileIo.waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
+      FileIo.writeUtf8StringToFile(filePath.toString(), file.getFileContent());
+    }
+    commandRequest.setWorkingDir(Paths.get(workingDirectory, gitFileConfig.getFilePath()).toString());
+    commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
   }
 
   private LogCallback markDoneAndStartNew(
@@ -546,5 +596,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   protected LogCallback getExecutionLogCallback(HelmCommandRequest helmCommandRequest, String name) {
     return new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(),
         helmCommandRequest.getAppId(), helmCommandRequest.getActivityId(), name);
+  }
+
+  public String getWorkingDirectory(HelmCommandRequest commandRequest) {
+    return replace(WORKING_DIR, "${" + ACTIVITY_ID + "}", commandRequest.getActivityId());
   }
 }

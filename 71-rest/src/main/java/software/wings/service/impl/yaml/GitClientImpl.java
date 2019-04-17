@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 import static software.wings.beans.yaml.YamlConstants.GIT_DEFAULT_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.GIT_HELM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -959,6 +960,9 @@ public class GitClientImpl implements GitClient {
 
       case TRIGGER:
         return GIT_TRIGGER_LOG_PREFIX;
+
+      case HELM:
+        return GIT_HELM_LOG_PREFIX;
 
       default:
         unhandled(repositoryType);

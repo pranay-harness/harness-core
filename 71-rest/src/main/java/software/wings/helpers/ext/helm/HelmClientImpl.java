@@ -40,6 +40,7 @@ import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -58,7 +59,7 @@ public class HelmClientImpl implements HelmClient {
   public HelmInstallCommandResponse install(HelmInstallCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
     String keyValueOverrides = constructValueOverrideFile(commandRequest.getVariableOverridesYamlFiles());
-    String chartReference = getChartReference(commandRequest.getChartSpecification());
+    String chartReference = getChartReference(commandRequest);
 
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String installCommand = HELM_INSTALL_COMMAND_TEMPLATE.replace("${OVERRIDE_VALUES}", keyValueOverrides)
@@ -77,11 +78,21 @@ public class HelmClientImpl implements HelmClient {
         .build();
   }
 
+  private String getChartReference(HelmInstallCommandRequest commandRequest) {
+    String chartReference;
+    if (commandRequest.getSourceRepoConfig() == null) {
+      chartReference = getChartReference(commandRequest.getChartSpecification());
+    } else {
+      chartReference = Paths.get(commandRequest.getWorkingDir()).toString();
+    }
+    return chartReference;
+  }
+
   @Override
   public HelmInstallCommandResponse upgrade(HelmInstallCommandRequest commandRequest)
       throws IOException, ExecutionException, TimeoutException, InterruptedException {
     String keyValueOverrides = constructValueOverrideFile(commandRequest.getVariableOverridesYamlFiles());
-    String chartReference = getChartReference(commandRequest.getChartSpecification());
+    String chartReference = getChartReference(commandRequest);
 
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String upgradeCommand = HELM_UPGRADE_COMMAND_TEMPLATE.replace("${RELEASE_NAME}", commandRequest.getReleaseName())
