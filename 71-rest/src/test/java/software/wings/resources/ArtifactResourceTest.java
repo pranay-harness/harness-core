@@ -36,6 +36,8 @@ import org.junit.rules.Verifier;
 import software.wings.beans.artifact.Artifact;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PermitService;
@@ -57,6 +59,8 @@ public class ArtifactResourceTest {
   public static final ArtifactStreamService ARTIFACT_STREAM_SERVICE =
       mock(ArtifactStreamService.class, RETURNS_DEEP_STUBS);
   public static final PermitService PERMIT_SERVICE = mock(PermitService.class, RETURNS_DEEP_STUBS);
+  public static final AppService APP_SERVICE = mock(AppService.class);
+  public static final AlertService ALERT_SERVICE = mock(AlertService.class);
 
   /**
    * The constant RESOURCES.
@@ -64,7 +68,8 @@ public class ArtifactResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ArtifactResource(ARTIFACT_SERVICE, ARTIFACT_STREAM_SERVICE, PERMIT_SERVICE))
+          .addResource(new ArtifactResource(
+              ARTIFACT_SERVICE, ARTIFACT_STREAM_SERVICE, PERMIT_SERVICE, APP_SERVICE, ALERT_SERVICE))
           .addProvider(ConstraintViolationExceptionMapper.class)
           .addProvider(WingsExceptionMapper.class)
           .build();

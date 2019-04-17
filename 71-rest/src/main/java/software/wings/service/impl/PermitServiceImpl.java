@@ -16,10 +16,16 @@ import software.wings.service.intfc.PermitService;
 public class PermitServiceImpl implements PermitService {
   @Inject private WingsPersistence wingsPersistence;
   private static final Logger logger = LoggerFactory.getLogger(PermitService.class);
-  private static final int[] BACKOFF_MULTIPLIER = new int[] {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610};
+  private static final int[] BACKOFF_MULTIPLIER = new int[] {1, 1, 2, 3, 5, 8, 13, 21, 34, 34, 34, 34};
+
+  public static final int MAX_FAILED_ATTEMPTS = 500;
 
   public static int getBackoffMultiplier(int failedCronAttempts) {
     return BACKOFF_MULTIPLIER[failedCronAttempts % BACKOFF_MULTIPLIER.length];
+  }
+
+  public static boolean shouldSendAlert(int failedCronAttempts) {
+    return failedCronAttempts == 7;
   }
 
   @Override
