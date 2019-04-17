@@ -188,8 +188,22 @@ public class HelmDeployState extends State {
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
 
+    K8sDelegateManifestConfig sourceRepoConfig = null;
+    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
+        app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
+    if (appManifest != null) {
+      GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
+      GitConfig sourceRepoGitConfig =
+          settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
+      sourceRepoConfig = K8sDelegateManifestConfig.builder()
+                             .gitFileConfig(sourceRepoGitFileConfig)
+                             .gitConfig(sourceRepoGitConfig)
+                             .encryptedDataDetails(fetchEncryptedDataDetail(context, sourceRepoGitConfig))
+                             .build();
+    }
+
     if (StateType.HELM_DEPLOY.name().equals(getStateType())) {
-      if (gitFileConfig == null || gitFileConfig.getConnectorId() == null) {
+      if ((gitFileConfig == null || gitFileConfig.getConnectorId() == null) && sourceRepoConfig == null) {
         validateChartSpecification(helmChartSpecification);
       }
       evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
@@ -235,20 +249,6 @@ public class HelmDeployState extends State {
         gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
       }
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
-    }
-
-    K8sDelegateManifestConfig sourceRepoConfig = null;
-    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
-        app.getUuid(), env.getUuid(), serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
-    if (appManifest != null) {
-      GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
-      GitConfig sourceRepoGitConfig =
-          settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
-      sourceRepoConfig = K8sDelegateManifestConfig.builder()
-                             .gitFileConfig(sourceRepoGitFileConfig)
-                             .gitConfig(sourceRepoGitConfig)
-                             .encryptedDataDetails(fetchEncryptedDataDetail(context, sourceRepoGitConfig))
-                             .build();
     }
 
     setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,

@@ -27,6 +27,7 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   private Map<String, String> valueOverrides;
   private List<String> variableOverridesYamlFiles;
   private GitFileConfig gitFileConfig;
+  private String workingDir;
 
   public HelmInstallCommandRequest() {
     super(HelmCommandType.INSTALL);

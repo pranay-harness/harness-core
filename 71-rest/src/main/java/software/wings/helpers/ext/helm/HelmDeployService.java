@@ -21,7 +21,7 @@ public interface HelmDeployService {
    * @param commandRequest       the command request
    * @return the helm command response
    */
-  HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest);
+  HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest) throws IOException;
 
   /**
    * Rollback helm command response.
