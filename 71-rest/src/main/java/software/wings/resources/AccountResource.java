@@ -24,7 +24,9 @@ import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.licensing.LicenseService;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.authentication.AuthenticationMechanism;
@@ -256,9 +258,9 @@ public class AccountResource {
   }
 
   @GET
-  @Path("{accountId}/type")
-  public RestResponse<String> getAccountType(@PathParam("accountId") String accountId) {
-    String accountType = accountService.getAccountType(accountId).orElse(null);
-    return new RestResponse<>(accountType);
+  @Path("{accountId}")
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<Account> getAccount(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.getFromCache(accountId));
   }
 }
