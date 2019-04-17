@@ -166,7 +166,17 @@ public class ServiceSampleDataProvider {
         + "# A Service can map an incoming port to any targetPort.\n"
         + "# targetPort is where application is listening on inside the container.\n"
         + "servicePort: 80\n"
-        + "serviceTargetPort: 8080");
+        + "serviceTargetPort: 8080\n"
+        + "\n"
+        + "# Specify all environment variables to be added to the container.\n"
+        + "# The following two maps, config and secrets, are put into a ConfigMap\n"
+        + "# and a Secret, respectively.\n"
+        + "# Both are added to the container environment in podSpec as envFrom source.\n"
+        + "env:\n"
+        + "  config:\n"
+        + "    key1: value1\n"
+        + "  secrets:\n"
+        + "    key2: value2");
 
     applicationManifestService.updateManifestFileByServiceId(valuesFile, service.getUuid());
 
