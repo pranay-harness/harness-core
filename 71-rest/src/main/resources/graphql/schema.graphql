@@ -42,6 +42,12 @@ interface BaseInfo {
   debugInfo: String
 }
 
+type PageInfo {
+  total: Int
+  offset : Int
+  limit : Int
+}
+
 # Type for workflow Execution
 type WorkflowExecution implements BaseInfo {
   # Workflow Execution Id
