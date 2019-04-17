@@ -300,10 +300,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (mlAnalysisResponse.getOverallMetricScores() == null) {
       mlAnalysisResponse.setOverallMetricScores(new HashMap<>());
     }
-    double riskSocre =
-        mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).average().orElse(0.0);
+    double riskScore =
+        mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
     continuousVerificationService.triggerAlertIfNecessary(
-        cvConfigId, riskSocre, mlAnalysisResponse.getAnalysisMinute());
+        cvConfigId, riskScore, mlAnalysisResponse.getAnalysisMinute());
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
         stateType, workflowExecutionId, stateExecutionId);
