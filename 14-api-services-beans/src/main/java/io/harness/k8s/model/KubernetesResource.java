@@ -242,27 +242,27 @@ public class KubernetesResource {
   }
 
   public static String redactSecretValues(String spec) {
-    List<HasMetadata> output = k8sClient.load(IOUtils.toInputStream(spec, UTF_8)).get();
-    if (!StringUtils.equals("Secret", output.get(0).getKind())) {
-      return spec;
-    }
-
-    Secret secret = (Secret) output.get(0);
-    final String redacted = "***";
-
-    for (Entry e : secret.getData().entrySet()) {
-      e.setValue(redacted);
-    }
-
-    for (Entry e : secret.getStringData().entrySet()) {
-      e.setValue(redacted);
-    }
-
-    String result = "";
+    String result = "Error in redactSecretValues. skipped.\n";
 
     try {
+      List<HasMetadata> output = k8sClient.load(IOUtils.toInputStream(spec, UTF_8)).get();
+      if (!StringUtils.equals("Secret", output.get(0).getKind())) {
+        return spec;
+      }
+
+      Secret secret = (Secret) output.get(0);
+      final String redacted = "***";
+
+      for (Entry e : secret.getData().entrySet()) {
+        e.setValue(redacted);
+      }
+
+      for (Entry e : secret.getStringData().entrySet()) {
+        e.setValue(redacted);
+      }
+
       result = KubernetesHelper.toYaml(secret);
-    } catch (IOException e) {
+    } catch (Exception e) {
       // do nothing
       noop();
     }
