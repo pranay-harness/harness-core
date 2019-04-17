@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 
 /**
  * Class representing entity for TimeSeries Analysis Record.
@@ -24,7 +25,7 @@ import org.mongodb.morphia.annotations.Indexes;
       options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx"))
   ,
       @Index(fields = {
-        @Field("analysisMinute"), @Field("appId"), @Field("cvConfigId")
+        @Field("appId"), @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC)
       }, options = @IndexOptions(name = "service_guard_idx"))
 })
 @Data

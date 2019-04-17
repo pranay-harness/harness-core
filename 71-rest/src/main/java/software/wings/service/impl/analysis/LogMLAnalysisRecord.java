@@ -24,6 +24,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -39,12 +40,18 @@ import java.util.Map;
  * Created by rsingh on 6/23/17.
  */
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
-@Indexes(@Index(fields =
-    {
-      @Field("applicationId")
-      , @Field("stateExecutionId"), @Field("cvConfigId"), @Field("stateType"), @Field("logCollectionMinute")
-    },
-    options = @IndexOptions(unique = true, name = "logAnalysisUniqueIdx")))
+@Indexes({
+  @Index(fields =
+      {
+        @Field("applicationId")
+        , @Field("stateExecutionId"), @Field("cvConfigId"), @Field("stateType"), @Field("logCollectionMinute")
+      },
+      options = @IndexOptions(unique = true, name = "logAnalysisUniqueIdx"))
+  ,
+      @Index(fields = {
+        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "service_guard_idx"))
+})
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
