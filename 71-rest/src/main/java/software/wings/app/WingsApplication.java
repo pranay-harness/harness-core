@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
@@ -84,6 +85,7 @@ import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -102,6 +104,7 @@ import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AccountIdAdditionJob;
 import software.wings.scheduler.AdministrativeJob;
+import software.wings.scheduler.ArtifactCleanupHandler;
 import software.wings.scheduler.ArtifactCollectionHandler;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.ExecutionLogsPruneJob;
@@ -497,19 +500,42 @@ public class WingsApplication extends Application<MainConfiguration> {
     final ArtifactCollectionHandler artifactCollectionHandler = new ArtifactCollectionHandler();
     injector.injectMembers(artifactCollectionHandler);
 
-    PersistenceIterator iterator = MongoPersistenceIterator.<ArtifactStream>builder()
-                                       .clazz(ArtifactStream.class)
-                                       .fieldName(ArtifactStream.NEXT_ITERATION_KEY)
-                                       .targetInterval(ofMinutes(1))
-                                       .acceptableDelay(ofSeconds(30))
-                                       .executorService(artifactCollectionExecutor)
-                                       .semaphore(new Semaphore(25))
-                                       .handler(artifactCollectionHandler)
-                                       .redistribute(true)
-                                       .build();
+    final Semaphore artifactCollectionSemaphore = new Semaphore(25);
+    PersistenceIterator artifactCollectionIterator = MongoPersistenceIterator.<ArtifactStream>builder()
+                                                         .clazz(ArtifactStream.class)
+                                                         .fieldName(ArtifactStream.NEXT_ITERATION_KEY)
+                                                         .targetInterval(ofMinutes(1))
+                                                         .acceptableDelay(ofSeconds(30))
+                                                         .executorService(artifactCollectionExecutor)
+                                                         .semaphore(artifactCollectionSemaphore)
+                                                         .handler(artifactCollectionHandler)
+                                                         .redistribute(true)
+                                                         .build();
 
-    injector.injectMembers(iterator);
-    artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+    injector.injectMembers(artifactCollectionIterator);
+    artifactCollectionExecutor.scheduleAtFixedRate(
+        () -> artifactCollectionIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+
+    final ArtifactCleanupHandler artifactCleanupHandler = new ArtifactCleanupHandler();
+    injector.injectMembers(artifactCleanupHandler);
+
+    PersistenceIterator artifactCleanupIterator =
+        MongoPersistenceIterator.<ArtifactStream>builder()
+            .clazz(ArtifactStream.class)
+            .fieldName(ArtifactStream.NEXT_CLEANUP_ITERATION_KEY)
+            .targetInterval(ofHours(2))
+            .acceptableDelay(ofSeconds(30))
+            .executorService(artifactCollectionExecutor)
+            .semaphore(artifactCollectionSemaphore)
+            .handler(artifactCleanupHandler)
+            .filterExpander(
+                query -> query.filter(ArtifactStream.ARTIFACT_STREAM_TYPE_KEY, ArtifactStreamType.DOCKER.name()))
+            .redistribute(true)
+            .build();
+
+    injector.injectMembers(artifactCleanupIterator);
+    artifactCollectionExecutor.scheduleAtFixedRate(
+        () -> artifactCleanupIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
 
     InstanceSyncHandler.InstanceSyncExecutor.registerIterators(injector);
   }

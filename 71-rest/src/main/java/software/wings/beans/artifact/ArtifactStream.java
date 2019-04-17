@@ -51,6 +51,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   public static final String METADATA_ONLY_KEY = "metadataOnly";
   public static final String SETTING_ID_KEY = "settingId";
   public static final String NEXT_ITERATION_KEY = "nextIteration";
+  public static final String NEXT_CLEANUP_ITERATION_KEY = "nextCleanupIteration";
 
   private String artifactStreamType;
   private String sourceName;
@@ -63,6 +64,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private boolean metadataOnly;
   private int failedCronAttempts;
   @Indexed private Long nextIteration;
+  @Indexed private Long nextCleanupIteration;
   private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
@@ -97,11 +99,16 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
+    return NEXT_CLEANUP_ITERATION_KEY.equals(fieldName) ? nextCleanupIteration : nextIteration;
   }
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {
+    if (NEXT_CLEANUP_ITERATION_KEY.equals(fieldName)) {
+      this.nextCleanupIteration = nextIteration;
+      return;
+    }
+
     this.nextIteration = nextIteration;
   }
 

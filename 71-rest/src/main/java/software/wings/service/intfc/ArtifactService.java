@@ -145,6 +145,14 @@ public interface ArtifactService extends OwnedByArtifactStream {
    */
   boolean delete(String appId, String artifactId);
 
+  /**
+   * Soft delete a list of artifacts.
+   *
+   * @param appId     the app id
+   * @param artifacts the artifacts
+   */
+  void deleteArtifacts(String appId, List<Artifact> artifacts);
+
   Artifact fetchLatestArtifactForArtifactStream(ArtifactStream artifactStream);
 
   Artifact fetchLastCollectedApprovedArtifactForArtifactStream(ArtifactStream artifactStream);
