@@ -9,8 +9,7 @@ import com.amazonaws.regions.Regions;
 import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -23,8 +22,8 @@ import java.util.function.Consumer;
 /**
  * Created by brett on 11/2/17
  */
+@Slf4j
 public abstract class AbstractSecretManagerValidation extends AbstractDelegateValidateTask {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateValidateTask.class);
   private static final Map<Regions, String> AWS_REGION_URL_MAP = new ConcurrentHashMap<>();
   static {
     // See AWS doc https://docs.aws.amazon.com/general/latest/gr/rande.html

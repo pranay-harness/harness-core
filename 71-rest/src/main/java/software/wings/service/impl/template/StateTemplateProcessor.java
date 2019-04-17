@@ -10,8 +10,7 @@ import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
@@ -28,8 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(StateTemplateProcessor.class);
   @Inject private WorkflowService workflowService;
   @Inject private TemplateHelper templateHelper;
 

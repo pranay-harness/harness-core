@@ -22,6 +22,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by anubhaw on 2019-03-11.
  */
+@Slf4j
 public class ScriptProcessExecutor extends AbstractScriptExecutor {
   private ShellExecutorConfig config;
   private ScriptType scriptType;

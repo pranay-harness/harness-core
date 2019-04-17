@@ -16,12 +16,11 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Environment.EnvironmentType;
@@ -52,13 +51,13 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class ActivityServiceImpl implements ActivityService {
   public static final int MAX_ACTIVITY_VERSION_RETRY = 5;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LogService logService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EventEmitter eventEmitter;
-  private static final Logger logger = LoggerFactory.getLogger(ActivityServiceImpl.class);
 
   @Inject private Queue<PruneEvent> pruneQueue;
 

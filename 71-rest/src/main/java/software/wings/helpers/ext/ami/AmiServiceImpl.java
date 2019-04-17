@@ -11,8 +11,7 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -28,9 +27,9 @@ import java.util.Map;
  * Created by sgurubelli on 12/14/17.
  */
 @Singleton
+@Slf4j
 public class AmiServiceImpl implements AmiService {
   private static final String AMI_RESOURCE_FILTER_PREFIX = "ami-";
-  private static final Logger logger = LoggerFactory.getLogger(AmiServiceImpl.class);
   @Inject private AwsHelperService awsHelperService;
 
   @Override

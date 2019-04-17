@@ -27,9 +27,8 @@ import io.harness.limits.impl.model.StaticLimit;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
@@ -52,6 +51,7 @@ import software.wings.service.intfc.UserService;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class AccountGenerator {
   private static final String adminUserUuid = "lv0euRhKRCyiXWzS7pOg6g";
   private static final String adminUserName = "Admin";
@@ -97,7 +97,6 @@ public class AccountGenerator {
   public static final String TEST_ACCOUNT_ID = "1234567890123456789012";
 
   @Setter Account account;
-  private static final Logger logger = LoggerFactory.getLogger(AccountGenerator.class);
 
   public enum Accounts { GENERIC_TEST, HARNESS_TEST }
 

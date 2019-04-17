@@ -27,6 +27,7 @@ import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
@@ -58,6 +59,7 @@ import java.util.UUID;
  * Created by rsingh on 9/29/17.
  */
 @Singleton
+@Slf4j
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
   @Inject private AccountService accountService;

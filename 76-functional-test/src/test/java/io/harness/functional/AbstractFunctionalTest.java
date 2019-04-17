@@ -13,21 +13,19 @@ import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
 import io.restassured.RestAssured;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 
 import java.io.IOException;
 import javax.ws.rs.core.GenericType;
 
+@Slf4j
 public abstract class AbstractFunctionalTest extends CategoryTest implements FunctionalTests {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractFunctionalTest.class);
-
   protected static String bearerToken;
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());

@@ -19,12 +19,11 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -36,9 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 @Singleton
+@Slf4j
 public final class NotifyEventListener extends QueueListener<NotifyEvent> {
-  private static final Logger logger = LoggerFactory.getLogger(NotifyEventListener.class);
-
   private static final Duration MAX_CALLBACK_PROCESSING_TIME = Duration.ofMinutes(1);
 
   @Inject private Injector injector;
