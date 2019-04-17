@@ -100,13 +100,14 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public void delete(Class<? extends GoogleDataStoreAware> clazz, String id) {
-    Query<Key> query = Query.newKeyQueryBuilder()
-                           .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
-                           .setFilter(PropertyFilter.eq("name", id))
-                           .build();
-    List<Key> keysToDelete = new ArrayList<>();
-    datastore.run(query).forEachRemaining(key -> keysToDelete.add(key));
-    datastore.delete(keysToDelete.stream().toArray(Key[] ::new));
+    logger.info("Deleting from GoogleDatastore table {}, id: {}",
+        clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value(), id);
+    Key keyToDelete = datastore.newKeyFactory()
+                          .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
+                          .newKey(id);
+    datastore.delete(keyToDelete);
+    logger.info("Deleted from GoogleDatastore table {}, id: {}",
+        clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value(), id);
   }
 
   @Override
