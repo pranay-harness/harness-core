@@ -78,7 +78,7 @@ public class ManagedExecutorService implements ExecutorService, Managed {
    */
   @Override
   public Future<?> submit(Runnable task) {
-    return executorService.submit(task);
+    return executorService.submit(GlobalContextManager.generateExecutorTask(task));
   }
 
   /* (non-Javadoc)

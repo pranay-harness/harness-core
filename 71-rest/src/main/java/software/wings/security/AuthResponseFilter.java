@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.manage.GlobalContextManager;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.ContainerRequest;
 import software.wings.beans.HttpMethod;
@@ -55,6 +56,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+    GlobalContextManager.unset();
     UserThreadLocal.unset(); // clear user object from thread local
     invalidateAccountCacheIfNeeded(requestContext);
   }

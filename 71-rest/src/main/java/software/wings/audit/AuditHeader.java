@@ -57,6 +57,7 @@ public class AuditHeader extends Base {
   private Long responseTime;
 
   // For Audit Headers created by Git user actions
+  @Getter @Setter private String accountId;
   @Getter @Setter private GitAuditUser gitAuditUser;
   @Getter @Setter private List<EntityAuditRecord> entityAuditRecords;
 

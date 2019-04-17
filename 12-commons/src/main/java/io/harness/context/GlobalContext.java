@@ -16,7 +16,6 @@ public class GlobalContext {
     if (globalContextData != null && !key.equals(globalContextData.getKey())) {
       throw new RuntimeException("This should never happen");
     }
-
     return globalContextData;
   }
 
