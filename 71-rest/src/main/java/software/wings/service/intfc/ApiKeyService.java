@@ -7,9 +7,10 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 public interface ApiKeyService extends OwnedByAccount {
-  PageResponse<ApiKeyEntry> list(PageRequest<ApiKeyEntry> request);
-  String generate(@NotEmpty String accountId);
-  void delete(@NotEmpty String uuid);
-  String get(@NotEmpty String uuid, @NotEmpty String accountId);
+  ApiKeyEntry update(String uuid, String accountId, ApiKeyEntry apiKeyEntry);
+  PageResponse<ApiKeyEntry> list(PageRequest<ApiKeyEntry> request, String accountId);
+  ApiKeyEntry generate(@NotEmpty String accountId, ApiKeyEntry apiKeyEntry);
+  void delete(String accountId, @NotEmpty String uuid);
+  ApiKeyEntry get(@NotEmpty String uuid, @NotEmpty String accountId);
   void validate(@NotEmpty String key, @NotEmpty String accountId);
 }
