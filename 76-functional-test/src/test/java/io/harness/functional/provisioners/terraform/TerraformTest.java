@@ -37,6 +37,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -111,6 +112,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "vaibhav.si@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldRunTerraformWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution = runWorkflow(application.getAppId(), environment.getUuid(), executionArgs);
