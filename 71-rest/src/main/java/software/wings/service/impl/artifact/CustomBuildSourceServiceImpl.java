@@ -35,9 +35,20 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
 
   @Override
+  public List<BuildDetails> getBuilds(String artifactStreamId) {
+    logger.info("Retrieving the builds for Custom Repository artifactStreamId {}", artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    return getBuildDetails(artifactStream);
+  }
+
+  @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId) {
     logger.info("Retrieving the builds for Custom Repository artifactStreamId {}", artifactStreamId);
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    return getBuildDetails(artifactStream);
+  }
+
+  private List<BuildDetails> getBuildDetails(ArtifactStream artifactStream) {
     Validator.notNullCheck("Artifact source does not exist", artifactStream, USER);
 
     CustomArtifactStream customArtifactStream = (CustomArtifactStream) artifactStream;
@@ -58,7 +69,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(artifactStreamAttributes.getAccountId())
-                                          .appId(appId)
+                                          .appId(artifactStream.getAppId())
                                           .timeout(Duration.ofSeconds(timeout).toMillis())
                                           .tags(tags)
                                           .build();

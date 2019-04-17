@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -165,8 +166,18 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
+  public List<BuildDetails> getBuilds(String artifactStreamId, String settingId) {
+    return getBuilds(GLOBAL_APP_ID, artifactStreamId, settingId, -1);
+  }
+
+  @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
-    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
+    ArtifactStream artifactStream;
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      artifactStream = getArtifactStream(appId, artifactStreamId);
+    } else {
+      artifactStream = getArtifactStream(artifactStreamId);
+    }
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       return customBuildSourceService.getBuilds(appId, artifactStreamId);
     }
@@ -178,10 +189,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
-    Service service = getService(appId, artifactStream);
     String artifactStreamType = artifactStream.getArtifactStreamType();
-
-    ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+    ArtifactStreamAttributes artifactStreamAttributes;
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      Service service = getService(appId, artifactStream);
+      artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+    } else {
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    }
     if (GCS.name().equals(artifactStreamType)) {
       limit = (limit != -1) ? limit : 100;
     }
@@ -315,5 +330,86 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting settingValue) {
     return secretManager.getEncryptionDetails(settingValue, null, null);
+  }
+
+  @Override
+  public Set<JobDetails> getJobs(String settingId, String parentJobName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    List<JobDetails> jobs = getBuildService(settingAttribute)
+                                .getJobs(settingValue, encryptedDataDetails, Optional.ofNullable(parentJobName));
+    // Sorting the job details by name before returning
+    Set<JobDetails> jobDetailsSet =
+        Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareToIgnoreCase));
+    jobDetailsSet.addAll(jobs);
+    return jobDetailsSet;
+  }
+
+  @Override
+  public Set<String> getArtifactPaths(String jobName, String settingId, String groupId, String artifactStreamType) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue value = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
+    return Sets.newTreeSet(getBuildService(artifactStreamType, settingAttribute)
+                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails));
+  }
+
+  @Override
+  public BuildService getBuildService(SettingAttribute settingAttribute) {
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder()
+            .accountId(settingAttribute.getAccountId())
+            .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
+                    ? 120 * 1000
+                    : DEFAULT_SYNC_CALL_TIMEOUT)
+            .build();
+    return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
+  }
+
+  private BuildService getBuildService(String artifactStreamType, SettingAttribute settingAttribute) {
+    if (artifactStreamType == null) {
+      return getBuildService(settingAttribute);
+    }
+    Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(120 * 1000).build();
+    return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
+  }
+
+  @Override
+  public BuildDetails getLastSuccessfulBuild(String artifactStreamId, String settingId) {
+    ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
+
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+
+    if (AMAZON_S3.name().equals(artifactStream.getArtifactStreamType())) {
+      return getBuildService(settingAttribute, artifactStream.getArtifactStreamType())
+          .getLastSuccessfulBuild(
+              artifactStream.getAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
+    } else {
+      return getBuildService(settingAttribute)
+          .getLastSuccessfulBuild(
+              artifactStream.getAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
+    }
+  }
+
+  private ArtifactStream getArtifactStream(String artifactStreamId) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    notNullCheck("Artifact Stream", artifactStream);
+    return artifactStream;
+  }
+
+  @Override
+  public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
+    if (buildDetails == null) {
+      throw new InvalidRequestException("Build details can not null", USER);
+    }
+    return artifactCollectionServiceAsync.collectArtifact(artifactStreamId, buildDetails);
   }
 }

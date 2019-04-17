@@ -12,6 +12,7 @@ import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.artifact.Artifact.ARTIFACT_FILES_KEY;
@@ -170,15 +171,23 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
-    if (!appService.exist(artifact.getAppId())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-          .addParam("args", "App does not exist: " + artifact.getAppId());
+    ArtifactStream artifactStream;
+    if (artifact.getAppId() != null && !artifact.getAppId().equals(GLOBAL_APP_ID)) {
+      if (!appService.exist(artifact.getAppId())) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "App does not exist: " + artifact.getAppId());
+      }
+      artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    } else {
+      artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     }
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+
     notNullCheck("Artifact Stream", artifactStream, USER);
 
     artifact.setArtifactSourceName(artifactStream.getSourceName());
-    artifact.setServiceIds(asList(artifactStream.getServiceId()));
+    if (artifactStream.getServiceId() != null) {
+      artifact.setServiceIds(asList(artifactStream.getServiceId()));
+    }
 
     setArtifactStatus(artifact, artifactStream);
 
@@ -199,13 +208,14 @@ public class ArtifactServiceImpl implements ArtifactService {
       artifact.setStatus(APPROVED);
       return;
     }
-    if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
+    if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) { // TODO: if (isNotEmpty(artifactPaths) ||not
+                                                                       // Null) ->not_downloaded
       artifact.setContentStatus(getArtifactType(artifactStream).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
       artifact.setStatus(APPROVED);
       return;
     }
 
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) { // TODO: use image_name
       if (getArtifactType(artifactStream).equals(DOCKER)) {
         artifact.setContentStatus(METADATA_ONLY);
         artifact.setStatus(APPROVED);

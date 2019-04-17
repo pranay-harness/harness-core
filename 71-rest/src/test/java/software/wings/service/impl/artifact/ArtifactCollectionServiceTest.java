@@ -4,10 +4,12 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.RPM;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -27,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.Artifact;
@@ -45,20 +48,23 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ArtifactCollectionServiceTest extends WingsBaseTest {
   public static final String LATEST_BUILD_NUMBER = "latest";
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   @Inject @Spy private WingsPersistence wingsPersistence;
   @InjectMocks @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
-  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @InjectMocks @Inject private ArtifactCollectionUtil artifactCollectionUtil;
 
   @Mock ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
   @Mock private BuildSourceService buildSourceService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private SettingsService settingsService;
 
   private Artifact.Builder artifactBuilder = anArtifact()
                                                  .withAppId(APP_ID)
@@ -71,9 +77,12 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
   private Artifact artifact = artifactBuilder.build();
 
+  private SettingAttribute settingAttribute = aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+
   @Before
   public void setUp() {
     when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
   }
 
   @Test
@@ -94,6 +103,26 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldCollectJenkinsArtifactConnectorLevel() {
+    BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .uuid(ARTIFACT_STREAM_ID)
+                                                      .appId(GLOBAL_APP_ID)
+                                                      .sourceName("ARTIFACT_SOURCE")
+                                                      .settingId(SETTING_ID)
+                                                      .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    Artifact newArtifact = artifactCollectionUtil.getArtifact(jenkinsArtifactStream, jenkinsBuildDetails);
+    when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
+
+    Artifact collectedArtifact = artifactCollectionService.collectArtifact(ARTIFACT_STREAM_ID, jenkinsBuildDetails);
+    assertThat(collectedArtifact).isNotNull();
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo("3594");
+    assertThat(collectedArtifact.getUrl()).isEqualTo("https://jenkins.harness.io/job/portal/3594/");
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldCollectS3Artifact() {
     BuildDetails s3BuildDetails = getS3BuildDetails();
 
@@ -102,6 +131,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                                         .appId(APP_ID)
                                                         .sourceName("ARTIFACT_SOURCE")
                                                         .serviceId(SERVICE_ID)
+                                                        .settingId(SETTING_ID)
                                                         .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
     Artifact newArtifact = artifactCollectionUtil.getArtifact(amazonS3ArtifactStream, s3BuildDetails);

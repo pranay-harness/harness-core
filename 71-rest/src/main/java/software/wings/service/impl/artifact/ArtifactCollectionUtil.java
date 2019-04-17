@@ -109,6 +109,11 @@ public class ArtifactCollectionUtil {
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
 
   public Artifact getArtifact(ArtifactStream artifactStream, BuildDetails buildDetails) {
+    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+    if (settingAttribute == null) {
+      throw new InvalidRequestException(
+          format("Setting attribute not found for artifact stream %s", artifactStream.getName()), USER);
+    }
     return anArtifact()
         .withAppId(artifactStream.getAppId())
         .withArtifactStreamId(artifactStream.getUuid())
@@ -117,6 +122,8 @@ public class ArtifactCollectionUtil {
         .withDescription(buildDetails.getDescription())
         .withMetadata(getMetadata(artifactStream, buildDetails))
         .withRevision(buildDetails.getRevision())
+        .withSettingId(artifactStream.getSettingId())
+        .withAccountId(settingAttribute.getAccountId())
         .build();
   }
 

@@ -10,6 +10,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -50,6 +51,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -116,6 +118,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
+  public ArtifactStream get(String artifactStreamId) {
+    return wingsPersistence.get(ArtifactStream.class, artifactStreamId);
+  }
+
+  @Override
   public ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName) {
     return wingsPersistence.createQuery(ArtifactStream.class)
         .filter("appId", appId)
@@ -132,7 +139,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   @ValidationGroups(Create.class)
-  public ArtifactStream create(ArtifactStream artifactStream, boolean validate) {
+  public ArtifactStream create(ArtifactStream artifactStream, boolean validate) { // todo: error if svc_id is null
     if (validate && artifactStream.getTemplateUuid() == null) {
       validateArtifactSourceData(artifactStream);
     }
@@ -157,7 +164,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
-    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    String accountId = null;
+    if (artifactStream.getAppId() == null || !artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    } else {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute != null) {
+        accountId = settingAttribute.getAccountId();
+      }
+    }
 
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
@@ -185,7 +200,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                     .build();
       PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
+      // For the connector level also, check if the name exists
+      // TODO: uncomment when index added on setting_id + name
+      //      pageRequest = aPageRequest()
+      //                        .addFilter("settingId", EQ, artifactStream.getSettingId())
+      //                        .addFilter("name", STARTS_WITH, escapedString)
+      //                        .build();
+      //      PageResponse<ArtifactStream> connectorResponse = wingsPersistence.query(ArtifactStream.class,
+      //      pageRequest);
       // If an entry exists with the given default name
+      //      if (isNotEmpty(response) || isNotEmpty(connectorResponse)) {
       if (isNotEmpty(response)) {
         name = Util.getNameWithNextRevision(
             response.getResponse().stream().map(ArtifactStream::getName).collect(toList()), name);
@@ -266,9 +290,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new WingsException("Please provide valid artifact name", USER);
     }
     boolean isRename = !artifactStream.getName().equals(existingArtifactStream.getName());
-    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-    yamlPushService.pushYamlChangeSet(
-        accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
+    String accountId;
+    if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+      yamlPushService.pushYamlChangeSet(accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE,
+          artifactStream.isSyncFromGit(), isRename);
+    }
+    // TODO: handle yaml updates for connector level
     return finalArtifactStream;
   }
 
@@ -326,6 +354,23 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public boolean delete(String appId, String artifactStreamId) {
     return delete(appId, artifactStreamId, false, false);
+  }
+
+  @Override
+  public boolean delete(String artifactStreamId) {
+    ArtifactStream artifactStream = get(artifactStreamId);
+    if (artifactStream == null) {
+      return true;
+    }
+    // TODO: check if used in triggers
+    String accountId = null;
+    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+    if (settingAttribute != null) {
+      accountId = settingAttribute.getAccountId();
+    }
+    yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, false, false);
+
+    return pruneArtifactStream(artifactStream.getAppId(), artifactStreamId);
   }
 
   @Override
@@ -500,6 +545,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .filter(ArtifactStream.APP_ID_KEY, appId)
                                       .filter(Mapper.ID_KEY, artifactStreamId);
+    UpdateOperations<ArtifactStream> updateOperations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class).set("failedCronAttempts", counter);
+    UpdateResults update = wingsPersistence.update(query, updateOperations);
+    return update.getUpdatedCount() == 1;
+  }
+
+  @Override
+  public boolean updateFailedCronAttempts(String artifactStreamId, int counter) {
+    Query<ArtifactStream> query =
+        wingsPersistence.createQuery(ArtifactStream.class).filter(Mapper.ID_KEY, artifactStreamId);
     UpdateOperations<ArtifactStream> updateOperations =
         wingsPersistence.createUpdateOperations(ArtifactStream.class).set("failedCronAttempts", counter);
     UpdateResults update = wingsPersistence.update(query, updateOperations);

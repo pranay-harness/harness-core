@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -57,7 +58,11 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
         logger.info("Permit [{}] acquired for artifactStream [id: {}, failedCount: {}] for [{}] minutes", permitId,
             artifactStream.getUuid(), artifactStream.getFailedCronAttempts(),
             TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
-        artifactCollectionServiceAsync.collectNewArtifactsAsync(appId, artifactStream, permitId);
+        if (!appId.equals(GLOBAL_APP_ID)) {
+          artifactCollectionServiceAsync.collectNewArtifactsAsync(appId, artifactStream, permitId);
+        } else {
+          artifactCollectionServiceAsync.collectNewArtifactsAsync(artifactStream, permitId);
+        }
       } else {
         logger.info("Permit already exists for artifactStreamId[{}]", artifactStreamId);
       }

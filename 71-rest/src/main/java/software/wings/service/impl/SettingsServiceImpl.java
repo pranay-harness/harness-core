@@ -66,11 +66,13 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
@@ -101,6 +103,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
+  @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private ServiceClassLocator serviceLocator;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingValidationService settingValidationService;
   @Inject private AppService appService;

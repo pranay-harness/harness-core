@@ -36,6 +36,14 @@ public interface ArtifactStreamService extends OwnedByService {
    */
   ArtifactStream get(String appId, String artifactStreamId);
 
+  /**
+   * Get artifact stream.
+   *
+   * @param artifactStreamId the id
+   * @return the artifact stream
+   */
+  ArtifactStream get(String artifactStreamId);
+
   ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName);
 
   /**
@@ -82,6 +90,14 @@ public interface ArtifactStreamService extends OwnedByService {
   boolean delete(@NotEmpty String appId, @NotEmpty String artifactStreamId);
 
   /**
+   * Delete.
+   *
+   * @param artifactStreamId the id
+   * @return true, if successful
+   */
+  boolean delete(@NotEmpty String artifactStreamId);
+
+  /**
    * Prune owned from the app entities.
    *
    * @param appId the app id
@@ -111,6 +127,8 @@ public interface ArtifactStreamService extends OwnedByService {
   boolean deleteByYamlGit(String appId, String artifactStreamId, boolean syncFromGit);
 
   boolean updateFailedCronAttempts(String appId, String artifactStreamId, int counter);
+
+  boolean updateFailedCronAttempts(String artifactStreamId, int counter);
 
   List<ArtifactStream> listBySettingId(String settingId);
 }

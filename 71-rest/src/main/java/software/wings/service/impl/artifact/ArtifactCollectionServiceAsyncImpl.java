@@ -41,6 +41,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
@@ -104,10 +105,28 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     }
   }
 
+  private BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+
+    if (metadataOnlyStreams.contains(artifactStreamType) || isArtifactoryDockerOrGeneric(artifactStream)) {
+      return BuildSourceRequestType.GET_BUILDS;
+    } else {
+      return BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD;
+    }
+  }
+
   private boolean isArtifactoryDockerOrGenric(ArtifactStream artifactStream, ArtifactType artifactType) {
     return ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
         && (ArtifactType.DOCKER.equals(artifactType)
                || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType()));
+  }
+
+  private boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream) {
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+      return ((ArtifactoryArtifactStream) artifactStream).getImageName() != null
+          || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType());
+    }
+    return false;
   }
 
   @Override
@@ -119,6 +138,20 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     final Artifact artifact = artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
+      permitService.releasePermitByKey(artifactStream.getUuid());
+    }
+    return artifact;
+  }
+
+  @Override
+  public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new WingsException("Artifact Stream was deleted", USER);
+    }
+    final Artifact artifact = artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
+    if (artifactStream.getFailedCronAttempts() != 0) {
+      artifactStreamService.updateFailedCronAttempts(artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
     }
     return artifact;
@@ -187,15 +220,20 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       List<EncryptedDataDetail> encryptedDataDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
 
-      Service service = getService(appId, artifactStream);
-
-      ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
-
-      BuildSourceRequestType requestType = getRequestType(artifactStream, service.getArtifactType());
+      ArtifactStreamAttributes artifactStreamAttributes;
+      BuildSourceRequestType requestType;
+      if (!appId.equals(GLOBAL_APP_ID)) {
+        Service service = getService(appId, artifactStream);
+        artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+        requestType = getRequestType(artifactStream, service.getArtifactType());
+      } else {
+        artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+        requestType = getRequestType(artifactStream);
+      }
 
       buildSourceRequest = BuildSourceParameters.builder()
                                .accountId(settingAttribute.getAccountId())
-                               .appId(service.getAppId())
+                               .appId(artifactStream.getAppId())
                                .artifactStreamAttributes(artifactStreamAttributes)
                                .artifactStreamType(artifactStreamType)
                                .settingValue(settingValue)
@@ -211,10 +249,17 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
     delegateTaskBuilder.data(dataBuilder.build());
 
-    waitNotifyEngine.waitForAll(new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId), waitId);
+    waitNotifyEngine.waitForAll(
+        new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()),
+        waitId);
     logger.info("Queuing delegate task for artifactStreamId {} with waitId {}", artifactStream.getUuid(), waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
     logger.info("Queued delegate taskId {} for artifactStreamId {}", taskId, artifactStream.getUuid());
+  }
+
+  @Override
+  public void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId) {
+    collectNewArtifactsAsync(artifactStream.getAppId(), artifactStream, permitId);
   }
 
   private int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {

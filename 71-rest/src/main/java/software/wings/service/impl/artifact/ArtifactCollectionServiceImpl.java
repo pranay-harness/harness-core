@@ -82,7 +82,19 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   }
 
   @Override
+  public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new WingsException("Artifact Stream was deleted", USER);
+    }
+    return artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
+  }
+
+  @Override
   public void collectNewArtifactsAsync(String appId, ArtifactStream artifactStream, String permitId) {}
+
+  @Override
+  public void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId) {}
 
   @Override
   public Artifact collectNewArtifacts(String appId, ArtifactStream artifactStream, String buildNumber) {

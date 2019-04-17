@@ -37,6 +37,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -84,6 +85,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ArtifactStreamServiceTest extends WingsBaseTest {
+  private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+  private static final String ANOTHER_SETTING_ID = "ANOTHER_SETTING_ID";
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
   @Mock private YamlPushService yamlPushService;
   @Mock private AppService appService;
@@ -122,11 +125,23 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   public void shouldAddJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    validateJenkinsArtifactStreamOnCreate(savedArtifactSteam);
+    verify(appService).getAccountIdByAppId(APP_ID);
+  }
 
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddJenkinsArtifactStreamAtConnectorLevel() {
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(GLOBAL_APP_ID);
+    validateJenkinsArtifactStreamOnCreate(savedArtifactSteam);
+  }
+
+  private void validateJenkinsArtifactStreamOnCreate(ArtifactStream savedArtifactSteam) {
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
-    assertThat(savedArtifactSteam.getAppId()).isNotEmpty();
-
     String artifactDisplayName = savedArtifactSteam.fetchArtifactDisplayName("40");
     assertThat(artifactDisplayName).isNotEmpty().contains("todolistwar");
     String[] values = artifactDisplayName.split("_");
@@ -141,8 +156,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     JenkinsArtifactStream savedJenkinsArtifactStream = (JenkinsArtifactStream) savedArtifactSteam;
     assertThat(savedJenkinsArtifactStream.getJobname()).isEqualTo("todolistwar");
     assertThat(savedJenkinsArtifactStream.getArtifactPaths()).contains("target/todolist.war");
-
-    verify(appService).getAccountIdByAppId(APP_ID);
   }
 
   private JenkinsArtifactStream getJenkinsStream() {
@@ -157,16 +170,56 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .build();
   }
 
+  private JenkinsArtifactStream getJenkinsStreamAtConnectorLevel() {
+    return JenkinsArtifactStream.builder()
+        .sourceName("todolistwar")
+        .settingId(SETTING_ID)
+        .appId(GLOBAL_APP_ID)
+        .jobname("todolistwar")
+        .autoPopulate(true)
+        .artifactPaths(asList("target/todolist.war"))
+        .build();
+  }
+
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
+    JenkinsArtifactStream savedJenkinsArtifactStream = validateJenkinsArtifactStream(savedArtifactSteam, APP_ID);
+    updateAndValidateJenkinsArtifactStream(
+        (JenkinsArtifactStream) savedArtifactSteam, savedJenkinsArtifactStream, APP_ID);
 
+    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    verify(triggerService).updateByApp(APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateJenkinsArtifactStreamAtConnectorLevel() {
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
+    JenkinsArtifactStream savedJenkinsArtifactStream = validateJenkinsArtifactStream(savedArtifactSteam, GLOBAL_APP_ID);
+    updateAndValidateJenkinsArtifactStream(
+        (JenkinsArtifactStream) savedArtifactSteam, savedJenkinsArtifactStream, GLOBAL_APP_ID);
+
+    verify(yamlPushService, times(1))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    //    verify(triggerService).updateByApp(APP_ID);
+  }
+
+  @NotNull
+  private JenkinsArtifactStream validateJenkinsArtifactStream(ArtifactStream savedArtifactSteam, String appId) {
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(JENKINS.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
 
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("todolistwar");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("todolistwar");
@@ -177,7 +230,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     JenkinsArtifactStream savedJenkinsArtifactStream = (JenkinsArtifactStream) savedArtifactSteam;
     assertThat(savedJenkinsArtifactStream.getJobname()).isEqualTo("todolistwar");
     assertThat(savedJenkinsArtifactStream.getArtifactPaths()).contains("target/todolist.war");
+    return savedJenkinsArtifactStream;
+  }
 
+  private void updateAndValidateJenkinsArtifactStream(
+      JenkinsArtifactStream savedArtifactSteam, JenkinsArtifactStream savedJenkinsArtifactStream, String appId) {
     savedJenkinsArtifactStream.setName("JekinsName_Changed");
     savedJenkinsArtifactStream.setJobname("todoliswar_changed");
     savedJenkinsArtifactStream.setArtifactPaths(asList("*WAR_Changed"));
@@ -187,23 +244,16 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("JekinsName_Changed");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(JENKINS.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
 
     assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("todoliswar_changed");
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo("todoliswar_changed");
     assertThat(updatedArtifactStream).isInstanceOf(JenkinsArtifactStream.class);
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(JENKINS.name());
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getJobName()).isEqualTo("todoliswar_changed");
-    JenkinsArtifactStream updatedJenkinsArtifactStream = (JenkinsArtifactStream) savedArtifactSteam;
+    JenkinsArtifactStream updatedJenkinsArtifactStream = savedArtifactSteam;
     assertThat(updatedJenkinsArtifactStream.getJobname()).isEqualTo("todoliswar_changed");
     assertThat(updatedJenkinsArtifactStream.getArtifactPaths()).contains("*WAR_Changed");
-
-    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlPushService, times(2))
-        .pushYamlChangeSet(
-            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
-    verify(triggerService).updateByApp(APP_ID);
   }
 
   @Test
@@ -217,12 +267,28 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .serviceId(SERVICE_ID)
                                                     .artifactPaths(asList("artifacts/todolist.war"))
                                                     .build();
-    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream);
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream, APP_ID);
     BambooArtifactStream savedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
 
     verify(appService).getAccountIdByAppId(APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddBambooArtifactStreamAtConnectorLevel() {
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .appId(GLOBAL_APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream, GLOBAL_APP_ID);
+    BambooArtifactStream savedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
+    assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
+    assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
   }
 
   @Test
@@ -236,9 +302,40 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .serviceId(SERVICE_ID)
                                                     .artifactPaths(asList("artifacts/todolist.war"))
                                                     .build();
-    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream);
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream, APP_ID);
+    updateAndValidateBambooArtifactStream((BambooArtifactStream) savedArtifactSteam, APP_ID);
 
-    BambooArtifactStream savedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
+    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
+    verify(triggerService).updateByApp(APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateBambooArtifactStreamAtConnectorLevel() {
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .appId(GLOBAL_APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream, GLOBAL_APP_ID);
+
+    updateAndValidateBambooArtifactStream((BambooArtifactStream) savedArtifactSteam, GLOBAL_APP_ID);
+
+    verify(yamlPushService, times(1))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
+    //    verify(triggerService).updateByApp(APP_ID);
+  }
+
+  private void updateAndValidateBambooArtifactStream(BambooArtifactStream savedArtifactSteam, String appId) {
+    BambooArtifactStream savedBambooArtifactStream = savedArtifactSteam;
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
 
@@ -251,31 +348,24 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("Bamboo_Changed");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(BAMBOO.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
 
     assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("TOD-TOD_Changed");
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo("TOD-TOD_Changed");
     assertThat(updatedArtifactStream).isInstanceOf(BambooArtifactStream.class);
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(BAMBOO.name());
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getJobName()).isEqualTo("TOD-TOD_Changed");
-    BambooArtifactStream updatedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
+    BambooArtifactStream updatedBambooArtifactStream = savedArtifactSteam;
     assertThat(updatedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD_Changed");
     assertThat(updatedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist_changed.war");
-
-    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlPushService, times(2))
-        .pushYamlChangeSet(
-            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
-    verify(triggerService).updateByApp(APP_ID);
   }
 
-  private ArtifactStream createBambooArtifactStream(BambooArtifactStream bambooArtifactStream) {
+  private ArtifactStream createBambooArtifactStream(BambooArtifactStream bambooArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(bambooArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(BAMBOO.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("TOD-TOD");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("TOD-TOD");
     assertThat(savedArtifactSteam).isInstanceOf(BambooArtifactStream.class);
@@ -1280,6 +1370,35 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldListArtifactStreamsAtConnectorLevel() {
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
+    ArtifactStream savedJenkinsArtifactStream = artifactStreamService.create(jenkinsArtifactStream);
+
+    assertThat(savedJenkinsArtifactStream).isNotNull();
+
+    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
+                                                              .appId(GLOBAL_APP_ID)
+                                                              .repositoryType("any")
+                                                              .settingId(ANOTHER_SETTING_ID)
+                                                              .jobname("generic-repo")
+                                                              .artifactPattern("io/harness/todolist/todolist*")
+                                                              .autoPopulate(true)
+                                                              .build();
+
+    ArtifactStream savedArtifactStream = artifactStreamService.create(artifactoryArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+
+    PageRequest<ArtifactStream> pageRequest = aPageRequest().addFilter("settingId", Operator.EQ, SETTING_ID).build();
+
+    List<ArtifactStream> artifactStreams = artifactStreamService.list(pageRequest);
+    assertThat(artifactStreams).isNotEmpty().size().isEqualTo(1);
+    assertThat(artifactStreams)
+        .extracting(artifactStream -> artifactStream.getArtifactStreamType())
+        .contains(ArtifactStreamType.JENKINS.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldGetArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
                                                               .appId(APP_ID)
@@ -1297,6 +1416,27 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactStream artifactStream = artifactStreamService.get(APP_ID, savedArtifactStream.getUuid());
     assertThat(artifactStream.getUuid()).isEqualTo(savedArtifactStream.getUuid());
     assertThat(artifactStream.getName()).isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactStreamAtConnectorLevel() {
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
+    ArtifactStream savedArtifactStream = artifactStreamService.create(jenkinsArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+    assertThat(savedArtifactStream.getAppId()).isEqualTo(GLOBAL_APP_ID);
+    ArtifactStream artifactStream = artifactStreamService.get(savedArtifactStream.getUuid());
+    assertThat(artifactStream.getUuid()).isEqualTo(savedArtifactStream.getUuid());
+    assertThat(artifactStream.getName()).isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldDeleteArtifactStreamAtConnectorLevel() {
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
+    ArtifactStream savedArtifactStream = artifactStreamService.create(jenkinsArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+    assertThat(artifactStreamService.delete(savedArtifactStream.getUuid())).isTrue();
   }
 
   @Test

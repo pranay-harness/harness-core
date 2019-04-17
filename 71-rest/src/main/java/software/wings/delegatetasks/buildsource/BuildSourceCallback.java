@@ -53,6 +53,7 @@ public class BuildSourceCallback implements NotifyCallback {
   private String appId;
   private String artifactStreamId;
   private String permitId;
+  private String settingId;
   private List<BuildDetails> builds;
 
   @Inject private transient ServiceResourceService serviceResourceService;
@@ -65,11 +66,13 @@ public class BuildSourceCallback implements NotifyCallback {
 
   private static final Logger logger = LoggerFactory.getLogger(BuildSourceCallback.class);
 
-  public BuildSourceCallback(String accountId, String appId, String artifactStreamId, String permitId) {
+  public BuildSourceCallback(String accountId, String appId, String artifactStreamId, String permitId,
+      String settingId) { // todo: new constr with settingId
     this.accountId = accountId;
     this.appId = appId;
     this.artifactStreamId = artifactStreamId;
     this.permitId = permitId;
+    this.settingId = settingId;
   }
 
   @Override

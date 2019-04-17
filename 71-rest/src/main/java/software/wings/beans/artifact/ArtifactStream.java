@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -36,6 +35,7 @@ import java.util.List;
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
                , @Field("serviceId"), @Field("name") }))
+// todo: add compound index with setting_id + name
 @HarnessExportableEntity
 @Data
 @AllArgsConstructor
@@ -57,7 +57,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private String settingId;
   @EntityName private String name;
   private boolean autoPopulate;
-  @NotEmpty @Indexed private String serviceId;
+  @Indexed private String serviceId;
   @Deprecated private transient boolean autoDownload;
   @Deprecated private transient boolean autoApproveForProduction;
   private boolean metadataOnly;
