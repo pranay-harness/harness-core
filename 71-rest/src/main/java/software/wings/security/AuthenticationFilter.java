@@ -16,8 +16,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.manage.GlobalContextManager;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
@@ -100,6 +102,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     if (authorization == null) {
       throw new WingsException(INVALID_TOKEN, USER);
     }
+
+    GlobalContextManager.set(new GlobalContext());
 
     if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
       String identityServiceToken =

@@ -35,8 +35,8 @@ public class AuditResource {
    * @return the http audit service
    */
   @Inject
-  public AuditService getHttpAuditService() {
-    return httpAuditService;
+  public AuditResource(AuditService httpAuditService) {
+    this.httpAuditService = httpAuditService;
   }
 
   /**

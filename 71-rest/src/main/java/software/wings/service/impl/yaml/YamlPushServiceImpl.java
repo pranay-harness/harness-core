@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.FeatureName.AUDIT_TRAIL;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -14,6 +15,8 @@ import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Validator;
 
@@ -29,16 +32,22 @@ public class YamlPushServiceImpl implements YamlPushService {
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private ExecutorService executorService;
   @Inject private YamlHelper yamlHelper;
+  @Inject private AuditService auditService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public <T> void pushYamlChangeSet(
       String accountId, T oldEntity, T newEntity, Type type, boolean syncFromGit, boolean isRename) {
-    if (syncFromGit) {
-      return;
-    }
-
     executorService.submit(() -> {
       try {
+        if (featureFlagService.isEnabled(AUDIT_TRAIL, accountId)) {
+          auditService.registerAuditActions(accountId, oldEntity, newEntity, type);
+        }
+
+        if (syncFromGit) {
+          return;
+        }
+
         switch (type) {
           case CREATE:
             validateCreate(oldEntity, newEntity);

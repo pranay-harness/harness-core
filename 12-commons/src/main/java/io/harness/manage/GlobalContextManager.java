@@ -9,8 +9,7 @@ import java.io.IOException;
 
 @Slf4j
 public class GlobalContextManager {
-  public static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal();
-
+  private static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal<>();
   public static class GlobalContextGuard implements Closeable {
     GlobalContextGuard(GlobalContext globalContext) {
       logger.info("Global Context Update for Thread, Add initiated: " + Thread.currentThread().getId());
@@ -23,11 +22,12 @@ public class GlobalContextManager {
       unset();
     }
   }
-  private static void set(GlobalContext globalContext) {
+
+  public static void set(GlobalContext globalContext) {
     contextThreadLocal.set(globalContext);
   }
 
-  private static void unset() {
+  public static void unset() {
     contextThreadLocal.remove();
   }
 
@@ -42,7 +42,7 @@ public class GlobalContextManager {
     return globalContext.get(key);
   }
 
-  public static GlobalContextTaskWrapper generateExecutoTask(Runnable task) {
+  public static GlobalContextTaskWrapper generateExecutorTask(Runnable task) {
     return GlobalContextTaskWrapper.builder().task(task).context(contextThreadLocal.get()).build();
   }
 

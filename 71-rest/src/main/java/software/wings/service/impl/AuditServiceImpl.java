@@ -2,10 +2,12 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.k8s.model.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -20,8 +22,12 @@ import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.context.GlobalContextData;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.AuditGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.ReadPref;
+import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -32,8 +38,11 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
+import software.wings.audit.EntityAuditRecord;
+import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
+import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
@@ -47,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 /**
  * Audit Service Implementation class.
  *
@@ -57,6 +67,7 @@ import java.util.concurrent.TimeUnit;
 public class AuditServiceImpl implements AuditService {
   @Inject private FileService fileService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private EntityHelper entityHelper;
 
   private WingsPersistence wingsPersistence;
 
@@ -205,14 +216,14 @@ public class AuditServiceImpl implements AuditService {
     final int batchSize = 1000;
     final int limit = 5000;
     final long days = TimeUnit.DAYS.convert(retentionMillis, TimeUnit.MILLISECONDS);
-    logger.info("Start: Deleting audit records older than {} time", System.currentTimeMillis() - retentionMillis);
+    logger.info("Start: Deleting audit records older than {} time", currentTimeMillis() - retentionMillis);
     try {
       logger.info("Start: Deleting audit records older than {} days", days);
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
                                                .field(AuditHeader.CREATED_AT_KEY)
-                                               .lessThan(System.currentTimeMillis() - retentionMillis)
+                                               .lessThan(currentTimeMillis() - retentionMillis)
                                                .asList(new FindOptions().limit(limit).batchSize(batchSize));
           if (isEmpty(auditHeaders)) {
             logger.info("No more audit records older than {} days", days);
@@ -262,5 +273,49 @@ public class AuditServiceImpl implements AuditService {
       logger.warn(format("Failed to delete audit records older than last %d days within 10 minutes.", days), ex);
     }
     logger.info("Deleted audit records older than {} days", days);
+  }
+
+  @Override
+  public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
+    try {
+      String auditHeaderId = getAuditHeaderIdFromGlobalContext();
+      UuidAccess entityToQuery;
+      switch (type) {
+        case CREATE: {
+          entityToQuery = (UuidAccess) newEntity;
+          break;
+        }
+        case UPDATE: {
+          entityToQuery = (UuidAccess) newEntity;
+          break;
+        }
+        case DELETE: {
+          entityToQuery = (UuidAccess) oldEntity;
+          break;
+        }
+        default: {
+          logger.warn(
+              format("Unknown type class while registering audit actions: [%s]", type.getClass().getSimpleName()));
+          return;
+        }
+      }
+      EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
+      entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
+      UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
+      operations.addToSet("entityAuditRecords", builder.build());
+      operations.set("accountId", accountId);
+      wingsPersistence.update(
+          wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, auditHeaderId), operations);
+    } catch (Exception ex) {
+      logger.error(format("Exception while auditing records for account [%s]", accountId), ex);
+    }
+  }
+
+  private String getAuditHeaderIdFromGlobalContext() throws Exception {
+    GlobalContextData globalContextData = GlobalContextManager.get(AUDIT_ID);
+    if (!(globalContextData instanceof AuditGlobalContextData)) {
+      throw new Exception("Object of unknown class returned when querying for audit header Id");
+    }
+    return ((AuditGlobalContextData) globalContextData).getAuditId();
   }
 }
