@@ -156,6 +156,7 @@ import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
+import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
 import software.wings.sm.states.k8s.K8sCanaryDeploy;
 import software.wings.sm.states.k8s.K8sDelete;
@@ -586,6 +587,11 @@ public enum StateType implements StateTypeDescriptor {
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   JIRA_CREATE_UPDATE(JiraCreateUpdate.class, COLLABORATION, 1, "Jira",
+      asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,
+          DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
+      ORCHESTRATION_STENCILS, COMMON),
+
+  SERVICENOW_CREATE_UPDATE(ServiceNowCreateUpdateState.class, COLLABORATION, 3, "ServiceNow",
       asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,
           DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
       ORCHESTRATION_STENCILS, COMMON);

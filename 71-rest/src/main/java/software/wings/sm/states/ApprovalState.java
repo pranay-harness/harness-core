@@ -312,6 +312,7 @@ public class ApprovalState extends State {
   private ExecutionResponse executeServiceNowApproval(
       ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
     ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
+    servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
     executionData.setApprovalField(servicenowApprovalParams.getApprovalField());
     executionData.setApprovalValue(servicenowApprovalParams.getApprovalValue());
     executionData.setRejectionField(servicenowApprovalParams.getRejectionField());
@@ -325,11 +326,12 @@ public class ApprovalState extends State {
         servicenowApprovalParams.getTicketType().toString());
 
     try {
-      String issueUrl = serviceNowService.getIssueUrl(servicenowApprovalParams.getIssueNumber(),
+      String ticketUrl = serviceNowService.getIssueUrl(servicenowApprovalParams.getIssueNumber(),
           servicenowApprovalParams.getSnowConnectorId(), servicenowApprovalParams.getTicketType(), app.getAppId(),
           app.getAccountId());
 
-      executionData.setIssueUrl(issueUrl);
+      executionData.setTicketUrl(ticketUrl);
+      executionData.setTicketType(servicenowApprovalParams.getTicketType());
       return anExecutionResponse()
           .withAsync(true)
           .withExecutionStatus(PAUSED)
@@ -463,6 +465,7 @@ public class ApprovalState extends State {
   private ExecutionResponse handleAsyncServiceNow(ExecutionContext context, ApprovalStateExecutionData executionData,
       ApprovalStateExecutionData approvalNotifyResponse) {
     ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
+    servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
     setPipelineVariables(context);
     return anExecutionResponse()
         .withStateExecutionData(executionData)

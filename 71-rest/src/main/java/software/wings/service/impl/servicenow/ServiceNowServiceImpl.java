@@ -25,7 +25,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -33,6 +32,7 @@ import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 @Slf4j
@@ -59,8 +59,8 @@ public class ServiceNowServiceImpl implements ServiceNowService {
 
   @Data
   @Builder
-  public static class ServiceNowState {
-    private int id;
+  public static class ServiceNowMetaDTO {
+    private String id;
     private String displayName;
   }
 
@@ -81,15 +81,15 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).validateConnector(taskParameters);
   }
 
-  public List<ServiceNowState> getStates(
+  public List<ServiceNowMetaDTO> getStates(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
     ServiceNowConfig serviceNowConfig;
     try {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
-      logger.error("Error getting Service now connector for ID: {}", connectorId);
+      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", ExceptionUtils.getMessage(e));
+          .addParam("message", "Error getting ServiceNow connector " + ExceptionUtils.getMessage(e));
     }
 
     ServiceNowTaskParameters taskParameters =
@@ -106,13 +106,37 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getStates(taskParameters);
   }
 
+  @Override
+  public Map<String, List<ServiceNowMetaDTO>> getCreateMeta(
+      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
+    ServiceNowConfig serviceNowConfig;
+    try {
+      serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
+    } catch (Exception e) {
+      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
+          .addParam("message", ExceptionUtils.getMessage(e));
+    }
+    ServiceNowTaskParameters taskParameters =
+        ServiceNowTaskParameters.builder()
+            .accountId(accountId)
+            .ticketType(ticketType)
+            .serviceNowConfig(serviceNowConfig)
+            .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
+            .build();
+    SyncTaskContext snowTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+
+    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getCreateMeta(taskParameters);
+  }
+
   public String getIssueUrl(
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId) {
     ServiceNowConfig serviceNowConfig;
     try {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
-      logger.error("Error getting Service now connector for ID: {}", connectorId);
+      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
           .addParam("message", ExceptionUtils.getMessage(e));
     }
@@ -139,7 +163,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     try {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
-      logger.error("Error getting Service now connector for ID: {}", connectorId);
+      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
           .addParam("message", ExceptionUtils.getMessage(e));
     }
@@ -147,7 +171,6 @@ public class ServiceNowServiceImpl implements ServiceNowService {
         ServiceNowTaskParameters.builder()
             .accountId(accountId)
             .issueNumber(issueNumber)
-            .action(ServiceNowAction.CHECK_APPROVAL)
             .serviceNowConfig(serviceNowConfig)
             .ticketType(ServiceNowTicketType.valueOf(ticketType))
             .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))

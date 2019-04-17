@@ -47,7 +47,7 @@ public class ServiceNowApprovalJob implements Job {
       String approvalExecutionId, String accountId, String appId, String workflowExecutionId, String ticketType) {
     if (servicenowApprovalParams.getSnowConnectorId() == null) {
       throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", "Service now ConnectorId cannot be null");
+          .addParam("message", "ServiceNow ConnectorId cannot be null");
     }
     JobDetail job = JobBuilder.newJob(ServiceNowApprovalJob.class)
                         .withIdentity(approvalExecutionId, GROUP)

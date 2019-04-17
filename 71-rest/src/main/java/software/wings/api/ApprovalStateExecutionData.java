@@ -15,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.security.UserGroup;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateExecutionData;
@@ -56,6 +57,10 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   private String rejectionField;
   private String rejectionValue;
 
+  /** ServiceNow Approval */
+  private String ticketUrl;
+  private ServiceNowTicketType ticketType;
+
   // Setting these variables for pipeline executions with only approval state
   @Transient private transient List<UserGroup> userGroupList;
   @Transient private transient boolean isAuthorized;
@@ -84,6 +89,10 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
         ExecutionDataValue.builder().displayName("Approval Status").value(getStatus()).build());
     putNotNull(
         executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue URL").value(issueUrl).build());
+    if (ticketUrl != null && ticketType != null) {
+      putNotNull(executionDetails, "ticketUrl",
+          ExecutionDataValue.builder().displayName(ticketType.getDisplayName() + " URL").value(ticketUrl).build());
+    }
     if (timeoutMillis != null) {
       Integer timeoutMins = timeoutMillis / (60 * 1000);
       putNotNull(executionDetails, "timeoutMins",

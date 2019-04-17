@@ -12,6 +12,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -21,8 +22,10 @@ public class ServiceNowTaskParameters implements TaskParameters, ExecutionCapabi
   private ServiceNowConfig serviceNowConfig;
   private ServiceNowAction action;
   private String issueNumber;
+  private String issueId;
   List<EncryptedDataDetail> encryptionDetails;
   private ServiceNowTicketType ticketType;
+  private Map<ServiceNowFields, String> fields;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
