@@ -2,7 +2,9 @@ package software.wings.service.impl;
 
 import static com.amazonaws.regions.Regions.GovCloud;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toMap;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -10,6 +12,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.ResourceType;
+import com.amazonaws.services.s3.model.Bucket;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import software.wings.app.MainConfiguration;
@@ -17,6 +20,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairBuilder;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
@@ -29,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -42,6 +47,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
+  @Inject private AwsHelperService awsHelperService;
 
   @Deprecated
   public Map<String, String> getRegions() {
@@ -90,5 +96,18 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
     }
 
     return (AwsConfig) computeProviderSetting.getValue();
+  }
+
+  @Override
+  public List<String> listBuckets(String awsSettingId) {
+    SettingAttribute settingAttribute = settingService.get(awsSettingId);
+    notNullCheck("Cloud provider doesn't exist", settingAttribute, USER);
+
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, null, null);
+
+    List<Bucket> buckets = awsHelperService.listS3Buckets(awsConfig, encryptionDetails);
+
+    return buckets.stream().map(Bucket::getName).collect(Collectors.toList());
   }
 }

@@ -19,6 +19,7 @@ import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -69,5 +70,14 @@ public class AwsHelperResource {
   public RestResponse<Set<String>> listTags(@QueryParam("appId") String appId, @QueryParam("region") String region,
       @QueryParam("computeProviderId") String computeProviderId, @QueryParam("resourceType") String resourceType) {
     return new RestResponse<>(awsHelperResourceService.listTags(appId, computeProviderId, region, resourceType));
+  }
+
+  @GET
+  @Path("buckets/{settingId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listBuckets(
+      @QueryParam("accountId") String accountId, @PathParam("settingId") String settingId) {
+    return new RestResponse(awsHelperResourceService.listBuckets(settingId));
   }
 }
