@@ -24,6 +24,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -46,8 +47,18 @@ public class ApiKeyResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<String> generate(@NotEmpty @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(apiKeyService.generate(accountId));
+  public RestResponse<ApiKeyEntry> generate(
+      @NotEmpty @QueryParam("accountId") String accountId, ApiKeyEntry apiKeyEntry) {
+    return new RestResponse<>(apiKeyService.generate(accountId, apiKeyEntry));
+  }
+
+  @PUT
+  @Path("{apiKeyId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ApiKeyEntry> update(@NotEmpty @QueryParam("accountId") String accountId,
+      @NotEmpty @PathParam("apiKeyId") String uuid, ApiKeyEntry apiKeyEntry) {
+    return new RestResponse<>(apiKeyService.update(uuid, accountId, apiKeyEntry));
   }
 
   @GET
@@ -56,14 +67,14 @@ public class ApiKeyResource {
   public RestResponse<PageResponse<ApiKeyEntry>> list(
       @NotEmpty @QueryParam("accountId") String accountId, @BeanParam PageRequest<ApiKeyEntry> pageRequest) {
     pageRequest.addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId);
-    return new RestResponse<>(apiKeyService.list(pageRequest));
+    return new RestResponse<>(apiKeyService.list(pageRequest, accountId));
   }
 
   @GET
   @Path("{apiKeyId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> get(
+  public RestResponse<ApiKeyEntry> get(
       @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @PathParam("apiKeyId") String uuid) {
     return new RestResponse<>(apiKeyService.get(uuid, accountId));
   }
@@ -72,8 +83,9 @@ public class ApiKeyResource {
   @Path("{apiKeyId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Void> delete(@NotEmpty @PathParam("apiKeyId") String uuid) {
-    apiKeyService.delete(uuid);
+  public RestResponse<Void> delete(
+      @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @PathParam("apiKeyId") String uuid) {
+    apiKeyService.delete(accountId, uuid);
     return new RestResponse<>();
   }
 }
