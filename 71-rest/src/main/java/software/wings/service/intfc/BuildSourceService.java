@@ -139,7 +139,7 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
-  default List<BuildDetails> getBuilds(String appId, String artifactStreamId) {
+  default List<BuildDetails> getBuilds(String artifactStreamId, String settingId) {
     throw new UnsupportedOperationException();
   }
 
@@ -220,6 +220,56 @@ public interface BuildSourceService {
    * @return
    */
   default Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets jobs.
+   *
+   * @param settingId the jenkins setting id
+   * @param parentJobName the jenkins parent job name (if any)
+   * @return the jobs
+   */
+  default Set<JobDetails> getJobs(@NotEmpty String settingId, @Nullable String parentJobName) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets build service.
+   *
+   * @param settingAttribute the setting attribute
+   * @return the build service
+   */
+  default BuildService getBuildService(SettingAttribute settingAttribute) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets artifact paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @param groupId   the group id
+   * @param artifactStreamType artifact stream type
+   * @return the artifact paths
+   */
+  default Set<String> getArtifactPaths(
+      @NotEmpty String jobName, @NotEmpty String settingId, String groupId, String artifactStreamType) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets last successful build.
+   *
+   * @param artifactStreamId the artifact stream id
+   * @param settingId        the setting id
+   * @return the last successful build
+   */
+  default BuildDetails getLastSuccessfulBuild(String artifactStreamId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
     throw new UnsupportedOperationException();
   }
 }

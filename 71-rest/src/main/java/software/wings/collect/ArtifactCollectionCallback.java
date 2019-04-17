@@ -1,6 +1,7 @@
 package software.wings.collect;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
@@ -16,11 +17,15 @@ import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.Map;
 
@@ -32,6 +37,8 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   @Inject private ArtifactService artifactService;
   @Inject private EventEmitter eventEmitter;
   @Inject private NotificationService notificationService;
+  @Inject private SettingsService settingsService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   private String appId;
   private String artifactId;
@@ -46,6 +53,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
+    Artifact artifact = null;
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
 
     if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
@@ -55,23 +63,34 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       artifactService.updateStatus(artifactId, appId, APPROVED, FAILED, "Failed to download artifact file");
     } else {
       logger.info("Artifact collection completed - artifactId : {}", artifactId);
-      Artifact artifact = artifactService.get(appId, artifactId);
+      artifact = artifactService.get(appId, artifactId);
       if (artifact == null) {
         logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
         return;
       }
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, DOWNLOADED, "");
-
+      String accountId = null;
+      ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+      if (artifactStream != null) {
+        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+        if (settingAttribute != null) {
+          accountId = settingAttribute.getAccountId();
+        }
+      }
       notificationService.sendNotificationAsync(anApprovalNotification()
                                                     .withAppId(artifact.getAppId())
                                                     .withEntityId(artifact.getUuid())
                                                     .withEntityType(EntityType.ARTIFACT)
                                                     .withEntityName(artifact.getDisplayName())
                                                     .withArtifactStreamId(artifact.getArtifactStreamId())
+                                                    .withAccountId(accountId)
                                                     .build());
     }
-    eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifactId).withAppId(appId).build());
+    if (artifact != null && !artifact.getAppId().equals(GLOBAL_APP_ID)) {
+      eventEmitter.send(
+          Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifactId).withAppId(appId).build());
+    }
   }
 
   @Override
@@ -83,8 +102,10 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       return;
     }
     artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), ERROR, FAILED);
-    eventEmitter.send(Channel.ARTIFACTS,
-        anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+    if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
+      eventEmitter.send(Channel.ARTIFACTS,
+          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+    }
   }
 
   public String getAppId() {

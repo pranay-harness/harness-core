@@ -3,8 +3,10 @@ package software.wings.collect;
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
 
 import com.google.inject.Inject;
@@ -76,25 +78,39 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
       logger.info("Received artifact collection event for artifactId {} and of appId {}", artifact.getUuid(),
           artifact.getAppId());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING, ContentStatus.DOWNLOADING);
-      eventEmitter.send(Channel.ARTIFACTS,
-          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
-
-      ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-      String accountId = appService.get(artifactStream.getAppId()).getAccountId();
+      ArtifactStream artifactStream;
+      String accountId;
+      if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
+        eventEmitter.send(Channel.ARTIFACTS,
+            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+        artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+        if (artifactStream == null) {
+          throw new WingsException("Artifact Stream does not exist", USER);
+        }
+        accountId = appService.get(artifactStream.getAppId()).getAccountId();
+      } else {
+        artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+        if (artifactStream == null) {
+          throw new WingsException("Artifact Stream does not exist", USER);
+        }
+        accountId = artifact.getAccountId();
+      }
       String waitId = generateUuid();
 
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
       logger.info("Registering callback for the artifact artifactId {} with waitId {}", artifact.getUuid(), waitId);
       waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getAppId(), artifact.getUuid()), waitId);
-      logger.info("Queuing delegate task {} for artifactId {} of arifactSourceName {} ", delegateTask.getUuid(),
+      logger.info("Queuing delegate task {} for artifactId {} of artifactSourceName {} ", delegateTask.getUuid(),
           artifact.getUuid(), artifact.getArtifactSourceName());
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
       logger.error(format("Failed to collect artifact. Reason %s", ExceptionUtils.getMessage(ex)), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED, ContentStatus.FAILED);
-      eventEmitter.send(Channel.ARTIFACTS,
-          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+      if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
+        eventEmitter.send(Channel.ARTIFACTS,
+            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+      }
     }
   }
 

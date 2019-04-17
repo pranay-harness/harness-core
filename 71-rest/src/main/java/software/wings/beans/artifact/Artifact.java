@@ -69,6 +69,8 @@ public class Artifact extends Base {
   private String errorMessage;
   private ContentStatus contentStatus;
   private transient Map<String, String> source;
+  private String settingId;
+  private String accountId;
 
   /**
    * Gets buildNo.
@@ -286,6 +288,8 @@ public class Artifact extends Base {
     private String errorMessage;
     private long lastUpdatedAt;
     private ContentStatus contentStatus;
+    private String settingId;
+    private String accountId;
 
     private Builder() {}
 
@@ -388,6 +392,16 @@ public class Artifact extends Base {
       return this;
     }
 
+    public Builder withSettingId(String settingId) {
+      this.settingId = settingId;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder but() {
       return anArtifact()
           .withArtifactStreamId(artifactStreamId)
@@ -408,7 +422,9 @@ public class Artifact extends Base {
           .withErrorMessage(errorMessage)
           .withLastUpdatedAt(lastUpdatedAt)
           .withContentStatus(contentStatus)
-          .withEntityYamlPath(entityYamlPath);
+          .withEntityYamlPath(entityYamlPath)
+          .withSettingId(settingId)
+          .withAccountId(accountId);
     }
 
     public Artifact build() {
@@ -432,6 +448,8 @@ public class Artifact extends Base {
       artifact.setLastUpdatedAt(lastUpdatedAt);
       artifact.setContentStatus(contentStatus);
       artifact.setEntityYamlPath(entityYamlPath);
+      artifact.setSettingId(settingId);
+      artifact.setAccountId(accountId);
       return artifact;
     }
   }

@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -30,8 +31,15 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.common.BuildDetailsComparator;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -43,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -66,8 +75,10 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class SettingResource {
   @Inject private SettingsService settingsService;
+  @Inject private BuildSourceService buildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private SecretManager secretManager;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   /**
    * List.
@@ -356,5 +367,147 @@ public class SettingResource {
             .withValue(value);
 
     return new RestResponse<>(settingsService.validateConnectivity(settingAttribute.build()));
+  }
+
+  /**
+   * Gets jobs.
+   *
+   * @param settingId the setting id
+   * @return the jobs
+   */
+  @GET
+  @Path("build-sources/jobs")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<JobDetails>> getJobs(
+      @QueryParam("settingId") String settingId, @QueryParam("parentJobName") String parentJobName) {
+    return new RestResponse<>(buildSourceService.getJobs(settingId, parentJobName));
+  }
+
+  /**
+   * Gets artifact paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @return the artifact paths
+   */
+  @GET
+  @Path("build-sources/jobs/{jobName}/paths")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> getArtifactPaths(@PathParam("jobName") String jobName,
+      @QueryParam("settingId") String settingId, @QueryParam("groupId") String groupId,
+      @QueryParam("streamType") String streamType) {
+    return new RestResponse<>(buildSourceService.getArtifactPaths(jobName, settingId, groupId, streamType));
+  }
+
+  /***
+   * Collects an artifact
+   * @param artifactStreamId
+   * @param buildDetails
+   * @return
+   */
+  @POST
+  @Path("build-sources")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Artifact> collectArtifact(
+      @QueryParam("artifactStreamId") String artifactStreamId, BuildDetails buildDetails) {
+    return new RestResponse<>(buildSourceService.collectArtifact(artifactStreamId, buildDetails));
+  }
+
+  /**
+   * Gets builds.
+   *
+   * @param artifactStreamId the artifact source id
+   * @param settingId        the setting id
+   * @return the builds
+   */
+  @GET
+  @Path("build-sources/builds")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<BuildDetails>> getBuilds(
+      @QueryParam("artifactStreamId") String artifactStreamId, @QueryParam("settingId") String settingId) {
+    List<BuildDetails> buildDetails = buildSourceService.getBuilds(artifactStreamId, settingId);
+    buildDetails = buildDetails.stream().sorted(new BuildDetailsComparator()).collect(toList());
+    return new RestResponse<>(buildDetails);
+  }
+
+  /**
+   * Save rest response.
+   *
+   * @param artifactStream the artifact stream
+   * @return the rest response
+   */
+  @POST
+  @Path("artifact-streams")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ArtifactStream> save(ArtifactStream artifactStream) {
+    artifactStream.setAppId(GLOBAL_APP_ID);
+    return new RestResponse<>(artifactStreamService.create(artifactStream));
+  }
+
+  /**
+   * List.
+   *
+   * @param pageRequest the page request
+   * @return the rest response
+   */
+  @GET
+  @Path("artifact-streams")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<ArtifactStream>> list(
+      @QueryParam("settingId") String settingId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
+    pageRequest.addFilter("settingId", EQ, settingId);
+    pageRequest.addFilter("appId", EQ, GLOBAL_APP_ID);
+    return new RestResponse<>(artifactStreamService.list(pageRequest));
+  }
+
+  /**
+   * Gets the.
+   *
+   * @param streamId the stream id
+   * @return the rest response
+   */
+  @GET
+  @Path("artifact-streams/{streamId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ArtifactStream> get(@PathParam("streamId") String streamId) {
+    return new RestResponse<>(artifactStreamService.get(streamId));
+  }
+
+  /**
+   * Update rest response.
+   *
+   * @param streamId       the stream id
+   * @param artifactStream the artifact stream
+   * @return the rest response
+   */
+  @PUT
+  @Path("artifact-streams/{streamId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ArtifactStream> update(@PathParam("streamId") String streamId, ArtifactStream artifactStream) {
+    artifactStream.setUuid(streamId);
+    artifactStream.setAppId(GLOBAL_APP_ID);
+    return new RestResponse<>(artifactStreamService.update(artifactStream));
+  }
+
+  /**
+   * Delete.
+   *
+   * @param id    the id
+   * @return the rest response
+   */
+  @DELETE
+  @Path("artifact-streams/{id}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse delete(@PathParam("id") String id) {
+    return new RestResponse<>(artifactStreamService.delete(id));
   }
 }
