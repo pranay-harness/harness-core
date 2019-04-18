@@ -22,6 +22,7 @@ public class GraphQLConstants {
   public static final String RESULT_TYPE = "Result";
   public static final String BASE_INFO_TYPE = "BaseInfo";
   public static final String WORKFLOW_TYPE = "Workflow";
+  public static final String PIPELINE_TYPE = "Pipeline";
   public static final String WORKFLOW_EXECUTION_TYPE = "WorkflowExecution";
   public static final String ARTIFACT_TYPE = "Artifact";
   public static final String APPLICATION_TYPE = "Application";

@@ -6,6 +6,9 @@ schema {
 
 # Harness GraphQL SDL details
 type Query {
+  # Get a pipeline object by id
+  pipeline(pipelineId: String!): Pipeline  @dataFetcher(name : "pipeline")
+
   # Get the workflow details for a specific appId and workflow Id
   workflow(appId: String!, workflowId: String!): Workflow   @dataFetcher(name : "workflow")
 
@@ -47,6 +50,18 @@ type PageInfo {
   total: Int
   offset : Int
   limit : Int
+}
+
+# Type for pipeline
+type Pipeline {
+  # Pipeline Id
+  id: String
+
+  # Name of the pipeline
+  name: String
+
+  # Description of the pipeline
+  description: String
 }
 
 # Type for workflow Execution
