@@ -14,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.dataloader.MappedBatchLoader;
 import software.wings.beans.Application;
-import software.wings.graphql.datafetcher.application.ApplicationAdaptor;
-import software.wings.graphql.schema.type.ApplicationInfo;
+import software.wings.graphql.datafetcher.application.ApplicationController;
+import software.wings.graphql.schema.type.QLApplication;
 import software.wings.service.intfc.AppService;
 
 import java.util.Collections;
@@ -28,20 +28,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApplicationBatchDataLoader implements MappedBatchLoader<String, ApplicationInfo> {
+public class ApplicationBatchDataLoader implements MappedBatchLoader<String, QLApplication> {
   AppService appService;
-  ApplicationAdaptor applicationAdaptor;
 
   @Inject
-  public ApplicationBatchDataLoader(AppService appService, ApplicationAdaptor applicationAdaptor) {
+  public ApplicationBatchDataLoader(AppService appService) {
     this.appService = appService;
-    this.applicationAdaptor = applicationAdaptor;
   }
 
   @Override
-  public CompletionStage<Map<String, ApplicationInfo>> load(Set<String> appIds) {
+  public CompletionStage<Map<String, QLApplication>> load(Set<String> appIds) {
     return CompletableFuture.supplyAsync(() -> {
-      Map<String, ApplicationInfo> applicationInfoMap;
+      Map<String, QLApplication> applicationInfoMap;
       if (!CollectionUtils.isEmpty(appIds)) {
         PageRequest<Application> pageRequest =
             aPageRequest().addFilter(APP_ID_KEY, Operator.IN, appIds.toArray()).build();
@@ -49,8 +47,8 @@ public class ApplicationBatchDataLoader implements MappedBatchLoader<String, App
 
         applicationInfoMap = applications.getResponse()
                                  .stream()
-                                 .map(a -> applicationAdaptor.getApplicationInfo(a))
-                                 .collect(Collectors.toMap(ApplicationInfo::getId, Function.identity()));
+                                 .map(a -> ApplicationController.getApplicationInfo(a))
+                                 .collect(Collectors.toMap(QLApplication::getId, Function.identity()));
       } else {
         applicationInfoMap = Collections.EMPTY_MAP;
       }

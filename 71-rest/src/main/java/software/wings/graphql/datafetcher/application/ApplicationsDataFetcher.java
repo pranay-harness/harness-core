@@ -13,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.schema.type.ApplicationInfo;
 import software.wings.graphql.schema.type.PagedData;
+import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
@@ -23,21 +23,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApplicationListDataFetcher extends AbstractDataFetcher<PagedData<ApplicationInfo>> {
+public class ApplicationsDataFetcher extends AbstractDataFetcher<PagedData<QLApplication>> {
   AppService appService;
-  ApplicationAdaptor applicationAdaptor;
 
   @Inject
-  public ApplicationListDataFetcher(
-      AppService appService, AuthHandler authHandler, ApplicationAdaptor applicationAdaptor) {
+  public ApplicationsDataFetcher(AppService appService, AuthHandler authHandler) {
     super(authHandler);
     this.appService = appService;
-    this.applicationAdaptor = applicationAdaptor;
   }
 
   @Override
-  public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    PagedData<ApplicationInfo> pagedData = PagedData.<ApplicationInfo>builder().build();
+  public PagedData<QLApplication> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    PagedData<QLApplication> pagedData = PagedData.<QLApplication>builder().build();
     int limit = getPageLimit(dataFetchingEnvironment);
     int offset = getPageOffset(dataFetchingEnvironment);
 
@@ -54,13 +51,13 @@ public class ApplicationListDataFetcher extends AbstractDataFetcher<PagedData<Ap
                                                .build();
 
     final PageResponse<Application> applications = appService.list(pageRequest);
-    return PagedData.<ApplicationInfo>builder()
+    return PagedData.<QLApplication>builder()
         .offset(offset)
         .limit(limit)
         .total(applications.getTotal())
         .data(applications.getResponse()
                   .stream()
-                  .map(application -> applicationAdaptor.getApplicationInfo(application))
+                  .map(application -> ApplicationController.getApplicationInfo(application))
                   .collect(Collectors.toList()))
         .build();
   }

@@ -8,19 +8,21 @@ import com.google.inject.name.Names;
 
 import graphql.GraphQL;
 import org.dataloader.MappedBatchLoader;
+import org.jetbrains.annotations.NotNull;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
-import software.wings.graphql.datafetcher.application.ApplicationListDataFetcher;
+import software.wings.graphql.datafetcher.application.ApplicationsDataFetcher;
 import software.wings.graphql.datafetcher.application.batchloader.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
-import software.wings.graphql.datafetcher.environment.EnvironmentListDataFetcher;
+import software.wings.graphql.datafetcher.environment.EnvironmentsDataFetcher;
+import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowExecutionDataFetcher;
-import software.wings.graphql.datafetcher.workflow.WorkflowExecutionListDataFetcher;
-import software.wings.graphql.datafetcher.workflow.WorkflowListDataFetcher;
+import software.wings.graphql.datafetcher.workflow.WorkflowExecutionsDataFetcher;
+import software.wings.graphql.datafetcher.workflow.WorkflowsDataFetcher;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
@@ -32,17 +34,6 @@ import java.util.Set;
  * Created a new module as part of code review comment
  */
 public class GraphQLModule extends AbstractModule {
-  public static final String APPLICATION = "application";
-  public static final String APPLICATIONS = "applications";
-  public static final String DEPLOYED_ARTIFACTS = "deployedArtifacts";
-  public static final String ENVIRONMENT = "environment";
-  public static final String ENVIRONMENTS = "environments";
-  public static final String PIPELINE = "pipeline";
-  public static final String WORKFLOW = "workflow";
-  public static final String WORKFLOW_EXECUTION = "workflowExecution";
-  public static final String WORKFLOW_EXECUTIONS = "workflowExecutions";
-  public static final String WORKFLOWS = "workflows";
-
   /***
    * This collection is mainly required to inject batched loader at app start time.
    * I was not getting a handle to Annotation Name at runtime hence I am taking this approach.
@@ -69,29 +60,42 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetchers() {
-    bindDataFetcherWithAnnotation(APPLICATION, ApplicationDataFetcher.class);
-    bindDataFetcherWithAnnotation(APPLICATIONS, ApplicationListDataFetcher.class);
-    bindDataFetcherWithAnnotation(DEPLOYED_ARTIFACTS, ArtifactDataFetcher.class);
-    bindDataFetcherWithAnnotation(ENVIRONMENT, EnvironmentDataFetcher.class);
-    bindDataFetcherWithAnnotation(ENVIRONMENTS, EnvironmentListDataFetcher.class);
-    bindDataFetcherWithAnnotation(PIPELINE, PipelineDataFetcher.class);
-    bindDataFetcherWithAnnotation(WORKFLOW, WorkflowDataFetcher.class);
-    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTION, WorkflowExecutionDataFetcher.class);
-    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTIONS, WorkflowExecutionListDataFetcher.class);
-    bindDataFetcherWithAnnotation(WORKFLOWS, WorkflowListDataFetcher.class);
+    bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
+    bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowsDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowExecutionDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowExecutionsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
+    bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
+    bindDataFetcherWithAnnotation(EnvironmentsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApplicationsDataFetcher.class);
+  }
+
+  @NotNull
+  private String calculateAnnotationName(Class clazz, String suffix) {
+    String className = clazz.getName();
+    char c[] =
+        className.substring(className.lastIndexOf('.') + 1, clazz.getName().length() - suffix.length()).toCharArray();
+
+    c[0] = Character.toLowerCase(c[0]);
+    return new String(c);
   }
 
   private void bindBatchedDataLoaders() {
-    bindBatchedDataLoaderWithAnnotation(APPLICATION, ApplicationBatchDataLoader.class);
+    bindBatchedDataLoaderWithAnnotation(ApplicationBatchDataLoader.class);
   }
 
-  private void bindDataFetcherWithAnnotation(String annotationName, Class<? extends AbstractDataFetcher> childClass) {
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(childClass);
+  private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {
+    String annotationName = calculateAnnotationName(clazz, "DataFetcher");
+    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
   }
 
-  private void bindBatchedDataLoaderWithAnnotation(
-      String annotationName, Class<? extends MappedBatchLoader> childClass) {
+  private void bindBatchedDataLoaderWithAnnotation(Class<? extends MappedBatchLoader> clazz) {
+    String annotationName = calculateAnnotationName(clazz, "BatchDataLoader");
+
     BATCH_DATA_LOADER_NAMES.add(annotationName);
-    bind(MappedBatchLoader.class).annotatedWith(Names.named(annotationName)).to(childClass).in(Scopes.SINGLETON);
+    bind(MappedBatchLoader.class).annotatedWith(Names.named(annotationName)).to(clazz).in(Scopes.SINGLETON);
   }
 }

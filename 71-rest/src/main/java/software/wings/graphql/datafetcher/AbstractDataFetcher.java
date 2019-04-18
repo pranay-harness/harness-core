@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.graphql.utils.GraphQLConstants.EMPTY_OR_NULL_INPUT_FIELD;
 import static software.wings.graphql.utils.GraphQLConstants.MAX_PAGE_SIZE;
@@ -39,6 +40,13 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
   @Setter Map<String, String> contextFieldArgsMap;
   @Getter @Setter String batchedDataLoaderName;
 
+  protected abstract T fetch(DataFetchingEnvironment dataFetchingEnvironment);
+
+  @Override
+  public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+    return fetch(dataFetchingEnvironment);
+  }
+
   protected boolean isAuthorizedToView(String appId, PermissionAttribute permissionAttribute, String entityId) {
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
     return authHandler.authorize(permissionAttributeList, asList(appId), entityId);
@@ -61,18 +69,22 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
   }
 
   protected void addInvalidInputInfo(BaseInfo baseInfo, String entityName) {
-    String invalidInputMsg = String.format(EMPTY_OR_NULL_INPUT_FIELD, entityName);
+    String invalidInputMsg = format(EMPTY_OR_NULL_INPUT_FIELD, entityName);
     baseInfo.setDebugInfo(invalidInputMsg);
   }
 
   protected void addNoRecordFoundInfo(BaseInfo baseInfo, String messageString, Object... values) {
-    String noRecordsFoundMsg = String.format(messageString, values);
+    String noRecordsFoundMsg = format(messageString, values);
     baseInfo.setDebugInfo(noRecordsFoundMsg);
   }
 
-  protected void throwNotAuthorizedException(String entityName, String id, String appId) {
-    String errorMsg = String.format(USER_NOT_AUTHORIZED_TO_VIEW_ENTITY, entityName, id, appId);
+  protected WingsException notAuthorizedException(String entityName, String id, String appId) {
+    String errorMsg = format(USER_NOT_AUTHORIZED_TO_VIEW_ENTITY, entityName, id, appId);
     throw new WingsException(errorMsg, WingsException.USER);
+  }
+
+  protected WingsException batchFetchException(Throwable cause) {
+    return new WingsException("", cause);
   }
 
   /**
@@ -102,14 +114,9 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
         PropertyDescriptor pd = new PropertyDescriptor(field.getName(), obj.getClass());
         fieldValue = pd.getReadMethod().invoke(obj);
       }
-    } catch (NoSuchFieldException e) {
-      logger.warn("NoSuchFieldException occured while fetching value for field {}", fieldName);
-    } catch (IllegalAccessException e) {
-      logger.warn("IllegalAccessException occured while fetching value for field {}", fieldName);
-    } catch (IntrospectionException e) {
-      logger.warn("IntrospectionException occured while fetching value for field {}", fieldName);
-    } catch (InvocationTargetException e) {
-      logger.warn("InvocationTargetException occured while fetching value for field {}", fieldName);
+    } catch (
+        NoSuchFieldException | IllegalAccessException | IntrospectionException | InvocationTargetException exception) {
+      logger.warn(format("NoSuchFieldException occurred while fetching value for field %s", fieldName), exception);
     }
 
     return fieldValue;

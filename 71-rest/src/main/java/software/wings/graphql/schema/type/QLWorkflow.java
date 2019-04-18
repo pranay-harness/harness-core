@@ -10,14 +10,14 @@ import software.wings.beans.Service;
 import java.util.List;
 
 /**
- * The reason I am defining this class as WorkflowInfo
+ * The reason I am defining this class as QLWorkflow
  * is because we already have an enum named as WorkflowType.
  * If required will change the name to something more meaningful.
  */
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkflowInfo implements BaseInfo {
+public class QLWorkflow implements BaseInfo {
   String id;
   String name;
   String description;
