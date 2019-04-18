@@ -57,12 +57,15 @@ public class ApplicationManifest extends Base {
   public static final class Yaml extends BaseEntityYaml {
     private String storeType;
     private GitFileConfig gitFileConfig;
+    private HelmChartConfig helmChartConfig;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig, String kind) {
+    public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
+        HelmChartConfig helmChartConfig) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
+      this.helmChartConfig = helmChartConfig;
     }
   }
 }

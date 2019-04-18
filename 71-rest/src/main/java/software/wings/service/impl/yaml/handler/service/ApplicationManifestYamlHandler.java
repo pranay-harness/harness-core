@@ -12,6 +12,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -20,6 +21,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.GitFileConfigHelperService;
+import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -36,6 +38,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
   @Inject YamlResourceService yamlResourceService;
   @Inject ServiceResourceService serviceResourceService;
+  @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
 
   @Override
   public Yaml toYaml(ApplicationManifest applicationManifest, String appId) {
@@ -44,6 +47,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .harnessApiVersion(getHarnessApiVersion())
         .storeType(applicationManifest.getStoreType().name())
         .gitFileConfig(getGitFileConfigForToYaml(applicationManifest))
+        .helmChartConfig(getHelmChartConfigForToYaml(applicationManifest))
         .build();
   }
 
@@ -88,12 +92,14 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     StoreType storeType = Enum.valueOf(StoreType.class, yaml.getStoreType());
     AppManifestKind kind = yamlHelper.getAppManifestKindFromPath(filePath);
     GitFileConfig gitFileConfig = getGitFileConfigFromYaml(accountId, appId, yaml, storeType);
+    HelmChartConfig helmChartConfig = getHelmChartConfigFromYaml(accountId, appId, yaml, storeType);
 
     ApplicationManifest manifest = ApplicationManifest.builder()
                                        .serviceId(serviceId)
                                        .envId(envId)
                                        .storeType(storeType)
                                        .gitFileConfig(gitFileConfig)
+                                       .helmChartConfig(helmChartConfig)
                                        .kind(kind)
                                        .build();
 
@@ -151,6 +157,28 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
 
     return gitFileConfigHelperService.getGitFileConfigFromYaml(accountId, appId, gitFileConfig);
+  }
+
+  private HelmChartConfig getHelmChartConfigForToYaml(ApplicationManifest applicationManifest) {
+    if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+      return null;
+    }
+
+    return helmChartConfigHelperService.getHelmChartConfigForToYaml(applicationManifest.getHelmChartConfig());
+  }
+
+  private HelmChartConfig getHelmChartConfigFromYaml(String accountId, String appId, Yaml yaml, StoreType storeType) {
+    HelmChartConfig helmChartConfig = yaml.getHelmChartConfig();
+    if (helmChartConfig == null) {
+      return null;
+    }
+
+    if (StoreType.Local.equals(storeType)) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "gitFileConfig cannot be used for Local storeType.");
+    }
+
+    return helmChartConfigHelperService.getHelmChartConfigFromYaml(accountId, appId, helmChartConfig);
   }
 
   private String getServiceIdFromYamlPath(String appId, String filePath) {
