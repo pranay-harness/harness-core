@@ -244,6 +244,11 @@
         <property name="message" value="Offset is a single word"/>
     </module>
 
+    <module name="RegexpSingleline">
+        <property name="format" value="[Gg]raphQl"/>
+        <property name="message" value="Please use QL both uppercase"/>
+    </module>
+
     <module name="RegexpOnFilename">
         <property name="fileNamePattern" value="[Ww]orkFlow\."/>
     </module>

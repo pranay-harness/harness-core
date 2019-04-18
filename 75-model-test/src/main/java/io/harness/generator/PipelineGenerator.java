@@ -96,6 +96,7 @@ public class PipelineGenerator {
     return ensurePipeline(seed, owners,
         Pipeline.builder()
             .name(BARRIER.name())
+            .description("This is pipeline to test barriers")
             .pipelineStages(asList(
                 PipelineStage.builder()
                     .pipelineStageElements(asList(PipelineStageElement.builder()
@@ -248,6 +249,10 @@ public class PipelineGenerator {
       builder.name(pipeline.getName());
     } else {
       throw new UnsupportedOperationException();
+    }
+
+    if (pipeline.getDescription() != null) {
+      builder.description(pipeline.getDescription());
     }
 
     builder.pipelineStages(pipeline.getPipelineStages());

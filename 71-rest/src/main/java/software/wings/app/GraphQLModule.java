@@ -16,6 +16,7 @@ import software.wings.graphql.datafetcher.application.batchloader.ApplicationBat
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentListDataFetcher;
+import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowExecutionDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowExecutionListDataFetcher;
@@ -31,15 +32,16 @@ import java.util.Set;
  * Created a new module as part of code review comment
  */
 public class GraphQLModule extends AbstractModule {
-  public static final String WORKFLOW = "workflow";
-  public static final String WORKFLOWS = "workflows";
-  public static final String WORKFLOW_EXECUTION = "workflowExecution";
-  public static final String WORKFLOW_EXECUTIONS = "workflowExecutions";
-  public static final String DEPLOYED_ARTIFACTS = "deployedArtifacts";
   public static final String APPLICATION = "application";
   public static final String APPLICATIONS = "applications";
+  public static final String DEPLOYED_ARTIFACTS = "deployedArtifacts";
   public static final String ENVIRONMENT = "environment";
   public static final String ENVIRONMENTS = "environments";
+  public static final String PIPELINE = "pipeline";
+  public static final String WORKFLOW = "workflow";
+  public static final String WORKFLOW_EXECUTION = "workflowExecution";
+  public static final String WORKFLOW_EXECUTIONS = "workflowExecutions";
+  public static final String WORKFLOWS = "workflows";
 
   /***
    * This collection is mainly required to inject batched loader at app start time.
@@ -67,15 +69,16 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetchers() {
-    bindDataFetcherWithAnnotation(WORKFLOW, WorkflowDataFetcher.class);
-    bindDataFetcherWithAnnotation(WORKFLOWS, WorkflowListDataFetcher.class);
-    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTION, WorkflowExecutionDataFetcher.class);
-    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTIONS, WorkflowExecutionListDataFetcher.class);
-    bindDataFetcherWithAnnotation(DEPLOYED_ARTIFACTS, ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(APPLICATION, ApplicationDataFetcher.class);
+    bindDataFetcherWithAnnotation(APPLICATIONS, ApplicationListDataFetcher.class);
+    bindDataFetcherWithAnnotation(DEPLOYED_ARTIFACTS, ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(ENVIRONMENT, EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(ENVIRONMENTS, EnvironmentListDataFetcher.class);
-    bindDataFetcherWithAnnotation(APPLICATIONS, ApplicationListDataFetcher.class);
+    bindDataFetcherWithAnnotation(PIPELINE, PipelineDataFetcher.class);
+    bindDataFetcherWithAnnotation(WORKFLOW, WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTION, WorkflowExecutionDataFetcher.class);
+    bindDataFetcherWithAnnotation(WORKFLOW_EXECUTIONS, WorkflowExecutionListDataFetcher.class);
+    bindDataFetcherWithAnnotation(WORKFLOWS, WorkflowListDataFetcher.class);
   }
 
   private void bindBatchedDataLoaders() {
