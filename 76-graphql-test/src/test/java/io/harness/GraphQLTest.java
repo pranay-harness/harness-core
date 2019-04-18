@@ -4,7 +4,6 @@ import graphql.ExecutionResult;
 import graphql.GraphQL;
 import io.harness.rule.GraphQLRule;
 import io.harness.rule.LifecycleRule;
-import io.harness.serializer.MapperUtils;
 import org.junit.Rule;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.config.Configuration.AccessLevel;
@@ -37,7 +36,7 @@ public class GraphQLTest extends CategoryTest {
     final ExecutionResult result = getGraphQL().execute(query);
 
     final T t = objenesis.newInstance(clazz);
-    MapperUtils.mapObject(result.<LinkedHashMap>getData().values().iterator().next(), t);
+    modelMapper.map(result.<LinkedHashMap>getData().values().iterator().next(), t);
     return t;
   }
 }
