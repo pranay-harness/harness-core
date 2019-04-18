@@ -862,6 +862,17 @@ public class K8sStateHelper {
         .build();
   }
 
+  private String generateRepoName(
+      HelmRepoConfig helmRepoConfig, String settingAttributeId, String workflowExecutionId) {
+    switch (helmRepoConfig.getSettingType()) {
+      case HTTP_HELM_REPO:
+        return convertBase64UuidToCanonicalForm(settingAttributeId);
+
+      default:
+        return convertBase64UuidToCanonicalForm(workflowExecutionId);
+    }
+  }
+
   private HelmChartConfigParams getHelmChartConfigTaskParams(
       ExecutionContext context, ApplicationManifest applicationManifest) {
     HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
@@ -877,14 +888,15 @@ public class K8sStateHelper {
     List<EncryptedDataDetail> encryptionDataDetails =
         secretManager.getEncryptionDetails(helmRepoConfig, context.getAppId(), null);
 
-    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder =
-        HelmChartConfigParams.builder()
-            .chartName(helmChartConfig.getChartName())
-            .chartVersion(helmChartConfig.getChartVersion())
-            .helmRepoConfig(helmRepoConfig)
-            .encryptedDataDetails(encryptionDataDetails)
-            .repoDisplayName(settingAttribute.getName())
-            .repoName(convertBase64UuidToCanonicalForm(settingAttribute.getUuid()));
+    String repoName = generateRepoName(helmRepoConfig, settingAttribute.getUuid(), context.getWorkflowExecutionId());
+
+    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = HelmChartConfigParams.builder()
+                                                                    .chartName(helmChartConfig.getChartName())
+                                                                    .chartVersion(helmChartConfig.getChartVersion())
+                                                                    .helmRepoConfig(helmRepoConfig)
+                                                                    .encryptedDataDetails(encryptionDataDetails)
+                                                                    .repoDisplayName(settingAttribute.getName())
+                                                                    .repoName(repoName);
 
     if (isNotBlank(helmRepoConfig.getConnectorId())) {
       SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());
