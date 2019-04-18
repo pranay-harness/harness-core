@@ -21,7 +21,6 @@ import io.harness.exception.WingsException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -67,8 +66,6 @@ import java.util.Map;
 
 @Singleton
 public class YamlIntegrationTestHelper {
-  protected static final Logger logger = LoggerFactory.getLogger(YamlIntegrationTestHelper.class);
-
   public static final String URL_FOR_GIT_SYNC = "https://github.com/wings-software/yamlIntegrationTest.git";
 
   public Application createApplication(String appName, String accountId, AppService appService) {

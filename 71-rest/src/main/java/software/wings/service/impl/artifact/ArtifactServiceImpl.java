@@ -61,12 +61,11 @@ import io.harness.queue.Queue;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
@@ -101,6 +100,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class ArtifactServiceImpl implements ArtifactService {
   /**
    * The Auto downloaded.
@@ -108,7 +108,6 @@ public class ArtifactServiceImpl implements ArtifactService {
   List<String> autoDownloaded =
       asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.ECR.name(), ArtifactStreamType.GCR.name(),
           ArtifactStreamType.ACR.name(), ArtifactStreamType.AMAZON_S3.name(), ArtifactStreamType.AMI.name());
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactServiceImpl.class);
 
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
   private static final int ARTIFACT_RETENTION_SIZE = 25;

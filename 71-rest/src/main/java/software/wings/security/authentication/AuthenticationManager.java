@@ -19,8 +19,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
@@ -48,6 +47,7 @@ import java.util.Optional;
 import javax.ws.rs.core.Response;
 
 @Singleton
+@Slf4j
 public class AuthenticationManager {
   @Inject private PasswordBasedAuthHandler passwordBasedAuthHandler;
   @Inject private SamlBasedAuthHandler samlBasedAuthHandler;
@@ -63,8 +63,6 @@ public class AuthenticationManager {
   @Inject private OauthOptions oauthOptions;
 
   @Inject private LicenseService licenseService;
-
-  private static Logger logger = LoggerFactory.getLogger(AuthenticationManager.class);
 
   public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
     switch (mechanism) {

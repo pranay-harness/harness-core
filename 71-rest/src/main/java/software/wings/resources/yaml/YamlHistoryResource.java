@@ -8,8 +8,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.yaml.YamlHistory;
@@ -36,8 +34,6 @@ import javax.ws.rs.QueryParam;
 @Scope(APPLICATION)
 public class YamlHistoryResource {
   private YamlHistoryService yamlHistoryService;
-
-  private static final Logger logger = LoggerFactory.getLogger(YamlHistoryResource.class);
 
   /**
    * Instantiates a new app yaml resource.

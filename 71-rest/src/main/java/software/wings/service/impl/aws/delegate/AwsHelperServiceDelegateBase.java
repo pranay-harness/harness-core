@@ -24,12 +24,11 @@ import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.security.EncryptionService;
 
+@Slf4j
 class AwsHelperServiceDelegateBase {
-  private static final Logger logger = LoggerFactory.getLogger(AwsHelperServiceDelegateBase.class);
   @Inject protected EncryptionService encryptionService;
 
   protected void attachCredentials(

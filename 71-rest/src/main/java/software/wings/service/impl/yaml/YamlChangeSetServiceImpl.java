@@ -20,12 +20,11 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
@@ -48,13 +47,12 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityUpdateService entityUpdateService;
-
-  private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetServiceImpl.class);
 
   @Override
   public YamlChangeSet save(YamlChangeSet yamlChangeSet) {

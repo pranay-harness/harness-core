@@ -26,9 +26,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSetupExecutionData;
@@ -77,6 +76,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by anubhaw on 12/19/17.
  */
+@Slf4j
 public class AwsAmiServiceSetup extends State {
   private String autoScalingGroupName;
   private int autoScalingSteadyStateTimeout;
@@ -93,8 +93,6 @@ public class AwsAmiServiceSetup extends State {
   @Inject @Transient protected transient ExecutorService executorService;
   @Inject @Transient protected transient LogService logService;
   @Inject @Transient private transient DelegateService delegateService;
-
-  @Transient private static final Logger logger = LoggerFactory.getLogger(AwsAmiServiceSetup.class);
 
   private String commandName = Constants.AMI_SETUP_COMMAND_NAME;
   /**

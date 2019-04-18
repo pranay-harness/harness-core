@@ -27,8 +27,7 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,13 +40,13 @@ import java.util.Set;
 /**
  * The Class JsonUtils.
  */
+@Slf4j
 public class JsonUtils {
   /**
    * The constant mapperForCloning.
    */
   public static final ObjectMapper mapperForCloning;
   public static final ObjectMapper mapperForInternalUse;
-  private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private static final ObjectMapper mapper;
 
   static {

@@ -19,10 +19,10 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.InfrastructureMapping;
@@ -67,9 +67,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by anubhaw on 8/4/16.
  */
+@Slf4j
 public class AppDynamicsState extends AbstractMetricAnalysisState {
-  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
-
   @Transient @Inject protected AppdynamicsService appdynamicsService;
 
   @Attributes(required = true, title = "AppDynamics Server") private String analysisServerConfigId;

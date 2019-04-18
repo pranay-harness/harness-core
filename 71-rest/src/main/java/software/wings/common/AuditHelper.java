@@ -5,8 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.k8s.model.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
@@ -20,9 +19,9 @@ import java.io.InputStream;
  * @author Rishi
  */
 @Singleton
+@Slf4j
 public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<>();
-  private static final Logger logger = LoggerFactory.getLogger(AuditHelper.class);
 
   @Inject private AuditService auditService;
 

@@ -33,8 +33,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.fabric8.utils.Lists;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -61,9 +60,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 @Singleton
+@Slf4j
 public class AwsAmiHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAmiHelperServiceDelegate {
-  private static final Logger logger = LoggerFactory.getLogger(AwsAmiHelperServiceDelegateImpl.class);
   private static final String AUTOSCALING_GROUP_RESOURCE_TYPE = "auto-scaling-group";
   @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @VisibleForTesting static final String NAME_TAG = "Name";

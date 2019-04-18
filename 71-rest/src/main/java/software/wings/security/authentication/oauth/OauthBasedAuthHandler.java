@@ -11,9 +11,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -39,6 +38,7 @@ import java.util.concurrent.ExecutionException;
  */
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class OauthBasedAuthHandler implements AuthHandler {
   @Inject AuthenticationUtil authenticationUtil;
   @Inject UserService userService;
@@ -46,8 +46,6 @@ public class OauthBasedAuthHandler implements AuthHandler {
   @Inject SSOSettingServiceImpl ssoSettingService;
   @Inject UserServiceImpl userServiceImpl;
   @Inject OauthOptions oauthOptions;
-
-  static final Logger logger = LoggerFactory.getLogger(OauthBasedAuthHandler.class);
 
   @Override
   public AuthenticationMechanism getAuthenticationMechanism() {

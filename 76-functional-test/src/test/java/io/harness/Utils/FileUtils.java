@@ -2,8 +2,7 @@ package io.harness.Utils;
 
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.resource.Project;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.io.BufferedReader;
@@ -16,9 +15,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class FileUtils {
-  static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
-
   public static void modifySMTPInConfigFile(File file, SmtpConfig smtpConfig) throws IOException {
     Path path = Paths.get(file.getParent(), "modified_config.yml");
     File outputFile = new File(path.toString());

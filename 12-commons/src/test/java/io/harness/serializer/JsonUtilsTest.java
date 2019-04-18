@@ -12,11 +12,10 @@ import com.jayway.jsonpath.DocumentContext;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtilsTest.Base.BaseType;
 import io.harness.serializer.JsonUtilsTest.CustomResponse.Result;
+import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,6 +33,7 @@ import java.util.Map;
  *
  * @author Rishi.
  */
+@Slf4j
 public class JsonUtilsTest {
   private static final String json =
       "{\"store\":{\"book\":[{\"category\":\"reference\",\"author\":\"NigelRees\",\"title\":\"SayingsoftheCentury\","
@@ -41,7 +41,6 @@ public class JsonUtilsTest {
       + "\"author\":\"HermanMelville\",\"title\":\"MobyDick\",\"isbn\":\"0-553-21311-3\",\"price\":8.99},{\"category\":\"fiction\""
       + ",\"author\":\"J.R.R.Tolkien\",\"title\":\"TheLordoftheRings\",\"isbn\":\"0-395-19395-8\",\"price\":22.99}]"
       + ",\"bicycle\":{\"color\":\"red\",\"price\":19.95}},\"expensive\":10}";
-  private static final Logger logger = LoggerFactory.getLogger(JsonUtilsTest.class);
 
   /**
    * Should get authors.

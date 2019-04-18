@@ -11,6 +11,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Request.Builder;
@@ -18,8 +19,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.security.SecretManager;
 
@@ -32,14 +31,13 @@ import java.util.concurrent.ExecutionException;
 
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class AzureClientImpl extends BaseOauthClient implements OauthClient {
   OAuth20Service service;
   static String EMAIL_FIELD_NAME = "userPrincipalName";
   static String NAME_FIELD_NAME = "givenName";
 
   static final String PROTECTED_RESOURCE_URL = "https://graph.microsoft.com/v1.0/me/";
-
-  static final Logger logger = LoggerFactory.getLogger(AzureClientImpl.class);
 
   @Inject
   public AzureClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager)

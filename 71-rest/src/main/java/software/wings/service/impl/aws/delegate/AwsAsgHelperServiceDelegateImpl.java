@@ -49,8 +49,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
@@ -66,9 +65,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class AwsAsgHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAsgHelperServiceDelegate {
-  private static final Logger logger = LoggerFactory.getLogger(AwsAsgHelperServiceDelegateImpl.class);
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   @Inject private AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
   @Inject private TimeLimiter timeLimiter;
