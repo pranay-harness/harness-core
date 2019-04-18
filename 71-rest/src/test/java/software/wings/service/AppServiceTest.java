@@ -72,6 +72,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -120,6 +121,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private WorkflowService workflowService;
   @Mock private YamlGitService yamlGitService;
+  @Mock private TemplateService templateService;
 
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
   @Mock private ServiceJobScheduler serviceJobScheduler;
@@ -314,7 +316,7 @@ public class AppServiceTest extends WingsBaseTest {
     appService.delete(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
-        alertService, triggerService);
+        alertService, triggerService, templateService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
@@ -326,7 +328,7 @@ public class AppServiceTest extends WingsBaseTest {
     appService.pruneDescendingEntities(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
-        alertService, triggerService);
+        alertService, triggerService, templateService);
 
     inOrder.verify(alertService).pruneByApplication(APP_ID);
     inOrder.verify(environmentService).pruneByApplication(APP_ID);
@@ -336,6 +338,7 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(serviceResourceService).pruneByApplication(APP_ID);
     inOrder.verify(triggerService).pruneByApplication(APP_ID);
     inOrder.verify(workflowService).pruneByApplication(APP_ID);
+    inOrder.verify(templateService).pruneByApplication(APP_ID);
   }
 
   @Test
@@ -348,7 +351,7 @@ public class AppServiceTest extends WingsBaseTest {
 
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
-        alertService, triggerService);
+        alertService, triggerService, templateService);
 
     inOrder.verify(alertService).pruneByApplication(APP_ID);
     inOrder.verify(environmentService).pruneByApplication(APP_ID);
@@ -358,5 +361,6 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(serviceResourceService).pruneByApplication(APP_ID);
     inOrder.verify(triggerService).pruneByApplication(APP_ID);
     inOrder.verify(workflowService).pruneByApplication(APP_ID);
+    inOrder.verify(templateService).pruneByApplication(APP_ID);
   }
 }

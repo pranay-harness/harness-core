@@ -10,13 +10,14 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.service.intfc.ownership.OwnedByAccount;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.io.IOException;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public interface TemplateService extends OwnedByAccount {
+public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Template> list(PageRequest<Template> pageRequest);
 
   Template save(@Valid @NotNull Template template);

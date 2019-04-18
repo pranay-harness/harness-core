@@ -76,6 +76,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -118,6 +119,7 @@ public class AppServiceImpl implements AppService {
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private YamlGitService yamlGitService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private TemplateService templateService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;

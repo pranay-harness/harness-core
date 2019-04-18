@@ -609,4 +609,24 @@ public class TemplateServiceImpl implements TemplateService {
     AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
     return abstractTemplateProcessor.fetchTemplateProperties();
   }
+
+  @Override
+  public void pruneByApplication(String appId) {
+    // delete all templates with appId
+    List<Template> templates = wingsPersistence.createQuery(Template.class).filter(Template.APP_ID_KEY, appId).asList();
+    for (Template template : templates) {
+      deleteTemplate(template);
+    }
+    // delete all template folders with appId
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolder.APP_ID_KEY, appId));
+  }
+
+  private void deleteTemplate(Template template) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(VersionedTemplate.class).filter(TEMPLATE_ID_KEY, template.getUuid()));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(TemplateVersion.class).filter(TEMPLATE_UUID_KEY, template.getUuid()));
+    wingsPersistence.delete(template);
+  }
 }
