@@ -204,8 +204,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldCreateBastionHostBasedSshConfig() {
-    Host host =
-        builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).withBastionConnAttr(BASTION_HOST_ATTR.getUuid()).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
