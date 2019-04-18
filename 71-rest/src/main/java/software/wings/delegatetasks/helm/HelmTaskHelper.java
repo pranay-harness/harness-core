@@ -109,6 +109,7 @@ public class HelmTaskHelper {
       if (chartMuseumServer != null) {
         chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
       }
+      removeRepo(helmChartConfigParams.getRepoName());
     }
   }
 
