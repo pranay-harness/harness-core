@@ -43,6 +43,7 @@ interface BaseInfo {
 }
 
 type PageInfo {
+  hasMore : Boolean
   total: Int
   offset : Int
   limit : Int

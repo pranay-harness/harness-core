@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLPageInfo {
+  Boolean hasMore;
   Integer total;
   Integer limit;
   Integer offset;
