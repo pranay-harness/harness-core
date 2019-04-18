@@ -174,11 +174,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment get(String appId, String envId) {
-    Environment environment = wingsPersistence.getWithAppId(Environment.class, appId, envId);
-    populateValuesInEnvironment(
-        environment); // ToDo anshul Remove this once UI starts hitting ManifestFile new endpoints
-
-    return environment;
+    return wingsPersistence.getWithAppId(Environment.class, appId, envId);
   }
 
   @Override
@@ -199,10 +195,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       if (withServiceTemplates) {
         addServiceTemplates(environment);
       }
-      populateValuesInEnvironment(
-          environment); // ToDo anshul Remove this once UI starts hitting ManifestFile new endpoints
     }
-
     return environment;
   }
 
@@ -317,9 +310,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     yamlPushService.pushYamlChangeSet(
         accountId, savedEnvironment, updatedEnvironment, Type.UPDATE, environment.isSyncFromGit(), isRename);
-
-    populateValuesInEnvironment(
-        updatedEnvironment); // ToDo anshul Remove this once UI starts hitting ManifestFile new endpoints
 
     return updatedEnvironment;
   }
@@ -997,56 +987,5 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       throw new InvalidRequestException(
           format("No valid application manifest exists for environment: %s and service: %s", envId, serviceId));
     }
-  }
-
-  private void populateValuesInEnvironment(Environment environment) {
-    if (environment == null) {
-      return;
-    }
-
-    List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvIdAndKind(
-        environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
-    if (isEmpty(applicationManifests)) {
-      environment.setHelmValueYaml(null);
-      environment.setHelmValueYamlByServiceTemplateId(null);
-      return;
-    }
-
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getByEnvId(environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
-    environment.setHelmValueYaml(getManifestFileContent(applicationManifest));
-
-    List<ServiceTemplate> serviceTemplates = environment.getServiceTemplates();
-    if (isEmpty(serviceTemplates)) {
-      PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-      pageRequest.addFilter("appId", EQ, environment.getAppId());
-      pageRequest.addFilter("envId", EQ, environment.getUuid());
-      serviceTemplates = serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE).getResponse();
-    }
-
-    Map<String, String> valuesOverrides = new HashMap<>();
-    for (ServiceTemplate serviceTemplate : serviceTemplates) {
-      applicationManifest = applicationManifestService.getByEnvAndServiceId(
-          environment.getAppId(), environment.getUuid(), serviceTemplate.getServiceId(), AppManifestKind.VALUES);
-      String valuesYaml = getManifestFileContent(applicationManifest);
-
-      if (isNotBlank(valuesYaml)) {
-        valuesOverrides.put(serviceTemplate.getUuid(), valuesYaml);
-      }
-    }
-
-    environment.setHelmValueYamlByServiceTemplateId(valuesOverrides);
-  }
-
-  private String getManifestFileContent(ApplicationManifest applicationManifest) {
-    if (applicationManifest != null) {
-      ManifestFile manifestFile =
-          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), VALUES_YAML_KEY);
-      if (manifestFile != null) {
-        return manifestFile.getFileContent();
-      }
-    }
-
-    return null;
   }
 }
