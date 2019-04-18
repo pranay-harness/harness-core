@@ -13,8 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.datafetcher.workflow.adapater.WorkflowAdapter;
-import software.wings.graphql.schema.type.WorkflowExecutionInfo;
+import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -24,16 +23,13 @@ import software.wings.service.intfc.WorkflowExecutionService;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<WorkflowExecutionInfo> {
+public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<QLWorkflowExecution> {
   WorkflowExecutionService workflowExecutionService;
-  WorkflowAdapter workflowAdapter;
 
   @Inject
-  public WorkflowExecutionDataFetcher(
-      WorkflowExecutionService workflowExecutionService, WorkflowAdapter workflowAdapter, AuthHandler authHandler) {
+  public WorkflowExecutionDataFetcher(WorkflowExecutionService workflowExecutionService, AuthHandler authHandler) {
     super(authHandler);
     this.workflowExecutionService = workflowExecutionService;
-    this.workflowAdapter = workflowAdapter;
   }
 
   private boolean isAuthorizedToView(String appId, String workflowId) {
@@ -42,8 +38,8 @@ public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<WorkflowEx
   }
 
   @Override
-  public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    WorkflowExecutionInfo workflowExecutionType = WorkflowExecutionInfo.builder().build();
+  public QLWorkflowExecution fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    QLWorkflowExecution workflowExecutionType = QLWorkflowExecution.builder().build();
 
     String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     if (StringUtils.isBlank(appId)) {
@@ -58,7 +54,7 @@ public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<WorkflowEx
     }
 
     if (!isAuthorizedToView(appId, workflowId)) {
-      throwNotAuthorizedException(WORKFLOW_TYPE, workflowId, appId);
+      throw notAuthorizedException(WORKFLOW_TYPE, workflowId, appId);
     }
 
     String envId = dataFetchingEnvironment.getArgument(GraphQLConstants.ENV_ID);
@@ -66,7 +62,7 @@ public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<WorkflowEx
     WorkflowExecution workflowExecution =
         workflowExecutionService.fetchLastWorkflowExecution(appId, workflowId, serviceId, envId);
     if (workflowExecution != null) {
-      workflowExecutionType = workflowAdapter.getWorkflowExecution(workflowExecution);
+      workflowExecutionType = WorkflowController.getWorkflowExecution(workflowExecution);
     } else {
       addNoRecordFoundInfo(
           workflowExecutionType, NO_RECORDS_FOUND_FOR_APP_ID_AND_ENTITY, WORKFLOW_EXECUTION_TYPE, workflowId, appId);

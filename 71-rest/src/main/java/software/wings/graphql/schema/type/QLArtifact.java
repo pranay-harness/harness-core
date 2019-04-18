@@ -6,12 +6,18 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EnvironmentInfo implements BaseInfo {
+@Builder
+public class QLArtifact implements BaseInfo {
   String id;
   String name;
-  String description;
-  String environmentType;
+  String sourceName;
+  String displayName;
+  String buildNo;
+  String workflowExecutionName;
+  String pipelineExecutionName;
+  String lastDeployedBy;
+  long lastDeployedAt;
   String debugInfo;
+  String appId;
 }

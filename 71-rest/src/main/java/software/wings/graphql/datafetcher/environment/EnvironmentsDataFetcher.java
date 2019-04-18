@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Environment;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.schema.type.EnvironmentInfo;
 import software.wings.graphql.schema.type.PagedData;
+import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.EnvironmentService;
 
@@ -26,22 +26,19 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EnvironmentListDataFetcher extends AbstractDataFetcher<PagedData<EnvironmentInfo>> {
+public class EnvironmentsDataFetcher extends AbstractDataFetcher<PagedData<QLEnvironment>> {
   EnvironmentService environmentService;
   AuthHandler authHandler;
-  EnvironmentAdaptor environmentAdaptor;
 
   @Inject
-  public EnvironmentListDataFetcher(
-      AuthHandler authHandler, EnvironmentService environmentService, EnvironmentAdaptor environmentAdaptor) {
+  public EnvironmentsDataFetcher(AuthHandler authHandler, EnvironmentService environmentService) {
     super(authHandler);
     this.environmentService = environmentService;
-    this.environmentAdaptor = environmentAdaptor;
   }
 
   @Override
-  public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    PagedData<EnvironmentInfo> pagedData = PagedData.<EnvironmentInfo>builder().build();
+  public PagedData<QLEnvironment> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    PagedData<QLEnvironment> pagedData = PagedData.<QLEnvironment>builder().build();
     String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID);
     String environmentType = (String) getArgumentValue(dataFetchingEnvironment, ENV_TYPE);
 
@@ -63,11 +60,11 @@ public class EnvironmentListDataFetcher extends AbstractDataFetcher<PagedData<En
     PageRequest<Environment> pageRequest = pageRequestBuilder.build();
     PageResponse<Environment> result = environmentService.list(pageRequest, false);
 
-    return PagedData.<EnvironmentInfo>builder()
+    return PagedData.<QLEnvironment>builder()
         .total(result.getTotal())
         .data(result.getResponse()
                   .stream()
-                  .map(env -> environmentAdaptor.getEnvironmentInfo(env))
+                  .map(env -> EnvironmentController.getEnvironmentInfo(env))
                   .collect(Collectors.toList()))
         .limit(Integer.parseInt(result.getLimit()))
         .offset(Integer.parseInt(result.getOffset()))

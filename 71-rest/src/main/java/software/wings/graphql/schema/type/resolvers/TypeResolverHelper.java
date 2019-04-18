@@ -12,11 +12,11 @@ import com.google.inject.Singleton;
 
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.TypeResolver;
-import software.wings.graphql.schema.type.ApplicationInfo;
-import software.wings.graphql.schema.type.ArtifactInfo;
-import software.wings.graphql.schema.type.EnvironmentInfo;
-import software.wings.graphql.schema.type.WorkflowExecutionInfo;
-import software.wings.graphql.schema.type.WorkflowInfo;
+import software.wings.graphql.schema.type.QLApplication;
+import software.wings.graphql.schema.type.QLArtifact;
+import software.wings.graphql.schema.type.QLEnvironment;
+import software.wings.graphql.schema.type.QLWorkflow;
+import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.utils.GraphQLConstants;
 
 import java.util.Map;
@@ -37,13 +37,13 @@ public class TypeResolverHelper {
     return env -> {
       Object javaObject = env.getObject();
       GraphQLObjectType graphQLObjectType = null;
-      if (javaObject instanceof WorkflowInfo) {
+      if (javaObject instanceof QLWorkflow) {
         graphQLObjectType = env.getSchema().getObjectType(WORKFLOW_TYPE);
-      } else if (javaObject instanceof WorkflowExecutionInfo) {
+      } else if (javaObject instanceof QLWorkflowExecution) {
         graphQLObjectType = env.getSchema().getObjectType(WORKFLOW_EXECUTION_TYPE);
-      } else if (javaObject instanceof ApplicationInfo) {
+      } else if (javaObject instanceof QLApplication) {
         graphQLObjectType = env.getSchema().getObjectType(APPLICATION_TYPE);
-      } else if (javaObject instanceof EnvironmentInfo) {
+      } else if (javaObject instanceof QLEnvironment) {
         graphQLObjectType = env.getSchema().getObjectType(ENVIRONMENT_TYPE);
       }
       return graphQLObjectType;
@@ -54,15 +54,15 @@ public class TypeResolverHelper {
     return env -> {
       Object javaObject = env.getObject();
       GraphQLObjectType graphQLObjectType = null;
-      if (javaObject instanceof WorkflowInfo) {
+      if (javaObject instanceof QLWorkflow) {
         graphQLObjectType = env.getSchema().getObjectType(WORKFLOW_TYPE);
-      } else if (javaObject instanceof WorkflowExecutionInfo) {
+      } else if (javaObject instanceof QLWorkflowExecution) {
         graphQLObjectType = env.getSchema().getObjectType(WORKFLOW_EXECUTION_TYPE);
-      } else if (javaObject instanceof ArtifactInfo) {
+      } else if (javaObject instanceof QLArtifact) {
         graphQLObjectType = env.getSchema().getObjectType(ARTIFACT_TYPE);
-      } else if (javaObject instanceof ApplicationInfo) {
+      } else if (javaObject instanceof QLApplication) {
         graphQLObjectType = env.getSchema().getObjectType(APPLICATION_TYPE);
-      } else if (javaObject instanceof EnvironmentInfo) {
+      } else if (javaObject instanceof QLEnvironment) {
         graphQLObjectType = env.getSchema().getObjectType(ENVIRONMENT_TYPE);
       }
       return graphQLObjectType;

@@ -12,8 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.datafetcher.workflow.adapater.WorkflowAdapter;
-import software.wings.graphql.schema.type.WorkflowInfo;
+import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -23,17 +22,13 @@ import software.wings.service.intfc.WorkflowService;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkflowDataFetcher extends AbstractDataFetcher<WorkflowInfo> {
+public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow> {
   WorkflowService workflowService;
 
-  WorkflowAdapter workflowAdapter;
-
   @Inject
-  public WorkflowDataFetcher(
-      WorkflowService workflowService, WorkflowAdapter workflowAdapter, AuthHandler authHandler) {
+  public WorkflowDataFetcher(WorkflowService workflowService, AuthHandler authHandler) {
     super(authHandler);
     this.workflowService = workflowService;
-    this.workflowAdapter = workflowAdapter;
   }
 
   private boolean isAuthorizedToView(String appId, String workflowId) {
@@ -42,8 +37,8 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<WorkflowInfo> {
   }
 
   @Override
-  public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    WorkflowInfo workflowInfo = WorkflowInfo.builder().build();
+  public QLWorkflow fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    QLWorkflow workflowInfo = QLWorkflow.builder().build();
     String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     String workflowId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.WORKFLOW_ID);
     // Pre-checks
@@ -58,12 +53,12 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<WorkflowInfo> {
     }
 
     if (!this.isAuthorizedToView(appId, workflowId)) {
-      throwNotAuthorizedException(WORKFLOW_TYPE, workflowId, appId);
+      throw notAuthorizedException(WORKFLOW_TYPE, workflowId, appId);
     }
 
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
     if (workflow != null) {
-      workflowInfo = workflowAdapter.getWorkflow(workflow);
+      workflowInfo = WorkflowController.getWorkflow(workflow);
     } else {
       addNoRecordFoundInfo(workflowInfo, NO_RECORDS_FOUND_FOR_APP_ID_AND_ENTITY, WORKFLOW_TYPE, workflowId, appId);
     }

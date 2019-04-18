@@ -10,32 +10,31 @@ import org.apache.commons.lang3.StringUtils;
 import org.dataloader.DataLoader;
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.schema.type.ApplicationInfo;
+import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 
+import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApplicationDataFetcher extends AbstractDataFetcher<ApplicationInfo> {
+public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication> {
   AppService appService;
-  ApplicationAdaptor applicationAdaptor;
 
   @Inject
-  public ApplicationDataFetcher(AppService appService, AuthHandler authHandler, ApplicationAdaptor applicationAdaptor) {
+  public ApplicationDataFetcher(AppService appService, AuthHandler authHandler) {
     super(authHandler);
     this.appService = appService;
-    this.applicationAdaptor = applicationAdaptor;
   }
 
   @Override
-  public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+  public QLApplication fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
 
     if (StringUtils.isBlank(appId)) {
-      ApplicationInfo applicationInfo = ApplicationInfo.builder().build();
+      QLApplication applicationInfo = QLApplication.builder().build();
       addInvalidInputInfo(applicationInfo, GraphQLConstants.APP_ID);
       return applicationInfo;
     }
@@ -48,19 +47,24 @@ public class ApplicationDataFetcher extends AbstractDataFetcher<ApplicationInfo>
     }
   }
 
-  private Object loadApplicationInfo(String appId) {
-    ApplicationInfo applicationInfo;
+  private QLApplication loadApplicationInfo(String appId) {
+    QLApplication applicationInfo;
     Application application = appService.get(appId);
     if (null == application) {
-      applicationInfo = ApplicationInfo.builder().build();
+      applicationInfo = QLApplication.builder().build();
       addNoRecordFoundInfo(applicationInfo, GraphQLConstants.APP_ID);
     } else {
-      applicationInfo = applicationAdaptor.getApplicationInfo(application);
+      applicationInfo = ApplicationController.getApplicationInfo(application);
     }
     return applicationInfo;
   }
 
-  private Object loadApplicationInfoWithBatching(@NotNull String appId, DataLoader<String, Object> dataLoader) {
-    return dataLoader.load(appId);
+  private QLApplication loadApplicationInfoWithBatching(
+      @NotNull String appId, DataLoader<String, QLApplication> dataLoader) {
+    try {
+      return dataLoader.load(appId).get();
+    } catch (InterruptedException | ExecutionException e) {
+      throw batchFetchException(e);
+    }
   }
 }

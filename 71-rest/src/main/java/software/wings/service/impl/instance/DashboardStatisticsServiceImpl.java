@@ -771,7 +771,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           getEntitySummary(envInfo.getName(), envInfo.getId(), EntityType.ENVIRONMENT.name());
 
       ArtifactInfo artifactInfo = aggregationInfo.getArtifactInfo();
-      Validator.notNullCheck("ArtifactInfo", artifactInfo);
+      Validator.notNullCheck("QLArtifact", artifactInfo);
       ArtifactSummary artifactSummary = getArtifactSummary(
           artifactInfo.getName(), artifactInfo.getId(), artifactInfo.getBuildNo(), artifactInfo.getSourceName());
 

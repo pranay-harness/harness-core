@@ -27,7 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.schema.type.ArtifactInfo;
+import software.wings.graphql.schema.type.QLArtifact;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.ArtifactService;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>> {
+public class ArtifactDataFetcher extends AbstractDataFetcher<List<QLArtifact>> {
   public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
   public static final String LAST_ARTIFACT_ID_KEY = "lastArtifactId";
   public static final String LAST_DEPLOYED_AT_KEY = "lastDeployedAt";
@@ -60,8 +60,8 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>>
   }
 
   @Override
-  public List<ArtifactInfo> get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    List<ArtifactInfo> deployedArtifactList = Lists.newArrayList();
+  public List<QLArtifact> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    List<QLArtifact> deployedArtifactList = Lists.newArrayList();
 
     String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     if (StringUtils.isBlank(appId)) {
@@ -104,7 +104,7 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>>
     return deployedArtifactList;
   }
 
-  private List<ArtifactInfo> getDeployedArtifactList(
+  private List<QLArtifact> getDeployedArtifactList(
       String appId, PageResponse<Instance> instancePageResponse, Map<String, List<Instance>> artifactToInstanceMap) {
     PageResponse<Artifact> artifactPageResponse = getArtifacts(appId, artifactToInstanceMap.keySet().toArray());
 
@@ -115,7 +115,7 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>>
         .map(i -> {
           Artifact artifact = artifactMap.get(i.getLastArtifactId());
 
-          return ArtifactInfo.builder()
+          return QLArtifact.builder()
               .lastDeployedAt(i.getLastDeployedAt())
               .lastDeployedBy(i.getLastDeployedByName())
               .workflowExecutionName(i.getLastWorkflowExecutionName())
@@ -158,14 +158,14 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<ArtifactInfo>>
     return this.instanceService.list(instancePageRequest);
   }
 
-  private void addInvalidInputDebugInfo(List<ArtifactInfo> artifactInfoList, String entityName) {
-    ArtifactInfo artifactInfo = ArtifactInfo.builder().build();
+  private void addInvalidInputDebugInfo(List<QLArtifact> artifactInfoList, String entityName) {
+    QLArtifact artifactInfo = QLArtifact.builder().build();
     artifactInfoList.add(artifactInfo);
     addInvalidInputInfo(artifactInfo, entityName);
   }
 
-  private void addNoRecordFoundDebugInfo(List<ArtifactInfo> artifactInfoList, String messageString, Object... values) {
-    ArtifactInfo artifactInfo = ArtifactInfo.builder().build();
+  private void addNoRecordFoundDebugInfo(List<QLArtifact> artifactInfoList, String messageString, Object... values) {
+    QLArtifact artifactInfo = QLArtifact.builder().build();
     artifactInfoList.add(artifactInfo);
     addNoRecordFoundInfo(artifactInfo, messageString, values);
   }

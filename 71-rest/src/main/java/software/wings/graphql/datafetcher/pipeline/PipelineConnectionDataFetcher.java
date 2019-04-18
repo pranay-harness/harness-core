@@ -9,19 +9,18 @@ import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Pipeline;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.schema.type.QLPipeline;
-import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
+import software.wings.graphql.schema.type.QLPipelineConnection;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
-public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline> {
+public class PipelineConnectionDataFetcher extends AbstractDataFetcher<QLPipelineConnection> {
   @Inject HPersistence persistence;
 
   @Inject
-  public PipelineDataFetcher(AuthHandler authHandler) {
+  public PipelineConnectionDataFetcher(AuthHandler authHandler) {
     super(authHandler);
   }
 
@@ -33,7 +32,7 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline> {
   }
 
   @Override
-  public QLPipeline fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+  public QLPipelineConnection fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     String pipelineId = (String) getArgumentValue(dataFetchingEnvironment, "pipelineId");
 
     Pipeline pipeline = persistence.get(Pipeline.class, pipelineId);
@@ -42,8 +41,6 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline> {
       throw notAuthorizedException(PIPELINE_TYPE, pipelineId, pipeline.getAppId());
     }
 
-    final QLPipelineBuilder builder = QLPipeline.builder();
-    PipelineController.populatePipeline(pipeline, builder);
-    return builder.build();
+    return null;
   }
 }

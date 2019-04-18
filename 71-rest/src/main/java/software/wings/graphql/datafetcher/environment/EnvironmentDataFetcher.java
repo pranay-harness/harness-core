@@ -12,29 +12,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Environment;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.schema.type.EnvironmentInfo;
+import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.EnvironmentService;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EnvironmentDataFetcher extends AbstractDataFetcher<EnvironmentInfo> {
+public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment> {
   EnvironmentService environmentService;
   AuthHandler authHandler;
-  EnvironmentAdaptor environmentAdaptor;
 
   @Inject
-  public EnvironmentDataFetcher(
-      AuthHandler authHandler, EnvironmentService environmentService, EnvironmentAdaptor environmentAdaptor) {
+  public EnvironmentDataFetcher(AuthHandler authHandler, EnvironmentService environmentService) {
     super(authHandler);
     this.environmentService = environmentService;
-    this.environmentAdaptor = environmentAdaptor;
   }
 
   @Override
-  public EnvironmentInfo get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    EnvironmentInfo environmentInfo = EnvironmentInfo.builder().build();
+  public QLEnvironment fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    QLEnvironment environmentInfo = QLEnvironment.builder().build();
     String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID);
     // Pre-checks
     if (StringUtils.isBlank(appId)) {
@@ -53,6 +50,6 @@ public class EnvironmentDataFetcher extends AbstractDataFetcher<EnvironmentInfo>
       addNoRecordFoundInfo(environmentInfo, ENV_ID);
       return environmentInfo;
     }
-    return environmentAdaptor.getEnvironmentInfo(env);
+    return EnvironmentController.getEnvironmentInfo(env);
   }
 }

@@ -16,9 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.datafetcher.workflow.adapater.WorkflowAdapter;
 import software.wings.graphql.schema.type.PagedData;
-import software.wings.graphql.schema.type.WorkflowInfo;
+import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.WorkflowService;
@@ -27,22 +26,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkflowListDataFetcher extends AbstractDataFetcher<PagedData<WorkflowInfo>> {
+public class WorkflowsDataFetcher extends AbstractDataFetcher<PagedData<QLWorkflow>> {
   WorkflowService workflowService;
 
-  WorkflowAdapter workflowAdapter;
-
   @Inject
-  public WorkflowListDataFetcher(
-      WorkflowService workflowService, WorkflowAdapter workflowAdapter, AuthHandler authHandler) {
+  public WorkflowsDataFetcher(WorkflowService workflowService, AuthHandler authHandler) {
     super(authHandler);
     this.workflowService = workflowService;
-    this.workflowAdapter = workflowAdapter;
   }
 
   @Override
-  public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    PagedData<WorkflowInfo> pagedData = PagedData.<WorkflowInfo>builder().build();
+  public PagedData<QLWorkflow> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    PagedData<QLWorkflow> pagedData = PagedData.<QLWorkflow>builder().build();
     String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
 
     if (StringUtils.isBlank(appId)) {
@@ -69,7 +64,7 @@ public class WorkflowListDataFetcher extends AbstractDataFetcher<PagedData<Workf
       addNoRecordFoundInfo(pagedData, NO_RECORDS_FOUND_FOR_APP_ID, WORKFLOW_TYPE, appId);
     } else {
       pagedData.setData(
-          pageResponse.getResponse().stream().map(w -> workflowAdapter.getWorkflow(w)).collect(Collectors.toList()));
+          pageResponse.getResponse().stream().map(w -> WorkflowController.getWorkflow(w)).collect(Collectors.toList()));
     }
     return pagedData;
   }

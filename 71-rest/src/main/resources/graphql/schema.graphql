@@ -7,9 +7,11 @@ schema {
 # Harness GraphQL SDL details
 type Query {
   # Get a pipeline object by id
-  pipeline(pipelineId: String!): Pipeline  @dataFetcher(name : "pipeline")
+  pipeline(pipelineId: String!): Pipeline @dataFetcher(name : "pipeline")
 
-  # Get the workflow details for a specific appId and workflow Id
+  pipelines(appId: String, limit: Int, offset: Int): PipelineConnection @dataFetcher(name : "pipelineConnection")
+
+    # Get the workflow details for a specific appId and workflow Id
   workflow(appId: String!, workflowId: String!): Workflow   @dataFetcher(name : "workflow")
 
   # Get list of workflows for an appId. It will return paginated data
@@ -22,7 +24,7 @@ type Query {
   workflowExecutions(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData  @dataFetcher(name : "workflowExecutions")
 
   # Get list of successfully deployed articacts.
-  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]  @dataFetcher(name : "deployedArtifacts")
+  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]  @dataFetcher(name : "artifact")
 
   # Get details about an application
   application(appId:String!): Application @dataFetcher(name : "application")
@@ -62,6 +64,11 @@ type Pipeline {
 
   # Description of the pipeline
   description: String
+}
+
+type PipelineConnection {
+  pageInfo : PageInfo
+  nodes : [Pipeline]
 }
 
 # Type for workflow Execution

@@ -13,9 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
-import software.wings.graphql.datafetcher.workflow.adapater.WorkflowAdapter;
 import software.wings.graphql.schema.type.PagedData;
-import software.wings.graphql.schema.type.WorkflowExecutionInfo;
+import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -24,21 +23,18 @@ import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public class WorkflowExecutionListDataFetcher extends AbstractDataFetcher<PagedData<WorkflowExecutionInfo>> {
+public class WorkflowExecutionsDataFetcher extends AbstractDataFetcher<PagedData<QLWorkflowExecution>> {
   WorkflowExecutionService workflowExecutionService;
-  WorkflowAdapter workflowAdapter;
 
   @Inject
-  public WorkflowExecutionListDataFetcher(
-      WorkflowExecutionService workflowExecutionService, WorkflowAdapter workflowAdapter, AuthHandler authHandler) {
+  public WorkflowExecutionsDataFetcher(WorkflowExecutionService workflowExecutionService, AuthHandler authHandler) {
     super(authHandler);
     this.workflowExecutionService = workflowExecutionService;
-    this.workflowAdapter = workflowAdapter;
   }
 
   @Override
-  public PagedData<WorkflowExecutionInfo> get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
-    PagedData<WorkflowExecutionInfo> pagedData = PagedData.<WorkflowExecutionInfo>builder().build();
+  public PagedData<QLWorkflowExecution> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
+    PagedData<QLWorkflowExecution> pagedData = PagedData.<QLWorkflowExecution>builder().build();
 
     String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
     if (StringUtils.isBlank(appId)) {
@@ -73,7 +69,7 @@ public class WorkflowExecutionListDataFetcher extends AbstractDataFetcher<PagedD
     } else {
       pagedData.setData(pageResponse.getResponse()
                             .stream()
-                            .map(we -> workflowAdapter.getWorkflowExecution(we))
+                            .map(we -> WorkflowController.getWorkflowExecution(we))
                             .collect(Collectors.toList()));
     }
 
