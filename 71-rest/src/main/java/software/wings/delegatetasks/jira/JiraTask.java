@@ -10,6 +10,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
+import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue;
@@ -26,8 +27,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.JiraExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JiraConfig;
@@ -50,14 +49,13 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class JiraTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
 
   private static final String JIRA_APPROVAL_FIELD_KEY = "name";
   private static final String WEBHOOK_CREATION_URL = "/rest/webhooks/1.0/webhook/";
-
-  private static final Logger logger = LoggerFactory.getLogger(JiraTask.class);
 
   public JiraTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {

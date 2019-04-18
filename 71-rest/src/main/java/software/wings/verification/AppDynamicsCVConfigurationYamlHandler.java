@@ -9,8 +9,7 @@ import com.google.inject.Inject;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -23,9 +22,9 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 public class AppDynamicsCVConfigurationYamlHandler
     extends CVConfigurationYamlHandler<AppDynamicsCVConfigurationYaml, AppDynamicsCVServiceConfiguration> {
-  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsCVConfigurationYamlHandler.class);
   @Inject AppdynamicsService appdynamicsService;
 
   @Override

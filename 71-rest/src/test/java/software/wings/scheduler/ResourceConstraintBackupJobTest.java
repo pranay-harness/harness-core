@@ -20,8 +20,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.quartz.JobExecutionContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
@@ -35,8 +33,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ResourceConstraintBackupJobTest extends WingsBaseTest {
-  public static final Logger logger = LoggerFactory.getLogger(PersistentLockCleanupJobTest.class);
-
   @Mock WorkflowExecutionService workflowExecutionService;
   @Inject @InjectMocks private ResourceConstraintService resourceConstraintService;
 

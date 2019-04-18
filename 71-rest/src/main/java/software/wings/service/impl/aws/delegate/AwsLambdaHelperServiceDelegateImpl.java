@@ -43,9 +43,8 @@ import com.amazonaws.services.lambda.model.VpcConfig;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -71,10 +70,9 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@Slf4j
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
-  private static final Logger logger = LoggerFactory.getLogger(AwsLambdaHelperServiceDelegateImpl.class);
-
   @VisibleForTesting
   public AWSLambdaClient getAmazonLambdaClient(
       String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {

@@ -22,8 +22,6 @@ import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.api.PhaseElement;
@@ -58,7 +56,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AwsAmiSwitchRoutesState extends State {
-  private static final transient Logger logger = LoggerFactory.getLogger(AwsAmiSwitchRoutesState.class);
   public static final String SWAP_AUTO_SCALING_ROUTES = "Swap AutoScaling Routes";
   @Attributes(title = "Downsize Old Auto Scaling Group")
   @Getter

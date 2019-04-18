@@ -19,8 +19,7 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -49,17 +48,12 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 5/13/16.
  */
 @Singleton
+@Slf4j
 public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   /**
    * The constant APP_ID.
    */
   public static final String APP_ID = "appId";
-
-  /**
-   * II
-   * The constant ARTIFACT_STREAM_NAME.
-   */
-  private static final Logger logger = LoggerFactory.getLogger(JenkinsBuildServiceImpl.class);
 
   @Inject private EncryptionService encryptionService;
   @Inject private JenkinsUtil jenkinsUtil;

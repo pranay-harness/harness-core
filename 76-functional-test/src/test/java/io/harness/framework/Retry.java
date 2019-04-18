@@ -5,17 +5,16 @@ import io.harness.framework.matchers.EmailMatcher;
 import io.harness.framework.matchers.MailinatorEmailMatcher;
 import io.harness.framework.matchers.Matcher;
 import io.harness.framework.matchers.SettingsAttributeMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+@Slf4j
 public class Retry<T> {
   private int retryCounter;
   private int maxRetries;
   private int introduceDelayInMS;
-  private static final Logger logger = LoggerFactory.getLogger(Retry.class);
 
   public Retry(int maxRetries, int introduceDelayInMS) {
     this.maxRetries = maxRetries;

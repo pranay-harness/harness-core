@@ -22,8 +22,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
@@ -59,8 +59,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class APMVerificationState extends AbstractMetricAnalysisState {
-  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationState.class);
   @SchemaIgnore protected static final String URL_BODY_APPENDER = "__harness-body__";
 
   public APMVerificationState(String name) {

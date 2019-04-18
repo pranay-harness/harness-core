@@ -19,8 +19,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -31,8 +29,6 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 
 public class ZombieHunterJobTest extends WingsBaseTest {
-  public static final Logger logger = LoggerFactory.getLogger(ZombieHunterJobTest.class);
-
   @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject @InjectMocks private AppService appService;

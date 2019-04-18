@@ -35,10 +35,9 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.ContainerServiceData;
@@ -107,9 +106,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by anubhaw on 12/19/17.
  */
+@Slf4j
 public class AwsAmiServiceDeployState extends State {
-  @Transient private static final transient Logger logger = LoggerFactory.getLogger(AwsAmiServiceDeployState.class);
-
   @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")

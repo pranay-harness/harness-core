@@ -160,9 +160,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -188,6 +187,7 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 12/15/16.
  */
 @Singleton
+@Slf4j
 public class AwsHelperService {
   private static final String AWS_AVAILABILITY_ZONE_CHECK =
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
@@ -197,8 +197,6 @@ public class AwsHelperService {
   @Inject private AwsUtils awsUtils;
 
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
-
-  private static final Logger logger = LoggerFactory.getLogger(AwsHelperService.class);
 
   public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {

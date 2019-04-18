@@ -18,9 +18,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -81,6 +80,7 @@ import software.wings.yaml.workflow.WorkflowYaml;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private AppService appService;
   @Inject private CommandService commandService;
@@ -99,8 +99,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private ApplicationManifestService applicationManifestService;
-
-  private static final Logger logger = LoggerFactory.getLogger(YamlResourceServiceImpl.class);
 
   /**
    * Find by app, service and service command ids.
