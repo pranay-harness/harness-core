@@ -67,6 +67,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+
 /**
  * Created by anubhaw on 4/4/16.
  */
@@ -386,10 +387,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (env == null) {
       return;
     }
-    Map<String, String> envHelmValues = env.getHelmValueYamlByServiceTemplateId();
-    if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(template.getUuid()))) {
-      template.setHelmValueYamlOverride(envHelmValues.get(template.getUuid()));
-    }
+
+    ApplicationManifest applicationManifest = applicationManifestService.getByEnvAndServiceId(
+        template.getAppId(), template.getEnvId(), template.getServiceId(), AppManifestKind.VALUES);
+    String valuesYaml = getValuesFileContent(applicationManifest);
+    template.setHelmValueYamlOverride(valuesYaml);
   }
 
   private void populateServiceAndOverrideValuesAppManifest(ServiceTemplate template) {
@@ -404,13 +406,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       return;
     }
 
-    List<ManifestFile> manifestFiles =
-        applicationManifestService.getManifestFilesByAppManifestId(template.getAppId(), appManifest.getUuid());
-    if (isEmpty(manifestFiles)) {
-      return;
-    }
+    ManifestFile manifestFile =
+        applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), VALUES_YAML_KEY);
 
-    template.setValuesOverrideManifestFile(manifestFiles.get(0));
+    template.setValuesOverrideManifestFile(manifestFile);
   }
 
   /* (non-Javadoc)
@@ -669,5 +668,17 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                 allServiceConfigFile != null ? asList(allServiceConfigFile) : asList()),
             templateConfigFile != null ? asList(templateConfigFile) : asList());
     return configFiles.isEmpty() ? null : configFiles.get(0);
+  }
+
+  private String getValuesFileContent(ApplicationManifest applicationManifest) {
+    if (applicationManifest != null) {
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), VALUES_YAML_KEY);
+      if (manifestFile != null) {
+        return manifestFile.getFileContent();
+      }
+    }
+
+    return null;
   }
 }
