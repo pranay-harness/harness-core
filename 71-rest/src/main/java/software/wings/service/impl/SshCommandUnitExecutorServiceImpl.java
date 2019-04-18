@@ -96,7 +96,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                                                     .build();
       executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
     } else {
-      SshSessionConfig sshSessionConfig = SshHelperUtil.getSshSessionConfig(commandUnit.getName(), context, null);
+      SshSessionConfig sshSessionConfig = SshHelperUtil.createSshSessionConfig(commandUnit.getName(), context);
       executor = sshExecutorFactory.getExecutor(sshSessionConfig);
     }
 
@@ -111,7 +111,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           () -> commandUnit.execute(shellCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS, true);
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
-          logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+          logBuilder.withLogLevel(ERROR)
               .withLogLine("Command execution timed out")
               .withExecutionResult(commandExecutionStatus)
               .build());
@@ -121,14 +121,14 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         WingsException ex = (WingsException) e.getCause();
         String errorMessage = ExceptionUtils.getMessage(ex);
         logService.save(context.getAccountId(),
-            logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+            logBuilder.withLogLevel(ERROR)
                 .withLogLine(errorMessage)
                 .withExecutionResult(commandExecutionStatus)
                 .build());
         throw(WingsException) e.getCause();
       } else {
         logService.save(context.getAccountId(),
-            logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+            logBuilder.withLogLevel(ERROR)
                 .withLogLine("Unknown Error " + e.getCause().getMessage())
                 .withExecutionResult(commandExecutionStatus)
                 .build());
@@ -141,7 +141,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         if (messageList.get(0).getCode() == ErrorCode.INVALID_KEY
             || messageList.get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {
           logService.save(context.getAccountId(),
-              logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+              logBuilder.withLogLevel(ERROR)
                   .withLogLine("Command execution failed: invalid key")
                   .withExecutionResult(commandExecutionStatus)
                   .build());
@@ -150,7 +150,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       } else {
         logger.error("Error while executing command", e);
         logService.save(context.getAccountId(),
-            logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+            logBuilder.withLogLevel(ERROR)
                 .withLogLine("Command execution failed")
                 .withExecutionResult(commandExecutionStatus)
                 .build());
@@ -158,7 +158,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       }
     } catch (Exception e) {
       logService.save(context.getAccountId(),
-          logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+          logBuilder.withLogLevel(ERROR)
               .withLogLine("Command execution failed")
               .withExecutionResult(commandExecutionStatus)
               .build());
