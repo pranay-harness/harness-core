@@ -475,7 +475,7 @@ public class WatcherServiceImpl implements WatcherService {
             logger.warn("Delegate processes {} need restart. Will be drained and new process with same version started",
                 drainingRestartNeededList);
             drainingRestartNeededList.forEach(this ::drainDelegateProcess);
-          } else if (working.compareAndSet(false, true)) {
+          } else if (drainingRestartNeededList.containsAll(runningDelegates) && working.compareAndSet(false, true)) {
             logger.warn(
                 "Delegate processes {} need restart. Starting new process and draining old", drainingRestartNeededList);
             startDelegateProcess(null, ".", drainingRestartNeededList, "DelegateRestartScript", getProcessId());
