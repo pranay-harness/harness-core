@@ -10,6 +10,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -71,8 +72,8 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
-    dataCollectionInfo = (CustomLogDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
+    dataCollectionInfo = (CustomLogDataCollectionInfo) parameters;
     logger.info("Log collection - dataCollectionInfo: {}", dataCollectionInfo);
     if (!isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;

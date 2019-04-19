@@ -16,6 +16,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -67,8 +68,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
   }
 
   @Override
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
-    dataCollectionInfo = (StackDriverDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
+    dataCollectionInfo = (StackDriverDataCollectionInfo) parameters;
     logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)

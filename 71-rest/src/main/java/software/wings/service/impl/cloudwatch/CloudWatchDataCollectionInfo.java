@@ -2,6 +2,7 @@ package software.wings.service.impl.cloudwatch;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.AwsConfig;
@@ -19,7 +20,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-public class CloudWatchDataCollectionInfo implements ExecutionCapabilityDemander {
+public class CloudWatchDataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private AwsConfig awsConfig;
   private String applicationId;
   private String stateExecutionId;

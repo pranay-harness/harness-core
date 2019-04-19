@@ -126,7 +126,7 @@ public class LogDataCollectionTaskTest {
         .thenReturn(true);
 
     // execute
-    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(new Object[] {dataCollectionInfo});
+    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
     Runnable r = dataCollectionTask.getDataCollector(taskResult);
     r.run();
 
@@ -169,7 +169,7 @@ public class LogDataCollectionTaskTest {
         .thenReturn(true);
 
     // execute
-    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(new Object[] {dataCollectionInfo});
+    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
     Runnable r = dataCollectionTask.getDataCollector(taskResult);
     r.run();
 

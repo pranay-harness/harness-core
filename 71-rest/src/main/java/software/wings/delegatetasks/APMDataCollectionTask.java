@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -102,8 +103,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
-    dataCollectionInfo = (APMDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
+    dataCollectionInfo = (APMDataCollectionInfo) parameters;
     collectionWindow =
         dataCollectionInfo.getDataCollectionFrequency() != 0 ? dataCollectionInfo.getDataCollectionFrequency() : 1;
     initialDelayMins = 2;

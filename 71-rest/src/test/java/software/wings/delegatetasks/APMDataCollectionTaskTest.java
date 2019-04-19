@@ -9,7 +9,11 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+
+import io.harness.delegate.task.TaskParameters;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,7 +83,8 @@ public class APMDataCollectionTaskTest {
   @Category(UnitTests.class)
   public void testBatchingHosts() throws Exception {
     setup();
-    DataCollectionTaskResult tr = dataCollectionTask.initDataCollection(dataCollectionTask.getParameters());
+    DataCollectionTaskResult tr =
+        dataCollectionTask.initDataCollection((TaskParameters) dataCollectionTask.getParameters()[0]);
     String batchUrl = "urlData{$harness_batch{pod_name:${host},'|'}}";
     List<String> batchedHosts =
         (List<String>) useReflectionToMakeInnerClassVisible().invoke(dataCollectionTask.getDataCollector(tr), batchUrl);
@@ -98,7 +103,8 @@ public class APMDataCollectionTaskTest {
     }
 
     dataCollectionInfo.setHosts(hostList);
-    DataCollectionTaskResult tr = dataCollectionTask.initDataCollection(dataCollectionTask.getParameters());
+    DataCollectionTaskResult tr =
+        dataCollectionTask.initDataCollection((TaskParameters) dataCollectionTask.getParameters()[0]);
     String batchUrl = "urlData{$harness_batch{pod_name:${host},'|'}}";
     List<String> batchedHosts =
         (List<String>) useReflectionToMakeInnerClassVisible().invoke(dataCollectionTask.getDataCollector(tr), batchUrl);
@@ -120,6 +126,7 @@ public class APMDataCollectionTaskTest {
     setup();
     APMDataCollectionInfo info = (APMDataCollectionInfo) dataCollectionTask.getParameters()[0];
     info.setEncryptedDataDetails(null);
-    DataCollectionTaskResult tr = dataCollectionTask.initDataCollection(dataCollectionTask.getParameters());
+    DataCollectionTaskResult tr =
+        dataCollectionTask.initDataCollection((TaskParameters) dataCollectionTask.getParameters()[0]);
   }
 }

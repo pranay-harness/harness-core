@@ -13,6 +13,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
@@ -62,8 +63,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
   }
 
   @Override
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
-    dataCollectionInfo = (DynaTraceDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
+    dataCollectionInfo = (DynaTraceDataCollectionInfo) parameters;
     logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)

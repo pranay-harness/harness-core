@@ -1,5 +1,6 @@
 package software.wings.service.impl.stackdriver;
 
+import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.GcpConfig;
@@ -17,7 +18,7 @@ import java.util.Set;
  */
 @Data
 @Builder
-public class StackDriverDataCollectionInfo {
+public class StackDriverDataCollectionInfo implements TaskParameters {
   private GcpConfig gcpConfig;
   private String appId;
   private String stateExecutionId;

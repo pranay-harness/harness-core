@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.delegate.task.TaskParameters;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -15,7 +16,7 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public abstract class LogDataCollectionInfo extends DataCollectionInfo {
+public abstract class LogDataCollectionInfo extends DataCollectionInfo implements TaskParameters {
   private String query;
   private long startTime;
   private long endTime;

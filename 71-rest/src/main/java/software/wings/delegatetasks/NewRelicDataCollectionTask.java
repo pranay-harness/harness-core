@@ -20,6 +20,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -80,8 +81,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   }
 
   @Override
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
-    dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
+    dataCollectionInfo = (NewRelicDataCollectionInfo) parameters;
     is247Task = this.getTaskType().equals(TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA.name());
     logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
