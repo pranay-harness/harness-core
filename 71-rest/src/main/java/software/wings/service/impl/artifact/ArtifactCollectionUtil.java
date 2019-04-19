@@ -90,6 +90,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 import software.wings.utils.Validator;
 
 import java.util.HashMap;
@@ -487,11 +488,9 @@ public class ArtifactCollectionUtil {
   }
 
   private static boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream) {
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-      return ((ArtifactoryArtifactStream) artifactStream).getImageName() != null
-          || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType());
-    }
-    return false;
+    return ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
+        && (artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals(RepositoryType.docker.name())
+               || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType()));
   }
 
   public static BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {
@@ -505,7 +504,7 @@ public class ArtifactCollectionUtil {
     }
   }
 
-  public static BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
+  private static BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)

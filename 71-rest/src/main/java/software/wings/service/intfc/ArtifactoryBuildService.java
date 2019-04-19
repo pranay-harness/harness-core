@@ -8,6 +8,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,10 @@ public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig>
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_PLANS)
   Map<String, String> getPlans(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType);
+
+  @DelegateTaskType(TaskType.ARTIFACTORY_GET_PLANS)
+  Map<String, String> getPlans(
+      ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_ARTIFACTORY_PATHS)
   List<String> getArtifactPaths(

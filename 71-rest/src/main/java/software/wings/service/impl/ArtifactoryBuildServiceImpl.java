@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -22,6 +23,7 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,13 +50,24 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
-    if (artifactStreamAttributes.getArtifactType().equals(DOCKER)) {
-      return artifactoryService.getBuilds(
-          artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      if (artifactStreamAttributes.getArtifactType().equals(DOCKER)) {
+        return artifactoryService.getBuilds(
+            artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
+      } else {
+        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
+            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
+            artifactStreamAttributes.getRepositoryType(), limit == -1 ? 25 : limit);
+      }
     } else {
-      return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
-          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-          artifactStreamAttributes.getRepositoryType(), limit == -1 ? 25 : limit);
+      if (artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name())) {
+        return artifactoryService.getBuilds(
+            artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
+      } else {
+        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
+            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
+            artifactStreamAttributes.getRepositoryType(), limit == -1 ? 25 : limit);
+      }
     }
   }
 
@@ -93,6 +106,12 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
     if (artifactType.equals(DOCKER)) {
       return artifactoryService.getRepositories(config, encryptionDetails, artifactType);
     }
+    return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);
+  }
+
+  @Override
+  public Map<String, String> getPlans(
+      ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType) {
     return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);
   }
 

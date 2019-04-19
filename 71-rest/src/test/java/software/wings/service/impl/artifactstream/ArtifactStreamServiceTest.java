@@ -77,6 +77,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -562,11 +563,30 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
                                                               .build();
+    createAndValidateArtifactoryArtifactStream(artifactoryArtifactStream, APP_ID, "any");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddArtifactoryArtifactStreamAtConnectorLevel() {
+    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
+                                                              .appId(GLOBAL_APP_ID)
+                                                              .repositoryType(RepositoryType.any.name())
+                                                              .settingId(SETTING_ID)
+                                                              .jobname("generic-repo")
+                                                              .artifactPattern("io/harness/todolist/todolist*")
+                                                              .autoPopulate(true)
+                                                              .build();
+    createAndValidateArtifactoryArtifactStream(artifactoryArtifactStream, GLOBAL_APP_ID, RepositoryType.any.name());
+  }
+
+  private void createAndValidateArtifactoryArtifactStream(
+      ArtifactoryArtifactStream artifactoryArtifactStream, String appId, String repositoryType) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("generic-repo/io/harness/todolist/todolist*");
@@ -574,7 +594,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam).isInstanceOf(ArtifactoryArtifactStream.class);
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactStreamType())
         .isEqualTo(ARTIFACTORY.name());
-    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo(repositoryType);
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("generic-repo");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactPattern())
         .isEqualTo("io/harness/todolist/todolist*");
@@ -582,7 +602,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactoryArtifactStream savedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
     assertThat(savedArtifactoryArtifactStream.getJobname()).isEqualTo("generic-repo");
     assertThat(savedArtifactoryArtifactStream.getArtifactPattern()).isEqualTo("io/harness/todolist/todolist*");
-    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo(repositoryType);
 
     verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
@@ -599,11 +619,30 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
                                                               .build();
+    updateArtifactoryArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID, "any");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateArtifactoryArtifactStreamAtConnectorLevel() {
+    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
+                                                              .appId(GLOBAL_APP_ID)
+                                                              .repositoryType(RepositoryType.any.name())
+                                                              .settingId(SETTING_ID)
+                                                              .jobname("generic-repo")
+                                                              .artifactPattern("io/harness/todolist/todolist*")
+                                                              .autoPopulate(true)
+                                                              .build();
+    updateArtifactoryArtifactStreamAndValidate(artifactoryArtifactStream, GLOBAL_APP_ID, RepositoryType.any.name());
+  }
+
+  private void updateArtifactoryArtifactStreamAndValidate(
+      ArtifactoryArtifactStream artifactoryArtifactStream, String appId, String repositoryType) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("generic-repo/io/harness/todolist/todolist*");
@@ -611,7 +650,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam).isInstanceOf(ArtifactoryArtifactStream.class);
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactStreamType())
         .isEqualTo(ARTIFACTORY.name());
-    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo(repositoryType);
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("generic-repo");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactPattern())
         .isEqualTo("io/harness/todolist/todolist*");
@@ -619,7 +658,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactoryArtifactStream savedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
     assertThat(savedArtifactoryArtifactStream.getJobname()).isEqualTo("generic-repo");
     assertThat(savedArtifactoryArtifactStream.getArtifactPattern()).isEqualTo("io/harness/todolist/todolist*");
-    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo(repositoryType);
 
     savedArtifactoryArtifactStream.setName("Aritfactory_Changed");
     savedArtifactoryArtifactStream.setJobname("harness-rpm");
@@ -629,20 +668,20 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isEqualTo("Aritfactory_Changed");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("harness-rpm/todolist*");
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo("harness-rpm/todolist*");
     assertThat(updatedArtifactStream).isInstanceOf(ArtifactoryArtifactStream.class);
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactStreamType())
         .isEqualTo(ARTIFACTORY.name());
-    assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("any");
+    assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo(repositoryType);
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getJobName()).isEqualTo("harness-rpm");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactPattern()).isEqualTo("todolist*");
 
     ArtifactoryArtifactStream updatedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
     assertThat(updatedArtifactoryArtifactStream.getJobname()).isEqualTo("harness-rpm");
     assertThat(updatedArtifactoryArtifactStream.getArtifactPattern()).isEqualTo("todolist*");
-    assertThat(updatedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("any");
+    assertThat(updatedArtifactoryArtifactStream.getRepositoryType()).isEqualTo(repositoryType);
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
@@ -661,11 +700,31 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
             .autoPopulate(true)
             .serviceId(SERVICE_ID)
             .build();
+    addArtifactoryMavenArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddArtifactoryMavenArtifactStreamAtConnectorLevel() {
+    ArtifactoryArtifactStream artifactoryArtifactStream =
+        ArtifactoryArtifactStream.builder()
+            .appId(GLOBAL_APP_ID)
+            .repositoryType("maven")
+            .settingId(SETTING_ID)
+            .jobname("harness-maven")
+            .artifactPattern("io/harness/todolist/todolist/*/todolist*")
+            .autoPopulate(true)
+            .build();
+    addArtifactoryMavenArtifactStreamAndValidate(artifactoryArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void addArtifactoryMavenArtifactStreamAndValidate(
+      ArtifactoryArtifactStream artifactoryArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("harness-maven/io/harness/todolist/todolist/*/todolist*");
@@ -779,7 +838,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam).isInstanceOf(ArtifactoryArtifactStream.class);
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactStreamType())
         .isEqualTo(ARTIFACTORY.name());
-    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getImageName()).isEqualTo("wingsplugins/todolist");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("wingsplugins/todolist");
@@ -787,7 +846,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactoryArtifactStream savedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
     assertThat(savedArtifactoryArtifactStream.getJobname()).isEqualTo("docker");
     assertThat(savedArtifactoryArtifactStream.getImageName()).isEqualTo("wingsplugins/todolist");
-    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("docker");
 
     verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
@@ -814,7 +873,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam).isInstanceOf(ArtifactoryArtifactStream.class);
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactStreamType())
         .isEqualTo(ARTIFACTORY.name());
-    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getImageName()).isEqualTo("wingsplugins/todolist");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("wingsplugins/todolist");
@@ -822,11 +881,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactoryArtifactStream savedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
     assertThat(savedArtifactoryArtifactStream.getJobname()).isEqualTo("docker");
     assertThat(savedArtifactoryArtifactStream.getImageName()).isEqualTo("wingsplugins/todolist");
-    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("any");
+    assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("docker");
 
     savedArtifactoryArtifactStream.setName("Aritfactory_Changed");
     savedArtifactoryArtifactStream.setJobname("docker-local");
-    savedArtifactoryArtifactStream.setArtifactPattern("todolist*");
+    //    savedArtifactoryArtifactStream.setArtifactPattern("todolist*");
     savedArtifactoryArtifactStream.setGroupId("wingsplugins/todolist-changed");
     savedArtifactoryArtifactStream.setImageName("wingsplugins/todolist-changed");
 
@@ -842,7 +901,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream).isInstanceOf(ArtifactoryArtifactStream.class);
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactStreamType())
         .isEqualTo(ARTIFACTORY.name());
-    assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("any");
+    assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("docker");
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getJobName()).isEqualTo("docker-local");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getImageName())
         .isEqualTo("wingsplugins/todolist-changed");
@@ -850,7 +909,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactoryArtifactStream updatedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
     assertThat(updatedArtifactoryArtifactStream.getJobname()).isEqualTo("docker-local");
     assertThat(updatedArtifactoryArtifactStream.getImageName()).isEqualTo("wingsplugins/todolist-changed");
-    assertThat(updatedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("any");
+    assertThat(updatedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("docker");
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlPushService, times(2))

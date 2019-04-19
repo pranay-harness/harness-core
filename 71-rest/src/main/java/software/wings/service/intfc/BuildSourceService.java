@@ -8,6 +8,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.utils.RepositoryType;
 
 import java.util.List;
 import java.util.Map;
@@ -168,6 +169,17 @@ public interface BuildSourceService {
   }
 
   /**
+   * Gets group Id paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @return the groupId paths
+   */
+  default Set<String> getGroupIds(@NotEmpty String jobName, @NotEmpty String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Validate Artifact Stream
    *
    * @param appId                    the app id
@@ -270,6 +282,30 @@ public interface BuildSourceService {
   }
 
   default Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets plans.
+   *
+   * @param settingId the setting id
+   * @param artifactStreamType artifact stream type
+   * @return the plans
+   */
+  default Map<String, String> getPlans(@NotEmpty String settingId, String artifactStreamType) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets plans for repository type.
+   *
+   * @param settingId
+   * @param streamType
+   * @param repositoryType
+   * @return
+   */
+  default Map<String, String> getPlansForRepositoryType(
+      @NotEmpty String settingId, String streamType, RepositoryType repositoryType) {
     throw new UnsupportedOperationException();
   }
 }

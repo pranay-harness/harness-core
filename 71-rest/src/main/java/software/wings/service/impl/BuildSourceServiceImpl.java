@@ -46,6 +46,7 @@ import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -411,5 +412,30 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       throw new InvalidRequestException("Build details can not null", USER);
     }
     return artifactCollectionServiceAsync.collectArtifact(artifactStreamId, buildDetails);
+  }
+
+  @Override
+  public Map<String, String> getPlans(String settingId, String artifactStreamType) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    return getBuildService(artifactStreamType, settingAttribute)
+        .getPlans(getSettingValue(settingAttribute), getEncryptedDataDetails((EncryptableSetting) settingValue));
+  }
+
+  @Override
+  public Map<String, String> getPlansForRepositoryType(
+      String settingId, String streamType, RepositoryType repositoryType) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue value = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
+    return getBuildService(settingAttribute).getPlans(value, encryptedDataDetails, repositoryType);
+  }
+
+  @Override
+  public Set<String> getGroupIds(String repoType, String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return Sets.newTreeSet(getBuildService(settingAttribute).getGroupIds(repoType, settingValue, encryptedDataDetails));
   }
 }

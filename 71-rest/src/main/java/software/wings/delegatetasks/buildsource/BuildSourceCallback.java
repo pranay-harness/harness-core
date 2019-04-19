@@ -6,6 +6,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -41,6 +42,7 @@ import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -187,10 +189,18 @@ public class BuildSourceCallback implements NotifyCallback {
   }
 
   private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
-      collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
+        collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
+      } else {
+        collectGenericArtifacts(artifactStream, newArtifacts);
+      }
     } else {
-      collectGenericArtifacts(artifactStream, newArtifacts);
+      if (artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals(RepositoryType.docker.name())) {
+        collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
+      } else {
+        collectGenericArtifacts(artifactStream, newArtifacts);
+      }
     }
   }
 

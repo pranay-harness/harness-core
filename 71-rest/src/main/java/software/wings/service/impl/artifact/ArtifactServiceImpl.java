@@ -74,6 +74,7 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -82,6 +83,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -214,14 +216,24 @@ public class ArtifactServiceImpl implements ArtifactService {
       return;
     }
 
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) { // TODO: use image_name
-      if (getArtifactType(artifactStream).equals(DOCKER)) {
-        artifact.setContentStatus(METADATA_ONLY);
-        artifact.setStatus(APPROVED);
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+      if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
+        if (getArtifactType(artifactStream).equals(DOCKER)) {
+          artifact.setContentStatus(METADATA_ONLY);
+          artifact.setStatus(APPROVED);
+          return;
+        }
+        artifact.setStatus(QUEUED);
+        return;
+      } else {
+        if (((ArtifactoryArtifactStream) artifactStream).getRepositoryType().equals(RepositoryType.docker.name())) {
+          artifact.setContentStatus(METADATA_ONLY);
+          artifact.setStatus(APPROVED);
+          return;
+        }
+        artifact.setStatus(QUEUED);
         return;
       }
-      artifact.setStatus(QUEUED);
-      return;
     }
     artifact.setStatus(QUEUED);
   }

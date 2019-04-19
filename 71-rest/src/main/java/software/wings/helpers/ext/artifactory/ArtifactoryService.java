@@ -7,6 +7,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.io.InputStream;
 import java.util.List;
@@ -52,6 +53,12 @@ public interface ArtifactoryService {
   Map<String, String> getRepositories(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String packageType);
 
+  /**
+   * Get Repositories
+   * @return map RepoId and Name
+   */
+  Map<String, String> getRepositories(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType);
   /***
    * Get docker tags
    * @param artifactoryConfig the Artifactory Config
