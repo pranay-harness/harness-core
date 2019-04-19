@@ -1299,7 +1299,7 @@ public class UserServiceImpl implements UserService {
     String accountId = account.getUuid();
     createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId, oauthClient);
 
-    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+    //    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
     return user;
   }
 
@@ -2134,5 +2134,12 @@ public class UserServiceImpl implements UserService {
       wingsPersistence.delete(User.class, user.getUuid());
       evictUserFromCache(user.getUuid());
     }
+  }
+
+  @Override
+  public boolean updateLead(String email, String accountId) {
+    User user = getUserByEmail(email);
+    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+    return true;
   }
 }
