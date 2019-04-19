@@ -7,6 +7,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.inject.Inject;
 
+import graphql.ExecutionResult;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.ApplicationGenerator;
@@ -32,7 +33,7 @@ public class PipelineTest extends GraphQLTest {
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
-  public void testQueryPipeline() throws InstantiationException, IllegalAccessException {
+  public void testQueryPipeline() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
 
@@ -48,7 +49,20 @@ public class PipelineTest extends GraphQLTest {
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
-  public void testQueryPipelines() throws InstantiationException, IllegalAccessException {
+  public void testQueryMissingPipeline() {
+    String query = "{ pipeline(pipelineId: \"blah\") { id name description } }";
+
+    final ExecutionResult result = getGraphQL().execute(query);
+    assertThat(result.getErrors().size()).isEqualTo(1);
+
+    // TODO: this message is wrong
+    assertThat(result.getErrors().get(0).getMessage())
+        .isEqualTo("Exception while fetching data (/pipeline) : INVALID_REQUEST");
+  }
+
+  @Test
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testQueryPipelines() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
 

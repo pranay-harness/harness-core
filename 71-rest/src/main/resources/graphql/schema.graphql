@@ -11,8 +11,8 @@ type Query {
 
   pipelines(appId: String!, limit: Int!, offset: Int): PipelineConnection @dataFetcher(name : "pipelineConnection")
 
-    # Get the workflow details for a specific appId and workflow Id
-  workflow(appId: String!, workflowId: String!): Workflow   @dataFetcher(name : "workflow")
+    # Get workflow object by id
+  workflow(workflowId: String!): Workflow   @dataFetcher(name : "workflow")
 
   # Get list of workflows for an appId. It will return paginated data
   workflows(appId: String!, limit: Int, offset: Int): PagedData  @dataFetcher(name : "workflows")
