@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -41,6 +42,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "PipelineKeys")
 public class Pipeline extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
@@ -115,5 +117,11 @@ public class Pipeline extends Base implements KeywordsAware {
       this.description = description;
       this.pipelineStages = pipelineStages;
     }
+  }
+
+  public static final class PipelineKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
   }
 }

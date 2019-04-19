@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class QLEnvironment implements BaseInfo {
+public class QLEnvironment implements QLObject, BaseInfo {
   String id;
   String name;
   String description;

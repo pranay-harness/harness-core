@@ -99,7 +99,7 @@ public class SettingGenerator {
       case AZURE_TEST_CLOUD_PROVIDER:
         return ensureAzureTestCloudProvider(seed, owners);
       case DEV_TEST_CONNECTOR:
-        return ensureDevTest(seed);
+        return ensureDevTest(seed, owners);
       case HARNESS_JENKINS_CONNECTOR:
         return ensureHarnessJenkins(seed, owners);
       case GITHUB_TEST_CONNECTOR:
@@ -237,8 +237,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  private SettingAttribute ensureDevTest(Randomizer.Seed seed) {
-    final Account account = accountGenerator.randomAccount();
+  private SettingAttribute ensureDevTest(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensureRandom(seed, owners);
 
     final SettingAttribute settingAttribute =
         aSettingAttribute()

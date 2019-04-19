@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class QLWorkflow implements BaseInfo {
+public class QLWorkflow implements QLObject, BaseInfo {
   String id;
   String name;
   String description;

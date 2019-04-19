@@ -309,9 +309,4 @@ public class AccountGenerator {
     Accounts predefined = random.nextObject(Accounts.class);
     return ensurePredefined(seed, owners, predefined);
   }
-
-  // TODO: Very dummy version, implement this
-  public Account randomAccount() {
-    return account;
-  }
 }

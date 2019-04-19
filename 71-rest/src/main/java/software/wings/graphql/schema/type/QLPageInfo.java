@@ -8,9 +8,10 @@ import lombok.experimental.FieldDefaults;
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class QLPageInfo {
-  Boolean hasMore;
-  Integer total;
+public class QLPageInfo implements QLObject {
   Integer limit;
   Integer offset;
+
+  Boolean hasMore;
+  Integer total;
 }
