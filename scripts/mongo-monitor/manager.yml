@@ -1,18 +1,12 @@
 metrics:
-  delegate_tasks_count:
-    check_interval:   10      # seconds
-    query:            "db.getCollection('delegateTasks').find({}).count()"
-    min:              0
-    max:              1000
+  - delegate_tasks_count:
+      check_interval:   10      # seconds
+      query:            "db.getCollection('delegateTasks').find({}).count()"
 
-  wait_queues_count:
-    check_interval:   10      # seconds
-    query:            "db.getCollection('waitQueues').find({}).count()"
-    min:              0
-    max:              5000
+  - wait_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.getCollection('waitQueues').find({}).count()"
 
-  state_execution_instances_document_size:
-    check_interval:   10      # seconds
-    query:            "db.getCollection('stateExecutionInstances').stats().avgObjSize"
-    min:              1000
-    max:              10000
+  - state_execution_instances_document_size:
+      check_interval:   10      # seconds
+      query:            "db.getCollection('stateExecutionInstances').stats().avgObjSize"
