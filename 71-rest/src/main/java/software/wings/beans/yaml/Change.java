@@ -2,7 +2,6 @@ package software.wings.beans.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.ToString;
 
@@ -21,8 +20,7 @@ public class Change {
 
   public enum ChangeType { ADD, MODIFY, RENAME, DELETE }
 
-  @SuppressFBWarnings("CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE")
-  public Builder clone() {
+  public Builder toBuilder() {
     return Builder.aFileChange()
         .withFilePath(getFilePath())
         .withFileContent(getFileContent())
