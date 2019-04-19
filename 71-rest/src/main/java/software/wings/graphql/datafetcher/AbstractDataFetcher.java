@@ -53,7 +53,7 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
   }
 
   protected int getPageLimit(@NotNull DataFetchingEnvironment environment) {
-    Integer limit = environment.getArgument(GraphQLConstants.PAGE_LIMIT);
+    Integer limit = environment.getArgument(GraphQLConstants.PAGE_LIMIT_ARG);
     if (limit == null || limit > MAX_PAGE_SIZE) {
       limit = GraphQLConstants.MAX_PAGE_SIZE;
     }
@@ -61,7 +61,7 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
   }
 
   protected int getPageOffset(@NotNull DataFetchingEnvironment environment) {
-    Integer offset = environment.getArgument(GraphQLConstants.PAGE_OFFSET);
+    Integer offset = environment.getArgument(GraphQLConstants.PAGE_OFFSET_ARG);
     if (offset == null) {
       offset = GraphQLConstants.ZERO_OFFSET;
     }

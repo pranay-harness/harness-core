@@ -36,9 +36,9 @@ public class WorkflowExecutionsDataFetcher extends AbstractDataFetcher<PagedData
   public PagedData<QLWorkflowExecution> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     PagedData<QLWorkflowExecution> pagedData = PagedData.<QLWorkflowExecution>builder().build();
 
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID_ARG);
     if (StringUtils.isBlank(appId)) {
-      addInvalidInputInfo(pagedData, GraphQLConstants.APP_ID);
+      addInvalidInputInfo(pagedData, GraphQLConstants.APP_ID_ARG);
       return pagedData;
     }
 
@@ -48,9 +48,9 @@ public class WorkflowExecutionsDataFetcher extends AbstractDataFetcher<PagedData
       return pagedData;
     }
 
-    String envId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ENV_ID);
+    String envId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ENV_ID_ARG);
     if (StringUtils.isBlank(envId)) {
-      addInvalidInputInfo(pagedData, GraphQLConstants.ENV_ID);
+      addInvalidInputInfo(pagedData, GraphQLConstants.ENV_ID_ARG);
       return pagedData;
     }
 

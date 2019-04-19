@@ -2,12 +2,12 @@ package software.wings.graphql.datafetcher.artifact;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.graphql.utils.GraphQLConstants.APP_ID;
+import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.ARTIFACT_TYPE;
-import static software.wings.graphql.utils.GraphQLConstants.ENV_ID;
+import static software.wings.graphql.utils.GraphQLConstants.ENV_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.MAX_PAGE_SIZE_STR;
 import static software.wings.graphql.utils.GraphQLConstants.NO_RECORDS_FOUND_FOR_ENTITIES;
-import static software.wings.graphql.utils.GraphQLConstants.SERVICE_ID;
+import static software.wings.graphql.utils.GraphQLConstants.SERVICE_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.ZERO_OFFSET_STR;
 
 import com.google.common.collect.Lists;
@@ -63,21 +63,21 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<QLArtifact>> {
   public List<QLArtifact> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     List<QLArtifact> deployedArtifactList = Lists.newArrayList();
 
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID_ARG);
     if (StringUtils.isBlank(appId)) {
-      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.APP_ID);
+      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.APP_ID_ARG);
       return deployedArtifactList;
     }
 
-    String serviceId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.SERVICE_ID);
+    String serviceId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.SERVICE_ID_ARG);
     if (StringUtils.isBlank(serviceId)) {
-      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.SERVICE_ID);
+      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.SERVICE_ID_ARG);
       return deployedArtifactList;
     }
 
-    String envId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ENV_ID);
+    String envId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ENV_ID_ARG);
     if (StringUtils.isBlank(envId)) {
-      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.ENV_ID);
+      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.ENV_ID_ARG);
       return deployedArtifactList;
     }
 
@@ -132,7 +132,7 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<QLArtifact>> {
 
   private PageResponse<Artifact> getArtifacts(String appId, Object[] ids) {
     PageRequest<Artifact> aritifactPageRequest = aPageRequest()
-                                                     .addFilter(APP_ID, Operator.EQ, appId)
+                                                     .addFilter(APP_ID_ARG, Operator.EQ, appId)
                                                      .addFilter(ID_KEY, Operator.IN, ids)
                                                      .withLimit(MAX_PAGE_SIZE_STR)
                                                      .withOffset(ZERO_OFFSET_STR)
@@ -144,9 +144,9 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<QLArtifact>> {
       String appId, String envId, String serviceId, int limit, int offset) {
     PageRequest<Instance> instancePageRequest =
         aPageRequest()
-            .addFilter(APP_ID, Operator.EQ, appId)
-            .addFilter(ENV_ID, Operator.EQ, envId)
-            .addFilter(SERVICE_ID, Operator.EQ, serviceId)
+            .addFilter(APP_ID_ARG, Operator.EQ, appId)
+            .addFilter(ENV_ID_ARG, Operator.EQ, envId)
+            .addFilter(SERVICE_ID_ARG, Operator.EQ, serviceId)
             .addFilter(LAST_ARTIFACT_ID_KEY, Operator.EXISTS)
             .withLimit(String.valueOf(limit))
             .withOffset(String.valueOf(offset))

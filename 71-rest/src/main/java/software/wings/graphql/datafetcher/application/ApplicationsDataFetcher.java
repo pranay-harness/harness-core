@@ -39,9 +39,9 @@ public class ApplicationsDataFetcher extends AbstractDataFetcher<PagedData<QLApp
     int offset = getPageOffset(dataFetchingEnvironment);
 
     // TODO - remove this once accountID is available from the authentication
-    String accountID = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ACCOUNT_ID);
+    String accountID = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ACCOUNT_ID_ARG);
     if (StringUtils.isBlank(accountID)) {
-      addInvalidInputInfo(pagedData, GraphQLConstants.ACCOUNT_ID);
+      addInvalidInputInfo(pagedData, GraphQLConstants.ACCOUNT_ID_ARG);
       return pagedData;
     }
     PageRequest<Application> pageRequest = PageRequestBuilder.aPageRequest()

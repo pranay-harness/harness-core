@@ -31,6 +31,8 @@ public interface DashboardStatisticsService {
   InstanceSummaryStats getAppInstanceSummaryStats(
       @NotEmpty String accountId, List<String> appIds, List<String> groupByEntityTypes, long timestamp);
 
+  long getTotalInstancesForAccount(String accountId, List<String> appIds);
+
   /**
    * Gets the total instance summary stats for the given service.
    * The results are grouped by the given entity types.

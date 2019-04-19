@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.environment;
 
-import static software.wings.graphql.utils.GraphQLConstants.APP_ID;
-import static software.wings.graphql.utils.GraphQLConstants.ENV_ID;
+import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
+import static software.wings.graphql.utils.GraphQLConstants.ENV_ID_ARG;
 
 import com.google.inject.Inject;
 
@@ -32,22 +32,22 @@ public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment> {
   @Override
   public QLEnvironment fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     QLEnvironment environmentInfo = QLEnvironment.builder().build();
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID_ARG);
     // Pre-checks
     if (StringUtils.isBlank(appId)) {
-      addInvalidInputInfo(environmentInfo, GraphQLConstants.APP_ID);
+      addInvalidInputInfo(environmentInfo, GraphQLConstants.APP_ID_ARG);
       return environmentInfo;
     }
 
-    String envId = (String) getArgumentValue(dataFetchingEnvironment, ENV_ID);
+    String envId = (String) getArgumentValue(dataFetchingEnvironment, ENV_ID_ARG);
     if (StringUtils.isBlank(envId)) {
-      addInvalidInputInfo(environmentInfo, GraphQLConstants.ENV_ID);
+      addInvalidInputInfo(environmentInfo, GraphQLConstants.ENV_ID_ARG);
       return environmentInfo;
     }
 
     Environment env = environmentService.get(appId, envId);
     if (null == env) {
-      addNoRecordFoundInfo(environmentInfo, ENV_ID);
+      addNoRecordFoundInfo(environmentInfo, ENV_ID_ARG);
       return environmentInfo;
     }
     return EnvironmentController.getEnvironmentInfo(env);

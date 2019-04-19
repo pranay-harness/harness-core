@@ -3,17 +3,18 @@ package software.wings.graphql.utils;
 import software.wings.beans.FeatureName;
 
 public class GraphQLConstants {
-  public static final String APP_ID = "appId";
-  public static final String ACCOUNT_ID = "accountId";
-  public static final String SERVICE_ID = "serviceId";
-  public static final String ENV_ID = "envId";
-  public static final String PAGE_LIMIT = "limit";
-  public static final String PAGE_OFFSET = "offset";
+  public static final String APP_ID_ARG = "appId";
+  public static final String ACCOUNT_ID_ARG = "accountId";
+  public static final String SERVICE_ID_ARG = "serviceId";
+  public static final String INSTANCE_COUNT_TYPE_ARG = "instanceCountType";
+  public static final String ENV_ID_ARG = "envId";
+  public static final String PAGE_LIMIT_ARG = "limit";
+  public static final String PAGE_OFFSET_ARG = "offset";
   public static final int ZERO_OFFSET = 0;
   public static final String ZERO_OFFSET_STR = "0";
   public static final int MAX_PAGE_SIZE = 20;
   public static final String MAX_PAGE_SIZE_STR = "20";
-  public static final String ENV_TYPE = "environmentType";
+  public static final String ENV_TYPE_ARG = "environmentType";
 
   // Workflow related constants.
   public static final String WORKFLOW_ID = "workflowId";

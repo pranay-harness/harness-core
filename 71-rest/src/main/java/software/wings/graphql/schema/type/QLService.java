@@ -10,6 +10,5 @@ public class QLService {
   private String id;
   private String name;
   private String description;
-
-  ArtifactType artifactType;
+  private ArtifactType artifactType;
 }
