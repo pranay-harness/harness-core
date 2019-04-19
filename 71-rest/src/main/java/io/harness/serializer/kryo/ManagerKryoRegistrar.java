@@ -590,6 +590,7 @@ import software.wings.sm.states.ShellScriptState;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
+import software.wings.utils.RepositoryType;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 public class ManagerKryoRegistrar implements KryoRegistrar {
@@ -1228,5 +1229,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BugsnagSetupTestData.class, 7168);
     kryo.register(ServiceNowFields.class, 7169);
     kryo.register(ServiceNowExecutionData.class, 7170);
+    kryo.register(RepositoryType.class, 7171);
   }
 }

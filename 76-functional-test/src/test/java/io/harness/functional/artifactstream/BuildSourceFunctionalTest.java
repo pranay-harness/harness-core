@@ -20,8 +20,10 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
+import software.wings.utils.RepositoryType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.core.GenericType;
 
@@ -125,5 +127,72 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                                  .as(artifactStreamType.getType());
     assertThat(restResponse.getResource()).isNotNull();
     assertThat(restResponse.getResource().contains("artifacts/todolist.war")).isNotNull();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getDockerImagesNamesForArtifactoryAtConnectorLevel() {
+    GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
+
+    };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR);
+    RestResponse<Set<String>> restResponse = Setup.portal()
+                                                 .auth()
+                                                 .oauth2(bearerToken)
+                                                 .queryParam("accountId", application.getAccountId())
+                                                 .queryParam("settingId", settingAttribute.getUuid())
+                                                 .pathParam("jobName", "docker")
+                                                 .contentType(ContentType.JSON)
+                                                 .get("/settings/build-sources/jobs/{jobName}/groupIds")
+                                                 .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().contains("hello-world-harness")).isNotNull();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getRepositoriesForArtifactoryDockerAtConnectorLevel() {
+    GenericType<RestResponse<Map<String, String>>> artifactStreamType =
+        new GenericType<RestResponse<Map<String, String>>>() {
+
+        };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR);
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .queryParam("accountId", application.getAccountId())
+                                                         .queryParam("settingId", settingAttribute.getUuid())
+                                                         .queryParam("repositoryType", RepositoryType.docker.name())
+                                                         .contentType(ContentType.JSON)
+                                                         .get("/settings/build-sources/plans")
+                                                         .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().size()).isGreaterThan(0);
+    assertThat(restResponse.getResource().containsKey("docker"));
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getRepositoriesForArtifactoryAnyAtConnectorLevel() {
+    GenericType<RestResponse<Map<String, String>>> artifactStreamType =
+        new GenericType<RestResponse<Map<String, String>>>() {
+
+        };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR);
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .queryParam("accountId", application.getAccountId())
+                                                         .queryParam("settingId", settingAttribute.getUuid())
+                                                         .queryParam("repositoryType", RepositoryType.any.name())
+                                                         .contentType(ContentType.JSON)
+                                                         .get("/settings/build-sources/plans")
+                                                         .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().size()).isGreaterThan(0);
+    assertThat(restResponse.getResource().containsKey("harness-maven"));
   }
 }

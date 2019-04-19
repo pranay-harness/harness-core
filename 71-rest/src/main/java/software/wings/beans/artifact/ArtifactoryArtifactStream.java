@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.utils.RepositoryType;
 import software.wings.utils.Util;
 
 import java.text.SimpleDateFormat;
@@ -81,6 +83,15 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return getJobname() + '/' + (isBlank(getImageName()) ? getArtifactPattern() : getImageName());
   }
 
+  // TODO: remove this method after migration of old artifact streams
+  // TODO: add validations for repository type
+  public String getRepositoryType() {
+    if (isEmpty(artifactPattern)) {
+      return RepositoryType.docker.name();
+    }
+    return repositoryType;
+  }
+
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return ArtifactStreamAttributes.builder()
@@ -90,7 +101,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .groupId(getGroupId())
         .artifactPattern(artifactPattern)
         .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))
-        .repositoryType(repositoryType)
+        .repositoryType(getRepositoryType())
         .metadataOnly(isMetadataOnly())
         .artifactoryDockerRepositoryServer(dockerRepositoryServer)
         .build();

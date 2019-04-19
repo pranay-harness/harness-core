@@ -46,11 +46,13 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
+import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
@@ -399,6 +401,41 @@ public class SettingResource {
       @QueryParam("settingId") String settingId, @QueryParam("groupId") String groupId,
       @QueryParam("streamType") String streamType) {
     return new RestResponse<>(buildSourceService.getArtifactPaths(jobName, settingId, groupId, streamType));
+  }
+
+  /**
+   * Gets bamboo plans.
+   *
+   * @param settingId the setting id
+   * @return the bamboo plans
+   */
+  @GET
+  @Path("build-sources/plans")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("settingId") String settingId,
+      @QueryParam("streamType") String streamType, @QueryParam("repositoryType") String repositoryType) {
+    if (repositoryType != null) {
+      return new RestResponse<>(
+          buildSourceService.getPlansForRepositoryType(settingId, streamType, RepositoryType.valueOf(repositoryType)));
+    }
+    return new RestResponse<>(buildSourceService.getPlans(settingId, streamType));
+  }
+
+  /**
+   * Gets artifact paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @return group Ids
+   */
+  @GET
+  @Path("build-sources/jobs/{jobName}/groupIds")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> getGroupIds(
+      @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getGroupIds(jobName, settingId));
   }
 
   /***

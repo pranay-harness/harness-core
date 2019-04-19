@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -41,6 +42,7 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -179,11 +181,20 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   }
 
   private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
-      collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
-    } else if (artifactStream.fetchArtifactStreamAttributes().getRepositoryType() == null
-        || artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals("any")) {
-      collectGenericArtifacts(appId, artifactStream, newArtifacts);
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
+        collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
+      } else if (artifactStream.fetchArtifactStreamAttributes().getRepositoryType() == null
+          || artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals("any")) {
+        collectGenericArtifacts(appId, artifactStream, newArtifacts);
+      }
+    } else {
+      if (artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals(RepositoryType.docker.name())) {
+        collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
+      } else if (artifactStream.fetchArtifactStreamAttributes().getRepositoryType() == null
+          || artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals("any")) {
+        collectGenericArtifacts(appId, artifactStream, newArtifacts);
+      }
     }
   }
 

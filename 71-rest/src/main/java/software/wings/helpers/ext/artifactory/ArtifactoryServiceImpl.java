@@ -52,6 +52,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,6 +103,22 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       default:
         return getRepositories(artifactoryConfig, encryptionDetails,
             Arrays.asList(PackageType.values()).stream().filter(type -> !docker.equals(type)).collect(toList()));
+    }
+  }
+
+  @Override
+  public Map<String, String> getRepositories(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType) {
+    switch (repositoryType) {
+      case docker:
+        return getRepositories(artifactoryConfig, encryptionDetails);
+      case maven:
+        return getRepositories(artifactoryConfig, encryptionDetails, Arrays.asList(PackageType.maven));
+      case any:
+        return getRepositories(artifactoryConfig, encryptionDetails,
+            Arrays.asList(PackageType.values()).stream().filter(type -> !docker.equals(type)).collect(toList()));
+      default:
+        return getRepositories(artifactoryConfig, encryptionDetails, "");
     }
   }
 
