@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class QLPipeline {
+public class QLPipeline implements QLObject {
   private String id;
   private String name;
   private String description;

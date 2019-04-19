@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class QLWorkflowExecution implements BaseInfo {
+public class QLWorkflowExecution implements QLObject, BaseInfo {
   String id;
   String name;
   ExecutionStatus status;

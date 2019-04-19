@@ -88,7 +88,7 @@ public class TemplateGenerator {
     if (template != null && template.getAccountId() != null) {
       builder.accountId(template.getAccountId());
     } else {
-      Account account = owners.obtainAccount(() -> accountGenerator.randomAccount());
+      Account account = owners.obtainAccount(() -> accountGenerator.ensureRandom(seed, owners));
       builder.accountId(account.getUuid());
     }
 

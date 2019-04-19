@@ -83,7 +83,7 @@ public class NotificationGroupGenerator {
     if (notificationGroup != null && notificationGroup.getAccountId() != null) {
       builder.withAccountId(notificationGroup.getAccountId());
     } else {
-      Account account = owners.obtainAccount(() -> accountGenerator.randomAccount());
+      Account account = owners.obtainAccount(() -> accountGenerator.ensureRandom(seed, owners));
       builder.withAccountId(account.getUuid());
     }
 
