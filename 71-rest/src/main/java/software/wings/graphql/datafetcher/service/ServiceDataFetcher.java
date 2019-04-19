@@ -18,6 +18,7 @@ import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 public class ServiceDataFetcher extends AbstractDataFetcher<QLService> {
+  public static final String SERVICE_ID_ARG = "serviceId";
   @Inject HPersistence persistence;
 
   private static final PermissionAttribute permissionAttribute =
@@ -30,13 +31,13 @@ public class ServiceDataFetcher extends AbstractDataFetcher<QLService> {
 
   @Override
   protected QLService fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    String serviceId = (String) getArgumentValue(dataFetchingEnvironment, "serviceId");
+    String serviceId = (String) getArgumentValue(dataFetchingEnvironment, SERVICE_ID_ARG);
     Service service = persistence.get(Service.class, serviceId);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", WingsException.USER);
     }
-    final QLServiceBuilder builder = QLService.builder();
 
+    final QLServiceBuilder builder = QLService.builder();
     ServiceController.populateService(service, builder);
     return builder.build();
   }

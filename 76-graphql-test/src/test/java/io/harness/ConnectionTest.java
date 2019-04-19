@@ -32,7 +32,7 @@ public class ConnectionTest extends GraphQLTest {
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
-  public void testConnectionPaging() throws InstantiationException, IllegalAccessException {
+  public void testConnectionPaging() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
 

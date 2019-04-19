@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Service;
-import software.wings.graphql.schema.type.QLPipeline;
+import software.wings.graphql.schema.type.QLService;
 
 @Slf4j
 public class ServiceTest extends GraphQLTest {
@@ -24,7 +24,7 @@ public class ServiceTest extends GraphQLTest {
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
-  public void testQueryService() throws InstantiationException, IllegalAccessException {
+  public void testQueryService() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
 
@@ -33,9 +33,9 @@ public class ServiceTest extends GraphQLTest {
 
     String query = "{ service(serviceId: \"" + service.getUuid() + "\") { id name description } }";
 
-    QLPipeline qlPipeline = execute(QLPipeline.class, query);
-    assertThat(qlPipeline.getId()).isEqualTo(service.getUuid());
-    assertThat(qlPipeline.getName()).isEqualTo(service.getName());
-    assertThat(qlPipeline.getDescription()).isEqualTo(service.getDescription());
+    QLService qlService = execute(QLService.class, query);
+    assertThat(qlService.getId()).isEqualTo(service.getUuid());
+    assertThat(qlService.getName()).isEqualTo(service.getName());
+    assertThat(qlService.getDescription()).isEqualTo(service.getDescription());
   }
 }

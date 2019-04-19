@@ -51,7 +51,7 @@ public class GraphQLTest extends CategoryTest {
         .setProvider(new QLProvider());
   }
 
-  protected <T> T execute(Class<T> clazz, String query) throws IllegalAccessException, InstantiationException {
+  protected <T> T execute(Class<T> clazz, String query) {
     final ExecutionResult result = getGraphQL().execute(query);
 
     if (isNotEmpty(result.getErrors())) {
