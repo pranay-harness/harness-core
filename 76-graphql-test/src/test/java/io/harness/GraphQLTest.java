@@ -6,6 +6,7 @@ import graphql.ExecutionResult;
 import graphql.GraphQL;
 import io.harness.rule.GraphQLRule;
 import io.harness.rule.LifecycleRule;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.Provider;
@@ -26,7 +27,6 @@ public class GraphQLTest extends CategoryTest {
   }
 
   private static final Objenesis objenesis = new ObjenesisStd(true);
-  private ModelMapper modelMapper = new ModelMapper();
 
   class QLProvider implements Provider<Object> {
     @Override
@@ -39,18 +39,6 @@ public class GraphQLTest extends CategoryTest {
     }
   }
 
-  GraphQLTest() {
-    modelMapper = new ModelMapper();
-
-    final Provider<?> provider = modelMapper.getConfiguration().getProvider();
-
-    modelMapper.getConfiguration()
-        .setMatchingStrategy(MatchingStrategies.STRICT)
-        .setFieldMatchingEnabled(true)
-        .setFieldAccessLevel(AccessLevel.PRIVATE)
-        .setProvider(new QLProvider());
-  }
-
   protected <T> T execute(Class<T> clazz, String query) {
     final ExecutionResult result = getGraphQL().execute(query);
 
@@ -59,7 +47,19 @@ public class GraphQLTest extends CategoryTest {
     }
 
     final T t = objenesis.newInstance(clazz);
-    modelMapper.map(result.<LinkedHashMap>getData().values().iterator().next(), t);
+
+    modelMapper().map(result.<LinkedHashMap>getData().values().iterator().next(), t);
     return t;
+  }
+
+  @NotNull
+  private ModelMapper modelMapper() {
+    ModelMapper modelMapper = new ModelMapper();
+    modelMapper.getConfiguration()
+        .setMatchingStrategy(MatchingStrategies.STANDARD)
+        .setFieldMatchingEnabled(true)
+        .setFieldAccessLevel(AccessLevel.PRIVATE)
+        .setProvider(new QLProvider());
+    return modelMapper;
   }
 }

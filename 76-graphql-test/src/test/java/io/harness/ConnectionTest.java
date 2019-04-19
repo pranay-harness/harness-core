@@ -105,5 +105,52 @@ public class ConnectionTest extends GraphQLTest {
       assertTrue(pipelineConnection.getPageInfo().getHasMore());
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
+    {
+      String query = "{ pipelines(appId: \"" + application.getUuid()
+          + "\", limit: 5, offset: 0) { nodes { id } pageInfo { limit offset total } } }";
+
+      QLPipelineConnection pipelineConnection = execute(QLPipelineConnection.class, query);
+      assertThat(pipelineConnection.getNodes().size()).isEqualTo(3);
+
+      assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
+      assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(0);
+      assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
+    }
+
+    {
+      String query = "{ pipelines(appId: \"" + application.getUuid()
+          + "\", limit: 5, offset: 2) { nodes { id } pageInfo { limit offset total } } }";
+
+      QLPipelineConnection pipelineConnection = execute(QLPipelineConnection.class, query);
+      assertThat(pipelineConnection.getNodes().size()).isEqualTo(1);
+
+      assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
+      assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(2);
+      assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
+    }
+
+    {
+      String query = "{ pipelines(appId: \"" + application.getUuid()
+          + "\", limit: 5, offset: 3) { nodes { id } pageInfo { limit offset total } } }";
+
+      QLPipelineConnection pipelineConnection = execute(QLPipelineConnection.class, query);
+      assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
+
+      assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
+      assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(3);
+      assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
+    }
+
+    {
+      String query = "{ pipelines(appId: \"" + application.getUuid()
+          + "\", limit: 5, offset: 5) { nodes { id } pageInfo { limit offset total } } }";
+
+      QLPipelineConnection pipelineConnection = execute(QLPipelineConnection.class, query);
+      assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
+
+      assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
+      assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(5);
+      assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
+    }
   }
 }
