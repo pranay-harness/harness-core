@@ -31,11 +31,12 @@ public class ServiceTest extends GraphQLTest {
     final Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     assertThat(service).isNotNull();
 
-    String query = "{ service(serviceId: \"" + service.getUuid() + "\") { id name description } }";
+    String query = "{ service(serviceId: \"" + service.getUuid() + "\") { id name description artifactType } }";
 
     QLService qlService = execute(QLService.class, query);
     assertThat(qlService.getId()).isEqualTo(service.getUuid());
     assertThat(qlService.getName()).isEqualTo(service.getName());
     assertThat(qlService.getDescription()).isEqualTo(service.getDescription());
+    assertThat(qlService.getArtifactType()).isEqualTo(service.getArtifactType());
   }
 }

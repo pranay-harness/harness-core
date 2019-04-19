@@ -41,9 +41,9 @@ public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<QLWorkflow
   public QLWorkflowExecution fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     QLWorkflowExecution workflowExecutionType = QLWorkflowExecution.builder().build();
 
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID_ARG);
     if (StringUtils.isBlank(appId)) {
-      addInvalidInputInfo(workflowExecutionType, GraphQLConstants.APP_ID);
+      addInvalidInputInfo(workflowExecutionType, GraphQLConstants.APP_ID_ARG);
       return workflowExecutionType;
     }
 
@@ -57,8 +57,8 @@ public class WorkflowExecutionDataFetcher extends AbstractDataFetcher<QLWorkflow
       throw notAuthorizedException(WORKFLOW_TYPE, workflowId, appId);
     }
 
-    String envId = dataFetchingEnvironment.getArgument(GraphQLConstants.ENV_ID);
-    String serviceId = dataFetchingEnvironment.getArgument(GraphQLConstants.SERVICE_ID);
+    String envId = dataFetchingEnvironment.getArgument(GraphQLConstants.ENV_ID_ARG);
+    String serviceId = dataFetchingEnvironment.getArgument(GraphQLConstants.SERVICE_ID_ARG);
     WorkflowExecution workflowExecution =
         workflowExecutionService.fetchLastWorkflowExecution(appId, workflowId, serviceId, envId);
     if (workflowExecution != null) {

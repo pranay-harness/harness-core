@@ -31,11 +31,11 @@ public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication> {
 
   @Override
   public QLApplication fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID_ARG);
 
     if (StringUtils.isBlank(appId)) {
       QLApplication applicationInfo = QLApplication.builder().build();
-      addInvalidInputInfo(applicationInfo, GraphQLConstants.APP_ID);
+      addInvalidInputInfo(applicationInfo, GraphQLConstants.APP_ID_ARG);
       return applicationInfo;
     }
 
@@ -52,7 +52,7 @@ public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication> {
     Application application = appService.get(appId);
     if (null == application) {
       applicationInfo = QLApplication.builder().build();
-      addNoRecordFoundInfo(applicationInfo, GraphQLConstants.APP_ID);
+      addNoRecordFoundInfo(applicationInfo, GraphQLConstants.APP_ID_ARG);
     } else {
       applicationInfo = ApplicationController.getApplicationInfo(application);
     }

@@ -1,8 +1,8 @@
 package software.wings.graphql.datafetcher.environment;
 
 import static software.wings.beans.Environment.ENVIRONMENT_TYPE_KEY;
-import static software.wings.graphql.utils.GraphQLConstants.APP_ID;
-import static software.wings.graphql.utils.GraphQLConstants.ENV_TYPE;
+import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
+import static software.wings.graphql.utils.GraphQLConstants.ENV_TYPE_ARG;
 
 import com.google.inject.Inject;
 
@@ -39,11 +39,11 @@ public class EnvironmentsDataFetcher extends AbstractDataFetcher<PagedData<QLEnv
   @Override
   public PagedData<QLEnvironment> fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     PagedData<QLEnvironment> pagedData = PagedData.<QLEnvironment>builder().build();
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID);
-    String environmentType = (String) getArgumentValue(dataFetchingEnvironment, ENV_TYPE);
+    String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID_ARG);
+    String environmentType = (String) getArgumentValue(dataFetchingEnvironment, ENV_TYPE_ARG);
 
     if (StringUtils.isEmpty(appId)) {
-      addInvalidInputInfo(pagedData, APP_ID);
+      addInvalidInputInfo(pagedData, APP_ID_ARG);
       return pagedData;
     }
 

@@ -167,6 +167,18 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .build();
   }
 
+  @Override
+  public long getTotalInstancesForAccount(String accountId, List<String> appIds) {
+    Query<Instance> query;
+    try {
+      query = getInstanceQuery(accountId, appIds, false, -1);
+      return getInstanceCount(query);
+    } catch (Exception e) {
+      logger.error("Error while getting total instances for accountId:[{}]", accountId, e);
+      return -1;
+    }
+  }
+
   private List<EntitySummaryStats> getEntitySummaryStats(
       String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();

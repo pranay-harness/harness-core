@@ -38,6 +38,9 @@ type Query {
   # Get page data of environments
   environments(appId: String!, environmentType: String,limit: Int, offset: Int): PagedData  @dataFetcher(name : "environments")
 
+  # Get count of instances in your application
+  # Taking accountId as input temporarily since there is no auth support as of now.
+  instanceCount(accountId:String!, instanceCountType: InstanceCountType=TOTAL) : InstanceCount @dataFetcher(name : "instanceCount")
   # Get details about a service
   service(serviceId: String! ): Service  @dataFetcher(name : "service")
 
@@ -196,3 +199,11 @@ type Environment implements BaseInfo {
   # Debug info useful to troubleshoot issues
   debugInfo: String
 }
+
+
+type InstanceCount{
+  count: Int
+  instanceCountType: InstanceCountType
+}
+
+enum InstanceCountType {TOTAL,NINETY_FIVE_PERCENTILE}
