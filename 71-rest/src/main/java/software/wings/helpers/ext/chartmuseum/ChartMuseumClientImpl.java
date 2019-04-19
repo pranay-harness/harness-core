@@ -4,13 +4,19 @@ import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.AMAZON_S3_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.AWS_ACCESS_KEY_ID;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.AWS_SECRET_ACCESS_KEY;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.BUCKET_REGION_ERROR_CODE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_START_RETRIES;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.INVALID_ACCESS_KEY_ID_ERROR;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.INVALID_ACCESS_KEY_ID_ERROR_CODE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.NO_SUCH_BBUCKET_ERROR;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.NO_SUCH_BBUCKET_ERROR_CODE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.PORTS_BOUND;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.PORTS_START_POINT;
-import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.S3_COMMAND_TEMPLATE;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNATURE_DOES_NOT_MATCH_ERROR;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNATURE_DOES_NOT_MATCH_ERROR_CODE;
 
 import com.google.inject.Inject;
 
@@ -57,9 +63,10 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     environment.put(AWS_ACCESS_KEY_ID, awsConfig.getAccessKey());
     environment.put(AWS_SECRET_ACCESS_KEY, new String(awsConfig.getSecretKey()));
 
-    String evaluatedTemplate = S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", amazonS3HelmRepoConfig.getBucketName())
-                                   .replace("${FOLDER_PATH}", amazonS3HelmRepoConfig.getFolderPath())
-                                   .replace("${REGION}", amazonS3HelmRepoConfig.getRegion());
+    String evaluatedTemplate =
+        AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", amazonS3HelmRepoConfig.getBucketName())
+            .replace("${FOLDER_PATH}", amazonS3HelmRepoConfig.getFolderPath())
+            .replace("${REGION}", amazonS3HelmRepoConfig.getRegion());
 
     StringBuilder builder = new StringBuilder(128);
     builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
@@ -167,13 +174,33 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
   }
 
   private String getErrorMessage(String processOutput) {
-    String errorMsg = "Could not start chart museum server. ";
+    String errorPrefix = "Failed with error: ";
 
-    if (processOutput.contains(NO_SUCH_BBUCKET_ERROR)) {
-      return errorMsg + "Failed with error: " + NO_SUCH_BBUCKET_ERROR;
+    if (processOutput.contains(NO_SUCH_BBUCKET_ERROR_CODE)) {
+      return errorPrefix + NO_SUCH_BBUCKET_ERROR;
     }
 
-    return errorMsg + format("Failed after %s retries", CHART_MUSEUM_SERVER_START_RETRIES);
+    if (processOutput.contains(INVALID_ACCESS_KEY_ID_ERROR_CODE)) {
+      return errorPrefix + INVALID_ACCESS_KEY_ID_ERROR;
+    }
+
+    if (processOutput.contains(SIGNATURE_DOES_NOT_MATCH_ERROR_CODE)) {
+      return errorPrefix + SIGNATURE_DOES_NOT_MATCH_ERROR;
+    }
+
+    if (processOutput.contains(BUCKET_REGION_ERROR_CODE)) {
+      String[] outputLines = processOutput.split(System.lineSeparator());
+
+      for (String line : outputLines) {
+        if (line.contains(BUCKET_REGION_ERROR_CODE)) {
+          return errorPrefix + line.substring(line.indexOf(BUCKET_REGION_ERROR_CODE));
+        }
+      }
+
+      return errorPrefix + BUCKET_REGION_ERROR_CODE;
+    }
+
+    return format("Could not start chart museum server. Failed after %s retries", CHART_MUSEUM_SERVER_START_RETRIES);
   }
 
   private boolean checkAddressInUseError(String processOutput, int port) {
