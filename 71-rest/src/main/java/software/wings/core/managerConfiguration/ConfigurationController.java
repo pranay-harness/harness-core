@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 @Slf4j
@@ -37,6 +38,7 @@ public class ConfigurationController implements Managed, QueueController {
   private final Map<ConfigChangeListener, List<ConfigChangeEvent>> configChangeListeners =
       synchronizedMap(new HashMap<>());
   private final AtomicBoolean primary = new AtomicBoolean(true);
+  private final AtomicReference<String> primaryVersion = new AtomicReference<>(MATCH_ALL_VERSION);
   private long pollIntervalInMillis;
 
   public ConfigurationController() {
@@ -69,12 +71,20 @@ public class ConfigurationController implements Managed, QueueController {
     return !primary.get();
   }
 
+  public String getPrimaryVersion() {
+    return primaryVersion.get();
+  }
+
   private void run() {
     while (running.get()) {
       ManagerConfiguration managerConfiguration = wingsPersistence.createQuery(ManagerConfiguration.class).get();
       if (managerConfiguration == null) {
-        wingsPersistence.save(aManagerConfiguration().withPrimaryVersion(MATCH_ALL_VERSION).build());
-        return;
+        managerConfiguration = aManagerConfiguration().withPrimaryVersion(MATCH_ALL_VERSION).build();
+        wingsPersistence.save(managerConfiguration);
+      }
+
+      if (!StringUtils.equals(primaryVersion.get(), managerConfiguration.getPrimaryVersion())) {
+        primaryVersion.set(managerConfiguration.getPrimaryVersion());
       }
 
       boolean isPrimary = StringUtils.equals(MATCH_ALL_VERSION, managerConfiguration.getPrimaryVersion())
