@@ -901,7 +901,9 @@ public class SecretManagerImpl implements SecretManager {
                                                  .filter("encryptedValue", uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
-      String reason = "Being used by " + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "));
+      String reason = "Can't delete this secret because it is still being used in the Harness component(s): "
+          + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "))
+          + ". Please remove the usages of this secret and try again.";
       throw new KmsOperationException(reason, USER);
     }
 
