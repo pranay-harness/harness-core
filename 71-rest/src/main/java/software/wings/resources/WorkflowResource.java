@@ -575,8 +575,9 @@ public class WorkflowResource {
   @Path("steps/phase/{phaseId}/sections/{sectionId}/{position}")
   @Timed
   @ExceptionMetered
-  public RestResponse<WorkflowCategorySteps> getSteps(@PathParam("phaseId") String phaseId,
-      @PathParam("sectionId") String sectionId, @PathParam("position") int position, Workflow workflow) {
+  public RestResponse<WorkflowCategorySteps> getSteps(@QueryParam("accountId") String accountId,
+      @PathParam("phaseId") String phaseId, @PathParam("sectionId") String sectionId,
+      @PathParam("position") int position, Workflow workflow) {
     final User user = UserThreadLocal.get();
     final WorkflowCategorySteps steps =
         workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, sectionId, position);
