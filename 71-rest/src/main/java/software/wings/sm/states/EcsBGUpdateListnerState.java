@@ -10,8 +10,6 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.PhaseElement;
@@ -55,8 +53,6 @@ public class EcsBGUpdateListnerState extends State {
   @Inject protected transient LogService logService;
 
   public static final String ECS_UPDATE_LISTENER_COMMAND = "ECS Update Listener Command";
-
-  private static final Logger logger = LoggerFactory.getLogger(EcsBGUpdateListnerState.class);
 
   @Attributes(title = "Downsize Older Service") private boolean downsizeOldService;
 

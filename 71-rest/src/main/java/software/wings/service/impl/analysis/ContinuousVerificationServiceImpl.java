@@ -47,11 +47,10 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.MetricDataAnalysisResponse;
@@ -166,6 +165,7 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
@@ -183,8 +183,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private AlertService alertService;
   @Inject private MainConfiguration mainConfiguration;
-
-  private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;

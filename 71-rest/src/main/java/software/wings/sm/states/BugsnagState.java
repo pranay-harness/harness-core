@@ -14,9 +14,9 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute;
@@ -45,9 +45,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class BugsnagState extends AbstractLogAnalysisState {
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(BugsnagState.class);
-
   @SchemaIgnore
   @Transient
   private static final String FETCH_EVENTS_URL =

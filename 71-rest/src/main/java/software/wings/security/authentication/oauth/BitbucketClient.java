@@ -13,11 +13,10 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.oauth.ProvidersImpl.Bitbucket;
@@ -28,14 +27,13 @@ import java.util.concurrent.ExecutionException;
 
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class BitbucketClient extends BaseOauthClient implements OauthClient {
   OAuth20Service service;
   BitbucketConfig bitbucketConfig;
 
   static final String PROTECTED_RESOURCE_URL_NAME = "https://api.bitbucket.org/2.0/user";
   static final String PROTECTED_RESOURCE_URL_EMAIL = "https://api.bitbucket.org/2.0/user/emails";
-
-  static final Logger logger = LoggerFactory.getLogger(BitbucketClient.class);
 
   @Inject
   public BitbucketClient(MainConfiguration mainConfiguration, SecretManager secretManager) {

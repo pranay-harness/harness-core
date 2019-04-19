@@ -23,19 +23,18 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.UserInvite;
 
 import java.io.IOException;
 import javax.mail.MessagingException;
-
+@Slf4j
 public class TrialUsersTest extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;
   @Inject private OwnerManager ownerManager;
@@ -43,7 +42,6 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   Owners owners;
   final Seed seed = new Seed(0);
 
-  private static final Logger logger = LoggerFactory.getLogger(TrialUsersTest.class);
   final int MAX_RETRIES = 20;
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);

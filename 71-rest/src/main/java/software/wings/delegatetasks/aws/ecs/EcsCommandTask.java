@@ -9,13 +9,11 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler;
-import software.wings.delegatetasks.pcf.PcfCommandTask;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 
@@ -23,10 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+@Slf4j
 public class EcsCommandTask extends AbstractDelegateRunnableTask {
   @Inject private Map<String, EcsCommandTaskHandler> commandTaskTypeToTaskHandlerMap;
-
-  private static final Logger logger = LoggerFactory.getLogger(PcfCommandTask.class);
 
   public EcsCommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {

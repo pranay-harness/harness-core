@@ -11,8 +11,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitNotifyEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
@@ -38,6 +37,7 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 5/23/16.
  */
 @Singleton
+@Slf4j
 public class EmailNotificationServiceImpl implements EmailNotificationService {
   @Inject private Mailer mailer;
 
@@ -56,8 +56,6 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
   @Inject private EmailUtil emailUtil;
 
   @Inject private AlertService alertService;
-
-  private static final Logger logger = LoggerFactory.getLogger(EmailNotificationServiceImpl.class);
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.EmailNotificationService#send(java.lang.Object)

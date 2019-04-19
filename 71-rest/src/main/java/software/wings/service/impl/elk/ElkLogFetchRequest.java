@@ -8,8 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +32,6 @@ public class ElkLogFetchRequest {
   private final long startTime;
   private final long endTime;
   @Builder.Default private ElkQueryType queryType = ElkQueryType.TERM;
-  private static final Logger logger = LoggerFactory.getLogger(ElkLogFetchRequest.class);
 
   public Object toElasticSearchJsonObject() {
     List<JSONObject> hostJsonObjects = new ArrayList<>();

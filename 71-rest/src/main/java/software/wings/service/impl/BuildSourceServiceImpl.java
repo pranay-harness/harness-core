@@ -19,8 +19,7 @@ import com.google.inject.name.Named;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
@@ -61,6 +60,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private DelegateProxyFactory delegateProxyFactory;
@@ -75,7 +75,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private AppService appService;
   @Inject private GcsService gcsService;
   @Inject private CustomBuildSourceService customBuildSourceService;
-  private static final Logger logger = LoggerFactory.getLogger(BuildSourceServiceImpl.class);
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {

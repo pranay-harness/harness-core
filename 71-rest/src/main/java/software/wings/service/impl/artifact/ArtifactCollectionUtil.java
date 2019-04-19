@@ -43,9 +43,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -98,6 +97,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@Slf4j
 public class ArtifactCollectionUtil {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -110,8 +110,6 @@ public class ArtifactCollectionUtil {
   @Inject private AppService appService;
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ServiceResourceService serviceResourceService;
-
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionUtil.class);
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =

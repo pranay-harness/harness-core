@@ -9,6 +9,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -17,8 +18,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.instance.dashboard.InstanceStatsUtil;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
@@ -28,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 
 @DisallowConcurrentExecution
+@Slf4j
 public class InstanceStatsMetricsJob implements Job {
   private static final String CRON_NAME = "INSTANCE_STATS_METRICS_CRON_NAME";
   private static final String CRON_GROUP = "INSTANCE_STATS_METRICS_CRON_GROUP";
   private static final String LOCK = "INSTANCE_STATS_METRICS";
-  private static final Logger logger = LoggerFactory.getLogger(InstanceStatsMetricsJob.class);
 
   @Inject private BackgroundExecutorService executorService;
   @Inject private BackgroundSchedulerLocker persistentLocker;

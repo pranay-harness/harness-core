@@ -9,9 +9,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -35,13 +34,12 @@ import java.util.function.Supplier;
 /**
  * Created by anubhaw on 3/22/18.
  */
+@Slf4j
 public class HelmCommandTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private HelmDeployService helmDeployService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private HelmCommandHelper helmCommandHelper;
-
-  private static final Logger logger = LoggerFactory.getLogger(HelmCommandTask.class);
 
   public HelmCommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {

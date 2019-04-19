@@ -9,9 +9,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
@@ -36,11 +35,10 @@ import java.util.function.Supplier;
 /**
  * Created by anubhaw on 10/26/17.
  */
+@Slf4j
 public class GitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
-
-  private static final Logger logger = LoggerFactory.getLogger(GitCommandTask.class);
 
   public GitCommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {

@@ -14,9 +14,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -31,14 +30,13 @@ import java.util.List;
  * Created by bzane on 2/22/17
  */
 @Singleton
+@Slf4j
 public class GcpHelperService {
   public static final String LOCATION_DELIMITER = "/";
   public static final String ALL_LOCATIONS = "-";
 
   private static final int SLEEP_INTERVAL_SECS = 5;
   private static final int TIMEOUT_MINS = 30;
-
-  private static final Logger logger = LoggerFactory.getLogger(GcpHelperService.class);
 
   @Inject private EncryptionService encryptionService;
 

@@ -20,10 +20,9 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -52,12 +51,13 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 4/20/18.
  */
 @Singleton
+@Slf4j
 public class ContainerDeploymentDelegateHelper {
   @Inject private AzureHelperService azureHelperService;
   @Inject private GkeClusterService gkeClusterService;
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private EncryptionService encryptionService;
-  private static final Logger logger = LoggerFactory.getLogger(ContainerDeploymentDelegateHelper.class);
+
   private static final String KUBE_CONFIG_DIR = "./repository/helm/.kube/";
 
   public static final LoadingCache<String, Object> lockObjects =

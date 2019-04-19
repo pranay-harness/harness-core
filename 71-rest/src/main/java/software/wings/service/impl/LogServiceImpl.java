@@ -20,8 +20,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
@@ -49,7 +47,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class LogServiceImpl implements LogService {
   public static final int MAX_LOG_ROWS_PER_ACTIVITY = 1000;
-  private static final Logger logger = LoggerFactory.getLogger(LogServiceImpl.class);
+
   private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   public static final int NUM_OF_LOGS_TO_KEEP = 200;
   @Inject private WingsPersistence wingsPersistence;

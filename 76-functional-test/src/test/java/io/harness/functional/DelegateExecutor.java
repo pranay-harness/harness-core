@@ -11,8 +11,7 @@ import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.threading.Puller;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate.Status;
@@ -27,9 +26,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class DelegateExecutor {
   private static boolean failedAlready;
-  private static final Logger logger = LoggerFactory.getLogger(DelegateExecutor.class);
 
   @Inject private DelegateService delegateService;
 

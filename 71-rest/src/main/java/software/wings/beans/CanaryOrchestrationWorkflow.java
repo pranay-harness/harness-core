@@ -34,10 +34,9 @@ import static software.wings.common.Constants.phaseNamePattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Graph.Builder;
 import software.wings.sm.TransitionType;
 
@@ -52,12 +51,11 @@ import java.util.Set;
  */
 @JsonTypeName("CANARY")
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@Slf4j
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public CanaryOrchestrationWorkflow() {
     setOrchestrationWorkflowType(CANARY);
   }
-
-  private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
 
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
 

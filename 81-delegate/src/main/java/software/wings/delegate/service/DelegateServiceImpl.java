@@ -90,6 +90,7 @@ import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.JsonUtils;
 import io.harness.version.VersionInfoManager;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -171,6 +172,7 @@ import javax.net.ssl.TrustManager;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@Slf4j
 public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int RECONNECT_INTERVAL_SECONDS = 10;
@@ -208,7 +210,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private DelegateDecryptionService delegateDecryptionService;
 
-  private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
 
   private final Map<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();

@@ -8,8 +8,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -25,11 +24,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.List;
 import java.util.function.Consumer;
-
+@Slf4j
 public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
   @Inject EmailHandler emailHandler;
   private static final int SOCKET_TIMEOUT = (int) SECONDS.toMillis(15);
-  private static final Logger logger = LoggerFactory.getLogger(ConnectivityBasicValidation.class);
+
   private static final String SLACK_API_CRITERIA = "https://slack.com/api/api.test";
 
   public ConnectivityBasicValidation(

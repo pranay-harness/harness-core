@@ -30,6 +30,7 @@ import groovy.lang.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -70,8 +71,6 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.FS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.SettingAttribute;
@@ -112,10 +111,10 @@ import java.util.stream.Stream;
  */
 
 @Singleton
+@Slf4j
 public class GitClientImpl implements GitClient {
   private static final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
 
-  private static final Logger logger = LoggerFactory.getLogger(GitClientImpl.class);
   @Inject GitClientHelper gitClientHelper;
 
   @Override

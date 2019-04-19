@@ -6,8 +6,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Singleton;
 
 import io.harness.exception.HarnessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -21,8 +19,6 @@ import java.util.List;
 @Singleton
 public class DirectKubernetesInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, DirectKubernetesInfrastructureMapping> {
-  private static final Logger logger = LoggerFactory.getLogger(DirectKubernetesInfraMappingYamlHandler.class);
-
   @Override
   public Yaml toYaml(DirectKubernetesInfrastructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();

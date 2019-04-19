@@ -14,8 +14,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
@@ -57,8 +55,6 @@ public class CatalogResource {
    * The constant JENKINS_SETTING_ID.
    */
   public static final String JENKINS_SETTING_ID = "jenkinsSettingId";
-
-  private static final Logger logger = LoggerFactory.getLogger(CatalogResource.class);
 
   private CatalogService catalogService;
   private SettingsService settingsService;

@@ -10,8 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -39,12 +38,12 @@ import java.util.concurrent.TimeUnit;
  * Created by Praveen
  */
 @Singleton
+@Slf4j
 public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
   private static final String organizationsUrl = "user/organizations";
   private static final String projectsUrl = "organizations/orgId/projects";
   private static final String FETCH_EVENTS_URL =
       "projects/:projectId:/events?filters[event.since][][value]=${iso_start_time}&filters[event.before][][value]=${iso_end_time}&full_reports=true&per_page=1";
-  private static final Logger logger = LoggerFactory.getLogger(BugsnagDelegateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
 

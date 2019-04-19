@@ -13,8 +13,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
@@ -62,8 +60,6 @@ public class MapRouteState extends State {
   @Inject @Transient protected transient LogService logService;
 
   public static final String PCF_MAP_ROUTE_COMMAND = "PCF Map Route";
-
-  private static final Logger logger = LoggerFactory.getLogger(MapRouteState.class);
 
   @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;
 

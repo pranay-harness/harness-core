@@ -17,9 +17,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Praveen
  */
+@Slf4j
 public class CustomLogVerificationState extends AbstractLogAnalysisState {
   public CustomLogVerificationState(String name) {
     super(name, StateType.LOG_VERIFICATION.getType());
@@ -56,7 +57,6 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
   @Transient
   @SchemaIgnore
-  private static final Logger logger = LoggerFactory.getLogger(CustomLogVerificationState.class);
 
   private List<LogCollectionInfo> logCollectionInfos;
 

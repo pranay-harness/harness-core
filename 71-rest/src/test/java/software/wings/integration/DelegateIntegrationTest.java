@@ -7,6 +7,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.network.Http;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by anubhaw on 6/21/17.
  */
+@Slf4j
 public class DelegateIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {

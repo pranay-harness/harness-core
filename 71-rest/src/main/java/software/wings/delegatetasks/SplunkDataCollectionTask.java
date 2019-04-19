@@ -8,8 +8,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -31,10 +31,10 @@ import java.util.function.Supplier;
 /**
  * Created by rsingh on 5/18/17.
  */
+@Slf4j
 public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask {
   public static final Duration RETRY_SLEEP = Duration.ofSeconds(30);
 
-  private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
   private SplunkDataCollectionInfo dataCollectionInfo;
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;

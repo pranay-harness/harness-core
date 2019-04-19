@@ -13,8 +13,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -28,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class BuildSourceCleanupCallback implements NotifyCallback {
   private String accountId;
   private String appId;
@@ -36,8 +36,6 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
   @Inject private transient ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;
-
-  private static final Logger logger = LoggerFactory.getLogger(BuildSourceCleanupCallback.class);
 
   public BuildSourceCleanupCallback(String accountId, String appId, String artifactStreamId) {
     this.accountId = accountId;

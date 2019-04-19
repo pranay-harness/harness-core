@@ -22,12 +22,11 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -71,6 +70,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 
 @Singleton
+@Slf4j
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public static final String METRIC_NAME_NON_SPECIAL_CHARS = "METRIC_NAME_NON_SPECIAL_CHARS";
   public static final String METRIC_NAME_SPECIAL_CHARS = "METRIC_NAME_SPECIAL_CHAR";
@@ -81,7 +81,6 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private static final Pattern METRIC_NAME_PATTERN_NO_SPECIAL_CHAR = Pattern.compile("[a-zA-Z0-9_\\-\\+\\s/]*");
   private static final List<String> NOT_ALLOWED_STRINGS = Lists.newArrayList("{", "}");
 
-  private static final Logger logger = LoggerFactory.getLogger(NewRelicDelgateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;

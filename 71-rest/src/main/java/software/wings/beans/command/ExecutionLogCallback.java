@@ -3,21 +3,20 @@ package software.wings.beans.command;
 import static software.wings.beans.Log.Builder.aLog;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Log.LogLevel;
 import software.wings.delegatetasks.DelegateLogService;
 
 /**
  * Created by anubhaw on 2/14/17.
  */
+@Slf4j
 public class ExecutionLogCallback implements LogCallback {
   private transient DelegateLogService logService;
   private String accountId;
   private String appId;
   private String activityId;
   private String commandName;
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionLogCallback.class);
 
   public ExecutionLogCallback() {
     // do nothing callback

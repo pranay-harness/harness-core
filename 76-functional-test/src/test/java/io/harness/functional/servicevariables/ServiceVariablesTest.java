@@ -36,13 +36,12 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rule.OwnerRule.Owner;
 import io.restassured.path.json.JsonPath;
+import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -66,7 +65,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
@@ -78,7 +77,6 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Inject private WorkflowRestUtil workflowRestUtil;
   @Inject private ArtifactRestUtil artifactRestUtil;
 
-  private static final Logger logger = LoggerFactory.getLogger(ServiceVariablesTest.class);
   final String NORMAL_TEXT = "normalText";
   final String OVERRIDABLE_TEXT = "overridableText";
   final String ENV_OVERRIDDEN_TEXT = "envOverridableText";

@@ -24,8 +24,6 @@ import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
@@ -43,7 +41,6 @@ import java.util.List;
     broadcastFilters = {DelegateEventFilter.class})
 public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
   public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
-  private static final Logger logger = LoggerFactory.getLogger(DelegateStreamHandler.class);
 
   @Inject private AuthService authService;
   @Inject private DelegateService delegateService;

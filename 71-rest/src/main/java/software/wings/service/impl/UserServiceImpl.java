@@ -80,6 +80,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -88,8 +89,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
@@ -172,6 +171,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class UserServiceImpl implements UserService {
   public static final String ADD_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
@@ -181,8 +181,6 @@ public class UserServiceImpl implements UserService {
   public static final int REGISTRATION_SPAM_THRESHOLD = 3;
 
   private static final String BLACKLISTED_DOMAINS_FILE = "trial/blacklisted-email-domains.txt";
-
-  private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
   /**
    * The Executor service.

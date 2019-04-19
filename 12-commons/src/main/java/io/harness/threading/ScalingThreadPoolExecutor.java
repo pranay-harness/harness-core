@@ -1,7 +1,6 @@
 package io.harness.threading;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -17,12 +16,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * /ScalingThreadPoolExecutor.java that forces the Java to raise the current pool size, if it has
  * still not reached the max threshold, in case existing ones are busy processing other jobs.
  */
+@Slf4j
 public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
   /**
    * number of threads that are actively executing tasks
    */
   private final AtomicInteger activeCount = new AtomicInteger();
-  private static final Logger logger = LoggerFactory.getLogger(ThreadPoolExecutor.class);
 
   /**
    * Instantiates a new scaling thread pool executor.

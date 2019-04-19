@@ -20,13 +20,12 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.dl.WingsPersistence;
@@ -49,10 +48,10 @@ import java.util.concurrent.TimeUnit;
  * Delete all learning engine tasks in queue older than 7 days.
  */
 @Singleton
+@Slf4j
 public class VerificationServiceExecutorService {
   private static final String VERIFICATION_CRON_NAME = "VERIFICATION_SERVICE_EXECUTOR_CRON_NAME";
   private static final String VERIFICATION_CRON_GROUP = "VERIFICATION_SERVICE_EXECUTOR_CRON_GROUP";
-  private static final Logger logger = LoggerFactory.getLogger(VerificationServiceExecutorService.class);
 
   @Inject @Named("verificationServiceExecutor") protected ScheduledExecutorService taskPollService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;

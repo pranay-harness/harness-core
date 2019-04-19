@@ -8,9 +8,8 @@ import static software.wings.sm.StateType.HELM_DEPLOY;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -24,14 +23,12 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+@Slf4j
 public class HelmReleaseNameSuffixMigration implements Migration {
   // This migration appends "harness and ${infra.helm.shortId} to the release name prefix".
   // After this migration release prefix will technically become release name.
   // Example:- previous release name prefix "abc-def" with  will become "abc-def-harness-${infra.helm.shortId}"
   // ${infra.helm.shortId} will be evaluated at runtime and will have first 7 characters of the infra mapping Id
-
-  private static final Logger logger = LoggerFactory.getLogger(HelmReleaseNameSuffixMigration.class);
 
   private static final String HELM_RELEASE_NAME_PREFIX_KEY = "helmReleaseNamePrefix";
   private static final String HELM_RELEASE_NAME_SUFFIX_VALUE = "-harness-${infra.helm.shortId}";

@@ -1,6 +1,7 @@
 package software.wings.integration.appdynamics;
 
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -11,6 +12,7 @@ import javax.ws.rs.client.WebTarget;
 /**
  * Created by rsingh on 5/15/17.
  */
+@Slf4j
 public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
   private final String baseUrl = "http://35.233.204.2/todolist";
   //  private final String baseUrl = "https://appd.cfapps.io";

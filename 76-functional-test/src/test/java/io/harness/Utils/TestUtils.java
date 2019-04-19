@@ -9,8 +9,7 @@ import io.harness.framework.email.mailinator.MailinatorInbox;
 import io.harness.framework.matchers.MailinatorEmailMatcher;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -19,14 +18,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.UUID;
-
+@Slf4j
 public class TestUtils {
   final int MAX_RETRIES = 5;
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
   final String EXPECTED_SUBJECT = "You are invited to join Harness at Harness platform";
-  private static final Logger logger = LoggerFactory.getLogger(TestUtils.class);
 
   public String generateUniqueInboxId() {
     String emailId = UUID.randomUUID().toString() + System.currentTimeMillis();

@@ -7,8 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -28,10 +27,9 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@Slf4j
 public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B extends SettingValue>
     extends BaseYamlHandler<Y, SettingAttribute> {
-  private static final Logger logger = LoggerFactory.getLogger(SettingValueYamlHandler.class);
-
   @Inject protected SecretManager secretManager;
   @Inject private SettingsService settingsService;
   @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;

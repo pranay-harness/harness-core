@@ -15,6 +15,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -31,8 +32,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -44,7 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-
+@Slf4j
 public class GitClientImplTest extends WingsBaseTest {
   public static final String oldObjectIdString = "0000000000000000000000000000000000000000";
   public static final String newObjectIdString = "1111111111111111111111111111111111111111";
@@ -56,8 +55,6 @@ public class GitClientImplTest extends WingsBaseTest {
   private static final String GIT_REPO_URL = "git@github.com:wings-software/yaml-test.git";
   // private static final String PRIVATE_KEY = "/Users/rathna/.ssh/id_rsa";
   private static final String GIT_USER = "git";
-
-  private static final Logger logger = LoggerFactory.getLogger(GitClientImplTest.class);
 
   @Mock private GitClientHelper gitClientHelper;
   @Inject @InjectMocks private GitClientImpl gitClient;

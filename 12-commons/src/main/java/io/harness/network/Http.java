@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.google.common.base.Splitter;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -14,8 +15,6 @@ import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,10 +38,11 @@ import javax.net.ssl.X509TrustManager;
 /**
  * Created by anubhaw on 5/2/17.
  */
+@Slf4j
 public class Http {
   private static UrlValidator urlValidator =
       new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
-  private static final Logger logger = LoggerFactory.getLogger(Http.class);
+
   private static TrustManager[] trustAllCerts = getTrustManagers();
   private static SSLContext sc = getSslContext();
 

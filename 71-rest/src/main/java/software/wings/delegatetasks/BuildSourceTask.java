@@ -9,9 +9,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -34,12 +33,11 @@ import java.util.function.Supplier;
 /**
  * Created by anubhaw on 7/19/18.
  */
+@Slf4j
 public class BuildSourceTask extends AbstractDelegateRunnableTask {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private Injector injector;
-
-  private static final Logger logger = LoggerFactory.getLogger(BuildSourceTask.class);
 
   public BuildSourceTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {

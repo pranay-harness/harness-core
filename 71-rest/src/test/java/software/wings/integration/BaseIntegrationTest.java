@@ -36,6 +36,7 @@ import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.serializer.JsonSubtypeResolver;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.glassfish.jersey.client.ClientConfig;
@@ -45,8 +46,6 @@ import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Role;
@@ -97,9 +96,8 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by rsingh on 4/24/17.
  */
+@Slf4j
 public abstract class BaseIntegrationTest extends WingsBaseTest implements WingsIntegrationTestConstants {
-  protected static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
-
   protected static Client client;
 
   @Inject protected WingsPersistence wingsPersistence;

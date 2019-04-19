@@ -18,8 +18,6 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.DelegateTaskResponse;
@@ -44,8 +42,6 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
 
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private DelegateLogService logService;
-
-  private static final Logger logger = LoggerFactory.getLogger(ShellScriptApprovalTask.class);
 
   public ShellScriptApprovalTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {

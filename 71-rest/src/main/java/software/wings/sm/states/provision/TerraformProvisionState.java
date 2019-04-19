@@ -35,10 +35,9 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
@@ -94,11 +93,9 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Slf4j
 public abstract class TerraformProvisionState extends State {
   public static final String RUN_PLAN_ONLY_KEY = "runPlanOnly";
-
-  private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionState.class);
 
   private static final String VARIABLES_KEY = "variables";
   private static final String BACKEND_CONFIGS_KEY = "backend_configs";
