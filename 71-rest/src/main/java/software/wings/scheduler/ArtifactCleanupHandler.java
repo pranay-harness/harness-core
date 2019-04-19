@@ -8,15 +8,14 @@ import com.google.inject.name.Named;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactCleanupService;
 
+@Slf4j
 public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCleanupHandler.class);
 
   @Inject @Named("AsyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceAsync;
 

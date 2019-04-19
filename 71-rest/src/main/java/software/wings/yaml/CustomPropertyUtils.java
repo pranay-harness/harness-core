@@ -7,19 +7,16 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.BeanAccess;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
-
+@Slf4j
 class CustomPropertyUtils extends PropertyUtils {
-  private static final Logger logger = LoggerFactory.getLogger(CustomPropertyUtils.class);
-
   @Override
   protected Set<Property> createPropertySet(Class<? extends Object> type, BeanAccess bAccess) {
     try {

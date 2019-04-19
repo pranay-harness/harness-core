@@ -17,11 +17,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitFileConfig;
@@ -72,6 +71,7 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 4/1/18.
  */
 @Singleton
+@Slf4j
 public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmClient helmClient;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -82,7 +82,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private DelegateLogService delegateLogService;
   @Inject private GitClient gitClient;
 
-  private static final Logger logger = LoggerFactory.getLogger(HelmDeployService.class);
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
 

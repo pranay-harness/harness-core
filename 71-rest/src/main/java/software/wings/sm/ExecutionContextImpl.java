@@ -29,9 +29,8 @@ import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
 import software.wings.beans.Application;
@@ -75,11 +74,10 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
+@Slf4j
 public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final Pattern wildCharPattern = Pattern.compile("[+*/\\\\ &$\"'.|]");
   private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
 
   @Inject private transient ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;

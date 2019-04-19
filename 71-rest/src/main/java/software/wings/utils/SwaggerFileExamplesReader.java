@@ -22,8 +22,6 @@ import io.swagger.models.Swagger;
 import io.swagger.models.auth.OAuth2Definition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -44,8 +42,6 @@ public class SwaggerFileExamplesReader implements ReaderListener {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
   }
-
-  private static final Logger logger = LoggerFactory.getLogger(SwaggerFileExamplesReader.class);
 
   @Override
   public void beforeScan(Reader reader, Swagger swagger) {

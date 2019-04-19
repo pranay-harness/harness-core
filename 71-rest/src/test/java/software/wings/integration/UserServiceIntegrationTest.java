@@ -27,6 +27,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Before;
@@ -70,6 +71,7 @@ import javax.ws.rs.core.HttpHeaders;
 /**
  * Created by rsingh on 4/24/17.
  */
+@Slf4j
 public class UserServiceIntegrationTest extends BaseIntegrationTest {
   private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
   @Inject private AccountService accountService;

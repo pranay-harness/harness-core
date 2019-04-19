@@ -21,6 +21,7 @@ import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -28,8 +29,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
@@ -41,7 +40,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 public class ScriptApprovalJob implements Job {
   private static final String SCRIPT_STRING_KEY = "SCRIPT_STRING_KEY";
   private static final String ACTIVITY_ID_KEY = "activityId";
@@ -50,8 +49,6 @@ public class ScriptApprovalJob implements Job {
   private static final long TIME_OUT_IN_MINUTES = 5;
   private static final int DELAY_START_SECONDS = 10;
   private static final String SCRIPT_APPROVAL_DIRECTORY = "/tmp";
-
-  private static final Logger logger = LoggerFactory.getLogger(ScriptApprovalJob.class);
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 

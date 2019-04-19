@@ -19,11 +19,10 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -31,6 +30,7 @@ import software.wings.beans.UserInvite;
 /**
  * @author rktummala on 04/04/19
  */
+@Slf4j
 public class NewTrialSignupTest extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;
   @Inject private OwnerManager ownerManager;
@@ -38,7 +38,6 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   Owners owners;
   final Seed seed = new Seed(0);
 
-  private static final Logger logger = LoggerFactory.getLogger(NewTrialSignupTest.class);
   UserRestUtil urUtil = new UserRestUtil();
   TestUtils testUtils = new TestUtils();
 

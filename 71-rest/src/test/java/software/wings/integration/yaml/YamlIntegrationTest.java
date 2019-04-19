@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,6 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Ignore
+@Slf4j
 public class YamlIntegrationTest extends BaseIntegrationTest {
   private Application application;
   private Service service;

@@ -15,6 +15,7 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.service.intfc.ContinuousVerificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -24,8 +25,6 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -44,6 +43,7 @@ import java.util.stream.Collectors;
  */
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
+@Slf4j
 public class VerificationJob implements Job {
   // Cron name to uniquely identify the cron
   public static final String VERIFICATION_CRON_NAME = "VERIFICATION_CRON_NAME";
@@ -51,7 +51,6 @@ public class VerificationJob implements Job {
   public static final String VERIFICATION_CRON_GROUP = "VERIFICATION_CRON_GROUP";
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
-  private static final Logger logger = LoggerFactory.getLogger(VerificationJob.class);
 
   @Inject private VerificationManagerClient verificationManagerClient;
 

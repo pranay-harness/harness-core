@@ -14,8 +14,6 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
@@ -61,8 +59,6 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient LogService logService;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
-
-  private static final Logger logger = LoggerFactory.getLogger(PcfSwitchBlueGreenRoutes.class);
 
   @Attributes(title = "Downsize Old Applications") private boolean downsizeOldApps;
 

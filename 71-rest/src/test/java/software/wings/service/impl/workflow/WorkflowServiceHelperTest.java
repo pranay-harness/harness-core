@@ -32,8 +32,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
@@ -50,7 +48,6 @@ import java.util.Map;
 public class WorkflowServiceHelperTest extends WingsBaseTest {
   private static String envId = generateUuid();
 
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceHelperTest.class);
   @Mock private ServiceResourceService serviceResourceService;
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
 

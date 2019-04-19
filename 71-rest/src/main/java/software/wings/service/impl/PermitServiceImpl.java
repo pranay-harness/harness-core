@@ -6,16 +6,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Permit;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PermitService;
 
 @Singleton
+@Slf4j
 public class PermitServiceImpl implements PermitService {
   @Inject private WingsPersistence wingsPersistence;
-  private static final Logger logger = LoggerFactory.getLogger(PermitService.class);
+
   private static final int[] BACKOFF_MULTIPLIER = new int[] {1, 1, 2, 3, 5, 8, 13, 21, 34, 34, 34, 34};
 
   public static final int MAX_FAILED_ATTEMPTS = 500;

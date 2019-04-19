@@ -13,9 +13,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.MapperUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -54,13 +53,13 @@ import java.util.Map;
 /**
  * Created by rishi on 1/12/17.
  */
+@Slf4j
 public class PhaseSubWorkflow extends SubWorkflowState {
   public PhaseSubWorkflow(String name) {
     super(name, StateType.PHASE.name());
   }
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
-  private static final Logger logger = LoggerFactory.getLogger(PhaseSubWorkflow.class);
 
   private String uuid;
   private String serviceId;

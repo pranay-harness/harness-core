@@ -12,8 +12,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.model.EventConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -30,6 +29,7 @@ import software.wings.service.intfc.WorkflowService;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class UsageMetricsService {
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private ServiceResourceService serviceResourceService;
@@ -39,7 +39,6 @@ public class UsageMetricsService {
   @Inject private TriggerService triggerService;
   @Inject private UsageMetricsEventPublisher publisher;
   @Inject private EnvironmentService environmentService;
-  private static final Logger logger = LoggerFactory.getLogger(UsageMetricsService.class);
 
   public void checkUsageMetrics() {
     getAllAccounts().forEach(account -> {

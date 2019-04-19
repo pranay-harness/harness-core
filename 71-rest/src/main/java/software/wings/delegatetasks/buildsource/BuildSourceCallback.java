@@ -23,8 +23,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.alert.AlertType;
@@ -54,6 +53,7 @@ import java.util.stream.Collectors;
 /**
  * Created by anubhaw on 7/20/18.
  */
+@Slf4j
 public class BuildSourceCallback implements NotifyCallback {
   private String accountId;
   private String appId;
@@ -70,8 +70,6 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient PermitService permitService;
   @Inject private transient AlertService alertService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
-
-  private static final Logger logger = LoggerFactory.getLogger(BuildSourceCallback.class);
 
   public BuildSourceCallback(String accountId, String appId, String artifactStreamId, String permitId,
       String settingId) { // todo: new constr with settingId

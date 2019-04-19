@@ -8,16 +8,14 @@ import io.harness.framework.email.mailinator.MailinatorInbox;
 import io.harness.framework.email.mailinator.MailinatorMessageDetails;
 import io.harness.framework.email.mailinator.MailinatorMetaMessage;
 import io.harness.framework.matchers.MailinatorEmailMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-
+@Slf4j
 public class MailinatorRestUtils {
   final int MAX_RETRIES = 60;
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
-  private static final Logger logger = LoggerFactory.getLogger(MailinatorRestUtils.class);
 
   public MailinatorInbox retrieveInbox(String inboxName) {
     MailinatorInbox inbox = Setup.mailinator().queryParam("to", inboxName).get("/inbox").as(MailinatorInbox.class);

@@ -14,13 +14,12 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -45,9 +44,9 @@ import java.util.concurrent.ExecutionException;
 
 @NoArgsConstructor
 @Singleton
+@Slf4j
 public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   private int MAX_RELEASE_VERSIONS_TO_KEEP = 3;
-  private static final Logger logger = LoggerFactory.getLogger(PcfSetupCommandTaskHandler.class);
 
   /**
    * This method is responsible for fetching previous release version information

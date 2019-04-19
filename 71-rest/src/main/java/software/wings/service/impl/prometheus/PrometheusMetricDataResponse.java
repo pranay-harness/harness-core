@@ -4,8 +4,7 @@ import com.google.common.collect.TreeBasedTable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.MetricCollectionResponse;
 import software.wings.sm.StateType;
@@ -20,11 +19,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Slf4j
 public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   private String status;
   private PrometheusMetricData data;
-
-  private static final Logger logger = LoggerFactory.getLogger(PrometheusMetricDataResponse.class);
 
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)

@@ -5,10 +5,9 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import com.google.inject.Inject;
 
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -19,10 +18,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+@Slf4j
 public class CleanUpDatadogCallLogMigration implements Migration {
   private static final String API_KEY = "api_key";
-  private static final Logger logger = LoggerFactory.getLogger(CleanUpDatadogCallLogMigration.class);
 
   @Inject private WingsPersistence wingsPersistence;
 

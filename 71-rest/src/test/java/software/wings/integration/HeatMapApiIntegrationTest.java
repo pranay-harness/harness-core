@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -43,6 +44,7 @@ import javax.ws.rs.core.GenericType;
  * @author Vaibhav Tulsyan
  * 22/Oct/2018
  */
+@Slf4j
 public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Inject WingsPersistence wingsPersistence;
 

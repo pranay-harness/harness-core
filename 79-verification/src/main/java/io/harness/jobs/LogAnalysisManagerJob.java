@@ -22,8 +22,6 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -77,7 +75,6 @@ public class LogAnalysisManagerJob implements Job {
 
   @AllArgsConstructor
   public static class LogAnalysisTask implements Callable<Long> {
-    private static final Logger logger = LoggerFactory.getLogger(LogAnalysisTask.class);
     private LogAnalysisService analysisService;
 
     private AnalysisContext context;

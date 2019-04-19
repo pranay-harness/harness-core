@@ -10,11 +10,10 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
@@ -28,10 +27,9 @@ import java.util.Random;
  */
 @Integration
 @Ignore
+@Slf4j
 public class ExecutionGenTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
-
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionGenTest.class);
 
   @Test
   @Category(UnitTests.class)

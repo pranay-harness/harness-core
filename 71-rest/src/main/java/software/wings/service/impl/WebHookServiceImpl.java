@@ -16,8 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.serializer.JsonUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -55,6 +54,7 @@ import javax.ws.rs.core.Response;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class WebHookServiceImpl implements WebHookService {
   public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
   public static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
@@ -69,8 +69,6 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
   @Inject private TriggerExecutionService triggerExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
-
-  private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 
   private String getBaseUrl() {
     String baseUrl = configuration.getPortal().getUrl().trim();

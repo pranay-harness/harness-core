@@ -78,8 +78,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -598,7 +596,7 @@ public enum StateType implements StateTypeDescriptor {
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
-  private static final Logger logger = LoggerFactory.getLogger(StateType.class);
+
   private final Class<? extends State> stateClass;
   private final Object jsonSchema;
   private Object uiSchema;

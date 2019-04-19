@@ -5,6 +5,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rule.RepeatRule.Repeat;
+import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by anubhaw on 6/8/17.
  */
+@Slf4j
 public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)

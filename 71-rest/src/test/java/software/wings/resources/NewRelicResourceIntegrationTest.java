@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Before;
@@ -25,6 +26,7 @@ import java.util.Set;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
+@Slf4j
 public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
   private NewRelicState.Metric requestsPerMinuteMetric;
   @Before

@@ -3,8 +3,7 @@ package software.wings.service.impl.instance;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
@@ -16,10 +15,10 @@ import software.wings.beans.infrastructure.instance.InstanceType;
  * @author rktummala on 09/11/17
  */
 @Singleton
+@Slf4j
 public class InstanceUtil {
   private static final String WORKFLOW_PREFIX = "Workflow: ";
   private static final int WORKFLOW_PREFIX_LENGTH = 10;
-  private static final Logger logger = LoggerFactory.getLogger(InstanceUtil.class);
 
   public void setInstanceType(InstanceBuilder builder, String infraMappingType) {
     builder.instanceType(getInstanceType(infraMappingType));

@@ -9,8 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute;
@@ -34,13 +33,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class LogVerificationServiceImpl implements LogVerificationService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-
-  private static final Logger logger = LoggerFactory.getLogger(LogVerificationServiceImpl.class);
 
   @Override
   public Set<BugsnagApplication> getOrgProjectListBugsnag(

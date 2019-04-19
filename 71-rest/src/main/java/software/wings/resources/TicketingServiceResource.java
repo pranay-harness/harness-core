@@ -8,8 +8,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
 import io.harness.waiter.WaitNotifyEngine;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.http.Body;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.JiraHelperService;
@@ -25,11 +24,11 @@ import javax.ws.rs.Produces;
 @Path("/ticketing")
 @Consumes("application/json")
 @Produces("application/json")
+@Slf4j
 public class TicketingServiceResource {
   private JiraHelperService jiraHelperService;
   private WorkflowExecutionService workflowExecutionService;
   private WaitNotifyEngine waitNotifyEngine;
-  private static final Logger logger = LoggerFactory.getLogger(TicketingServiceResource.class);
 
   @Inject
   public TicketingServiceResource(JiraHelperService jiraHelperService,

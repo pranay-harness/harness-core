@@ -17,10 +17,9 @@ import io.harness.resource.Project;
 import io.harness.threading.Puller;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.apache.http.params.CoreConnectionPNames;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 
 import java.io.File;
@@ -30,9 +29,10 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class ManagerExecutor {
   private static boolean failedAlready;
-  private static final Logger logger = LoggerFactory.getLogger(ManagerExecutor.class);
+
   private static final String alpnJar =
       "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
 

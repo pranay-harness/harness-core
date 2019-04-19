@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.IntegrationTests;
 import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -40,6 +41,7 @@ import javax.ws.rs.core.GenericType;
  * 2. Timeline is correctly fetched.
  *
  */
+@Slf4j
 public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
   @Inject private WingsPersistence persistence;
   @Inject private StatsCollectorImpl statsCollector;

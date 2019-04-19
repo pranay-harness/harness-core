@@ -9,8 +9,6 @@ import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
 import com.amazonaws.services.ecr.model.ListImagesResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -28,7 +26,6 @@ import java.util.List;
 public class EcrClassicServiceImpl implements EcrClassicService {
   @Inject private AwsHelperService awsHelperService;
   @Inject private EncryptionService encryptionService;
-  private static final Logger logger = LoggerFactory.getLogger(EcrClassicServiceImpl.class);
 
   @Override
   public List<BuildDetails> getBuilds(

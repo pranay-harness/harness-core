@@ -12,9 +12,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
@@ -30,13 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
+@Slf4j
 public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private KubernetesContainerService kubernetesContainerService;
-
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesSwapServiceSelectorsTask.class);
 
   public KubernetesSwapServiceSelectorsTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {

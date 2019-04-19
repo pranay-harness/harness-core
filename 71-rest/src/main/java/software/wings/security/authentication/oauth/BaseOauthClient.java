@@ -2,18 +2,17 @@ package software.wings.security.authentication.oauth;
 
 import io.fabric8.utils.Strings;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
+@Slf4j
 public class BaseOauthClient {
   private static final String STATE_KEY = "state";
-  private static final Logger logger = LoggerFactory.getLogger(BaseOauthClient.class);
 
   private SecretManager secretManager;
 

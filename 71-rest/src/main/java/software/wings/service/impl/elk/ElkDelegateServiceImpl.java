@@ -23,8 +23,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -64,8 +62,6 @@ import javax.net.ssl.X509TrustManager;
 @Singleton
 public class ElkDelegateServiceImpl implements ElkDelegateService {
   public static final int MAX_RECORDS = 10000;
-
-  private static final Logger logger = LoggerFactory.getLogger(ElkDelegateServiceImpl.class);
 
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;

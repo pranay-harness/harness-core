@@ -57,12 +57,11 @@ import io.harness.scheduler.VerificationServiceExecutorService;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.service.intfc.LearningEngineService;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.WingsApplication;
@@ -85,6 +84,7 @@ import javax.ws.rs.Path;
  *
  * @author Raghu
  */
+@Slf4j
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
@@ -95,7 +95,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                                       .addAll(VerificationMorphiaClasses.classes)
                                                       .build();
   // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
-  private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);
+
   private static String APPLICATION_NAME = "Verification Service Application";
   private final MetricRegistry metricRegistry = new MetricRegistry();
   public HarnessMetricRegistry harnessMetricRegistry;

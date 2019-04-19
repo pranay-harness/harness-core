@@ -30,14 +30,13 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -46,12 +45,11 @@ import software.wings.beans.UserInvite;
 import java.io.IOException;
 import java.util.List;
 import javax.mail.MessagingException;
-
+@Slf4j
 public class UserTest extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;
   @Inject private OwnerManager ownerManager;
 
-  private static final Logger logger = LoggerFactory.getLogger(UserTest.class);
   final int MAX_RETRIES = 20;
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);

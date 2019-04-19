@@ -18,8 +18,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.artifact.ArtifactFile;
@@ -56,8 +54,6 @@ public class PcfCommandTaskHelper {
 
   @Inject private DelegateFileManager delegateFileManager;
   @Inject private PcfDeploymentManager pcfDeploymentManager;
-
-  private static final Logger logger = LoggerFactory.getLogger(PcfCommandTaskHelper.class);
 
   /**
    * Returns Application names those will be downsized in deployment process

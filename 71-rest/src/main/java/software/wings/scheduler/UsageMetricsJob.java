@@ -7,6 +7,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -15,17 +16,15 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 @DisallowConcurrentExecution
+@Slf4j
 public class UsageMetricsJob implements Job {
   private static final String CRON_NAME = "USAGE_METRICS_CRON_NAME";
   private static final String CRON_GROUP = "USAGE_METRICS_CRON_GROUP";
   private static final String LOCK = "USAGE_METRICS";
-  private static final Logger logger = LoggerFactory.getLogger(UsageMetricsJob.class);
 
   @Inject private BackgroundExecutorService executorService;
   @Inject private BackgroundSchedulerLocker persistentLocker;

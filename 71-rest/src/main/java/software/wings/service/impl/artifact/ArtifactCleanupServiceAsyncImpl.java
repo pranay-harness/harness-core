@@ -13,8 +13,7 @@ import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.waiter.WaitNotifyEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStream;
@@ -29,9 +28,8 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@Slf4j
 public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCleanupServiceAsyncImpl.class);
-
   @Inject private SettingsService settingsService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;

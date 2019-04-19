@@ -30,9 +30,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.BambooExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -61,9 +60,8 @@ import java.util.Map;
 /**
  * Created by sgurubelli on 8/28/17.
  */
+@Slf4j
 public class BambooState extends State {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(BambooState.class);
-
   @Attributes(title = "Bamboo Server") private String bambooConfigId;
 
   @Attributes(title = "Plan Name") private String planName;

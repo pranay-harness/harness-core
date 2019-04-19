@@ -16,8 +16,6 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
@@ -81,8 +79,6 @@ public class PcfDeployState extends State {
   @Attributes(title = "Instance Unit Type")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
   public static final String PCF_RESIZE_COMMAND = "PCF Resize";
-
-  private static final Logger logger = LoggerFactory.getLogger(PcfDeployState.class);
 
   /**
    * Instantiates a new state.

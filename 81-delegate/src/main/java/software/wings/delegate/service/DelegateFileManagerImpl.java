@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -21,8 +22,6 @@ import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.common.Constants;
@@ -51,6 +50,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final int DEFAULT_MAX_CACHED_ARTIFACT = 2;
   private ManagerClient managerClient;
@@ -61,7 +61,6 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   private static final String ARTIFACT_REPO_BASE_DIR = "./repository/artifacts/";
   private static final String ARTIFACT_REPO_TMP_DIR = "./repository/artifacts/tmp/";
-  private static final Logger logger = LoggerFactory.getLogger(DelegateFileManagerImpl.class);
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 

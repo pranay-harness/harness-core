@@ -43,13 +43,12 @@ import io.harness.generator.SettingGenerator;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rule.OwnerRule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -78,7 +77,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
@@ -97,7 +96,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ArtifactRestUtil artifactRestUtil;
   @Inject private ArtifactStreamManager artifactStreamManager;
-  private static final Logger logger = LoggerFactory.getLogger(EcsWorkflowFunctionalTest.class);
+
   final Seed seed = new Seed(0);
   Owners owners;
 

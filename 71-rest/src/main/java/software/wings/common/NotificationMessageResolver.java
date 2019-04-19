@@ -17,11 +17,10 @@ import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.text.WordUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -44,9 +43,9 @@ import java.util.regex.Pattern;
  * Created by anubhaw on 7/25/16.
  */
 @Singleton
+@Slf4j
 public class NotificationMessageResolver {
   private Map<String, ChannelTemplate> templateMap;
-  private static final Logger logger = LoggerFactory.getLogger(NotificationMessageResolver.class);
 
   @Inject private MainConfiguration configuration;
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");

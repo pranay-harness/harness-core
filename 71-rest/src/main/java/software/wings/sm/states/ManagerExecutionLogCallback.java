@@ -3,19 +3,18 @@ package software.wings.sm.states;
 import com.google.common.base.Objects;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.LogCallback;
 import software.wings.service.intfc.LogService;
 
+@Slf4j
 public class ManagerExecutionLogCallback implements LogCallback {
   private transient LogService logService;
   private Builder logBuilder;
   private String activityId;
-  private static final Logger logger = LoggerFactory.getLogger(ManagerExecutionLogCallback.class);
 
   public ManagerExecutionLogCallback() {}
 

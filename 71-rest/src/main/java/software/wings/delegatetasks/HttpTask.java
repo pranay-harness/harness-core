@@ -9,6 +9,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -27,8 +28,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
@@ -40,13 +39,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
+@Slf4j
 public class HttpTask extends AbstractDelegateRunnableTask {
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
-
-  private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
 
   public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {

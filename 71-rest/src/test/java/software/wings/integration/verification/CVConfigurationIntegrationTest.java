@@ -30,6 +30,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,6 +83,7 @@ import javax.ws.rs.core.GenericType;
  * @author Vaibhav Tulsyan
  * 05/Oct/2018
  */
+@Slf4j
 public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   private String appId, envId, serviceId, appDynamicsApplicationId;

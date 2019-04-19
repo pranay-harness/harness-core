@@ -23,8 +23,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -116,8 +114,6 @@ public class PcfSetupState extends State {
   public static final String PCF_SETUP_COMMAND = "PCF Setup";
 
   private boolean blueGreen;
-
-  private static final Logger logger = LoggerFactory.getLogger(PcfSetupState.class);
 
   /**
    * Instantiates a new state.

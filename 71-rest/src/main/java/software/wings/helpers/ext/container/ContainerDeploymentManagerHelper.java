@@ -12,8 +12,6 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import org.mongodb.morphia.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -70,8 +68,6 @@ public class ContainerDeploymentManagerHelper {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
-
-  private static final Logger logger = LoggerFactory.getLogger(ContainerDeploymentManagerHelper.class);
 
   public List<InstanceStatusSummary> getInstanceStatusSummaryFromContainerInfoList(
       List<ContainerInfo> containerInfos, ServiceTemplateElement serviceTemplateElement) {

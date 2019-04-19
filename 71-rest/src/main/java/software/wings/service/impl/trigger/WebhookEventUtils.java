@@ -14,14 +14,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.service.impl.WebHookServiceImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,14 +27,13 @@ import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 
 @Singleton
+@Slf4j
 public class WebhookEventUtils {
   public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
   public static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
   public static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
 
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
-
-  private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 
   public static final List<String> eventHeaders =
       Collections.unmodifiableList(asList(X_GIT_HUB_EVENT, X_GIT_LAB_EVENT, X_BIT_BUCKET_EVENT));

@@ -28,10 +28,9 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.WingsException;
 import io.harness.persistence.GoogleDataStoreAware;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DataStoreService;
@@ -42,9 +41,10 @@ import java.util.List;
 import java.util.Set;
 
 @Singleton
+@Slf4j
 public class GoogleDataStoreServiceImpl implements DataStoreService {
   private static int DATA_STORE_BATCH_SIZE = 500;
-  private static final Logger logger = LoggerFactory.getLogger(GoogleDataStoreServiceImpl.class);
+
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
   private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
   private DataStoreService mongoDataStoreService;
