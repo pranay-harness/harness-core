@@ -2,6 +2,7 @@ package software.wings.service.impl.prometheus;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.PrometheusConfig;
@@ -16,7 +17,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-public class PrometheusDataCollectionInfo implements ExecutionCapabilityDemander {
+public class PrometheusDataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private PrometheusConfig prometheusConfig;
   private String applicationId;
   private String stateExecutionId;

@@ -5,6 +5,7 @@ import static io.harness.threading.Morpheus.sleep;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
@@ -45,12 +46,12 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
                                               .status(DataCollectionTaskStatus.SUCCESS)
                                               .stateType(StateType.SPLUNKV2)
                                               .build();
-    this.dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
+    this.dataCollectionInfo = (SplunkDataCollectionInfo) parameters;
     logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
 
     // Check whether for given splunk config, splunk Service is possible or not.

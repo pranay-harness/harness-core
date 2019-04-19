@@ -89,11 +89,11 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     }
   }
 
-  public DataCollectionTaskResult run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
+  public DataCollectionTaskResult run(Object[] parameters) {
+    throw new NotImplementedException("not supported. use DataCollectionTaskResult run(TaskParameters parameters)");
   }
 
-  public DataCollectionTaskResult run(Object[] parameters) {
+  public DataCollectionTaskResult run(TaskParameters parameters) {
     try {
       DataCollectionTaskResult taskResult = initDataCollection(parameters);
       if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
@@ -125,9 +125,9 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
           pendingTask = true;
         }
       }, getInitialDelayMinutes(), getPeriodMinutes(), TimeUnit.MINUTES);
-      getLogger().info("going to collect data for " + parameters[0]);
+      getLogger().info("going to collect data for " + parameters);
       waitForCompletion();
-      getLogger().info(" finish data collection for " + parameters[0] + ". result is " + taskResult);
+      getLogger().info(" finish data collection for " + parameters + ". result is " + taskResult);
       return taskResult;
     } catch (Exception e) {
       getLogger().error("Data collection task   failed : ", e);
@@ -165,7 +165,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
 
   protected abstract StateType getStateType();
 
-  protected abstract DataCollectionTaskResult initDataCollection(Object[] parameters);
+  protected abstract DataCollectionTaskResult initDataCollection(TaskParameters parameters);
 
   protected abstract Logger getLogger();
 

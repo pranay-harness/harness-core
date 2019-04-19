@@ -2,6 +2,7 @@ package software.wings.service.impl.dynatrace;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DynaTraceDataCollectionInfo implements ExecutionCapabilityDemander {
+
+public class DynaTraceDataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private DynaTraceConfig dynaTraceConfig;
   private String applicationId;
   private String stateExecutionId;

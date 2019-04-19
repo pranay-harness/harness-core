@@ -2,6 +2,7 @@ package software.wings.service.impl.appdynamics;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -22,7 +23,8 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppdynamicsDataCollectionInfo implements ExecutionCapabilityDemander {
+
+public class AppdynamicsDataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private AppDynamicsConfig appDynamicsConfig;
   private String applicationId;
   private String stateExecutionId;

@@ -1,5 +1,6 @@
 package software.wings.service.impl.apm;
 
+import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -11,7 +12,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class APMDataCollectionInfo {
+public class APMDataCollectionInfo implements TaskParameters {
   private String baseUrl;
   private String validationUrl;
   private Map<String, String> headers;

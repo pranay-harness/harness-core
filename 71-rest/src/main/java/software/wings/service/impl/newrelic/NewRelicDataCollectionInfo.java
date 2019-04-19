@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,8 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewRelicDataCollectionInfo implements ExecutionCapabilityDemander {
+
+public class NewRelicDataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private NewRelicConfig newRelicConfig;
   private String applicationId;
   private String stateExecutionId;

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.sumologic.client.SumoLogicClient;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -51,10 +52,10 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     DataCollectionTaskResult taskResult =
         DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).stateType(StateType.SUMO).build();
-    this.dataCollectionInfo = (SumoDataCollectionInfo) parameters[0];
+    this.dataCollectionInfo = (SumoDataCollectionInfo) parameters;
     logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
     sumoClient = sumoDelegateService.getSumoClient(
         dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails(), encryptionService);

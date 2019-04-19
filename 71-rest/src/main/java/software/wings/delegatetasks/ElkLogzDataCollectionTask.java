@@ -7,6 +7,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -56,8 +57,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   }
 
   @Override
-  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
-    this.dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
+    this.dataCollectionInfo = (LogDataCollectionInfo) parameters;
     logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
