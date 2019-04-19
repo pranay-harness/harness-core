@@ -37,6 +37,10 @@ type Query {
 
   # Get page data of environments
   environments(appId: String!, environmentType: String,limit: Int, offset: Int): PagedData  @dataFetcher(name : "environments")
+
+  # Get details about a service
+  service(serviceId: String! ): Service  @dataFetcher(name : "service")
+
 }
 
 # DateTime which will return date based on PST zone
@@ -121,6 +125,8 @@ type Workflow implements BaseInfo {
 
 # Service Type
 type Service {
+   # Service Id
+   id: String
    # Name of the service
    name: String
    # Description of the Service
