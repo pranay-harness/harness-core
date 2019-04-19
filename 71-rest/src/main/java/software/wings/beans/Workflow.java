@@ -18,6 +18,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -34,6 +35,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "workflows", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class Workflow extends Base implements KeywordsAware {
@@ -450,5 +452,11 @@ public class Workflow extends Base implements KeywordsAware {
       workflow.setSyncFromGit(syncFromGit);
       return workflow;
     }
+  }
+
+  public static final class WorkflowKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
   }
 }
