@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private static final String UNHANDLED_CONFIG_MSG = "Unhandled type of helm repo config. Type : ";
+  private static final String AWS_URL = "https://aws.amazon.com/";
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
@@ -100,6 +101,11 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
     String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
     if (isBlank(chartMuseumPath)) {
       logger.info(format("chartmuseum not installed in delegate for task %s", delegateTaskId));
+      return false;
+    }
+
+    if (!connectableHttpUrl(AWS_URL)) {
+      logger.info(format("Unreachable URL %s for task %s from delegate", AWS_URL, delegateTaskId));
       return false;
     }
 
