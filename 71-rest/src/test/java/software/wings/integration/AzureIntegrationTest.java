@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerservice.OSType;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
@@ -111,6 +112,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();

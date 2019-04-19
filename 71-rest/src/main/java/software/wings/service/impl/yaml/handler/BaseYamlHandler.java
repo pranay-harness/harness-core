@@ -28,7 +28,7 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
 
   protected Builder cloneFileChangeContext(ChangeContext<Y> context, BaseYaml yaml) {
     Change change = context.getChange();
-    Change.Builder clonedChange = change.clone();
+    Change.Builder clonedChange = change.toBuilder();
     clonedChange.withFileContent(YamlHelper.toYamlString(yaml));
 
     Builder clonedContext = context.toBuilder();
