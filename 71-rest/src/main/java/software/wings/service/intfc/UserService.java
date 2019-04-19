@@ -465,4 +465,6 @@ public interface UserService extends OwnedByAccount {
    * Set the default account for a user. It means the user will land on the default account next time logging in.
    */
   boolean setDefaultAccount(User user, @NotEmpty String accountId);
+
+  boolean updateLead(String email, String accountId);
 }

@@ -328,7 +328,7 @@ public class AuthenticationManager {
       if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, null)) {
         throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
       }
-      User user = null;
+      User user;
       AuthenticationResponse authenticationResponse = oauthBasedAuthHandler.authenticate(credentials);
 
       if (null == authenticationResponse.getUser()) {

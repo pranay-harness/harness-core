@@ -968,6 +968,16 @@ public class UserResource {
     return new RestResponse<>(twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(userId));
   }
 
+  @PUT
+  @Path("lead-update")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<Boolean> updateMarketoForUser(
+      @NotEmpty @QueryParam("email") String email, @NotEmpty @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(userService.updateLead(email, accountId));
+  }
+
   private RestResponse<UserInvite> getPublicUserInvite(UserInvite userInvite) {
     if (userInvite == null) {
       return new RestResponse<>();
