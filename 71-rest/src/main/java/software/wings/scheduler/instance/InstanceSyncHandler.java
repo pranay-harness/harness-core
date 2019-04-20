@@ -12,7 +12,7 @@ import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.service.impl.instance.InstanceHelper;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -38,7 +38,7 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
 
       PersistenceIterator iterator = MongoPersistenceIterator.<InfrastructureMapping>builder()
                                          .clazz(InfrastructureMapping.class)
-                                         .fieldName(ArtifactStream.NEXT_ITERATION_KEY)
+                                         .fieldName(InfrastructureMappingKeys.nextIteration)
                                          .targetInterval(ofMinutes(10))
                                          .acceptableDelay(ofMinutes(10))
                                          .executorService(executor)
