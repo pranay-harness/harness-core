@@ -60,6 +60,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.quartz.TriggerKey;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -169,6 +170,9 @@ public class TriggerServiceImpl implements TriggerService {
       String accountId = appService.getAccountIdByAppId(savedTrigger.getAppId());
       ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(), trigger);
     }
+
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportForAuditingUsingAppId(trigger.getAppId(), null, trigger, Type.CREATE);
     return savedTrigger;
   }
 
@@ -183,12 +187,24 @@ public class TriggerServiceImpl implements TriggerService {
     Trigger updatedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     addOrUpdateCronForScheduledJob(trigger, existingTrigger);
+
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportForAuditingUsingAppId(
+        updatedTrigger.getAppId(), existingTrigger, updatedTrigger, Type.UPDATE);
     return updatedTrigger;
   }
 
   @Override
   public boolean delete(String appId, String triggerId) {
-    return triggerServiceHelper.delete(triggerId);
+    Trigger trigger = get(appId, triggerId);
+    boolean answer = triggerServiceHelper.delete(triggerId);
+
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    if (answer) {
+      auditServiceHelper.reportDeleteForAuditing(trigger.getAppId(), trigger);
+    }
+
+    return answer;
   }
 
   @Override

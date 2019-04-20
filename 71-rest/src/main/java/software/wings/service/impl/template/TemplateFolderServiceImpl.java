@@ -38,11 +38,13 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Base;
+import software.wings.beans.Event.Type;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -67,6 +69,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public PageResponse<TemplateFolder> list(PageRequest<TemplateFolder> pageRequest) {
@@ -95,9 +98,15 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
       templateFolder.setPathId(pathId);
     }
     templateFolder.setKeywords(getKeywords(templateFolder));
-    return Validator.duplicateCheck(()
-                                        -> wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder),
-        TemplateFolder.NAME_KEY, templateFolder.getName());
+    TemplateFolder savedTemplateFolder =
+        Validator.duplicateCheck(()
+                                     -> wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder),
+            TemplateFolder.NAME_KEY, templateFolder.getName());
+
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        savedTemplateFolder.getAccountId(), null, savedTemplateFolder, Type.CREATE);
+    return savedTemplateFolder;
   }
 
   private List<String> getKeywords(TemplateFolder templateFolder) {
@@ -131,7 +140,11 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     operations.set("name", templateFolder.getName());
     operations.set("keywords", getKeywords(templateFolder));
     Validator.duplicateCheck(() -> wingsPersistence.update(query, operations), "name", templateFolder.getName());
-    return get(savedTemplateFolder.getUuid());
+    TemplateFolder updatedTemplateFolder = get(savedTemplateFolder.getUuid());
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        updatedTemplateFolder.getAccountId(), savedTemplateFolder, updatedTemplateFolder, Type.UPDATE);
+    return updatedTemplateFolder;
   }
 
   private void validateScope(TemplateFolder templateFolder, TemplateFolder savedTemplateFolder) {
@@ -156,7 +169,12 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
                                   .filter(ACCOUNT_ID_KEY, templateFolder.getAccountId())
                                   .field(TemplateFolder.PATH_ID_KEY)
                                   .contains(templateFolderUuid));
-      return wingsPersistence.delete(TemplateFolder.class, templateFolderUuid);
+      boolean deleted = wingsPersistence.delete(TemplateFolder.class, templateFolderUuid);
+      // TODO: AUDIT: Once this entity is yamlized, this can be removed
+      if (deleted) {
+        auditServiceHelper.reportDeleteForAuditingUsingAccountId(templateFolder.getAccountId(), templateFolder);
+      }
+      return deleted;
     }
     return false;
   }

@@ -52,6 +52,7 @@ import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -125,7 +126,10 @@ public class TemplateServiceImpl implements TemplateService {
     // Save Versioned template
     wingsPersistence.save(buildTemplateDetails(template, templateUuid));
 
-    return get(templateUuid);
+    Template savedTemplate = get(templateUuid);
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.CREATE);
+    return savedTemplate;
   }
 
   private VersionedTemplate buildTemplateDetails(Template template, String templateUuid) {
@@ -212,6 +216,8 @@ public class TemplateServiceImpl implements TemplateService {
     if (templateDetailsChanged) {
       executorService.submit(() -> updateLinkedEntities(savedTemplate));
     }
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        savedTemplate.getAccountId(), oldTemplate, savedTemplate, Type.UPDATE);
     return savedTemplate;
   }
 
@@ -313,6 +319,10 @@ public class TemplateServiceImpl implements TemplateService {
                                   .filter(TEMPLATE_UUID_KEY, templateUuid));
     }
 
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    if (templateDeleted) {
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(template.getAccountId(), template);
+    }
     return templateDeleted;
   }
 

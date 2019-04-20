@@ -190,5 +190,13 @@ public enum EntityType {
 
   MANIFEST_FILE,
 
-  SERVICE_VARIABLE
+  SERVICE_VARIABLE,
+
+  TRIGGER,
+
+  ROLE,
+
+  TEMPLATE,
+
+  TEMPLATE_FOLDER
 }
