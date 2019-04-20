@@ -14,7 +14,7 @@ import software.wings.beans.Service;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class ServiceRestUtil extends AbstractFunctionalTest {
+public class ServiceRestUtils extends AbstractFunctionalTest {
   /**
    *
    * @param appId

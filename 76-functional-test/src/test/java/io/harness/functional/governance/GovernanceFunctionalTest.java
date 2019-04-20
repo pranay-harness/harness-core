@@ -15,7 +15,7 @@ import static software.wings.sm.StateType.HTTP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -57,7 +57,7 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowRestUtil workflowRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
 
   Application application;
   final Seed seed = new Seed(0);

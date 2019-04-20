@@ -7,10 +7,10 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.GuerillaMailUtil;
+import io.harness.RestUtils.GuerillaMailUtils;
 import io.harness.RestUtils.HTMLUtils;
 import io.harness.RestUtils.MailinatorRestUtils;
-import io.harness.RestUtils.UserRestUtil;
+import io.harness.RestUtils.UserRestUtils;
 import io.harness.Utils.TestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Retry;
@@ -55,8 +55,8 @@ public class UserTest extends AbstractFunctionalTest {
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   final String EXPECTED_SUBJECT = "You are invited to join Harness at Harness platform";
   final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
-  UserRestUtil urUtil = new UserRestUtil();
-  GuerillaMailUtil gmailUtil = new GuerillaMailUtil();
+  UserRestUtils urUtil = new UserRestUtils();
+  GuerillaMailUtils gmailUtil = new GuerillaMailUtils();
   MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
   HTMLUtils htmlUtils = new HTMLUtils();
   TestUtils testUtils = new TestUtils();
@@ -78,7 +78,7 @@ public class UserTest extends AbstractFunctionalTest {
   public void listUsers() {
     logger.info("Starting the list users test");
     Account account = this.getAccount();
-    UserRestUtil urUtil = new UserRestUtil();
+    UserRestUtils urUtil = new UserRestUtils();
     List<User> userList = urUtil.getUserList(account.getUuid());
     assertNotNull(userList);
     assertTrue(userList.size() > 0);

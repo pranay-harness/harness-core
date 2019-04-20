@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtil;
+import io.harness.RestUtils.ArtifactRestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
@@ -42,7 +42,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private ArtifactRestUtil artifactRestUtil;
+  @Inject private ArtifactRestUtils artifactRestUtil;
 
   private static final String GCS_PROJECT = "exploration-161417";
   private static final String GCS_ARTIFACT = "todolist-v1.0.zip";

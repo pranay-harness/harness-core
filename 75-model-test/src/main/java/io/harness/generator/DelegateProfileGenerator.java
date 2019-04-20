@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 import software.wings.beans.DelegateProfile;
+import software.wings.beans.DelegateProfile.DelegateProfileKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 
@@ -37,7 +38,9 @@ public class DelegateProfileGenerator {
   }
 
   public DelegateProfile exists(DelegateProfile profile) {
-    return wingsPersistence.createQuery(DelegateProfile.class).filter("name", profile.getName()).get();
+    return wingsPersistence.createQuery(DelegateProfile.class)
+        .filter(DelegateProfileKeys.name, profile.getName())
+        .get();
   }
 
   public DelegateProfile ensurePredefined(DelegateProfile profile) {

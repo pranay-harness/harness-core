@@ -11,8 +11,8 @@ import static software.wings.sm.StateType.K8S_DELETE;
 
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactStreamRestUtil;
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.ArtifactStreamRestUtils;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
@@ -64,9 +64,9 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private WorkflowRestUtil workflowRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
   @Inject private TestConstants testConstants;
-  @Inject private ArtifactStreamRestUtil artifactStreamRestUtil;
+  @Inject private ArtifactStreamRestUtils artifactStreamRestUtil;
 
   private static final long TIMEOUT = 1200000; // 20 minutes
 

@@ -15,7 +15,7 @@ import static software.wings.sm.StateType.JIRA_CREATE_UPDATE;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -62,7 +62,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private WorkflowService workflowService;
   @Inject private SettingsService settingsService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowRestUtil workflowRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
 
   Application application;
 

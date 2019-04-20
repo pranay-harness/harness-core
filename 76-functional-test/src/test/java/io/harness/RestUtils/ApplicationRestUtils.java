@@ -12,7 +12,7 @@ import software.wings.beans.Application;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class ApplicationRestUtil extends AbstractFunctionalTest {
+public class ApplicationRestUtils extends AbstractFunctionalTest {
   /**
    *
    * @param application

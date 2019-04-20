@@ -16,7 +16,7 @@ import software.wings.beans.WorkflowPhase;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class WorkflowRestUtil extends AbstractFunctionalTest {
+public class WorkflowRestUtils extends AbstractFunctionalTest {
   public Workflow createWorkflow(String accountId, String appId, Workflow workflow) {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 

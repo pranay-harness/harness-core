@@ -17,7 +17,7 @@ import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class ArtifactRestUtil extends AbstractFunctionalTest {
+public class ArtifactRestUtils extends AbstractFunctionalTest {
   public List<Artifact> fetchArtifactByArtifactStream(String appId, String artifactStreamId) {
     GenericType<RestResponse<PageResponse<Artifact>>> artifactType =
         new GenericType<RestResponse<PageResponse<Artifact>>>() {};

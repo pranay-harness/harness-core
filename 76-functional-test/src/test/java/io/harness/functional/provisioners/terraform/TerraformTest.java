@@ -10,8 +10,8 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.InfraProvisionerRestUtil;
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.InfraProvisionerRestUtils;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -73,8 +73,8 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private SecretGenerator secretGenerator;
-  @Inject private InfraProvisionerRestUtil infraProvisionerRestUtil;
-  @Inject private WorkflowRestUtil workflowRestUtil;
+  @Inject private InfraProvisionerRestUtils infraProvisionerRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ScmSecret scmSecret;
 

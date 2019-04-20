@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.task.CapabilityUtil.isTaskTypeMigratedToCapabilityFramework;
+import static io.harness.delegate.task.CapabilityUtils.isTaskTypeMigratedToCapabilityFramework;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;

@@ -10,15 +10,15 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import io.harness.RestUtils.ApplicationRestUtil;
-import io.harness.RestUtils.ArtifactStreamRestUtil;
-import io.harness.RestUtils.CloudProviderUtil;
-import io.harness.RestUtils.ConnectorUtil;
-import io.harness.RestUtils.EnvironmentRestUtil;
-import io.harness.RestUtils.ExecutionRestUtil;
-import io.harness.RestUtils.SSHKeysUtil;
-import io.harness.RestUtils.ServiceRestUtil;
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.ApplicationRestUtils;
+import io.harness.RestUtils.ArtifactStreamRestUtils;
+import io.harness.RestUtils.CloudProviderUtils;
+import io.harness.RestUtils.ConnectorUtils;
+import io.harness.RestUtils.EnvironmentRestUtils;
+import io.harness.RestUtils.ExecutionRestUtils;
+import io.harness.RestUtils.SSHKeysUtils;
+import io.harness.RestUtils.ServiceRestUtils;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -52,12 +52,12 @@ import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
-  ApplicationRestUtil applicationRestUtil = new ApplicationRestUtil();
-  ServiceRestUtil serviceRestUtil = new ServiceRestUtil();
-  EnvironmentRestUtil environmentRestUtil = new EnvironmentRestUtil();
-  WorkflowRestUtil workflowRestUtil = new WorkflowRestUtil();
-  ArtifactStreamRestUtil artifactStreamRestUtil = new ArtifactStreamRestUtil();
-  ExecutionRestUtil executionRestUtil = new ExecutionRestUtil();
+  ApplicationRestUtils applicationRestUtil = new ApplicationRestUtils();
+  ServiceRestUtils serviceRestUtil = new ServiceRestUtils();
+  EnvironmentRestUtils environmentRestUtil = new EnvironmentRestUtils();
+  WorkflowRestUtils workflowRestUtil = new WorkflowRestUtils();
+  ArtifactStreamRestUtils artifactStreamRestUtil = new ArtifactStreamRestUtils();
+  ExecutionRestUtils executionRestUtil = new ExecutionRestUtils();
   GlobalSettingsDataStorage globalSettingsDataStorage = new GlobalSettingsDataStorage();
 
   // TEST constants
@@ -98,9 +98,9 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void TC1_createApplication() {
     // Test data setup
-    cloudProviderId = CloudProviderUtil.createAWSCloudProvider(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
-    artifactoryId = ConnectorUtil.createArtifactoryConnector(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
-    sshKeyId = SSHKeysUtil.createSSHKey(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
+    cloudProviderId = CloudProviderUtils.createAWSCloudProvider(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
+    artifactoryId = ConnectorUtils.createArtifactoryConnector(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
+    sshKeyId = SSHKeysUtils.createSSHKey(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
 
     Application warApp = anApplication().withName(APP_NAME).build();
     application = applicationRestUtil.createApplication(warApp);

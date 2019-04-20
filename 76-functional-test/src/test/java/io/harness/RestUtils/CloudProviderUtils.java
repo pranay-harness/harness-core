@@ -13,7 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 
 @Singleton
-public class CloudProviderUtil {
+public class CloudProviderUtils {
   public static String createAWSCloudProvider(String bearerToken, String cloudPrividerName, String accountId) {
     SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -27,7 +27,7 @@ public class CloudProviderUtil {
                            .build())
             .build();
 
-    JsonPath setAttrResponse = SettingsUtil.create(bearerToken, accountId, settingAttribute);
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
     assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }

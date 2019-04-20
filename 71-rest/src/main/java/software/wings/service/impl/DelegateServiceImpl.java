@@ -93,7 +93,7 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.CapabilityUtil;
+import io.harness.delegate.task.CapabilityUtils;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -1400,7 +1400,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
   // TODO: either new CapabilityCheckController or existing ValidationClass is used.
   private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
-    if (!CapabilityUtil.isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())
+    if (!CapabilityUtils.isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())
         || !featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId())) {
       return;
     }

@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -20,6 +21,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ServiceSecretKeyKeys")
 public class ServiceSecretKey extends Base {
   private String serviceSecret;
   private ServiceType serviceType;

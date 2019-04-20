@@ -11,9 +11,9 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtil;
+import io.harness.RestUtils.ArtifactRestUtils;
 import io.harness.RestUtils.ServiceVariablesUtils;
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.Utils.WorkflowUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -74,8 +74,8 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactStreamManager artifactStreamManager;
-  @Inject private WorkflowRestUtil workflowRestUtil;
-  @Inject private ArtifactRestUtil artifactRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
+  @Inject private ArtifactRestUtils artifactRestUtil;
 
   final String NORMAL_TEXT = "normalText";
   final String OVERRIDABLE_TEXT = "overridableText";

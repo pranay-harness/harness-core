@@ -15,7 +15,7 @@ import java.util.Map;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class ExecutionRestUtil extends AbstractFunctionalTest {
+public class ExecutionRestUtils extends AbstractFunctionalTest {
   /**
    *
    * @param appId

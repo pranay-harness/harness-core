@@ -14,7 +14,7 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class InfraProvisionerRestUtil extends AbstractFunctionalTest {
+public class InfraProvisionerRestUtils extends AbstractFunctionalTest {
   public InfrastructureProvisioner saveProvisioner(String appId, InfrastructureProvisioner infrastructureProvisioner)
       throws Exception {
     GenericType<RestResponse<TerraformInfrastructureProvisioner>> provisioner =

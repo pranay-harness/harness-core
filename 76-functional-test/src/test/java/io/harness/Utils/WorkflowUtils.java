@@ -5,7 +5,7 @@ import static software.wings.sm.StateType.HTTP;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.WorkflowRestUtils;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class WorkflowUtils {
-  WorkflowRestUtil workflowRestUtil = new WorkflowRestUtil();
+  WorkflowRestUtils workflowRestUtil = new WorkflowRestUtils();
 
   public WorkflowPhase modifyPhases(Workflow savedWorkflow, String applicationId) {
     CanaryOrchestrationWorkflow orchestrationWorkflow =

@@ -4,7 +4,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.google.gson.JsonObject;
 
-import io.harness.RestUtils.UserGroupRestUtil;
+import io.harness.RestUtils.UserGroupRestUtils;
 import software.wings.beans.Account;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserGroupUtils {
-  private static UserGroupRestUtil userGroupRestUtil = new UserGroupRestUtil();
+  private static UserGroupRestUtils userGroupRestUtil = new UserGroupRestUtils();
 
   public static UserGroup getUserGroup(Account account, String bearerToken, String groupName) {
     List<UserGroup> userGroupList = userGroupRestUtil.getUserGroups(account, bearerToken);

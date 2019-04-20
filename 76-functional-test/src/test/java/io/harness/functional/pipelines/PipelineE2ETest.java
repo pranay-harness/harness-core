@@ -11,11 +11,11 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtil;
-import io.harness.RestUtils.ArtifactStreamRestUtil;
-import io.harness.RestUtils.ExecutionRestUtil;
+import io.harness.RestUtils.ArtifactRestUtils;
+import io.harness.RestUtils.ArtifactStreamRestUtils;
+import io.harness.RestUtils.ExecutionRestUtils;
 import io.harness.RestUtils.PipelineRestUtils;
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.Utils.PipelineUtils;
 import io.harness.Utils.WorkflowUtils;
 import io.harness.beans.ExecutionStatus;
@@ -72,11 +72,11 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactStreamManager artifactStreamManager;
-  @Inject private WorkflowRestUtil workflowRestUtil;
-  @Inject private ArtifactRestUtil artifactRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
+  @Inject private ArtifactRestUtils artifactRestUtil;
   PipelineRestUtils pipelineRestUtils = new PipelineRestUtils();
-  ArtifactStreamRestUtil artifactStreamRestUtil = new ArtifactStreamRestUtil();
-  ExecutionRestUtil executionRestUtil = new ExecutionRestUtil();
+  ArtifactStreamRestUtils artifactStreamRestUtil = new ArtifactStreamRestUtils();
+  ExecutionRestUtils executionRestUtil = new ExecutionRestUtils();
 
   private Application application;
   private Service service;

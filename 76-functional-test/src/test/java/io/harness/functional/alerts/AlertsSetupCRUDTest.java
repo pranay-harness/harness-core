@@ -6,8 +6,8 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
 
-import io.harness.RestUtils.AlertsRestUtil;
-import io.harness.RestUtils.UserGroupRestUtil;
+import io.harness.RestUtils.AlertsRestUtils;
+import io.harness.RestUtils.UserGroupRestUtils;
 import io.harness.Utils.AlertsUtils;
 import io.harness.Utils.TestUtils;
 import io.harness.Utils.UserGroupUtils;
@@ -33,8 +33,8 @@ import java.util.Set;
 
 @Slf4j
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
-  UserGroupRestUtil userGroupRestUtil = new UserGroupRestUtil();
-  AlertsRestUtil arUtil = new AlertsRestUtil();
+  UserGroupRestUtils userGroupRestUtil = new UserGroupRestUtils();
+  AlertsRestUtils arUtil = new AlertsRestUtils();
 
   @Test
   @Owner(emails = "swamy@harness.io", resent = false)

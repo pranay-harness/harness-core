@@ -16,7 +16,7 @@ import java.util.HashMap;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class ArtifactStreamRestUtil extends AbstractFunctionalTest {
+public class ArtifactStreamRestUtils extends AbstractFunctionalTest {
   /**
    *
    * @param appId
