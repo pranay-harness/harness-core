@@ -8,9 +8,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.DataStorageMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
@@ -18,9 +17,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.WorkflowExecutionBaselineServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
-
+@Slf4j
 public class NewRelicMetricDataBaselineMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(NewRelicMetricDataBaselineMigration.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DataStoreService dataStoreService;
   @Inject private MainConfiguration mainConfiguration;

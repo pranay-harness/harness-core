@@ -40,9 +40,8 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
 import io.harness.serializer.KryoUtils;
 import io.harness.waiter.ErrorNotifyResponseData;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -121,6 +120,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class K8sStateHelper {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient SettingsService settingsService;
@@ -133,8 +133,6 @@ public class K8sStateHelper {
   @Inject private transient ActivityService activityService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
-
-  private static final Logger logger = LoggerFactory.getLogger(K8sStateHelper.class);
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {

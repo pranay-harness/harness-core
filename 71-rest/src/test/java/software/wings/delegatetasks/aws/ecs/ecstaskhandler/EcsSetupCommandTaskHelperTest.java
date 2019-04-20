@@ -40,6 +40,7 @@ import com.amazonaws.services.ecs.model.ServiceRegistry;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.category.element.UnitTests;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +50,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -66,7 +66,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+@Slf4j
 public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String SECURITY_GROUP_ID_1 = "sg-id";
   public static final String CLUSTER_NAME = "clusterName";
@@ -80,8 +80,6 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String DOCKER_DOMAIN_NAME = "domainName";
   @Mock private AwsClusterService awsClusterService;
   @Spy @InjectMocks @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
-
-  private static Logger logger = LoggerFactory.getLogger(EcsSetupCommandTaskHelperTest.class);
 
   private SettingAttribute computeProvider = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
 

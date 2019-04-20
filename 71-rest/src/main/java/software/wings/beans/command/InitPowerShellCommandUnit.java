@@ -9,8 +9,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
 import software.wings.utils.Validator;
 
@@ -25,11 +23,6 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
   @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
 
   @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = Maps.newHashMap();
-
-  @JsonIgnore
-  @Transient
-  @SchemaIgnore
-  protected static final Logger logger = LoggerFactory.getLogger(InitPowerShellCommandUnit.class);
 
   public InitPowerShellCommandUnit() {
     super(CommandUnitType.EXEC);

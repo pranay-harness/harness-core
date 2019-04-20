@@ -42,8 +42,6 @@ import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceVariable;
@@ -74,8 +72,6 @@ import java.util.concurrent.Callable;
  */
 @Singleton
 public class WingsMongoPersistence extends MongoPersistence implements WingsPersistence, Managed {
-  protected static Logger logger = LoggerFactory.getLogger(WingsMongoPersistence.class);
-
   @Inject private SecretManager secretManager;
 
   /**

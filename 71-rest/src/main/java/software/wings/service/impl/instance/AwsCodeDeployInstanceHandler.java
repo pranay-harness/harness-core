@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
 import software.wings.api.CommandStepExecutionSummary;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 01/30/18
  */
+@Slf4j
 public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
 

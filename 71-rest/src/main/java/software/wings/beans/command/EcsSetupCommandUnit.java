@@ -8,10 +8,9 @@ import io.harness.exception.ExceptionUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -31,8 +30,8 @@ import java.util.Map;
 /**
  * Created by brett on 11/18/17
  */
+@Slf4j
 public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsSetupCommandUnit.class);
   @Inject @Transient private transient EcsSetupCommandHandler ecsSetupCommandHandler;
   @Inject @Transient private transient EcsBlueGreenSetupCommandHandler ecsBlueGreenSetupCommandHandler;
   @Inject @Transient private transient EcsBlueGreenRoute53SetupCommandHandler ecsBlueGreenRoute53SetupCommandHandler;

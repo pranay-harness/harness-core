@@ -14,9 +14,9 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.time.Timestamp;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -51,8 +51,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Slf4j
 public class PrometheusState extends AbstractMetricAnalysisState {
-  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(PrometheusState.class);
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
 

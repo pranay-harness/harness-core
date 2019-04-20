@@ -20,7 +20,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -33,8 +32,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.LogService;
 
 public class PruneEntityListenerTest extends WingsBaseTest {
-  public static final Logger logger = LoggerFactory.getLogger(PruneEntityListenerTest.class);
-
   @Mock private WingsPersistence wingsPersistence;
 
   @Mock private LogService logService;

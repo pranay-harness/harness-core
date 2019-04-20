@@ -11,11 +11,10 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.oauth.ProvidersImpl.Gitlab;
@@ -25,6 +24,7 @@ import java.net.URI;
 import java.util.concurrent.ExecutionException;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class GitlabClient extends BaseOauthClient implements OauthClient {
   OAuth20Service service;
 
@@ -32,8 +32,6 @@ public class GitlabClient extends BaseOauthClient implements OauthClient {
   static String NAME_FIELD_NAME = "name";
   static String LOGIN_FIELD_NAME = "login";
   static String PROTECTED_RESOURCE_URL = "https://gitlab.com/api/v4/user";
-
-  static Logger logger = LoggerFactory.getLogger(GithubClientImpl.class);
 
   @Inject
   public GitlabClient(MainConfiguration mainConfiguration, SecretManager secretManager) {

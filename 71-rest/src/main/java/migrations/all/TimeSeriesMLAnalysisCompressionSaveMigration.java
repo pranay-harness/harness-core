@@ -11,16 +11,14 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
-
+@Slf4j
 public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(TimeSeriesMLAnalysisCompressionSaveMigration.class);
   private static final int BATCH_SIZE = 50;
   @Inject private WingsPersistence wingsPersistence;
 

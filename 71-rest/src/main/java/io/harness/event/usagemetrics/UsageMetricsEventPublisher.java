@@ -9,16 +9,15 @@ import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 @Singleton
+@Slf4j
 public class UsageMetricsEventPublisher {
-  private static Logger logger = LoggerFactory.getLogger(UsageMetricsEventPublisher.class);
   @Inject EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
 

@@ -65,11 +65,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -104,8 +104,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class EcsSetupCommandTaskHelper {
-  private static final transient Logger logger = LoggerFactory.getLogger(EcsSetupCommandTaskHelper.class);
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
   @Inject private AwsHelperService awsHelperService;

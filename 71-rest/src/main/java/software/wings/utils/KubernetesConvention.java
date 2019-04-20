@@ -6,8 +6,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.Optional;
@@ -16,9 +15,8 @@ import java.util.regex.Pattern;
 /**
  * Created by brett on 3/8/17
  */
+@Slf4j
 public class KubernetesConvention {
-  private static Logger logger = LoggerFactory.getLogger(KubernetesConvention.class);
-
   public static final String DOT = ".";
   public static final String DASH = "-";
 

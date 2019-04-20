@@ -8,8 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -18,8 +17,8 @@ import java.io.IOException;
 /**
  * Created by rsingh on 10/6/17.
  */
+@Slf4j
 public class KmsTransitionEventListener extends QueueListener<KmsTransitionEvent> {
-  protected static final Logger logger = LoggerFactory.getLogger(KmsTransitionEventListener.class);
   @Inject private SecretManager secretManager;
 
   public KmsTransitionEventListener() {

@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
@@ -52,6 +53,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class PcfInstanceHandler extends InstanceHandler {
   @Inject private PcfHelperService pcfHelperService;
 

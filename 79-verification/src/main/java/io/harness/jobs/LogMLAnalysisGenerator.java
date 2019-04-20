@@ -6,14 +6,12 @@ import static software.wings.beans.FeatureName.LOGML_NEURAL_NET;
 
 import com.google.common.collect.Lists;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.ExceptionUtils;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -32,9 +30,8 @@ import java.util.Set;
 /**
  * Created by sriram_parthasarathy on 8/23/17.
  */
+@Slf4j
 public class LogMLAnalysisGenerator implements Runnable {
-  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisGenerator.class);
-
   private final AnalysisContext context;
   private final String accountId;
   private final String applicationId;

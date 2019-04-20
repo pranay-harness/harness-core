@@ -102,6 +102,7 @@ import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
 import me.snowdrop.istio.api.model.IstioResourceFluent.DestinationRuleSpecNested;
@@ -112,8 +113,6 @@ import me.snowdrop.istio.api.model.v1.networking.VirtualServiceFluent.HttpNested
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -152,9 +151,8 @@ import java.util.regex.Pattern;
 /**
  * Created by brett on 3/3/17
  */
+@Slf4j
 public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesSetupCommandUnit.class);
-
   @Transient private static final Pattern envVarPattern = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]*$");
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =

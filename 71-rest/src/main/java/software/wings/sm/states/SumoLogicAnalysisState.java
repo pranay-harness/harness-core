@@ -7,16 +7,14 @@ import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.sm.states.SumoLogicAnalysisState.SumoHostNameField.SOURCE_HOST;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
@@ -44,9 +42,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by sriram_parthasarathy on 9/11/17.
  */
+@Slf4j
 public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SumoLogicAnalysisState.class);
-
   @Attributes(required = true, title = "Sumo Logic Server") protected String analysisServerConfigId;
 
   public SumoLogicAnalysisState(String name) {

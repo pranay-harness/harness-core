@@ -19,11 +19,10 @@ import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
 import software.wings.utils.Validator;
 
@@ -42,6 +41,7 @@ import java.util.Properties;
 /**
  * Created by peeyushaggarwal on 7/26/16.
  */
+@Slf4j
 @JsonTypeName("INIT")
 public class InitSshCommandUnit extends SshCommandUnit {
   /**
@@ -88,11 +88,6 @@ public class InitSshCommandUnit extends SshCommandUnit {
   @JsonIgnore @Transient @SchemaIgnore private String executionStagingDir;
 
   @JsonIgnore private String launcherScriptFileName;
-
-  @JsonIgnore
-  @Transient
-  @SchemaIgnore
-  protected static final Logger logger = LoggerFactory.getLogger(InitSshCommandUnit.class);
 
   /**
    * Instantiates a new Init command unit.

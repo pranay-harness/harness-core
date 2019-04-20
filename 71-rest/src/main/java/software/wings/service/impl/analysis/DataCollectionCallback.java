@@ -18,9 +18,7 @@ import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Data;
-import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -44,9 +42,8 @@ import java.util.Map;
  */
 @Data
 @Builder
+@Slf4j
 public class DataCollectionCallback implements NotifyCallback {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(DataCollectionCallback.class);
-
   @Inject private transient WaitNotifyEngine waitNotifyEngine;
   @Inject private transient WingsPersistence wingsPersistence;
   @Inject private transient AlertService alertService;

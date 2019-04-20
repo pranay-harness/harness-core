@@ -10,10 +10,9 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.config.LogzConfig;
@@ -39,9 +38,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 8/21/17.
  */
+@Slf4j
 public class LogzAnalysisState extends ElkAnalysisState {
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(LogzAnalysisState.class);
-
   public LogzAnalysisState(String name) {
     super(name, StateType.LOGZ.getType());
   }

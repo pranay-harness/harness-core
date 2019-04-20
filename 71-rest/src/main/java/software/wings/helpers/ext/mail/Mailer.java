@@ -15,13 +15,12 @@ import freemarker.template.TemplateException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -34,9 +33,9 @@ import javax.mail.internet.InternetAddress;
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */
+@Slf4j
 public class Mailer {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
-  public static final Logger logger = LoggerFactory.getLogger(Mailer.class);
 
   @Inject private EncryptionService encryptionService;
   /**

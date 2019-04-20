@@ -15,9 +15,8 @@ import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
-import org.mongodb.morphia.annotations.Transient;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
@@ -61,9 +60,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 8/28/17.
  */
+@Slf4j
 public class NewRelicState extends AbstractMetricAnalysisState {
-  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(NewRelicState.class);
-
   @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationId;

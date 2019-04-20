@@ -8,12 +8,9 @@ import io.harness.beans.SweepingOutput;
 import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 
 public class SweepingPhaseMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(SweepingPhaseMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

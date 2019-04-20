@@ -16,11 +16,10 @@ import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import io.harness.delegate.command.CommandExecutionResult;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
 import software.wings.utils.Validator;
 
@@ -31,7 +30,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
-
+@Slf4j
 public class InitSshCommandUnitV2 extends SshCommandUnit {
   /**
    * The constant INITIALIZE_UNIT.
@@ -76,11 +75,6 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
   @JsonIgnore @Transient @SchemaIgnore private String preInitCommand;
 
   @JsonIgnore @Transient @SchemaIgnore private String executionStagingDir;
-
-  @JsonIgnore
-  @Transient
-  @SchemaIgnore
-  protected static final Logger logger = LoggerFactory.getLogger(InitSshCommandUnitV2.class);
 
   public InitSshCommandUnitV2() {
     super(CommandUnitType.EXEC);

@@ -17,10 +17,8 @@ import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.EcsResizeParams;
@@ -46,8 +44,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class EcsDeployCommandTaskHelper {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsDeployCommandTaskHelper.class);
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
   @Inject private AwsHelperService awsHelperService;

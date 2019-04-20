@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -32,7 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+@Slf4j
 public class AzureInstanceHandler extends InstanceHandler {
   @Inject protected AzureHelperService azureHelperService;
 

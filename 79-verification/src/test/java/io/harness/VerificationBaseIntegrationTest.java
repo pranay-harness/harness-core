@@ -32,6 +32,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.VerificationTokenGenerator;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.service.intfc.LearningEngineService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.glassfish.jersey.client.ClientConfig;
@@ -39,8 +40,6 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceType;
@@ -70,11 +69,11 @@ import javax.ws.rs.core.Response.Status;
 /**
  * Created by rsingh on 9/25/18.
  */
+@Slf4j
 public abstract class VerificationBaseIntegrationTest
     extends VerificationBaseTest implements WingsIntegrationTestConstants {
   public static String VERIFICATION_API_BASE = "https://localhost:7070/verification";
 
-  protected static final Logger logger = LoggerFactory.getLogger(VerificationBaseIntegrationTest.class);
   protected static Client client;
 
   protected String accountId = "INVALID_ID";
