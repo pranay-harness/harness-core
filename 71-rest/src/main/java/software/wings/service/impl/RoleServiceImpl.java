@@ -9,10 +9,12 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
@@ -29,6 +31,8 @@ public class RoleServiceImpl implements RoleService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
+  @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private AppService appService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.RoleService#list(software.wings.dl.PageRequest)
@@ -43,7 +47,11 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   public Role save(Role role) {
-    return wingsPersistence.saveAndGet(Role.class, role);
+    Role savedRole = wingsPersistence.saveAndGet(Role.class, role);
+
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportForAuditingUsingAccountId(role.getAccountId(), null, role, Type.CREATE);
+    return savedRole;
   }
 
   /* (non-Javadoc)
@@ -67,7 +75,11 @@ public class RoleServiceImpl implements RoleService {
     wingsPersistence.updateFields(Role.class, role.getUuid(),
         ImmutableMap.of(
             "name", role.getName(), "description", role.getDescription(), "permissions", role.getPermissions()));
-    return get(role.getUuid());
+
+    Role updatedRole = get(role.getUuid());
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportForAuditingUsingAccountId(role.getAccountId(), savedRole, updatedRole, Type.UPDATE);
+    return updatedRole;
   }
 
   private void ensureNonAdminRole(Role role) {
@@ -95,6 +107,9 @@ public class RoleServiceImpl implements RoleService {
         }
       });
     }
+
+    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(role.getAccountId(), role);
   }
 
   @Override

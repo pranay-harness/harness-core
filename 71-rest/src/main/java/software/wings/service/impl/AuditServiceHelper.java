@@ -24,6 +24,14 @@ public class AuditServiceHelper {
     }
   }
 
+  public void reportDeleteForAuditingUsingAccountId(String accountId, Object entity) {
+    try {
+      auditService.registerAuditActions(accountId, entity, null, Type.DELETE);
+    } catch (Exception e) {
+      logger.warn("Failed to Audit \"Delete\" purge record");
+    }
+  }
+
   public void reportForAuditingUsingAppId(String appId, Object oldEntity, Object newEntity, Type type) {
     try {
       String accountId = appService.getAccountIdByAppId(appId);

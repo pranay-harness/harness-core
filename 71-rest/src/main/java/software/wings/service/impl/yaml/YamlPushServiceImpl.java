@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.FeatureName.AUDIT_TRAIL;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -77,9 +76,7 @@ public class YamlPushServiceImpl implements YamlPushService {
 
   private <T> void performAuditForEntityChange(String accountId, T oldEntity, T newEntity, Type type) {
     try {
-      if (featureFlagService.isEnabled(AUDIT_TRAIL, accountId)) {
-        auditService.registerAuditActions(accountId, oldEntity, newEntity, type);
-      }
+      auditService.registerAuditActions(accountId, oldEntity, newEntity, type);
     } catch (Exception e) {
       getErrorMsgForAudit(oldEntity, newEntity, type, e);
     }

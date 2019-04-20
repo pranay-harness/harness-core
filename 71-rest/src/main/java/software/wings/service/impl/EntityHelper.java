@@ -54,6 +54,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.Role;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.ServiceVariable;
@@ -82,6 +83,9 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.settings.SettingValue;
@@ -163,6 +167,15 @@ public class EntityHelper {
       affectedResourceId = provisioner.getUuid();
       affectedResourceName = provisioner.getName();
       affectedResourceType = EntityType.PROVISIONER.name();
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof Trigger) {
+      Trigger trigger = (Trigger) entity;
+      entityType = EntityType.TRIGGER.name();
+      entityName = trigger.getName();
+      appId = trigger.getAppId();
+      affectedResourceId = trigger.getUuid();
+      affectedResourceName = trigger.getName();
+      affectedResourceType = EntityType.TRIGGER.name();
       affectedResourceOperation = type.name();
     } else if (entity instanceof ArtifactStream) {
       ArtifactStream artifactStream = (ArtifactStream) entity;
@@ -332,6 +345,33 @@ public class EntityHelper {
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
       }
+    } else if (entity instanceof Role) {
+      Role role = (Role) entity;
+      entityType = EntityType.ROLE.name();
+      entityName = role.getName();
+      appId = role.getAppId();
+      affectedResourceId = role.getUuid();
+      affectedResourceName = role.getName();
+      affectedResourceType = EntityType.ROLE.name();
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof Template) {
+      Template template = (Template) entity;
+      entityType = EntityType.TEMPLATE.name();
+      entityName = template.getName();
+      appId = template.getAppId();
+      affectedResourceId = template.getUuid();
+      affectedResourceName = template.getName();
+      affectedResourceType = EntityType.TEMPLATE.name();
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof TemplateFolder) {
+      TemplateFolder templateFolder = (TemplateFolder) entity;
+      entityType = EntityType.TEMPLATE_FOLDER.name();
+      entityName = templateFolder.getName();
+      appId = templateFolder.getAppId();
+      affectedResourceId = templateFolder.getUuid();
+      affectedResourceName = templateFolder.getName();
+      affectedResourceType = EntityType.TEMPLATE_FOLDER.name();
+      affectedResourceOperation = type.name();
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));
       entityType = format("Object of class: [%s]", entity.getClass().getSimpleName());
