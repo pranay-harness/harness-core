@@ -30,11 +30,11 @@ public class VersionInfoResource {
   @ExceptionMetered
   public RestResponse<VersionPackage> get() {
     return new RestResponse<>(VersionPackage.builder()
-                                  .version(versionInfoManager.getVersionInfo())
-                                  .runtime(RuntimeInfo.builder()
-                                               .primary(configurationController.isPrimary())
-                                               .primaryVersion(configurationController.getPrimaryVersion())
-                                               .build())
+                                  .versionInfo(versionInfoManager.getVersionInfo())
+                                  .runtimeInfo(RuntimeInfo.builder()
+                                                   .primary(configurationController.isPrimary())
+                                                   .primaryVersion(configurationController.getPrimaryVersion())
+                                                   .build())
                                   .build());
   }
 }
