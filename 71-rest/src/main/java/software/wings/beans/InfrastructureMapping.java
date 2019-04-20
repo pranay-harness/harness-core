@@ -17,6 +17,7 @@ import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -45,6 +46,7 @@ import javax.annotation.Nullable;
                , @Field("envId"), @Field("name") }))
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
 public abstract class InfrastructureMapping extends Base implements EncryptableSetting, PersistentIterable {
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";

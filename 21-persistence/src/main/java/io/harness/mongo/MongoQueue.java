@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queuable;
+import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
@@ -93,16 +94,16 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       final Date now = new Date();
 
       Query<T> query = createQuery();
-      query.or(query.criteria(Queuable.RUNNING_KEY).equal(false),
-          query.criteria(Queuable.RESET_TIMESTAMP_KEY).lessThanOrEq(now));
-      query.field(Queuable.EARLIEST_GET_KEY)
+      query.or(query.criteria(QueuableKeys.running).equal(false),
+          query.criteria(QueuableKeys.resetTimestamp).lessThanOrEq(now));
+      query.field(QueuableKeys.earliestGet)
           .lessThanOrEq(now)
-          .order(Sort.descending(Queuable.PRIORITY_KEY), Sort.ascending(Queuable.CREATED_KEY));
+          .order(Sort.descending(QueuableKeys.priority), Sort.ascending(QueuableKeys.created));
 
       UpdateOperations<T> updateOperations =
           datastore.createUpdateOperations(klass)
-              .set(Queuable.RUNNING_KEY, true)
-              .set(Queuable.RESET_TIMESTAMP_KEY, new Date(now.getTime() + resetDurationMillis()));
+              .set(QueuableKeys.running, true)
+              .set(QueuableKeys.resetTimestamp, new Date(now.getTime() + resetDurationMillis()));
 
       T message = HPersistence.retry(() -> datastore.findAndModify(query, updateOperations));
       if (message != null) {
@@ -129,19 +130,19 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
     Query<T> query = persistence.createQuery(klass)
-                         .filter(Queuable.ID_KEY, message.getId())
-                         .field(Queuable.RESET_TIMESTAMP_KEY)
+                         .filter(QueuableKeys.id, message.getId())
+                         .field(QueuableKeys.resetTimestamp)
                          .lessThan(resetTimestamp)
-                         .filter(Queuable.RUNNING_KEY, true);
+                         .filter(QueuableKeys.running, true);
 
     UpdateOperations<T> updateOperations =
-        persistence.createUpdateOperations(klass).set(Queuable.RESET_TIMESTAMP_KEY, resetTimestamp);
+        persistence.createUpdateOperations(klass).set(QueuableKeys.resetTimestamp, resetTimestamp);
 
     if (persistence.findAndModify(query, updateOperations, HPersistence.returnOldOptions) != null) {
       message.setResetTimestamp(resetTimestamp);
       return;
     }
-    final T currentState = persistence.createQuery(klass).filter(Queuable.ID_KEY, message.getId()).get();
+    final T currentState = persistence.createQuery(klass).filter(QueuableKeys.id, message.getId()).get();
     logger.error("Reset duration failed for {}", currentState.toString());
   }
 
@@ -155,9 +156,9 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       case ALL:
         return datastore.getCount(klass);
       case RUNNING:
-        return datastore.getCount(createQuery().filter(Queuable.RUNNING_KEY, true));
+        return datastore.getCount(createQuery().filter(QueuableKeys.running, true));
       case NOT_RUNNING:
-        return datastore.getCount(createQuery().filter(Queuable.RUNNING_KEY, false));
+        return datastore.getCount(createQuery().filter(QueuableKeys.running, false));
       default:
         unhandled(filter);
     }
@@ -180,11 +181,11 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(id);
     Objects.requireNonNull(earliestGet);
 
-    persistence.update(persistence.createQuery(klass, excludeAuthority).filter(Queuable.ID_KEY, id),
+    persistence.update(persistence.createQuery(klass, excludeAuthority).filter(QueuableKeys.id, id),
         persistence.createUpdateOperations(klass)
-            .set(Queuable.RUNNING_KEY, false)
-            .set(Queuable.RETRIES_KEY, retries)
-            .set(Queuable.EARLIEST_GET_KEY, earliestGet));
+            .set(QueuableKeys.running, false)
+            .set(QueuableKeys.retries, retries)
+            .set(QueuableKeys.earliestGet, earliestGet));
   }
 
   @Override
@@ -219,7 +220,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   private Query<T> createQuery() {
     final Query<T> query = persistence.createQuery(klass, ReadPref.CRITICAL);
     if (filterWithVersion) {
-      query.filter(Queuable.VERSION_KEY, versionInfoManager.getVersionInfo().getVersion());
+      query.filter(QueuableKeys.version, versionInfoManager.getVersionInfo().getVersion());
     }
     return query;
   }

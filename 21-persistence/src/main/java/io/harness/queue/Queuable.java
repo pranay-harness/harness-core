@@ -3,6 +3,7 @@ package io.harness.queue;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.persistence.PersistentEntity;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
@@ -19,16 +20,8 @@ import java.util.Date;
     , @Field("created"), @Field("earliestGet"), @Field("running"), @Field("resetTimestamp"), @Field("version")
   })
 })
+@FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
-  public static final String CREATED_KEY = "created";
-  public static final String EARLIEST_GET_KEY = "earliestGet";
-  public static final String ID_KEY = "id";
-  public static final String PRIORITY_KEY = "priority";
-  public static final String RESET_TIMESTAMP_KEY = "resetTimestamp";
-  public static final String RETRIES_KEY = "retries";
-  public static final String RUNNING_KEY = "running";
-  public static final String VERSION_KEY = "version";
-
   @Id private String id;
   private boolean running;
   private Date resetTimestamp = new Date(Long.MAX_VALUE);

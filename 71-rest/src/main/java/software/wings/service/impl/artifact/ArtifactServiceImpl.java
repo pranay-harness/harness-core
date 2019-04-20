@@ -36,7 +36,6 @@ import static software.wings.beans.artifact.Artifact.Status.REJECTED;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStream.ARTIFACT_STREAM_TYPE_KEY;
-import static software.wings.beans.artifact.ArtifactStream.METADATA_ONLY_KEY;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
@@ -73,6 +72,7 @@ import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.collect.CollectEvent;
@@ -566,7 +566,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     try (HIterator<ArtifactStream> artifactStreams = new HIterator(wingsPersistence.createQuery(ArtifactStream.class)
                                                                        .project(ARTIFACT_STREAM_TYPE_KEY, true)
                                                                        .project(APP_ID_KEY, true)
-                                                                       .project(METADATA_ONLY_KEY, true)
+                                                                       .project(ArtifactStreamKeys.metadataOnly, true)
                                                                        .fetch())) {
       while (artifactStreams.hasNext()) {
         ArtifactStream artifactStream = artifactStreams.next();

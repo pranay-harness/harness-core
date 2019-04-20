@@ -85,6 +85,7 @@ import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.common.Constants;
@@ -503,7 +504,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     final Semaphore artifactCollectionSemaphore = new Semaphore(25);
     PersistenceIterator artifactCollectionIterator = MongoPersistenceIterator.<ArtifactStream>builder()
                                                          .clazz(ArtifactStream.class)
-                                                         .fieldName(ArtifactStream.NEXT_ITERATION_KEY)
+                                                         .fieldName(ArtifactStreamKeys.nextIteration)
                                                          .targetInterval(ofMinutes(1))
                                                          .acceptableDelay(ofSeconds(30))
                                                          .executorService(artifactCollectionExecutor)
@@ -522,7 +523,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     PersistenceIterator artifactCleanupIterator =
         MongoPersistenceIterator.<ArtifactStream>builder()
             .clazz(ArtifactStream.class)
-            .fieldName(ArtifactStream.NEXT_CLEANUP_ITERATION_KEY)
+            .fieldName(ArtifactStreamKeys.nextCleanupIteration)
             .targetInterval(ofHours(2))
             .acceptableDelay(ofSeconds(30))
             .executorService(artifactCollectionExecutor)

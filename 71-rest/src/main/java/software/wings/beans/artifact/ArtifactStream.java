@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -40,6 +41,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ArtifactStreamKeys")
 public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
 
@@ -48,10 +50,6 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   public static final String NAME_KEY = "name";
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
-  public static final String METADATA_ONLY_KEY = "metadataOnly";
-  public static final String SETTING_ID_KEY = "settingId";
-  public static final String NEXT_ITERATION_KEY = "nextIteration";
-  public static final String NEXT_CLEANUP_ITERATION_KEY = "nextCleanupIteration";
 
   private String artifactStreamType;
   private String sourceName;
@@ -99,12 +97,12 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    return NEXT_CLEANUP_ITERATION_KEY.equals(fieldName) ? nextCleanupIteration : nextIteration;
+    return ArtifactStreamKeys.nextCleanupIteration.equals(fieldName) ? nextCleanupIteration : nextIteration;
   }
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {
-    if (NEXT_CLEANUP_ITERATION_KEY.equals(fieldName)) {
+    if (ArtifactStreamKeys.nextCleanupIteration.equals(fieldName)) {
       this.nextCleanupIteration = nextIteration;
       return;
     }
