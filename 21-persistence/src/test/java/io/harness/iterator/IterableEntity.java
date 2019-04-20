@@ -3,15 +3,15 @@ package io.harness.iterator;
 import io.harness.persistence.PersistentIterable;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
 @Entity(value = "!!!testIterable")
+@FieldNameConstants(innerTypeName = "IterableEntityKeys")
 public class IterableEntity implements PersistentIterable {
-  public static final String NEXT_ITERATION_KEY = "nextIteration";
-
   @Id private String uuid;
   private Long nextIteration;
 

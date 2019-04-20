@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
+import io.harness.iterator.IterableEntity.IterableEntityKeys;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
@@ -48,7 +49,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   public void setup() {
     iterator = MongoPersistenceIterator.<IterableEntity>builder()
                    .clazz(IterableEntity.class)
-                   .fieldName(IterableEntity.NEXT_ITERATION_KEY)
+                   .fieldName(IterableEntityKeys.nextIteration)
                    .targetInterval(ofSeconds(10))
                    .acceptableDelay(ofSeconds(1))
                    .executorService(executorService)

@@ -1,11 +1,13 @@
 package io.harness.beans;
 
+import io.harness.beans.SweepingOutput.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -23,22 +25,21 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Indexes({
   @Index(options = @IndexOptions(name = "uniquePipelineExecution", unique = true),
-      fields = { @Field("appId")
-                 , @Field("name"), @Field("pipelineExecutionId") })
+      fields =
+      {
+        @Field(SweepingOutputKeys.appId)
+        , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.pipelineExecutionId)
+      })
   ,
       @Index(options = @IndexOptions(name = "uniqueWorkflowExecution", unique = true), fields = {
-        @Field("appId"), @Field("name"), @Field("workflowExecutionId")
+        @Field(SweepingOutputKeys.appId)
+        , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionId)
       }), @Index(options = @IndexOptions(name = "uniquePhaseExecution", unique = true), fields = {
-        @Field("appId"), @Field("name"), @Field("phaseExecutionId")
+        @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId)
       })
 })
+@FieldNameConstants(innerTypeName = "SweepingOutputKeys")
 public class SweepingOutput implements PersistentEntity, UuidAccess {
-  public static final String APP_ID_KEY = "appId";
-  public static final String NAME_KEY = "name";
-  public static final String PHASE_EXECUTION_ID_KEY = "phaseExecutionId";
-  public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
-  public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
-
   @Id private String uuid;
   private String appId;
   private String pipelineExecutionId;
