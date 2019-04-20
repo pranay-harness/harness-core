@@ -6,6 +6,6 @@ import lombok.Value;
 @Value
 @Builder
 public class VersionPackage {
-  private VersionInfo version;
-  private RuntimeInfo runtime;
+  private VersionInfo versionInfo;
+  private RuntimeInfo runtimeInfo;
 }
