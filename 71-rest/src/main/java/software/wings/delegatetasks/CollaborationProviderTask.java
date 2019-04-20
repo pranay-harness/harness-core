@@ -10,9 +10,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
@@ -20,9 +19,8 @@ import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
+@Slf4j
 public class CollaborationProviderTask extends AbstractDelegateRunnableTask {
-  private static Logger logger = LoggerFactory.getLogger(CollaborationProviderTask.class);
   @Inject EmailHandler emailHandler;
 
   public CollaborationProviderTask(String delegateId, DelegateTask delegateTask,

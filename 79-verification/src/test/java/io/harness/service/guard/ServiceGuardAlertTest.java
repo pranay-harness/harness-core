@@ -14,6 +14,7 @@ import static software.wings.sm.StateType.SUMO;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,7 +32,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
-
+@Slf4j
 public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
   @Before
   public void setUp() throws Exception {

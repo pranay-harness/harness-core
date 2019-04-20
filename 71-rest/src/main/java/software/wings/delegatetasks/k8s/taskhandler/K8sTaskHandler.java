@@ -6,16 +6,14 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-
+@Slf4j
 public abstract class K8sTaskHandler {
   @Inject protected DelegateLogService delegateLogService;
-  private static final Logger logger = LoggerFactory.getLogger(K8sTaskHandler.class);
 
   public K8sTaskExecutionResponse executeTask(
       K8sTaskParameters k8STaskParameters, K8sDelegateTaskParams k8SDelegateTaskParams) {

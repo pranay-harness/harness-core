@@ -14,8 +14,6 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -50,8 +48,6 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class K8sCanaryDeploy extends State implements K8sStateExecutor {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sCanaryDeploy.class);
-
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;

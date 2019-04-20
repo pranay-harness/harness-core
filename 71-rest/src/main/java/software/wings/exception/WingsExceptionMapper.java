@@ -10,17 +10,14 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
-
+@Slf4j
 public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
-  private static Logger logger = LoggerFactory.getLogger(WingsExceptionMapper.class);
-
   @Override
   public Response toResponse(WingsException exception) {
     ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);

@@ -18,8 +18,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
@@ -47,8 +45,6 @@ import java.util.UUID;
 
 @Attributes
 public class NewRelicDeploymentMarkerState extends State {
-  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(NewRelicDeploymentMarkerState.class);
-
   @Transient @Inject private DelegateService delegateService;
   @Transient @Inject protected SettingsService settingsService;
 

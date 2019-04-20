@@ -226,6 +226,11 @@
 
     </module>
 
+    <module name="RegexpSingleline">
+        <property name="format" value="Logger logger = LoggerFactory.getLogger"/>
+        <property name="message" value="Do not create logger object on your own, use lombok @Slf4j onstead"/>
+    </module>
+
     <!-- Spelling consistence -->
 
 

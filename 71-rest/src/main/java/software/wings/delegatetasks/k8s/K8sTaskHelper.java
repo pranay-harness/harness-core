@@ -54,9 +54,8 @@ import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -92,6 +91,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class K8sTaskHelper {
   @Inject protected DelegateLogService delegateLogService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;
@@ -99,8 +99,6 @@ public class K8sTaskHelper {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
-
-  private static final Logger logger = LoggerFactory.getLogger(K8sTaskHelper.class);
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";

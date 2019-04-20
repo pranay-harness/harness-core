@@ -2,8 +2,7 @@ package software.wings.service;
 
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.container.PcfServiceSpecification;
 
 import java.io.BufferedReader;
@@ -12,9 +11,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Singleton
+@Slf4j
 public class ServiceHelper {
-  private static Logger logger = LoggerFactory.getLogger(ServiceHelper.class);
-
   public void addPlaceholderTexts(PcfServiceSpecification pcfServiceSpecification) {
     String manifestYaml = pcfServiceSpecification.getManifestYaml();
     StringBuilder sb = new StringBuilder(128);

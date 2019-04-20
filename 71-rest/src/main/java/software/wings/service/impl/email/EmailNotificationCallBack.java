@@ -8,9 +8,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.waiter.NotifyCallback;
-import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
@@ -18,9 +16,8 @@ import software.wings.service.intfc.AlertService;
 
 import java.util.Map;
 
+@Slf4j
 public class EmailNotificationCallBack implements NotifyCallback {
-  @Transient private static Logger logger = LoggerFactory.getLogger(EmailNotificationCallBack.class);
-
   @Inject private AlertService alertService;
 
   @Override

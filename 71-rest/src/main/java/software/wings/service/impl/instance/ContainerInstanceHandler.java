@@ -24,6 +24,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
@@ -87,6 +88,7 @@ import java.util.Set;
  * @author rktummala on 02/03/18
  */
 @Singleton
+@Slf4j
 public class ContainerInstanceHandler extends InstanceHandler {
   @Inject private ContainerSync containerSync;
   @Inject private transient K8sStateHelper k8sStateHelper;

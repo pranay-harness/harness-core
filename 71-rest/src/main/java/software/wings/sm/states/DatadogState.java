@@ -21,8 +21,8 @@ import io.harness.serializer.YamlUtils;
 import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute;
@@ -61,9 +61,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
+@Slf4j
 public class DatadogState extends AbstractMetricAnalysisState {
-  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(DatadogState.class);
   private static final int DATA_COLLECTION_RATE_MINS = 5;
 
   public DatadogState(String name) {

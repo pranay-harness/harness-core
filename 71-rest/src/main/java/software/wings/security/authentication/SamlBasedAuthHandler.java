@@ -8,6 +8,7 @@ import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.opensaml.saml2.core.Attribute;
@@ -15,8 +16,6 @@ import org.opensaml.saml2.core.AttributeStatement;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.schema.impl.XSAnyImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
@@ -34,12 +33,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Singleton
+@Slf4j
 public class SamlBasedAuthHandler implements AuthHandler {
   @Inject private SamlClientService samlClientService;
   @Inject private AuthenticationUtil authenticationUtil;
   @Inject private SamlUserGroupSync samlUserGroupSync;
   @Inject private SSOSettingService ssoSettingService;
-  private static Logger logger = LoggerFactory.getLogger(SamlBasedAuthHandler.class);
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {

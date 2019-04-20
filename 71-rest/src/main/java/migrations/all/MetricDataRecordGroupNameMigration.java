@@ -1,14 +1,14 @@
 package migrations.all;
 
 import com.mongodb.DBObject;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
 /**
  * Created by rsingh on 5/20/18.
  */
+@Slf4j
 public class MetricDataRecordGroupNameMigration extends AddFieldMigration {
-  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MetricDataRecordGroupNameMigration.class);
   @Override
   protected org.slf4j.Logger getLogger() {
     return logger;

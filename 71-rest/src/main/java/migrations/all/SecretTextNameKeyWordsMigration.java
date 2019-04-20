@@ -3,16 +3,14 @@ package migrations.all;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Misc;
-
+@Slf4j
 public class SecretTextNameKeyWordsMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(SecretTextNameKeyWordsMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

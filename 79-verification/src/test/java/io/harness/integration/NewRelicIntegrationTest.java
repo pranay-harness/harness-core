@@ -44,6 +44,7 @@ import io.harness.scm.SecretName;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Before;
@@ -103,6 +104,7 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by rsingh on 9/7/17.
  */
+@Slf4j
 public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   public static String NEW_RELIC_CONNECTOR_NAME = "NewRelic";
 

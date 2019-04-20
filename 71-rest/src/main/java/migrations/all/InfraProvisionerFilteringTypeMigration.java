@@ -9,17 +9,15 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.exception.ExceptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;
-
+@Slf4j
 public class InfraProvisionerFilteringTypeMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(EntityNameValidationMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

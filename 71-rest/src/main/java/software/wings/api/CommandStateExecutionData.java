@@ -11,9 +11,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandUnitDetails;
@@ -38,8 +37,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Slf4j
 public class CommandStateExecutionData extends StateExecutionData {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(CommandStateExecutionData.class);
   private String appId;
   private String delegateTaskId;
   private String hostName;

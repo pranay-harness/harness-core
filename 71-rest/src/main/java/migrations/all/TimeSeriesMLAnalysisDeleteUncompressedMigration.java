@@ -7,14 +7,12 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
-
+@Slf4j
 public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(TimeSeriesMLAnalysisDeleteUncompressedMigration.class);
   private static final int BATCH_SIZE = 50;
   @Inject private WingsPersistence wingsPersistence;
 

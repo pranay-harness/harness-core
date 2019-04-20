@@ -19,8 +19,8 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -60,9 +60,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by anubhaw on 12/7/16.
  */
+@Slf4j
 public class CloudWatchState extends AbstractMetricAnalysisState {
-  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(CloudWatchState.class);
-
   @Inject private transient AwsHelperService awsHelperService;
   @Inject private transient CloudWatchService cloudWatchService;
 

@@ -6,7 +6,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static org.slf4j.LoggerFactory.getLogger;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.NAME_KEY;
@@ -34,9 +33,9 @@ import io.harness.beans.PageResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
@@ -57,8 +56,8 @@ import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class TemplateGalleryServiceImpl implements TemplateGalleryService {
-  private static final Logger logger = getLogger(TemplateGalleryServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateFolderService templateFolderService;
   @Inject private TemplateService templateService;

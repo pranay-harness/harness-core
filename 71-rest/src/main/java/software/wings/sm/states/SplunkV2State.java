@@ -11,10 +11,9 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
@@ -41,9 +40,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by peeyushaggarwal on 7/15/16.
  */
+@Slf4j
 public class SplunkV2State extends AbstractLogAnalysisState {
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
-
   @Attributes(required = true, title = "Splunk Server") private String analysisServerConfigId;
 
   public SplunkV2State(String name) {

@@ -9,9 +9,8 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.helpers.ext.external.comm.CollaborationHandler;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
@@ -31,10 +30,11 @@ import javax.mail.Session;
 import javax.mail.Transport;
 
 @Singleton
+@Slf4j
 public class EmailHandler implements CollaborationHandler {
   @Inject private Mailer mailer;
   @Inject private EmailUtil emailHelperUtil;
-  private static Logger logger = LoggerFactory.getLogger(EmailHandler.class);
+
   @Inject @Transient private transient EncryptionService encryptionService;
   private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
 

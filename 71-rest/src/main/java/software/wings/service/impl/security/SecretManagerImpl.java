@@ -48,9 +48,8 @@ import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
@@ -115,9 +114,8 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 10/30/17.
  */
+@Slf4j
 public class SecretManagerImpl implements SecretManager {
-  protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
-
   private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;]";
 
   @Inject private WingsPersistence wingsPersistence;

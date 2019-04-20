@@ -16,8 +16,6 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.security.SecretManager;
 
@@ -33,8 +31,6 @@ public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
   static final String PROTECTED_RESOURCE_URL = "https://api.linkedin.com/v1/people/~:(%s)";
   static final String EMAIL_FIELD_NAME = "email-address";
   static final String NAME_FIELD_NAME = "firstName";
-
-  static final Logger logger = LoggerFactory.getLogger(LinkedinClientImpl.class);
 
   @Inject
   public LinkedinClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager) {

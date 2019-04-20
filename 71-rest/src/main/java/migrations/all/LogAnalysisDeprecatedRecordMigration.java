@@ -5,16 +5,14 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.verification.CVConfiguration;
-
+@Slf4j
 public class LogAnalysisDeprecatedRecordMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(LogAnalysisDeprecatedRecordMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

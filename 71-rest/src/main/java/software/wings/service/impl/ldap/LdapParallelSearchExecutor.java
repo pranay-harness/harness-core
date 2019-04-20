@@ -5,10 +5,9 @@ import static java.lang.Math.min;
 import com.google.common.collect.Lists;
 
 import de.danielbechler.util.Collections;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,9 +26,8 @@ import javax.validation.constraints.NotNull;
 /**
  * This class is meant to make parallel call for LDAP search
  */
+@Slf4j
 public class LdapParallelSearchExecutor {
-  static final Logger logger = LoggerFactory.getLogger(LdapParallelSearchExecutor.class);
-
   static final int MAX_THREAD_COUNT = 3;
 
   static final int LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = 30;

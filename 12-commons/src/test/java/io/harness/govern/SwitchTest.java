@@ -7,17 +7,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
-public class SwitchTest {
+public class SwitchTest implements MockableTestMixin {
   @Test
   @Category(UnitTests.class)
-  public void unhandled() {
+  public void unhandled() throws IllegalAccessException {
     Logger mockLogger = mock(Logger.class);
-    Switch.setLogger(mockLogger);
+    setStaticFieldValue(Switch.class, "logger", mockLogger);
 
     int a = 5;
     Switch.unhandled(a);

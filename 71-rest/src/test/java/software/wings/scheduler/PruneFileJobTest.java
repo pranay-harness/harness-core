@@ -19,12 +19,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Base;
@@ -36,8 +34,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 import java.util.Date;
 
 public class PruneFileJobTest extends WingsBaseTest {
-  public static final Logger logger = LoggerFactory.getLogger(PruneFileJobTest.class);
-
   @Mock private WingsPersistence wingsPersistence;
 
   @Mock private FileService fileService;
@@ -116,7 +112,7 @@ public class PruneFileJobTest extends WingsBaseTest {
     when(context.getJobDetail()).thenReturn(details(Base.class, ENTITY_ID, FileBucket.PLATFORMS));
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(job, "logger", mockLogger);
+    setStaticFieldValue(PruneFileJob.class, "logger", mockLogger);
 
     job.execute(context);
 

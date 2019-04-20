@@ -33,9 +33,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ShellExecutionData;
@@ -66,6 +65,7 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 2/10/16.
  */
 @ValidateOnExecution
+@Slf4j
 public class ScriptSshExecutor extends AbstractScriptExecutor {
   public static final int CHUNK_SIZE = 10 * 1024; // 10KB
   public static final int ALLOWED_BYTES = 1024 * 1024; // 1MB
@@ -86,7 +86,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
-  public static final Logger logger = LoggerFactory.getLogger(ScriptSshExecutor.class);
+
   protected SshSessionConfig config;
 
   /**

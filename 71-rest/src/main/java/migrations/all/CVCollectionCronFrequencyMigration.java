@@ -8,13 +8,11 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import io.harness.persistence.ReadPref;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
-
+@Slf4j
 public class CVCollectionCronFrequencyMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(CVCollectionCronFrequencyMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

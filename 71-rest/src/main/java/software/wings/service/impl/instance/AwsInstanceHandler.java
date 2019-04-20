@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.HarnessException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
  * @author rktummala on 02/01/18
  */
 @Singleton
+@Slf4j
 public class AwsInstanceHandler extends InstanceHandler {
   @Inject protected AwsHelperService awsHelperService;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;

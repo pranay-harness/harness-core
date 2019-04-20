@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
@@ -19,8 +20,6 @@ import org.ldaptive.SearchScope;
 import org.ldaptive.auth.SearchDnResolver;
 import org.ldaptive.handler.RecursiveEntryHandler;
 import org.ldaptive.referral.SearchReferralHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 
@@ -28,6 +27,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Builder(builderClassName = "Builder", buildMethodName = "internalBuild")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class LdapSearch implements LdapValidator {
   @NotNull ConnectionFactory connectionFactory;
   @NotNull String baseDN;
@@ -42,8 +42,6 @@ public class LdapSearch implements LdapValidator {
   int maxReferralHops;
   String recursiveSearchAttr;
   String recursiveMergeAttr;
-
-  private static Logger logger = LoggerFactory.getLogger(LdapSearch.class);
 
   public static class Builder {
     public LdapSearch build() {

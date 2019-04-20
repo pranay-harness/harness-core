@@ -16,8 +16,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ActionableNotification;
 import software.wings.beans.ApprovalNotification;
@@ -53,8 +51,6 @@ public class NotificationServiceImpl implements NotificationService {
   @Inject private NotificationDispatcherService notificationDispatcherService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private MainConfiguration configuration;
-
-  private static Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
   @Override
   public PageResponse<Notification> list(PageRequest<Notification> pageRequest) {

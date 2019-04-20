@@ -15,10 +15,10 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -52,12 +52,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by raghu on 8/4/17.
  */
+@Slf4j
 public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient public static final String DEFAULT_TIME_FIELD = "@timestamp";
 
   @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
-
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisState.class);
 
   @Transient @Inject protected ElkAnalysisService elkAnalysisService;
 

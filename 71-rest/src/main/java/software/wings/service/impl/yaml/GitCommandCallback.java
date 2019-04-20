@@ -16,9 +16,8 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.NotifyCallback;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
@@ -53,6 +52,7 @@ import java.util.stream.Collectors;
 /**
  * Created by anubhaw on 10/27/17.
  */
+@Slf4j
 public class GitCommandCallback implements NotifyCallback {
   private String accountId;
   private String changeSetId;
@@ -65,8 +65,6 @@ public class GitCommandCallback implements NotifyCallback {
     this.changeSetId = changeSetId;
     this.gitCommandType = gitCommandType;
   }
-
-  @Transient private static final transient Logger logger = LoggerFactory.getLogger(GitCommandCallback.class);
 
   @Transient @Inject private transient YamlChangeSetService yamlChangeSetService;
   @Transient @Inject private transient YamlService yamlService;

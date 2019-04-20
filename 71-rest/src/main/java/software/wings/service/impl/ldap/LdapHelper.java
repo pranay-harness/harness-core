@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import de.danielbechler.util.Collections;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.ldaptive.BindConnectionInitializer;
 import org.ldaptive.Connection;
@@ -25,8 +26,6 @@ import org.ldaptive.auth.SearchDnResolver;
 import org.ldaptive.ssl.AllowAnyHostnameVerifier;
 import org.ldaptive.ssl.AllowAnyTrustManager;
 import org.ldaptive.ssl.SslConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.sso.LdapGroupSettings;
 import software.wings.beans.sso.LdapSearchConfig;
 import software.wings.beans.sso.LdapUserSettings;
@@ -47,8 +46,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class LdapHelper {
-  static final Logger logger = LoggerFactory.getLogger(LdapHelper.class);
   LdapConnectionConfig connectionConfig;
   ConnectionConfig ldaptiveConfig;
   LdapParallelSearchExecutor ldapParallelSearchExecutor;

@@ -14,9 +14,8 @@ import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.ExceptionUtils;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -48,8 +47,8 @@ import java.util.stream.Collectors;
  * 3. Have repetitive code (like done here).
  * Finally we decided to go with option 3.
  */
+@Slf4j
 public abstract class EntityNameValidationMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(EntityNameValidationMigration.class);
   @Inject private WingsPersistence wingsPersistence;
 
   protected abstract boolean skipAccount(String accountId);

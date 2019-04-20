@@ -12,8 +12,6 @@ import com.google.inject.Singleton;
 import com.codahale.metrics.health.HealthCheck;
 import lombok.Builder;
 import lombok.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class HealthService extends HealthCheck {
-  protected static final Logger logger = LoggerFactory.getLogger(HealthService.class);
-
   boolean initial;
   TimeLimiter timeLimiter;
   ExecutorService executorService;

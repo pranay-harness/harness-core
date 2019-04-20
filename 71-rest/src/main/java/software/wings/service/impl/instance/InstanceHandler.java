@@ -9,8 +9,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.HarnessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
@@ -46,9 +45,8 @@ import java.util.Optional;
 /**
  * @author rktummala on 01/30/18
  */
+@Slf4j
 public abstract class InstanceHandler {
-  protected static final Logger logger = LoggerFactory.getLogger(InstanceHandler.class);
-
   @Inject protected InstanceHelper instanceHelper;
   @Inject protected InstanceService instanceService;
   @Inject protected InfrastructureMappingService infraMappingService;

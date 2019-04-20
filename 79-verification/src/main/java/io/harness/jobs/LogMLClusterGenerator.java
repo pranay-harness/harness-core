@@ -2,10 +2,8 @@ package io.harness.jobs;
 
 import com.google.common.collect.Lists;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.service.intfc.LearningEngineService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -16,9 +14,8 @@ import software.wings.service.intfc.analysis.LogAnalysisResource;
 /**
  * Created by sriram_parthasarathy on 8/24/17.
  */
+@Slf4j
 public class LogMLClusterGenerator implements Runnable {
-  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(LogMLClusterGenerator.class);
-
   private LearningEngineService learningEngineService;
 
   private final LogClusterContext context;

@@ -17,8 +17,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -51,8 +49,6 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class K8sScale extends State {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sScale.class);
-
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;

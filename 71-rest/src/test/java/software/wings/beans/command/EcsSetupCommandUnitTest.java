@@ -32,8 +32,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -53,7 +51,6 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   @InjectMocks @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
   @InjectMocks @Inject private EcsSetupCommandHandler ecsSetupCommandHandler;
   @InjectMocks @Inject private EcsSetupCommandUnit ecsSetupCommandUnit;
-  private static Logger logger = LoggerFactory.getLogger(EcsSetupCommandUnitTest.class);
 
   private EcsSetupParams setupParams =
       anEcsSetupParams()

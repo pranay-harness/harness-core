@@ -6,10 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -25,8 +24,8 @@ import software.wings.settings.SettingValue;
 
 import java.util.List;
 
+@Slf4j
 public class GcsArtifactProjectIdMigration implements Migration {
-  private static Logger logger = LoggerFactory.getLogger(GcsArtifactProjectIdMigration.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;

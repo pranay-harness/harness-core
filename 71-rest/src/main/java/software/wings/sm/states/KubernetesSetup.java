@@ -18,9 +18,8 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
@@ -58,6 +57,7 @@ import java.util.Optional;
  * Created by brett on 3/1/17
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Slf4j
 public class KubernetesSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in
   // wingsui/src/containers/WorkflowEditor/custom/ServiceSetup/KubernetesSetup/KubernetesSetup.js
@@ -66,8 +66,6 @@ public class KubernetesSetup extends ContainerServiceSetup {
   public static final String PROTOCOL_KEY = "protocol";
   public static final String TARGET_PORT_KEY = "targetPort";
   public static final String SERVICE_TYPE_KEY = "serviceType";
-
-  @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesSetup.class);
 
   @Transient @Inject private transient ConfigService configService;
   @Transient @Inject private transient ServiceTemplateService serviceTemplateService;

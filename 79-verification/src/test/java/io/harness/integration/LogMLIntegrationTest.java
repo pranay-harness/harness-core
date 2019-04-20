@@ -33,6 +33,7 @@ import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -100,6 +101,7 @@ import javax.ws.rs.core.Response;
  * Created by rsingh on 8/17/17.
  */
 @SuppressWarnings("ALL")
+@Slf4j
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
   private Set<String> hosts = new HashSet<>();

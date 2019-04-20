@@ -25,12 +25,12 @@ import software.wings.WingsBaseTest;
 public class WingsExceptionMapperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
-  public void sanity() {
+  public void sanity() throws IllegalAccessException {
     final WingsException exception = WingsException.builder().code(DEFAULT_ERROR_CODE).build();
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(mapper, "logger", mockLogger);
+    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
 
     mapper.toResponse(exception);
 
@@ -77,12 +77,12 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldNotLogHarmless() {
+  public void shouldNotLogHarmless() throws IllegalAccessException {
     final WingsException exception = new WingsException(DEFAULT_ERROR_CODE, USER);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(mapper, "logger", mockLogger);
+    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
 
     mapper.toResponse(exception);
 

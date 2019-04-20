@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -45,6 +46,7 @@ import java.util.Optional;
  * @author rktummala on 02/02/18
  */
 @Singleton
+@Slf4j
 public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   @Override
   public void syncInstances(String appId, String infraMappingId) throws HarnessException {

@@ -1,12 +1,9 @@
 package io.harness.govern;
 
-import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Switch {
-  @Setter protected static Logger logger = LoggerFactory.getLogger(Switch.class);
-
   /**
    * Reports error for unhandled value in a switch statement.
    *
