@@ -41,6 +41,7 @@ import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMapping
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.scm.ScmSecret;
@@ -439,7 +440,8 @@ public class WorkflowGenerator {
       OrchestrationWorkflowType orchestrationWorkflowType =
           workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
       if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
-        Environment environment = owners.obtainEnvironment();
+        Environment environment = owners.obtainEnvironment(
+            () -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
         builder.envId(environment.getUuid());
       }
     }
@@ -450,7 +452,8 @@ public class WorkflowGenerator {
       OrchestrationWorkflowType orchestrationWorkflowType =
           workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
       if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
-        Service service = owners.obtainService();
+        Service service =
+            owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
         builder.serviceId(service.getUuid());
       }
     }

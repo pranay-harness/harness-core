@@ -50,8 +50,8 @@ public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetch
         new FindOptions().limit(limit + (isPageInfoHasMoreSelected(dataFetchingEnvironment) ? 1 : 0)).skip(offset);
 
     try (HIterator<T> iterator = new HIterator<T>(query.fetch(options))) {
-      int i = 0;
-      for (; i < limit && iterator.hasNext(); i++) {
+      int count = 0;
+      for (; count < limit && iterator.hasNext(); count++) {
         controller.populate(iterator.next());
       }
 
@@ -65,10 +65,10 @@ public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetch
         // But not so fast if we did not fetch even a single record, we might of have offset bigger than the amount of
         // data we have.
         // And of course if we did not skip at all we still can owner this result.
-        if (iterator.hasNext() || (i == 0 && options.getSkip() > 0)) {
+        if (iterator.hasNext() || (count == 0 && options.getSkip() > 0)) {
           builder.total((int) query.count());
         } else {
-          builder.total(options.getSkip() + i);
+          builder.total(options.getSkip() + count);
         }
       }
     }
