@@ -3,6 +3,7 @@ package io.harness.queue;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.persistence.PersistentEntity;
+import io.harness.queue.Queuable.QueuableKeys;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -16,8 +17,9 @@ import java.util.Date;
 
 @Indexes({
   @Index(options = @IndexOptions(name = "next"), fields = {
-    @Field(value = "priority", type = IndexType.DESC)
-    , @Field("created"), @Field("earliestGet"), @Field("running"), @Field("resetTimestamp"), @Field("version")
+    @Field(value = QueuableKeys.priority, type = IndexType.DESC)
+    , @Field(QueuableKeys.created), @Field(QueuableKeys.earliestGet), @Field(QueuableKeys.running),
+        @Field(QueuableKeys.resetTimestamp), @Field(QueuableKeys.version)
   })
 })
 @FieldNameConstants(innerTypeName = "QueuableKeys")

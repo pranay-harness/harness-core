@@ -10,6 +10,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutput.Scope;
 import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
+import io.harness.beans.SweepingOutput.SweepingOutputKeys;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
@@ -40,17 +41,17 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   public SweepingOutput find(
       String appId, String name, String pipelineExecutionId, String workflowExecutionId, String phaseExecutionId) {
     final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
-                                            .filter(SweepingOutput.APP_ID_KEY, appId)
-                                            .filter(SweepingOutput.NAME_KEY, name);
+                                            .filter(SweepingOutputKeys.appId, appId)
+                                            .filter(SweepingOutputKeys.name, name);
 
     final CriteriaContainerImpl workflowCriteria =
-        query.criteria(SweepingOutput.WORKFLOW_EXECUTION_ID_KEY).equal(workflowExecutionId);
+        query.criteria(SweepingOutputKeys.workflowExecutionId).equal(workflowExecutionId);
     final CriteriaContainerImpl phaseCriteria =
-        query.criteria(SweepingOutput.PHASE_EXECUTION_ID_KEY).equal(phaseExecutionId);
+        query.criteria(SweepingOutputKeys.phaseExecutionId).equal(phaseExecutionId);
 
     if (pipelineExecutionId != null) {
       final CriteriaContainerImpl pipelineCriteria =
-          query.criteria(SweepingOutput.PIPELINE_EXECUTION_ID_KEY).equal(pipelineExecutionId);
+          query.criteria(SweepingOutputKeys.pipelineExecutionId).equal(pipelineExecutionId);
       query.or(pipelineCriteria, workflowCriteria, phaseCriteria);
     } else {
       query.or(workflowCriteria, phaseCriteria);
