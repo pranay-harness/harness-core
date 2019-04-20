@@ -43,9 +43,11 @@ import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 
 import java.io.ByteArrayInputStream;
@@ -68,6 +70,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private FileService fileService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private EntityHelper entityHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   private WingsPersistence wingsPersistence;
 
@@ -277,8 +280,16 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
+    if (!featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL, accountId)) {
+      return;
+    }
+
     try {
       String auditHeaderId = getAuditHeaderIdFromGlobalContext();
+      if (isEmpty(auditHeaderId)) {
+        throw new WingsException("AuditHeaderKey is null").addParam("message", "AuditHeaderKey is null");
+      }
+
       UuidAccess entityToQuery;
       switch (type) {
         case CREATE: {

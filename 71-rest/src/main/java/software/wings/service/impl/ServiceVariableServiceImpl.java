@@ -42,6 +42,7 @@ import software.wings.beans.Event;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
@@ -75,6 +76,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -160,10 +162,10 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     Map<String, Object> updateMap = new HashMap<>();
     if (isNotEmpty(serviceVariable.getValue())) {
-      updateMap.put("value", serviceVariable.getValue());
+      updateMap.put(ServiceVariableKeys.value, serviceVariable.getValue());
     }
     if (serviceVariable.getType() != null) {
-      updateMap.put("type", serviceVariable.getType());
+      updateMap.put(ServiceVariableKeys.type, serviceVariable.getType());
     }
     if (isNotEmpty(updateMap)) {
       wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), updateMap);
@@ -196,11 +198,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     executorService.submit(() -> removeSearchTagsIfNecessary(serviceVariable, null));
     Query<ServiceVariable> query = wingsPersistence.createQuery(ServiceVariable.class)
-                                       .filter("parentServiceVariableId", settingId)
+                                       .filter(ServiceVariableKeys.parentServiceVariableId, settingId)
                                        .filter(APP_ID_KEY, appId);
     List<ServiceVariable> modified = query.asList();
-    UpdateOperations<ServiceVariable> updateOperations =
-        wingsPersistence.createUpdateOperations(ServiceVariable.class).unset("parentServiceVariableId");
+    UpdateOperations<ServiceVariable> updateOperations = wingsPersistence.createUpdateOperations(ServiceVariable.class)
+                                                             .unset(ServiceVariableKeys.parentServiceVariableId);
     wingsPersistence.update(query, updateOperations);
 
     wingsPersistence.delete(
@@ -222,8 +224,10 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public List<ServiceVariable> getServiceVariablesForEntity(
       String appId, String entityId, EncryptedFieldMode encryptedFieldMode) {
-    PageRequest<ServiceVariable> request =
-        aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("entityId", Operator.EQ, entityId).build();
+    PageRequest<ServiceVariable> request = aPageRequest()
+                                               .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
+                                               .addFilter(ServiceVariableKeys.entityId, Operator.EQ, entityId)
+                                               .build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
     variables.forEach(serviceVariable -> processEncryptedServiceVariable(encryptedFieldMode, serviceVariable));
     return variables;
@@ -232,11 +236,12 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public List<ServiceVariable> getServiceVariablesByTemplate(
       String appId, String envId, ServiceTemplate serviceTemplate, EncryptedFieldMode encryptedFieldMode) {
-    PageRequest<ServiceVariable> request = aPageRequest()
-                                               .addFilter("appId", Operator.EQ, appId)
-                                               .addFilter("envId", Operator.EQ, envId)
-                                               .addFilter("templateId", Operator.EQ, serviceTemplate.getUuid())
-                                               .build();
+    PageRequest<ServiceVariable> request =
+        aPageRequest()
+            .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
+            .addFilter(ServiceVariableKeys.envId, Operator.EQ, envId)
+            .addFilter(ServiceVariableKeys.templateId, Operator.EQ, serviceTemplate.getUuid())
+            .build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
     variables.forEach(serviceVariable -> processEncryptedServiceVariable(encryptedFieldMode, serviceVariable));
     return variables;
@@ -245,14 +250,21 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public void deleteByTemplateId(String appId, String serviceTemplateId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
-                                .filter("appId", appId)
-                                .filter("templateId", serviceTemplateId));
+                                .filter(ServiceVariableKeys.appId, appId)
+                                .filter(ServiceVariableKeys.templateId, serviceTemplateId));
   }
 
   @Override
   public void pruneByService(String appId, String entityId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(ServiceVariable.class).filter("appId", appId).filter("entityId", entityId));
+    List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
+                                                 .filter(ServiceVariableKeys.appId, appId)
+                                                 .filter(ServiceVariableKeys.entityId, entityId)
+                                                 .asList();
+    for (ServiceVariable serviceVariable : serviceVariables) {
+      if (wingsPersistence.delete(serviceVariable)) {
+        auditServiceHelper.reportDeleteForAuditing(appId, serviceVariable);
+      }
+    }
   }
 
   private void processEncryptedServiceVariable(EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable) {

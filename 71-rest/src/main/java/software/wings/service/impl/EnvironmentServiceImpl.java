@@ -133,6 +133,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private YamlPushService yamlPushService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -477,6 +478,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     List<Environment> environments = wingsPersistence.createQuery(Environment.class).filter("appId", appId).asList();
     environments.forEach(environment -> {
       wingsPersistence.delete(environment);
+      auditServiceHelper.reportDeleteForAuditing(appId, environment);
       pruneDescendingEntities(appId, environment.getUuid());
     });
   }

@@ -66,6 +66,7 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -96,6 +97,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Inject private TemplateVersionService templateVersionService;
   @Inject private TemplateHelper templateHelper;
   @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private AuditServiceHelper auditServiceHelper;
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   @Override
@@ -616,10 +618,15 @@ public class TemplateServiceImpl implements TemplateService {
     List<Template> templates = wingsPersistence.createQuery(Template.class).filter(Template.APP_ID_KEY, appId).asList();
     for (Template template : templates) {
       deleteTemplate(template);
+      auditServiceHelper.reportDeleteForAuditing(appId, template);
     }
     // delete all template folders with appId
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolder.APP_ID_KEY, appId));
+    List<TemplateFolder> templateFolders =
+        wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolder.APP_ID_KEY, appId).asList();
+    for (TemplateFolder templateFolder : templateFolders) {
+      wingsPersistence.delete(templateFolder);
+      auditServiceHelper.reportDeleteForAuditing(appId, templateFolder);
+    }
   }
 
   private void deleteTemplate(Template template) {

@@ -16,8 +16,12 @@ import static software.wings.beans.yaml.YamlConstants.USER_DATA_SPEC_YAML_FILE_N
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.context.GlobalContextData;
+import io.harness.k8s.model.PurgeGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.UuidAccess;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -91,14 +95,17 @@ public class EntityHelper {
 
   public <T extends UuidAccess> void loadMetaDataForEntity(T entity, EntityAuditRecordBuilder builder, Type type) {
     String entityId = entity.getUuid();
-    String entityType = "";
-    String entityName = "";
-    String appId = "";
-    String appName = "";
-    String affectedResourceId = "";
-    String affectedResourceName = "";
-    String affectedResourceType = "";
-    String affectedResourceOperation = "";
+    String entityType = StringUtils.EMPTY;
+    String entityName = StringUtils.EMPTY;
+    String appId = StringUtils.EMPTY;
+    String appName = StringUtils.EMPTY;
+    String affectedResourceId = StringUtils.EMPTY;
+    String affectedResourceName = StringUtils.EMPTY;
+    String affectedResourceType = StringUtils.EMPTY;
+
+    boolean purgeActivity = isPurgeActivity();
+    String opTypeForAffectedResource = purgeActivity ? Type.DELETE.name() : Type.UPDATE.name();
+    String affectedResourceOperation = opTypeForAffectedResource;
 
     if (entity instanceof Environment) {
       Environment environment = (Environment) entity;
@@ -139,7 +146,6 @@ public class EntityHelper {
       affectedResourceId = mapping.getEnvId();
       affectedResourceName = getEnvironmentName(mapping.getEnvId(), appId);
       affectedResourceType = EntityType.ENVIRONMENT.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof Workflow) {
       Workflow workflow = (Workflow) entity;
       entityType = EntityType.WORKFLOW.name();
@@ -166,7 +172,6 @@ public class EntityHelper {
       affectedResourceId = artifactStream.getServiceId();
       affectedResourceName = getServiceName(artifactStream.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof Service) {
       Service service = (Service) entity;
       entityType = EntityType.SERVICE.name();
@@ -184,7 +189,6 @@ public class EntityHelper {
       affectedResourceId = chartSpecification.getServiceId();
       affectedResourceName = getServiceName(chartSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof PcfServiceSpecification) {
       PcfServiceSpecification serviceSpecification = (PcfServiceSpecification) entity;
       entityType = EntityType.PCF_SERVICE_SPECIFICATION.name();
@@ -193,7 +197,6 @@ public class EntityHelper {
       affectedResourceId = serviceSpecification.getServiceId();
       affectedResourceName = getServiceName(serviceSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof LambdaSpecification) {
       LambdaSpecification lambdaSpecification = (LambdaSpecification) entity;
       entityType = EntityType.LAMBDA_SPECIFICATION.name();
@@ -202,7 +205,6 @@ public class EntityHelper {
       affectedResourceId = lambdaSpecification.getServiceId();
       affectedResourceName = getServiceName(lambdaSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof UserDataSpecification) {
       UserDataSpecification dataSpecification = (UserDataSpecification) entity;
       entityType = EntityType.USER_DATA_SPECIFICATION.name();
@@ -211,7 +213,6 @@ public class EntityHelper {
       affectedResourceId = dataSpecification.getServiceId();
       affectedResourceName = getServiceName(dataSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof EcsContainerTask) {
       EcsContainerTask task = (EcsContainerTask) entity;
       entityType = EntityType.ECS_CONTAINER_SPECIFICATION.name();
@@ -220,7 +221,6 @@ public class EntityHelper {
       affectedResourceId = task.getServiceId();
       affectedResourceName = getServiceName(task.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof EcsServiceSpecification) {
       EcsServiceSpecification ecsServiceSpecification = (EcsServiceSpecification) entity;
       entityType = EntityType.ECS_SERVICE_SPECIFICATION.name();
@@ -229,7 +229,6 @@ public class EntityHelper {
       affectedResourceId = ecsServiceSpecification.getServiceId();
       affectedResourceName = getServiceName(ecsServiceSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof KubernetesContainerTask) {
       KubernetesContainerTask task = (KubernetesContainerTask) entity;
       entityType = EntityType.K8S_CONTAINER_SPECIFICATION.name();
@@ -238,7 +237,6 @@ public class EntityHelper {
       affectedResourceId = task.getServiceId();
       affectedResourceName = getServiceName(task.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof ConfigFile) {
       ConfigFile configFile = (ConfigFile) entity;
       entityType = EntityType.CONFIG_FILE.name();
@@ -257,7 +255,6 @@ public class EntityHelper {
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
       }
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof SettingAttribute) {
       SettingAttribute settingAttribute = (SettingAttribute) entity;
       entityType = getEntityTypeForSettingValue(settingAttribute.getValue());
@@ -274,7 +271,6 @@ public class EntityHelper {
       affectedResourceId = serviceCommand.getServiceId();
       affectedResourceName = getServiceName(serviceCommand.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
-      affectedResourceOperation = Type.UPDATE.name();
     } else if (entity instanceof ManifestFile) {
       ManifestFile manifestFile = (ManifestFile) entity;
       entityType = EntityType.MANIFEST_FILE.name();
@@ -288,14 +284,12 @@ public class EntityHelper {
           affectedResourceId = envId;
           affectedResourceName = getEnvironmentName(envId, appId);
           affectedResourceType = EntityType.ENVIRONMENT.name();
-          affectedResourceOperation = Type.UPDATE.name();
         } else {
           String serviceId = manifest.getServiceId();
           if (isNotEmpty(serviceId)) {
             affectedResourceId = serviceId;
             affectedResourceName = getServiceName(serviceId, appId);
             affectedResourceType = EntityType.SERVICE.name();
-            affectedResourceOperation = Type.UPDATE.name();
           }
         }
       }
@@ -309,14 +303,12 @@ public class EntityHelper {
         affectedResourceId = envId;
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
-        affectedResourceOperation = Type.UPDATE.name();
       } else {
         String serviceId = applicationManifest.getServiceId();
         if (isNotEmpty(serviceId)) {
           affectedResourceId = serviceId;
           affectedResourceName = getServiceName(serviceId, appId);
           affectedResourceType = EntityType.SERVICE.name();
-          affectedResourceOperation = Type.UPDATE.name();
         }
       }
     } else if (entity instanceof ServiceVariable) {
@@ -330,7 +322,6 @@ public class EntityHelper {
         if (EntityType.SERVICE.equals(entityTypeForVariable)) {
           affectedResourceId = variable.getEntityId();
           affectedResourceName = getServiceName(affectedResourceId, appId);
-          affectedResourceType = EntityType.SERVICE.name();
         } else if (EntityType.ENVIRONMENT.equals(entityTypeForVariable)) {
           affectedResourceId = variable.getEntityId();
           affectedResourceName = getEnvironmentName(affectedResourceId, appId);
@@ -341,7 +332,6 @@ public class EntityHelper {
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
       }
-      affectedResourceOperation = Type.UPDATE.name();
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));
       entityType = format("Object of class: [%s]", entity.getClass().getSimpleName());
@@ -362,6 +352,17 @@ public class EntityHelper {
         .affectedResourceName(affectedResourceName)
         .affectedResourceType(affectedResourceType)
         .affectedResourceOperation(affectedResourceOperation);
+  }
+
+  private boolean isPurgeActivity() {
+    boolean purgeActivity = false;
+
+    GlobalContextData globalContextData = GlobalContextManager.get(PurgeGlobalContextData.PURGE_OP);
+    if (globalContextData != null) {
+      purgeActivity = true;
+    }
+
+    return purgeActivity;
   }
 
   private String getApplicationName(String appId) {

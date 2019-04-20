@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queuable;
@@ -191,6 +192,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   @Override
   public void send(final T payload) {
     Objects.requireNonNull(payload);
+    payload.setGlobalContext(GlobalContextManager.getGlobalContext());
     payload.setVersion(versionInfoManager.getVersionInfo().getVersion());
 
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);

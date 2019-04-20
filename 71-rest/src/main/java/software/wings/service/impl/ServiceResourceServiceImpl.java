@@ -237,6 +237,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -690,8 +691,52 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         getServiceCommands(appId, serviceId, false)
             .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, syncFromGit));
         sendNotificationAsync(service, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
+        pruneDeploymentSpecifications(service);
       }
     });
+  }
+
+  private void pruneDeploymentSpecifications(Service service) {
+    PcfServiceSpecification pcfServiceSpecification = getPcfServiceSpecification(service.getAppId(), service.getUuid());
+    if (pcfServiceSpecification != null) {
+      wingsPersistence.delete(HelmChartSpecification.class, service.getAppId(), pcfServiceSpecification.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(service.getAppId(), pcfServiceSpecification);
+    }
+
+    ContainerTask containerTask =
+        getContainerTaskByDeploymentType(service.getAppId(), service.getUuid(), DeploymentType.ECS.name());
+    if (containerTask == null) {
+      containerTask =
+          getContainerTaskByDeploymentType(service.getAppId(), service.getUuid(), DeploymentType.KUBERNETES.name());
+    }
+    if (containerTask != null) {
+      wingsPersistence.delete(ContainerTask.class, service.getAppId(), containerTask.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(service.getAppId(), containerTask);
+    }
+
+    HelmChartSpecification helmChartSpecification = getHelmChartSpecification(service.getAppId(), service.getUuid());
+    if (helmChartSpecification != null) {
+      wingsPersistence.delete(HelmChartSpecification.class, service.getAppId(), helmChartSpecification.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(service.getAppId(), helmChartSpecification);
+    }
+
+    UserDataSpecification userDataSpecification = getUserDataSpecification(service.getAppId(), service.getUuid());
+    if (userDataSpecification != null) {
+      wingsPersistence.delete(UserDataSpecification.class, service.getAppId(), userDataSpecification.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(service.getAppId(), userDataSpecification);
+    }
+
+    EcsServiceSpecification ecsServiceSpecification = getEcsServiceSpecification(service.getAppId(), service.getUuid());
+    if (ecsServiceSpecification != null) {
+      wingsPersistence.delete(EcsServiceSpecification.class, service.getAppId(), ecsServiceSpecification.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(service.getAppId(), ecsServiceSpecification);
+    }
+
+    LambdaSpecification lambdaSpecification = getLambdaSpecification(service.getAppId(), service.getUuid());
+    if (lambdaSpecification != null) {
+      wingsPersistence.delete(LambdaSpecification.class, service.getAppId(), lambdaSpecification.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(service.getAppId(), lambdaSpecification);
+    }
   }
 
   @Override
@@ -885,6 +930,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void pruneByApplication(String appId) {
     findServicesByApp(appId).forEach(service -> {
       wingsPersistence.delete(Service.class, service.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(service.getAppId(), service);
+      pruneDeploymentSpecifications(service);
       pruneDescendingEntities(appId, service.getUuid());
     });
   }

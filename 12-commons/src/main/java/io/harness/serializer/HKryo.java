@@ -38,6 +38,8 @@ import de.javakaffee.kryoserializers.guava.ReverseListSerializer;
 import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import io.harness.beans.FileData;
+import io.harness.context.GlobalContext;
+import io.harness.context.GlobalContextData;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -200,6 +202,8 @@ public class HKryo extends Kryo {
     register(JSONObject.class, 5584);
 
     register(FileData.class, 1201);
+    register(GlobalContext.class, 1202);
+    register(GlobalContextData.class, 1203);
   }
 
   private Registration check(Registration registration, int id) {
