@@ -4,6 +4,7 @@ import io.harness.beans.DelegateTask.ParametersConverter;
 import io.harness.beans.DelegateTask.ResponseDataConverter;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.mongo.KryoConverter;
 import io.harness.persistence.CreatedAtAware;
@@ -36,17 +37,6 @@ import javax.validation.constraints.NotNull;
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
-  public static final String ACCOUNT_ID_KEY = "accountId";
-  public static final String APP_ID_KEY = "appId";
-  public static final String ASYNC_KEY = "async";
-  public static final String DATA_PARAMETERS_KEY = "data.parameters";
-  public static final String DATA_TASK_TYPE_KEY = "data.taskType";
-  public static final String DATA_TIMEOUT_KEY = "data.timeout";
-  public static final String DELEGATE_ID_KEY = "delegateId";
-  public static final String EXECUTION_CAPABILITIES = "executionCapabilities";
-  public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
-  public static final String PRE_ASSIGNED_DELEGATE_ID = "preAssignedDelegateId";
-
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
   public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
@@ -97,4 +87,10 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   }
 
   public enum Status { QUEUED, STARTED, FINISHED, ERROR, ABORTED }
+
+  public static final class DelegateTaskKeys {
+    public static final String data_parameters = data + "." + TaskDataKeys.parameters;
+    public static final String data_taskType = data + "." + TaskDataKeys.taskType;
+    public static final String data_timeout = data + "." + TaskDataKeys.timeout;
+  }
 }

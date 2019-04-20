@@ -16,6 +16,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
@@ -88,7 +89,7 @@ public class DelegateQueueTask implements Runnable {
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter("status", STARTED)
-            .where("this.lastUpdatedAt + this." + DelegateTask.DATA_TIMEOUT_KEY + " < " + clock.millis())
+            .where("this.lastUpdatedAt + this." + DelegateTaskKeys.data_timeout + " < " + clock.millis())
             .asKeyList(new FindOptions().limit(100));
 
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
@@ -104,7 +105,7 @@ public class DelegateQueueTask implements Runnable {
     List<Key<DelegateTask>> longQueuedTaskKeys =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter("status", QUEUED)
-            .where("this.createdAt + this." + DelegateTask.DATA_TIMEOUT_KEY + " < " + clock.millis())
+            .where("this.createdAt + this." + DelegateTaskKeys.data_timeout + " < " + clock.millis())
             .asKeyList(new FindOptions().limit(100));
 
     if (!longQueuedTaskKeys.isEmpty()) {
@@ -122,12 +123,12 @@ public class DelegateQueueTask implements Runnable {
                                      .field(ID_KEY)
                                      .in(taskIds)
                                      .project(ID_KEY, true)
-                                     .project(DelegateTask.DELEGATE_ID_KEY, true)
+                                     .project(DelegateTaskKeys.delegateId, true)
                                      .project("waitId", true)
                                      .project("tags", true)
                                      .project("accountId", true)
-                                     .project(DelegateTask.DATA_TASK_TYPE_KEY, true)
-                                     .project(DelegateTask.DATA_PARAMETERS_KEY, true)
+                                     .project(DelegateTaskKeys.data_taskType, true)
+                                     .project(DelegateTaskKeys.data_parameters, true)
                                      .asList();
       delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, delegateTask -> delegateTask)));
       taskWaitIds.putAll(tasks.stream()
@@ -140,12 +141,12 @@ public class DelegateQueueTask implements Runnable {
           DelegateTask task = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                   .filter(ID_KEY, taskId)
                                   .project(ID_KEY, true)
-                                  .project(DelegateTask.DELEGATE_ID_KEY, true)
+                                  .project(DelegateTaskKeys.delegateId, true)
                                   .project("waitId", true)
                                   .project("tags", true)
                                   .project("accountId", true)
-                                  .project(DelegateTask.DATA_TASK_TYPE_KEY, true)
-                                  .project(DelegateTask.DATA_PARAMETERS_KEY, true)
+                                  .project(DelegateTaskKeys.data_taskType, true)
+                                  .project(DelegateTaskKeys.data_parameters, true)
                                   .get();
           delegateTasks.put(taskId, task);
           if (isNotEmpty(task.getWaitId())) {
@@ -193,7 +194,7 @@ public class DelegateQueueTask implements Runnable {
     Query<DelegateTask> unassignedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                                    .filter("status", QUEUED)
                                                    .filter("version", versionInfoManager.getVersionInfo().getVersion())
-                                                   .field(DelegateTask.DELEGATE_ID_KEY)
+                                                   .field(DelegateTaskKeys.delegateId)
                                                    .doesNotExist();
 
     long now = clock.millis();
