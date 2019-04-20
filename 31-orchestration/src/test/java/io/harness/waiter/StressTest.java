@@ -13,6 +13,7 @@ import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
+import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,8 +50,9 @@ public class StressTest extends OrchestrationTest {
         while (i < 10000) {
           final int ids = random.nextInt(5) + 1;
           if (i / 100 != (i + ids) / 100) {
-            final long waits =
-                persistence.createQuery(WaitInstance.class).filter("status", ExecutionStatus.NEW).count();
+            final long waits = persistence.createQuery(WaitInstance.class)
+                                   .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
+                                   .count();
             long waitQueues = persistence.createQuery(WaitQueue.class).count();
             long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
             logger.info("{}: i = {}, avg: {}, waits: {}, queues: {}, events: {}", n, (i / 100 + 1) * 100, time / i,
@@ -79,7 +81,8 @@ public class StressTest extends OrchestrationTest {
       });
 
       while (true) {
-        final long waits = persistence.createQuery(WaitInstance.class).filter("status", ExecutionStatus.NEW).count();
+        final long waits =
+            persistence.createQuery(WaitInstance.class).filter(WaitInstanceKeys.status, ExecutionStatus.NEW).count();
         long waitQueues = persistence.createQuery(WaitQueue.class).count();
         long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
         logger.info("waits: {}, queues: {}, events: {}", waits, waitQueues, notifyQueues);

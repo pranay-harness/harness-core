@@ -18,6 +18,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
+import io.harness.waiter.WaitQueue.WaitQueueKeys;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
@@ -115,7 +116,7 @@ public class WaitNotifyEngine {
 
       final List<WaitQueue> waitQueues =
           wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
-              .filter(WaitQueue.CORRELATION_ID_KEY, correlationId)
+              .filter(WaitQueueKeys.correlationId, correlationId)
               .asList();
 
       waitQueues.forEach(waitQueue

@@ -20,6 +20,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
+import io.harness.waiter.WaitQueue.WaitQueueKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 
@@ -89,7 +90,7 @@ public class Notifier implements Runnable {
     // Get wait queue entries
     try (HIterator<WaitQueue> iterator =
              new HIterator<WaitQueue>(persistence.createQuery(WaitQueue.class, excludeAuthority)
-                                          .field(WaitQueue.CORRELATION_ID_KEY)
+                                          .field(WaitQueueKeys.correlationId)
                                           .in(correlationIds)
                                           .fetch())) {
       while (iterator.hasNext()) {

@@ -26,9 +26,6 @@ import javax.validation.constraints.NotNull;
 @Builder
 @FieldNameConstants(innerTypeName = "WaitQueueKeys")
 public class WaitQueue implements PersistentEntity, UuidAccess, CreatedAtAccess {
-  public static final String CORRELATION_ID_KEY = "correlationId";
-  public static final String WAIT_INSTANCE_ID_KEY = "waitInstanceId";
-
   public static final Duration TTL = Duration.ofDays(14);
 
   @Id @NotNull private String uuid;
