@@ -40,9 +40,7 @@ public class YamlPushServiceImpl implements YamlPushService {
       String accountId, T oldEntity, T newEntity, Type type, boolean syncFromGit, boolean isRename) {
     executorService.submit(() -> {
       try {
-        if (featureFlagService.isEnabled(AUDIT_TRAIL, accountId)) {
-          auditService.registerAuditActions(accountId, oldEntity, newEntity, type);
-        }
+        performAuditForEntityChange(accountId, oldEntity, newEntity, type);
 
         if (syncFromGit) {
           return;
@@ -75,6 +73,29 @@ public class YamlPushServiceImpl implements YamlPushService {
         logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
+  }
+
+  private <T> void performAuditForEntityChange(String accountId, T oldEntity, T newEntity, Type type) {
+    try {
+      if (featureFlagService.isEnabled(AUDIT_TRAIL, accountId)) {
+        auditService.registerAuditActions(accountId, oldEntity, newEntity, type);
+      }
+    } catch (Exception e) {
+      getErrorMsgForAudit(oldEntity, newEntity, type, e);
+    }
+  }
+
+  private <T> void getErrorMsgForAudit(T oldEntity, T newEntity, Type type, Exception e) {
+    logger.error(new StringBuilder(128)
+                     .append("Failed while trying to perform audit for Entity: ")
+                     .append(oldEntity != null ? oldEntity.getClass() : newEntity.getClass())
+                     .append(", ID: ")
+                     .append(oldEntity != null ? ((UuidAware) oldEntity).getUuid() : ((UuidAware) newEntity).getUuid())
+                     .append("Operation Type: ")
+                     .append(type.name())
+                     .append(", Exception: ")
+                     .append(e)
+                     .toString());
   }
 
   @Override

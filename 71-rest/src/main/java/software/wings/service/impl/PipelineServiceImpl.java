@@ -46,7 +46,6 @@ import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
@@ -56,6 +55,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -111,6 +111,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -324,10 +325,16 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public void pruneByApplication(String appId) {
-    List<Key<Pipeline>> pipelineKeys =
-        wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).asKeyList();
-    for (Key key : pipelineKeys) {
-      prunePipeline(appId, (String) key.getId());
+    List<Pipeline> pipelines = wingsPersistence.createQuery(Pipeline.class)
+                                   .filter(PipelineKeys.appId, appId)
+                                   .project(PipelineKeys.name, true)
+                                   .project(PipelineKeys.appId, true)
+                                   .project(PipelineKeys.uuid, true)
+                                   .asList();
+    for (Pipeline pipeline : pipelines) {
+      if (prunePipeline(appId, pipeline.getUuid())) {
+        auditServiceHelper.reportDeleteForAuditing(appId, pipeline);
+      }
     }
   }
 

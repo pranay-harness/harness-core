@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -55,6 +56,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ServiceVariableKeys")
 public class ServiceVariable extends Base implements EncryptableSetting {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
@@ -188,5 +190,12 @@ public class ServiceVariable extends Base implements EncryptableSetting {
 
     serviceVariable.setAppId(getAppId());
     return serviceVariable;
+  }
+
+  public static final class ServiceVariableKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
   }
 }

@@ -191,6 +191,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AzureHelperService azureHelperService;
   @Inject private TriggerService triggerService;
   @Inject private PipelineService pipelineService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -935,12 +936,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public void pruneByEnvironment(String appId, String envId) {
-    List<Key<InfrastructureMapping>> keys = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                .filter(InfrastructureMapping.APP_ID_KEY, appId)
-                                                .filter("envId", envId)
-                                                .asKeyList();
-    for (Key<InfrastructureMapping> key : keys) {
-      prune(appId, (String) key.getId());
+    List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                             .filter(InfrastructureMapping.APP_ID_KEY, appId)
+                                                             .filter("envId", envId)
+                                                             .project(InfrastructureMapping.APP_ID_KEY, true)
+                                                             .project(InfrastructureMapping.ENV_ID_KEY, true)
+                                                             .project(InfrastructureMapping.NAME_KEY, true)
+                                                             .project(InfrastructureMapping.ID_KEY, true)
+                                                             .asList();
+    for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
+      prune(appId, infrastructureMapping.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(appId, infrastructureMapping);
     }
   }
 

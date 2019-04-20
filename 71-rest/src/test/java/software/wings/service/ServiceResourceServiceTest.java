@@ -14,6 +14,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -140,6 +141,7 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -378,12 +380,20 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDeleteService() {
+    Query mockQuery = mock(Query.class);
+    AuditServiceHelper auditServiceHelper = mock(AuditServiceHelper.class);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
+
+    when(mockWingsPersistence.createQuery(any())).thenReturn(mockQuery);
+    when(mockQuery.filter(anyString(), anyString())).thenReturn(mockQuery);
+    when(mockQuery.get()).thenReturn(null);
+    doNothing().when(auditServiceHelper).reportDeleteForAuditing(anyString(), any());
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList()).build());
+
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
     srs.delete(APP_ID, SERVICE_ID);

@@ -27,7 +27,6 @@ public class PruneEvent extends Queuable {
   public PruneEvent(String classCanonicalName, String appId, String entityId) {
     setEarliestGet(Date.from(OffsetDateTime.now().plus(DELAY).toInstant()));
     setRetries(MAX_RETRIES);
-
     this.appId = appId;
     this.entityId = entityId;
     this.entityClass = classCanonicalName;

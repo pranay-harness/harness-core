@@ -41,8 +41,10 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.harness.k8s.model.AuditGlobalContextData;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.PurgeGlobalContextData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
@@ -97,5 +99,7 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
 
     kryo.register(K8sPod.class, 7145);
     kryo.register(K8sContainer.class, 7146);
+    kryo.register(AuditGlobalContextData.class, 7172);
+    kryo.register(PurgeGlobalContextData.class, 7173);
   }
 }

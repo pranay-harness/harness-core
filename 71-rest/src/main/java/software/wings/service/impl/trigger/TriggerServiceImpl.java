@@ -91,6 +91,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
@@ -147,6 +148,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private EnvironmentService environmentService;
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
   @Inject private TriggerExecutionService triggerExecutionService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest) {
@@ -198,10 +200,10 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public void pruneByApplication(String appId) {
-    wingsPersistence.createQuery(Trigger.class)
-        .filter(Trigger.APP_ID_KEY, appId)
-        .asList()
-        .forEach(trigger -> delete(appId, trigger.getUuid()));
+    wingsPersistence.createQuery(Trigger.class).filter(Trigger.APP_ID_KEY, appId).asList().forEach(trigger -> {
+      delete(appId, trigger.getUuid());
+      auditServiceHelper.reportDeleteForAuditing(appId, trigger);
+    });
   }
 
   @Override

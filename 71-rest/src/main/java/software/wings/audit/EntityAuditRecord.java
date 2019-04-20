@@ -6,10 +6,6 @@ import lombok.Value;
 @Value
 @Builder
 public class EntityAuditRecord {
-  public static final String OPERATION_TYPE_CREATE = "CREATE";
-  public static final String OPERATION_TYPE_UPDATE = "UPDATE";
-  public static final String OPERATION_TYPE_DELETE = "DELETE";
-
   // Details of the entity being modified
   private String entityId;
   private String entityType;

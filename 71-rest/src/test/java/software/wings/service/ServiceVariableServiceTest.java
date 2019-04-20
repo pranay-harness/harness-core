@@ -6,6 +6,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,6 +48,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -405,19 +409,17 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDeleteByEntityId() {
-    PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(SERVICE_VARIABLE));
-    pageResponse.setTotal(1l);
+    AuditServiceHelper auditServiceHelper = mock(AuditServiceHelper.class);
+    doNothing().when(auditServiceHelper).reportDeleteForAuditing(anyString(), any());
 
-    PageRequest<ServiceVariable> pageRequest =
-        aPageRequest().addFilter("appId", Operator.EQ, APP_ID).addFilter("entityId", Operator.EQ, "ENTITY_ID").build();
-
+    List<ServiceVariable> serviceVariables = asList(SERVICE_VARIABLE);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
-    when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
-    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
+    when(query.filter(anyString(), any())).thenReturn(query);
+    when(query.asList()).thenReturn(serviceVariables);
+    when(wingsPersistence.delete(any(ServiceVariable.class))).thenReturn(true);
 
     serviceVariableService.pruneByService(APP_ID, "ENTITY_ID");
-    verify(wingsPersistence).delete(query);
+    verify(wingsPersistence, times(1)).delete(any(ServiceVariable.class));
   }
 
   /**

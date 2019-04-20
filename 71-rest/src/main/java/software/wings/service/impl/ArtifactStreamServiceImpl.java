@@ -106,6 +106,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject @Transient private transient FeatureFlagService featureFlagService;
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -529,7 +530,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .filter(ArtifactStream.APP_ID_KEY, appId)
         .filter("serviceId", serviceId)
         .asList()
-        .forEach(artifactSource -> pruneArtifactStream((String) appId, (String) artifactSource.getUuid()));
+        .forEach(artifactSource -> {
+          pruneArtifactStream((String) appId, (String) artifactSource.getUuid());
+          auditServiceHelper.reportDeleteForAuditing(appId, artifactSource);
+        });
   }
 
   @Override

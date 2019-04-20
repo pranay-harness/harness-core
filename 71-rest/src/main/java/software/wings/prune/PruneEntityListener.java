@@ -7,7 +7,10 @@ import com.google.inject.Inject;
 
 import io.harness.exception.CauseCollection;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.PurgeGlobalContextData;
 import io.harness.logging.ExceptionLogger;
+import io.harness.manage.GlobalContextManager;
+import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.queue.QueueListener;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Activity;
@@ -32,6 +35,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -136,8 +140,13 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
             + "the prune job schedule and the parent entity deletion.");
 
       } else {
-        if (!prune(clz, message.getAppId(), message.getEntityId())) {
-          throw new WingsException("The prune failed this time");
+        try (GlobalContextGuard guard = GlobalContextManager.initGlobalContextGuard(message.getGlobalContext())) {
+          GlobalContextManager.upsertGlobalContextRecord(PurgeGlobalContextData.builder().build());
+          if (!prune(clz, message.getAppId(), message.getEntityId())) {
+            throw new WingsException("The prune failed this time");
+          }
+        } catch (IOException e) {
+          throw new WingsException("Something failed in GlobalContextGuard. The prune failed this time: " + e);
         }
       }
     } catch (ClassNotFoundException ignore) {

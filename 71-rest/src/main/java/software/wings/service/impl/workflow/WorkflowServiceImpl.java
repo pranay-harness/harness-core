@@ -112,7 +112,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -149,6 +148,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowCategoryStepsMeta;
 import software.wings.beans.WorkflowCreationFlags;
@@ -172,6 +172,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -299,6 +300,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private YamlPushService yamlPushService;
   @Inject private TemplateService templateService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -1295,9 +1297,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public void pruneByApplication(String appId) {
     // prune workflows
-    List<Key<Workflow>> workflowKeys = wingsPersistence.createQuery(Workflow.class).filter("appId", appId).asKeyList();
-    for (Key key : workflowKeys) {
-      pruneWorkflow(appId, (String) key.getId());
+    List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class)
+                                   .filter(WorkflowKeys.appId, appId)
+                                   .project(WorkflowKeys.name, true)
+                                   .project(WorkflowKeys.appId, true)
+                                   .project(WorkflowKeys.uuid, true)
+                                   .asList();
+    for (Workflow workflow : workflows) {
+      if (pruneWorkflow(appId, workflow.getUuid())) {
+        auditServiceHelper.reportDeleteForAuditing(appId, workflow);
+      }
     }
 
     // prune state machines

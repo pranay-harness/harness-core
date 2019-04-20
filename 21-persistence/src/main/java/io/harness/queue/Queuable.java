@@ -2,8 +2,13 @@ package io.harness.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.context.GlobalContext;
+import io.harness.context.GlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable.QueuableKeys;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -32,6 +37,7 @@ public abstract class Queuable implements PersistentEntity {
   private Date created = new Date();
   private int retries;
   private String version;
+  @Getter @Setter private GlobalContext globalContext;
 
   /**
    * Instantiates a new queuable.
@@ -183,6 +189,12 @@ public abstract class Queuable implements PersistentEntity {
   public void onUpdate() {
     if (id == null) {
       id = generateUuid();
+    }
+  }
+
+  protected void updateGlobalContext(GlobalContextData globalContextData) {
+    if (globalContextData != null) {
+      GlobalContextManager.upsertGlobalContextRecord(globalContextData);
     }
   }
 }
