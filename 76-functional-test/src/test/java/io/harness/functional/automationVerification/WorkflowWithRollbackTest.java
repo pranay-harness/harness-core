@@ -12,8 +12,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtil;
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.ArtifactRestUtils;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -68,8 +68,8 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
   @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private ArtifactRestUtil artifactRestUtil;
-  @Inject private WorkflowRestUtil workflowRestUtil;
+  @Inject private ArtifactRestUtils artifactRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
 
   private Application application;
   private Service service;

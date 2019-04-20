@@ -10,7 +10,7 @@ import software.wings.beans.alert.AlertNotificationRule;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
-public class AlertsRestUtil {
+public class AlertsRestUtils {
   public AlertNotificationRule createAlert(
       String accountId, String bearerToken, AlertNotificationRule alertNotificationRule) {
     RestResponse<AlertNotificationRule> alertRule =

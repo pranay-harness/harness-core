@@ -13,7 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.ArtifactoryConfig;
 
 @Singleton
-public class ConnectorUtil {
+public class ConnectorUtils {
   public static String createArtifactoryConnector(String bearerToken, String connectorName, String accountId) {
     SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -29,7 +29,7 @@ public class ConnectorUtil {
                     .build())
             .build();
 
-    JsonPath setAttrResponse = SettingsUtil.create(bearerToken, accountId, settingAttribute);
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
     assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }

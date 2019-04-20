@@ -8,10 +8,12 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.TestEntity.TestEntityKeys;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,6 +27,7 @@ import java.util.stream.IntStream;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "TestEntityKeys")
 class TestEntity implements PersistentEntity {
   @Id private String uuid;
   private String test;
@@ -66,7 +69,7 @@ public class HPersistenceTest extends PersistenceTest {
     persistence.saveIgnoringDuplicateKeys(list);
 
     final List<TestEntity> testEntities = persistence.createQuery(TestEntity.class, excludeAuthority)
-                                              .filter("test", "shouldSaveIgnoringDuplicateKeysList")
+                                              .filter(TestEntityKeys.test, "shouldSaveIgnoringDuplicateKeysList")
                                               .asList();
 
     assertThat(testEntities).hasSize(5);
@@ -90,7 +93,7 @@ public class HPersistenceTest extends PersistenceTest {
     persistence.save(entity);
 
     final Query<TestEntity> query =
-        persistence.createQuery(TestEntity.class, excludeAuthority).filter("test", "shouldDeleteUuid");
+        persistence.createQuery(TestEntity.class, excludeAuthority).filter(TestEntityKeys.test, "shouldDeleteUuid");
 
     List<TestEntity> testEntities = query.asList();
     assertThat(testEntities).hasSize(1);
@@ -109,7 +112,7 @@ public class HPersistenceTest extends PersistenceTest {
     persistence.save(entity);
 
     final Query<TestEntity> query =
-        persistence.createQuery(TestEntity.class, excludeAuthority).filter("test", "shouldDeleteQuery");
+        persistence.createQuery(TestEntity.class, excludeAuthority).filter(TestEntityKeys.test, "shouldDeleteQuery");
 
     List<TestEntity> testEntities = query.asList();
     assertThat(testEntities).hasSize(1);
@@ -128,7 +131,7 @@ public class HPersistenceTest extends PersistenceTest {
     persistence.save(entity);
 
     final Query<TestEntity> query =
-        persistence.createQuery(TestEntity.class, excludeAuthority).filter("test", "shouldDeleteEntity");
+        persistence.createQuery(TestEntity.class, excludeAuthority).filter(TestEntityKeys.test, "shouldDeleteEntity");
 
     List<TestEntity> testEntities = query.asList();
     assertThat(testEntities).hasSize(1);

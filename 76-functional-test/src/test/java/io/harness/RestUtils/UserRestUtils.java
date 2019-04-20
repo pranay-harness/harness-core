@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
-public class UserRestUtil extends AbstractFunctionalTest {
+public class UserRestUtils extends AbstractFunctionalTest {
   public List<User> getUserList(String accountId) {
     RestResponse<PageResponse<User>> userRestResponse =
         Setup.portal()

@@ -8,7 +8,7 @@ import io.harness.framework.email.GuerillaEmailDetails;
 import io.harness.framework.email.GuerillaEmailInfo;
 import io.harness.framework.email.GuerillaIndividualEmail;
 
-public class GuerillaMailUtil {
+public class GuerillaMailUtils {
   public GuerillaEmailInfo refreshAndGetNewEmail() {
     GuerillaEmailInfo emailInfo = Setup.email()
                                       .queryParam("f", "get_email_address")

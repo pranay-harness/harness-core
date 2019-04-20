@@ -8,7 +8,7 @@ import static org.junit.Assert.assertNull;
 
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.UserRestUtil;
+import io.harness.RestUtils.UserRestUtils;
 import io.harness.Utils.TestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -38,7 +38,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   Owners owners;
   final Seed seed = new Seed(0);
 
-  UserRestUtil urUtil = new UserRestUtil();
+  UserRestUtils urUtil = new UserRestUtils();
   TestUtils testUtils = new TestUtils();
 
   @Before

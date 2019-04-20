@@ -80,6 +80,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceSecretKey;
+import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -217,8 +218,8 @@ public class DataGenService {
     }
 
     featureFlagService.initializeFeatureFlags();
-    wingsPersistence.findAndModify(
-        wingsPersistence.createQuery(ServiceSecretKey.class).filter("serviceType", ServiceType.LEARNING_ENGINE),
+    wingsPersistence.findAndModify(wingsPersistence.createQuery(ServiceSecretKey.class)
+                                       .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE),
         wingsPersistence.createUpdateOperations(ServiceSecretKey.class)
             .set("serviceSecret", "67d9b94d9856665afc21acd3aa745401"),
         new FindAndModifyOptions().upsert(true));

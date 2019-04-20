@@ -14,7 +14,7 @@ import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class UserGroupRestUtil {
+public class UserGroupRestUtils {
   public List<UserGroup> getUserGroups(Account account, String bearerToken) {
     GenericType<RestResponse<PageResponse<UserGroup>>> userGroupType =
         new GenericType<RestResponse<PageResponse<UserGroup>>>() {};

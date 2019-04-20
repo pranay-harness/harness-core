@@ -17,7 +17,7 @@ import java.util.HashMap;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class EnvironmentRestUtil extends AbstractFunctionalTest {
+public class EnvironmentRestUtils extends AbstractFunctionalTest {
   /**
    *
    * @param applicationId

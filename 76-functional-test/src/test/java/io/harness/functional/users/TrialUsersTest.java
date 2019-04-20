@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.RestUtils.HTMLUtils;
 import io.harness.RestUtils.MailinatorRestUtils;
-import io.harness.RestUtils.UserRestUtil;
+import io.harness.RestUtils.UserRestUtils;
 import io.harness.Utils.TestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Retry;
@@ -47,7 +47,7 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   final String EXPECTED_SUBJECT = "Verify Your Email for Harness Trial";
   final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
-  UserRestUtil urUtil = new UserRestUtil();
+  UserRestUtils urUtil = new UserRestUtils();
   MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
   HTMLUtils htmlUtils = new HTMLUtils();
   TestUtils testUtils = new TestUtils();

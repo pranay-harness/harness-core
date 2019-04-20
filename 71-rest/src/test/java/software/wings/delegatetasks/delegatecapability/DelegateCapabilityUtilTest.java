@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.CapabilityUtil;
+import io.harness.delegate.task.CapabilityUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.TaskType;
@@ -31,7 +31,7 @@ public class DelegateCapabilityUtilTest {
 
     List<TaskType> taskTypesVerified =
         taskTypeList.stream()
-            .filter(taskType -> CapabilityUtil.isTaskTypeMigratedToCapabilityFramework(taskType.name()))
+            .filter(taskType -> CapabilityUtils.isTaskTypeMigratedToCapabilityFramework(taskType.name()))
             .collect(toList());
 
     assertEquals(taskTypeList.size(), taskTypesVerified.size());

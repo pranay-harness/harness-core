@@ -21,7 +21,7 @@ import static software.wings.sm.StateType.DC_NODE_SELECT;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -78,7 +78,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private WorkflowRestUtil workflowRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
   @Inject private TestConstants testConstants;
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);

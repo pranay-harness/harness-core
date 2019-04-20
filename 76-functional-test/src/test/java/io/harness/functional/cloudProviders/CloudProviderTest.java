@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import io.harness.RestUtils.SettingsUtil;
+import io.harness.RestUtils.SettingsUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.OwnerRule.Owner;
@@ -33,7 +33,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void TC0_listCloudProviders() {
-    JsonPath cloudProviders = SettingsUtil.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
+    JsonPath cloudProviders = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
     assertThat(cloudProviders).isNotNull();
   }
 
@@ -53,14 +53,14 @@ public class CloudProviderTest extends AbstractFunctionalTest {
                            .build())
             .build();
 
-    JsonPath setAttrResponse = SettingsUtil.create(bearerToken, getAccount().getUuid(), settingAttribute);
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
     assertThat(setAttrResponse).isNotNull();
     // System.out.println(setAttrResponse.prettyPrint());
     cloudProviderId = setAttrResponse.getString("resource.uuid").trim();
 
     // Verify cloudprovider is created i.e cloudprovider with specific name exist
     boolean connectorFound =
-        SettingsUtil.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
     assertTrue(connectorFound);
   }
 
@@ -68,11 +68,11 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void TC2_deleteCloudProvider() {
-    SettingsUtil.delete(bearerToken, getAccount().getUuid(), cloudProviderId);
+    SettingsUtils.delete(bearerToken, getAccount().getUuid(), cloudProviderId);
 
     // Verify cloudprovider is deleted i.e cloudprovider with specific name doesn't exist
     boolean connectorFound =
-        SettingsUtil.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
     assertFalse(connectorFound);
   }
 }

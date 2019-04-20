@@ -21,8 +21,8 @@ import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtil;
-import io.harness.RestUtils.WorkflowRestUtil;
+import io.harness.RestUtils.ArtifactRestUtils;
+import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -83,7 +83,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowRestUtil workflowRestUtil;
+  @Inject private WorkflowRestUtils workflowRestUtil;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private AccountGenerator accountGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
@@ -94,7 +94,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private EnvironmentService environmentService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private ArtifactRestUtil artifactRestUtil;
+  @Inject private ArtifactRestUtils artifactRestUtil;
   @Inject private ArtifactStreamManager artifactStreamManager;
 
   final Seed seed = new Seed(0);

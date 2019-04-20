@@ -5,6 +5,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -17,6 +18,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "DelegateProfileKeys")
 public class DelegateProfile extends Base {
   @NotEmpty private String accountId;
   @NotEmpty private String name;
