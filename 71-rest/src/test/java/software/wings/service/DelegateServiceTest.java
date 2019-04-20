@@ -346,7 +346,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                               .build())
                                     .build();
     delegateService.queueTask(delegateTask);
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.APP_ID_KEY, APP_ID).get())
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.appId, APP_ID).get())
         .isEqualTo(delegateTask);
   }
 
@@ -369,7 +369,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .build();
     delegateService.queueTask(delegateTask);
     DelegateTask delegateTask1 =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.APP_ID_KEY, APP_ID).get();
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.appId, APP_ID).get();
     assertThat(delegateTask1.getPreAssignedDelegateId()).isEqualTo(DELEGATE_ID);
   }
 
