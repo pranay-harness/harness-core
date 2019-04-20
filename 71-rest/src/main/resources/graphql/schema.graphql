@@ -15,7 +15,7 @@ type Query {
   workflow(workflowId: String!): Workflow   @dataFetcher(name : "workflow")
 
   # Get list of workflows for an appId. It will return paginated data
-  workflows(appId: String!, limit: Int, offset: Int): PagedData  @dataFetcher(name : "workflows")
+  workflows(appId: String!, limit: Int!, offset: Int): WorkflowConnection  @dataFetcher(name : "workflowConnection")
 
   # Get the execution status of a workflow
   workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution  @dataFetcher(name : "workflowExecution")
@@ -78,6 +78,24 @@ type PipelineConnection {
   nodes : [Pipeline]
 }
 
+# Type workflow
+type Workflow {
+  # Workflow Id
+  id: String
+
+  # Name of the workflow
+  name: String
+
+  # Description of the workflow
+  description: String
+}
+
+type WorkflowConnection {
+    pageInfo : PageInfo
+    nodes : [Workflow]
+}
+
+
 # Type for workflow Execution
 type WorkflowExecution implements BaseInfo {
   # Workflow Execution Id
@@ -99,32 +117,7 @@ type WorkflowExecution implements BaseInfo {
   debugInfo: String
 }
 
-# Type workflow
-type Workflow implements BaseInfo {
-  # Workflow Id
-  id: String
 
-  # Name of the workflow
-  name: String
-
-  # Workflow type PIPELINE or ORCHESTRATION
-  workflowType: String
-
-  # Description of the workflow
-  description: String
-
-  # Flag whether this workflow is templatized
-  templatized: Boolean
-
-  # Services associated with the workflow
-  services: [Service]
-
-  environment: Environment  @dataFetcher(name : "environment", contextFieldArgsMap: "{ \"appId\": \"appId\", \"envId\": \"envId\"}")
-
-  # Debug info useful to troubleshoot issues
-  debugInfo: String
-
-}
 
 # Service Type
 type Service {
@@ -187,8 +180,6 @@ type Application implements BaseInfo {
   description : String
   # Debug info useful to troubleshoot issues
   debugInfo: String
-  # Workflows within an application
-  workflows: PagedData  @dataFetcher(name : "workflows", contextFieldArgsMap: "{ \"appId\": \"id\"}")
 }
 
 type Environment implements BaseInfo {
