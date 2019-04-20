@@ -25,8 +25,6 @@ import java.util.Date;
 @Builder
 @FieldNameConstants(innerTypeName = "NotifyResponseKeys")
 public class NotifyResponse<T extends ResponseData> implements PersistentEntity, UuidAccess, CreatedAtAccess {
-  public static final String STATUS_KEY = "status";
-
   public static final Duration TTL = WaitQueue.TTL.plusDays(7);
 
   @Id private String uuid;

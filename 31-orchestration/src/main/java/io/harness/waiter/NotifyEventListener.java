@@ -19,6 +19,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
+import io.harness.waiter.WaitQueue.WaitQueueKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -55,12 +56,12 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
     final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class, ReadPref.CRITICAL)
                                                       .filter(WaitInstanceKeys.uuid, waitInstanceId)
-                                                      .filter(WaitInstance.STATUS_KEY, ExecutionStatus.NEW)
-                                                      .field(WaitInstance.CALLBACK_PROCESSING_AT_KEY)
+                                                      .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
+                                                      .field(WaitInstanceKeys.callbackProcessingAt)
                                                       .lessThan(limit);
 
     final UpdateOperations<WaitInstance> updateOperations =
-        persistence.createUpdateOperations(WaitInstance.class).set(WaitInstance.CALLBACK_PROCESSING_AT_KEY, now);
+        persistence.createUpdateOperations(WaitInstance.class).set(WaitInstanceKeys.callbackProcessingAt, now);
 
     return persistence.findAndModify(waitInstanceQuery, updateOperations, findAndModifyOptions);
   }
@@ -74,7 +75,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     String waitInstanceId = message.getWaitInstanceId();
 
     List<WaitQueue> waitQueues = persistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
-                                     .filter(WaitQueue.WAIT_INSTANCE_ID_KEY, waitInstanceId)
+                                     .filter(WaitQueueKeys.waitInstanceId, waitInstanceId)
                                      .asList();
 
     if (isEmpty(waitQueues)) {
@@ -162,8 +163,8 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     try {
       UpdateOperations<WaitInstance> waitInstanceUpdate =
           persistence.createUpdateOperations(WaitInstance.class)
-              .set(WaitInstance.STATUS_KEY, status)
-              .set(WaitInstance.VALID_UNTIL_KEY,
+              .set(WaitInstanceKeys.status, status)
+              .set(WaitInstanceKeys.validUntil,
                   Date.from(OffsetDateTime.now().plus(WaitInstance.AfterFinishTTL).toInstant()));
       persistence.update(waitInstance, waitInstanceUpdate);
     } catch (Exception exception) {
