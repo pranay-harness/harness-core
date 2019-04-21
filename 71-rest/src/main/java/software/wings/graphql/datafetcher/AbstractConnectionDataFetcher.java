@@ -8,14 +8,12 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetcher<T> {
-  protected static final String LIMIT_ARG = "limit";
-  protected static final String OFFSET_ARG = "offset";
-
   @Inject protected HPersistence persistence;
 
   public AbstractConnectionDataFetcher(AuthHandler authHandler) {
@@ -34,24 +32,20 @@ public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetch
 
   public interface Controller<T> { void populate(T entity); }
 
-  protected <T> QLPageInfo populate(
-      Query<T> query, DataFetchingEnvironment dataFetchingEnvironment, Controller<T> controller) {
-    Integer limit = (Integer) getArgumentValue(dataFetchingEnvironment, LIMIT_ARG);
-    Integer offset = (Integer) getArgumentValue(dataFetchingEnvironment, OFFSET_ARG);
-    if (offset == null) {
-      offset = Integer.valueOf(0);
-    }
-
-    QLPageInfoBuilder builder = QLPageInfo.builder().limit(limit).offset(offset);
+  protected <T> QLPageInfo populate(QLPageQueryParameters page, Query<T> query,
+      DataFetchingEnvironment dataFetchingEnvironment, Controller<T> controller) {
+    QLPageInfoBuilder builder = QLPageInfo.builder().limit(page.getLimit()).offset(page.getOffset());
 
     // A full count of all items that match particular filter could be expensive. This is why using has more feature is
     // recommended over obtaining total. To determine if we have more, we fetch 1 more than the requested.
     final FindOptions options =
-        new FindOptions().limit(limit + (isPageInfoHasMoreSelected(dataFetchingEnvironment) ? 1 : 0)).skip(offset);
+        new FindOptions()
+            .limit(page.getLimit() + (isPageInfoHasMoreSelected(dataFetchingEnvironment) ? 1 : 0))
+            .skip(page.getOffset());
 
     try (HIterator<T> iterator = new HIterator<T>(query.fetch(options))) {
       int count = 0;
-      for (; count < limit && iterator.hasNext(); count++) {
+      for (; count < page.getLimit() && iterator.hasNext(); count++) {
         controller.populate(iterator.next());
       }
 

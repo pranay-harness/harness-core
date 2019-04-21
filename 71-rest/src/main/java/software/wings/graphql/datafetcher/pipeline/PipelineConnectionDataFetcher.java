@@ -9,6 +9,7 @@ import org.mongodb.morphia.query.Sort;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.graphql.datafetcher.AbstractConnectionDataFetcher;
+import software.wings.graphql.schema.query.QLPipelinesQueryParameters;
 import software.wings.graphql.schema.type.QLPipeline;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
 import software.wings.graphql.schema.type.QLPipelineConnection;
@@ -32,13 +33,14 @@ public class PipelineConnectionDataFetcher extends AbstractConnectionDataFetcher
 
   @Override
   public QLPipelineConnection fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID_ARG);
+    QLPipelinesQueryParameters qlQuery = fetchParameters(QLPipelinesQueryParameters.class, dataFetchingEnvironment);
+
     final Query<Pipeline> query = persistence.createQuery(Pipeline.class)
-                                      .filter(PipelineKeys.appId, appId)
+                                      .filter(PipelineKeys.appId, qlQuery.getAppId())
                                       .order(Sort.descending(PipelineKeys.createdAt));
 
     QLPipelineConnectionBuilder connectionBuilder = QLPipelineConnection.builder();
-    connectionBuilder.pageInfo(populate(query, dataFetchingEnvironment, pipeline -> {
+    connectionBuilder.pageInfo(populate(qlQuery, query, dataFetchingEnvironment, pipeline -> {
       QLPipelineBuilder builder = QLPipeline.builder();
       PipelineController.populatePipeline(pipeline, builder);
       connectionBuilder.node(builder.build());
