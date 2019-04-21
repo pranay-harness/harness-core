@@ -15,6 +15,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.config.Configuration;
+import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.internal.objenesis.Objenesis;
+import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.schema.type.BaseInfo;
@@ -94,6 +99,20 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
   protected Account getAccount() {
     User currentUser = UserThreadLocal.get();
     return currentUser.getAccounts().get(0);
+  }
+
+  private static final Objenesis objenesis = new ObjenesisStd(true);
+
+  protected <P> P fetchParameters(Class<P> clazz, DataFetchingEnvironment dataFetchingEnvironment) {
+    ModelMapper modelMapper = new ModelMapper();
+    modelMapper.getConfiguration()
+        .setMatchingStrategy(MatchingStrategies.STANDARD)
+        .setFieldMatchingEnabled(true)
+        .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
+
+    P parameters = objenesis.newInstance(clazz);
+    modelMapper.map(dataFetchingEnvironment.getArguments(), parameters);
+    return parameters;
   }
 
   protected Object getArgumentValue(DataFetchingEnvironment dataFetchingEnvironment, String argumentName) {
