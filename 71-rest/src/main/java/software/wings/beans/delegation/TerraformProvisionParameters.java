@@ -1,8 +1,11 @@
 package software.wings.beans.delegation;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.beans.GitConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -11,8 +14,9 @@ import java.util.concurrent.TimeUnit;
 
 @Value
 @Builder
-public class TerraformProvisionParameters {
+public class TerraformProvisionParameters implements ExecutionCapabilityDemander {
   private static final long TIMEOUT_IN_MINUTES = 30;
+  public static final String TERRAFORM = "terraform";
 
   public enum TerraformCommand { APPLY, DESTROY }
 
@@ -45,4 +49,9 @@ public class TerraformProvisionParameters {
   private final List<String> targets;
   private final List<String> tfVarFiles;
   private final boolean runPlanOnly;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails);
+  }
 }
