@@ -15,7 +15,7 @@ public class FeatureAvailabilityProviderServiceImpl implements FeatureAvailabili
 
   @Override
   public List<FeatureAvailability> listFeatureAvailability(String accountId) {
-    if (accountService.isAccountLite(accountId)) {
+    if (accountService.isCommunityAccount(accountId)) {
       return Arrays.stream(HarnessFeature.values())
           .map(it -> new FeatureAvailability(it, false))
           .collect(Collectors.toList());

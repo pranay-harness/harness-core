@@ -5,15 +5,13 @@ import com.google.inject.Singleton;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
 @Singleton
+@Slf4j
 public class ProcessExecutorCapabilityCheck implements CapabilityCheck {
-  private static final Logger logger = LoggerFactory.getLogger(ProcessExecutorCapabilityCheck.class);
-
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ProcessExecutorCapability processExecutorCapability = (ProcessExecutorCapability) delegateCapability;
