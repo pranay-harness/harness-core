@@ -2137,7 +2137,13 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean updateLead(String email, String accountId) {
     User user = getUserByEmail(email);
-    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+    executorService.submit(() -> {
+      try {
+        Thread.sleep(30000);
+      } catch (InterruptedException e) {
+      }
+      eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+    });
     return true;
   }
 }
