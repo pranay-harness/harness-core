@@ -1,13 +1,16 @@
 package software.wings.resources.alert;
 
+import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.security.PermissionAttribute.ResourceType.ROLE;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
@@ -22,6 +25,7 @@ import software.wings.service.intfc.AlertService;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -42,11 +46,16 @@ public class AlertResource {
   @Inject private AlertVisibilityChecker alertVisibilityChecker;
   @Inject private ContinuousVerificationService continuousVerificationService;
 
+  // PL-1389
+  private static final Set<software.wings.beans.alert.AlertType> ALERT_TYPES_TO_NOT_SHOW_UNDER_BELL_ICON =
+      Sets.newHashSet(CONTINUOUS_VERIFICATION_ALERT);
+
   @GET
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<Alert>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Alert> request) {
+    request.addFilter(Alert.TYPE_KEY, Operator.NOT_IN, ALERT_TYPES_TO_NOT_SHOW_UNDER_BELL_ICON.toArray());
     return new RestResponse<>(alertService.list(request));
   }
 
