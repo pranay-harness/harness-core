@@ -332,7 +332,7 @@ public class SettingValidationService {
     try {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
       gitConfig.setDecrypted(true);
-      gitConfigHelperService.validateGitConfig(gitConfig, fetchEncryptionDetails(gitConfig));
+      gitConfigHelperService.validateGitConfig(gitConfig, encryptedDataDetails);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }

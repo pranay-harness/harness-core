@@ -49,7 +49,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassphrase;
 
   @Attributes(title = "Auth Scheme") private AuthenticationScheme authenticationScheme = SSH_KEY;
-  public enum AuthenticationScheme { SSH_KEY, KERBEROS }
+  public enum AuthenticationScheme { SSH_KEY, KERBEROS, HTTP_PASSWORD }
   @Attributes private KerberosConfig kerberosConfig;
   @Attributes(title = "Kerberos Password") @Encrypted private char[] kerberosPassword;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKerberosPassword;

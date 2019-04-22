@@ -5,12 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
+import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.yaml.YamlConstants.GIT_DEFAULT_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_HELM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
@@ -28,7 +30,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import groovy.lang.Singleton;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -62,6 +64,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.HttpTransport;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.PushResult;
@@ -69,11 +72,16 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.http.HttpConnection;
+import org.eclipse.jgit.transport.http.HttpConnectionFactory;
+import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.FS;
+import org.eclipse.jgit.util.HttpSupport;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCheckoutResult;
 import software.wings.beans.yaml.GitCloneResult;
@@ -93,6 +101,8 @@ import software.wings.service.intfc.yaml.GitClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Proxy;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -125,7 +135,7 @@ public class GitClientImpl implements GitClient {
         FileUtils.deleteDirectory(new File(gitRepoDirectory));
       }
     } catch (IOException ioex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", ExceptionUtils.getMessage(ioex));
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", getMessage(ioex));
     }
 
     logger.info(GIT_YAML_LOG_PREFIX + "cloning repo, Git repo directory :{}", gitRepoDirectory);
@@ -446,7 +456,7 @@ public class GitClientImpl implements GitClient {
       }
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      String errorMsg = ExceptionUtils.getMessage(ex);
+      String errorMsg = getMessage(ex);
       if (ex instanceof InvalidRemoteException || ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
       }
@@ -825,7 +835,7 @@ public class GitClientImpl implements GitClient {
         }
       }
       // Any generic error
-      return ExceptionUtils.getMessage(e);
+      return getMessage(e);
     }
     return null; // no error
   }
@@ -967,8 +977,11 @@ public class GitClientImpl implements GitClient {
   }
 
   private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {
-    if (!gitConfig.isKeyAuth()) {
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith("http")) {
       gitCommand.setCredentialsProvider(getCredentialsProvider(gitConfig));
+      if (gitConfig.getAuthenticationScheme().equals(KERBEROS)) {
+        addApacheConnectionFactoryAndGenerateTGT(gitConfig);
+      }
     } else {
       gitCommand.setTransportConfigCallback(transport -> {
         SshTransport sshTransport = (SshTransport) transport;
@@ -976,6 +989,33 @@ public class GitClientImpl implements GitClient {
       });
     }
     return gitCommand;
+  }
+
+  private void addApacheConnectionFactoryAndGenerateTGT(GitConfig gitConfig) {
+    try {
+      HttpTransport.setConnectionFactory(new ApacheHttpConnectionFactory());
+      URL url = new URL(gitConfig.getRepoUrl());
+      SshSessionConfig sshSessionConfig = createSshSessionConfig(gitConfig.getSshSettingAttribute(), url.getHost());
+      software.wings.core.ssh.executors.SshSessionFactory.generateTGT(sshSessionConfig, new NoopExecutionCallback());
+    } catch (Exception e) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
+          gitConfig.getRepoUrl(), getMessage(e));
+      throw new InvalidRequestException("Failed to do Kerberos authentication");
+    }
+  }
+
+  public static class ApacheHttpConnectionFactory implements HttpConnectionFactory {
+    @Override
+    public HttpConnection create(URL url) throws IOException {
+      return create(url, null);
+    }
+
+    @Override
+    public HttpConnection create(URL url, Proxy proxy) throws IOException {
+      HttpConnection connection = new HttpClientConnectionFactory().create(url, proxy);
+      HttpSupport.disableSslVerify(connection);
+      return connection;
+    }
   }
 
   private SshSessionFactory getSshSessionFactory(SettingAttribute settingAttribute) {
