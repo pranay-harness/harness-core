@@ -9,6 +9,8 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.harness.OrchestrationModule;
+import io.harness.event.lite.FeatureAvailabilityProviderService;
+import io.harness.event.lite.FeatureAvailabilityProviderServiceImpl;
 import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
 import io.harness.limits.LimitCheckerFactory;
@@ -674,6 +676,8 @@ public class WingsModule extends DependencyModule {
     bind(GovernanceConfigService.class).to(GovernanceConfigServiceImpl.class);
     bind(MarketPlaceService.class).to(MarketPlaceServiceImpl.class);
     bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
+
+    bind(FeatureAvailabilityProviderService.class).to(FeatureAvailabilityProviderServiceImpl.class);
 
     bind(ServiceNowService.class).to(ServiceNowServiceImpl.class);
     // Start of deployment trigger dependencies
