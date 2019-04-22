@@ -74,7 +74,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         buildDetails =
             dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER, e)
           .addParam("message", ExceptionUtils.getMessage(e));
     }

@@ -43,6 +43,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
           artifactStreamId, artifactStream.getArtifactStreamType(), artifactStream.getFailedCronAttempts());
       return;
     }
+
     try {
       int leaseDuration = (int) (TimeUnit.MINUTES.toMillis(1)
           * PermitServiceImpl.getBackoffMultiplier(artifactStream.getFailedCronAttempts()));
