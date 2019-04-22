@@ -25,6 +25,7 @@ public class Alert extends Base {
   public static final String CLOSED_AT_KEY = "closedAt";
   public static final String STATUS_KEY = "status";
   public static final String VALID_UNTIL_KEY = "validUntil";
+  public static final String TYPE_KEY = "type";
 
   @Indexed private String accountId;
   @Indexed private AlertType type;
