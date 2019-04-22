@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.config.Configuration;
 import org.modelmapper.convention.MatchingStrategies;
@@ -112,6 +113,12 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
 
     P parameters = objenesis.newInstance(clazz);
     modelMapper.map(dataFetchingEnvironment.getArguments(), parameters);
+    try {
+      FieldUtils.writeField(parameters, "selectionSet", dataFetchingEnvironment.getSelectionSet(), true);
+    } catch (IllegalAccessException exception) {
+      logger.error("This should not happen", exception);
+    }
+
     return parameters;
   }
 
