@@ -171,7 +171,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   private static class UserGroupComparator implements Comparator<UserGroup>, Serializable {
     @Override
     public int compare(UserGroup lhs, UserGroup rhs) {
-      return lhs.getName().compareToIgnoreCase(rhs.getName());
+      return StringUtils.compare(lhs.getName(), rhs.getName());
     }
   }
 

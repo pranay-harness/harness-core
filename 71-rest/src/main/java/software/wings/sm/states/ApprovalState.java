@@ -17,12 +17,10 @@ import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.Constants.SCRIPT_APPROVAL_COMMAND;
@@ -60,6 +58,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -77,6 +76,7 @@ import software.wings.scheduler.ScriptApprovalJob;
 import software.wings.scheduler.ServiceNowApprovalJob;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.EmailNotificationService;
@@ -122,6 +122,8 @@ public class ApprovalState extends State {
   @Inject private JiraHelperService jiraHelperService;
   @Inject private ServiceNowService serviceNowService;
   @Inject private transient ActivityService activityService;
+  @Inject private transient WorkflowNotificationHelper workflowNotificationHelper;
+
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   @Getter @Setter ApprovalStateParams approvalStateParams;
@@ -160,7 +162,15 @@ public class ApprovalState extends State {
                                                   .build();
     populateApprovalAlert(approvalNeededAlert, context);
     alertService.openAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
-    sendApprovalNotification(app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
+
+    try {
+      workflowNotificationHelper.sendApprovalNotification(
+          app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues, (ExecutionContextImpl) context);
+    } catch (Exception e) {
+      // catch exception so that failure to send notification doesn't affect rest of execution
+      logger.error("Error sending approval notifiaction. accountId={}", app.getAccountId(), e);
+    }
+
     WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetailsWithoutGraph(app.getAppId(), context.getWorkflowExecutionId());
     if (workflowExecution != null) {
@@ -581,10 +591,16 @@ public class ApprovalState extends State {
     return super.getTimeoutMillis();
   }
 
+  /**
+   * @deprecated
+   * Use {@link WorkflowNotificationHelper#sendApprovalNotification} instead
+   */
+  @Deprecated
   void sendApprovalNotification(
       String accountId, NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
     List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
+    NotificationRule notificationRule =
+        NotificationRuleBuilder.aNotificationRule().withNotificationGroups(notificationGroups).build();
 
     notificationService.sendNotificationAsync(anInformationNotification()
                                                   .withAppId(GLOBAL_APP_ID)
@@ -592,7 +608,7 @@ public class ApprovalState extends State {
                                                   .withNotificationTemplateId(notificationMessageType.name())
                                                   .withNotificationTemplateVariables(placeHolderValues)
                                                   .build(),
-        singletonList(notificationRule));
+        Collections.singletonList(notificationRule));
   }
 
   private static String getStatusMessage(ExecutionStatus status) {

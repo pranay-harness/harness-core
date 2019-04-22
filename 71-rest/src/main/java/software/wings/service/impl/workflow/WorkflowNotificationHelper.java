@@ -12,6 +12,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
@@ -37,15 +38,18 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -65,10 +69,13 @@ import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -184,6 +191,45 @@ public class WorkflowNotificationHelper {
     } else {
       notificationService.sendNotificationAsync(notification, notificationRules);
     }
+  }
+
+  public void sendApprovalNotification(String accountId, NotificationMessageType notificationMessageType,
+      Map<String, String> placeHolderValues, ExecutionContextImpl context) {
+    List<NotificationRule> rules = new LinkedList<>();
+
+    Objects.requireNonNull(context, "Context can't be null. accountId=" + accountId);
+    Objects.requireNonNull(context.getWorkflowType(), "workflow type can't be null. accountId=" + accountId);
+
+    switch (context.getWorkflowType()) {
+      case ORCHESTRATION:
+        rules = obtainNotificationApplicableToScope(context, WORKFLOW, PAUSED);
+        break;
+
+      case PIPELINE:
+        UserGroup defaultUserGroup = userGroupService.getDefaultUserGroup(accountId);
+        if (null == defaultUserGroup) {
+          logger.error("There is no default user group. accountId={}", accountId);
+        } else {
+          NotificationRule rule = NotificationRuleBuilder.aNotificationRule()
+                                      .withUserGroupIds(Collections.singletonList(defaultUserGroup.getUuid()))
+                                      .build();
+
+          rules.add(rule);
+        }
+        break;
+
+      default:
+        throw new IllegalArgumentException("Uknown workflow type: " + context.getWorkflowType());
+    }
+
+    InformationNotification notification = anInformationNotification()
+                                               .withAppId(GLOBAL_APP_ID)
+                                               .withAccountId(accountId)
+                                               .withNotificationTemplateId(notificationMessageType.name())
+                                               .withNotificationTemplateVariables(placeHolderValues)
+                                               .build();
+
+    notificationService.sendNotificationAsync(notification, rules);
   }
 
   List<NotificationRule> obtainNotificationApplicableToScope(
