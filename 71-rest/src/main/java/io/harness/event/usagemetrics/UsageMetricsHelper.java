@@ -22,6 +22,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -45,7 +46,7 @@ public class UsageMetricsHelper {
   public Application getApplication(String appId) {
     Application application = wingsPersistence.createQuery(Application.class)
                                   .project(Application.ACCOUNT_ID_KEY, true)
-                                  .project(Application.NAME_KEY, true)
+                                  .project(ApplicationKeys.name, true)
                                   .filter(Application.ID_KEY, appId)
                                   .get();
     Validator.notNullCheck("Application does not exist", application, USER);

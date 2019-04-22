@@ -46,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
@@ -426,7 +427,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public List<String> getAppNamesByAccountId(String accountId) {
     return wingsPersistence.createQuery(Application.class)
-        .project(Application.NAME_KEY, true)
+        .project(ApplicationKeys.name, true)
         .filter("accountId", accountId)
         .asList()
         .stream()

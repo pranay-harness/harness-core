@@ -11,6 +11,7 @@ import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Application.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -64,7 +65,7 @@ public class ApplicationGenerator {
   public Application exists(Application application) {
     return wingsPersistence.createQuery(Application.class)
         .filter(Application.ACCOUNT_ID_KEY, application.getAccountId())
-        .filter(Application.NAME_KEY, application.getName())
+        .filter(ApplicationKeys.name, application.getName())
         .get();
   }
 

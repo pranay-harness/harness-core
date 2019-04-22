@@ -94,8 +94,8 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public void updateStatus(String activityId, String appId, ExecutionStatus status) {
     wingsPersistence.update(
-        wingsPersistence.createQuery(Activity.class).filter(ID_KEY, activityId).filter("appId", appId),
-        wingsPersistence.createUpdateOperations(Activity.class).set("status", status));
+        wingsPersistence.createQuery(Activity.class).filter(ID_KEY, activityId).filter(ActivityKeys.appId, appId),
+        wingsPersistence.createUpdateOperations(Activity.class).set(ActivityKeys.status, status));
     Activity activity = get(activityId, appId);
     if (isNotBlank(activity.getServiceInstanceId())) {
       serviceInstanceService.updateActivity(activity);
@@ -166,15 +166,18 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public Activity getLastActivityForService(String appId, String serviceId) {
-    return wingsPersistence.createQuery(Activity.class).filter("appId", appId).filter("serviceId", serviceId).get();
+    return wingsPersistence.createQuery(Activity.class)
+        .filter(ActivityKeys.appId, appId)
+        .filter(ActivityKeys.serviceId, serviceId)
+        .get();
   }
 
   @Override
   public Activity getLastProductionActivityForService(String appId, String serviceId) {
     return wingsPersistence.createQuery(Activity.class)
-        .filter("appId", appId)
-        .filter("serviceId", serviceId)
-        .filter("environmentType", EnvironmentType.PROD)
+        .filter(ActivityKeys.appId, appId)
+        .filter(ActivityKeys.serviceId, serviceId)
+        .filter(ActivityKeys.environmentType, EnvironmentType.PROD)
         .get();
   }
 
@@ -212,8 +215,8 @@ public class ActivityServiceImpl implements ActivityService {
     //            unitName);
     Query<Activity> query = wingsPersistence.createQuery(Activity.class)
                                 .filter(Mapper.ID_KEY, activityId)
-                                .filter("appId", appId)
-                                .field("commandUnits")
+                                .filter(ActivityKeys.appId, appId)
+                                .field(ActivityKeys.commandUnits)
                                 .elemMatch(wingsPersistence.createQuery(Command.class).filter("name", unitName));
 
     UpdateOperations<Activity> updateOperations = wingsPersistence.createUpdateOperations(Activity.class)
@@ -228,7 +231,7 @@ public class ActivityServiceImpl implements ActivityService {
     commandUnitLastLogMap.forEach((unitName, log) -> {
       Query<Activity> query = wingsPersistence.createQuery(Activity.class)
                                   .filter(Mapper.ID_KEY, activityId)
-                                  .filter("appId", appId)
+                                  .filter(ActivityKeys.appId, appId)
                                   .disableValidation()
                                   .filter("commandUnits.name", unitName);
 
