@@ -11,8 +11,6 @@ import static software.wings.sm.StateType.K8S_DELETE;
 
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactStreamRestUtils;
-import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
@@ -30,6 +28,8 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
+import io.harness.restutils.ArtifactStreamRestUtils;
+import io.harness.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;

@@ -6,14 +6,14 @@ import static org.junit.Assert.assertFalse;
 
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.SecretsRestUtils;
-import io.harness.RestUtils.VaultRestUtils;
-import io.harness.Utils.SecretsUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.restutils.SecretsRestUtils;
+import io.harness.restutils.VaultRestUtils;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.utils.SecretsUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;

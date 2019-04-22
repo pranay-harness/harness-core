@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
@@ -19,6 +18,7 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rest.RestResponse;
+import io.harness.restutils.ArtifactRestUtils;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;

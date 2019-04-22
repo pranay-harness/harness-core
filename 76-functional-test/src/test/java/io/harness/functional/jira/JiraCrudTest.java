@@ -15,7 +15,6 @@ import static software.wings.sm.StateType.JIRA_CREATE_UPDATE;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -30,6 +29,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
+import io.harness.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;

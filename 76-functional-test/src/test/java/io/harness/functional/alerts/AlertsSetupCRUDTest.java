@@ -6,18 +6,18 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
 
-import io.harness.RestUtils.AlertsRestUtils;
-import io.harness.RestUtils.UserGroupRestUtils;
-import io.harness.Utils.AlertsUtils;
-import io.harness.Utils.TestUtils;
-import io.harness.Utils.UserGroupUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
+import io.harness.restutils.AlertsRestUtils;
+import io.harness.restutils.UserGroupRestUtils;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.utils.AlertsUtils;
+import io.harness.utils.TestUtils;
+import io.harness.utils.UserGroupUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

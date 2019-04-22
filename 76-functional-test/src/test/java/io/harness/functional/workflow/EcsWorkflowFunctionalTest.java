@@ -21,8 +21,6 @@ import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtils;
-import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -42,6 +40,8 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
+import io.harness.restutils.ArtifactRestUtils;
+import io.harness.restutils.WorkflowRestUtils;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;

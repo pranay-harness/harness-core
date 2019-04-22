@@ -8,8 +8,6 @@ import static org.junit.Assert.assertNull;
 
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.UserRestUtils;
-import io.harness.Utils.TestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.functional.AbstractFunctionalTest;
@@ -18,7 +16,9 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
+import io.harness.restutils.UserRestUtils;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;

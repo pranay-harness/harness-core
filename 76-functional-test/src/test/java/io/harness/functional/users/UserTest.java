@@ -7,11 +7,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.GuerillaMailUtils;
-import io.harness.RestUtils.HTMLUtils;
-import io.harness.RestUtils.MailinatorRestUtils;
-import io.harness.RestUtils.UserRestUtils;
-import io.harness.Utils.TestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Retry;
 import io.harness.framework.Setup;
@@ -29,7 +24,12 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
+import io.harness.restutils.GuerillaMailUtils;
+import io.harness.restutils.HTMLUtils;
+import io.harness.restutils.MailinatorRestUtils;
+import io.harness.restutils.UserRestUtils;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;

@@ -10,8 +10,6 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.InfraProvisionerRestUtils;
-import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -32,6 +30,8 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.WorkflowGenerator;
+import io.harness.restutils.InfraProvisionerRestUtils;
+import io.harness.restutils.WorkflowRestUtils;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;

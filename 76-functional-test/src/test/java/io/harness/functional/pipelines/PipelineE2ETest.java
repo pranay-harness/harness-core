@@ -11,13 +11,6 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.ArtifactRestUtils;
-import io.harness.RestUtils.ArtifactStreamRestUtils;
-import io.harness.RestUtils.ExecutionRestUtils;
-import io.harness.RestUtils.PipelineRestUtils;
-import io.harness.RestUtils.WorkflowRestUtils;
-import io.harness.Utils.PipelineUtils;
-import io.harness.Utils.WorkflowUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -38,7 +31,14 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
+import io.harness.restutils.ArtifactRestUtils;
+import io.harness.restutils.ArtifactStreamRestUtils;
+import io.harness.restutils.ExecutionRestUtils;
+import io.harness.restutils.PipelineRestUtils;
+import io.harness.restutils.WorkflowRestUtils;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.utils.PipelineUtils;
+import io.harness.utils.WorkflowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.Before;

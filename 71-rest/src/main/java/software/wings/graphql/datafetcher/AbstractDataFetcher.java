@@ -42,6 +42,8 @@ import javax.validation.constraints.NotNull;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public abstract class AbstractDataFetcher<T> implements DataFetcher {
+  public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
+
   @NotNull final AuthHandler authHandler;
   @Setter Map<String, String> contextFieldArgsMap;
   @Getter @Setter String batchedDataLoaderName;
@@ -113,10 +115,12 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
 
     P parameters = objenesis.newInstance(clazz);
     modelMapper.map(dataFetchingEnvironment.getArguments(), parameters);
-    try {
-      FieldUtils.writeField(parameters, "selectionSet", dataFetchingEnvironment.getSelectionSet(), true);
-    } catch (IllegalAccessException exception) {
-      logger.error("This should not happen", exception);
+    if (FieldUtils.getField(clazz, SELECTION_SET_FIELD_NAME, true) != null) {
+      try {
+        FieldUtils.writeField(parameters, SELECTION_SET_FIELD_NAME, dataFetchingEnvironment.getSelectionSet(), true);
+      } catch (IllegalAccessException exception) {
+        logger.error("This should not happen", exception);
+      }
     }
 
     return parameters;

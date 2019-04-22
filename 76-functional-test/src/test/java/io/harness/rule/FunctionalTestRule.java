@@ -4,18 +4,21 @@ import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import graphql.GraphQL;
 import io.dropwizard.Configuration;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.framework.ManagerExecutor;
 import io.harness.framework.Setup;
-import io.harness.functional.ManagerExecutor;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -25,6 +28,7 @@ import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
 import io.harness.threading.CurrentThreadExecutor;
+import lombok.Getter;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -33,6 +37,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
+import software.wings.app.GraphQLModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -40,6 +45,7 @@ import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
+import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.authentication.oauth.AzureConfig;
 import software.wings.security.authentication.oauth.BitbucketConfig;
@@ -67,10 +73,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
   protected AdvancedDatastore datastore;
   private ExecutorService executorService = new CurrentThreadExecutor();
-
-  String PORTAL_URL = "PORTAL_URL";
-
-  String VERIFICATION_PATH = "VERIFICATION_PATH";
+  @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
@@ -110,8 +113,8 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     MainConfiguration configuration = new MainConfiguration();
     configuration.getPortal().setCompanyName("COMPANY_NAME");
     configuration.getPortal().setAllowedDomains("harness.io");
-    configuration.getPortal().setUrl(PORTAL_URL);
-    configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
+    configuration.getPortal().setUrl("PORTAL_URL");
+    configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     AzureConfig azureConfig =
@@ -163,11 +166,16 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
+    modules.add(new GraphQLModule());
     return modules;
   }
 
   @Override
   public void initialize(Injector injector) {
+    final QueryLanguageProvider<GraphQL> instance =
+        injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
+    graphQL = instance.getQL();
+
     final HPersistence persistence = injector.getInstance(HPersistence.class);
     persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
