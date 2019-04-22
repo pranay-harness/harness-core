@@ -14,6 +14,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,8 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class CapabilityHelper {
+  public static final String TERRAFORM = "terraform";
+
   public static void embedCapabilitiesInDelegateTask(
       DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {
     if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {
@@ -197,5 +200,30 @@ public class CapabilityHelper {
     }
 
     return executionCapabilities;
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForProcessExecutor(
+      String category, List<String> processExecutorArguments, List<EncryptedDataDetail> encryptedDataDetails) {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.add(
+        ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(category, processExecutorArguments));
+
+    if (isNotEmpty(encryptedDataDetails)) {
+      List<ExecutionCapability> capabilitiesForEncryption = generateVaultHttpCapabilities(encryptedDataDetails);
+      if (isNotEmpty(capabilitiesForEncryption)) {
+        executionCapabilities.addAll(capabilitiesForEncryption);
+      }
+    }
+    return executionCapabilities;
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForTerraform(
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    List<String> processExecutorArguments = new ArrayList<>();
+    processExecutorArguments.add("/bin/sh");
+    processExecutorArguments.add("-c");
+    processExecutorArguments.add("terraform --version");
+
+    return generateExecutionCapabilitiesForProcessExecutor(TERRAFORM, processExecutorArguments, encryptedDataDetails);
   }
 }
