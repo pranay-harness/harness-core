@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;
@@ -20,9 +20,11 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
     super.setDeploymentType(DeploymentType.SSH.name());
   }
 
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   @Override
   public final CommandExecutionStatus execute(CommandExecutionContext context) {
+    if (!(context instanceof ShellCommandExecutionContext)) {
+      throw new WingsException("Unexpected context type");
+    }
     return executeInternal((ShellCommandExecutionContext) context);
   }
 

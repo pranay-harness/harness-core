@@ -6,8 +6,8 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 import software.wings.utils.Validator;
@@ -29,27 +29,23 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     setName(INIT_POWERSHELL_UNIT_NAME);
   }
 
-  @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
   private String getInitCommand(String runtimePath) {
-    String script = "$RUNTIME_PATH=[System.Environment]::ExpandEnvironmentVariables(\"%s\")\n"
-        + "if(!(Test-Path \"$RUNTIME_PATH\"))\n"
-        + "{\n"
-        + "    New-Item -ItemType Directory -Path \"$RUNTIME_PATH\"\n"
-        + "    Write-Host \"$RUNTIME_PATH Folder Created Successfully.\"\n"
-        + "}\n"
-        + "else\n"
-        + "{\n"
-        + "    Write-Host \"${RUNTIME_PATH} Folder already exists.\"\n"
+    String script = "$RUNTIME_PATH=[System.Environment]::ExpandEnvironmentVariables(\"%s\")%n"
+        + "if(!(Test-Path \"$RUNTIME_PATH\"))%n"
+        + "{%n"
+        + "    New-Item -ItemType Directory -Path \"$RUNTIME_PATH\"%n"
+        + "    Write-Host \"$RUNTIME_PATH Folder Created Successfully.\"%n"
+        + "}%n"
+        + "else%n"
+        + "{%n"
+        + "    Write-Host \"${RUNTIME_PATH} Folder already exists.\"%n"
         + "}";
 
     return String.format(script, runtimePath);
   }
 
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
-    activityId = context.getActivityId();
-
     Validator.notNullCheck("Service Variables", context.getServiceVariables());
     envVariables.putAll(context.getServiceVariables());
 
@@ -70,6 +66,9 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
 
     createPreparedCommands(command);
     context.addEnvVariables(envVariables);
+    if (!(context instanceof ShellCommandExecutionContext)) {
+      throw new WingsException("Unexpected context type");
+    }
     return ((ShellCommandExecutionContext) context)
         .executeCommandString(getInitCommand(context.getWindowsRuntimePath()));
   }

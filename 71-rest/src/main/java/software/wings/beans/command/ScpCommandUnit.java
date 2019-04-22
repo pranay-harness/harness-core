@@ -14,7 +14,6 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import lombok.Data;
@@ -226,16 +225,6 @@ public class ScpCommandUnit extends SshCommandUnit {
      */
     public String getName() {
       return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
-    public void setName(String name) {
-      this.name = name;
     }
   }
 

@@ -53,11 +53,6 @@ public enum RoleType {
     return permissions;
   }
 
-  @SuppressFBWarnings({"ME_ENUM_FIELD_SETTER", "EI_EXPOSE_REP2"})
-  public void setPermissions(Permission[] permissions) {
-    this.permissions = permissions;
-  }
-
   public String getDescription() {
     return description;
   }
