@@ -21,8 +21,6 @@ import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 public class PipelineConnectionDataFetcher extends AbstractConnectionDataFetcher<QLPipelineConnection> {
-  protected static final String APP_ID_ARG = "appId";
-
   @Inject
   public PipelineConnectionDataFetcher(AuthHandler authHandler) {
     super(authHandler);

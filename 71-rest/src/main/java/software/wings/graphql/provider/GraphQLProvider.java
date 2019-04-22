@@ -18,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLScalars;
-import software.wings.graphql.schema.type.resolvers.TypeResolverHelper;
+import software.wings.graphql.schema.type.resolvers.TypeResolverManager;
 
 import java.io.IOException;
 import java.net.URL;
@@ -32,7 +32,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
   GraphQL graphQL;
 
-  TypeResolverHelper typeResolverHelper;
+  TypeResolverManager typeResolverHelper;
 
   Injector injector;
 
@@ -40,7 +40,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
   @Inject
   public GraphQLProvider(
-      @NotNull TypeResolverHelper typeResolverHelper, Injector injector, DataFetcherDirective dataFetcherDirective) {
+      @NotNull TypeResolverManager typeResolverHelper, Injector injector, DataFetcherDirective dataFetcherDirective) {
     this.typeResolverHelper = typeResolverHelper;
     this.injector = injector;
     this.dataFetcherDirective = dataFetcherDirective;
