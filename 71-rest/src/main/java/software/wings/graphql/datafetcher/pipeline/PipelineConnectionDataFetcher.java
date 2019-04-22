@@ -40,7 +40,7 @@ public class PipelineConnectionDataFetcher extends AbstractConnectionDataFetcher
                                       .order(Sort.descending(PipelineKeys.createdAt));
 
     QLPipelineConnectionBuilder connectionBuilder = QLPipelineConnection.builder();
-    connectionBuilder.pageInfo(populate(qlQuery, query, dataFetchingEnvironment, pipeline -> {
+    connectionBuilder.pageInfo(populate(qlQuery, query, pipeline -> {
       QLPipelineBuilder builder = QLPipeline.builder();
       PipelineController.populatePipeline(pipeline, builder);
       connectionBuilder.node(builder.build());

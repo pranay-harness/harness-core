@@ -32,16 +32,13 @@ public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetch
 
   public interface Controller<T> { void populate(T entity); }
 
-  protected <T> QLPageInfo populate(QLPageQueryParameters page, Query<T> query,
-      DataFetchingEnvironment dataFetchingEnvironment, Controller<T> controller) {
+  protected <T> QLPageInfo populate(QLPageQueryParameters page, Query<T> query, Controller<T> controller) {
     QLPageInfoBuilder builder = QLPageInfo.builder().limit(page.getLimit()).offset(page.getOffset());
 
     // A full count of all items that match particular filter could be expensive. This is why using has more feature is
     // recommended over obtaining total. To determine if we have more, we fetch 1 more than the requested.
     final FindOptions options =
-        new FindOptions()
-            .limit(page.getLimit() + (isPageInfoHasMoreSelected(dataFetchingEnvironment) ? 1 : 0))
-            .skip(page.getOffset());
+        new FindOptions().limit(page.getLimit() + (page.isHasMoreRequested() ? 1 : 0)).skip(page.getOffset());
 
     try (HIterator<T> iterator = new HIterator<T>(query.fetch(options))) {
       int count = 0;
@@ -49,11 +46,11 @@ public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetch
         controller.populate(iterator.next());
       }
 
-      if (isPageInfoHasMoreSelected(dataFetchingEnvironment)) {
+      if (page.isHasMoreRequested()) {
         builder.hasMore(iterator.hasNext());
       }
 
-      if (isPageInfoTotalSelected(dataFetchingEnvironment)) {
+      if (page.isTotalRequested()) {
         // If we need total we still have a way to avoid the second query to mongo. If the data we already fetch is all
         // we have, we can calculate the total instead.
         // But not so fast if we did not fetch even a single record, we might of have offset bigger than the amount of

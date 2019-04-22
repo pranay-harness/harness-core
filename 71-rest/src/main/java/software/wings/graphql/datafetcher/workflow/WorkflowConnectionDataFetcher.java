@@ -32,7 +32,7 @@ public class WorkflowConnectionDataFetcher extends AbstractConnectionDataFetcher
                                       .order(Sort.descending(WorkflowKeys.createdAt));
 
     QLWorkflowConnectionBuilder connectionBuilder = QLWorkflowConnection.builder();
-    connectionBuilder.pageInfo(populate(qlQuery, query, dataFetchingEnvironment, workflow -> {
+    connectionBuilder.pageInfo(populate(qlQuery, query, workflow -> {
       QLWorkflowBuilder builder = QLWorkflow.builder();
       WorkflowController.populateWorkflow(workflow, builder);
       connectionBuilder.node(builder.build());
