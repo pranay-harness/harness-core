@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -8,6 +10,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.validator.Trimmed;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,6 +19,7 @@ import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -27,9 +31,8 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Username", required = true) private String username;
-
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;
-  @NotEmpty @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
+  @NotEmpty @Trimmed @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
 
   @Attributes(title = "Git Branch", required = true) private String branch;
   @SchemaIgnore private String reference;
@@ -40,6 +43,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   private String sshSettingId;
   @SchemaIgnore @Transient private SettingAttribute sshSettingAttribute;
   private boolean keyAuth;
+  @Default private AuthenticationScheme authenticationScheme = HTTP_PASSWORD;
   @Attributes(title = "Description") private String description;
   private String webhookToken;
   @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
@@ -61,21 +65,25 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Builder
   public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
       String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth,
-      String description, String webhookToken, String reference, boolean generateWebhookUrl) {
+      AuthenticationScheme authenticationScheme, String description, String webhookToken, GitRepositoryType gitRepoType,
+      boolean generateWebhookUrl, String authorName, String authorEmailId) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password;
     this.repoUrl = repoUrl;
     this.branch = branch;
-    this.reference = reference;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.sshSettingId = sshSettingId;
     this.sshSettingAttribute = sshSettingAttribute;
     this.keyAuth = keyAuth;
+    this.authenticationScheme = authenticationScheme;
     this.description = description;
-    this.generateWebhookUrl = generateWebhookUrl;
     this.webhookToken = webhookToken;
+    this.gitRepoType = gitRepoType;
+    this.generateWebhookUrl = generateWebhookUrl;
+    this.authorName = authorName;
+    this.authorEmailId = authorEmailId;
   }
 
   @Data

@@ -85,27 +85,7 @@ public class SshSessionFactory {
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme().equals(KERBEROS)) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
       logger.info("SSH using Kerberos Auth");
-      logger.info("Do we need to generate Ticket Granting Ticket(TGT)? " + config.getKerberosConfig().isGenerateTGT());
-      if (config.getKerberosConfig() != null && config.getKerberosConfig().isGenerateTGT()) {
-        if (!isValidKeyTabFile(config.getKerberosConfig().getKeyTabFilePath())) {
-          logCallback.saveExecutionLog("Cannot proceed with Ticket Granting Ticket(TGT) generation.", ERROR);
-          logger.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
-          throw new JSchException(
-              "Failure: Invalid keytab file path. Cannot proceed with Ticket Granting Ticket(TGT) generation");
-        }
-        logger.info("Generating Ticket Granting Ticket(TGT)...");
-        boolean ticketGenerated = generateTGT(config.getKerberosConfig(),
-            config.getPassword() != null ? new String(config.getPassword()) : null, logCallback);
-        if (ticketGenerated) {
-          logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for "
-              + config.getKerberosConfig().getPrincipalWithRealm());
-          logger.info("Ticket Granting Ticket(TGT) generated successfully for "
-              + config.getKerberosConfig().getPrincipalWithRealm());
-        } else {
-          logger.error("Failure: could not generate Ticket Granting Ticket(TGT)");
-          throw new JSchException("Failure: could not generate Ticket Granting Ticket(TGT)");
-        }
-      }
+      generateTGT(config, logCallback);
 
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
@@ -151,13 +131,37 @@ public class SshSessionFactory {
     return session;
   }
 
+  public static void generateTGT(SshSessionConfig config, LogCallback logCallback) throws JSchException {
+    logger.info("Do we need to generate Ticket Granting Ticket(TGT)? " + config.getKerberosConfig().isGenerateTGT());
+    if (config.getKerberosConfig() != null && config.getKerberosConfig().isGenerateTGT()) {
+      if (!isValidKeyTabFile(config.getKerberosConfig().getKeyTabFilePath())) {
+        logCallback.saveExecutionLog("Cannot proceed with Ticket Granting Ticket(TGT) generation.", ERROR);
+        logger.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
+        throw new JSchException(
+            "Failure: Invalid keytab file path. Cannot proceed with Ticket Granting Ticket(TGT) generation");
+      }
+      logger.info("Generating Ticket Granting Ticket(TGT)...");
+      boolean ticketGenerated = generateTGT(config.getKerberosConfig(),
+          config.getPassword() != null ? new String(config.getPassword()) : null, logCallback);
+      if (ticketGenerated) {
+        logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for "
+            + config.getKerberosConfig().getPrincipalWithRealm());
+        logger.info("Ticket Granting Ticket(TGT) generated successfully for "
+            + config.getKerberosConfig().getPrincipalWithRealm());
+      } else {
+        logger.error("Failure: could not generate Ticket Granting Ticket(TGT)");
+        throw new JSchException("Failure: could not generate Ticket Granting Ticket(TGT)");
+      }
+    }
+  }
+
   private static boolean generateTGT(KerberosConfig kerberosConfig, String password, LogCallback logCallback) {
     logCallback.saveExecutionLog(
         "Generating Ticket Granting Ticket(TGT) for principal: " + kerberosConfig.getPrincipalWithRealm());
     logger.info("Generating Ticket Granting Ticket(TGT) for principal: " + kerberosConfig.getPrincipalWithRealm());
     String commandString = !StringUtils.isEmpty(password)
         ? format("echo %s | kinit %s", password, kerberosConfig.getPrincipalWithRealm())
-        : format("kinit %s -k -t %s", kerberosConfig.getPrincipalWithRealm(), kerberosConfig.getKeyTabFilePath());
+        : format("kinit -k -t %s %s", kerberosConfig.getKeyTabFilePath(), kerberosConfig.getPrincipalWithRealm());
     return executeLocalCommand(commandString);
   }
 
