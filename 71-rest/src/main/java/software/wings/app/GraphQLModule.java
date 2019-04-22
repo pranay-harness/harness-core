@@ -17,14 +17,14 @@ import software.wings.graphql.datafetcher.application.batchloader.ApplicationBat
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentsDataFetcher;
+import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
+import software.wings.graphql.datafetcher.execution.WorkflowExecutionsDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
-import software.wings.graphql.datafetcher.workflow.WorkflowExecutionDataFetcher;
-import software.wings.graphql.datafetcher.workflow.WorkflowExecutionsDataFetcher;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
@@ -62,19 +62,19 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetchers() {
-    bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
-    bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
-    bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
-    bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
-    bindDataFetcherWithAnnotation(WorkflowExecutionDataFetcher.class);
-    bindDataFetcherWithAnnotation(WorkflowExecutionsDataFetcher.class);
-    bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApplicationsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentsDataFetcher.class);
-    bindDataFetcherWithAnnotation(ApplicationsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
+    bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowExecutionsDataFetcher.class);
   }
 
   @NotNull

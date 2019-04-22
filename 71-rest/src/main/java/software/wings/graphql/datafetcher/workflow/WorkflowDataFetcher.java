@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.schema.query.QLWorkflowQueryParameters;
 import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -18,8 +19,6 @@ import software.wings.service.impl.security.auth.AuthHandler;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow> {
-  public static final String WORKFLOW_ID_ARG = "workflowId";
-
   @Inject HPersistence persistence;
 
   @Inject
@@ -29,9 +28,8 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow> {
 
   @Override
   public QLWorkflow fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    String workflowId = (String) getArgumentValue(dataFetchingEnvironment, WORKFLOW_ID_ARG);
-
-    Workflow workflow = persistence.get(Workflow.class, workflowId);
+    QLWorkflowQueryParameters qlQuery = fetchParameters(QLWorkflowQueryParameters.class, dataFetchingEnvironment);
+    Workflow workflow = persistence.get(Workflow.class, qlQuery.getWorkflowId());
     if (workflow == null) {
       throw new InvalidRequestException("Workflow does not exist", WingsException.USER);
     }

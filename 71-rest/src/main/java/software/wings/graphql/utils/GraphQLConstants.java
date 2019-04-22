@@ -19,16 +19,6 @@ public class GraphQLConstants {
   // Workflow related constants.
   public static final String WORKFLOW_ID = "workflowId";
 
-  // Defining Types here, if required will move to an enum
-  public static final String RESULT_TYPE = "Result";
-  public static final String BASE_INFO_TYPE = "BaseInfo";
-  public static final String WORKFLOW_TYPE = "Workflow";
-  public static final String PIPELINE_TYPE = "Pipeline";
-  public static final String WORKFLOW_EXECUTION_TYPE = "WorkflowExecution";
-  public static final String ARTIFACT_TYPE = "Artifact";
-  public static final String APPLICATION_TYPE = "Application";
-  public static final String ENVIRONMENT_TYPE = "Environment";
-
   // Error messages
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";
   public static final String EMPTY_OR_NULL_INPUT_FIELD = "Input field %s is either null or empty";

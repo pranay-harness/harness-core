@@ -1,19 +1,15 @@
 package software.wings.graphql.schema.type;
 
 import io.harness.beans.ExecutionStatus;
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.FieldDefaults;
+import lombok.Value;
 
-@Data
+@Value
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class QLWorkflowExecution implements QLObject, BaseInfo {
+public class QLWorkflowExecution implements QLExecution {
   String id;
-  String name;
   ExecutionStatus status;
+  long queuedTime;
   long startTime;
   long endTime;
-  String debugInfo;
 }

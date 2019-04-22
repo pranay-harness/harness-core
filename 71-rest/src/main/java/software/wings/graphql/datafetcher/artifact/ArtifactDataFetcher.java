@@ -3,10 +3,8 @@ package software.wings.graphql.datafetcher.artifact;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
-import static software.wings.graphql.utils.GraphQLConstants.ARTIFACT_TYPE;
 import static software.wings.graphql.utils.GraphQLConstants.ENV_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.MAX_PAGE_SIZE_STR;
-import static software.wings.graphql.utils.GraphQLConstants.NO_RECORDS_FOUND_FOR_ENTITIES;
 import static software.wings.graphql.utils.GraphQLConstants.SERVICE_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.ZERO_OFFSET_STR;
 
@@ -94,11 +92,6 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<QLArtifact>> {
 
     if (!artifactToInstanceMap.isEmpty()) {
       deployedArtifactList = getDeployedArtifactList(appId, instancePageResponse, artifactToInstanceMap);
-    }
-
-    if (deployedArtifactList.isEmpty()) {
-      addNoRecordFoundDebugInfo(
-          deployedArtifactList, NO_RECORDS_FOUND_FOR_ENTITIES, ARTIFACT_TYPE, appId, envId, serviceId);
     }
 
     return deployedArtifactList;

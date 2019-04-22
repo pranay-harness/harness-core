@@ -18,7 +18,7 @@ type Query {
   workflows(appId: String!, limit: Int!, offset: Int): WorkflowConnection  @dataFetcher(name : "workflowConnection")
 
   # Get the execution status of a workflow
-  workflowExecution(workflowId: String!, appId: String!, serviceId: String, envId: String) : WorkflowExecution  @dataFetcher(name : "workflowExecution")
+  execution(executionId: String!) : Execution  @dataFetcher(name : "execution")
 
   # Get the list of workflow execution status for a particular workflowId, envId and appId.  It will return Paginated data.
   workflowExecutions(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData  @dataFetcher(name : "workflowExecutions")
@@ -49,10 +49,6 @@ type Query {
 # DateTime which will return date based on PST zone
 scalar DateTime
 scalar Object
-
-interface BaseInfo {
-  debugInfo: String
-}
 
 type PageInfo {
   hasMore : Boolean
@@ -91,33 +87,49 @@ type Workflow {
 }
 
 type WorkflowConnection {
-    pageInfo : PageInfo
-    nodes : [Workflow]
+  pageInfo : PageInfo
+  nodes : [Workflow]
 }
 
+enum ExecutionStatus {
+  ABORTED,
+  ERROR,
+  FAILED,
+  PAUSED,
+  QUEUED,
+  RESUMED,
+  RUNNING,
+  SUCCESS,
+  WAITING,
+  SKIPPED,
+  REJECTED,
+  EXPIRED
+}
+
+interface Execution {
+  queuedTime : DateTime
+  startTime : DateTime
+  endTime : DateTime
+  status : ExecutionStatus
+}
 
 # Type for workflow Execution
-type WorkflowExecution implements BaseInfo {
+type WorkflowExecution implements Execution {
   # Workflow Execution Id
   id: String
 
-  # Name of the workflow
-  name: String
-
   # Status of the workflow
-  status: String
+  status: ExecutionStatus
+
+  # DateTime when execution started
+  queuedTime : DateTime
 
   # DateTime when execution started
   startTime: DateTime
 
   # DateTime when execution ended
   endTime: DateTime
-
-  # Debug info useful to troubleshoot issues
-  debugInfo: String
 }
-
-
 
 # Service Type
 type Service {
@@ -143,15 +155,13 @@ type PagedData {
   limit: Int
   # Data returned
   data: [Result]
-  # Debug info useful to troubleshoot issues
-  debugInfo: String
 }
 
 # Union for Workflow and Workflow Execution
 union Result = Workflow | WorkflowExecution | Application | Environment
 
 # Aritifact type
-type Artifact implements BaseInfo {
+type Artifact {
     # Artifact Id
     id: String
     # Source of the artifact Docker Jenkins
@@ -168,27 +178,21 @@ type Artifact implements BaseInfo {
     lastDeployedAt: DateTime
     # Last User who deployed successfully this artifact
     lastDeployedBy: String
-    # Debug info useful to troubleshoot issues
-    debugInfo: String
     # Application of the artifact
     application: Application @dataFetcher(name : "application", contextFieldArgsMap: "{ \"appId\": \"appId\"}", batchLoader: "application")
 }
 
-type Application implements BaseInfo {
+type Application {
   id: String
   name : String
   description : String
-  # Debug info useful to troubleshoot issues
-  debugInfo: String
 }
 
-type Environment implements BaseInfo {
+type Environment  {
   id: String
   name : String
   description : String
   environmentType: String
-  # Debug info useful to troubleshoot issues
-  debugInfo: String
 }
 
 
