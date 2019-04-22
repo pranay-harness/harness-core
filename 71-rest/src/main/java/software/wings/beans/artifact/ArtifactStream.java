@@ -33,9 +33,15 @@ import java.util.List;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 @Entity(value = "artifactStream")
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
-    fields = { @Field("appId")
-               , @Field("serviceId"), @Field("name") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "yaml", unique = true),
+      fields = { @Field("appId")
+                 , @Field("serviceId"), @Field("name") })
+  ,
+      @Index(options = @IndexOptions(name = "artifactStream_cleanup"), fields = {
+        @Field("artifactStreamType"), @Field("nextCleanupIteration")
+      })
+})
 // todo: add compound index with setting_id + name
 @HarnessExportableEntity
 @Data
@@ -62,7 +68,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private boolean metadataOnly;
   private int failedCronAttempts;
   @Indexed private Long nextIteration;
-  @Indexed private Long nextCleanupIteration;
+  private Long nextCleanupIteration;
   private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();

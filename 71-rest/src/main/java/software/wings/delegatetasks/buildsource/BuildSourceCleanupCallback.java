@@ -22,6 +22,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,7 +104,9 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   private void cleanupDockerArtifacts(ArtifactStream artifactStream, List<Artifact> deletedArtifacts) {
-    Set<String> buildNumbers = builds.parallelStream().map(BuildDetails::getNumber).collect(Collectors.toSet());
+    Set<String> buildNumbers = isEmpty(builds)
+        ? new HashSet<>()
+        : builds.parallelStream().map(BuildDetails::getNumber).collect(Collectors.toSet());
     List<Artifact> deletedArtifactsNew = new ArrayList<>();
     artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch().forEach(artifact -> {
       if (!buildNumbers.contains(artifact.getBuildNo())) {

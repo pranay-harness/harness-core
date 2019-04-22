@@ -15,17 +15,21 @@ import software.wings.service.intfc.PermitService;
 @Slf4j
 public class PermitServiceImpl implements PermitService {
   @Inject private WingsPersistence wingsPersistence;
+  /*
+  {1, 1, 2, 3, 5, 10} == 22 minutes cycle
+  500 iterations ~= 80 cycles == 80 * 22 = 1760 > 24hrs
+   */
+  private static final int[] BACKOFF_MULTIPLIER = new int[] {1, 1, 2, 3, 5, 10};
 
-  private static final int[] BACKOFF_MULTIPLIER = new int[] {1, 1, 2, 3, 5, 8, 13, 21, 34, 34, 34, 34};
-
-  public static final int MAX_FAILED_ATTEMPTS = 500;
+  public static final int MAX_FAILED_ATTEMPTS = 3500;
 
   public static int getBackoffMultiplier(int failedCronAttempts) {
-    return BACKOFF_MULTIPLIER[failedCronAttempts % BACKOFF_MULTIPLIER.length];
+    return failedCronAttempts > 500 ? BACKOFF_MULTIPLIER.length - 1
+                                    : BACKOFF_MULTIPLIER[failedCronAttempts % BACKOFF_MULTIPLIER.length];
   }
 
   public static boolean shouldSendAlert(int failedCronAttempts) {
-    return failedCronAttempts == 7;
+    return MAX_FAILED_ATTEMPTS == failedCronAttempts;
   }
 
   @Override
