@@ -21,7 +21,6 @@ import static software.wings.sm.StateType.DC_NODE_SELECT;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -40,6 +39,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.rest.RestResponse;
+import io.harness.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
 import org.awaitility.Awaitility;
 import org.junit.Before;

@@ -15,7 +15,6 @@ import static software.wings.sm.StateType.HTTP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.RestUtils.WorkflowRestUtils;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -27,6 +26,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.rest.RestResponse;
+import io.harness.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.awaitility.Awaitility;

@@ -5,9 +5,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import io.harness.RestUtils.SettingsUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.restutils.SettingsUtils;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
