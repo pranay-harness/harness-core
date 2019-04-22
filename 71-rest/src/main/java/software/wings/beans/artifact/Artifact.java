@@ -30,11 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Artifact bean class.
- *
- * @author Rishi
- */
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -53,8 +48,9 @@ public class Artifact extends Base {
   public static final String ARTIFACT_FILES_KEY = "artifactFiles";
   public static final String METADATA_KEY = "metadata";
   public static final String REVISION_KEY = "revision";
-
   public static final String URL_KEY = "url";
+  public static final String METADATA_IMAGE_KEY = "metadata.image";
+  public static final String METADATA_TAG_KEY = "metadata.tag";
 
   private String artifactStreamId;
   private String artifactSourceName;

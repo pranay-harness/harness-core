@@ -35,6 +35,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SubEntityType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.sm.StateType;
@@ -62,6 +63,8 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_BUCKET_KEY = "artifact.key";
   protected static final String ARTIFACT_URL = "artifact.url";
   protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME = "artifact.buildFullDisplayName";
+  protected static final String ARTIFACT_METADATA_IMAGE = "artifact." + Artifact.METADATA_IMAGE_KEY;
+  protected static final String ARTIFACT_METADATA_TAG = "artifact." + Artifact.METADATA_TAG_KEY;
   protected static final String ARTIFACT_PATH = "artifact.artifactPath";
   protected static final String ARTIFACT_SOURCE_USER_NAME = "artifact.source." + ARTIFACT_SOURCE_USER_NAME_KEY;
   protected static final String ARTIFACT_SOURCE_REGISTRY_URL = "artifact.source." + ARTIFACT_SOURCE_REGISTRY_URL_KEY;
@@ -147,7 +150,7 @@ public abstract class ExpressionBuilder {
     expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
         ARTIFACT_FILE_NAME, ARTIFACT_ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME,
         ARTIFACT_BUCKET_KEY, ARTIFACT_PATH, ARTIFACT_URL, ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL,
-        ARTIFACT_SOURCE_REPOSITORY_NAME));
+        ARTIFACT_SOURCE_REPOSITORY_NAME, ARTIFACT_METADATA_IMAGE, ARTIFACT_METADATA_TAG));
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(INFRA_NAME));
