@@ -10,21 +10,16 @@ import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.service.intfc.UserService;
 
 @Singleton
 public class PasswordBasedAuthHandler implements AuthHandler {
-  private MainConfiguration configuration;
   private UserService userService;
 
-  @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
-  public PasswordBasedAuthHandler(MainConfiguration configuration, UserService userService) {
-    this.configuration = configuration;
+  public PasswordBasedAuthHandler(UserService userService) {
     this.userService = userService;
   }
 

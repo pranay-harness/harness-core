@@ -2,12 +2,10 @@ package software.wings.sm.states.pcf;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.common.Constants;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
-@SuppressFBWarnings("MF_CLASS_MASKS_FIELD")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UnmapRouteState extends MapRouteState {
   @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;

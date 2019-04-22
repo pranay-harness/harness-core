@@ -10,7 +10,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import software.wings.beans.Account;
 import software.wings.beans.SyncTaskContext;
@@ -33,7 +32,6 @@ public class LdapBasedAuthHandler implements AuthHandler {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   private UserService userService;
 
-  @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
   public LdapBasedAuthHandler(UserService userService) {
     this.userService = userService;

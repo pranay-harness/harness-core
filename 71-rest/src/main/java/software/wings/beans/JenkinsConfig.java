@@ -58,7 +58,7 @@ public class JenkinsConfig
     authMechanism = USERNAME_PASSWORD_FIELD;
   }
 
-  @SuppressFBWarnings({"EI_EXPOSE_REP2", "EI_EXPOSE_REP2"})
+  @SuppressFBWarnings({"EI_EXPOSE_REP2"})
   @Builder
   public JenkinsConfig(String jenkinsUrl, String username, char[] password, String accountId, String encryptedPassword,
       char[] token, String encryptedToken, String authMechanism) {
