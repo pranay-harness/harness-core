@@ -15,6 +15,7 @@ import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.dl.WingsPersistence;
@@ -70,7 +71,7 @@ public class NotificationGroupGenerator {
   public NotificationGroup exists(NotificationGroup notificationGroup) {
     return wingsPersistence.createQuery(NotificationGroup.class)
         .filter(Application.ACCOUNT_ID_KEY, notificationGroup.getAccountId())
-        .filter(Application.NAME_KEY, notificationGroup.getName())
+        .filter(ApplicationKeys.name, notificationGroup.getName())
         .get();
   }
 

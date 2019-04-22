@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.APP_ID_KEY;
-import static software.wings.beans.Application.NAME_KEY;
 import static software.wings.beans.yaml.YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
@@ -26,6 +25,7 @@ import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
@@ -406,8 +406,10 @@ public class EntityHelper {
   }
 
   private String getApplicationName(String appId) {
-    List<Application> applications =
-        wingsPersistence.createQuery(Application.class).filter(APP_ID_KEY, appId).project(NAME_KEY, true).asList();
+    List<Application> applications = wingsPersistence.createQuery(Application.class)
+                                         .filter(APP_ID_KEY, appId)
+                                         .project(ApplicationKeys.name, true)
+                                         .asList();
     if (isEmpty(applications)) {
       return "";
     }

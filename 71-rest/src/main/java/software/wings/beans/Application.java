@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -35,13 +36,12 @@ import java.util.Objects;
  */
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "ApplicationKeys")
 @Indexes(
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
 public class Application extends Base implements KeywordsAware {
-  public static final String NAME_KEY = "name";
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
-  public static final String APP_ID_KEY = "appId";
 
   @NotEmpty private String name;
   private String description;
