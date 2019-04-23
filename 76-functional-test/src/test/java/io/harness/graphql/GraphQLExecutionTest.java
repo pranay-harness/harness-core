@@ -36,6 +36,8 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionKeys;
+import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoKeys;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionKeys;
 
 import java.util.LinkedHashMap;
@@ -53,7 +55,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     Owners owners = ownerManager.create();
 
     // Test  creating a workflow
-    Workflow savedWorkflow = workflowGenerator.ensureWorkflow(seed, owners,
+    Workflow workflow = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .name("Workflow - " + generateUuid())
             .workflowType(WorkflowType.ORCHESTRATION)
@@ -68,10 +70,10 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     // Test running the workflow
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
+    executionArgs.setWorkflowType(workflow.getWorkflowType());
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
-    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
+    executionArgs.setOrchestrationId(workflow.getUuid());
 
     final Application application = owners.obtainApplication();
     final Environment environment = owners.obtainEnvironment();
@@ -80,16 +82,40 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
-    String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
-        + "\") { id queuedTime startTime endTime status } }";
+    {
+      String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
+          + "\") { id queuedTime startTime endTime status } }";
 
-    final LinkedHashMap linkedHashMap = qlExecute(query);
+      final LinkedHashMap linkedHashMap = qlExecute(query);
 
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+    }
+
+    {
+      String query = "{ executionsByWorkflow(workflowId: \"" + workflow.getUuid()
+          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+
+      final LinkedHashMap linkedHashMap = qlExecute(query);
+
+      assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+          .isEqualTo(1);
+    }
+
+    runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+
+    {
+      String query = "{ executionsByWorkflow(workflowId: \"" + workflow.getUuid()
+          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+
+      final LinkedHashMap linkedHashMap = qlExecute(query);
+
+      assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+          .isEqualTo(2);
+    }
   }
 
   @Test
@@ -138,15 +164,39 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
         runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
-    String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
-        + "\") { id queuedTime startTime endTime status } }";
+    {
+      String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
+          + "\") { id queuedTime startTime endTime status } }";
 
-    final LinkedHashMap linkedHashMap = qlExecute(query);
+      final LinkedHashMap linkedHashMap = qlExecute(query);
 
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
-    assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+    }
+
+    {
+      String query = "{ executionsByPipeline(pipelineId: \"" + pipeline.getUuid()
+          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+
+      final LinkedHashMap linkedHashMap = qlExecute(query);
+
+      assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+          .isEqualTo(1);
+    }
+
+    runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+
+    {
+      String query = "{ executionsByPipeline(pipelineId: \"" + pipeline.getUuid()
+          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+
+      final LinkedHashMap linkedHashMap = qlExecute(query);
+
+      assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+          .isEqualTo(2);
+    }
   }
 }

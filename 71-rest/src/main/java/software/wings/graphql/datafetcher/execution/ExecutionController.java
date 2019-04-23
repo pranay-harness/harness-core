@@ -1,8 +1,18 @@
 package software.wings.graphql.datafetcher.execution;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
+import io.harness.exception.UnexpectedException;
 import io.harness.govern.Switch;
+import software.wings.beans.WorkflowExecution;
+import software.wings.graphql.schema.type.QLExecution;
 import software.wings.graphql.schema.type.QLExecutionStatus;
+import software.wings.graphql.schema.type.QLPipelineExecution;
+import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutionBuilder;
+import software.wings.graphql.schema.type.QLWorkflowExecution;
+import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Deliberately having a single class to adapt both
@@ -46,5 +56,21 @@ public class ExecutionController {
         Switch.unhandled(status);
     }
     return null;
+  }
+
+  public static QLExecution populateExecution(@NotNull WorkflowExecution execution) {
+    if (execution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+      final QLWorkflowExecutionBuilder builder = QLWorkflowExecution.builder();
+      WorkflowExecutionController.populateWorkflowExecution(execution, builder);
+      return builder.build();
+    }
+
+    if (execution.getWorkflowType() == WorkflowType.PIPELINE) {
+      final QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
+      PipelineExecutionController.populatePipelineExecution(execution, builder);
+      return builder.build();
+    }
+
+    throw new UnexpectedException();
   }
 }

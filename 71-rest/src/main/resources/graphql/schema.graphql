@@ -20,8 +20,10 @@ type Query {
   # Get the execution status of a workflow
   execution(executionId: String!) : Execution  @dataFetcher(name : "execution")
 
-  # Get the list of workflow execution status for a particular workflowId, envId and appId.  It will return Paginated data.
-  workflowExecutions(workflowId: String!, appId: String!, envId: String!, limit: Int, offset: Int): PagedData  @dataFetcher(name : "workflowExecutions")
+  # Get the list of executions.
+  executionsByApplication(appId: String!, limit: Int!, offset: Int): ExecutionConnection  @dataFetcher(name : "executionConnection")
+  executionsByWorkflow(workflowId: String!, limit: Int!, offset: Int): ExecutionConnection  @dataFetcher(name : "executionConnection")
+  executionsByPipeline(pipelineId: String!, limit: Int!, offset: Int): ExecutionConnection  @dataFetcher(name : "executionConnection")
 
   # Get list of successfully deployed articacts.
   deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]  @dataFetcher(name : "artifact")
@@ -119,6 +121,11 @@ interface Execution {
   startTime : DateTime
   endTime : DateTime
   status : ExecutionStatus
+}
+
+type ExecutionConnection {
+  pageInfo : PageInfo
+  nodes : [Execution]
 }
 
 # Type for workflow execution
