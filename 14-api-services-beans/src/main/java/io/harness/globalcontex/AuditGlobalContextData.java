@@ -1,4 +1,4 @@
-package io.harness.k8s.model;
+package io.harness.globalcontex;
 
 import io.harness.context.GlobalContextData;
 import lombok.Builder;

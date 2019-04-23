@@ -28,6 +28,9 @@ public class GlobalContextManager {
   }
 
   public static GlobalContextGuard initGlobalContextGuard(GlobalContext globalContext) {
+    if (globalContext == null) {
+      globalContext = new GlobalContext();
+    }
     return new GlobalContextGuard(globalContext);
   }
 

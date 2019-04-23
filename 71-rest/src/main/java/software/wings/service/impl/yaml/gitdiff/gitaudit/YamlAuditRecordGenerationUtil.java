@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.k8s.model.AuditGlobalContextData;
+import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;

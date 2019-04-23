@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.context.GlobalContextData;
-import io.harness.k8s.model.PurgeGlobalContextData;
+import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.UuidAccess;
 import lombok.extern.slf4j.Slf4j;
