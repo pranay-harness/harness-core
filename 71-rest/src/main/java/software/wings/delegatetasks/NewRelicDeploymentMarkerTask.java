@@ -30,13 +30,13 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public ResponseData run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
-    NewRelicDataCollectionInfo dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
+  public ResponseData run(TaskParameters parameters) {
+    NewRelicDataCollectionInfo dataCollectionInfo = (NewRelicDataCollectionInfo) parameters;
     if (isEmpty(dataCollectionInfo.getDeploymentMarker())) {
       throw new WingsException("Empty deployment marker body");
     }
