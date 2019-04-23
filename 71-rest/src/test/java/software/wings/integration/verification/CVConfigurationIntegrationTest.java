@@ -57,6 +57,7 @@ import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.AppService;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -1314,5 +1315,108 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(0.5, fetchedObject.getAlertThreshold(), 0.0);
     assertEquals(cvConfiguration.getSnoozeStartTime(), fetchedObject.getSnoozeStartTime());
     assertEquals(cvConfiguration.getSnoozeEndTime(), fetchedObject.getSnoozeEndTime());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testListConfigurations() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    String testUuid = generateUuid();
+    logger.info("testUuid {}", testUuid);
+    int numOfApplications = 5;
+    int numOfEnvs = 10;
+
+    for (int i = 0; i < numOfApplications; i++) {
+      for (int j = 0; j < numOfEnvs; j++) {
+        createNewRelicConfig(true);
+        newRelicCVServiceConfiguration.setEnvId("env" + j + testUuid);
+        newRelicCVServiceConfiguration.setName("NRTestConfig" + testUuid);
+        String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=app" + i + testUuid
+            + "&stateType=" + NEW_RELIC;
+        WebTarget target = client.target(url);
+        getRequestBuilderWithAuthHeader(target).post(
+            entity(newRelicCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+        url =
+            API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=app" + i + testUuid + "&stateType=" + SUMO;
+        target = client.target(url);
+        createLogsCVConfig(true);
+        logsCVConfiguration.setEnvId("env" + j + testUuid);
+        logsCVConfiguration.setName("SumoTestConfig" + testUuid);
+        getRequestBuilderWithAuthHeader(target).post(
+            entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+      }
+    }
+    assertEquals(numOfApplications * numOfEnvs,
+        wingsPersistence.createQuery(CVConfiguration.class)
+            .filter(CVConfigurationKeys.accountId, accountId)
+            .filter(CVConfigurationKeys.name, "NRTestConfig" + testUuid)
+            .asList()
+            .size());
+    assertEquals(numOfApplications * numOfEnvs,
+        wingsPersistence.createQuery(CVConfiguration.class)
+            .filter(CVConfigurationKeys.accountId, accountId)
+            .filter(CVConfigurationKeys.name, "SumoTestConfig" + testUuid)
+            .asList()
+            .size());
+
+    // ask for all the cvConfigs for 1 app
+    String url =
+        API_BASE + "/cv-configuration/list-cv-configurations?accountId=" + accountId + "&appIds=app0" + testUuid;
+    WebTarget target = client.target(url);
+    RestResponse<List<CVConfiguration>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<CVConfiguration>>>() {});
+    List<CVConfiguration> cvConfigurations = restResponse.getResource();
+    assertEquals(numOfEnvs * 2, cvConfigurations.size());
+    for (int i = 0; i < numOfEnvs; i++) {
+      assertEquals("app0" + testUuid, cvConfigurations.get(i * 2).getAppId());
+      assertEquals("env" + i + testUuid, cvConfigurations.get(i * 2).getEnvId());
+      assertEquals("app0" + testUuid, cvConfigurations.get(i * 2 + 1).getAppId());
+      assertEquals("env" + i + testUuid, cvConfigurations.get(i * 2 + 1).getEnvId());
+    }
+
+    // ask for all the cvConfigs for 2 apps
+    url = API_BASE + "/cv-configuration/list-cv-configurations?accountId=" + accountId + "&appIds=app0" + testUuid
+        + "&appIds=app1" + testUuid;
+    target = client.target(url);
+    restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<CVConfiguration>>>() {});
+    cvConfigurations = restResponse.getResource();
+    assertEquals(numOfEnvs * 2 * 2, cvConfigurations.size());
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < numOfEnvs; j++) {
+        final int index = i * numOfEnvs * 2 + j * 2;
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
+            cvConfigurations.get(index).getAppId());
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
+            cvConfigurations.get(index).getEnvId());
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
+            cvConfigurations.get(index + 1).getAppId());
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
+            cvConfigurations.get(index + 1).getEnvId());
+      }
+    }
+
+    // ask for all the cvConfigs for 2 apps and 2 envs
+    url = API_BASE + "/cv-configuration/list-cv-configurations?accountId=" + accountId + "&appIds=app0" + testUuid
+        + "&appIds=app1" + testUuid + "&envIds=env0" + testUuid + "&envIds=env1" + testUuid;
+    target = client.target(url);
+    restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<CVConfiguration>>>() {});
+    cvConfigurations = restResponse.getResource();
+    assertEquals(8, cvConfigurations.size());
+
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < 2; j++) {
+        final int index = i * 2 * 2 + j * 2;
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
+            cvConfigurations.get(index).getAppId());
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
+            cvConfigurations.get(index).getEnvId());
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
+            cvConfigurations.get(index + 1).getAppId());
+        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
+            cvConfigurations.get(index + 1).getEnvId());
+      }
+    }
   }
 }

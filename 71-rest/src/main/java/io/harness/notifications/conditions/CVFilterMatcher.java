@@ -1,6 +1,9 @@
 package io.harness.notifications.conditions;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.notifications.FilterMatcher;
+import io.harness.notifications.beans.CVAlertFilters;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
 import lombok.Value;
@@ -25,7 +28,7 @@ public class CVFilterMatcher implements FilterMatcher {
   public boolean matchesCondition() {
     Conditions filterConditions = alertFilter.getConditions();
     Operator op = filterConditions.getOperator();
-    CVFilters cvAlertFilters = filterConditions.getCvAlertFilters();
+    CVAlertFilters cvAlertFilters = filterConditions.getCvAlertFilters();
 
     if (null == cvAlertFilters) {
       log.info("No cvAlertFilters specified. Alert will be considered to match filter.");
@@ -42,13 +45,27 @@ public class CVFilterMatcher implements FilterMatcher {
     conditions.add(() -> alert.getType() == alertFilter.getAlertType());
 
     List<String> appIds = cvAlertFilters.getAppIds();
-    conditions.add(() -> appIds.contains(alert.getAppId()));
+    if (isNotEmpty(appIds)) {
+      conditions.add(() -> appIds.contains(alert.getAppId()));
+    }
 
     List<String> envIds = cvAlertFilters.getEnvIds();
-    conditions.add(() -> envIds.contains(alertData.getCvConfiguration().getEnvId()));
+    if (isNotEmpty(envIds)) {
+      conditions.add(() -> envIds.contains(alertData.getCvConfiguration().getEnvId()));
+    }
 
-    List<String> cvConfigIds = cvAlertFilters.getCVConfigurationIds();
-    conditions.add(() -> cvConfigIds.contains(alertData.getCvConfiguration().getUuid()));
+    List<String> cvConfigIds = cvAlertFilters.getCvConfigIds();
+    if (isNotEmpty(cvConfigIds)) {
+      conditions.add(() -> cvConfigIds.contains(alertData.getCvConfiguration().getUuid()));
+    }
+
+    if (cvAlertFilters.getAlertMinThreshold() >= 0) {
+      conditions.add(() -> alertData.getRiskScore() >= cvAlertFilters.getAlertMinThreshold());
+    }
+
+    if (cvAlertFilters.getAlertMaxThreshold() >= 0) {
+      conditions.add(() -> alertData.getRiskScore() < cvAlertFilters.getAlertMaxThreshold());
+    }
 
     boolean matches = allTrue(conditions);
 

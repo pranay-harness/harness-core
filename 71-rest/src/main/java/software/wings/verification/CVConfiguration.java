@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -35,6 +36,7 @@ import javax.validation.constraints.NotNull;
 })
 @HarnessExportableEntity
 @Data
+@FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class CVConfiguration extends Base {

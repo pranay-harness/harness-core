@@ -69,6 +69,15 @@ public class CVConfigurationResource {
     return new RestResponse<>(cvConfigurationService.listConfigurations(accountId, appId, envId, stateType));
   }
 
+  @GET
+  @Path("/list-cv-configurations")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<CVConfiguration>> listConfigurations(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("appIds") final List<String> appIds, @QueryParam("envIds") final List<String> envIds) {
+    return new RestResponse<>(cvConfigurationService.listConfigurations(accountId, appIds, envIds));
+  }
+
   @PUT
   @Path("{serviceConfigurationId}")
   @Timed
