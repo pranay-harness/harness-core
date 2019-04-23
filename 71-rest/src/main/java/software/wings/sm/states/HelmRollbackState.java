@@ -11,6 +11,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.HelmDummyCommandUnit;
@@ -19,6 +20,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.sm.ContextElement;
@@ -49,7 +51,8 @@ public class HelmRollbackState extends HelmDeployState {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageTag,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig) {
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Integer previousReleaseRevision = null;
 
     ContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
@@ -121,7 +124,7 @@ public class HelmRollbackState extends HelmDeployState {
   }
 
   @Override
-  protected List<CommandUnit> getCommandUnits() {
+  protected List<CommandUnit> getCommandUnits(boolean valuesInGit) {
     List<CommandUnit> commandUnits = new ArrayList<>();
 
     commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Init));

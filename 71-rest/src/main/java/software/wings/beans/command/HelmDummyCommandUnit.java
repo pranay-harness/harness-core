@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 
 public class HelmDummyCommandUnit extends AbstractCommandUnit {
+  public static final String FetchFiles = "Fetch Files";
   public static final String Init = "Initialize";
   public static final String Prepare = "Prepare";
   public static final String InstallUpgrade = "Install / Upgrade";

@@ -53,7 +53,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.sm.states.k8s.K8sStateHelper;
+import software.wings.utils.ApplicationManifestUtils;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 
@@ -76,7 +76,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private YamlPushService yamlPushService;
   @Inject private DelegateService delegateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private K8sStateHelper k8sStateHelper;
+  @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   @Override
   public ApplicationManifest create(ApplicationManifest applicationManifest) {
@@ -504,7 +504,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     appManifestMap.put(K8sValuesLocation.Service, appManifest);
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
-        k8sStateHelper.createGitFetchFilesTaskParams(null, app, appManifestMap);
+        applicationManifestUtils.createGitFetchFilesTaskParams(null, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(generateUuid());
 
     DelegateTask delegateTask = DelegateTask.builder()
