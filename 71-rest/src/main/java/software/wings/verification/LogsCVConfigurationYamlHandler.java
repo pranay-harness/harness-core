@@ -5,6 +5,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
+import software.wings.verification.log.BugsnagCVConfiguration.BugsnagCVConfigurationYaml;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -23,6 +24,9 @@ public class LogsCVConfigurationYamlHandler
         break;
       case ELK:
         yaml = new ElkCVConfigurationYaml();
+        break;
+      case BUG_SNAG:
+        yaml = new BugsnagCVConfigurationYaml();
         break;
       default:
         throw new IllegalStateException("Invalid state " + bean.getStateType());
