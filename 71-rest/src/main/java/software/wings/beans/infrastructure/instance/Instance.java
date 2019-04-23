@@ -135,4 +135,14 @@ public class Instance extends Base {
     this.isDeleted = isDeleted;
     this.deletedAt = deletedAt;
   }
+
+  public static final class InstanceKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String envId = "envId";
+    public static final String envType = "envType";
+    public static final String serviceId = "serviceId";
+    public static final String lastDeployedAt = "lastDeployedAt";
+    public static final String uuid = "uuid";
+  }
 }
