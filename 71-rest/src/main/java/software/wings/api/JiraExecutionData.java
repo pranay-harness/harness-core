@@ -30,7 +30,7 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private JSONArray statuses;
   private JSONObject createMetadata;
 
-  private String webhookUrl;
+  private String currentStatus;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {

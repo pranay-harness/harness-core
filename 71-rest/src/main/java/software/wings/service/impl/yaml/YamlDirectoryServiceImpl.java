@@ -1489,6 +1489,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, collaborationProvidersFolder, SettingVariableTypes.SMTP, directoryPath.clone());
     doCollaborationProviderType(
         accountId, collaborationProvidersFolder, SettingVariableTypes.SLACK, directoryPath.clone());
+    doCollaborationProviderType(
+        accountId, collaborationProvidersFolder, SettingVariableTypes.JIRA, directoryPath.clone());
+    doCollaborationProviderType(
+        accountId, collaborationProvidersFolder, SettingVariableTypes.SERVICENOW, directoryPath.clone());
 
     return collaborationProvidersFolder;
   }
@@ -1802,6 +1806,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // collaboration providers
       case SMTP:
       case SLACK:
+      case JIRA:
+      case SERVICENOW:
         sb.append(COLLABORATION_PROVIDERS_FOLDER);
         break;
 

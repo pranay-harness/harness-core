@@ -21,6 +21,8 @@ public interface StateExecutionService {
   List<StateExecutionData> fetchPhaseExecutionData(
       String appId, String executionUuid, String phaseName, CurrentPhase currentPhase);
 
+  void updateStateExecutionData(String appId, String stateExecutionId, StateExecutionData stateExecutionData);
+
   PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest);
 
   List<ServiceInstance> getHostExclusionList(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement);

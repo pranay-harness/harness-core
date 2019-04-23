@@ -31,7 +31,6 @@ import software.wings.api.JiraExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.jira.JiraTaskParameters;
-import software.wings.beans.jira.JiraWebhookParameters;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -41,7 +40,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,12 +90,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         responseData = createTicket(parameters);
         break;
 
-      case CREATE_WEBHOOK:
-        responseData = createWebhook(parameters);
-        break;
-
-      case DELETE_WEBHOOK:
-        responseData = deleteWebhook(parameters);
+      case FETCH_ISSUE:
+        responseData = fetchIssue(parameters);
         break;
 
       case GET_PROJECTS:
@@ -372,10 +366,19 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     try {
       JiraClient jira = getJiraClient(parameters);
       Issue.FluentCreate fluentCreate = jira.createIssue(parameters.getProject(), parameters.getIssueType())
-                                            .field(Field.SUMMARY, parameters.getSummary())
-                                            .field(Field.DESCRIPTION, parameters.getDescription())
-                                            .field(Field.LABELS, parameters.getLabels())
-                                            .field(Field.PRIORITY, parameters.getPriority());
+                                            .field(Field.SUMMARY, parameters.getSummary());
+
+      if (parameters.getPriority() != null) {
+        fluentCreate.field(Field.PRIORITY, parameters.getPriority());
+      }
+
+      if (parameters.getDescription() != null) {
+        fluentCreate.field(Field.DESCRIPTION, parameters.getDescription());
+      }
+
+      if (parameters.getLabels() != null) {
+        fluentCreate.field(Field.LABELS, parameters.getLabels());
+      }
 
       if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
         for (Entry<String, Object> customField : parameters.getCustomFields().entrySet()) {
@@ -442,16 +445,25 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     if (EmptyPredicate.isNotEmpty(approvalFieldValue)
         && StringUtils.equalsIgnoreCase(approvalFieldValue, parameters.getApprovalValue())) {
       logger.info("IssueId: {} Approved", parameters.getIssueId());
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
+      return JiraExecutionData.builder()
+          .currentStatus(approvalFieldValue)
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .build();
     }
 
     if (EmptyPredicate.isNotEmpty(rejectionFieldValue)
         && StringUtils.equalsIgnoreCase(rejectionFieldValue, parameters.getRejectionValue())) {
       logger.info("IssueId: {} Rejected", parameters.getIssueId());
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.REJECTED).build();
+      return JiraExecutionData.builder()
+          .currentStatus(rejectionFieldValue)
+          .executionStatus(ExecutionStatus.REJECTED)
+          .build();
     }
 
-    return JiraExecutionData.builder().executionStatus(ExecutionStatus.RUNNING).build();
+    return JiraExecutionData.builder()
+        .currentStatus(approvalFieldValue)
+        .executionStatus(ExecutionStatus.PAUSED)
+        .build();
   }
 
   private String getIssueUrl(JiraConfig jiraConfig, Issue issue) {
@@ -475,88 +487,32 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return new JiraClient(jiraConfig.getBaseUrl(), creds);
   }
 
-  private ResponseData deleteWebhook(JiraTaskParameters parameters) {
+  private ResponseData fetchIssue(JiraTaskParameters parameters) {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
-
-    Issue issue;
-    CommandExecutionStatus commandExecutionStatus;
     JiraClient jira;
+    Issue issue;
+    String approvalFieldValue = null;
     try {
       jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
+      String message = "Waiting for Approval on ticket: " + issue.getKey();
+      if (EmptyPredicate.isNotEmpty(parameters.getApprovalField())) {
+        Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getApprovalField());
+        approvalFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
+      }
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.PAUSED)
+          .issueUrl(getIssueUrl(jiraConfig, issue))
+          .issueKey(issue.getKey())
+          .currentStatus(approvalFieldValue)
+          .errorMessage(message)
+          .build();
     } catch (JiraException e) {
       String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
       logger.error(error, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
-    String message = "Approval/Rejection provided on ticket: " + issue.getKey();
-    JiraExecutionData jiraExecutionData = JiraExecutionData.builder()
-                                              .issueUrl(getIssueUrl(jiraConfig, issue))
-                                              .executionStatus(ExecutionStatus.SUCCESS)
-                                              .errorMessage(message)
-                                              .build();
-    if (parameters.getWebhookUrl() == null) {
-      return jiraExecutionData;
-    }
-    try {
-      jira.getRestClient().delete(new URI(parameters.getWebhookUrl()));
-    } catch (IOException | URISyntaxException | RestException e) {
-      logger.error("Unable to delete a new Jira webhook", e);
-      return jiraExecutionData;
-    }
-    return jiraExecutionData;
-  }
-
-  private ResponseData createWebhook(JiraTaskParameters parameters) {
-    JiraConfig jiraConfig = parameters.getJiraConfig();
-    encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
-    JiraClient jira;
-    CommandExecutionStatus commandExecutionStatus;
-    Issue issue;
-    try {
-      jira = getJiraClient(parameters);
-      issue = jira.getIssue(parameters.getIssueId());
-    } catch (JiraException e) {
-      String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
-      logger.error(error, e);
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
-    }
-
-    List<String> events = new ArrayList<>();
-    events.add("jira:issue_updated");
-    Map<String, String> filters = new HashMap<>();
-    filters.put("issue-related-events-section", "issue = " + parameters.getIssueId());
-    String url = parameters.getCallbackUrl();
-    String message = "Waiting for Approval on ticket: " + issue.getKey();
-    JiraWebhookParameters jiraWebhookParameters = JiraWebhookParameters.builder()
-                                                      .name("webhook for issue = " + issue.getKey())
-                                                      .events(events)
-                                                      .filters(filters)
-                                                      .excludeBody(false)
-                                                      .jqlFilter(filters)
-                                                      .excludeIssueDetails(false)
-                                                      .url(url)
-                                                      .build();
-
-    JSONObject json = JSONObject.fromObject(jiraWebhookParameters);
-
-    String webhookUrl;
-    JiraExecutionData jiraExecutionData = JiraExecutionData.builder()
-                                              .executionStatus(ExecutionStatus.PAUSED)
-                                              .issueUrl(getIssueUrl(jiraConfig, issue))
-                                              .errorMessage(message)
-                                              .build();
-    try {
-      JSON resp = jira.getRestClient().post(new URI(jiraConfig.getBaseUrl() + WEBHOOK_CREATION_URL), json);
-      JSONObject object = JSONObject.fromObject(resp);
-      webhookUrl = object.getString("self");
-    } catch (RestException | IOException | URISyntaxException e) {
-      String error = "Unable to create a new Jira webhook for " + getIssueUrl(jiraConfig, issue);
-      logger.error(error, e);
-      return jiraExecutionData;
-    }
-    jiraExecutionData.setWebhookUrl(webhookUrl);
-    return jiraExecutionData;
   }
 }

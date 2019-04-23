@@ -490,6 +490,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       // collaboration providers
       case SMTP:
       case SLACK:
+      case JIRA:
+      case SERVICENOW:
         return yamlHandlerFactory.getYamlHandler(YamlType.COLLABORATION_PROVIDER, settingVariableType.name());
 
       // load balancers

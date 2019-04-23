@@ -5,13 +5,12 @@ public enum JiraAction {
   UPDATE_TICKET("Update Ticket"),
   AUTH("Auth"),
 
-  GET_PROJECTS(""),
-  GET_FIELDS_OPTIONS(""),
-  GET_STATUSES(""),
-  GET_CREATE_METADATA(""),
+  GET_PROJECTS("Get Projects"),
+  GET_FIELDS_OPTIONS("Get Field Options"),
+  GET_STATUSES("Get Statuses"),
+  GET_CREATE_METADATA("Get Create Metadata"),
 
-  CREATE_WEBHOOK("Create webhook"),
-  DELETE_WEBHOOK("Delete Webhook"),
+  FETCH_ISSUE("Fetch Issue"),
   CHECK_APPROVAL("Check Jira Approval");
 
   private String displayName;

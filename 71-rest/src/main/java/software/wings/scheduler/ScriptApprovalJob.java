@@ -1,12 +1,5 @@
 package software.wings.scheduler;
 
-import static software.wings.common.Constants.ACCOUNT_ID_KEY;
-import static software.wings.common.Constants.APP_ID_KEY;
-import static software.wings.common.Constants.SCRIPT_APPROVAL_COMMAND;
-import static software.wings.common.Constants.SCRIPT_APPROVAL_ENV_VARIABLE;
-import static software.wings.common.Constants.SCRIPT_APPROVAL_JOB_GROUP;
-import static software.wings.common.Constants.WORKFLOW_EXECUTION_ID_KEY;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -55,6 +48,12 @@ public class ScriptApprovalJob implements Job {
   @Inject private DelegateServiceImpl delegateService;
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject WaitNotifyEngine waitNotifyEngine;
+  private String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
+  private static String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
+  private static String ACCOUNT_ID_KEY = "accountId";
+  private static String APP_ID_KEY = "appId";
+  private String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
+  private static String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
 
   public static void doRetryJob(PersistentScheduler jobScheduler, String accountId, String appId, String approvalId,
       String workflowExecutionId, String activityId, ShellScriptApprovalParams shellScriptApprovalParams) {

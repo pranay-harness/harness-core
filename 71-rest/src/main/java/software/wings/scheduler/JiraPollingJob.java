@@ -3,9 +3,7 @@ package software.wings.scheduler;
 import static software.wings.scheduler.ServiceNowApprovalJob.scheduleJob;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +11,7 @@ import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
+import software.wings.api.JiraExecutionData;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
@@ -24,14 +23,15 @@ public class JiraPollingJob implements Job {
   private static final String ISSUE_ID = "issueId";
   private static final String APPROVAL_ID = "approvalId";
   private static final String WORKFLOW_EXECUTION_ID = "workflowExecutionId";
+  private static final String STATE_EXECUTION_INSTANCE_ID = "stateExecutionInstanceId";
   private static final String ACCOUNT_ID_KEY = "accountId";
   private static final String APP_ID_KEY = "appId";
 
   @Inject private JiraHelperService jiraHelperService;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static void doPollingJob(PersistentScheduler jobScheduler, JiraApprovalParams jiraApprovalParams,
-      String approvalExecutionId, String accountId, String appId, String workflowExecutionId) {
+      String approvalExecutionId, String accountId, String appId, String workflowExecutionId,
+      String stateExecutionInstanceId) {
     JobDetail job = JobBuilder.newJob(JiraPollingJob.class)
                         .withIdentity(approvalExecutionId, GROUP)
                         .usingJobData(CONNECTOR_ID, jiraApprovalParams.getJiraConnectorId())
@@ -44,6 +44,7 @@ public class JiraPollingJob implements Job {
                         .usingJobData("rejectionField", jiraApprovalParams.getRejectionField())
                         .usingJobData("rejectionValue", jiraApprovalParams.getRejectionValue())
                         .usingJobData(WORKFLOW_EXECUTION_ID, workflowExecutionId)
+                        .usingJobData(STATE_EXECUTION_INSTANCE_ID, stateExecutionInstanceId)
                         .build();
     logger.info("Issue Id in the JiraPollingJob = {}", jiraApprovalParams.getIssueId());
     scheduleJob(jobScheduler, approvalExecutionId, job, GROUP);
@@ -61,8 +62,7 @@ public class JiraPollingJob implements Job {
     String rejectionField = jobExecutionContext.getMergedJobDataMap().getString("rejectionField");
     String rejectionValue = jobExecutionContext.getMergedJobDataMap().getString("rejectionValue");
     String workflowExecutionId = jobExecutionContext.getMergedJobDataMap().getString(WORKFLOW_EXECUTION_ID);
-
-    boolean isTerminalState = false;
+    String stateExecutionInstanceId = jobExecutionContext.getMergedJobDataMap().getString(STATE_EXECUTION_INSTANCE_ID);
 
     if (rejectionField != null && rejectionValue != null) {
       logger.info(
@@ -73,32 +73,30 @@ public class JiraPollingJob implements Job {
           approvalId, issueId, approvalField, approvalValue);
     }
     try {
-      ExecutionStatus approval = jiraHelperService.getApprovalStatus(
+      JiraExecutionData jiraExecutionData = jiraHelperService.getApprovalStatus(
           connectorId, accountId, appId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
-      // TODO:: Pooja: What if ticket not found or rejected. Also, there should be window till we should poll after
-      // than it should delete
 
+      ExecutionStatus approval = jiraExecutionData.getExecutionStatus();
       logger.info("Jira Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
           workflowExecutionId);
 
       if (approval == ExecutionStatus.SUCCESS || approval == ExecutionStatus.REJECTED) {
-        isTerminalState = true;
-
         ApprovalDetails.Action action =
             approval == ExecutionStatus.SUCCESS ? ApprovalDetails.Action.APPROVE : ApprovalDetails.Action.REJECT;
 
-        EmbeddedUser user = null;
-        jiraHelperService.approveWorkflow(action, approvalId, user, appId, workflowExecutionId, approval);
+        jiraHelperService.approveWorkflow(action, approvalId, appId, workflowExecutionId, approval,
+            jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
+      } else if (approval == ExecutionStatus.PAUSED) {
+        jiraHelperService.continuePauseWorkflow(approvalId, appId, workflowExecutionId, approval,
+            jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
       }
     } catch (Exception ex) {
-      logger.error("Exception in execute JiraPollingJob. approvalId: {}, workflowExecutionId: {} ", approvalId,
-          workflowExecutionId, ex);
-      // TODO:: Pooja: Add logic to determine terminal exceptions and cleanup for those.
+      logger.error("Exception in execute JiraPollingJob. approvalId: {}, workflowExecutionId: {} , issueId: {}",
+          approvalId, workflowExecutionId, issueId, ex);
     }
+  }
 
-    if (isTerminalState) {
-      logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
-      jobScheduler.deleteJob(approvalId, GROUP);
-    }
+  public static void deleteJob(PersistentScheduler jobScheduler, String approvalId) {
+    jobScheduler.deleteJob(approvalId, GROUP);
   }
 }
