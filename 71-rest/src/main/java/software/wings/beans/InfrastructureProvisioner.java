@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
+import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,7 @@ import javax.validation.Valid;
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
 @Entity(value = "infrastructureProvisioner")
 @HarnessExportableEntity
-public abstract class InfrastructureProvisioner extends Base {
+public abstract class InfrastructureProvisioner extends Base implements NameAccess {
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
   public static final String NAME_KEY = "name";

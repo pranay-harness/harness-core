@@ -12,6 +12,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.persistence.NameAccess;
 import io.harness.persistence.PersistentIterable;
 import io.harness.validation.Update;
 import lombok.Data;
@@ -47,7 +48,7 @@ import javax.annotation.Nullable;
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
-public abstract class InfrastructureMapping extends Base implements EncryptableSetting, PersistentIterable {
+public abstract class InfrastructureMapping extends Base implements EncryptableSetting, PersistentIterable, NameAccess {
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
   public static final String PROVISIONER_ID_KEY = "provisionerId";

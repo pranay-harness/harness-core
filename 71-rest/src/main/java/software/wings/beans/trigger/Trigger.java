@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
+import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,7 +40,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
-public class Trigger extends Base {
+public class Trigger extends Base implements NameAccess {
   @NotEmpty private String name;
   private String description;
   @NotNull private TriggerCondition condition;

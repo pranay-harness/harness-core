@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,7 +45,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Service extends Base implements KeywordsAware {
+public class Service extends Base implements KeywordsAware, NameAccess {
   public static final String NAME_KEY = "name";
   public static final String ARTIFACT_TYPE = "artifactType";
   public static final String IS_K8S_V2_KEY = "isK8sV2";

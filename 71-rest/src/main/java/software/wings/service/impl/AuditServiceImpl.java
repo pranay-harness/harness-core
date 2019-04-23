@@ -26,6 +26,7 @@ import io.harness.context.GlobalContextData;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
+import io.harness.persistence.NameAccess;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
@@ -40,6 +41,7 @@ import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
+import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
@@ -71,6 +73,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private TimeLimiter timeLimiter;
   @Inject private EntityHelper entityHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private EntityNameCache entityNameCache;
 
   private WingsPersistence wingsPersistence;
 
@@ -313,13 +316,27 @@ public class AuditServiceImpl implements AuditService {
       }
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
+      EntityAuditRecord record = builder.build();
+      updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
+
       UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
-      operations.addToSet("entityAuditRecords", builder.build());
+      operations.addToSet("entityAuditRecords", record);
       operations.set("accountId", accountId);
       wingsPersistence.update(
           wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, auditHeaderId), operations);
     } catch (Exception ex) {
       logger.error(format("Exception while auditing records for account [%s]", accountId), ex);
+    }
+  }
+
+  private <T> void updateEntityNameCacheIfRequired(T oldEntity, T newEntity, EntityAuditRecord record) {
+    if (oldEntity instanceof NameAccess && newEntity instanceof NameAccess
+        && !((NameAccess) oldEntity).getName().equals(((NameAccess) newEntity).getName())) {
+      try {
+        entityNameCache.invalidateCache(EntityType.valueOf(record.getEntityType()), record.getEntityId());
+      } catch (Exception e) {
+        logger.warn("Failed while invalidating EntityNameCache: " + e);
+      }
     }
   }
 
