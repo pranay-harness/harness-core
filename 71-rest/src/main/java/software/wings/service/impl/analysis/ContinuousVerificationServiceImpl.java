@@ -85,6 +85,7 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
@@ -94,7 +95,6 @@ import software.wings.service.impl.datadog.DataDogFetchConfig;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -125,6 +125,8 @@ import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
@@ -1311,6 +1313,61 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   @Override
+  public boolean notifyVerificationState(String correlationId, VerificationDataAnalysisResponse response) {
+    try {
+      waitNotifyEngine.notify(correlationId, response);
+      return true;
+    } catch (Exception ex) {
+      logger.error("Exception while notifying correlationId {}", correlationId, ex);
+      return false;
+    }
+  }
+
+  @Override
+  public boolean notifyWorkflowVerificationState(String appId, String stateExecutionId, ExecutionStatus status) {
+    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                                .get();
+    if (analysisContext == null) {
+      logger.error("for app {} could not find context for {}", appId, stateExecutionId);
+      return false;
+    }
+
+    try {
+      final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
+          VerificationStateAnalysisExecutionData.builder()
+              .appId(appId)
+              .correlationId(analysisContext.getCorrelationId())
+              .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+              .stateExecutionInstanceId(stateExecutionId)
+              .serverConfigId(analysisContext.getAnalysisServerConfigId())
+              .timeDuration(analysisContext.getTimeDuration())
+              .canaryNewHostNames(analysisContext.getTestNodes() != null
+                      ? new HashSet<>(analysisContext.getTestNodes().values())
+                      : null)
+              .lastExecutionNodes(analysisContext.getControlNodes() != null
+                      ? new HashSet<>(analysisContext.getControlNodes().values())
+                      : null)
+              .delegateTaskId(analysisContext.getDelegateTaskId())
+              .mlAnalysisType(analysisContext.getAnalysisType())
+              .query(analysisContext.getQuery())
+              .build();
+      stateAnalysisExecutionData.setStatus(status);
+
+      final VerificationDataAnalysisResponse analysisResponse =
+          VerificationDataAnalysisResponse.builder().stateExecutionData(stateAnalysisExecutionData).build();
+      analysisResponse.setExecutionStatus(status);
+
+      waitNotifyEngine.notify(analysisContext.getCorrelationId(), analysisResponse);
+      return true;
+    } catch (Exception ex) {
+      logger.error("Exception for {} while notifying correlationId {}", stateExecutionId,
+          analysisContext.getStateExecutionId(), ex);
+      return false;
+    }
+  }
+
+  @Override
   public boolean collect247Data(String cvConfigId, StateType stateType, long startTime, long endTime) {
     String waitId = generateUuid();
     DelegateTask task;
@@ -1367,7 +1424,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
                                     .appId(cvConfiguration.getAppId())
                                     .executionData(getExecutionData(cvConfiguration, waitId,
-                                        (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime), isLogCollection))
+                                        (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime)))
                                     .isLogCollection(isLogCollection)
                                     .cvConfigId(cvConfiguration.getUuid())
                                     .dataCollectionStartTime(startTime)
@@ -1393,30 +1450,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
-  private StateExecutionData getExecutionData(
-      CVConfiguration cvConfiguration, String waitId, int timeDuration, boolean isLogCollection) {
-    if (isLogCollection) {
-      return LogAnalysisExecutionData.builder()
-          .appId(cvConfiguration.getAppId())
-          .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
-          .serverConfigId(cvConfiguration.getConnectorId())
-          .timeDuration(timeDuration)
-          .canaryNewHostNames(new HashSet<>())
-          .lastExecutionNodes(new HashSet<>())
-          .correlationId(waitId)
-          .build();
-    } else {
-      return MetricAnalysisExecutionData.builder()
-          .appId(cvConfiguration.getAppId())
-          .workflowExecutionId(null)
-          .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
-          .serverConfigId(cvConfiguration.getConnectorId())
-          .timeDuration(timeDuration)
-          .canaryNewHostNames(new HashSet<>())
-          .lastExecutionNodes(new HashSet<>())
-          .correlationId(waitId)
-          .build();
-    }
+  private StateExecutionData getExecutionData(CVConfiguration cvConfiguration, String waitId, int timeDuration) {
+    return VerificationStateAnalysisExecutionData.builder()
+        .appId(cvConfiguration.getAppId())
+        .workflowExecutionId(null)
+        .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
+        .serverConfigId(cvConfiguration.getConnectorId())
+        .timeDuration(timeDuration)
+        .canaryNewHostNames(new HashSet<>())
+        .lastExecutionNodes(new HashSet<>())
+        .correlationId(waitId)
+        .build();
   }
 
   private DelegateTask createDynaTraceDelegateTask(
@@ -1682,7 +1726,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     hostsToBeCollected.addAll(canaryNewHostNames);
     switch (context.getStateType()) {
       case SUMO:
-        final LogAnalysisExecutionData executionData =
+        final VerificationStateAnalysisExecutionData executionData =
             createLogAnalysisExecutionData(context, canaryNewHostNames, lastExecutionNodes);
         try {
           SumoConfig sumoConfig = (SumoConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
@@ -1736,9 +1780,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .build();
   }
 
-  private LogAnalysisExecutionData createLogAnalysisExecutionData(
+  private VerificationStateAnalysisExecutionData createLogAnalysisExecutionData(
       AnalysisContext context, Set<String> canaryNewHostNames, Map<String, String> lastExecutionNodes) {
-    return LogAnalysisExecutionData.builder()
+    return VerificationStateAnalysisExecutionData.builder()
         .stateExecutionInstanceId(context.getStateExecutionId())
         .serverConfigId(context.getAnalysisServerConfigId())
         .query(context.getQuery())

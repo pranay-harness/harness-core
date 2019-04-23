@@ -18,7 +18,6 @@ import static software.wings.common.VerificationConstants.getLogAnalysisStates;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
-import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.TIMESERIES_24x7;
 import static software.wings.sm.states.AbstractMetricAnalysisState.COMPARISON_WINDOW;
 import static software.wings.sm.states.AbstractMetricAnalysisState.MIN_REQUESTS_PER_MINUTE;
@@ -53,8 +52,6 @@ import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -66,6 +63,8 @@ import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.time.OffsetDateTime;
@@ -931,16 +930,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 AnalysisContext context =
                     wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
                 logger.error("Verification L1 => L2 cluster failed", ex);
-                final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder().build();
+                final VerificationStateAnalysisExecutionData executionData =
+                    VerificationStateAnalysisExecutionData.builder().mlAnalysisType(MLAnalysisType.LOG_ML).build();
                 executionData.setStatus(ExecutionStatus.ERROR);
                 executionData.setErrorMsg(ex.getMessage());
                 logger.info(
                     "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
-                verificationManagerClientHelper.notifyManagerForLogAnalysis(context,
-                    aLogAnalysisResponse()
-                        .withLogAnalysisExecutionData(executionData)
-                        .withExecutionStatus(ExecutionStatus.ERROR)
-                        .build());
+                verificationManagerClientHelper.notifyManagerForVerificationAnalysis(
+                    context, VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build());
                 wingsPersistence.updateField(CVConfiguration.class, cvConfiguration.getUuid(), "enabled24x7", false);
               }
             } catch (Exception e) {
@@ -978,8 +975,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
       final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
 
-      LogAnalysisExecutionData logAnalysisExecutionData =
-          LogAnalysisExecutionData.builder()
+      VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+          VerificationStateAnalysisExecutionData.builder()
               .stateExecutionInstanceId(context.getStateExecutionId())
               .serverConfigId(context.getAnalysisServerConfigId())
               .query(context.getQuery())
@@ -989,6 +986,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())
               .correlationId(context.getCorrelationId())
               .analysisMinute(logAnalysisMinute)
+              .mlAnalysisType(MLAnalysisType.LOG_ML)
               .build();
 
       logAnalysisExecutionData.setStatus(status);
@@ -997,12 +995,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logAnalysisExecutionData.setErrorMsg(errorMsg);
       }
 
-      final LogAnalysisResponse response = aLogAnalysisResponse()
-                                               .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                               .withExecutionStatus(status)
-                                               .build();
+      final VerificationDataAnalysisResponse response =
+          VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+      response.setExecutionStatus(status);
       logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
-      verificationManagerClientHelper.notifyManagerForLogAnalysis(context, response);
+      verificationManagerClientHelper.notifyManagerForVerificationAnalysis(context, response);
     }
   }
 

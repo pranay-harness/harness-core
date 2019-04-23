@@ -1,7 +1,5 @@
 package io.harness.jobs;
 
-import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -24,11 +22,12 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -188,16 +187,16 @@ public class LogClusterManagerJob implements Job {
         try {
           logger.error("Verification L0 => L1 cluster failed", ex);
           if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-            final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder().build();
+            final VerificationStateAnalysisExecutionData executionData =
+                VerificationStateAnalysisExecutionData.builder().build();
             executionData.setStatus(ExecutionStatus.ERROR);
             executionData.setErrorMsg(ex.getMessage());
             logger.info(
                 "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
-            managerClientHelper.notifyManagerForLogAnalysis(context,
-                aLogAnalysisResponse()
-                    .withLogAnalysisExecutionData(executionData)
-                    .withExecutionStatus(ExecutionStatus.ERROR)
-                    .build());
+            final VerificationDataAnalysisResponse analysisResponse =
+                VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+            analysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
+            managerClientHelper.notifyManagerForVerificationAnalysis(context, analysisResponse);
           }
         } catch (Exception e) {
           logger.error("Verification cluster manager cleanup failed", e);

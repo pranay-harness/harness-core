@@ -37,7 +37,6 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -53,6 +52,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -274,8 +274,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
     }
 
-    SettingAttribute settingAttribute = settingsService.get(
-        ((MetricAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData()).getServerConfigId());
+    SettingAttribute settingAttribute =
+        settingsService.get(((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
+                                .getServerConfigId());
 
     if (settingAttribute.getName().toLowerCase().endsWith("dev")
         || settingAttribute.getName().toLowerCase().endsWith("prod")) {

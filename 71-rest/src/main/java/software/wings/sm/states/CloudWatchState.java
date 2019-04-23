@@ -41,13 +41,13 @@ import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -133,7 +133,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
-      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
+      VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Map<String, String> lambdaFunctions = new HashMap<>();

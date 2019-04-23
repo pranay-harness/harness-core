@@ -69,7 +69,6 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricUtilHelper;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
@@ -85,6 +84,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationStateTest;
 import software.wings.sm.states.DatadogState;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -384,7 +384,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setStateType(StateType.NEW_RELIC.name());
     stateExecutionInstance.setDisplayName("Relic_Fail");
     Map<String, StateExecutionData> hashMap = new HashMap();
-    hashMap.put("Relic_Fail", MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    hashMap.put("Relic_Fail", VerificationStateAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
     stateExecutionInstance.setStateExecutionMap(hashMap);
     stateExecutionInstance.setAppId(appId);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
@@ -447,7 +447,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setStateType(StateType.NEW_RELIC.name());
     stateExecutionInstance.setDisplayName("Relic_Fail");
     Map<String, StateExecutionData> hashMap = new HashMap();
-    hashMap.put("Relic_Fail", MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    hashMap.put("Relic_Fail", VerificationStateAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
     stateExecutionInstance.setStateExecutionMap(hashMap);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 

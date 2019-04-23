@@ -35,7 +35,6 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -46,6 +45,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.DecimalFormat;
 import java.util.Collection;
@@ -142,7 +142,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
-      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
+      VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
     final Collection<Metric> metricNameToObjectMap =
         newRelicService.getMetricsCorrespondingToMetricNames(metrics).values();
     final Map<String, TimeSeriesMetricDefinition> metricTemplate =

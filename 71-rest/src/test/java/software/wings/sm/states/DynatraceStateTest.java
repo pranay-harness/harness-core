@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
@@ -31,9 +30,10 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionResponse;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.ParseException;
 import java.util.Collections;
@@ -183,9 +183,10 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
     assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
 
-    MetricAnalysisExecutionData metricAnalysisExecutionData = MetricAnalysisExecutionData.builder().build();
-    MetricDataAnalysisResponse metricDataAnalysisResponse =
-        MetricDataAnalysisResponse.builder().stateExecutionData(metricAnalysisExecutionData).build();
+    VerificationStateAnalysisExecutionData metricAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder().build();
+    VerificationDataAnalysisResponse metricDataAnalysisResponse =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(metricAnalysisExecutionData).build();
     metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.FAILED);
     Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", metricDataAnalysisResponse);

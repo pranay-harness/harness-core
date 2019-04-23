@@ -42,7 +42,6 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ExecutionContext;
@@ -50,6 +49,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 
 import java.io.IOException;
@@ -154,7 +154,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
-      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
+      VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 

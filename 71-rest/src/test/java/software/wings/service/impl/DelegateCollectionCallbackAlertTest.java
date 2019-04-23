@@ -29,11 +29,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -70,7 +70,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     dataCollectionCallback.setWaitNotifyEngine(waitNotifyEngine);
     dataCollectionCallback.setCvConfigurationService(cvConfigurationService);
 
-    dataCollectionCallback.setExecutionData(new MetricAnalysisExecutionData());
+    dataCollectionCallback.setExecutionData(new VerificationStateAnalysisExecutionData());
 
     Map<String, ResponseData> response = new HashMap<>();
     response.put("error", ErrorNotifyResponseData.builder().errorMessage("some error message").build());

@@ -23,7 +23,6 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
@@ -37,13 +36,14 @@ import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -562,8 +562,8 @@ public class MetricAnalysisJob implements Job {
     private void sendStateNotification(AnalysisContext context, boolean error, String errMsg, int analysisMinute) {
       if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
-        final MetricAnalysisExecutionData executionData =
-            MetricAnalysisExecutionData.builder()
+        final VerificationStateAnalysisExecutionData executionData =
+            VerificationStateAnalysisExecutionData.builder()
                 .appId(context.getAppId())
                 .workflowExecutionId(context.getWorkflowExecutionId())
                 .stateExecutionInstanceId(context.getStateExecutionId())
@@ -574,17 +574,18 @@ public class MetricAnalysisJob implements Job {
                     context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes().keySet())
                 .correlationId(context.getCorrelationId())
                 .analysisMinute(analysisMinute)
+                .mlAnalysisType(MLAnalysisType.TIME_SERIES)
                 .build();
         executionData.setStatus(status);
         if (error) {
           executionData.setErrorMsg(errMsg);
         }
-        final MetricDataAnalysisResponse response =
-            MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+        final VerificationDataAnalysisResponse response =
+            VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
         response.setExecutionStatus(status);
         logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
 
-        managerClientHelper.notifyManagerForMetricAnalysis(context, response);
+        managerClientHelper.notifyManagerForVerificationAnalysis(context, response);
       }
     }
 

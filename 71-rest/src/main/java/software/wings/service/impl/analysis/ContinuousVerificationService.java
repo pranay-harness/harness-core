@@ -12,6 +12,7 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
+import software.wings.verification.VerificationDataAnalysisResponse;
 
 import java.text.ParseException;
 import java.util.LinkedHashMap;
@@ -49,6 +50,10 @@ public interface ContinuousVerificationService {
       String accountId, String serverConfigId, Object fetchConfig, StateType type);
 
   boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response);
+
+  boolean notifyVerificationState(String correlationId, VerificationDataAnalysisResponse response);
+
+  boolean notifyWorkflowVerificationState(String appId, String stateExecutionId, ExecutionStatus status);
 
   boolean collect247Data(String cvConfigId, StateType stateType, long startTime, long endTime);
 

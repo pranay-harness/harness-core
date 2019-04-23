@@ -31,12 +31,12 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -99,7 +99,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
-      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
+      VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
