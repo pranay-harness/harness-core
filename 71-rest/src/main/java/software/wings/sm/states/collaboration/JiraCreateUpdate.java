@@ -1,5 +1,6 @@
 package software.wings.sm.states.collaboration;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -14,6 +15,7 @@ import io.harness.beans.SweepingOutput;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
@@ -98,6 +100,14 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
 
     JiraConfig jiraConfig = getJiraConfig(jiraConnectorId);
     renderExpressions(context);
+
+    if (ExpressionEvaluator.containsVariablePattern(issueId)) {
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage("Expression not rendered for issue Id: " + issueId)
+          .withStateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
+          .build();
+    }
 
     JiraTaskParameters parameters = JiraTaskParameters.builder()
                                         .jiraConfig(jiraConfig)

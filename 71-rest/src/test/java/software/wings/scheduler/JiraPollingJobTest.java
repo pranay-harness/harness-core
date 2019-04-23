@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.APPROVAL_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.JIRA_CONNECTOR_ID;
 import static software.wings.utils.WingsTestConstants.JIRA_ISSUE_ID;
+import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
@@ -22,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.JiraExecutionData;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.JiraHelperService;
@@ -53,52 +55,10 @@ public class JiraPollingJobTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldDeleteJobOnSuccessfullApproval() throws TimeoutException, InterruptedException {
-    when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
-             APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
-        .thenReturn(ExecutionStatus.SUCCESS);
-
-    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
-    jiraApprovalParams.setJiraConnectorId(JIRA_CONNECTOR_ID);
-    jiraApprovalParams.setIssueId(JIRA_ISSUE_ID);
-    jiraApprovalParams.setApprovalField(APPROVAL_FIELD);
-    jiraApprovalParams.setApprovalValue(APPROVAL_VALUE);
-    jiraApprovalParams.setRejectionField(REJECTION_FIELD);
-    jiraApprovalParams.setRejectionValue(REJECTION_VALUE);
-
-    JiraPollingJob.doPollingJob(
-        jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
-    listener.waitToSatisfy(ofSeconds(35));
-    assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isFalse();
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void shouldDeleteJobOnRejection() throws TimeoutException, InterruptedException {
-    when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
-             APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
-        .thenReturn(ExecutionStatus.REJECTED);
-
-    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
-    jiraApprovalParams.setJiraConnectorId(JIRA_CONNECTOR_ID);
-    jiraApprovalParams.setIssueId(JIRA_ISSUE_ID);
-    jiraApprovalParams.setApprovalField(APPROVAL_FIELD);
-    jiraApprovalParams.setApprovalValue(APPROVAL_VALUE);
-    jiraApprovalParams.setRejectionField(REJECTION_FIELD);
-    jiraApprovalParams.setRejectionValue(REJECTION_VALUE);
-
-    JiraPollingJob.doPollingJob(
-        jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
-    listener.waitToSatisfy(ofSeconds(35));
-    assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isFalse();
-  }
-
-  @Test
-  @Category(UnitTests.class)
   public void shouldNotDeleteJobOnAwitingApproval() throws TimeoutException, InterruptedException {
     when(jiraHelperService.getApprovalStatus(JIRA_CONNECTOR_ID, ACCOUNT_ID, APP_ID, JIRA_ISSUE_ID, APPROVAL_FIELD,
              APPROVAL_VALUE, REJECTION_FIELD, REJECTION_VALUE))
-        .thenReturn(ExecutionStatus.FAILED);
+        .thenReturn(JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build());
 
     JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
     jiraApprovalParams.setJiraConnectorId(JIRA_CONNECTOR_ID);
@@ -108,8 +68,8 @@ public class JiraPollingJobTest extends WingsBaseTest {
     jiraApprovalParams.setRejectionField(REJECTION_FIELD);
     jiraApprovalParams.setRejectionValue(REJECTION_VALUE);
 
-    JiraPollingJob.doPollingJob(
-        jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
+    JiraPollingJob.doPollingJob(jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID,
+        WORKFLOW_EXECUTION_ID, STATE_EXECUTION_ID);
     listener.waitToSatisfy(ofSeconds(35));
     assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isTrue();
   }

@@ -124,6 +124,15 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   }
 
   @Override
+  public void updateStateExecutionData(String appId, String stateExecutionId, StateExecutionData stateExecutionData) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionId);
+    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+    stateExecutionMap.put(stateExecutionInstance.getDisplayName(), stateExecutionData);
+    wingsPersistence.save(stateExecutionInstance);
+  }
+
+  @Override
   public PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest) {
     return wingsPersistence.query(StateExecutionInstance.class, pageRequest);
   }

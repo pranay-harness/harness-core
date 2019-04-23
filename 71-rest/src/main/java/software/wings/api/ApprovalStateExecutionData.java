@@ -51,7 +51,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
 
   /** Jira Approval */
   private String issueUrl;
-  private String webhookUrl;
+  private String issueKey;
+  private String currentStatus;
   private String approvalField;
   private String approvalValue;
   private String rejectionField;
@@ -104,6 +105,14 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
           ExecutionDataValue.builder()
               .displayName("Approval Criteria")
               .value(StringUtils.capitalize(approvalField) + " : " + StringUtils.capitalize(approvalValue))
+              .build());
+    }
+
+    if (EmptyPredicate.isNotEmpty(currentStatus)) {
+      putNotNull(executionDetails, "currentStatus",
+          ExecutionDataValue.builder()
+              .displayName("Current value")
+              .value(StringUtils.capitalize(approvalField) + " : " + StringUtils.capitalize(currentStatus))
               .build());
     }
 

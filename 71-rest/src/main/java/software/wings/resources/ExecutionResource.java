@@ -264,6 +264,7 @@ public class ExecutionResource {
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
       @QueryParam("stateExecutionId") String stateExecutionId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ApprovalDetails approvalDetails) {
+    notNullCheck("Approval action", approvalDetails.getAction());
     ApprovalStateExecutionData approvalStateExecutionData =
         workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
             appId, workflowExecutionId, stateExecutionId, approvalDetails);

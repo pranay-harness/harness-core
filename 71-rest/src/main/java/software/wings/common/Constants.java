@@ -345,11 +345,6 @@ public interface Constants {
   Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
 
   /**
-   * The constant DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS.
-   */
-  Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-  /**
    * The constant for Default Env State timeout
    */
   Integer ENV_STATE_TIMEOUT_MILLIS = 12 * 60 * 60 * 1000; // 12 hours
@@ -760,9 +755,8 @@ public interface Constants {
   /**
    * Script as Approval
    */
-  String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
+
   String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
-  String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
 
   String RESOURCE_URI_CREATE_APP = "/api/apps";
   String RESOURCE_URI_CREATE_SERVICE = "/api/services";

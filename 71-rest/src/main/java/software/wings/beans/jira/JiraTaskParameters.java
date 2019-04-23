@@ -37,12 +37,10 @@ public class JiraTaskParameters implements ExecutionCapabilityDemander {
   private String activityId;
   private String approvalId;
 
-  private String webhookUrl;
   private String approvalField;
   private String approvalValue;
   private String rejectionField;
   private String rejectionValue;
-  private String callbackUrl;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

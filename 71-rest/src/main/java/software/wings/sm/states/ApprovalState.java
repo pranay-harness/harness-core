@@ -22,9 +22,6 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
-import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
-import static software.wings.common.Constants.SCRIPT_APPROVAL_COMMAND;
-import static software.wings.common.Constants.SCRIPT_APPROVAL_JOB_GROUP;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
@@ -43,6 +40,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Getter;
 import lombok.Setter;
@@ -125,6 +123,10 @@ public class ApprovalState extends State {
   @Inject private transient WorkflowNotificationHelper workflowNotificationHelper;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
+  private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
+  String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
+  String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
 
   @Getter @Setter ApprovalStateParams approvalStateParams;
   @Getter @Setter ApprovalStateType approvalStateType = USER_GROUP;
@@ -286,6 +288,15 @@ public class ApprovalState extends State {
       ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
+
+    if (ExpressionEvaluator.containsVariablePattern(jiraApprovalParams.getIssueId())) {
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage("Expression not rendered for Jira issue Id: " + jiraApprovalParams.getIssueId())
+          .withStateExecutionData(executionData)
+          .build();
+    }
+
     Application app = ((ExecutionContextImpl) context).getApp();
 
     executionData.setApprovalField(jiraApprovalParams.getApprovalField());
@@ -293,23 +304,24 @@ public class ApprovalState extends State {
     executionData.setRejectionField(jiraApprovalParams.getRejectionField());
     executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
 
-    // Create a cron job which polls JIRA for approval status
-    logger.info("IssueId = {} while creating Jira polling Job", jiraApprovalParams.getIssueId());
-    JiraPollingJob.doPollingJob(serviceJobScheduler, jiraApprovalParams, executionData.getApprovalId(),
-        app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId());
-
-    JiraExecutionData jiraExecutionData = jiraHelperService.createWebhook(
+    JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
     if (jiraExecutionData.getExecutionStatus().equals(FAILED)) {
       return anExecutionResponse()
-          .withExecutionStatus(jiraExecutionData.getExecutionStatus())
+          .withExecutionStatus(FAILED)
           .withErrorMessage(jiraExecutionData.getErrorMessage())
           .withStateExecutionData(executionData)
           .build();
     }
+    // Create a cron job which polls JIRA for approval status
+    logger.info("IssueId = {} while creating Jira polling Job", jiraApprovalParams.getIssueId());
+    JiraPollingJob.doPollingJob(serviceJobScheduler, jiraApprovalParams, executionData.getApprovalId(),
+        app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId());
+
     // issue Url on which approval is waiting in case of jira.
     executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
-    executionData.setWebhookUrl(jiraExecutionData.getWebhookUrl());
+    executionData.setIssueKey(jiraExecutionData.getIssueKey());
+    executionData.setCurrentStatus(jiraExecutionData.getCurrentStatus());
     return anExecutionResponse()
         .withAsync(true)
         .withExecutionStatus(PAUSED)
@@ -323,6 +335,15 @@ public class ApprovalState extends State {
       ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
     ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
     servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
+
+    if (ExpressionEvaluator.containsVariablePattern(servicenowApprovalParams.getIssueNumber())) {
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage("Expression not rendered for issue Number: " + servicenowApprovalParams.getIssueNumber())
+          .withStateExecutionData(executionData)
+          .build();
+    }
+
     executionData.setApprovalField(servicenowApprovalParams.getApprovalField());
     executionData.setApprovalValue(servicenowApprovalParams.getApprovalValue());
     executionData.setRejectionField(servicenowApprovalParams.getRejectionField());
@@ -392,6 +413,7 @@ public class ApprovalState extends State {
     executionData.setApprovedBy(approvalNotifyResponse.getApprovedBy());
     executionData.setComments(approvalNotifyResponse.getComments());
     executionData.setApprovedOn(System.currentTimeMillis());
+    executionData.setCurrentStatus(approvalNotifyResponse.getCurrentStatus());
 
     Map<String, String> placeholderValues = new HashMap<>();
     if (approvalNotifyResponse.getApprovedBy() != null) {
@@ -460,15 +482,14 @@ public class ApprovalState extends State {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
     setPipelineVariables(context);
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
-    Application app = ((ExecutionContextImpl) context).getApp();
-    JiraExecutionData jiraExecutionData = jiraHelperService.deleteWebhook(
-        jiraApprovalParams, executionData.getWebhookUrl(), app.getAppId(), app.getAccountId());
-    // issue Url on which approval was waiting.
-    executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
+    logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
+        executionData.getWorkflowId());
+    JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
+
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
-        .withErrorMessage(jiraExecutionData.getErrorMessage())
+        .withErrorMessage("Approval/Rejection provided on ticket: " + executionData.getIssueKey())
         .build();
   }
 
@@ -476,6 +497,11 @@ public class ApprovalState extends State {
       ApprovalStateExecutionData approvalNotifyResponse) {
     ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
     servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
+
+    logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
+        executionData.getWorkflowId());
+    ServiceNowApprovalJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
+
     setPipelineVariables(context);
     return anExecutionResponse()
         .withStateExecutionData(executionData)
@@ -573,9 +599,7 @@ public class ApprovalState extends State {
 
   private void handleAbortEventJira(ExecutionContext context, Application app) {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
-    jiraHelperService.deleteWebhook(
-        approvalStateParams.getJiraApprovalParams(), executionData.getWebhookUrl(), app.getAppId(), app.getAccountId());
-    // Todo@Pooja : delete JiraPolling job in case of pipeline abort.
+    JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
   }
 
   private void handleAbortEventServiceNow(ExecutionContext context, Application app) {

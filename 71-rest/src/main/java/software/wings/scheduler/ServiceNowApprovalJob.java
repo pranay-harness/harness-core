@@ -1,11 +1,9 @@
 package software.wings.scheduler;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +39,6 @@ public class ServiceNowApprovalJob implements Job {
   private static final String WORKFLOW_EXECUTION_ID = "workflowExecutionId";
 
   @Inject private ServiceNowService serviceNowService;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static void doPollingJob(PersistentScheduler jobScheduler, ServiceNowApprovalParams servicenowApprovalParams,
       String approvalExecutionId, String accountId, String appId, String workflowExecutionId, String ticketType) {
@@ -106,21 +103,14 @@ public class ServiceNowApprovalJob implements Job {
       if (approval != null) {
         logger.info("Servicenow Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
             workflowExecutionId);
-        logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
-        jobScheduler.deleteJob(approvalId, GROUP);
         EmbeddedUser user = null;
         serviceNowService.approveWorkflow(approval, approvalId, user, appId, workflowExecutionId);
       }
 
-    } catch (WingsException we) {
-      logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
-      jobScheduler.deleteJob(approvalId, GROUP);
-      throw we;
     } catch (Exception ex) {
-      logger.error("Exception in execute JiraPollingJob. approvalId: {}, workflowExecutionId: {} ", approvalId,
-          workflowExecutionId, ex);
-      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER, ex)
-          .addParam("message", "Exception in fetching approval " + ExceptionUtils.getMessage(ex));
+      logger.error(
+          "Exception in execute service now polling job. approvalId: {}, workflowExecutionId: {} , issueNumber: {}",
+          approvalId, workflowExecutionId, issueNumber, ex);
     }
   }
 
