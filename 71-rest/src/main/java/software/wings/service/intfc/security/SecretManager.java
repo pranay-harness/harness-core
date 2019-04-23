@@ -28,6 +28,7 @@ import java.util.Optional;
 public interface SecretManager extends OwnedByAccount {
   String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
   String ENCRYPTED_FIELD_MASK = "*******";
+  String ACCOUNT_ID_KEY = "accountId";
 
   List<EncryptionConfig> listEncryptionConfig(String accountId);
 
@@ -63,7 +64,7 @@ public interface SecretManager extends OwnedByAccount {
 
   String getEncryptedYamlRef(EncryptableSetting object, String... fieldName) throws IllegalAccessException;
 
-  EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
+  EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef, String accountId);
 
   boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
       EncryptionType toEncryptionType, String toSecretId);

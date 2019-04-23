@@ -214,6 +214,7 @@ public class MigrationList {
         .add(Pair.of(239, ServiceNameMigrationIfEmpty.class))
         .add(Pair.of(240, DeleteCVAlertsMigration.class))
         .add(Pair.of(241, BaseMigration.class))
+        .add(Pair.of(242, BaseMigration.class))
         .build();
   }
 }

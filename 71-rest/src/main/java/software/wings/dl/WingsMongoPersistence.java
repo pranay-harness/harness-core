@@ -443,7 +443,8 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
     // yaml ref case
     if (isSetByYaml(object, encryptedField)) {
-      EncryptedData encryptedData = secretManager.getEncryptedDataFromYamlRef((String) encryptedField.get(object));
+      EncryptedData encryptedData =
+          secretManager.getEncryptedDataFromYamlRef((String) encryptedField.get(object), object.getAccountId());
       encryptedField.set(object, encryptedData.getUuid());
       return encryptedData.getUuid();
     }

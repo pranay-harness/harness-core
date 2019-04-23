@@ -14,6 +14,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
+import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -113,24 +114,28 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public VaultConfig getSecretConfig(String accountId) {
-    VaultConfig vaultConfig =
-        wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId).filter("isDefault", true).get();
-
-    if (vaultConfig != null) {
-      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
-      Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + vaultConfig);
-
-      char[] decrypt = decryptVaultToken(encryptedData);
-      vaultConfig.setAuthToken(String.valueOf(decrypt));
-    }
-
-    return vaultConfig;
+    Query<VaultConfig> query =
+        wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).filter(IS_DEFAULT_KEY, true);
+    return getVaultConfigInternal(query);
   }
 
   @Override
   public VaultConfig getVaultConfig(String accountId, String entityId) {
-    VaultConfig vaultConfig =
-        wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId).filter("_id", entityId).get();
+    Query<VaultConfig> query =
+        wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).filter(ID_KEY, entityId);
+    return getVaultConfigInternal(query);
+  }
+
+  @Override
+  public VaultConfig getVaultConfigByName(String accountId, String name) {
+    Query<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
+                                   .filter(ACCOUNT_ID_KEY, accountId)
+                                   .filter(EncryptedData.NAME_KEY, name);
+    return getVaultConfigInternal(query);
+  }
+
+  private VaultConfig getVaultConfigInternal(Query<VaultConfig> query) {
+    VaultConfig vaultConfig = query.get();
 
     if (vaultConfig != null) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
@@ -147,8 +152,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public void renewTokens(String accountId) {
     long currentTime = System.currentTimeMillis();
     logger.info("renewing vault token for {}", accountId);
-    try (HIterator<VaultConfig> query =
-             new HIterator<>(wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId).fetch())) {
+    try (HIterator<VaultConfig> query = new HIterator<>(
+             wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
       while (query.hasNext()) {
         VaultConfig vaultConfig = query.next();
         // don't renew if renewal interval not configured
@@ -288,7 +293,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
     final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter("accountId", accountId)
+                           .filter(ACCOUNT_ID_KEY, accountId)
                            .filter("kmsId", vaultConfigId)
                            .filter("encryptionType", EncryptionType.VAULT)
                            .count(new CountOptions().limit(1));
@@ -310,14 +315,14 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public Collection<VaultConfig> listVaultConfigs(String accountId, boolean maskSecret) {
     List<VaultConfig> rv = new ArrayList<>();
     try (HIterator<VaultConfig> query = new HIterator<>(wingsPersistence.createQuery(VaultConfig.class)
-                                                            .filter("accountId", accountId)
+                                                            .filter(ACCOUNT_ID_KEY, accountId)
                                                             .order("-createdAt")
                                                             .fetch())) {
       while (query.hasNext()) {
         VaultConfig vaultConfig = query.next();
         Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                                       .filter("kmsId", vaultConfig.getUuid())
-                                                      .filter("accountId", accountId);
+                                                      .filter(ACCOUNT_ID_KEY, accountId);
         vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
         if (maskSecret) {
           vaultConfig.setAuthToken(SECRET_MASK);
@@ -426,7 +431,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   private boolean updateCurrentEncryptionConfigToNonDefaultIfNeeded(String accountId, VaultConfig currentVaultConfig) {
     boolean updated = false;
     if (currentVaultConfig.isDefault()) {
-      Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
+      Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter(ACCOUNT_ID_KEY, accountId);
       List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
       for (KmsConfig kmsConfig : kmsConfigs) {
         if (kmsConfig.isDefault()) {
@@ -436,7 +441,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         }
       }
       Query<VaultConfig> vaultConfigQuery =
-          wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
+          wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId);
       List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
       for (VaultConfig vaultConfig : vaultConfigs) {
         if (vaultConfig.isDefault()) {

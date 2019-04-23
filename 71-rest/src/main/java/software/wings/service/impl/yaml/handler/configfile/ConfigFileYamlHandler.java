@@ -38,6 +38,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 /**
  * @author rktummala on 12/08/17
  */
@@ -171,12 +172,8 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     configFile.setName(configFileName);
     configFile.setFileName(configFileName);
     if (yaml.isEncrypted()) {
-      try {
-        EncryptedData encryptedDataFromYamlRef = secretManager.getEncryptedDataFromYamlRef(yaml.getFileName());
-        configFile.setEncryptedFileId(encryptedDataFromYamlRef.getUuid());
-      } catch (IllegalAccessException e) {
-        throw new WingsException("Error while decrypting config file url:" + yaml.getFileName(), e);
-      }
+      EncryptedData encryptedDataFromYamlRef = secretManager.getEncryptedDataFromYamlRef(yaml.getFileName(), accountId);
+      configFile.setEncryptedFileId(encryptedDataFromYamlRef.getUuid());
     } else {
       configFile.setEncryptedFileId("");
       ChecksumType checksumType = Util.getEnumFromString(ChecksumType.class, yaml.getChecksumType());

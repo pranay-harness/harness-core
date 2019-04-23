@@ -106,8 +106,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException {
-    throw new UnsupportedOperationException();
+  public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef, String accountId) {
+    return null;
   }
 
   @Override
