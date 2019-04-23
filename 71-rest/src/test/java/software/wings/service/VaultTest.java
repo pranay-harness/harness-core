@@ -334,6 +334,11 @@ public class VaultTest extends WingsBaseTest {
 
     VaultConfig savedConfig = vaultService.getSecretConfig(renameAccountId);
     assertEquals(vaultConfig, savedConfig);
+
+    // Testing getVaultConfigByName API is working properly
+    savedConfig = vaultService.getVaultConfigByName(renameAccountId, vaultConfig.getName());
+    assertEquals(vaultConfig, savedConfig);
+
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
                                                 .filter("type", SettingVariableTypes.VAULT)
                                                 .filter("accountId", renameAccountId)
@@ -1537,7 +1542,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void reuseYamlPasswordVaultEncryption() throws IOException, IllegalAccessException {
+  public void reuseYamlPasswordVaultEncryption() throws IllegalAccessException {
     VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, fromConfig);
 
@@ -1562,7 +1567,13 @@ public class VaultTest extends WingsBaseTest {
                                             .build();
     attributeIds.add(wingsPersistence.save(settingAttribute));
 
+    // yamlRef will be an URL format like: "hashicorpvault://vaultManagerName/harness/APP_DYNAMICS/...#value" for Vault
+    // based secrets
     String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+    assertNotNull(yamlRef);
+    assertTrue(yamlRef.startsWith(EncryptionType.VAULT.getYamlName() + "://" + fromConfig.getName() + "/harness/"));
+    assertTrue(yamlRef.contains("#value"));
+
     for (int i = 1; i < numOfSettingAttributes; i++) {
       appDynamicsConfig = AppDynamicsConfig.builder()
                               .accountId(accountId)

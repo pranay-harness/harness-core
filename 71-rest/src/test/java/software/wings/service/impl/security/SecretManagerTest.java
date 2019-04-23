@@ -2,9 +2,12 @@ package software.wings.service.impl.security;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -23,19 +26,28 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.EntityType;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.OverrideType;
+import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
 
@@ -47,6 +59,7 @@ public class SecretManagerTest {
   @Mock private UsageRestrictionsService usageRestrictionsService;
   @Mock private AppService appService;
   @Mock private EnvironmentService envService;
+  @Mock private VaultService vaultService;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Before
@@ -173,6 +186,62 @@ public class SecretManagerTest {
     assertEquals(pageSize, finalPageResponse.getPageSize());
     assertEquals(3, finalPageResponse.getTotal().longValue());
     assertEquals(offset + 5 * pageSize, finalPageResponse.getStart());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_Yaml_VaultPath_conversion() throws Exception {
+    String encryptedDataId = UUIDGenerator.generateUuid();
+    String accountId = UUIDGenerator.generateUuid();
+    String entityId = UUIDGenerator.generateUuid();
+    String kmsId = UUIDGenerator.generateUuid();
+    String vaultConfigName = "TestVault";
+    String vaultPath = "/foo/bar/MySecret#MyKey";
+    String secretValue = "MySecretValue";
+
+    EncryptedData encryptedData = mock(EncryptedData.class);
+    VaultConfig vaultConfig = mock(VaultConfig.class);
+
+    when(encryptedData.getEncryptionType()).thenReturn(EncryptionType.VAULT);
+    when(encryptedData.getAccountId()).thenReturn(accountId);
+    when(encryptedData.getKmsId()).thenReturn(kmsId);
+    when(encryptedData.getPath()).thenReturn(vaultPath);
+
+    when(vaultService.getVaultConfig(eq(accountId), eq(kmsId))).thenReturn(vaultConfig);
+    when(vaultService.getVaultConfigByName(eq(accountId), eq(vaultConfigName))).thenReturn(vaultConfig);
+    when(vaultService.decrypt(any(EncryptedData.class), eq(accountId), eq(vaultConfig)))
+        .thenReturn(secretValue.toCharArray());
+    when(vaultConfig.getName()).thenReturn(vaultConfigName);
+
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId(accountId)
+                                          .entityType(EntityType.SERVICE)
+                                          .name("SecretTextFromVaultPath")
+                                          .encryptedValue(encryptedDataId)
+                                          .value(secretValue.toCharArray())
+                                          .entityId(entityId)
+                                          .type(Type.ENCRYPTED_TEXT)
+                                          .overrideType(OverrideType.ALL)
+                                          .build();
+
+    when(wingsPersistence.save(any(EncryptedData.class))).thenReturn(encryptedDataId);
+    when(wingsPersistence.get(eq(EncryptedData.class), eq(encryptedDataId))).thenReturn(encryptedData);
+
+    String yamlRef = secretManager.getEncryptedYamlRef(serviceVariable);
+    assertTrue(yamlRef.startsWith(EncryptionType.VAULT.getYamlName()));
+    assertTrue(yamlRef.contains(vaultConfigName));
+    assertTrue(yamlRef.contains(vaultPath));
+
+    QueryImpl<EncryptedData> query = mock(QueryImpl.class);
+    FieldEnd fieldEnd = mock(FieldEnd.class);
+    when(wingsPersistence.createQuery(eq(EncryptedData.class))).thenReturn(query);
+    when(query.criteria(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyObject())).thenReturn(query);
+    when(query.get()).thenReturn(null);
+
+    EncryptedData encryptedDataFromYaml = secretManager.getEncryptedDataFromYamlRef(yamlRef, accountId);
+    assertNotNull(encryptedDataFromYaml);
+    verify(wingsPersistence, times(1)).save(any(EncryptedData.class));
   }
 
   private List<EncryptedData> getSecretList(int num) {

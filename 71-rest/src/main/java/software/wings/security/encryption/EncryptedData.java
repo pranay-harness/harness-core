@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -50,17 +51,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Indexes({
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
+@FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData extends Base implements EncryptedRecord {
   public static final String NAME_KEY = "name";
 
   @NotEmpty @Indexed private String name;
 
-  @NotEmpty private String encryptionKey;
+  @NotEmpty @Indexed private String encryptionKey;
 
   @NotEmpty private char[] encryptedValue;
 
   // When 'path' value is set, no actual encryption is needed since it's just referring to a secret in a Vault path.
-  private String path;
+  @Indexed private String path;
 
   @NotEmpty private SettingVariableTypes type;
 

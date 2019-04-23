@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
@@ -19,8 +20,14 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.common.Constants.SECRET_MASK;
-import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
+import static software.wings.security.EnvFilter.FilterType.NON_PROD;
+import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
+import static software.wings.service.intfc.security.VaultService.DEFAULT_BASE_PATH;
+import static software.wings.service.intfc.security.VaultService.DEFAULT_KEY_NAME;
+import static software.wings.service.intfc.security.VaultService.KEY_SPEARATOR;
+import static software.wings.service.intfc.security.VaultService.PATH_SEPARATOR;
+import static software.wings.service.intfc.security.VaultService.VAULT_VAILDATION_URL;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -67,9 +74,13 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretChangeLog;
@@ -89,6 +100,7 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.Validator;
 import software.wings.utils.WingsReflectionUtils;
 
@@ -117,6 +129,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SecretManagerImpl implements SecretManager {
   private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;]";
+  private static final String URL_ROOT_PREFIX = "//";
+  // Prefix YAML ingestion generated secret names with this prefix
+  private static final String YAML_PREFIX = "YAML_";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
@@ -489,7 +504,11 @@ public class SecretManagerImpl implements SecretManager {
       String encryptedFieldRefId = ((ConfigFile) object).getEncryptedFileId();
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
       Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + object);
-      return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedFieldRefId;
+      if (encryptedData.getEncryptionType() == EncryptionType.VAULT) {
+        return encryptedData.getEncryptionType().getYamlName() + ":" + getVaultSecretRefUrl(encryptedData);
+      } else {
+        return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedFieldRefId;
+      }
     }
     Preconditions.checkState(fieldNames.length <= 1, "can't give more than one field in the call");
     Field encryptedField = null;
@@ -516,15 +535,153 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
     Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + object);
 
-    return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedFieldRefId;
+    if (encryptedData.getEncryptionType() == EncryptionType.VAULT) {
+      return encryptedData.getEncryptionType().getYamlName() + ":" + getVaultSecretRefUrl(encryptedData);
+    } else {
+      return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedFieldRefId;
+    }
+  }
+
+  private String getVaultSecretRefUrl(EncryptedData encryptedData) {
+    VaultConfig vaultConfig = vaultService.getVaultConfig(encryptedData.getAccountId(), encryptedData.getKmsId());
+    String basePath = vaultConfig.getBasePath() == null ? DEFAULT_BASE_PATH : vaultConfig.getBasePath();
+    String vaultPath = isEmpty(encryptedData.getPath())
+        ? basePath + "/" + encryptedData.getEncryptionKey() + KEY_SPEARATOR + DEFAULT_KEY_NAME
+        : encryptedData.getPath();
+    return URL_ROOT_PREFIX + vaultConfig.getName() + vaultPath;
   }
 
   @Override
-  public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException {
+  public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef, String accountId) {
     Preconditions.checkState(isNotEmpty(encryptedYamlRef));
     String[] tags = encryptedYamlRef.split(":");
-    String fieldRefId = tags[1];
-    return wingsPersistence.get(EncryptedData.class, fieldRefId);
+    String encryptionTypeYamlName = tags[0];
+    String encryptedDataRef = tags[1];
+
+    EncryptedData encryptedData;
+    if (EncryptionType.VAULT.getYamlName().equals(encryptionTypeYamlName)
+        && encryptedDataRef.startsWith(URL_ROOT_PREFIX)) {
+      if (!encryptedDataRef.contains(KEY_SPEARATOR)) {
+        throw new WingsException(
+            "No key name separator # found in the Vault secret reference " + encryptedDataRef, USER);
+      }
+
+      // This is a new Vault path based reference;
+      ParsedVaultSecretRef vaultSecretRef = parse(encryptedDataRef, accountId);
+
+      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
+      query.criteria(ACCOUNT_ID_KEY)
+          .equal(accountId)
+          .criteria(EncryptedDataKeys.encryptionType)
+          .equal(EncryptionType.VAULT);
+      if (isNotEmpty(vaultSecretRef.relativePath)) {
+        query.criteria(EncryptedDataKeys.encryptionKey).equal(vaultSecretRef.relativePath);
+      } else if (isNotEmpty(vaultSecretRef.fullPath)) {
+        query.criteria(EncryptedDataKeys.path).equal(vaultSecretRef.fullPath);
+      }
+      encryptedData = query.get();
+
+      if (encryptedData == null) {
+        encryptedData = createNewSecretTextFromVaultPathReference(vaultSecretRef, accountId);
+      }
+    } else {
+      // This is an old id based reference
+      encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataRef);
+    }
+    return encryptedData;
+  }
+
+  private EncryptedData createNewSecretTextFromVaultPathReference(
+      ParsedVaultSecretRef vaultSecretRef, String accountId) {
+    String secretName = getEncryptedDataNameFromRef(vaultSecretRef.fullPath);
+    SettingVariableTypes type = SettingVariableTypes.SECRET_TEXT;
+    String encryptionKey = type + PATH_SEPARATOR + secretName;
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .name(secretName)
+                                      .encryptionKey(encryptionKey)
+                                      .encryptedValue(encryptionKey.toCharArray())
+                                      .encryptionType(EncryptionType.VAULT)
+                                      .type(type)
+                                      .accountId(accountId)
+                                      .kmsId(vaultSecretRef.vaultConfigId)
+                                      .usageRestrictions(getDefaultUsageRestrictions())
+                                      .build();
+
+    if (vaultSecretRef.relativePath != null) {
+      encryptedData.setEncryptionKey(vaultSecretRef.relativePath);
+      encryptedData.setEncryptedValue(vaultSecretRef.relativePath.toCharArray());
+    } else if (vaultSecretRef.fullPath != null) {
+      encryptedData.setPath(vaultSecretRef.fullPath);
+    }
+
+    String encryptedDataId = wingsPersistence.save(encryptedData);
+    encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
+
+    char[] decryptedValue = null;
+    try {
+      // To test if the encrypted Data path is valid.
+      decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultSecretRef.vaultConfig);
+    } catch (Exception e) {
+      logger.error("Failed to decrypted vault secret at path " + encryptedData.getPath(), e);
+    }
+
+    if (isNotEmpty(decryptedValue)) {
+      logger.info("Created a vault path and key reference secret '{}' to refer to the Vault secret at {}", secretName,
+          vaultSecretRef.fullPath);
+    } else {
+      // If invalid reference, delete the encrypted data instance.
+      wingsPersistence.delete(accountId, EncryptedData.class, encryptedDataId);
+      throw new WingsException("Vault path '" + vaultSecretRef.fullPath + "' is invalid", USER);
+    }
+    return encryptedData;
+  }
+
+  private UsageRestrictions getDefaultUsageRestrictions() {
+    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    EnvFilter envFilter = EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build();
+    AppEnvRestriction appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+    UsageRestrictions usageRestrictions = new UsageRestrictions();
+    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+    return usageRestrictions;
+  }
+
+  private ParsedVaultSecretRef parse(String encryptedDataRef, String accountId) {
+    if (!encryptedDataRef.startsWith(URL_ROOT_PREFIX) || !encryptedDataRef.contains(KEY_SPEARATOR)) {
+      throw new WingsException("Vault secret reference '" + encryptedDataRef + "' has illegal format", USER);
+    } else {
+      String secretMangerNameAndPath = encryptedDataRef.substring(2);
+
+      int index = secretMangerNameAndPath.indexOf(PATH_SEPARATOR);
+      String fullPath = secretMangerNameAndPath.substring(index);
+      String secretManagerName = secretMangerNameAndPath.substring(0, index);
+      VaultConfig vaultConfig = vaultService.getVaultConfigByName(accountId, secretManagerName);
+      if (vaultConfig == null) {
+        throw new WingsException("Vault secret manager '" + secretManagerName + "' doesn't exist", USER);
+      }
+
+      String basePath = vaultConfig.getBasePath() == null ? DEFAULT_BASE_PATH : vaultConfig.getBasePath();
+      index = fullPath.indexOf(KEY_SPEARATOR);
+      String keyName = fullPath.substring(index + 1);
+
+      String vaultPath = null;
+      if (fullPath.startsWith(basePath)) {
+        vaultPath = fullPath.substring(basePath.length() + 1, index);
+      }
+
+      return ParsedVaultSecretRef.builder()
+          .secretManagerName(secretManagerName)
+          .vaultConfigId(vaultConfig.getUuid())
+          .vaultConfig(vaultConfig)
+          .basePath(basePath)
+          .fullPath(fullPath)
+          .relativePath(vaultPath)
+          .keyName(keyName)
+          .build();
+    }
+  }
+
+  private String getEncryptedDataNameFromRef(String fullVaultPath) {
+    return YAML_PREFIX + fullVaultPath.replaceAll(PATH_SEPARATOR, "_").replaceAll(KEY_SPEARATOR, "_");
   }
 
   @Override
@@ -1705,5 +1862,16 @@ public class SecretManagerImpl implements SecretManager {
 
     usageRestrictionsService.validateSetupUsagesOnUsageRestrictionsUpdate(
         encryptedData.getAccountId(), setupAppEnvMap, usageRestrictions);
+  }
+
+  @Builder
+  private static class ParsedVaultSecretRef {
+    String secretManagerName;
+    String vaultConfigId;
+    VaultConfig vaultConfig;
+    String basePath;
+    String relativePath;
+    String fullPath;
+    String keyName;
   }
 }

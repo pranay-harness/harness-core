@@ -27,6 +27,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppContainerService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
@@ -50,6 +51,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   @Inject ServiceVariableService serviceVariableService;
   @Inject SecretManager secretManager;
   @Inject AppContainerService appContainerService;
+  @Inject AppService appService;
 
   @Override
   public Yaml toYaml(Service service, String appId) {
@@ -218,9 +220,10 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       }
     }
 
+    String accountId = appService.get(appId).getAccountId();
     // save the new variables
     for (NameValuePair.Yaml yaml : configVarsToAdd) {
-      serviceVariableService.save(createNewServiceVariable(appId, serviceId, yaml), syncFromGit);
+      serviceVariableService.save(createNewServiceVariable(accountId, appId, serviceId, yaml), syncFromGit);
     }
 
     // update the existing variables
@@ -243,13 +246,15 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     }
   }
 
-  private ServiceVariable createNewServiceVariable(String appId, String serviceId, NameValuePair.Yaml cv) {
+  private ServiceVariable createNewServiceVariable(
+      String accountId, String appId, String serviceId, NameValuePair.Yaml cv) {
     notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType(), USER);
 
     ServiceVariableBuilder serviceVariableBuilder = ServiceVariable.builder()
                                                         .name(cv.getName())
                                                         .entityType(EntityType.SERVICE)
                                                         .entityId(serviceId)
+                                                        .accountId(accountId)
                                                         .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID);
 
     if ("TEXT".equals(cv.getValueType())) {
