@@ -18,9 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class WorkflowUtils {
-  WorkflowRestUtils workflowRestUtil = new WorkflowRestUtils();
-
-  public WorkflowPhase modifyPhases(Workflow savedWorkflow, String applicationId) {
+  public static WorkflowPhase modifyPhases(String bearerToken, Workflow savedWorkflow, String applicationId) {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
@@ -31,14 +29,15 @@ public class WorkflowUtils {
             break;
           }
         }
-        return workflowRestUtil.saveWorkflowPhase(
-            applicationId, savedWorkflow.getUuid(), workflowPhase.getUuid(), workflowPhase);
+        return WorkflowRestUtils.saveWorkflowPhase(
+            bearerToken, applicationId, savedWorkflow.getUuid(), workflowPhase.getUuid(), workflowPhase);
       }
     }
     return null;
   }
 
-  public WorkflowPhase modifyPhasesForPipeline(Workflow savedWorkflow, String applicationId) {
+  public static WorkflowPhase modifyPhasesForPipeline(
+      String bearerToken, Workflow savedWorkflow, String applicationId) {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
@@ -50,14 +49,14 @@ public class WorkflowUtils {
             phaseStep.setSteps(new ArrayList<>());
           }
         }
-        return workflowRestUtil.saveWorkflowPhase(
-            applicationId, savedWorkflow.getUuid(), workflowPhase.getUuid(), workflowPhase);
+        return WorkflowRestUtils.saveWorkflowPhase(
+            bearerToken, applicationId, savedWorkflow.getUuid(), workflowPhase.getUuid(), workflowPhase);
       }
     }
     return null;
   }
 
-  public GraphNode getHTTPNode(String... values) {
+  public static GraphNode getHTTPNode(String... values) {
     HttpState httpState = new HttpState();
     httpState.setHeader("${serviceVariables.normalText}");
     return GraphNode.builder()
@@ -74,7 +73,7 @@ public class WorkflowUtils {
         .build();
   }
 
-  public GraphNode getHTTPNode() {
+  public static GraphNode getHTTPNode() {
     return GraphNode.builder()
         .id(generateUuid())
         .type(HTTP.name())

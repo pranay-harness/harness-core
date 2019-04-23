@@ -4,7 +4,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.framework.Setup;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -16,8 +15,8 @@ import software.wings.beans.WorkflowPhase;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class WorkflowRestUtils extends AbstractFunctionalTest {
-  public Workflow createWorkflow(String accountId, String appId, Workflow workflow) {
+public class WorkflowRestUtils {
+  public static Workflow createWorkflow(String bearerToken, String accountId, String appId, Workflow workflow) {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
     RestResponse<Workflow> savedWorkflowResponse = Setup.portal()
@@ -37,7 +36,8 @@ public class WorkflowRestUtils extends AbstractFunctionalTest {
     return savedWorkflowResponse.getResource();
   }
 
-  public WorkflowExecution runWorkflow(String appId, String envId, ExecutionArgs executionArgs) {
+  public static WorkflowExecution runWorkflow(
+      String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {};
 
@@ -54,7 +54,8 @@ public class WorkflowRestUtils extends AbstractFunctionalTest {
     return savedWorkflowExecutionResponse.getResource();
   }
 
-  public WorkflowPhase saveWorkflowPhase(String appId, String workflowId, String phaseId, WorkflowPhase phase) {
+  public static WorkflowPhase saveWorkflowPhase(
+      String bearerToken, String appId, String workflowId, String phaseId, WorkflowPhase phase) {
     GenericType<RestResponse<WorkflowPhase>> workflowExecutionType = new GenericType<RestResponse<WorkflowPhase>>() {};
 
     RestResponse<WorkflowPhase> savedWorkflowPhaseResponse = Setup.portal()
@@ -69,7 +70,7 @@ public class WorkflowRestUtils extends AbstractFunctionalTest {
     return savedWorkflowPhaseResponse.getResource();
   }
 
-  public Object deleteWorkflow(String workflowId, String appId) {
+  public static Object deleteWorkflow(String bearerToken, String workflowId, String appId) {
     GenericType<RestResponse> workflowType = new GenericType<RestResponse>() {};
     RestResponse savedResponse = Setup.portal()
                                      .auth()

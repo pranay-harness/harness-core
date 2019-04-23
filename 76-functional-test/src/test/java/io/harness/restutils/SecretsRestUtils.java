@@ -21,7 +21,7 @@ import javax.ws.rs.core.GenericType;
 
 @Slf4j
 public class SecretsRestUtils {
-  public List<VaultConfig> getListConfigs(String accountId, String bearerToken) {
+  public static List<VaultConfig> getListConfigs(String accountId, String bearerToken) {
     RestResponse<List<VaultConfig>> secretsResponse =
         Setup.portal()
             .auth()
@@ -32,7 +32,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public String addSecret(String accountId, String bearerToken, SecretText secretText) {
+  public static String addSecret(String accountId, String bearerToken, SecretText secretText) {
     RestResponse<String> secretsResponse = Setup.portal()
                                                .auth()
                                                .oauth2(bearerToken)
@@ -43,7 +43,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public boolean updateSecret(String accountId, String bearerToken, String uuid, SecretText secretText) {
+  public static boolean updateSecret(String accountId, String bearerToken, String uuid, SecretText secretText) {
     RestResponse<Boolean> secretsResponse = Setup.portal()
                                                 .auth()
                                                 .oauth2(bearerToken)
@@ -55,7 +55,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public boolean deleteSecret(String accountId, String bearerToken, String uuid) {
+  public static boolean deleteSecret(String accountId, String bearerToken, String uuid) {
     RestResponse<Boolean> secretsResponse = Setup.portal()
                                                 .auth()
                                                 .oauth2(bearerToken)
@@ -66,7 +66,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public List<EncryptedData> listSecrets(String accountId, String bearerToken) {
+  public static List<EncryptedData> listSecrets(String accountId, String bearerToken) {
     RestResponse<PageResponse<EncryptedData>> encryptedDataList =
         Setup.portal()
             .auth()
@@ -78,7 +78,7 @@ public class SecretsRestUtils {
     return encryptedDataList.getResource().getResponse();
   }
 
-  public String addSecretWithUsageRestrictions(String accountId, String bearerToken, SecretText secretText) {
+  public static String addSecretWithUsageRestrictions(String accountId, String bearerToken, SecretText secretText) {
     RestResponse<String> secretsResponse = null;
     try {
       logger.info("Entering add Secret with restrictions");
@@ -101,7 +101,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public boolean updateSecretWithUsageRestriction(
+  public static boolean updateSecretWithUsageRestriction(
       String accountId, String bearerToken, String uuid, SecretText secretText) {
     JsonElement jsonElement = SecretsUtils.getUsageRestDataAsJson(secretText);
     RestResponse<Boolean> secretsResponse = Setup.portal()
@@ -115,7 +115,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public String addSecretFile(String accountId, String bearerToken, String name, String fileName) {
+  public static String addSecretFile(String accountId, String bearerToken, String name, String fileName) {
     File file = new File(fileName);
     RestResponse<String> secretsResponse = Setup.portal()
                                                .auth()
@@ -130,7 +130,8 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public boolean updateSecretFile(String accountId, String bearerToken, String name, String fileName, String uuid) {
+  public static boolean updateSecretFile(
+      String accountId, String bearerToken, String name, String fileName, String uuid) {
     File file = new File(fileName);
     RestResponse<Boolean> secretsResponse = Setup.portal()
                                                 .auth()
@@ -146,7 +147,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public boolean deleteSecretFile(String accountId, String bearerToken, String uuid) {
+  public static boolean deleteSecretFile(String accountId, String bearerToken, String uuid) {
     RestResponse<Boolean> secretsResponse = Setup.portal()
                                                 .auth()
                                                 .oauth2(bearerToken)
@@ -157,7 +158,7 @@ public class SecretsRestUtils {
     return secretsResponse.getResource();
   }
 
-  public List<EncryptedData> listSecretsFile(String accountId, String bearerToken) {
+  public static List<EncryptedData> listSecretsFile(String accountId, String bearerToken) {
     RestResponse<PageResponse<EncryptedData>> encryptedDataList =
         Setup.portal()
             .auth()

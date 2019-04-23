@@ -58,7 +58,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
     Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);
     assertTrue(isTrialInviteDone);
 
-    User user = urUtil.completeNewTrialUserSignup(invite.getUuid());
+    User user = urUtil.completeNewTrialUserSignup(bearerToken, invite.getUuid());
     assertNotNull(user);
     assertEquals(user.getEmail(), invite.getEmail());
   }

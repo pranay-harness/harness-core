@@ -1,30 +1,27 @@
 package io.harness.restutils;
 
-import com.google.inject.Singleton;
-
 import io.harness.framework.Setup;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 
 import javax.ws.rs.core.GenericType;
 
-@Singleton
-public class ApplicationRestUtils extends AbstractFunctionalTest {
+public class ApplicationRestUtils {
   /**
    *
    * @param application
    * @return created Application details
    */
-  public Application createApplication(Application application) {
+  public static Application createApplication(String bearerToken, Account account, Application application) {
     GenericType<RestResponse<Application>> applicationType = new GenericType<RestResponse<Application>>() {};
 
     RestResponse<Application> savedApplicationResponse = Setup.portal()
                                                              .auth()
                                                              .oauth2(bearerToken)
-                                                             .queryParam("accountId", getAccount().getUuid())
+                                                             .queryParam("accountId", account.getUuid())
                                                              .body(application, ObjectMapperType.GSON)
                                                              .contentType(ContentType.JSON)
                                                              .post("/apps")

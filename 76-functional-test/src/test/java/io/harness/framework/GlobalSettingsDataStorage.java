@@ -1,24 +1,24 @@
 package io.harness.framework;
 
-import io.harness.functional.AbstractFunctionalTest;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
+import software.wings.beans.Account;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GlobalSettingsDataStorage extends AbstractFunctionalTest {
+public class GlobalSettingsDataStorage {
   public static Map<String, String> globalDataMap = new HashMap<>();
   public static Map<String, String> globalSecrets = new HashMap<>();
 
-  public Map<String, String> getAvailableGlobalDataMap() {
+  public static Map<String, String> getAvailableGlobalDataMap(String bearerToken, Account account) {
     Map<String, String> temp = new HashMap<>();
     JsonPath jsonPath =
         Setup.portal()
             .auth()
             .oauth2(bearerToken)
-            .queryParam("accountId", getAccount().getUuid())
+            .queryParam("accountId", account.getUuid())
             .queryParam(
                 "search[0][field]=category&search[0][op]=IN&search[0][value]=CLOUD_PROVIDER&search[0][value]=CONNECTOR")
             .contentType(ContentType.JSON)
@@ -36,12 +36,12 @@ public class GlobalSettingsDataStorage extends AbstractFunctionalTest {
     return globalDataMap;
   }
 
-  public Map<String, String> getAvailableSecrets() {
+  public static Map<String, String> getAvailableSecrets(String bearerToken, Account account) {
     Map<String, String> temp = new HashMap<>();
     JsonPath jsonPath = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", getAccount().getUuid())
+                            .queryParam("accountId", account.getUuid())
                             .contentType(ContentType.JSON)
                             .get("/secrets/list-values")
                             .getBody()

@@ -14,10 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserGroupUtils {
-  private static UserGroupRestUtils userGroupRestUtil = new UserGroupRestUtils();
-
   public static UserGroup getUserGroup(Account account, String bearerToken, String groupName) {
-    List<UserGroup> userGroupList = userGroupRestUtil.getUserGroups(account, bearerToken);
+    List<UserGroup> userGroupList = UserGroupRestUtils.getUserGroups(account, bearerToken);
     assertTrue(userGroupList != null && userGroupList.size() > 0);
 
     for (UserGroup elemUserGroup : userGroupList) {
@@ -29,7 +27,7 @@ public class UserGroupUtils {
   }
 
   public static UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
-    UserGroup userGroup = userGroupRestUtil.createUserGroup(account, bearerToken, jsonObject);
+    UserGroup userGroup = UserGroupRestUtils.createUserGroup(account, bearerToken, jsonObject);
     assertTrue(userGroup != null);
     return userGroup;
   }

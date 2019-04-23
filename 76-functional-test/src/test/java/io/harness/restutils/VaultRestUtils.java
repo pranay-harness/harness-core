@@ -9,7 +9,7 @@ import software.wings.beans.VaultConfig;
 import javax.ws.rs.core.GenericType;
 
 public class VaultRestUtils {
-  public String addVault(String bearerToken, VaultConfig vaultConfig) {
+  public static String addVault(String bearerToken, VaultConfig vaultConfig) {
     RestResponse<String> vaultRestResponse = Setup.portal()
                                                  .auth()
                                                  .oauth2(bearerToken)
@@ -20,7 +20,7 @@ public class VaultRestUtils {
     return vaultRestResponse.getResource();
   }
 
-  public boolean deleteVault(String accountId, String bearerToken, String vaultConfigId) {
+  public static boolean deleteVault(String accountId, String bearerToken, String vaultConfigId) {
     if (StringUtils.isBlank(vaultConfigId)) {
       return true;
     }

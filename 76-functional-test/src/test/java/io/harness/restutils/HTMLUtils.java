@@ -8,12 +8,12 @@ import java.io.IOException;
 import javax.mail.MessagingException;
 
 public class HTMLUtils {
-  public String retrieveInviteUrlFromEmail(String emailBody, String verificationElement)
+  public static String retrieveInviteUrlFromEmail(String emailBody, String verificationElement)
       throws IOException, MessagingException {
     return getUrlFromTable(Jsoup.parse(emailBody).select("table"), verificationElement);
   }
 
-  public String retrieveResetUrlFromEmail(String emailBody, String verificationElement)
+  public static String retrieveResetUrlFromEmail(String emailBody, String verificationElement)
       throws IOException, MessagingException {
     return getUrlFromTable(Jsoup.parse(emailBody).select("table"), verificationElement);
   }

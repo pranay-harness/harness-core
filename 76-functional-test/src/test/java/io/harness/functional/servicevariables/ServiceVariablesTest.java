@@ -74,8 +74,6 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactStreamManager artifactStreamManager;
-  @Inject private WorkflowRestUtils workflowRestUtil;
-  @Inject private ArtifactRestUtils artifactRestUtil;
 
   final String NORMAL_TEXT = "normalText";
   final String OVERRIDABLE_TEXT = "overridableText";
@@ -88,9 +86,6 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   private ArtifactStream artifactStream;
   final Seed seed = new Seed(0);
   Owners owners;
-
-  ServiceVariablesUtils serviceVariablesUtils = new ServiceVariablesUtils();
-  WorkflowUtils wfUtils = new WorkflowUtils();
 
   @Before
   public void setUp() {
@@ -144,17 +139,17 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     ServiceVariable addedEnvOverriddenVariable = null;
 
     logger.info("Adding service variable : " + normalServiceVariable.getName());
-    addedNormalServiceVariable = serviceVariablesUtils.addOrGetServiceVariable(normalServiceVariable);
+    addedNormalServiceVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, normalServiceVariable);
     assertNotNull(addedNormalServiceVariable);
     logger.info("Adding service variable : " + overridableVariables.getName());
-    addedOverridableServiceVariable = serviceVariablesUtils.addOrGetServiceVariable(overridableVariables);
+    addedOverridableServiceVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, overridableVariables);
     assertNotNull(addedOverridableServiceVariable);
     overridableVariables.setEntityType(EntityType.ENVIRONMENT);
     overridableVariables.setEntityId(environment.getUuid());
     overridableVariables.setAppId(environment.getAppId());
     overridableVariables.setValue(ENV_OVERRIDDEN_TEXT.toCharArray());
     logger.info("Adding environment service variable : " + overridableVariables.getName());
-    addedEnvOverriddenVariable = serviceVariablesUtils.addOrGetServiceVariable(overridableVariables);
+    addedEnvOverriddenVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, overridableVariables);
     assertNotNull(addedEnvOverriddenVariable);
 
     WorkflowPhase phase1 =
@@ -174,14 +169,14 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
             .build();
 
     Workflow savedWorkflow =
-        workflowRestUtil.createWorkflow(AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);
+        WorkflowRestUtils.createWorkflow(bearerToken, AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);
 
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
-    Artifact artifact =
-        artifactRestUtil.waitAndFetchArtifactByArtfactStream(application.getUuid(), artifactStream.getUuid());
+    Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
+        bearerToken, application.getUuid(), artifactStream.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
@@ -192,12 +187,12 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
 
     logger.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
 
-    wfUtils.modifyPhases(savedWorkflow, application.getUuid());
+    WorkflowUtils.modifyPhases(bearerToken, savedWorkflow, application.getUuid());
 
     logger.info("Workflow execution starts");
 
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     assertNotNull(workflowExecution);

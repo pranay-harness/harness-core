@@ -4,7 +4,6 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.framework.Setup;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -14,9 +13,9 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class InfraProvisionerRestUtils extends AbstractFunctionalTest {
-  public InfrastructureProvisioner saveProvisioner(String appId, InfrastructureProvisioner infrastructureProvisioner)
-      throws Exception {
+public class InfraProvisionerRestUtils {
+  public static InfrastructureProvisioner saveProvisioner(
+      String appId, String bearerToken, InfrastructureProvisioner infrastructureProvisioner) throws Exception {
     GenericType<RestResponse<TerraformInfrastructureProvisioner>> provisioner =
         new GenericType<RestResponse<TerraformInfrastructureProvisioner>>() {};
 
@@ -34,7 +33,7 @@ public class InfraProvisionerRestUtils extends AbstractFunctionalTest {
     return response.getResource();
   }
 
-  public void deleteProvisioner(String appId, String provisionerId) throws Exception {
+  public static void deleteProvisioner(String appId, String bearerToken, String provisionerId) throws Exception {
     RestResponse response = Setup.portal()
                                 .auth()
                                 .oauth2(bearerToken)
@@ -47,7 +46,8 @@ public class InfraProvisionerRestUtils extends AbstractFunctionalTest {
     }
   }
 
-  public InfrastructureProvisioner getProvisioner(String appId, String provisionerId) throws Exception {
+  public static InfrastructureProvisioner getProvisioner(String appId, String bearerToken, String provisionerId)
+      throws Exception {
     GenericType<RestResponse<TerraformInfrastructureProvisioner>> provisioner =
         new GenericType<RestResponse<TerraformInfrastructureProvisioner>>() {};
 

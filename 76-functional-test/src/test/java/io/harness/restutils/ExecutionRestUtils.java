@@ -3,11 +3,11 @@ package io.harness.restutils;
 import com.google.inject.Singleton;
 
 import io.harness.framework.Setup;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
+import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.WorkflowExecution;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class ExecutionRestUtils extends AbstractFunctionalTest {
+public class ExecutionRestUtils {
   /**
    *
    * @param appId
@@ -23,7 +23,8 @@ public class ExecutionRestUtils extends AbstractFunctionalTest {
    * @param executionArgs
    * @return Workflow execution status
    */
-  public WorkflowExecution runWorkflow(String appId, String envId, ExecutionArgs executionArgs) {
+  public static WorkflowExecution runWorkflow(
+      String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {};
 
@@ -39,7 +40,8 @@ public class ExecutionRestUtils extends AbstractFunctionalTest {
     return savedWorkflowExecutionResponse.getResource();
   }
 
-  public Map<String, Object> runPipeline(String appId, String envId, String pipelineId, ExecutionArgs executionArgs) {
+  public static Map<String, Object> runPipeline(
+      String bearerToken, String appId, String envId, String pipelineId, ExecutionArgs executionArgs) {
     GenericType<RestResponse<Map<String, Object>>> pipelineExecutionType =
         new GenericType<RestResponse<Map<String, Object>>>() {};
 
@@ -63,7 +65,7 @@ public class ExecutionRestUtils extends AbstractFunctionalTest {
    * @param executionId
    * @return returns execution status
    */
-  public String getExecutionStatus(String appId, String executionId) {
+  public static String getExecutionStatus(String bearerToken, Account account, String appId, String executionId) {
     int i = 0;
     String status = "FAILED";
     while (i < 60) {
@@ -71,7 +73,7 @@ public class ExecutionRestUtils extends AbstractFunctionalTest {
                               .auth()
                               .oauth2(bearerToken)
                               .queryParam("appId", appId)
-                              .queryParam("accountId", getAccount().getUuid())
+                              .queryParam("accountId", account.getUuid())
                               .contentType(ContentType.JSON)
                               .get("/executions/" + executionId)
                               .getBody()
@@ -93,12 +95,13 @@ public class ExecutionRestUtils extends AbstractFunctionalTest {
     return status;
   }
 
-  public String getWorkflowExecutionStatus(String appId, String executionId) {
+  public static String getWorkflowExecutionStatus(
+      String bearerToken, Account account, String appId, String executionId) {
     JsonPath jsonPath = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
                             .queryParam("appId", appId)
-                            .queryParam("accountId", getAccount().getUuid())
+                            .queryParam("accountId", account.getUuid())
                             .contentType(ContentType.JSON)
                             .get("/executions/" + executionId)
                             .getBody()

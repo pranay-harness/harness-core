@@ -6,7 +6,6 @@ import io.harness.beans.PageResponse;
 import io.harness.framework.Registration;
 import io.harness.framework.Setup;
 import io.harness.framework.constants.UserConstants;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -20,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
-public class UserRestUtils extends AbstractFunctionalTest {
-  public List<User> getUserList(String accountId) {
+public class UserRestUtils {
+  public static List<User> getUserList(String bearerToken, String accountId) {
     RestResponse<PageResponse<User>> userRestResponse =
         Setup.portal()
             .auth()
@@ -32,7 +31,7 @@ public class UserRestUtils extends AbstractFunctionalTest {
     return userRestResponse.getResource().getResponse();
   }
 
-  public List<UserInvite> inviteUser(Account account, String email) {
+  public static List<UserInvite> inviteUser(Account account, String bearerToken, String email) {
     UserInvite invite = new UserInvite();
     invite.setAccountId(account.getUuid());
     List<String> emailList = new ArrayList<>();
@@ -55,13 +54,13 @@ public class UserRestUtils extends AbstractFunctionalTest {
     return inviteList;
   }
 
-  public void sendResetPasswordMail(String emailId) {
+  public static void sendResetPasswordMail(String emailId) {
     UserResource.ResetPasswordRequest resetPasswordRequest = new UserResource.ResetPasswordRequest();
     resetPasswordRequest.setEmail(emailId);
     Setup.portal().body(resetPasswordRequest, ObjectMapperType.GSON).post("/users/reset-password");
   }
 
-  public void resetPasswordWith(String token, String password) throws UnsupportedEncodingException {
+  public static void resetPasswordWith(String token, String password) throws UnsupportedEncodingException {
     UserResource.UpdatePasswordRequest updatePasswordRequest = new UserResource.UpdatePasswordRequest();
     updatePasswordRequest.setPassword(password);
     Setup.portal()
@@ -70,7 +69,7 @@ public class UserRestUtils extends AbstractFunctionalTest {
         .post("/users/reset-password/{token}");
   }
 
-  public UserInvite completeUserRegistration(Account account, UserInvite invite) {
+  public static UserInvite completeUserRegistration(Account account, String bearerToken, UserInvite invite) {
     Registration registration = new Registration();
     registration.setAccountId(account.getAccountKey());
     registration.setAgreement(true);
@@ -91,7 +90,8 @@ public class UserRestUtils extends AbstractFunctionalTest {
     return completed.getResource();
   }
 
-  public UserInvite completeTrialUserSignup(String accountName, String companyName, UserInvite invite) {
+  public static UserInvite completeTrialUserSignup(
+      String bearerToken, String accountName, String companyName, UserInvite invite) {
     Registration registration = new Registration();
     registration.setAgreement(true);
     registration.setEmail(invite.getEmail());
@@ -112,7 +112,7 @@ public class UserRestUtils extends AbstractFunctionalTest {
     return completed.getResource();
   }
 
-  public User completeNewTrialUserSignup(String inviteId) {
+  public static User completeNewTrialUserSignup(String bearerToken, String inviteId) {
     RestResponse<User> completed = Setup.portal()
                                        .auth()
                                        .oauth2(bearerToken)
@@ -122,7 +122,8 @@ public class UserRestUtils extends AbstractFunctionalTest {
     return completed.getResource();
   }
 
-  public User completeTrialUserSignupAndSignin(String accountName, String companyName, UserInvite invite) {
+  public static User completeTrialUserSignupAndSignin(
+      String bearerToken, String accountName, String companyName, UserInvite invite) {
     Registration registration = new Registration();
     registration.setAgreement(true);
     registration.setEmail(invite.getEmail());
@@ -143,7 +144,7 @@ public class UserRestUtils extends AbstractFunctionalTest {
     return completed.getResource();
   }
 
-  public Boolean createTrialInvite(String emailId) {
+  public static Boolean createTrialInvite(String emailId) {
     RestResponse<Boolean> trialInviteResponse = Setup.portal()
                                                     .body(emailId)
                                                     .contentType(ContentType.TEXT)
@@ -153,7 +154,7 @@ public class UserRestUtils extends AbstractFunctionalTest {
     return trialInviteResponse.getResource();
   }
 
-  public Boolean createNewTrialInvite(UserInvite userInvite) {
+  public static Boolean createNewTrialInvite(UserInvite userInvite) {
     RestResponse<Boolean> trialInviteResponse = Setup.portal()
                                                     .body(userInvite, ObjectMapperType.GSON)
                                                     .contentType(ContentType.JSON)

@@ -42,7 +42,6 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private ArtifactRestUtils artifactRestUtil;
 
   private static final String GCS_PROJECT = "exploration-161417";
   private static final String GCS_ARTIFACT = "todolist-v1.0.zip";
@@ -74,8 +73,8 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     ArtifactStream savedArtifactSteam = saveAndGetGcsArtifactStream(service, gcpCloudProvider, GCS_ARTIFACT);
     assertThat(savedArtifactSteam).isNotNull();
 
-    final Artifact collectedArtifact =
-        artifactRestUtil.waitAndFetchArtifactByArtfactStream(application.getUuid(), savedArtifactSteam.getUuid());
+    final Artifact collectedArtifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
+        bearerToken, application.getUuid(), savedArtifactSteam.getUuid());
     assertThat(collectedArtifact).isNotNull();
 
     assertThat(collectedArtifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
@@ -110,8 +109,8 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     ArtifactStream savedArtifactSteam = saveAndGetGcsArtifactStream(service, gcpCloudProvider, artifactPath);
     assertThat(savedArtifactSteam).isNotNull();
 
-    final Artifact collectedArtifact =
-        artifactRestUtil.waitAndFetchArtifactByArtfactStream(application.getUuid(), savedArtifactSteam.getUuid());
+    final Artifact collectedArtifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
+        bearerToken, application.getUuid(), savedArtifactSteam.getUuid());
 
     assertThat(collectedArtifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
     assertThat(collectedArtifact.getStatus().equals(Status.APPROVED));

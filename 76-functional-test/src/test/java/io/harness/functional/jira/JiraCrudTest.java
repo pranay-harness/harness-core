@@ -19,16 +19,13 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
-import io.harness.generator.WorkflowGenerator;
 import io.harness.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
@@ -44,9 +41,7 @@ import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -55,14 +50,8 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private WorkflowGenerator workflowGenerator;
-  @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private AccountGenerator accountGenerator;
-  @Inject private WorkflowService workflowService;
-  @Inject private SettingsService settingsService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowRestUtils workflowRestUtil;
 
   Application application;
 
@@ -97,7 +86,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
     // REST API.
 
     Workflow savedWorkflow =
-        workflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), jiraWorkflow);
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), jiraWorkflow);
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
@@ -111,7 +100,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
 
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()

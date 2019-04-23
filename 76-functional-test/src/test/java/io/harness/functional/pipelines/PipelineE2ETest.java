@@ -32,7 +32,6 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.restutils.ArtifactRestUtils;
-import io.harness.restutils.ArtifactStreamRestUtils;
 import io.harness.restutils.ExecutionRestUtils;
 import io.harness.restutils.PipelineRestUtils;
 import io.harness.restutils.WorkflowRestUtils;
@@ -72,11 +71,6 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactStreamManager artifactStreamManager;
-  @Inject private WorkflowRestUtils workflowRestUtil;
-  @Inject private ArtifactRestUtils artifactRestUtil;
-  PipelineRestUtils pipelineRestUtils = new PipelineRestUtils();
-  ArtifactStreamRestUtils artifactStreamRestUtil = new ArtifactStreamRestUtils();
-  ExecutionRestUtils executionRestUtil = new ExecutionRestUtils();
 
   private Application application;
   private Service service;
@@ -132,7 +126,8 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
             .build();
     resetCache();
-    savedWorkflow = workflowRestUtil.createWorkflow(AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);
+    savedWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);
 
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
@@ -140,7 +135,8 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
 
     //
 
-    artifact = artifactRestUtil.waitAndFetchArtifactByArtfactStream(application.getUuid(), artifactStream.getUuid());
+    artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
+        bearerToken, application.getUuid(), artifactStream.getUuid());
 
     //    ExecutionArgs executionArgs = new ExecutionArgs();
     //    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
@@ -152,7 +148,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
 
     logger.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
 
-    wfUtils.modifyPhasesForPipeline(savedWorkflow, application.getUuid());
+    wfUtils.modifyPhasesForPipeline(bearerToken, savedWorkflow, application.getUuid());
   }
 
   @Test
@@ -166,11 +162,11 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     pipeline.setDescription("description");
     logger.info("Creating the pipeline");
     Pipeline createdPipeline =
-        pipelineRestUtils.createPipeline(application.getAppId(), pipeline, getAccount().getUuid(), bearerToken);
+        PipelineRestUtils.createPipeline(application.getAppId(), pipeline, getAccount().getUuid(), bearerToken);
     assertNotNull(createdPipeline);
     logger.info("Making a get call and verifying if the pipeline created is accessible");
     Pipeline verifyCreatedPipeline =
-        pipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
+        PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertNotNull(verifyCreatedPipeline);
     assertTrue(createdPipeline.getName().equals(verifyCreatedPipeline.getName()));
     logger.info("Create and Get pipeline verification completed");
@@ -182,10 +178,10 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     pipelineStages.add(executionStage);
     verifyCreatedPipeline.setPipelineStages(pipelineStages);
 
-    createdPipeline = pipelineRestUtils.updatePipeline(application.getAppId(), verifyCreatedPipeline, bearerToken);
+    createdPipeline = PipelineRestUtils.updatePipeline(application.getAppId(), verifyCreatedPipeline, bearerToken);
     assertNotNull(createdPipeline);
     verifyCreatedPipeline =
-        pipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
+        PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertNotNull(verifyCreatedPipeline);
     assertTrue(verifyCreatedPipeline.getPipelineStages().size() == pipelineStages.size());
 
@@ -199,8 +195,8 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     executionArgs.setNotifyTriggeredUserOnly(false);
     executionArgs.setPipelineId(verifyCreatedPipeline.getUuid());
 
-    Map<String, Object> pipelineExecution = executionRestUtil.runPipeline(
-        application.getAppId(), environment.getUuid(), verifyCreatedPipeline.getUuid(), executionArgs);
+    Map<String, Object> pipelineExecution = ExecutionRestUtils.runPipeline(
+        bearerToken, application.getAppId(), environment.getUuid(), verifyCreatedPipeline.getUuid(), executionArgs);
 
     assertThat(pipelineExecution).isNotNull();
 
@@ -243,7 +239,8 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
                           .equals(ExecutionStatus.SUCCESS.name()));
 
     logger.info("Workflow execution completed");
-    String status = executionRestUtil.getExecutionStatus(application.getAppId(), pipelineExecutionId);
+    String status =
+        ExecutionRestUtils.getExecutionStatus(bearerToken, getAccount(), application.getAppId(), pipelineExecutionId);
     assertThat(status).isEqualTo("SUCCESS");
 
     WorkflowExecution completedExecution =

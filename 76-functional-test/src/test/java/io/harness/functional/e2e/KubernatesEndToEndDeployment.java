@@ -45,13 +45,7 @@ import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
-  ApplicationRestUtils applicationRestUtil = new ApplicationRestUtils();
-  ServiceRestUtils serviceRestUtil = new ServiceRestUtils();
-  EnvironmentRestUtils environmentRestUtil = new EnvironmentRestUtils();
-  WorkflowRestUtils workflowRestUtil = new WorkflowRestUtils();
-  ArtifactStreamRestUtils artifactStreamRestUtil = new ArtifactStreamRestUtils();
   ExecutionRestUtils executionRestUtil = new ExecutionRestUtils();
-  GlobalSettingsDataStorage globalSettingsDataStorage = new GlobalSettingsDataStorage();
   static Map<String, String> availableGlobalDataMap = null;
   static Application sampleApp = null;
   static Service sampleService = null;
@@ -62,9 +56,9 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   public void t1_testApplicationCreation() {
-    availableGlobalDataMap = globalSettingsDataStorage.getAvailableGlobalDataMap();
+    availableGlobalDataMap = GlobalSettingsDataStorage.getAvailableGlobalDataMap(bearerToken, getAccount());
     Application application = anApplication().withName("Sample App" + System.currentTimeMillis()).build();
-    sampleApp = applicationRestUtil.createApplication(application);
+    sampleApp = ApplicationRestUtils.createApplication(bearerToken, getAccount(), application);
     assertThat(sampleApp).isNotNull();
   }
 
@@ -72,7 +66,7 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void t2_testServiceCreation() {
     Service service = Service.builder().name("SampleService").artifactType(ArtifactType.DOCKER).build();
-    sampleService = serviceRestUtil.createService(sampleApp.getAppId(), service);
+    sampleService = ServiceRestUtils.createService(bearerToken, getAccount(), sampleApp.getAppId(), service);
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
                                                     .appId(sampleApp.getUuid())
                                                     .serviceId(sampleService.getUuid())
@@ -80,8 +74,8 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
                                                     .imageName("library/nginx")
                                                     .autoPopulate(true)
                                                     .build();
-    ArtifactStream artifactStream =
-        artifactStreamRestUtil.configureDockerArtifactStream(sampleApp.getAppId(), dockerArtifactStream);
+    ArtifactStream artifactStream = ArtifactStreamRestUtils.configureDockerArtifactStream(
+        bearerToken, getAccount(), sampleApp.getAppId(), dockerArtifactStream);
     assertThat(artifactStream).isNotNull();
   }
 
@@ -89,11 +83,11 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void t3_testEnvironmentCreation() {
     Environment myEnv = anEnvironment().withName("MyEnv").withEnvironmentType(EnvironmentType.PROD).build();
-    sampleEnvironment = environmentRestUtil.createEnvironment(sampleApp.getAppId(), myEnv);
+    sampleEnvironment = EnvironmentRestUtils.createEnvironment(bearerToken, getAccount(), sampleApp.getAppId(), myEnv);
     assertThat(sampleEnvironment).isNotNull();
 
-    String serviceTemplateId =
-        environmentRestUtil.getServiceTemplateId(sampleApp.getUuid(), sampleEnvironment.getUuid());
+    String serviceTemplateId = EnvironmentRestUtils.getServiceTemplateId(
+        bearerToken, getAccount(), sampleApp.getUuid(), sampleEnvironment.getUuid());
 
     GcpKubernetesInfrastructureMapping gcpInfraMapping =
         aGcpKubernetesInfrastructureMapping()
@@ -109,8 +103,8 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
             .withAutoPopulate(true)
             .build();
 
-    gcpInfra =
-        environmentRestUtil.configureInfraMapping(sampleApp.getUuid(), sampleEnvironment.getUuid(), gcpInfraMapping);
+    gcpInfra = EnvironmentRestUtils.configureInfraMapping(
+        bearerToken, getAccount(), sampleApp.getUuid(), sampleEnvironment.getUuid(), gcpInfraMapping);
 
     assertThat(gcpInfra).isNotNull();
   }
@@ -130,7 +124,7 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
                                                        .build())
                             .build();
 
-    sampleWF = workflowRestUtil.createWorkflow(getAccount().getUuid(), sampleApp.getUuid(), workflow);
+    sampleWF = WorkflowRestUtils.createWorkflow(bearerToken, getAccount().getUuid(), sampleApp.getUuid(), workflow);
 
     assertThat(sampleWF).isNotNull();
   }
@@ -138,8 +132,8 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   public void t5_testDeployWorkflow() {
-    String artifactId = artifactStreamRestUtil.getArtifactStreamId(
-        sampleApp.getAppId(), sampleEnvironment.getUuid(), sampleService.getUuid());
+    String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
+        bearerToken, sampleApp.getAppId(), sampleEnvironment.getUuid(), sampleService.getUuid());
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(sampleWF.getWorkflowType());
     List<Artifact> artifacts = new ArrayList<>();
@@ -150,10 +144,11 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(sampleWF.getUuid());
 
     WorkflowExecution workflowExecution =
-        executionRestUtil.runWorkflow(sampleApp.getAppId(), sampleEnvironment.getUuid(), executionArgs);
+        executionRestUtil.runWorkflow(bearerToken, sampleApp.getAppId(), sampleEnvironment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
-    String status = executionRestUtil.getExecutionStatus(sampleApp.getAppId(), workflowExecution.getUuid());
+    String status = executionRestUtil.getExecutionStatus(
+        bearerToken, getAccount(), sampleApp.getAppId(), workflowExecution.getUuid());
     assertThat(status).isEqualTo("SUCCESS");
   }
 }

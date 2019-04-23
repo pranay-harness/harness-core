@@ -22,8 +22,6 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.TemplateFolderGenerator;
-import io.harness.generator.TemplateGalleryGenerator;
-import io.harness.generator.TemplateGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
@@ -40,7 +38,6 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
-import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
@@ -50,10 +47,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
-  @Inject private TemplateGalleryGenerator templateGalleryGenerator;
   @Inject private TemplateFolderGenerator templateFolderGenerator;
-  @Inject private TemplateGenerator templateGenerator;
-  @Inject private WorkflowExecutionServiceImpl workflowExecutionService;
 
   Workflow buildWorkflow;
 

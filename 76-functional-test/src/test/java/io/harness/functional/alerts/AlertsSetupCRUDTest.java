@@ -33,9 +33,6 @@ import java.util.Set;
 
 @Slf4j
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
-  UserGroupRestUtils userGroupRestUtil = new UserGroupRestUtils();
-  AlertsRestUtils arUtil = new AlertsRestUtils();
-
   @Test
   @Owner(emails = "swamy@harness.io", resent = false)
   @Category(FunctionalTests.class)
@@ -49,7 +46,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRule(
         getAccount().getUuid(), userGroups, AlertCategory.Setup, AlertType.DelegateProfileError);
     AlertNotificationRule updatedAlert =
-        arUtil.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
+        AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
@@ -58,9 +55,9 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
         createdAlert.getAlertFilter().getAlertType().name()));
 
     logger.info("Delete the alert");
-    arUtil.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
+    AlertsRestUtils.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
     logger.info("Verify if the deleted alert does not exist");
-    List<AlertNotificationRule> alertsList = arUtil.listAlerts(getAccount().getUuid(), bearerToken);
+    List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
     assertFalse(AlertsUtils.isAlertAvailable(alertsList, createdAlert));
   }
 
@@ -105,7 +102,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRuleWithConditions(getAccount().getUuid(),
         userGroups, AlertCategory.Setup, AlertType.DelegatesDown, new Conditions(Operator.NOT_MATCHING, null, null));
     AlertNotificationRule updatedAlert =
-        arUtil.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
+        AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
@@ -130,7 +127,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRule(getAccount().getUuid(), userGroups,
         AlertCategory.ContinuousVerification, AlertType.CONTINUOUS_VERIFICATION_ALERT);
     AlertNotificationRule updatedAlert =
-        arUtil.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
+        AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
@@ -159,7 +156,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     NotificationSettings notificationSettings = UserGroupUtils.createNotificationSettings(emailId, slackWebHook);
     userGroup.setNotificationSettings(notificationSettings);
     logger.info("Update user group with notification settings");
-    userGroup = userGroupRestUtil.updateNotificationSettings(getAccount(), bearerToken, userGroup);
+    userGroup = UserGroupRestUtils.updateNotificationSettings(getAccount(), bearerToken, userGroup);
     assertNotNull(userGroup);
     assertNotNull(userGroup.getNotificationSettings());
     return userGroup;
@@ -171,9 +168,10 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertNotificationRule alertNotificationRule =
         AlertsUtils.createAlertNotificationRule(getAccount().getUuid(), userGroups, alertCategory, alertType);
 
-    AlertNotificationRule createdAlert = arUtil.createAlert(getAccount().getUuid(), bearerToken, alertNotificationRule);
+    AlertNotificationRule createdAlert =
+        AlertsRestUtils.createAlert(getAccount().getUuid(), bearerToken, alertNotificationRule);
     logger.info("Verify if the created alert exists");
-    List<AlertNotificationRule> alertsList = arUtil.listAlerts(getAccount().getUuid(), bearerToken);
+    List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
     assertTrue(alertsList.size() > 0);
     assertTrue(AlertsUtils.isAlertAvailable(alertsList, createdAlert));
     return createdAlert;
@@ -181,9 +179,9 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
 
   private void deleteAlertNotificationRules(AlertNotificationRule createdAlert, AlertNotificationRule updatedAlert) {
     logger.info("Delete the alert");
-    arUtil.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
+    AlertsRestUtils.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
     logger.info("Verify if the deleted alert does not exist");
-    List<AlertNotificationRule> alertsList = arUtil.listAlerts(getAccount().getUuid(), bearerToken);
+    List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
     assertFalse(AlertsUtils.isAlertAvailable(alertsList, createdAlert));
   }
 
@@ -195,7 +193,8 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
       AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRule(
           getAccount().getUuid(), userGroups, createdAlert.getAlertCategory(), alertType);
 
-      updatedAlert = arUtil.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
+      updatedAlert =
+          AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
       logger.info("Verifying the updated alerts notification rule");
       assertNotNull(updatedAlert);

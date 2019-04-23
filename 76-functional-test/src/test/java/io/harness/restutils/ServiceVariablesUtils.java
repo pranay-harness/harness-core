@@ -4,7 +4,6 @@ import static org.junit.Assert.assertNotNull;
 
 import io.harness.beans.PageResponse;
 import io.harness.framework.Setup;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -13,8 +12,8 @@ import software.wings.beans.ServiceVariable;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
-public class ServiceVariablesUtils extends AbstractFunctionalTest {
-  public ServiceVariable addServiceVariable(ServiceVariable serviceVariable) {
+public class ServiceVariablesUtils {
+  public static ServiceVariable addServiceVariable(String bearerToken, ServiceVariable serviceVariable) {
     RestResponse<ServiceVariable> addedServiceVariable =
         Setup.portal()
             .auth()
@@ -30,7 +29,7 @@ public class ServiceVariablesUtils extends AbstractFunctionalTest {
     return addedServiceVariable.getResource();
   }
 
-  public List<ServiceVariable> getServiceVariables(String appId) {
+  public static List<ServiceVariable> getServiceVariables(String bearerToken, String appId) {
     RestResponse<PageResponse<ServiceVariable>> serviceReslonseList =
         Setup.portal()
             .auth()
@@ -45,8 +44,8 @@ public class ServiceVariablesUtils extends AbstractFunctionalTest {
     return serviceReslonseList.getResource().getResponse();
   }
 
-  public ServiceVariable getServiceVariable(ServiceVariable serviceVariable) {
-    List<ServiceVariable> serviceVariableList = getServiceVariables(serviceVariable.getAppId());
+  public static ServiceVariable getServiceVariable(String bearerToken, ServiceVariable serviceVariable) {
+    List<ServiceVariable> serviceVariableList = getServiceVariables(bearerToken, serviceVariable.getAppId());
     if (serviceVariableList == null) {
       return null;
     }
@@ -62,7 +61,8 @@ public class ServiceVariablesUtils extends AbstractFunctionalTest {
     return null;
   }
 
-  public boolean doesServiceVariableExists(List<ServiceVariable> serviceVariableList, ServiceVariable serviceVariable) {
+  public static boolean doesServiceVariableExists(
+      List<ServiceVariable> serviceVariableList, ServiceVariable serviceVariable) {
     if (serviceVariableList == null) {
       return false;
     }
@@ -79,11 +79,11 @@ public class ServiceVariablesUtils extends AbstractFunctionalTest {
     return exists[0];
   }
 
-  public ServiceVariable addOrGetServiceVariable(ServiceVariable serviceVariable) {
-    if (getServiceVariable(serviceVariable) == null) {
-      return addServiceVariable(serviceVariable);
+  public static ServiceVariable addOrGetServiceVariable(String bearerToken, ServiceVariable serviceVariable) {
+    if (getServiceVariable(bearerToken, serviceVariable) == null) {
+      return addServiceVariable(bearerToken, serviceVariable);
     } else {
-      return getServiceVariable(serviceVariable);
+      return getServiceVariable(bearerToken, serviceVariable);
     }
   }
 }

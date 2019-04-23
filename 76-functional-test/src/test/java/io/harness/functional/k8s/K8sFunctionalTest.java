@@ -16,7 +16,6 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.functional.windows.TestConstants;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
@@ -27,7 +26,6 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
-import io.harness.generator.SettingGenerator;
 import io.harness.restutils.ArtifactStreamRestUtils;
 import io.harness.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
@@ -63,10 +61,6 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
-  @Inject private SettingGenerator settingGenerator;
-  @Inject private WorkflowRestUtils workflowRestUtil;
-  @Inject private TestConstants testConstants;
-  @Inject private ArtifactStreamRestUtils artifactStreamRestUtil;
 
   private static final long TIMEOUT = 1200000; // 20 minutes
 
@@ -143,7 +137,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), savedEnvironment.getUuid(),
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
             getExecutionArgs(savedWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
     assertThat(workflowExecution).isNotNull();
 
@@ -160,7 +154,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution cleanupWorkflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), savedEnvironment.getUuid(),
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
             getExecutionArgs(cleanupWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
     assertThat(cleanupWorkflowExecution).isNotNull();
 
@@ -175,7 +169,8 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   }
 
   private ExecutionArgs getExecutionArgs(Workflow workflow, String envId, String serviceId) {
-    String artifactId = artifactStreamRestUtil.getArtifactStreamId(application.getUuid(), envId, serviceId);
+    String artifactId =
+        ArtifactStreamRestUtils.getArtifactStreamId(bearerToken, application.getUuid(), envId, serviceId);
     Artifact artifact = new Artifact();
     artifact.setUuid(artifactId);
 
@@ -201,7 +196,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(orchestrationWorkflowType);
-    return workflowRestUtil.createWorkflow(application.getAccountId(), appId, workflow);
+    return WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), appId, workflow);
   }
 
   private Workflow createK8sCleanupWorkflow(
@@ -229,7 +224,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
     phase.setPhaseSteps(phaseSteps);
 
-    workflowRestUtil.saveWorkflowPhase(appId, cleanupWorkflow.getUuid(), phase.getUuid(), phase);
+    WorkflowRestUtils.saveWorkflowPhase(bearerToken, appId, cleanupWorkflow.getUuid(), phase.getUuid(), phase);
     return cleanupWorkflow;
   }
 }
