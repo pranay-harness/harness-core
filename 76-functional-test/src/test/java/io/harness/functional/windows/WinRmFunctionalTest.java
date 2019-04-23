@@ -117,7 +117,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(), executionArgs);
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()
@@ -161,7 +161,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(), executionArgs);
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()

@@ -27,7 +27,6 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -63,9 +62,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
-  // TODO: Ignoring temporarily to find the main issue
-  public void shouldCreateHTTPStepinWorkflow() throws Exception {
+  public void shouldCreateHTTPStepInWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
     Workflow workflow = aWorkflow()
@@ -95,12 +92,12 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
 
     WorkflowExecution workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()
         .atMost(120, TimeUnit.SECONDS)
-        .pollInterval(5, TimeUnit.SECONDS)
+        .pollInterval(1, TimeUnit.SECONDS)
         .until(()
                    -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
                           .getStatus()

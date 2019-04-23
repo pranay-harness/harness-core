@@ -192,7 +192,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     logger.info("Workflow execution starts");
 
     WorkflowExecution workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     assertNotNull(workflowExecution);

@@ -1,15 +1,16 @@
 package software.wings.graphql.schema.type;
 
-import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder
+@FieldNameConstants(innerTypeName = "QLWorkflowExecutionKeys")
 public class QLWorkflowExecution implements QLExecution {
   String id;
-  ExecutionStatus status;
   long queuedTime;
   long startTime;
   long endTime;
+  QLExecutionStatus status;
 }

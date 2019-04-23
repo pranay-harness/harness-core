@@ -108,7 +108,8 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Ignore
   public void shouldRunTerraformWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
-    WorkflowExecution workflowExecution = runWorkflow(application.getAppId(), environment.getUuid(), executionArgs);
+    WorkflowExecution workflowExecution =
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getAppId(), environment.getUuid(), executionArgs);
     checkForWorkflowSuccess(workflowExecution);
   }
 
@@ -124,10 +125,6 @@ public class TerraformTest extends AbstractFunctionalTest {
       throw new WingsException(
           "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
     }
-  }
-
-  private WorkflowExecution runWorkflow(String appId, String envId, ExecutionArgs executionArgs) {
-    return WorkflowRestUtils.runWorkflow(bearerToken, appId, envId, executionArgs);
   }
 
   private ExecutionArgs prepareExecutionArgs(Workflow workflow) {

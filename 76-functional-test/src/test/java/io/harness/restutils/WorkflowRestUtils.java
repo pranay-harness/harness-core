@@ -36,7 +36,7 @@ public class WorkflowRestUtils {
     return savedWorkflowResponse.getResource();
   }
 
-  public static WorkflowExecution runWorkflow(
+  public static WorkflowExecution startWorkflow(
       String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {};

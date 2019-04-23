@@ -33,7 +33,7 @@ public class ServiceTest extends GraphQLTest {
 
     String query = "{ service(serviceId: \"" + service.getUuid() + "\") { id name description artifactType } }";
 
-    QLService qlService = execute(QLService.class, query);
+    QLService qlService = qlExecute(QLService.class, query);
     assertThat(qlService.getId()).isEqualTo(service.getUuid());
     assertThat(qlService.getName()).isEqualTo(service.getName());
     assertThat(qlService.getDescription()).isEqualTo(service.getDescription());

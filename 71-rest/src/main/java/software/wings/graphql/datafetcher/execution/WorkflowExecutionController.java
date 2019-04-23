@@ -17,6 +17,6 @@ public class WorkflowExecutionController {
         .queuedTime(workflowExecution.getCreatedAt())
         .startTime(workflowExecution.getStartTs())
         .endTime(workflowExecution.getEndTs())
-        .status(workflowExecution.getStatus());
+        .status(ExecutionController.convertStatus(workflowExecution.getStatus()));
   }
 }

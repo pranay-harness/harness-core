@@ -36,6 +36,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
+import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
@@ -419,7 +420,8 @@ public class WorkflowGenerator {
     if (workflow != null && workflow.getAppId() != null) {
       builder.appId(workflow.getAppId());
     } else {
-      final Application application = owners.obtainApplication();
+      final Application application = owners.obtainApplication(
+          () -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
       builder.appId(application.getUuid());
     }
 
@@ -472,10 +474,6 @@ public class WorkflowGenerator {
 
     if (workflow.getInfraMappingId() != null) {
       builder.infraMappingId(workflow.getInfraMappingId());
-    } else {
-      if (!OrchestrationWorkflowType.BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
-        throw new UnsupportedOperationException();
-      }
     }
     final Workflow finalWorkflow = builder.build();
 
