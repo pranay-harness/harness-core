@@ -22,6 +22,7 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import com.jcraft.jsch.JSchException;
 import com.sun.mail.iap.ConnectionException;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.netty.channel.ConnectTimeoutException;
 import software.wings.beans.BastionConnectionAttributes;
@@ -141,8 +142,10 @@ public class SshHelperUtil {
     HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) hostConnectionSetting.getValue();
 
     if (executorType.equals(KEY_AUTH)) {
-      builder.withKey(new String(hostConnectionAttributes.getKey()).toCharArray())
-          .withUserName(hostConnectionAttributes.getUserName())
+      if (EmptyPredicate.isNotEmpty(hostConnectionAttributes.getKey())) {
+        builder.withKey(new String(hostConnectionAttributes.getKey()).toCharArray());
+      }
+      builder.withUserName(hostConnectionAttributes.getUserName())
           .withPort(hostConnectionAttributes.getSshPort())
           .withKeyName(hostConnectionSetting.getUuid())
           .withPassword(null)
