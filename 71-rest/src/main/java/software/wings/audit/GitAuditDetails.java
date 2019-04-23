@@ -5,7 +5,8 @@ import lombok.Value;
 
 @Value
 @Builder
-public class GitAuditUser {
+public class GitAuditDetails {
   private String author;
   private String gitCommitId;
+  private String repoUrl;
 }

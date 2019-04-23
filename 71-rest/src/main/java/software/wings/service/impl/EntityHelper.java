@@ -258,12 +258,18 @@ public class EntityHelper {
       String envId = configFile.getEnvId();
       if (Environment.GLOBAL_ENV_ID.equals(envId)) {
         EntityType entityTypeForFile = configFile.getEntityType();
+        affectedResourceId = configFile.getEntityId();
+        // Config file defined in service
         if (EntityType.SERVICE.equals(entityTypeForFile)) {
-          affectedResourceId = configFile.getEntityId();
           affectedResourceName = getServiceName(affectedResourceId, appId);
           affectedResourceType = EntityType.SERVICE.name();
+        } else if (EntityType.ENVIRONMENT.equals(entityTypeForFile)) {
+          // Config file override in ENV for all services
+          affectedResourceName = getEnvironmentName(affectedResourceId, appId);
+          affectedResourceType = EntityType.ENVIRONMENT.name();
         }
       } else {
+        // Config file override in ENV for specific service.
         affectedResourceId = envId;
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
@@ -274,7 +280,8 @@ public class EntityHelper {
       entityName = settingAttribute.getName();
       affectedResourceId = settingAttribute.getUuid();
       affectedResourceName = settingAttribute.getName();
-      affectedResourceType = settingAttribute.getCategory().name();
+      affectedResourceType =
+          settingAttribute.getCategory() != null ? settingAttribute.getCategory().name() : StringUtils.EMPTY;
       affectedResourceOperation = type.name();
     } else if (entity instanceof ServiceCommand) {
       ServiceCommand serviceCommand = (ServiceCommand) entity;
@@ -441,6 +448,11 @@ public class EntityHelper {
   }
 
   private String getEntityTypeForSettingValue(SettingValue settingValue) {
+    // This will be case when going through yaml path.
+    if (settingValue == null) {
+      return "Setting Attribute";
+    }
+
     if (settingValue instanceof APMVerificationConfig) {
       return "APM Verification Config";
     } else if (settingValue instanceof AmazonS3HelmRepoConfig) {

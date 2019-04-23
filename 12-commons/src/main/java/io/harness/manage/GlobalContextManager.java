@@ -57,7 +57,7 @@ public class GlobalContextManager {
   public static void upsertGlobalContextRecord(GlobalContextData data) {
     GlobalContext globalContext = contextThreadLocal.get();
     if (globalContext == null) {
-      logger.warn("Global Context was null. Seems thread was not initialized. ALERT....", new Exception());
+      logger.warn("Global Context was null. Seems thread was not initialized. ALERT....");
       return;
     }
 
