@@ -12,10 +12,13 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.manage.GlobalContextManager;
+import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +118,11 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       ScheduledFuture<?> future = timer.scheduleAtFixedRate(
           () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
       try {
-        onMessage(message);
+        try (GlobalContextGuard guard = GlobalContextManager.initGlobalContextGuard(message.getGlobalContext())) {
+          onMessage(message);
+        } catch (IOException e) {
+          throw new WingsException("Something failed in initializing GlobalContextGuard:  " + e);
+        }
       } finally {
         future.cancel(true);
       }

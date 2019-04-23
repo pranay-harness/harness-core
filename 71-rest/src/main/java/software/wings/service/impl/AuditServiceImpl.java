@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.k8s.model.AuditGlobalContextData.AUDIT_ID;
+import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
@@ -24,7 +24,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.GlobalContextData;
 import io.harness.exception.WingsException;
-import io.harness.k8s.model.AuditGlobalContextData;
+import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.NameAccess;
 import io.harness.persistence.ReadPref;

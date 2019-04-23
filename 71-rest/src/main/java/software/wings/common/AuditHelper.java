@@ -3,7 +3,7 @@ package software.wings.common;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.k8s.model.AuditGlobalContextData;
+import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
