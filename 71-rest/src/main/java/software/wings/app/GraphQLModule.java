@@ -17,8 +17,8 @@ import software.wings.graphql.datafetcher.application.batchloader.ApplicationBat
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentsDataFetcher;
+import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
-import software.wings.graphql.datafetcher.execution.WorkflowExecutionsDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByEnvTypeDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByEnvironmentDataFetcher;
@@ -70,17 +70,17 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstancesByEnvironmentDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstancesByEnvTypeDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstancesByServiceDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
-    bindDataFetcherWithAnnotation(InstancesByServiceDataFetcher.class);
-    bindDataFetcherWithAnnotation(InstancesByEnvTypeDataFetcher.class);
-    bindDataFetcherWithAnnotation(InstancesByEnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
-    bindDataFetcherWithAnnotation(WorkflowExecutionsDataFetcher.class);
   }
 
   @NotNull
