@@ -208,6 +208,7 @@ public class AuditServiceImpl implements AuditService {
     if (fileUuid != null) {
       ops = ops.set("responsePayloadUuid", fileUuid);
     }
+
     wingsPersistence.update(auditHeader, ops);
   }
 

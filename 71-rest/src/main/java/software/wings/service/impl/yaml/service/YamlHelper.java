@@ -7,6 +7,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Application;
+import software.wings.beans.ConfigFile;
+import software.wings.beans.DeploymentSpecification;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -18,12 +21,14 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -58,6 +63,7 @@ public class YamlHelper {
   @Inject ApplicationManifestService applicationManifestService;
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EntityUpdateService entityUpdateService;
+  @Inject ConfigService configService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -232,6 +238,35 @@ public class YamlHelper {
     return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
   }
 
+  public ServiceCommand getServiceCommand(String accountId, String yamlFilePath) {
+    String appId = getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    String serviceId = getServiceId(appId, yamlFilePath);
+    Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+    String serviceCommandName =
+        extractEntityNameFromYamlPath(YamlType.COMMAND.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Service Command name null in the given yaml file: " + yamlFilePath, serviceCommandName);
+    return serviceResourceService.getCommandByName(appId, serviceId, serviceCommandName);
+  }
+
+  public ConfigFile getServiceConfigFile(String accountId, String yamlFilePath, String targetFilePath) {
+    String appId = getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    String serviceId = getServiceId(appId, yamlFilePath);
+    Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+
+    return configService.get(appId, serviceId, EntityType.SERVICE, targetFilePath);
+  }
+
+  public ConfigFile getEnvironmentConfigFile(String accountId, String yamlFilePath, String targetFilePath) {
+    String appId = getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    String envId = getEnvironmentId(appId, yamlFilePath);
+    Validator.notNullCheck("Environment null in the given yaml file: " + yamlFilePath, envId);
+
+    return configService.get(appId, envId, EntityType.ENVIRONMENT, targetFilePath);
+  }
+
   public Workflow getWorkflow(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
@@ -261,7 +296,7 @@ public class YamlHelper {
     return infraMappingService.getInfraMappingByName(appId, envId, infraMappingName);
   }
 
-  private String extractParentEntityName(String regex, String yamlFilePath, String delimiter) {
+  public String extractParentEntityName(String regex, String yamlFilePath, String delimiter) {
     Pattern pattern = Pattern.compile(regex);
     Matcher matcher = pattern.matcher(yamlFilePath);
 
@@ -373,6 +408,34 @@ public class YamlHelper {
         extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
     return artifactStreamService.getArtifactStreamByName(applicationId, serviceId, artifactStreamName);
+  }
+
+  public DeploymentSpecification getDeploymentSpecification(String applicationId, String serviceId, String subType) {
+    if ("PCF".equals(subType)) {
+      return serviceResourceService.getPcfServiceSpecification(applicationId, serviceId);
+    }
+
+    if ("HELM".equals(subType)) {
+      return serviceResourceService.getHelmChartSpecification(applicationId, serviceId);
+    }
+
+    if ("AMI".equals(subType)) {
+      return serviceResourceService.getUserDataSpecification(applicationId, serviceId);
+    }
+
+    if ("AWS_LAMBDA".equals(subType)) {
+      return serviceResourceService.getLambdaSpecification(applicationId, serviceId);
+    }
+
+    if ("ECS_SERVICE_SPEC".equals(subType)) {
+      return serviceResourceService.getEcsServiceSpecification(applicationId, serviceId);
+    }
+
+    if ("ECS".equals(subType) || "KUBERNETES".equals(subType)) {
+      return serviceResourceService.getContainerTaskByDeploymentType(applicationId, serviceId, subType);
+    }
+
+    return null;
   }
 
   public String getYamlPathForEntity(Object entity) {

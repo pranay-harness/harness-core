@@ -99,6 +99,9 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ArtifactStreamWithOnlyAuditNeededData;
+import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.InfraMappingWithOnlyAuditNeededData;
+import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ProvisionerWithOnlyAuditNeededData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -177,7 +180,8 @@ public class ManagerMorphiaClasses {
       Permit.class, LabeledLogRecord.class, AlertNotificationRule.class, CustomArtifactStream.class,
       NotificationReceiverInfo.class, DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class,
       HarnessApiKey.class, ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class,
-      Personalization.class, EntityYamlRecord.class);
+      Personalization.class, EntityYamlRecord.class, ProvisionerWithOnlyAuditNeededData.class,
+      ArtifactStreamWithOnlyAuditNeededData.class, InfraMappingWithOnlyAuditNeededData.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

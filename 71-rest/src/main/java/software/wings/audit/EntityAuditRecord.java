@@ -1,9 +1,9 @@
 package software.wings.audit;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class EntityAuditRecord {
   // Details of the entity being modified
@@ -13,6 +13,9 @@ public class EntityAuditRecord {
   private String operationType;
   private String entityOldYamlRecordId;
   private String entityNewYamlRecordId;
+  private String yamlPath;
+  private String yamlError;
+  private boolean failure;
 
   // Details of the affected application.
   // May be NULL for account level entities.
