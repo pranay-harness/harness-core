@@ -121,8 +121,26 @@ interface Execution {
   status : ExecutionStatus
 }
 
-# Type for workflow Execution
+# Type for workflow execution
 type WorkflowExecution implements Execution {
+  # Workflow Execution Id
+  id: String
+
+  # DateTime when execution started
+  queuedTime : DateTime
+
+  # DateTime when execution started
+  startTime: DateTime
+
+  # DateTime when execution ended
+  endTime: DateTime
+
+  # Status of the workflow
+  status: ExecutionStatus
+}
+
+# Type for pipeline execution
+type PipelineExecution implements Execution {
   # Workflow Execution Id
   id: String
 

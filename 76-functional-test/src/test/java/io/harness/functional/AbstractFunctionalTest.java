@@ -11,6 +11,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.framework.DelegateExecutor;
 import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
+import io.harness.restutils.PipelineRestUtils;
 import io.harness.restutils.WorkflowRestUtils;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
@@ -84,6 +85,18 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   public WorkflowExecution runWorkflow(String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     WorkflowExecution original = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
+
+    Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
+      final WorkflowExecution workflowExecution =
+          workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
+      return workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
+    });
+
+    return workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
+  }
+
+  public WorkflowExecution runPipeline(String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
+    WorkflowExecution original = PipelineRestUtils.startPipeline(bearerToken, appId, envId, executionArgs);
 
     Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
       final WorkflowExecution workflowExecution =
