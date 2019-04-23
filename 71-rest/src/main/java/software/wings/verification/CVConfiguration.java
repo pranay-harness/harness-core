@@ -3,6 +3,7 @@ package software.wings.verification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
+import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -39,7 +40,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class CVConfiguration extends Base {
+public class CVConfiguration extends Base implements NameAccess {
   public static final String NAME_KEY = "name";
   public static final String SERVICE_ID_KEY = "serviceId";
 

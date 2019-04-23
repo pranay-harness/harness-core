@@ -42,10 +42,10 @@ public class YamlAuditRecordGenerationUtil {
     AuditHeader.Builder builder = anAuditHeader();
     builder.withCreatedAt(System.currentTimeMillis())
         .withCreatedBy(EmbeddedUser.builder().name("GIT_SYNC").build())
-        .withGitAuditUser(GitAuditDetails.builder()
-                              .gitCommitId(gitDiffResult.getCommitId())
-                              .repoUrl(gitDiffResult.getRepoName())
-                              .build())
+        .withGitAuditDetails(GitAuditDetails.builder()
+                                 .gitCommitId(gitDiffResult.getCommitId())
+                                 .repoUrl(gitDiffResult.getRepoName())
+                                 .build())
         .withRemoteUser(anUser().withName("GIT_SYNC").build())
         .withRequestMethod(HttpMethod.POST)
         .withRequestTime(System.currentTimeMillis())
@@ -82,7 +82,7 @@ public class YamlAuditRecordGenerationUtil {
                      .append("Yaml Changes Were Ingested Successfully for Account: ")
                      .append(accountId)
                      .append(", CommitId: ")
-                     .append(auditHeader.getGitAuditUser().getGitCommitId())
+                     .append(auditHeader.getGitAuditDetails().getGitCommitId())
                      .toString();
 
     auditHeader.setResponseType(ResponseType.SUCCESS);
@@ -164,9 +164,9 @@ public class YamlAuditRecordGenerationUtil {
                             .append("Status: AccountId: ")
                             .append(accountId)
                             .append(", CommitId: ")
-                            .append(auditHeader.getGitAuditUser().getGitCommitId())
+                            .append(auditHeader.getGitAuditDetails().getGitCommitId())
                             .append("Repo: ")
-                            .append(auditHeader.getGitAuditUser().getRepoUrl())
+                            .append(auditHeader.getGitAuditDetails().getRepoUrl())
                             .append("\nSuccessful Paths: \n");
 
     changeListWithSuccessfulChanges.forEach(change -> { msg.append(getChangePath(change)); });

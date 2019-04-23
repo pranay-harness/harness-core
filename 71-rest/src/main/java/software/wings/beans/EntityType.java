@@ -198,5 +198,7 @@ public enum EntityType {
 
   TEMPLATE,
 
-  TEMPLATE_FOLDER
+  TEMPLATE_FOLDER,
+
+  SETTING_ATTRIBUTE
 }

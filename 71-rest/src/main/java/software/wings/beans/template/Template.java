@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import lombok.Builder;
@@ -37,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class Template extends Base implements KeywordsAware {
+public class Template extends Base implements KeywordsAware, NameAccess {
   public static final String FOLDER_ID_KEY = "folderId";
   public static final String FOLDER_PATH_ID_KEY = "folderPathId";
   public static final String GALLERY_ID_KEY = "galleryId";

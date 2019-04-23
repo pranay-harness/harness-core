@@ -58,7 +58,7 @@ public class AuditHeader extends Base {
 
   // For Audit Headers created by Git user actions
   @Getter @Setter private String accountId;
-  @Getter @Setter private GitAuditDetails gitAuditUser;
+  @Getter @Setter private GitAuditDetails gitAuditDetails;
   @Getter @Setter private List<EntityAuditRecord> entityAuditRecords;
 
   /**
@@ -512,7 +512,7 @@ public class AuditHeader extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private GitAuditDetails gitAuditUser;
+    private GitAuditDetails gitAuditDetails;
     private List<EntityAuditRecord> entityAuditRecords;
 
     private Builder() {}
@@ -526,8 +526,8 @@ public class AuditHeader extends Base {
       return new Builder();
     }
 
-    public Builder withGitAuditUser(GitAuditDetails gitAuditUser) {
-      this.gitAuditUser = gitAuditUser;
+    public Builder withGitAuditDetails(GitAuditDetails gitAuditDetails) {
+      this.gitAuditDetails = gitAuditDetails;
       return this;
     }
 
@@ -867,7 +867,7 @@ public class AuditHeader extends Base {
       auditHeader.setCreatedAt(createdAt);
       auditHeader.setLastUpdatedBy(lastUpdatedBy);
       auditHeader.setLastUpdatedAt(lastUpdatedAt);
-      auditHeader.setGitAuditUser(gitAuditUser);
+      auditHeader.setGitAuditDetails(gitAuditDetails);
       return auditHeader;
     }
   }

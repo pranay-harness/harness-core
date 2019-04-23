@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.persistence.NameAccess;
 import io.harness.persistence.PersistentIterable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -48,7 +49,7 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ArtifactStreamKeys")
-public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable {
+public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable, NameAccess {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
 
   protected static final String dateFormat = "HHMMSS";

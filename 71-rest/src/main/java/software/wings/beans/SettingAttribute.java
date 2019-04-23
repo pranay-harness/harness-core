@@ -51,6 +51,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -82,7 +83,7 @@ import javax.validation.Valid;
 @HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class SettingAttribute extends Base {
+public class SettingAttribute extends Base implements NameAccess {
   public static final String CATEGORY_KEY = "category";
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";

@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +41,7 @@ import java.util.Objects;
 @Indexes(
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
-public class Application extends Base implements KeywordsAware {
+public class Application extends Base implements KeywordsAware, NameAccess {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   @NotEmpty private String name;

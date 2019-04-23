@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -41,7 +42,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
-public class Environment extends Base implements KeywordsAware {
+public class Environment extends Base implements KeywordsAware, NameAccess {
   public static final String APP_ID_KEY = "appId";
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";

@@ -11,6 +11,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import lombok.Builder;
@@ -39,7 +40,7 @@ import java.util.List;
 @Indexes(@Index(options = @IndexOptions(name = "duplicateKey", unique = true),
     fields = { @Field("accountId")
                , @Field("name"), @Field("pathId"), @Field("appId") }))
-public class TemplateFolder extends Base implements KeywordsAware {
+public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   public static final String GALLERY_ID_KEY = "galleryId";
   public static final String KEYWORDS_KEY = "keywords";
   public static final String NAME_KEY = "name";
