@@ -172,6 +172,7 @@ import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateType;
 import software.wings.verification.AppDynamicsCVConfigurationYamlHandler;
+import software.wings.verification.BugsnagCVConfigurationYamlHandler;
 import software.wings.verification.CVConfigurationYamlHandler;
 import software.wings.verification.DatadogCvConfigurationYamlHandler;
 import software.wings.verification.ElkCVConfigurationYamlHandler;
@@ -290,6 +291,7 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG.name()).to(DatadogCvConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.SUMO.name()).to(LogsCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.ELK.name()).to(ElkCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.BUG_SNAG.name()).to(BugsnagCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);
