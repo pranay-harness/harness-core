@@ -4,8 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import graphql.GraphQL;
 import io.harness.CategoryTest;
-import io.harness.category.element.FunctionalTests;
+import io.harness.GraphQLTestMixin;
 import io.harness.framework.DelegateExecutor;
 import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
@@ -26,10 +27,15 @@ import java.io.IOException;
 import javax.ws.rs.core.GenericType;
 
 @Slf4j
-public abstract class AbstractFunctionalTest extends CategoryTest implements FunctionalTests {
+public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin {
   protected static String bearerToken;
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
+
+  @Override
+  public GraphQL getGraphQL() {
+    return rule.getGraphQL();
+  }
 
   @BeforeClass
   public static void setup() {
