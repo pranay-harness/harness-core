@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -10,9 +11,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
+import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -47,7 +51,10 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -60,7 +67,8 @@ import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
-import software.wings.common.Constants;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -73,6 +81,7 @@ import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
@@ -97,9 +106,11 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,6 +137,7 @@ public class HelmDeployState extends State {
   @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private transient GitConfigHelperService gitConfigHelperService;
   @Inject private transient ApplicationManifestService applicationManifestService;
+  @Inject private ApplicationManifestUtils appManifestHelper;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -163,122 +175,29 @@ public class HelmDeployState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    boolean valuesInGit = false;
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
-    Application app = appService.get(context.getAppId());
-    Environment env = workflowStandardParams.getEnv();
-    ServiceElement serviceElement = phaseElement.getServiceElement();
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceElement.getUuid());
-
-    ContainerInfrastructureMapping containerInfraMapping =
-        (ContainerInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
-
-    Activity activity = createActivity(context, getCommandUnits());
-
-    String releaseName = obtainHelmReleaseNamePrefix(context);
-    updateHelmReleaseNameInInfraMappingElement(context, releaseName);
-
-    String commandFlags = obtainCommandFlags(context);
-
-    ContainerServiceParams containerServiceParams =
-        containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName, context);
-
-    HelmChartSpecification helmChartSpecification =
-        serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
-
-    K8sDelegateManifestConfig sourceRepoConfig = null;
-    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
-        app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
-    if (appManifest != null) {
-      GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
-      GitConfig sourceRepoGitConfig =
-          settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
-      sourceRepoConfig = K8sDelegateManifestConfig.builder()
-                             .gitFileConfig(sourceRepoGitFileConfig)
-                             .gitConfig(sourceRepoGitConfig)
-                             .encryptedDataDetails(fetchEncryptedDataDetail(context, sourceRepoGitConfig))
-                             .build();
+    if (HELM_DEPLOY.name().equals(this.getStateType())) {
+      appManifestMap = appManifestHelper.getValuesApplicationManifests(context);
+      valuesInGit = appManifestHelper.isValuesInGit(appManifestMap);
     }
 
-    if (StateType.HELM_DEPLOY.name().equals(getStateType())) {
-      if ((gitFileConfig == null || gitFileConfig.getConnectorId() == null) && sourceRepoConfig == null) {
-        validateChartSpecification(helmChartSpecification);
-      }
-      evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
+    Activity activity = createActivity(context, getCommandUnits(valuesInGit));
+
+    if (valuesInGit) {
+      return executeGitTask(context, activity.getUuid(), appManifestMap);
     }
 
-    HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
-                                                          .activityId(activity.getUuid())
-                                                          .releaseName(releaseName)
-                                                          .namespace(containerServiceParams.getNamespace())
-                                                          .commandFlags(commandFlags)
-                                                          .build();
-
-    if (helmChartSpecification != null) {
-      stateExecutionData.setChartName(helmChartSpecification.getChartName());
-      stateExecutionData.setChartRepositoryUrl(helmChartSpecification.getChartUrl());
-      stateExecutionData.setChartVersion(helmChartSpecification.getChartVersion());
-    }
-
-    ImageDetails imageDetails = null;
-    if (artifact != null) {
-      imageDetails = getImageDetails(context, app, artifact);
-    }
-
-    String repoName = getRepoName(app.getName(), serviceElement.getName());
-
-    List<EncryptedDataDetail> encryptedDataDetails = null;
-    GitConfig gitConfig = null;
-    if (gitFileConfig != null) {
-      evaluateGitFileConfig(context);
-      List<TemplateExpression> templateExpressions = getTemplateExpressions();
-      if (isNotEmpty(templateExpressions)) {
-        TemplateExpression configIdExpression =
-            templateExpressionProcessor.getTemplateExpression(templateExpressions, "connectorId");
-        SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttributeByNameOrId(
-            context, configIdExpression, SettingVariableTypes.GIT);
-        SettingValue settingValue = settingAttribute.getValue();
-        if (!(settingValue instanceof GitConfig)) {
-          throw new InvalidRequestException("Git connector not found", USER);
-        }
-        gitConfig = (GitConfig) settingValue;
-        gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
-      } else {
-        gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
-      }
-      encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
-    }
-
-    setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
-        encryptedDataDetails, commandFlags);
-    HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
-        releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping,
-        repoName, gitConfig, encryptedDataDetails, commandFlags, sourceRepoConfig);
-
-    delegateService.queueTask(DelegateTask.builder()
-                                  .async(true)
-                                  .accountId(app.getAccountId())
-                                  .appId(app.getUuid())
-                                  .waitId(activity.getUuid())
-                                  .data(TaskData.builder()
-                                            .taskType(TaskType.HELM_COMMAND_TASK.name())
-                                            .parameters(new Object[] {commandRequest})
-                                            .timeout(TimeUnit.HOURS.toMillis(1))
-                                            .build())
-                                  .envId(env.getUuid())
-                                  .infrastructureMappingId(containerInfraMapping.getUuid())
-                                  .build());
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(singletonList(activity.getUuid()))
-        .withStateExecutionData(stateExecutionData)
-        .withAsync(true)
-        .build();
+    return executeHelmTask(context, activity.getUuid(), appManifestMap);
   }
 
-  protected List<CommandUnit> getCommandUnits() {
+  protected List<CommandUnit> getCommandUnits(boolean valuesInGit) {
     List<CommandUnit> commandUnits = new ArrayList<>();
+
+    if (valuesInGit) {
+      commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.FetchFiles));
+    }
 
     commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Init));
     commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Prepare));
@@ -317,27 +236,10 @@ public class HelmDeployState extends State {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig) {
-    List<String> helmValueOverridesYamlFiles =
-        serviceTemplateService.helmValueOverridesYamlFiles(appId, infrastructureMapping.getServiceTemplateId());
-    List<String> helmValueOverridesYamlFilesEvaluated = null;
-    if (isNotEmpty(helmValueOverridesYamlFiles)) {
-      helmValueOverridesYamlFilesEvaluated =
-          helmValueOverridesYamlFiles.stream()
-              .map(yamlFileContent -> {
-                if (imageDetails != null) {
-                  yamlFileContent =
-                      yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
-                          .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
-                              getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()));
-                }
-                yamlFileContent =
-                    yamlFileContent.replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, containerServiceParams.getNamespace());
-                return yamlFileContent;
-              })
-              .map(context::renderExpression)
-              .collect(Collectors.toList());
-    }
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    List<String> helmValueOverridesYamlFilesEvaluated = getValuesYamlOverrides(
+        context, containerServiceParams, appId, imageDetails, infrastructureMapping, appManifestMap);
 
     // TODO: this fix makes the previous behavior more obvious. We should review why we are overriding the value here
     steadyStateTimeout = DEFAULT_STEADY_STATE_TIMEOUT;
@@ -398,7 +300,7 @@ public class HelmDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .data(TaskData.builder()
-                      .taskType(TaskType.HELM_COMMAND_TASK.name())
+                      .taskType(HELM_COMMAND_TASK.name())
                       .parameters(new Object[] {helmReleaseHistoryCommandRequest})
                       .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
                       .build())
@@ -443,55 +345,22 @@ public class HelmDeployState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
-    String activityId = response.keySet().iterator().next();
-    HelmCommandExecutionResponse executionResponse =
-        fetchHelmCommandExecutionResponse(response.values().iterator().next());
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
-                                                                                             : ExecutionStatus.FAILED;
-    activityService.updateStatus(activityId, context.getAppId(), executionStatus);
-    HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
-    stateExecutionData.setStatus(executionStatus);
-    stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
-    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response)
+      throws InterruptedException {
+    HelmDeployStateExecutionData helmStateExecutionData =
+        (HelmDeployStateExecutionData) context.getStateExecutionData();
 
-    Builder executionResponseBuilder = Builder.anExecutionResponse()
-                                           .withExecutionStatus(executionStatus)
-                                           .withErrorMessage(executionResponse.getErrorMessage())
-                                           .withStateExecutionData(stateExecutionData);
+    TaskType taskType = helmStateExecutionData.getCurrentTaskType();
+    switch (taskType) {
+      case GIT_COMMAND:
+        return handleAsyncResponseForGitFetchFilesTask(context, response);
 
-    if (executionResponse.getHelmCommandResponse() == null) {
-      logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
-          + " with error message " + executionResponse.getErrorMessage());
+      case HELM_COMMAND_TASK:
+        return handleAsyncResponseForHelmTask(context, response);
 
-      return executionResponseBuilder.build();
+      default:
+        throw new WingsException("Unhandled task type " + taskType);
     }
-
-    if (CommandExecutionStatus.SUCCESS.equals(executionResponse.getHelmCommandResponse().getCommandExecutionStatus())) {
-      HelmInstallCommandResponse helmInstallCommandResponse =
-          (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
-
-      if (helmInstallCommandResponse != null) {
-        List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
-            context, helmInstallCommandResponse.getContainerInfoList());
-        stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
-
-        List<InstanceElement> instanceElements =
-            instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-        InstanceElementListParam instanceElementListParam =
-            InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
-
-        executionResponseBuilder.addContextElement(instanceElementListParam);
-        executionResponseBuilder.addNotifyElement(instanceElementListParam);
-      }
-    } else {
-      logger.info("Got helm execution response with status "
-          + executionResponse.getHelmCommandResponse().getCommandExecutionStatus().toString() + " with output "
-          + executionResponse.getHelmCommandResponse().getOutput());
-    }
-
-    return executionResponseBuilder.build();
   }
 
   @Override
@@ -677,5 +546,303 @@ public class HelmDeployState extends State {
         infraMappingElement.getHelm().setReleaseName(helmReleaseName);
       }
     }
+  }
+
+  private ExecutionResponse executeHelmTask(ExecutionContext context, String activityId,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) throws InterruptedException {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+    Application app = appService.get(context.getAppId());
+    Environment env = workflowStandardParams.getEnv();
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceElement.getUuid());
+
+    ContainerInfrastructureMapping containerInfraMapping =
+        (ContainerInfrastructureMapping) infrastructureMappingService.get(
+            app.getUuid(), phaseElement.getInfraMappingId());
+
+    String releaseName = obtainHelmReleaseNamePrefix(context);
+    updateHelmReleaseNameInInfraMappingElement(context, releaseName);
+
+    String commandFlags = obtainCommandFlags(context);
+
+    ContainerServiceParams containerServiceParams =
+        containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName, context);
+
+    HelmChartSpecification helmChartSpecification =
+        serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
+
+    K8sDelegateManifestConfig sourceRepoConfig = null;
+    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
+        app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
+    if (appManifest != null) {
+      GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
+      GitConfig sourceRepoGitConfig =
+          settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
+      sourceRepoConfig = K8sDelegateManifestConfig.builder()
+                             .gitFileConfig(sourceRepoGitFileConfig)
+                             .gitConfig(sourceRepoGitConfig)
+                             .encryptedDataDetails(fetchEncryptedDataDetail(context, sourceRepoGitConfig))
+                             .build();
+    }
+
+    if (StateType.HELM_DEPLOY.name().equals(getStateType())) {
+      if ((gitFileConfig == null || gitFileConfig.getConnectorId() == null) && sourceRepoConfig == null) {
+        validateChartSpecification(helmChartSpecification);
+      }
+      evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
+    }
+
+    HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
+                                                          .activityId(activityId)
+                                                          .releaseName(releaseName)
+                                                          .namespace(containerServiceParams.getNamespace())
+                                                          .commandFlags(commandFlags)
+                                                          .currentTaskType(HELM_COMMAND_TASK)
+                                                          .build();
+
+    if (helmChartSpecification != null) {
+      stateExecutionData.setChartName(helmChartSpecification.getChartName());
+      stateExecutionData.setChartRepositoryUrl(helmChartSpecification.getChartUrl());
+      stateExecutionData.setChartVersion(helmChartSpecification.getChartVersion());
+    }
+
+    ImageDetails imageDetails = null;
+    if (artifact != null) {
+      imageDetails = getImageDetails(context, app, artifact);
+    }
+
+    String repoName = getRepoName(app.getName(), serviceElement.getName());
+
+    List<EncryptedDataDetail> encryptedDataDetails = null;
+    GitConfig gitConfig = null;
+    if (gitFileConfig != null) {
+      evaluateGitFileConfig(context);
+      List<TemplateExpression> templateExpressions = getTemplateExpressions();
+      if (isNotEmpty(templateExpressions)) {
+        TemplateExpression configIdExpression =
+            templateExpressionProcessor.getTemplateExpression(templateExpressions, "connectorId");
+        SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttributeByNameOrId(
+            context, configIdExpression, SettingVariableTypes.GIT);
+        SettingValue settingValue = settingAttribute.getValue();
+        if (!(settingValue instanceof GitConfig)) {
+          throw new InvalidRequestException("Git connector not found", USER);
+        }
+        gitConfig = (GitConfig) settingValue;
+        gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+      } else {
+        gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+      }
+      encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
+    }
+
+    setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
+        encryptedDataDetails, commandFlags);
+    HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
+        releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, containerInfraMapping, repoName,
+        gitConfig, encryptedDataDetails, commandFlags, sourceRepoConfig, appManifestMap);
+
+    delegateService.queueTask(DelegateTask.builder()
+                                  .async(true)
+                                  .accountId(app.getAccountId())
+                                  .appId(app.getUuid())
+                                  .waitId(activityId)
+                                  .data(TaskData.builder()
+                                            .taskType(HELM_COMMAND_TASK.name())
+                                            .parameters(new Object[] {commandRequest})
+                                            .timeout(TimeUnit.HOURS.toMillis(1))
+                                            .build())
+                                  .envId(env.getUuid())
+                                  .infrastructureMappingId(containerInfraMapping.getUuid())
+                                  .build());
+    return ExecutionResponse.Builder.anExecutionResponse()
+        .withCorrelationIds(singletonList(activityId))
+        .withStateExecutionData(stateExecutionData)
+        .withAsync(true)
+        .build();
+  }
+
+  private ExecutionResponse executeGitTask(
+      ExecutionContext context, String activityId, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    Application app = appService.get(context.getAppId());
+
+    GitFetchFilesTaskParams fetchFilesTaskParams =
+        appManifestHelper.createGitFetchFilesTaskParams(context, app, appManifestMap);
+    fetchFilesTaskParams.setActivityId(activityId);
+    appManifestHelper.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
+
+    String waitId = generateUuid();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .async(true)
+                                    .waitId(waitId)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
+                                              .parameters(new Object[] {fetchFilesTaskParams})
+                                              .timeout(TimeUnit.MINUTES.toMillis(60))
+                                              .build())
+                                    .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+
+    return ExecutionResponse.Builder.anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Arrays.asList(waitId))
+        .withStateExecutionData(HelmDeployStateExecutionData.builder()
+                                    .activityId(activityId)
+                                    .commandName(HELM_COMMAND_NAME)
+                                    .currentTaskType(TaskType.GIT_COMMAND)
+                                    .appManifestMap(appManifestMap)
+                                    .build())
+        .withDelegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  protected ExecutionResponse handleAsyncResponseForHelmTask(
+      ExecutionContext context, Map<String, ResponseData> response) {
+    String activityId = response.keySet().iterator().next();
+    HelmCommandExecutionResponse executionResponse =
+        fetchHelmCommandExecutionResponse(response.values().iterator().next());
+    ExecutionStatus executionStatus =
+        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
+                                                                                             : ExecutionStatus.FAILED;
+    activityService.updateStatus(activityId, context.getAppId(), executionStatus);
+    HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setStatus(executionStatus);
+    stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+
+    Builder executionResponseBuilder = Builder.anExecutionResponse()
+                                           .withExecutionStatus(executionStatus)
+                                           .withErrorMessage(executionResponse.getErrorMessage())
+                                           .withStateExecutionData(stateExecutionData);
+
+    if (executionResponse.getHelmCommandResponse() == null) {
+      logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
+          + " with error message " + executionResponse.getErrorMessage());
+
+      return executionResponseBuilder.build();
+    }
+
+    if (CommandExecutionStatus.SUCCESS.equals(executionResponse.getHelmCommandResponse().getCommandExecutionStatus())) {
+      HelmInstallCommandResponse helmInstallCommandResponse =
+          (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
+
+      if (helmInstallCommandResponse != null) {
+        List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
+            context, helmInstallCommandResponse.getContainerInfoList());
+        stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+
+        List<InstanceElement> instanceElements =
+            instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+        InstanceElementListParam instanceElementListParam =
+            InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+
+        executionResponseBuilder.addContextElement(instanceElementListParam);
+        executionResponseBuilder.addNotifyElement(instanceElementListParam);
+      }
+    } else {
+      logger.info("Got helm execution response with status "
+          + executionResponse.getHelmCommandResponse().getCommandExecutionStatus().toString() + " with output "
+          + executionResponse.getHelmCommandResponse().getOutput());
+    }
+
+    return executionResponseBuilder.build();
+  }
+
+  private ExecutionResponse handleAsyncResponseForGitFetchFilesTask(
+      ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String activityId = ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
+
+    GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return anExecutionResponse().withExecutionStatus(executionStatus).build();
+    }
+
+    Map<K8sValuesLocation, String> valuesFiles =
+        appManifestHelper.getValuesFilesFromGitFetchFilesResponse(executionResponse);
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) context.getStateExecutionData();
+    helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
+
+    return executeHelmTask(context, activityId, helmDeployStateExecutionData.getAppManifestMap());
+  }
+
+  private List<String> getValuesYamlOverrides(ExecutionContext context, ContainerServiceParams containerServiceParams,
+      String appId, ImageDetails imageDetails, ContainerInfrastructureMapping infrastructureMapping,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) context.getStateExecutionData();
+    if (helmDeployStateExecutionData != null) {
+      valuesFiles.putAll(helmDeployStateExecutionData.getValuesFiles());
+    }
+
+    appManifestHelper.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+
+    // ToDo anshul - Remove this piece of code once the values yaml in service has been migrated to ManifestFiles format
+    ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, infrastructureMapping.getServiceTemplateId());
+    if (serviceTemplate != null) {
+      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
+      if (isNotBlank(service.getHelmValueYaml())) {
+        valuesFiles.put(K8sValuesLocation.Service, service.getHelmValueYaml());
+      }
+    }
+
+    logger.info("Found Values at following sources: " + valuesFiles.keySet());
+    List<String> helmValueOverridesYamlFiles = getOrderedValuesYamlList(valuesFiles);
+
+    List<String> helmValueOverridesYamlFilesEvaluated = null;
+    if (isNotEmpty(helmValueOverridesYamlFiles)) {
+      helmValueOverridesYamlFilesEvaluated =
+          helmValueOverridesYamlFiles.stream()
+              .map(yamlFileContent -> {
+                if (imageDetails != null) {
+                  yamlFileContent =
+                      yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
+                          .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
+                              getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()));
+                }
+                yamlFileContent =
+                    yamlFileContent.replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, containerServiceParams.getNamespace());
+                return yamlFileContent;
+              })
+              .map(context::renderExpression)
+              .collect(Collectors.toList());
+    }
+
+    return helmValueOverridesYamlFilesEvaluated;
+  }
+
+  private List<String> getOrderedValuesYamlList(Map<K8sValuesLocation, String> valuesFiles) {
+    List<String> valuesList = new ArrayList<>();
+
+    if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
+      valuesList.add(valuesFiles.get(K8sValuesLocation.Service));
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.ServiceOverride)) {
+      valuesList.add(valuesFiles.get(K8sValuesLocation.ServiceOverride));
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
+      valuesList.add(valuesFiles.get(K8sValuesLocation.EnvironmentGlobal));
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.Environment)) {
+      valuesList.add(valuesFiles.get(K8sValuesLocation.Environment));
+    }
+
+    return valuesList;
   }
 }

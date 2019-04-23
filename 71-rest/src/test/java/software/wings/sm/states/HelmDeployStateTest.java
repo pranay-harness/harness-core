@@ -61,7 +61,6 @@ import software.wings.api.DeploymentType;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -104,6 +103,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Collections;
 
@@ -135,6 +135,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private GitConfigHelperService gitConfigHelperService;
   @Mock private ArtifactCollectionUtil artifactCollectionUtil;
   @Mock private ApplicationManifestService applicationManifestService;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -170,7 +171,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
                                  .infraMappingId(INFRA_MAPPING_ID)
                                  .deploymentType(DeploymentType.KUBERNETES)
                                  .build())
-          .addStateExecutionData(new PhaseStepExecutionData())
+          .addStateExecutionData(HelmDeployStateExecutionData.builder().build())
           .build();
 
   private InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()

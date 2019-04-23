@@ -8,10 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.beans.TaskType;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +40,9 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
   private String namespace;
   private boolean rollback;
   private String commandFlags;
+  private TaskType currentTaskType;
+  @Builder.Default private Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+  @Builder.Default private Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 

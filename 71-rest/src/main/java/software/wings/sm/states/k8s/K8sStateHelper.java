@@ -2,12 +2,10 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
@@ -57,7 +55,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
-import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
@@ -74,8 +71,6 @@ import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
-import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
-import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -107,6 +102,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -133,6 +129,7 @@ public class K8sStateHelper {
   @Inject private transient ActivityService activityService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
+  @Inject ApplicationManifestUtils applicationManifestUtils;
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {
@@ -204,9 +201,10 @@ public class K8sStateHelper {
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId, String commandName) {
     Application app = appService.get(context.getAppId());
 
-    GitFetchFilesTaskParams fetchFilesTaskParams = createGitFetchFilesTaskParams(context, app, appManifestMap);
+    GitFetchFilesTaskParams fetchFilesTaskParams =
+        applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
-    setValuesYamlPath(fetchFilesTaskParams);
+    applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
@@ -242,60 +240,6 @@ public class K8sStateHelper {
         .build();
   }
 
-  private void setValuesYamlPath(GitFetchFilesTaskParams gitFetchFilesTaskParams) {
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = gitFetchFilesTaskParams.getGitFetchFilesConfigMap();
-
-    for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {
-      if (K8sValuesLocation.Service.name().equals(entry.getKey())) {
-        GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
-        gitFetchFileConfig.getGitFileConfig().setFilePath(
-            getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath()));
-      }
-    }
-  }
-
-  private Map<String, GitFetchFilesConfig> getGitFetchFileConfigMap(
-      ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = new HashMap<>();
-
-    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
-      K8sValuesLocation k8sValuesLocation = entry.getKey();
-      ApplicationManifest applicationManifest = entry.getValue();
-
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())
-          || StoreType.HelmSourceRepo.equals(applicationManifest.getStoreType())) {
-        GitFileConfig gitFileConfig =
-            gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
-        GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
-        notNullCheck("Git config not found", gitConfig);
-        List<EncryptedDataDetail> encryptionDetails =
-            secretManager.getEncryptionDetails(gitConfig, app.getUuid(), null);
-
-        GitFetchFilesConfig gitFetchFileConfig = GitFetchFilesConfig.builder()
-                                                     .gitConfig(gitConfig)
-                                                     .gitFileConfig(gitFileConfig)
-                                                     .encryptedDataDetails(encryptionDetails)
-                                                     .build();
-
-        gitFetchFileConfigMap.put(k8sValuesLocation.name(), gitFetchFileConfig);
-      }
-    }
-
-    return gitFetchFileConfigMap;
-  }
-
-  public GitFetchFilesTaskParams createGitFetchFilesTaskParams(
-      ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = getGitFetchFileConfigMap(context, app, appManifestMap);
-
-    return GitFetchFilesTaskParams.builder()
-        .accountId(app.getAccountId())
-        .appId(app.getUuid())
-        .isFinalState(isRemoteFetchRequiredForManifest(appManifestMap))
-        .gitFetchFilesConfigMap(gitFetchFileConfigMap)
-        .build();
-  }
-
   public Map<K8sValuesLocation, ApplicationManifest> getApplicationManifests(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     Application app = appService.get(context.getAppId());
@@ -310,30 +254,7 @@ public class K8sStateHelper {
     }
     appManifestMap.put(K8sValuesLocation.Service, applicationManifest);
 
-    applicationManifest =
-        applicationManifestService.getByServiceId(context.getAppId(), serviceElement.getUuid(), AppManifestKind.VALUES);
-    if (applicationManifest != null) {
-      appManifestMap.put(K8sValuesLocation.ServiceOverride, applicationManifest);
-    }
-
-    InfrastructureMapping infraMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    if (infraMapping == null) {
-      throw new InvalidRequestException(format(
-          "Infra mapping not found for appId %s infraMappingId %s", app.getUuid(), phaseElement.getInfraMappingId()));
-    }
-
-    applicationManifest =
-        applicationManifestService.getByEnvId(app.getUuid(), infraMapping.getEnvId(), AppManifestKind.VALUES);
-    if (applicationManifest != null) {
-      appManifestMap.put(K8sValuesLocation.EnvironmentGlobal, applicationManifest);
-    }
-
-    applicationManifest = applicationManifestService.getByEnvAndServiceId(
-        app.getUuid(), infraMapping.getEnvId(), serviceElement.getUuid(), AppManifestKind.VALUES);
-    if (applicationManifest != null) {
-      appManifestMap.put(K8sValuesLocation.Environment, applicationManifest);
-    }
+    appManifestMap.putAll(applicationManifestUtils.getValuesApplicationManifests(context));
 
     return appManifestMap;
   }
@@ -373,21 +294,6 @@ public class K8sStateHelper {
     return false;
   }
 
-  private void populateValuesFiles(
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, Map<K8sValuesLocation, String> valuesFiles) {
-    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
-      K8sValuesLocation k8sValuesLocation = entry.getKey();
-      ApplicationManifest applicationManifest = entry.getValue();
-      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
-        ManifestFile manifestFile =
-            applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
-        if (manifestFile != null) {
-          valuesFiles.put(k8sValuesLocation, manifestFile.getFileContent());
-        }
-      }
-    }
-  }
-
   public List<String> getRenderedValuesFiles(
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, ExecutionContext context) {
     Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
@@ -396,7 +302,7 @@ public class K8sStateHelper {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
 
-    populateValuesFiles(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
     List<String> result = new ArrayList<>();
 
@@ -699,42 +605,12 @@ public class K8sStateHelper {
       return anExecutionResponse().withExecutionStatus(executionStatus).build();
     }
 
-    Map<K8sValuesLocation, String> valuesFiles = getValuesFilesFromGitResponse(executionResponse);
+    Map<K8sValuesLocation, String> valuesFiles =
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(executionResponse);
     K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
 
     return k8sStateExecutor.executeK8sTask(context, activityId);
-  }
-
-  private Map<K8sValuesLocation, String> getValuesFilesFromGitResponse(GitCommandExecutionResponse executionResponse) {
-    GitFetchFilesFromMultipleRepoResult gitCommandResult =
-        (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult();
-
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
-    if (gitCommandResult == null) {
-      return valuesFiles;
-    }
-
-    for (Entry<String, GitFetchFilesResult> entry : gitCommandResult.getFilesFromMultipleRepo().entrySet()) {
-      GitFetchFilesResult gitFetchFilesResult = entry.getValue();
-
-      if (isNotEmpty(gitFetchFilesResult.getFiles())
-          && isNotBlank(gitFetchFilesResult.getFiles().get(0).getFileContent())) {
-        valuesFiles.put(
-            K8sValuesLocation.valueOf(entry.getKey()), gitFetchFilesResult.getFiles().get(0).getFileContent());
-      }
-    }
-
-    return valuesFiles;
-  }
-
-  private boolean isRemoteFetchRequiredForManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    if (!appManifestMap.containsKey(K8sValuesLocation.Service)) {
-      return true;
-    }
-
-    ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
-    return StoreType.Local.equals(applicationManifest.getStoreType());
   }
 
   public String getReleaseName(ExecutionContext context, ContainerInfrastructureMapping infraMapping) {

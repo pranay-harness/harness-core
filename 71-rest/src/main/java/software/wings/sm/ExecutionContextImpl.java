@@ -92,7 +92,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient VariableProcessor variableProcessor;
   @Inject private transient FeatureFlagService featureFlagService;
 
-  final String PHASE_PARAM = "PHASE_PARAM";
+  public static final String PHASE_PARAM = "PHASE_PARAM";
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
