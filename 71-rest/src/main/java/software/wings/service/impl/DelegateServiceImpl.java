@@ -2000,7 +2000,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (CollectionUtils.isNotEmpty(alertsToBeCreated)) {
         // create dashboard alerts
         alertService.openAlerts(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertsToBeCreated);
-        sendDelegateDownNotification(accountId, alertsToBeCreated);
+        // TODO(brett): disabling until we understand why false notifications are going out
+        // sendDelegateDownNotification(accountId, alertsToBeCreated);
       }
     }
   }
