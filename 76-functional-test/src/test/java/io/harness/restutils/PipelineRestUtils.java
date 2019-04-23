@@ -4,7 +4,9 @@ import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.WorkflowExecution;
 
 import javax.ws.rs.core.GenericType;
 
@@ -53,5 +55,23 @@ public class PipelineRestUtils {
                                                        .as(pipelineType.getType());
 
     return savedPipelineResponse.getResource();
+  }
+
+  public static WorkflowExecution startPipeline(
+      String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
+    GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
+        new GenericType<RestResponse<WorkflowExecution>>() {};
+
+    RestResponse<WorkflowExecution> savedWorkflowExecutionResponse = Setup.portal()
+                                                                         .auth()
+                                                                         .oauth2(bearerToken)
+                                                                         .queryParam("appId", appId)
+                                                                         .queryParam("envId", envId)
+                                                                         .contentType(ContentType.JSON)
+                                                                         .body(executionArgs, ObjectMapperType.GSON)
+                                                                         .post("/executions")
+                                                                         .as(workflowExecutionType.getType());
+
+    return savedWorkflowExecutionResponse.getResource();
   }
 }

@@ -42,13 +42,14 @@ public class TypeResolverManager {
     return ImmutableMap.<String, TypeResolver>builder()
         .put(TypeResolverManagerUnifaces.Result,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
-                                      .put(QLWorkflow.class, TypeResolverManagerTypes.Workflow)
-                                      .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
                                       .put(QLApplication.class, TypeResolverManagerTypes.Application)
                                       .put(QLEnvironment.class, TypeResolverManagerTypes.Environment)
+                                      .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
+                                      .put(QLWorkflow.class, TypeResolverManagerTypes.Workflow)
                                       .build()))
         .put(TypeResolverManagerUnifaces.Execution,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
                                       .put(QLWorkflowExecution.class, TypeResolverManagerTypes.WorkflowExecution)
                                       .build()))
         .build();
