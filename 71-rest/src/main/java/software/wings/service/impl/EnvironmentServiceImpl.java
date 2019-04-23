@@ -780,17 +780,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
       ApplicationManifest createdAppManifest = applicationManifestService.create(applicationManifestNew);
 
-      List<ManifestFile> manifestFiles =
-          applicationManifestService.getManifestFilesByAppManifestId(appId, applicationManifest.getUuid());
-
-      if (isEmpty(manifestFiles)) {
-        return;
-      }
-
-      for (ManifestFile manifestFile : manifestFiles) {
-        ManifestFile manifestFileNew = manifestFile.cloneInternal();
-        applicationManifestService.upsertApplicationManifestFile(manifestFileNew, createdAppManifest, true);
-      }
+      applicationManifestService.cloneManifestFiles(appId, applicationManifest, createdAppManifest);
     }
   }
 

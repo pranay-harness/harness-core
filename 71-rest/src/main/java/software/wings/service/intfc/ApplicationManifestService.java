@@ -63,4 +63,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   List<ManifestFile> listManifestFiles(String appManifestId, String appId);
 
   ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind);
+
+  void cloneManifestFiles(
+      String appId, ApplicationManifest applicationManifestOld, ApplicationManifest applicationManifestNew);
 }

@@ -595,6 +595,21 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
+  public void cloneManifestFiles(
+      String appId, ApplicationManifest applicationManifestOld, ApplicationManifest applicationManifestNew) {
+    List<ManifestFile> manifestFiles = getManifestFilesByAppManifestId(appId, applicationManifestOld.getUuid());
+
+    if (isEmpty(manifestFiles)) {
+      return;
+    }
+
+    for (ManifestFile manifestFile : manifestFiles) {
+      ManifestFile manifestFileNew = manifestFile.cloneInternal();
+      upsertApplicationManifestFile(manifestFileNew, applicationManifestNew, true);
+    }
+  }
+
+  @Override
   public AppManifestSource getAppManifestType(ApplicationManifest applicationManifest) {
     String serviceId = applicationManifest.getServiceId();
     String envId = applicationManifest.getEnvId();

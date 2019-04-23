@@ -2001,26 +2001,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(appId, originalServiceId);
-    if (applicationManifest == null) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.listAppManifests(appId, originalServiceId);
+    if (isEmpty(applicationManifests)) {
       return;
     }
+    for (ApplicationManifest applicationManifest : applicationManifests) {
+      ApplicationManifest applicationManifestNew = applicationManifest.cloneInternal();
+      applicationManifestNew.setServiceId(clonedServiceId);
+      applicationManifestService.create(applicationManifestNew);
 
-    ApplicationManifest applicationManifestNew = applicationManifest.cloneInternal();
-    applicationManifestNew.setServiceId(clonedServiceId);
-    applicationManifestService.create(applicationManifestNew);
-
-    List<ManifestFile> manifestFiles =
-        applicationManifestService.getManifestFilesByAppManifestId(appId, applicationManifest.getUuid());
-
-    if (isEmpty(manifestFiles)) {
-      return;
-    }
-
-    for (ManifestFile manifestFile : manifestFiles) {
-      ManifestFile manifestFileNew = manifestFile.cloneInternal();
-      applicationManifestService.createManifestFileByServiceId(manifestFileNew, clonedServiceId);
+      applicationManifestService.cloneManifestFiles(appId, applicationManifest, applicationManifestNew);
     }
   }
 
