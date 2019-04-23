@@ -55,6 +55,8 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   public static final String NAME_KEY = "name";
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String IS_DEFAULT_KEY = "isDefault";
+  public static final String NOTIFICATION_SETTINGS_KEY = "notificationSettings";
+
   /**
    * The constant DEFAULT_READ_ONLY_USER_GROUP_NAME.
    */

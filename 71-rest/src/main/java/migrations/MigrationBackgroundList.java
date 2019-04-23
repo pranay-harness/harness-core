@@ -54,6 +54,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(22, AddInfraMappingNameToInstanceData.class))
         .add(Pair.of(23, MigrateLogDataRecordsToGoogle.class))
         .add(Pair.of(24, SetEmailToIndividualMemberFlag.class))
+        .add(Pair.of(25, SetEmailToIndividualMemberFlag.class))
         .build();
   }
 }

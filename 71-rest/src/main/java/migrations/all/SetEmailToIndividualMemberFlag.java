@@ -28,6 +28,8 @@ public class SetEmailToIndividualMemberFlag implements Migration {
   @Override
   public void migrate() {
     try {
+      log.info("Running Migration: {}", SetEmailToIndividualMemberFlag.class.getSimpleName());
+
       List<Account> accounts = accountService.listAllAccounts();
 
       for (Account account : accounts) {
@@ -38,21 +40,25 @@ public class SetEmailToIndividualMemberFlag implements Migration {
 
         UserGroup userGroup = userGroupService.getDefaultUserGroup(accountId);
         if (null == userGroup) {
+          log.info("No default user group present. accountId={}", accountId);
           continue;
         }
 
         log.info(
             "Setting useIndividualEmails flag to true. accountId={} userGroupId={}", accountId, userGroup.getUuid());
         NotificationSettings existing = userGroup.getNotificationSettings();
+        NotificationSettings updatedSetting;
+
         if (null == existing) {
-          userGroup.setNotificationSettings(new NotificationSettings(true, Collections.emptyList(), null));
+          updatedSetting = new NotificationSettings(true, Collections.emptyList(), null);
         } else {
-          userGroup.setNotificationSettings(
-              new NotificationSettings(true, existing.getEmailAddresses(), existing.getSlackConfig()));
+          updatedSetting = new NotificationSettings(true, existing.getEmailAddresses(), existing.getSlackConfig());
         }
 
-        wingsPersistence.save(userGroup);
+        wingsPersistence.updateField(
+            UserGroup.class, userGroup.getUuid(), UserGroup.NOTIFICATION_SETTINGS_KEY, updatedSetting);
       }
+
     } catch (Exception e) {
       log.error("Error running SetEmailToIndividualMemberFlag migration", e);
     }
