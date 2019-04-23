@@ -811,6 +811,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     cvConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     cvConfiguration.setQuery("query2");
+    cvConfiguration.setBaselineStartMinute(25931716);
+    cvConfiguration.setBaselineEndMinute(25931835);
 
     getRequestBuilderWithAuthHeader(target).put(
         entity(cvConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -821,6 +823,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
+    assertEquals(25931835, fetchedObject.getBaselineEndMinute());
+    assertEquals(25931716, fetchedObject.getBaselineStartMinute());
 
     String delete_url =
         API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;

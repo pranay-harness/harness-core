@@ -435,6 +435,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case BUG_SNAG:
         BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
         updateOperations.set("query", bugsnagCVConfiguration.getQuery())
+            .set("baselineStartMinute", bugsnagCVConfiguration.getBaselineStartMinute())
+            .set("baselineEndMinute", bugsnagCVConfiguration.getBaselineEndMinute())
             .set("orgId", bugsnagCVConfiguration.getOrgId())
             .set("projectId", bugsnagCVConfiguration.getProjectId())
             .set("browserApplication", bugsnagCVConfiguration.isBrowserApplication());
@@ -443,6 +445,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         } else if (isNotEmpty(((BugsnagCVConfiguration) savedConfiguration).getReleaseStage())) {
           updateOperations.unset("releaseStage");
         }
+
+        resetBaselineIfNecessary(bugsnagCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
