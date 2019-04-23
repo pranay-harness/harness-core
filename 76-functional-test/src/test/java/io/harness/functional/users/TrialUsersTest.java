@@ -47,10 +47,6 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   final String EXPECTED_SUBJECT = "Verify Your Email for Harness Trial";
   final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
-  UserRestUtils urUtil = new UserRestUtils();
-  MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
-  HTMLUtils htmlUtils = new HTMLUtils();
-  TestUtils testUtils = new TestUtils();
 
   @Before
   public void trialUserTestSetup() {
@@ -66,23 +62,23 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignup() throws IOException, MessagingException {
     String domainName = "@harness.mailinator.com";
-    String emailId = testUtils.generateUniqueInboxId();
+    String emailId = TestUtils.generateUniqueInboxId();
     String fullEmailId = emailId + domainName;
     logger.info("Generating the email id for trial user : " + fullEmailId);
-    Boolean isTrialInviteDone = urUtil.createTrialInvite(fullEmailId);
+    Boolean isTrialInviteDone = UserRestUtils.createTrialInvite(fullEmailId);
     assertTrue(isTrialInviteDone);
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
     logger.info("Attempting to retrieve signup mail from inbox : " + emailId);
-    MailinatorMetaMessage message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_SUBJECT);
+    MailinatorMetaMessage message = MailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_SUBJECT);
     logger.info("Signup mail retrieved");
     logger.info("Reading the retrieved email");
     String emailFetchId = message.getId();
-    MailinatorMessageDetails messageDetails = mailinatorRestUtils.readEmail(emailId, emailFetchId);
+    MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
     assertNotNull(messageDetails);
 
     String inviteUrl =
-        htmlUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "VERIFY EMAIL");
+        HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "VERIFY EMAIL");
     assertNotNull(inviteUrl);
     assertTrue(StringUtils.isNotBlank(inviteUrl));
     String actualUrl = TestUtils.getInviteIdFromUrl(inviteUrl);
@@ -90,7 +86,7 @@ public class TrialUsersTest extends AbstractFunctionalTest {
     assertTrue(actualUrl.contains("inviteId="));
     String inviteId = actualUrl.split("inviteId=")[1];
     logger.info("Verified the presence of trial user signup URL");
-    messageDetails = mailinatorRestUtils.deleteEmail(emailId, emailFetchId);
+    messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
     assertNotNull(messageDetails.getAdditionalProperties());
     assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
@@ -105,11 +101,10 @@ public class TrialUsersTest extends AbstractFunctionalTest {
     String accountName = TestUtils.generateRandomUUID();
     String companyName = TestUtils.generateRandomUUID();
 
-    UserInvite completed = urUtil.completeTrialUserSignup(accountName, companyName, invite);
+    UserInvite completed = UserRestUtils.completeTrialUserSignup(bearerToken, accountName, companyName, invite);
     logger.info(accountName + ":" + companyName + ":" + invite.getEmail());
     assertNotNull(completed);
     assertTrue("Error: Completion is false after signup", completed.isCompleted());
-    //     urUtil.deleteUser(completed.getAccountId(), completed.getUuid());
 
     String bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.DEFAULT_PASSWORD);
     assertNotNull("Bearer Token not successfully provided", bearerToken);
@@ -119,19 +114,19 @@ public class TrialUsersTest extends AbstractFunctionalTest {
     logger.info("Looking for the delegate not available Alert");
 
     // Verify the reset password.
-    urUtil.sendResetPasswordMail(fullEmailId);
+    UserRestUtils.sendResetPasswordMail(fullEmailId);
     logger.info("Attempting to retrieve reset password mail from inbox : " + fullEmailId);
-    message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_RESET_PWD_SUBJECT);
+    message = MailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_RESET_PWD_SUBJECT);
     logger.info("Reset password mail retrieved");
     logger.info("Reading the retrieved email");
     emailFetchId = message.getId();
-    messageDetails = mailinatorRestUtils.readEmail(fullEmailId, emailFetchId);
+    messageDetails = MailinatorRestUtils.readEmail(fullEmailId, emailFetchId);
     assertNotNull(messageDetails);
     String resetUrl =
-        htmlUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
+        HTMLUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
     assertTrue(StringUtils.isNotBlank(resetUrl));
     logger.info("Email read and Reset password URL is available for user password reset");
-    urUtil.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
+    UserRestUtils.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
     // Verify if the user can login through the reset password
     bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.RESET_PASSWORD);
     assertNotNull("Bearer Token not successfully provided", bearerToken);

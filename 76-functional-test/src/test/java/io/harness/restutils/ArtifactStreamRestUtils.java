@@ -1,13 +1,11 @@
 package io.harness.restutils;
 
-import com.google.inject.Singleton;
-
 import io.harness.framework.Setup;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
+import software.wings.beans.Account;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 
@@ -15,8 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import javax.ws.rs.core.GenericType;
 
-@Singleton
-public class ArtifactStreamRestUtils extends AbstractFunctionalTest {
+public class ArtifactStreamRestUtils {
   /**
    *
    * @param appId
@@ -24,7 +21,7 @@ public class ArtifactStreamRestUtils extends AbstractFunctionalTest {
    * @param serviceId
    * @return artifact Stream Id
    */
-  public String getArtifactStreamId(String appId, String environmentId, String serviceId) {
+  public static String getArtifactStreamId(String bearerToken, String appId, String environmentId, String serviceId) {
     // TODO : Change this to Matcher pattern which is written by swamy
     int i = 0;
     while (i < 5) {
@@ -63,14 +60,15 @@ public class ArtifactStreamRestUtils extends AbstractFunctionalTest {
    * @param artifactSource
    * @return Docker Artifact steam response
    */
-  public DockerArtifactStream configureDockerArtifactStream(String appId, DockerArtifactStream artifactSource) {
+  public static DockerArtifactStream configureDockerArtifactStream(
+      String bearerToken, Account account, String appId, DockerArtifactStream artifactSource) {
     GenericType<RestResponse<DockerArtifactStream>> artifactStreamType =
         new GenericType<RestResponse<DockerArtifactStream>>() {};
 
     RestResponse<DockerArtifactStream> savedServiceResponse = Setup.portal()
                                                                   .auth()
                                                                   .oauth2(bearerToken)
-                                                                  .queryParam("accountId", getAccount().getUuid())
+                                                                  .queryParam("accountId", account.getUuid())
                                                                   .queryParam("appId", appId)
                                                                   .body(artifactSource, ObjectMapperType.GSON)
                                                                   .contentType(ContentType.JSON)
@@ -83,10 +81,10 @@ public class ArtifactStreamRestUtils extends AbstractFunctionalTest {
   /**
    *
    * @param appId
-   * @param artifactSource
+   * @param artifactStream
    * @return Docker Artifact steam response
    */
-  public JsonPath configureArtifactory(String appId, ArtifactStream artifactStream) {
+  public static JsonPath configureArtifactory(String bearerToken, String appId, ArtifactStream artifactStream) {
     JsonPath savedServiceResponse = Setup.portal()
                                         .auth()
                                         .oauth2(bearerToken)

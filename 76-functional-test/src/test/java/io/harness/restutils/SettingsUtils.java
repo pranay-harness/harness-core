@@ -2,8 +2,6 @@ package io.harness.restutils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Singleton;
-
 import io.harness.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -14,7 +12,6 @@ import software.wings.beans.SettingAttribute;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-@Singleton
 public class SettingsUtils {
   private static String ACCOUNT_ID = "accountId";
   private static String SETTINGS_ENDPOINT = "/settings";

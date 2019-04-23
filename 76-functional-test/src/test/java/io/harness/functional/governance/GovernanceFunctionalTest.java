@@ -57,7 +57,6 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowRestUtils workflowRestUtil;
 
   Application application;
   final Seed seed = new Seed(0);
@@ -89,7 +88,7 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
 
     // Test creating a workflow
     Workflow savedWorkflow =
-        workflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), workflow);
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
@@ -103,7 +102,7 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
 
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     String executionUuid = workflowExecution.getUuid();
@@ -117,12 +116,14 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
 
     setDeploymentFreeze(application.getAccountId(), true);
 
-    workflowExecution = workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+    workflowExecution =
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNull();
 
     setDeploymentFreeze(application.getAccountId(), false);
 
-    workflowExecution = workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+    workflowExecution =
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     String newExecutionUuid = workflowExecution.getUuid();

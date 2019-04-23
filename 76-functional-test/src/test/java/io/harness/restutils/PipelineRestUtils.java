@@ -9,7 +9,7 @@ import software.wings.beans.Pipeline;
 import javax.ws.rs.core.GenericType;
 
 public class PipelineRestUtils {
-  public Pipeline createPipeline(String appId, Pipeline pipeline, String accountId, String bearerToken) {
+  public static Pipeline createPipeline(String appId, Pipeline pipeline, String accountId, String bearerToken) {
     GenericType<RestResponse<Pipeline>> pipelineType = new GenericType<RestResponse<Pipeline>>() {};
 
     RestResponse<Pipeline> savedServiceResponse = Setup.portal()
@@ -25,7 +25,7 @@ public class PipelineRestUtils {
     return savedServiceResponse.getResource();
   }
 
-  public Pipeline getPipeline(String appId, String pipelineId, String bearerToken) {
+  public static Pipeline getPipeline(String appId, String pipelineId, String bearerToken) {
     GenericType<RestResponse<Pipeline>> pipelineType = new GenericType<RestResponse<Pipeline>>() {};
 
     RestResponse<Pipeline> savedServiceResponse = Setup.portal()
@@ -40,7 +40,7 @@ public class PipelineRestUtils {
     return savedServiceResponse.getResource();
   }
 
-  public Pipeline updatePipeline(String appId, Pipeline pipeline, String bearerToken) {
+  public static Pipeline updatePipeline(String appId, Pipeline pipeline, String bearerToken) {
     GenericType<RestResponse<Pipeline>> pipelineType = new GenericType<RestResponse<Pipeline>>() {};
 
     RestResponse<Pipeline> savedPipelineResponse = Setup.portal()

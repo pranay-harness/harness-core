@@ -9,7 +9,7 @@ import io.harness.framework.email.GuerillaEmailInfo;
 import io.harness.framework.email.GuerillaIndividualEmail;
 
 public class GuerillaMailUtils {
-  public GuerillaEmailInfo refreshAndGetNewEmail() {
+  public static GuerillaEmailInfo refreshAndGetNewEmail() {
     GuerillaEmailInfo emailInfo = Setup.email()
                                       .queryParam("f", "get_email_address")
                                       .queryParam("ip", "127.0.0.1")
@@ -31,11 +31,11 @@ public class GuerillaMailUtils {
     return emailInfo;
   }
 
-  public boolean forgetEmailId(String sidToken) {
+  public static boolean forgetEmailId(String sidToken) {
     return Setup.email().queryParam("f", "forget_me").queryParam("sid_token", sidToken).get().as(Boolean.class);
   }
 
-  public GuerillaEmailDetails getAllEmailList(String sidToken) {
+  public static GuerillaEmailDetails getAllEmailList(String sidToken) {
     GuerillaEmailDetails currentEmailList = Setup.email()
                                                 .queryParam("f", "get_email_list")
                                                 .queryParam("offset", "0")
@@ -47,7 +47,7 @@ public class GuerillaMailUtils {
     return currentEmailList;
   }
 
-  public GuerillaIndividualEmail fetchEmail(String sidToken, String mailId) {
+  public static GuerillaIndividualEmail fetchEmail(String sidToken, String mailId) {
     GuerillaIndividualEmail email = Setup.email()
                                         .queryParam("f", "fetch_email")
                                         .queryParam("email_id", mailId)

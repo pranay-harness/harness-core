@@ -1,7 +1,6 @@
 package io.harness.restutils;
 
 import com.google.gson.JsonObject;
-import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
 import io.harness.framework.Setup;
@@ -13,9 +12,8 @@ import software.wings.beans.security.UserGroup;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
-@Singleton
 public class UserGroupRestUtils {
-  public List<UserGroup> getUserGroups(Account account, String bearerToken) {
+  public static List<UserGroup> getUserGroups(Account account, String bearerToken) {
     GenericType<RestResponse<PageResponse<UserGroup>>> userGroupType =
         new GenericType<RestResponse<PageResponse<UserGroup>>>() {};
     RestResponse<PageResponse<UserGroup>> userGroups =
@@ -28,7 +26,7 @@ public class UserGroupRestUtils {
     return userGroups.getResource();
   }
 
-  public UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
+  public static UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
     RestResponse<UserGroup> userGroups = Setup.portal()
                                              .auth()
                                              .oauth2(bearerToken)
@@ -39,7 +37,7 @@ public class UserGroupRestUtils {
     return userGroups.getResource();
   }
 
-  public UserGroup updateNotificationSettings(Account account, String bearerToken, UserGroup userGroup) {
+  public static UserGroup updateNotificationSettings(Account account, String bearerToken, UserGroup userGroup) {
     RestResponse<UserGroup> userGroups = Setup.portal()
                                              .auth()
                                              .oauth2(bearerToken)

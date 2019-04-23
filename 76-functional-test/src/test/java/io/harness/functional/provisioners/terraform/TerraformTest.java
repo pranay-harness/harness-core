@@ -15,12 +15,10 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.exception.WingsException;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureProvisionerGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -29,7 +27,6 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
-import io.harness.generator.WorkflowGenerator;
 import io.harness.restutils.InfraProvisionerRestUtils;
 import io.harness.restutils.WorkflowRestUtils;
 import io.harness.rule.OwnerRule.Owner;
@@ -67,14 +64,9 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private WorkflowGenerator workflowGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private AccountGenerator accountGenerator;
-  @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private SecretGenerator secretGenerator;
-  @Inject private InfraProvisionerRestUtils infraProvisionerRestUtil;
-  @Inject private WorkflowRestUtils workflowRestUtil;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ScmSecret scmSecret;
 
@@ -94,11 +86,12 @@ public class TerraformTest extends AbstractFunctionalTest {
     ensurePredefinedStuff();
 
     terraformInfrastructureProvisioner = buildProvisionerObject();
-    terraformInfrastructureProvisioner = (TerraformInfrastructureProvisioner) infraProvisionerRestUtil.saveProvisioner(
-        application.getAppId(), terraformInfrastructureProvisioner);
+    terraformInfrastructureProvisioner = (TerraformInfrastructureProvisioner) InfraProvisionerRestUtils.saveProvisioner(
+        application.getAppId(), bearerToken, terraformInfrastructureProvisioner);
 
     workflow = buildWorkflow(terraformInfrastructureProvisioner);
-    workflow = workflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), workflow);
+    workflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
   }
 
   private void ensurePredefinedStuff() {
@@ -134,7 +127,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   private WorkflowExecution runWorkflow(String appId, String envId, ExecutionArgs executionArgs) {
-    return workflowRestUtil.runWorkflow(appId, envId, executionArgs);
+    return WorkflowRestUtils.runWorkflow(bearerToken, appId, envId, executionArgs);
   }
 
   private ExecutionArgs prepareExecutionArgs(Workflow workflow) {
@@ -175,7 +168,7 @@ public class TerraformTest extends AbstractFunctionalTest {
 
   private GraphNode buildTerraformProvisionStep(String provisionerId) throws Exception {
     InfrastructureProvisioner provisioner =
-        infraProvisionerRestUtil.getProvisioner(application.getUuid(), provisionerId);
+        InfraProvisionerRestUtils.getProvisioner(application.getUuid(), bearerToken, provisionerId);
     provisioner = setValuesToProvisioner(provisioner);
     return GraphNode.builder()
         .id(generateUuid())

@@ -11,7 +11,7 @@ import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 public class AlertsRestUtils {
-  public AlertNotificationRule createAlert(
+  public static AlertNotificationRule createAlert(
       String accountId, String bearerToken, AlertNotificationRule alertNotificationRule) {
     RestResponse<AlertNotificationRule> alertRule =
         Setup.portal()
@@ -24,7 +24,7 @@ public class AlertsRestUtils {
     return alertRule.getResource();
   }
 
-  public List<AlertNotificationRule> listAlerts(String accountId, String bearerToken) {
+  public static List<AlertNotificationRule> listAlerts(String accountId, String bearerToken) {
     RestResponse<List<AlertNotificationRule>> userRestResponse =
         Setup.portal()
             .auth()
@@ -35,7 +35,7 @@ public class AlertsRestUtils {
     return userRestResponse.getResource();
   }
 
-  public void deleteAlerts(String accountId, String bearerToken, String ruleId) {
+  public static void deleteAlerts(String accountId, String bearerToken, String ruleId) {
     Integer returnCode = Setup.portal()
                              .auth()
                              .oauth2(bearerToken)
@@ -45,7 +45,7 @@ public class AlertsRestUtils {
     assertTrue(returnCode == 200);
   }
 
-  public AlertNotificationRule updateAlert(
+  public static AlertNotificationRule updateAlert(
       String accountId, String bearerToken, String alertRuleId, AlertNotificationRule alertNotificationRule) {
     RestResponse<AlertNotificationRule> alertRule =
         Setup.portal()

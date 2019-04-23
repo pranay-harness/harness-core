@@ -20,19 +20,18 @@ import java.net.URLConnection;
 import java.util.UUID;
 @Slf4j
 public class TestUtils {
-  final int MAX_RETRIES = 5;
-  final int DELAY_IN_MS = 6000;
-  final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
-  MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
+  static final int MAX_RETRIES = 5;
+  static final int DELAY_IN_MS = 6000;
+  static final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   final String EXPECTED_SUBJECT = "You are invited to join Harness at Harness platform";
 
-  public String generateUniqueInboxId() {
+  public static String generateUniqueInboxId() {
     String emailId = UUID.randomUUID().toString() + System.currentTimeMillis();
     int count = 0;
     while (count < 10) {
       String finalEmailId = emailId;
       MailinatorInbox inbox = (MailinatorInbox) retry.executeWithRetry(
-          () -> mailinatorRestUtils.retrieveInbox(finalEmailId), new MailinatorEmailMatcher<>(), null);
+          () -> MailinatorRestUtils.retrieveInbox(finalEmailId), new MailinatorEmailMatcher<>(), null);
       if (inbox.getMessages().size() == 0) {
         return finalEmailId;
       } else {

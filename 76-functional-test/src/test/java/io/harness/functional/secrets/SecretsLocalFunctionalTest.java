@@ -4,8 +4,6 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.restutils.SecretsRestUtils;
@@ -18,15 +16,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
-import software.wings.service.intfc.security.ManagerDecryptionService;
 
 import java.util.List;
 
 @Slf4j
 public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
-  @Inject private ManagerDecryptionService managerDecryptionService;
-  SecretsRestUtils srUtils = new SecretsRestUtils();
-
   @Test
   @Owner(emails = "swamy@harness.io", resent = false)
   @Category(FunctionalTests.class)
@@ -37,21 +31,21 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     String secretValue = "value";
 
     SecretText secretText = SecretsUtils.createSecretTextObject(secretsName, secretValue);
-    List<EncryptedData> encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     boolean isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
     assertFalse(isSecretPresent);
 
-    String secretsId = srUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
+    String secretsId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
     assertTrue(StringUtils.isNotBlank(secretsId));
 
-    encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
     assertTrue(isSecretPresent);
     secretText.setName(secretsNewName);
 
-    boolean isUpdationDone = srUtils.updateSecret(getAccount().getUuid(), bearerToken, secretsId, secretText);
+    boolean isUpdationDone = SecretsRestUtils.updateSecret(getAccount().getUuid(), bearerToken, secretsId, secretText);
     assertTrue(isUpdationDone);
-    encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
     assertTrue(isSecretPresent);
 
@@ -60,9 +54,9 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     EncryptedData data = encryptedDataList.get(0);
     assertNotNull(data);
 
-    boolean isDeletionDone = srUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
+    boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
     assertTrue(isDeletionDone);
-    encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
     assertFalse(isSecretPresent);
   }
@@ -83,21 +77,21 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
 
     SecretText secretText =
         SecretsUtils.createSecretTextObjectWithUsageRestriction(secretsName, secretValue, "NON_PROD");
-    List<EncryptedData> encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     boolean isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
     assertFalse(isSecretPresent);
-    String secretsId = srUtils.addSecretWithUsageRestrictions(getAccount().getUuid(), bearerToken, secretText);
+    String secretsId = SecretsRestUtils.addSecretWithUsageRestrictions(getAccount().getUuid(), bearerToken, secretText);
     assertTrue(StringUtils.isNotBlank(secretsId));
 
-    encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
     assertTrue(isSecretPresent);
     secretText.setName(secretsNewName);
 
     boolean isUpdationDone =
-        srUtils.updateSecretWithUsageRestriction(getAccount().getUuid(), bearerToken, secretsId, secretText);
+        SecretsRestUtils.updateSecretWithUsageRestriction(getAccount().getUuid(), bearerToken, secretsId, secretText);
     assertTrue(isUpdationDone);
-    encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
     assertTrue(isSecretPresent);
 
@@ -106,9 +100,9 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     EncryptedData data = encryptedDataList.get(0);
     assertNotNull(data);
 
-    boolean isDeletionDone = srUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
+    boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
     assertTrue(isDeletionDone);
-    encryptedDataList = srUtils.listSecrets(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
     assertFalse(isSecretPresent);
   }
@@ -125,26 +119,26 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
         + "src/test/resources/secrets/"
         + "testFile.txt";
 
-    List<EncryptedData> encryptedDataList = srUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
+    List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
     boolean isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
     assertFalse(isSecretPresent);
 
-    String secretId = srUtils.addSecretFile(getAccount().getUuid(), bearerToken, secretsName, filePath);
+    String secretId = SecretsRestUtils.addSecretFile(getAccount().getUuid(), bearerToken, secretsName, filePath);
     assertTrue(StringUtils.isNotBlank(secretId));
-    encryptedDataList = srUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
     assertTrue(isSecretPresent);
 
     boolean isUpdated =
-        srUtils.updateSecretFile(getAccount().getUuid(), bearerToken, secretsNewName, filePath, secretId);
+        SecretsRestUtils.updateSecretFile(getAccount().getUuid(), bearerToken, secretsNewName, filePath, secretId);
     assertTrue(isUpdated);
-    encryptedDataList = srUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
     assertTrue(isSecretPresent);
 
-    boolean isDeleted = srUtils.deleteSecretFile(getAccount().getUuid(), bearerToken, secretId);
+    boolean isDeleted = SecretsRestUtils.deleteSecretFile(getAccount().getUuid(), bearerToken, secretId);
     assertTrue(isDeleted);
-    encryptedDataList = srUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
+    encryptedDataList = SecretsRestUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
     assertFalse(isSecretPresent);
   }

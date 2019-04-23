@@ -3,11 +3,11 @@ package io.harness.restutils;
 import com.google.inject.Singleton;
 
 import io.harness.framework.Setup;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
+import software.wings.beans.Account;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -17,20 +17,21 @@ import java.util.HashMap;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
-public class EnvironmentRestUtils extends AbstractFunctionalTest {
+public class EnvironmentRestUtils {
   /**
    *
    * @param applicationId
    * @param environment
    * @return Environment details
    */
-  public Environment createEnvironment(String applicationId, Environment environment) {
+  public static Environment createEnvironment(
+      String bearerToken, Account account, String applicationId, Environment environment) {
     GenericType<RestResponse<Environment>> environmentType = new GenericType<RestResponse<Environment>>() {};
 
     RestResponse<Environment> savedApplicationResponse = Setup.portal()
                                                              .auth()
                                                              .oauth2(bearerToken)
-                                                             .queryParam("accountId", getAccount().getUuid())
+                                                             .queryParam("accountId", account.getUuid())
                                                              .queryParam("appId", applicationId)
                                                              .body(environment, ObjectMapperType.GSON)
                                                              .contentType(ContentType.JSON)
@@ -40,7 +41,7 @@ public class EnvironmentRestUtils extends AbstractFunctionalTest {
     return savedApplicationResponse.getResource();
   }
 
-  public GcpKubernetesInfrastructureMapping configureInfraMapping(
+  public static GcpKubernetesInfrastructureMapping configureInfraMapping(String bearerToken, Account account,
       String applicationId, String environmentId, GcpKubernetesInfrastructureMapping infrastructureMapping) {
     GenericType<RestResponse<GcpKubernetesInfrastructureMapping>> infraMappingType =
         new GenericType<RestResponse<GcpKubernetesInfrastructureMapping>>() {};
@@ -49,7 +50,7 @@ public class EnvironmentRestUtils extends AbstractFunctionalTest {
         Setup.portal()
             .auth()
             .oauth2(bearerToken)
-            .queryParam("accountId", getAccount().getUuid())
+            .queryParam("accountId", account.getUuid())
             .queryParam("appId", applicationId)
             .queryParam("envId", environmentId)
             .body(infrastructureMapping, ObjectMapperType.GSON)
@@ -59,12 +60,12 @@ public class EnvironmentRestUtils extends AbstractFunctionalTest {
     return savedApplicationResponse.getResource();
   }
 
-  public JsonPath configureInfraMapping(
-      String applicationId, String environmentId, AwsInfrastructureMapping infrastructureMapping) {
+  public static JsonPath configureInfraMapping(String bearerToken, Account account, String applicationId,
+      String environmentId, AwsInfrastructureMapping infrastructureMapping) {
     JsonPath response = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", getAccount().getUuid())
+                            .queryParam("accountId", account.getUuid())
                             .queryParam("appId", applicationId)
                             .queryParam("envId", environmentId)
                             .body(infrastructureMapping, ObjectMapperType.GSON)
@@ -75,11 +76,12 @@ public class EnvironmentRestUtils extends AbstractFunctionalTest {
     return response;
   }
 
-  public String getServiceTemplateId(String applicationId, String environmentId) {
+  public static String getServiceTemplateId(
+      String bearerToken, Account account, String applicationId, String environmentId) {
     JsonPath jsonPath = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
-                            .queryParam("accountId", getAccount().getUuid())
+                            .queryParam("accountId", account.getUuid())
                             .queryParam("appId", applicationId)
                             .queryParam("envId", environmentId)
                             .contentType(ContentType.JSON)

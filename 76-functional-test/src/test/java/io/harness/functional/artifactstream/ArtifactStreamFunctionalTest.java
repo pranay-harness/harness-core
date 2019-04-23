@@ -16,7 +16,6 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
-import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -38,7 +37,6 @@ import javax.ws.rs.core.GenericType;
 public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
-  @Inject private WorkflowGenerator workflowGenerator;
   @Inject private ServiceGenerator serviceGenerator;
 
   Application application;

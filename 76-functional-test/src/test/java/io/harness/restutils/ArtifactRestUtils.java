@@ -2,13 +2,10 @@ package io.harness.restutils;
 
 import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
 
-import com.google.inject.Singleton;
-
 import io.harness.beans.PageResponse;
 import io.harness.framework.Retry;
 import io.harness.framework.Setup;
 import io.harness.framework.matchers.ArtifactMatcher;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import software.wings.beans.artifact.Artifact;
@@ -16,9 +13,9 @@ import software.wings.beans.artifact.Artifact;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
-@Singleton
-public class ArtifactRestUtils extends AbstractFunctionalTest {
-  public List<Artifact> fetchArtifactByArtifactStream(String appId, String artifactStreamId) {
+public class ArtifactRestUtils {
+  public static List<Artifact> fetchArtifactByArtifactStream(
+      String bearerToken, String appId, String artifactStreamId) {
     GenericType<RestResponse<PageResponse<Artifact>>> artifactType =
         new GenericType<RestResponse<PageResponse<Artifact>>>() {};
 
@@ -41,10 +38,11 @@ public class ArtifactRestUtils extends AbstractFunctionalTest {
     return savedArtifactResponse.getResource();
   }
 
-  public Artifact waitAndFetchArtifactByArtfactStream(String appId, String artifactStreamId) {
+  public static Artifact waitAndFetchArtifactByArtfactStream(
+      String bearerToken, String appId, String artifactStreamId) {
     Retry retry = new Retry(80, 10000);
     List<Artifact> artifacts = (List<Artifact>) retry.executeWithRetry(
-        () -> fetchArtifactByArtifactStream(appId, artifactStreamId), new ArtifactMatcher(), null);
+        () -> fetchArtifactByArtifactStream(bearerToken, appId, artifactStreamId), new ArtifactMatcher(), null);
     return artifacts.get(0);
   }
 }

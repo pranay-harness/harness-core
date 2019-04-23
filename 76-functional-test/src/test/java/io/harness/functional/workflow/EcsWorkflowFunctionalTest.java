@@ -26,7 +26,6 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
@@ -65,11 +64,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -83,18 +77,10 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowRestUtils workflowRestUtil;
   @Inject private ServiceGenerator serviceGenerator;
-  @Inject private AccountGenerator accountGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private ArtifactService artifactService;
-  @Inject private ServiceResourceService serviceResourceService;
-  @Inject private EnvironmentService environmentService;
   @Inject private WorkflowService workflowService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private ArtifactRestUtils artifactRestUtil;
   @Inject private ArtifactStreamManager artifactStreamManager;
 
   final Seed seed = new Seed(0);
@@ -141,7 +127,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR);
     assertThat(artifactStream).isNotNull();
 
-    artifact = artifactRestUtil.waitAndFetchArtifactByArtfactStream(application.getUuid(), artifactStream.getUuid());
+    artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
+        bearerToken, application.getUuid(), artifactStream.getUuid());
 
     resetCache();
   }
@@ -153,7 +140,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   public void shouldCreateBasicEcsWorkflow() throws Exception {
     Workflow workflow = getBasicEcsEc2TypeWorkflow();
     Workflow savedWorkflow =
-        workflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), workflow);
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
     assertNotNull(savedWorkflow);
     // Test running the workflow
     assertExecution(savedWorkflow);
@@ -389,7 +376,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     //        infrastructureMapping.getEnvId(), executionArgs, Trigger.builder().name("adwait").uuid("uuId").build());
 
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
     logger.info("Waiting for execution to finish");
 

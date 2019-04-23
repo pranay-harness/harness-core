@@ -13,17 +13,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 @Slf4j
 public class MailinatorRestUtils {
-  final int MAX_RETRIES = 60;
-  final int DELAY_IN_MS = 6000;
-  final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
+  static final int MAX_RETRIES = 60;
+  static final int DELAY_IN_MS = 6000;
+  static Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
 
-  public MailinatorInbox retrieveInbox(String inboxName) {
+  public static MailinatorInbox retrieveInbox(String inboxName) {
     MailinatorInbox inbox = Setup.mailinator().queryParam("to", inboxName).get("/inbox").as(MailinatorInbox.class);
 
     return inbox;
   }
 
-  public MailinatorMessageDetails readEmail(String inboxName, String emailFetchId) {
+  public static MailinatorMessageDetails readEmail(String inboxName, String emailFetchId) {
     MailinatorMessageDetails detailedMessage = Setup.mailinator()
                                                    .queryParam("to", inboxName)
                                                    .queryParam("id", emailFetchId)
@@ -33,7 +33,7 @@ public class MailinatorRestUtils {
     return detailedMessage;
   }
 
-  public MailinatorMessageDetails deleteEmail(String inboxName, String emailFetchId) {
+  public static MailinatorMessageDetails deleteEmail(String inboxName, String emailFetchId) {
     MailinatorMessageDetails detailedMessage = Setup.mailinator()
                                                    .queryParam("to", inboxName)
                                                    .queryParam("id", emailFetchId)
@@ -44,7 +44,7 @@ public class MailinatorRestUtils {
     return detailedMessage;
   }
 
-  public MailinatorMetaMessage retrieveMessageFromInbox(String inboxName, final String EXPECTED_SUBJECT) {
+  public static MailinatorMetaMessage retrieveMessageFromInbox(String inboxName, final String EXPECTED_SUBJECT) {
     MailinatorInbox inbox = (MailinatorInbox) retry.executeWithRetry(
         () -> retrieveInbox(inboxName), new MailinatorEmailMatcher<>(), EXPECTED_SUBJECT);
     assertNotNull("All retries failed: Unable to retrieve message for : " + inboxName, inbox.getMessages());

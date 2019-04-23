@@ -37,7 +37,6 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
-import io.harness.generator.SettingGenerator;
 import io.harness.rest.RestResponse;
 import io.harness.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
@@ -77,9 +76,6 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
-  @Inject private SettingGenerator settingGenerator;
-  @Inject private WorkflowRestUtils workflowRestUtil;
-  @Inject private TestConstants testConstants;
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
@@ -102,7 +98,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
         infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.PHYSICAL_WINRM_TEST);
 
     Workflow savedWorkflow = saveAndGetWorkflow(application.getUuid(), savedEnvironment.getUuid(),
-        savedService.getUuid(), infrastructureMapping.getUuid(), testConstants.INSTALL_IIS_APPLICATION, false);
+        savedService.getUuid(), infrastructureMapping.getUuid(), TestConstants.INSTALL_IIS_APPLICATION, false);
 
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
@@ -121,7 +117,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), savedEnvironment.getUuid(), executionArgs);
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()
@@ -146,7 +142,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
         infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.AZURE_WINRM_TEST);
 
     Workflow savedWorkflow = saveAndGetWorkflow(application.getUuid(), savedEnvironment.getUuid(),
-        savedService.getUuid(), infrastructureMapping.getUuid(), testConstants.INSTALL_IIS_APPLICATION, false);
+        savedService.getUuid(), infrastructureMapping.getUuid(), TestConstants.INSTALL_IIS_APPLICATION, false);
 
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
@@ -165,7 +161,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), savedEnvironment.getUuid(), executionArgs);
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()
@@ -226,7 +222,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
     selectNodeProperties.put("instanceCount", 1);
     selectNodeProperties.put("excludeSelectedHostsFromFuturePhases", true);
     if (specificHosts) {
-      selectNodeProperties.put("hostNames", Lists.newArrayList(testConstants.WINDOWS_DEPLOY_HOST));
+      selectNodeProperties.put("hostNames", Lists.newArrayList(TestConstants.WINDOWS_DEPLOY_HOST));
       selectNodeProperties.put("excludeSelectedHostsFromFuturePhases", false);
     }
 
@@ -281,6 +277,6 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
                                        .build())
             .build();
 
-    return workflowRestUtil.createWorkflow(application.getAccountId(), appId, iisAppWorkflow);
+    return WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), appId, iisAppWorkflow);
   }
 }

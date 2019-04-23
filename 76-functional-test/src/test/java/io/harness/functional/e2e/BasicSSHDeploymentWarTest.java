@@ -12,7 +12,6 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
-import io.harness.framework.GlobalSettingsDataStorage;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.restutils.ApplicationRestUtils;
 import io.harness.restutils.ArtifactStreamRestUtils;
@@ -52,14 +51,6 @@ import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
-  ApplicationRestUtils applicationRestUtil = new ApplicationRestUtils();
-  ServiceRestUtils serviceRestUtil = new ServiceRestUtils();
-  EnvironmentRestUtils environmentRestUtil = new EnvironmentRestUtils();
-  WorkflowRestUtils workflowRestUtil = new WorkflowRestUtils();
-  ArtifactStreamRestUtils artifactStreamRestUtil = new ArtifactStreamRestUtils();
-  ExecutionRestUtils executionRestUtil = new ExecutionRestUtils();
-  GlobalSettingsDataStorage globalSettingsDataStorage = new GlobalSettingsDataStorage();
-
   // TEST constants
   private static long appendString = System.currentTimeMillis();
   private static String APP_NAME = "WarServiceBasicDeploy-" + appendString;
@@ -83,7 +74,6 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
 
   // Entities
   private static Application application;
-  private static Service service;
   private static String serviceId;
   private static Environment environment;
   private static Workflow workflow;
@@ -103,7 +93,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
     sshKeyId = SSHKeysUtils.createSSHKey(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
 
     Application warApp = anApplication().withName(APP_NAME).build();
-    application = applicationRestUtil.createApplication(warApp);
+    application = ApplicationRestUtils.createApplication(bearerToken, getAccount(), warApp);
     assertThat(application).isNotNull();
   }
 
@@ -113,7 +103,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   public void TC2_createServiceAndCollectArtifact() {
     Service warService =
         Service.builder().name(SERVICE_NAME).deploymentType(DeploymentType.SSH).artifactType(ArtifactType.WAR).build();
-    serviceId = serviceRestUtil.createSSHService(application.getAppId(), warService);
+    serviceId = ServiceRestUtils.createSSHService(bearerToken, application.getAppId(), warService);
     assertThat(serviceId).isNotNull();
 
     ArtifactStream artifactStreamReg = ArtifactoryArtifactStream.builder()
@@ -125,7 +115,8 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
                                            .settingId(artifactoryId)
                                            .build();
     artifactStreamReg.setArtifactStreamType(ARTIFACT_TYPE);
-    JsonPath response = artifactStreamRestUtil.configureArtifactory(application.getAppId(), artifactStreamReg);
+    JsonPath response =
+        ArtifactStreamRestUtils.configureArtifactory(bearerToken, application.getAppId(), artifactStreamReg);
     assertThat(response).isNotNull();
   }
 
@@ -134,10 +125,11 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void TC3_createEnvironment() {
     Environment myEnv = anEnvironment().withName(ENV_MAME).withEnvironmentType(EnvironmentType.NON_PROD).build();
-    environment = environmentRestUtil.createEnvironment(application.getAppId(), myEnv);
+    environment = EnvironmentRestUtils.createEnvironment(bearerToken, getAccount(), application.getAppId(), myEnv);
     assertThat(environment).isNotNull();
 
-    String serviceTemplateId = environmentRestUtil.getServiceTemplateId(application.getUuid(), environment.getUuid());
+    String serviceTemplateId = EnvironmentRestUtils.getServiceTemplateId(
+        bearerToken, getAccount(), application.getUuid(), environment.getUuid());
 
     AwsInfrastructureMapping awsInfraMap = anAwsInfrastructureMapping()
                                                .withComputeProviderName(CLOUD_PROVIDER_NAME)
@@ -156,8 +148,8 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
                                                .withAutoPopulate(true)
                                                .build();
 
-    JsonPath response =
-        environmentRestUtil.configureInfraMapping(application.getUuid(), environment.getUuid(), awsInfraMap);
+    JsonPath response = EnvironmentRestUtils.configureInfraMapping(
+        bearerToken, getAccount(), application.getUuid(), environment.getUuid(), awsInfraMap);
     assertThat(response).isNotNull();
     awsInfraId = response.getString("resource.uuid").trim();
   }
@@ -179,7 +171,8 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
                                        .build())
             .build();
 
-    workflow = workflowRestUtil.createWorkflow(getAccount().getUuid(), application.getUuid(), workflowBuilder);
+    workflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, getAccount().getUuid(), application.getUuid(), workflowBuilder);
     assertThat(workflow).isNotNull();
   }
 
@@ -187,8 +180,8 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io", intermittent = false)
   @Category(FunctionalTests.class)
   public void TC5_deployWorkflow() {
-    String artifactStreamId =
-        artifactStreamRestUtil.getArtifactStreamId(application.getAppId(), environment.getUuid(), serviceId);
+    String artifactStreamId = ArtifactStreamRestUtils.getArtifactStreamId(
+        bearerToken, application.getAppId(), environment.getUuid(), serviceId);
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(workflow.getWorkflowType());
     List<Artifact> artifacts = new ArrayList<>();
@@ -200,7 +193,8 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(workflow.getUuid());
 
-    workflowExecution = executionRestUtil.runWorkflow(application.getAppId(), environment.getUuid(), executionArgs);
+    workflowExecution =
+        ExecutionRestUtils.runWorkflow(bearerToken, application.getAppId(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
   }
 
@@ -208,7 +202,8 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io")
   @Category(FunctionalTests.class)
   public void TC6_checkExecutionStarted() {
-    String status = executionRestUtil.getWorkflowExecutionStatus(application.getAppId(), workflowExecution.getUuid());
+    String status = ExecutionRestUtils.getWorkflowExecutionStatus(
+        bearerToken, getAccount(), application.getAppId(), workflowExecution.getUuid());
     if (!(status.equals("RUNNING") || status.equals("QUEUED"))) {
       Assert.fail("ERROR: Execution did not START");
     }

@@ -48,7 +48,6 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowRestUtils workflowRestUtil;
 
   Application application;
 
@@ -82,7 +81,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     // Test  creating a workflow
     Workflow savedWorkflow =
-        workflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), workflow);
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
@@ -96,7 +95,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
 
     WorkflowExecution workflowExecution =
-        workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()
