@@ -1494,8 +1494,6 @@ public class StateMachineExecutor implements StateInspectionListener {
             .in(parentInstanceIds)
             .field(StateExecutionInstanceKeys.status)
             .in(EnumSet.<ExecutionStatus>of(NEW, QUEUED, STARTING, RUNNING, PAUSED, PAUSING, WAITING))
-            .field(StateExecutionInstanceKeys.createdAt)
-            .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
 
     // get distinct parent Ids

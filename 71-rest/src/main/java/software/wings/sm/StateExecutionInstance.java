@@ -21,6 +21,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -41,11 +42,16 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "stateTypes"),
-      fields = { @Field("appId")
-                 , @Field("executionUuid"), @Field("stateType") })
+      fields =
+      {
+        @Field(StateExecutionInstanceKeys.appId)
+        , @Field(StateExecutionInstanceKeys.executionUuid), @Field(StateExecutionInstanceKeys.stateType)
+      })
   ,
-      @Index(options = @IndexOptions(name = "parentInstanceIds"), fields = {
-        @Field("appId"), @Field("executionUuid"), @Field("parentInstanceId")
+      @Index(options = @IndexOptions(name = "parentInstances"), fields = {
+        @Field(StateExecutionInstanceKeys.appId)
+        , @Field(StateExecutionInstanceKeys.executionUuid), @Field(StateExecutionInstanceKeys.parentInstanceId),
+            @Field(StateExecutionInstanceKeys.createdAt)
       })
 })
 public class StateExecutionInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
