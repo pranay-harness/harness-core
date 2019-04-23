@@ -41,7 +41,14 @@ type Query {
   # Get count of instances in your application
   # Taking accountId as input temporarily since there is no auth support as of now.
   instanceCount(accountId:String!, instanceCountType: InstanceCountType=TOTAL) : InstanceCount @dataFetcher(name : "instanceCount")
-  # Get details about a service
+
+  instancesByService(serviceId : String,limit: Int, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByService")
+
+  instancesByEnvironment(envId : String,limit: Int, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByEnvironment")
+
+  instancesByEnvironmentType(envType : EnvType,limit: Int, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByEnvType")
+
+    # Get details about a service
   service(serviceId: String! ): Service  @dataFetcher(name : "service")
 
 }
@@ -195,10 +202,25 @@ type Environment  {
   environmentType: String
 }
 
+enum InstanceType {PHYSICAL_HOST_INSTANCE,EC2_CLOUD_INSTANCE,GCP_CLOUD_INSTANCE,ECS_CONTAINER_INSTANCE,KUBERNETES_CONTAINER_INSTANCE,PCF_INSTANCE}
+
+enum EnvType {PROD,NON_PROD,ALL}
 
 type InstanceCount{
   count: Int
   instanceCountType: InstanceCountType
+}
+
+type Instance {
+  id : String
+  type : InstanceType
+  service : Service @dataFetcher(name : "service", contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  environment : Environment @dataFetcher(name : "environment", contextFieldArgsMap: "{ \"envId\": \"envId\",\"appId\": \"appId\"}")
+}
+
+type InstanceConnection {
+  pageInfo : PageInfo
+  nodes : [Instance]
 }
 
 enum InstanceCountType {TOTAL,NINETY_FIVE_PERCENTILE}
