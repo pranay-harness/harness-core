@@ -29,8 +29,6 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.DataCollectionInfo;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
@@ -41,6 +39,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
@@ -176,8 +176,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
       }
 
-      final LogAnalysisExecutionData executionData =
-          LogAnalysisExecutionData.builder()
+      final VerificationStateAnalysisExecutionData executionData =
+          VerificationStateAnalysisExecutionData.builder()
               .appId(analysisContext.getAppId())
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
               .serverConfigId(getAnalysisServerConfigId())
@@ -186,6 +186,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
               .canaryNewHostNames(canaryNewHostNames)
               .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
               .correlationId(analysisContext.getCorrelationId())
+              .mlAnalysisType(MLAnalysisType.LOG_ML)
               .build();
 
       executionData.setStatus(ExecutionStatus.RUNNING);
@@ -236,7 +237,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .withCorrelationIds(Collections.singletonList(corelationId))
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withErrorMessage(ExceptionUtils.getMessage(ex))
-          .withStateExecutionData(LogAnalysisExecutionData.builder()
+          .withStateExecutionData(VerificationStateAnalysisExecutionData.builder()
                                       .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
                                       .serverConfigId(getAnalysisServerConfigId())
                                       .query(getRenderedQuery())
@@ -248,11 +249,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   protected abstract String triggerAnalysisDataCollection(
-      ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts);
+      ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts);
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext executionContext, Map<String, ResponseData> response) {
-    LogAnalysisResponse executionResponse = (LogAnalysisResponse) response.values().iterator().next();
+    VerificationDataAnalysisResponse executionResponse =
+        (VerificationDataAnalysisResponse) response.values().iterator().next();
 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
       getLogger().info(
@@ -261,13 +263,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           executionContext.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.ERROR)
-          .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
-          .withErrorMessage(executionResponse.getLogAnalysisExecutionData().getErrorMsg())
+          .withStateExecutionData(executionResponse.getStateExecutionData())
+          .withErrorMessage(executionResponse.getStateExecutionData().getErrorMsg())
           .build();
     } else {
       AnalysisContext context =
-          getLogAnalysisContext(executionContext, executionResponse.getLogAnalysisExecutionData().getCorrelationId());
-      int analysisMinute = executionResponse.getLogAnalysisExecutionData().getAnalysisMinute();
+          getLogAnalysisContext(executionContext, executionResponse.getStateExecutionData().getCorrelationId());
+      int analysisMinute = executionResponse.getStateExecutionData().getAnalysisMinute();
       for (int i = 0; i < NUM_OF_RETRIES; i++) {
         final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
             context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
@@ -307,22 +309,22 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         }
 
         getLogger().info("for {} the final status is {}", context.getStateExecutionId(), executionStatus);
-        executionResponse.getLogAnalysisExecutionData().setStatus(executionStatus);
+        executionResponse.getStateExecutionData().setStatus(executionStatus);
         continuousVerificationService.setMetaDataExecutionStatus(
             executionContext.getStateExecutionInstanceId(), executionStatus);
         return anExecutionResponse()
             .withExecutionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId())
                     ? ExecutionStatus.SUCCESS
                     : executionStatus)
-            .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
+            .withStateExecutionData(executionResponse.getStateExecutionData())
             .build();
       }
 
-      executionResponse.getLogAnalysisExecutionData().setErrorMsg(
+      executionResponse.getStateExecutionData().setErrorMsg(
           "Analysis for minute " + analysisMinute + " failed to save in DB");
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.ERROR)
-          .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
+          .withStateExecutionData(executionResponse.getStateExecutionData())
           .build();
     }
   }
@@ -360,13 +362,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     analysisService.createAndSaveSummary(
         context.getStateType(), context.getAppId(), context.getStateExecutionId(), context.getQuery(), message);
 
-    LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder()
-                                                 .stateExecutionInstanceId(context.getStateExecutionId())
-                                                 .serverConfigId(context.getAnalysisServerConfigId())
-                                                 .query(context.getQuery())
-                                                 .timeDuration(context.getTimeDuration())
-                                                 .correlationId(context.getCorrelationId())
-                                                 .build();
+    VerificationStateAnalysisExecutionData executionData = VerificationStateAnalysisExecutionData.builder()
+                                                               .stateExecutionInstanceId(context.getStateExecutionId())
+                                                               .serverConfigId(context.getAnalysisServerConfigId())
+                                                               .query(context.getQuery())
+                                                               .timeDuration(context.getTimeDuration())
+                                                               .correlationId(context.getCorrelationId())
+                                                               .build();
     executionData.setStatus(status);
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status);
     return anExecutionResponse()

@@ -29,7 +29,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionCallback;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -37,6 +36,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -168,7 +168,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(
-      ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
+      ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();

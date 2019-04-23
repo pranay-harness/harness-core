@@ -35,8 +35,6 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -44,6 +42,8 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.ParseException;
 import java.util.Collections;
@@ -275,11 +275,11 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
     assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
 
-    LogAnalysisExecutionData logAnalysisExecutionData = LogAnalysisExecutionData.builder().build();
-    LogAnalysisResponse logAnalysisResponse = LogAnalysisResponse.Builder.aLogAnalysisResponse()
-                                                  .withExecutionStatus(ExecutionStatus.ERROR)
-                                                  .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                                  .build();
+    VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder().build();
+    VerificationDataAnalysisResponse logAnalysisResponse =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+    logAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
     Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", logAnalysisResponse);
     elkAnalysisState.handleAsyncResponse(executionContext, responseMap);

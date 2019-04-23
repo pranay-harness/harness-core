@@ -12,14 +12,13 @@ import retrofit2.http.GET;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationDataAnalysisResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -44,13 +43,9 @@ public interface VerificationManagerClient {
   @GET("delegates/available-versions-for-verification")
   Call<RestResponse<List<String>>> getListOfPublishedVersions(@Query("accountId") String accountId);
 
-  @POST("apm" + VerificationConstants.NOTIFY_METRIC_STATE)
-  Call<RestResponse<Boolean>> sendNotifyForMetricState(@HeaderMap Map<String, Object> headers,
-      @Query("correlationId") String correlationId, @Body MetricDataAnalysisResponse metricAnalysisResponse);
-
-  @POST("log-verification" + VerificationConstants.NOTIFY_LOG_STATE)
-  Call<RestResponse<Boolean>> sendNotifyForLogState(@HeaderMap Map<String, Object> headers,
-      @Query("correlationId") String correlationId, @Body LogAnalysisResponse logAnalysisResponse);
+  @POST("apm" + VerificationConstants.NOTIFY_VERIFICATION_STATE)
+  Call<RestResponse<Boolean>> sendNotifyForVerificationState(@HeaderMap Map<String, Object> headers,
+      @Query("correlationId") String correlationId, @Body VerificationDataAnalysisResponse metricAnalysisResponse);
 
   @GET("account") Call<RestResponse<PageResponse<Account>>> getAccounts(@Query("offset") String offset);
 

@@ -9,9 +9,8 @@ import io.harness.exception.WingsException;
 import io.harness.network.SafeHttpCall;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
+import software.wings.verification.VerificationDataAnalysisResponse;
 
 import java.util.HashMap;
 import java.util.List;
@@ -39,14 +38,9 @@ public class VerificationManagerClientHelper {
     }
   }
 
-  public void notifyManagerForLogAnalysis(AnalysisContext context, LogAnalysisResponse response) {
+  public void notifyManagerForVerificationAnalysis(AnalysisContext context, VerificationDataAnalysisResponse response) {
     Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
-    callManagerWithRetry(managerClient.sendNotifyForLogState(headers, context.getCorrelationId(), response));
-  }
-
-  public void notifyManagerForMetricAnalysis(AnalysisContext context, MetricDataAnalysisResponse response) {
-    Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
-    callManagerWithRetry(managerClient.sendNotifyForMetricState(headers, context.getCorrelationId(), response));
+    callManagerWithRetry(managerClient.sendNotifyForVerificationState(headers, context.getCorrelationId(), response));
   }
 
   public <T> T callManagerWithRetry(Call<T> call) {

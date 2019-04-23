@@ -1,21 +1,28 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.Action.EXECUTE;
+import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.APMFetchConfig;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.common.VerificationConstants;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationDataAnalysisResponse;
 
+import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -27,7 +34,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Slf4j
 public class ContinuousVerificationResource {
-  @Inject private ContinuousVerificationService verificationService;
+  @Inject private ContinuousVerificationService cvManagerService;
 
   /**
    * Api to fetch Metric data for given node.
@@ -44,8 +51,8 @@ public class ContinuousVerificationResource {
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
       APMFetchConfig fetchConfig) {
-    return new RestResponse<>(verificationService.getMetricsWithDataForNode(
-        accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
+    return new RestResponse<>(
+        cvManagerService.getMetricsWithDataForNode(accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
   }
 
   @POST
@@ -54,7 +61,28 @@ public class ContinuousVerificationResource {
   @LearningEngineAuth
   public RestResponse<Boolean> sendNotifyForMetricAnalysis(
       @QueryParam("correlationId") String correlationId, MetricDataAnalysisResponse response) {
-    return new RestResponse<>(verificationService.sendNotifyForMetricAnalysis(correlationId, response));
+    return new RestResponse<>(cvManagerService.sendNotifyForMetricAnalysis(correlationId, response));
+  }
+
+  @POST
+  @Path(VerificationConstants.NOTIFY_VERIFICATION_STATE)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<Boolean> notifyVerificationState(
+      @QueryParam("correlationId") String correlationId, VerificationDataAnalysisResponse response) {
+    return new RestResponse<>(cvManagerService.notifyVerificationState(correlationId, response));
+  }
+
+  @POST
+  @Path(VerificationConstants.NOTIFY_WORKFLOW_VERIFICATION_STATE)
+  @Timed
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
+  public RestResponse<Boolean> notifyWorkflowVerificationState(@QueryParam("accountId") String accountId,
+      @Valid @QueryParam("appId") String appId, @Valid @QueryParam("workflowId") String workflowId,
+      @Valid @QueryParam("workflowExecutionId") String workflowExecutionId,
+      @Valid @QueryParam("stateExecutionId") String stateExecutionId,
+      @Valid @QueryParam("status") ExecutionStatus status) {
+    return new RestResponse<>(cvManagerService.notifyWorkflowVerificationState(appId, stateExecutionId, status));
   }
 
   @GET
@@ -64,7 +92,7 @@ public class ContinuousVerificationResource {
   public RestResponse<Boolean> collect247CVData(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("stateType") StateType stateType, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime) {
-    return new RestResponse<>(verificationService.collect247Data(cvConfigId, stateType, startTime, endTime));
+    return new RestResponse<>(cvManagerService.collect247Data(cvConfigId, stateType, startTime, endTime));
   }
 
   @GET
@@ -75,6 +103,6 @@ public class ContinuousVerificationResource {
       @QueryParam("startDataCollectionMinute") long collectionMinute) {
     logger.info(
         "Trigger Data Collection for workflow with contextId {}, CollectionMinute {}", contextId, collectionMinute);
-    return new RestResponse<>(verificationService.collectCVDataForWorkflow(contextId, collectionMinute));
+    return new RestResponse<>(cvManagerService.collectCVDataForWorkflow(contextId, collectionMinute));
   }
 }

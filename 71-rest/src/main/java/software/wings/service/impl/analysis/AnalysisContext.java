@@ -44,7 +44,7 @@ public class AnalysisContext extends Base {
   private String accountId;
   private String workflowId;
   private String workflowExecutionId;
-  private String stateExecutionId;
+  @Indexed private String stateExecutionId;
   private String serviceId;
   private String predictiveCvConfigId;
   private int predictiveHistoryMinutes;

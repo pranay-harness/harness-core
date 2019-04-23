@@ -30,13 +30,13 @@ import software.wings.beans.TaskType;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.ParseException;
 import java.text.ParsePosition;
@@ -248,11 +248,11 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
     assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
 
-    LogAnalysisExecutionData logAnalysisExecutionData = LogAnalysisExecutionData.builder().build();
-    LogAnalysisResponse logAnalysisResponse = LogAnalysisResponse.Builder.aLogAnalysisResponse()
-                                                  .withExecutionStatus(ExecutionStatus.ERROR)
-                                                  .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                                  .build();
+    VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder().build();
+    VerificationDataAnalysisResponse logAnalysisResponse =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+    logAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
     Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", logAnalysisResponse);
     splunkState.handleAsyncResponse(executionContext, responseMap);
@@ -273,8 +273,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Test
   @Category(UnitTests.class)
   public void handleAsyncSummaryFail() {
-    LogAnalysisExecutionData logAnalysisExecutionData =
-        LogAnalysisExecutionData.builder()
+    VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder()
             .correlationId(UUID.randomUUID().toString())
             .stateExecutionInstanceId(stateExecutionId)
             .serverConfigId(UUID.randomUUID().toString())
@@ -286,10 +286,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     logAnalysisExecutionData.setErrorMsg(UUID.randomUUID().toString());
 
-    LogAnalysisResponse response = LogAnalysisResponse.Builder.aLogAnalysisResponse()
-                                       .withExecutionStatus(ExecutionStatus.ERROR)
-                                       .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                       .build();
+    VerificationDataAnalysisResponse response =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+    response.setExecutionStatus(ExecutionStatus.ERROR);
 
     Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", response);
@@ -303,8 +302,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Test
   @Category(UnitTests.class)
   public void handleAsyncSummaryPassNoData() {
-    LogAnalysisExecutionData logAnalysisExecutionData =
-        LogAnalysisExecutionData.builder()
+    VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder()
             .correlationId(UUID.randomUUID().toString())
             .stateExecutionInstanceId(stateExecutionId)
             .serverConfigId(UUID.randomUUID().toString())
@@ -316,10 +315,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     logAnalysisExecutionData.setErrorMsg(UUID.randomUUID().toString());
 
-    LogAnalysisResponse response = LogAnalysisResponse.Builder.aLogAnalysisResponse()
-                                       .withExecutionStatus(ExecutionStatus.SUCCESS)
-                                       .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                       .build();
+    VerificationDataAnalysisResponse response =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+    response.setExecutionStatus(ExecutionStatus.SUCCESS);
 
     Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", response);

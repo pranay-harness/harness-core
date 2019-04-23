@@ -591,6 +591,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
 import software.wings.utils.RepositoryType;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 public class ManagerKryoRegistrar implements KryoRegistrar {
@@ -1160,6 +1161,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(FileType.class, 5119);
     kryo.register(YamlGitConfig.SyncMode.class, 5548);
     kryo.register(YamlGitConfig.class, 5547);
+    kryo.register(VerificationStateAnalysisExecutionData.class, 5552);
 
     kryo.register(EcsBGRoute53ServiceSetupRequest.class, 7101);
     kryo.register(EcsBGRoute53ServiceSetupResponse.class, 7102);

@@ -21,7 +21,6 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PcfInstanceElement;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -30,13 +29,14 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,13 +68,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   protected abstract String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
-      MetricAnalysisExecutionData executionData, Map<String, String> hosts);
+      VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts);
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String corelationId = UUID.randomUUID().toString();
     String delegateTaskId = null;
-    MetricAnalysisExecutionData executionData;
+    VerificationStateAnalysisExecutionData executionData;
     try {
       getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       cleanUpForRetry(context);
@@ -152,7 +152,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
       int timeDurationInt = Integer.parseInt(getTimeDuration());
       executionData =
-          MetricAnalysisExecutionData.builder()
+          VerificationStateAnalysisExecutionData.builder()
               .appId(context.getAppId())
               .workflowExecutionId(context.getWorkflowExecutionId())
               .stateExecutionInstanceId(context.getStateExecutionInstanceId())
@@ -163,6 +163,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
               .correlationId(analysisContext.getCorrelationId())
               .canaryNewHostNames(analysisContext.getTestNodes().keySet())
               .lastExecutionNodes(analysisContext.getControlNodes().keySet())
+              .mlAnalysisType(MLAnalysisType.TIME_SERIES)
               .build();
       executionData.setErrorMsg(responseMessage);
       executionData.setStatus(ExecutionStatus.RUNNING);
@@ -184,8 +185,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           context.getStateExecutionInstanceId(), delegateTaskId);
 
       executionData.setDelegateTaskId(delegateTaskId);
-      final MetricDataAnalysisResponse response =
-          MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+      final VerificationDataAnalysisResponse response =
+          VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.RUNNING);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
       return anExecutionResponse()
@@ -209,12 +210,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .withCorrelationIds(Collections.singletonList(corelationId))
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withErrorMessage(ExceptionUtils.getMessage(ex))
-          .withStateExecutionData(MetricAnalysisExecutionData.builder()
+          .withStateExecutionData(VerificationStateAnalysisExecutionData.builder()
                                       .appId(context.getAppId())
                                       .workflowExecutionId(context.getWorkflowExecutionId())
                                       .stateExecutionInstanceId(context.getStateExecutionInstanceId())
                                       .delegateTaskId(delegateTaskId)
                                       .serverConfigId(getAnalysisServerConfigId())
+                                      .mlAnalysisType(MLAnalysisType.TIME_SERIES)
                                       .build())
           .build();
     }
@@ -238,7 +240,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
+    VerificationDataAnalysisResponse executionResponse =
+        (VerificationDataAnalysisResponse) response.values().iterator().next();
 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
       getLogger().info(
@@ -333,8 +336,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   protected ExecutionResponse generateAnalysisResponse(
       ExecutionContext context, ExecutionStatus status, String message) {
-    final MetricAnalysisExecutionData executionData =
-        MetricAnalysisExecutionData.builder()
+    final VerificationStateAnalysisExecutionData executionData =
+        VerificationStateAnalysisExecutionData.builder()
             .stateExecutionInstanceId(context.getStateExecutionInstanceId())
             .serverConfigId(getAnalysisServerConfigId())
             .timeDuration(Integer.parseInt(getTimeDuration()))

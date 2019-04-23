@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
-import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -19,19 +18,19 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -84,24 +83,16 @@ public class DataCollectionCallback implements NotifyCallback {
 
   private void sendErrorNotification(String errorMsg) {
     Preconditions.checkNotNull(executionData, "execution data is null for appId" + appId);
+    VerificationStateAnalysisExecutionData analysisExecutionData =
+        (VerificationStateAnalysisExecutionData) executionData;
+    analysisExecutionData.setStatus(ExecutionStatus.ERROR);
+    analysisExecutionData.setErrorMsg(errorMsg);
+    VerificationDataAnalysisResponse verificationDataAnalysisResponse =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
+    verificationDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
+    waitNotifyEngine.notify(analysisExecutionData.getCorrelationId(), verificationDataAnalysisResponse);
     if (isLogCollection) {
-      final LogAnalysisExecutionData logAnalysisExecutionData = (LogAnalysisExecutionData) executionData;
-      logAnalysisExecutionData.setStatus(ExecutionStatus.ERROR);
-      logAnalysisExecutionData.setErrorMsg(errorMsg);
-      waitNotifyEngine.notify(logAnalysisExecutionData.getCorrelationId(),
-          aLogAnalysisResponse()
-              .withLogAnalysisExecutionData(logAnalysisExecutionData)
-              .withExecutionStatus(ExecutionStatus.ERROR)
-              .build());
       deleteDataCollectionCron();
-    } else {
-      MetricAnalysisExecutionData analysisExecutionData = (MetricAnalysisExecutionData) executionData;
-      analysisExecutionData.setStatus(ExecutionStatus.ERROR);
-      analysisExecutionData.setErrorMsg(errorMsg);
-      MetricDataAnalysisResponse metricDataAnalysisResponse =
-          MetricDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
-      metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
-      waitNotifyEngine.notify(analysisExecutionData.getCorrelationId(), metricDataAnalysisResponse);
     }
   }
 

@@ -29,7 +29,6 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -40,6 +39,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -209,7 +209,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(
-      ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
+      ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
     final String timestampField = getTimestampField();
     final String accountId = appService.get(context.getAppId()).getAccountId();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

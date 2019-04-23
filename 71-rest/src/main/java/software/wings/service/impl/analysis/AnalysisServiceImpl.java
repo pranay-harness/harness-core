@@ -82,6 +82,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.io.IOException;
@@ -181,8 +182,9 @@ public class AnalysisServiceImpl implements AnalysisService {
       return null;
     }
 
-    SettingAttribute settingAttribute = settingsService.get(
-        ((LogAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData()).getServerConfigId());
+    SettingAttribute settingAttribute =
+        settingsService.get(((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
+                                .getServerConfigId());
 
     if (settingAttribute.getName().toLowerCase().endsWith("dev")
         || settingAttribute.getName().toLowerCase().endsWith("prod")) {

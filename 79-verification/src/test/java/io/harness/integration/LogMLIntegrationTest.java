@@ -56,7 +56,6 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -75,6 +74,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -207,7 +207,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setDisplayName("log");
 
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
-    stateExecutionMap.put("log", LogAnalysisExecutionData.builder().build());
+    stateExecutionMap.put("log", VerificationStateAnalysisExecutionData.builder().build());
     stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
 
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
@@ -252,7 +252,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setDisplayName("Relic_Fail");
     Map<String, StateExecutionData> hashMap = new HashMap();
-    hashMap.put("Relic_Fail", LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    hashMap.put("Relic_Fail", VerificationStateAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
     stateExecutionInstance.setStateExecutionMap(hashMap);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
@@ -314,7 +314,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setDisplayName("Relic_Fail");
     Map<String, StateExecutionData> hashMap = new HashMap();
-    hashMap.put("Relic_Fail", LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    hashMap.put("Relic_Fail", VerificationStateAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
     stateExecutionInstance.setStateExecutionMap(hashMap);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 

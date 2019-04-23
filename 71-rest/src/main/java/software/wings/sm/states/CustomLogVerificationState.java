@@ -32,12 +32,12 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionCallback;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -126,7 +126,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(
-      ExecutionContext context, LogAnalysisExecutionData data, Set<String> hosts) {
+      ExecutionContext context, VerificationStateAnalysisExecutionData data, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();

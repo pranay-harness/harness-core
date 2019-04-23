@@ -1,7 +1,5 @@
 package io.harness.jobs;
 
-import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -26,11 +24,11 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.LogAnalysisExecutionData;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -239,8 +237,8 @@ public class LogAnalysisManagerJob implements Job {
       if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
 
-        LogAnalysisExecutionData logAnalysisExecutionData =
-            LogAnalysisExecutionData.builder()
+        VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+            VerificationStateAnalysisExecutionData.builder()
                 .stateExecutionInstanceId(context.getStateExecutionId())
                 .serverConfigId(context.getAnalysisServerConfigId())
                 .query(context.getQuery())
@@ -258,12 +256,11 @@ public class LogAnalysisManagerJob implements Job {
           logAnalysisExecutionData.setErrorMsg(errorMsg);
         }
 
-        final LogAnalysisResponse response = aLogAnalysisResponse()
-                                                 .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                                 .withExecutionStatus(status)
-                                                 .build();
+        final VerificationDataAnalysisResponse response =
+            VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+        response.setExecutionStatus(status);
         logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
-        managerClientHelper.notifyManagerForLogAnalysis(context, response);
+        managerClientHelper.notifyManagerForVerificationAnalysis(context, response);
       }
     }
   }
