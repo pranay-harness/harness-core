@@ -124,7 +124,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     executionArgs.setArtifacts(Collections.singletonList(artifact));
 
     WorkflowExecution workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()

@@ -41,7 +41,7 @@ public class PipelineTest extends GraphQLTest {
 
     String query = "{ pipeline(pipelineId: \"" + pipeline.getUuid() + "\") { id name description } }";
 
-    QLPipeline qlPipeline = execute(QLPipeline.class, query);
+    QLPipeline qlPipeline = qlExecute(QLPipeline.class, query);
     assertThat(qlPipeline.getId()).isEqualTo(pipeline.getUuid());
     assertThat(qlPipeline.getName()).isEqualTo(pipeline.getName());
     assertThat(qlPipeline.getDescription()).isEqualTo(pipeline.getDescription());
@@ -79,7 +79,7 @@ public class PipelineTest extends GraphQLTest {
       String query =
           "{ pipelines(appId: \"" + application.getUuid() + "\", limit: 2) { nodes { id name description } } }";
 
-      QLPipelineConnection pipelineConnection = execute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(pipelineConnection.getNodes().get(0).getId()).isEqualTo(pipeline3.getUuid());
@@ -90,7 +90,7 @@ public class PipelineTest extends GraphQLTest {
       String query = "{ pipelines(appId: \"" + application.getUuid()
           + "\", limit: 2, offset: 1) { nodes { id name description } } }";
 
-      QLPipelineConnection pipelineConnection = execute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(pipelineConnection.getNodes().get(0).getId()).isEqualTo(pipeline2.getUuid());

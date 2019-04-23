@@ -42,16 +42,20 @@ public interface GraphQLTestMixin {
     return modelMapper;
   }
 
-  default<T> T execute(Class<T> clazz, String query) {
+  default LinkedHashMap qlExecute(String query) {
     final ExecutionResult result = getGraphQL().execute(query);
-
     if (isNotEmpty(result.getErrors())) {
       throw new RuntimeException(result.getErrors().toString());
     }
+    return (LinkedHashMap) result.<LinkedHashMap>getData().values().iterator().next();
+  }
+
+  // TODO: add support for scalars
+  default<T> T qlExecute(Class<T> clazz, String query) {
+    final LinkedHashMap map = qlExecute(query);
 
     final T t = objenesis.newInstance(clazz);
-
-    modelMapper().map(result.<LinkedHashMap>getData().values().iterator().next(), t);
+    modelMapper().map(map, t);
     return t;
   }
 }

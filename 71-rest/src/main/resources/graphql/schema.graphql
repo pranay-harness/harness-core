@@ -114,6 +114,7 @@ enum ExecutionStatus {
 }
 
 interface Execution {
+  id : String
   queuedTime : DateTime
   startTime : DateTime
   endTime : DateTime
@@ -125,9 +126,6 @@ type WorkflowExecution implements Execution {
   # Workflow Execution Id
   id: String
 
-  # Status of the workflow
-  status: ExecutionStatus
-
   # DateTime when execution started
   queuedTime : DateTime
 
@@ -136,6 +134,9 @@ type WorkflowExecution implements Execution {
 
   # DateTime when execution ended
   endTime: DateTime
+
+  # Status of the workflow
+  status: ExecutionStatus
 }
 
 # Service Type

@@ -102,28 +102,22 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
 
     WorkflowExecution workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     String executionUuid = workflowExecution.getUuid();
-    Awaitility.await()
-        .atMost(120, TimeUnit.SECONDS)
-        .pollInterval(5, TimeUnit.SECONDS)
-        .until(()
-                   -> workflowExecutionService.getWorkflowExecution(application.getUuid(), executionUuid)
-                          .getStatus()
-                          .equals(ExecutionStatus.SUCCESS));
 
     setDeploymentFreeze(application.getAccountId(), true);
 
     workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNull();
 
     setDeploymentFreeze(application.getAccountId(), false);
 
     workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     String newExecutionUuid = workflowExecution.getUuid();

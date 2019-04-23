@@ -50,7 +50,7 @@ public class WorkflowTest extends GraphQLTest {
 
     String query = "{ workflow(workflowId: \"" + workflow.getUuid() + "\") { id name description } }";
 
-    QLWorkflow qlWorkflow = execute(QLWorkflow.class, query);
+    QLWorkflow qlWorkflow = qlExecute(QLWorkflow.class, query);
     assertThat(qlWorkflow.getId()).isEqualTo(workflow.getUuid());
     assertThat(qlWorkflow.getName()).isEqualTo(workflow.getName());
     assertThat(qlWorkflow.getDescription()).isEqualTo(workflow.getDescription());
@@ -99,7 +99,7 @@ public class WorkflowTest extends GraphQLTest {
       String query =
           "{ workflows(appId: \"" + application.getUuid() + "\", limit: 2) { nodes { id name description } } }";
 
-      QLWorkflowConnection workflowConnection = execute(QLWorkflowConnection.class, query);
+      QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query);
       assertThat(workflowConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(workflowConnection.getNodes().get(0).getId()).isEqualTo(workflow3.getUuid());
@@ -109,7 +109,7 @@ public class WorkflowTest extends GraphQLTest {
       String query = "{ workflows(appId: \"" + application.getUuid()
           + "\", limit: 2, offset: 1) { nodes { id name description } } }";
 
-      QLWorkflowConnection workflowConnection = execute(QLWorkflowConnection.class, query);
+      QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query);
       assertThat(workflowConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(workflowConnection.getNodes().get(0).getId()).isEqualTo(workflow2.getUuid());

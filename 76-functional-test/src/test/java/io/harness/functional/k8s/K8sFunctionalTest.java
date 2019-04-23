@@ -137,7 +137,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution workflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
             getExecutionArgs(savedWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
     assertThat(workflowExecution).isNotNull();
 
@@ -154,7 +154,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
     // Deploy the workflow
     WorkflowExecution cleanupWorkflowExecution =
-        WorkflowRestUtils.runWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
+        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), savedEnvironment.getUuid(),
             getExecutionArgs(cleanupWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
     assertThat(cleanupWorkflowExecution).isNotNull();
 
