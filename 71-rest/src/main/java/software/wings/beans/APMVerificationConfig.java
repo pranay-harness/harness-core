@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 @Data
 @ToString(exclude = {"headersList", "optionsList"})
 @EqualsAndHashCode(callSuper = false)
+@Slf4j
 public class APMVerificationConfig extends SettingValue implements EncryptableSetting {
   @Transient @SchemaIgnore private static final String MASKED_STRING = "*****";
 

@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.alert.AlertData;
 import software.wings.verification.CVConfiguration;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -33,10 +35,14 @@ public class ContinuousVerificationAlertData implements AlertData {
 
   @Override
   public String buildTitle() {
+    double alertThreshold =
+        BigDecimal.valueOf(cvConfiguration.getAlertThreshold()).setScale(2, RoundingMode.HALF_UP).doubleValue();
+    riskScore = BigDecimal.valueOf(riskScore).setScale(2, RoundingMode.HALF_UP).doubleValue();
     return "24/7 Service Guard detected anomalies (Risk Level: High) for " + cvConfiguration.getName()
-        + "(Application: " + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName()
-        + ") Time: " + new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime)) + "\nRisk Score: "
-        + riskScore + ", Alert Threshold: " + cvConfiguration.getAlertThreshold() + "\nCheck at: " + portalUrl
+        + "(Application: " + cvConfiguration.getAppName() + ", Service: " + cvConfiguration.getServiceName()
+        + ", Environment: " + cvConfiguration.getEnvName()
+        + ") Time: " + new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime))
+        + "\nRisk Score: " + riskScore + ", Alert Threshold: " + alertThreshold + "\nCheck at: " + portalUrl
         + "/#/account/" + accountId + "/24-7-service-guard/" + cvConfiguration.getServiceId() + "/details";
   }
 }

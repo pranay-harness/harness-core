@@ -17,6 +17,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -39,6 +40,7 @@ import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.PrometheusState;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -177,8 +179,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public <T extends CVConfiguration> List<T> listConfigurations(
       String accountId, String appId, String envId, StateType stateType) {
     Query<T> configurationQuery = (Query<T>) wingsPersistence.createQuery(CVConfiguration.class)
-                                      .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
-                                      .filter("appId", appId);
+                                      .filter(CVConfigurationKeys.accountId, accountId)
+                                      .filter("appId", appId)
+                                      .filter(CVConfigurationKeys.isWorkflowConfig, false);
     if (isNotEmpty(envId)) {
       configurationQuery = configurationQuery.filter("envId", envId);
     }
@@ -198,6 +201,30 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       }
     });
     return cvConfigurations24x7;
+  }
+
+  @Override
+  public <T extends CVConfiguration> List<T> listConfigurations(
+      String accountId, List<String> appIds, List<String> envIds) {
+    Query<T> configurationQuery = (Query<T>) wingsPersistence.createQuery(CVConfiguration.class)
+                                      .filter(CVConfigurationKeys.accountId, accountId)
+                                      .filter(CVConfigurationKeys.isWorkflowConfig, false);
+
+    if (isNotEmpty(appIds)) {
+      configurationQuery = configurationQuery.field(CVConfiguration.APP_ID_KEY).in(appIds);
+    }
+
+    if (isNotEmpty(envIds)) {
+      configurationQuery = configurationQuery.field(CVConfigurationKeys.envId).in(envIds);
+    }
+
+    List<T> rv = new ArrayList<>();
+    try (HIterator<T> iterator = new HIterator<>(configurationQuery.fetch())) {
+      while (iterator.hasNext()) {
+        rv.add(iterator.next());
+      }
+    }
+    return rv;
   }
 
   @Override
@@ -354,8 +381,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("snoozeEndTime", cvConfiguration.getSnoozeEndTime());
     switch (stateType) {
       case NEW_RELIC:
-        updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId())
-            .set("metrics", ((NewRelicCVServiceConfiguration) cvConfiguration).getMetrics());
+        updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId());
+        if (isNotEmpty(((NewRelicCVServiceConfiguration) cvConfiguration).getMetrics())) {
+          updateOperations.set("metrics", ((NewRelicCVServiceConfiguration) cvConfiguration).getMetrics());
+        }
         break;
       case APP_DYNAMICS:
         updateOperations

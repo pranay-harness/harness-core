@@ -18,6 +18,7 @@ public interface CVConfigurationService extends OwnedByAccount {
   <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId);
   <T extends CVConfiguration> List<T> listConfigurations(
       String accountId, String appId, String envId, StateType stateType);
+  <T extends CVConfiguration> List<T> listConfigurations(String accountId, List<String> appIds, List<String> envIds);
   String updateConfiguration(
       String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId);
   String updateConfiguration(CVConfiguration cvConfiguration, String appId);
