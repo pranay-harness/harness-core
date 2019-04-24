@@ -50,17 +50,16 @@ type Query {
   instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
     @dataFetcher(name: "instanceCount")
 
-  instancesByService(serviceId: String, limit: Int, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByService")
+  instancesByService(serviceId : String,limit: Int!, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByService")
 
-  instancesByEnvironment(envId: String, limit: Int, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByEnvironment")
+  instancesByEnvironment(envId : String,limit: Int!, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByEnvironment")
 
-  instancesByEnvironmentType(envType: EnvironmentType, limit: Int, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByEnvType")
+  #Adding accountId as input temporarily since there is no auth support as of now
+  instancesByEnvironmentType(accountId:String! envType : EnvironmentType,limit: Int, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByEnvType")
 
-  # Get details about a service
-  service(serviceId: String!): Service @dataFetcher(name: "service")
+    # Get details about a service
+  service(serviceId: String! ): Service  @dataFetcher(name : "service")
+
 }
 
 # DateTime which will return date based on PST zone
@@ -174,20 +173,19 @@ type PipelineExecution implements Execution {
 
 # Service Type
 type Service {
-  # Service Id
-  id: String
+   # Service Id
+   id: String
+   # Name of the service
+   name: String
+   # Description of the Service
+   description: String
+   # Artifact type deployed by this service
+   artifactType: String
+   # Deployment Type SSH, Helm, Kubernetes
+   deploymentType: String
 
-  # Name of the service
-  name: String
+   instances(limit:Int!,offset:Int) : InstanceConnection @dataFetcher(name :"instancesByService",contextFieldArgsMap: "{ \"serviceId\": \"id\"}" )
 
-  # Description of the Service
-  description: String
-
-  # Artifact type deployed by this service
-  artifactType: String
-
-  # Deployment Type SSH, Helm, Kubernetes
-  deploymentType: String
 }
 
 # Type for returning paged data
@@ -239,6 +237,7 @@ type Environment {
   name: String
   description: String
   environmentType: String
+  instances(limit:Int!,offset:Int) : InstanceConnection @dataFetcher(name :"instancesByEnvironment",contextFieldArgsMap: "{ \"envId\": \"id\"}" )
 }
 
 enum InstanceType {
@@ -262,11 +261,8 @@ type InstanceCount {
 }
 
 type Instance {
-  id: String
-  type: InstanceType
-  service: Service @dataFetcher(name: "service", contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
-  environment: Environment
-    @dataFetcher(name: "environment", contextFieldArgsMap: "{ \"envId\": \"envId\",\"appId\": \"appId\"}")
+  id : String
+  type : InstanceType
 }
 
 type InstanceConnection {

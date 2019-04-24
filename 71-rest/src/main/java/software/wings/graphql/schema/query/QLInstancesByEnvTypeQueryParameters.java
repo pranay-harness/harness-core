@@ -12,5 +12,6 @@ public class QLInstancesByEnvTypeQueryParameters implements QLPageQueryParameter
   int limit;
   int offset;
   EnvironmentType envType;
+  String accountId;
   DataFetchingFieldSelectionSet selectionSet;
 }

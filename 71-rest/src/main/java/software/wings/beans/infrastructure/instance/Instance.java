@@ -4,6 +4,7 @@ import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -48,6 +49,8 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
         @Field("appId"), @Field("serviceId"), @Field("isDeleted")
       }, options = @IndexOptions(name = "instance_index8", background = true))
 })
+
+@FieldNameConstants(innerTypeName = "InstanceKeys")
 public class Instance extends Base {
   @NotEmpty private InstanceType instanceType;
   private HostInstanceKey hostInstanceKey;
@@ -139,10 +142,6 @@ public class Instance extends Base {
   public static final class InstanceKeys {
     // Temporary
     public static final String appId = "appId";
-    public static final String envId = "envId";
-    public static final String envType = "envType";
-    public static final String serviceId = "serviceId";
-    public static final String lastDeployedAt = "lastDeployedAt";
     public static final String uuid = "uuid";
   }
 }

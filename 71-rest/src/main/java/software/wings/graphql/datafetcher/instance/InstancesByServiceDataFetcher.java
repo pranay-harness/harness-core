@@ -27,6 +27,7 @@ public class InstancesByServiceDataFetcher extends AbstractConnectionDataFetcher
         fetchParameters(QLInstancesByServiceQueryParameters.class, dataFetchingEnvironment);
 
     final Query<Instance> query = persistence.createQuery(Instance.class)
+                                      .filter(InstanceKeys.isDeleted, false)
                                       .filter(InstanceKeys.serviceId, qlQuery.getServiceId())
                                       .order(Sort.descending(InstanceKeys.lastDeployedAt));
 
