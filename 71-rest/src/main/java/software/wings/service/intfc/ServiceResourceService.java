@@ -466,26 +466,21 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestSource appManifestSource);
 
-  ManifestFile createValuesYaml(String appId, String serviceId, ManifestFile manifestFile);
+  ManifestFile createK8sValueYaml(String appId, String serviceId, ManifestFile manifestFile);
 
-  ManifestFile getValuesYaml(String appId, String serviceId, String manifestFileId);
+  ManifestFile getK8sValueYaml(String appId, String serviceId, String manifestFileId);
 
-  ManifestFile updateValuesYaml(String appId, String serviceId, String manifestFileId, ManifestFile manifestFile);
+  ManifestFile updateK8sValueYaml(String appId, String serviceId, String manifestFileId, ManifestFile manifestFile);
 
-  void deleteValuesYaml(String appId, String serviceId, String manifestFileId);
+  void deleteK8sValueYaml(String appId, String serviceId, String manifestFileId);
 
-  ApplicationManifest createValuesAppManifest(String appId, String serviceId, ApplicationManifest applicationManifest);
+  ApplicationManifest createK8sValueAppManifest(
+      String appId, String serviceId, ApplicationManifest applicationManifest);
 
-  ApplicationManifest getValuesAppManifest(String appId, String serviceId, String appManifestId);
+  ApplicationManifest getK8sValueAppManifest(String appId, String serviceId, String appManifestId);
 
-  ApplicationManifest updateValuesAppManifest(
+  ApplicationManifest updateK8sValueAppManifest(
       String appId, String serviceId, String appManifestId, ApplicationManifest applicationManifest);
 
-  void deleteValuesAppManifest(String appId, String serviceId, String appManifestId);
-
-  Service deleteHelmValueYaml(String appId, String serviceId);
-
-  Service getWithHelmValues(String appId, String serviceId, SetupStatus status);
-
-  Service updateWithHelmValues(Service service);
+  void deleteK8sValueAppManifest(String appId, String serviceId, String appManifestId);
 }
