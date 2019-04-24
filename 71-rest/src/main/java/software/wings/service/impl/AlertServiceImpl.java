@@ -11,7 +11,6 @@ import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.beans.alert.AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.DelegateProfileError;
-import static software.wings.beans.alert.AlertType.DelegatesDown;
 import static software.wings.beans.alert.AlertType.GitConnectionError;
 import static software.wings.beans.alert.AlertType.GitSyncError;
 import static software.wings.beans.alert.AlertType.INSTANCE_USAGE_APPROACHING_LIMIT;
@@ -66,9 +65,9 @@ import java.util.concurrent.Future;
 public class AlertServiceImpl implements AlertService {
   // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
   public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(Arrays.asList(
-      NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT,
-      INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT,
-      GitSyncError, GitConnectionError, InvalidKMS, CONTINUOUS_VERIFICATION_ALERT));
+      NoActiveDelegates, /* TODO(brett): Disabled for now - DelegatesDown, */ DelegateProfileError,
+      DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED,
+      RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError, InvalidKMS, CONTINUOUS_VERIFICATION_ALERT));
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
