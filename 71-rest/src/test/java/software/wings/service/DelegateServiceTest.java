@@ -211,8 +211,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus() {
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().watcherVersion("1.0.0").delegateVersions(asList("1.0.0")).build());
-    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
-    DelegateConnection delegateConnection = wingsPersistence.saveAndGet(DelegateConnection.class,
+    Delegate delegate = BUILDER.but().build();
+    wingsPersistence.save(delegate);
+    wingsPersistence.save(
         DelegateConnection.builder().accountId(ACCOUNT_ID).delegateId(delegate.getUuid()).version("1.0.0").build());
     DelegateStatus delegateStatus = delegateService.getDelegateStatus(ACCOUNT_ID);
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains("1.0.0");

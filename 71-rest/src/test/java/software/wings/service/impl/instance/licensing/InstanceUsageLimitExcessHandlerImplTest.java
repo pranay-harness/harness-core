@@ -88,9 +88,6 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   }
 
   private static Alert sampleAlert(String accountId) {
-    Alert alert = new Alert();
-    alert.setAccountId(accountId);
-
-    return alert;
+    return Alert.builder().accountId(accountId).build();
   }
 }

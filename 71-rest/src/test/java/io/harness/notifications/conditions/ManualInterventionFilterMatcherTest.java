@@ -2,7 +2,6 @@ package io.harness.notifications.conditions;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 
 import io.harness.category.element.UnitTests;
 import io.harness.notifications.beans.Conditions;
@@ -49,10 +48,6 @@ public class ManualInterventionFilterMatcherTest extends WingsBaseTest {
                                                   .executionId("some-exec-id")
                                                   .build();
 
-    return anAlert()
-        .withType(AlertType.ManualInterventionNeeded)
-        .withAppId("some-app")
-        .withAlertData(alertData)
-        .build();
+    return Alert.builder().type(AlertType.ManualInterventionNeeded).appId("some-app").alertData(alertData).build();
   }
 }

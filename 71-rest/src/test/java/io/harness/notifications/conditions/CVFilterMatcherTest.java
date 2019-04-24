@@ -2,7 +2,6 @@ package io.harness.notifications.conditions;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 
 import com.google.common.collect.Lists;
 
@@ -44,11 +43,11 @@ public class CVFilterMatcherTest extends WingsBaseTest {
     cvConfiguration.setEnvId("env3");
 
     Alert cvAlert =
-        anAlert()
-            .withType(AlertType.CONTINUOUS_VERIFICATION_ALERT)
-            .withAlertData(
+        Alert.builder()
+            .type(AlertType.CONTINUOUS_VERIFICATION_ALERT)
+            .alertData(
                 ContinuousVerificationAlertData.builder().cvConfiguration(cvConfiguration).riskScore(0.4).build())
-            .withAppId("app1")
+            .appId("app1")
             .build();
     CVFilterMatcher cvFilterMatcher = new CVFilterMatcher(filter, cvAlert);
     assertTrue(cvFilterMatcher.matchesCondition());

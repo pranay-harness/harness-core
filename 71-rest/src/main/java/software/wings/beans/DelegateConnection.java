@@ -6,6 +6,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -13,15 +14,13 @@ import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Date;
 
+@FieldNameConstants(innerTypeName = "DelegateConnectionKeys")
 @Entity(value = "delegateConnections", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DelegateConnection extends Base {
-  public static final String DELEGATE_ID_KEY = "delegateId";
-  public static final String LAST_HEARTBEAT_KEY = "lastHeartbeat";
-
   public static final int defaultExpiryTimeInMinutes = 5;
 
   @NotEmpty private String accountId;

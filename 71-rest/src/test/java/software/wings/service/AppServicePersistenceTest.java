@@ -25,6 +25,7 @@ import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.dl.WingsPersistence;
@@ -79,7 +80,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
 
     // Make sure that we added the two alerts
     PageResponse<Alert> alerts =
-        alertService.list(aPageRequest().addFilter(Alert.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID).build());
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, EQ, ACCOUNT_ID).build());
 
     assertThat(alerts.size()).isEqualTo(2);
 
@@ -96,7 +97,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Application.class, APP_ID)).isNull();
 
     // Make sure that just the alert for the application are deleted
-    alerts = alertService.list(aPageRequest().addFilter(Alert.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID).build());
+    alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, EQ, ACCOUNT_ID).build());
 
     assertThat(alerts.size()).isEqualTo(1);
   }

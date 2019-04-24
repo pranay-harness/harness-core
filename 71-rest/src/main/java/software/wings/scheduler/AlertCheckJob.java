@@ -2,8 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
@@ -14,7 +13,6 @@ import com.google.inject.name.Named;
 
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.quartz.Job;
@@ -27,21 +25,22 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.ManagerConfiguration;
+import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.utils.EmailHelperUtil;
 
 import java.time.Clock;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -54,11 +53,9 @@ public class AlertCheckJob implements Job {
 
   private static final int POLL_INTERVAL = 300;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
-  private static boolean sendEmailForNoActiveDelegates;
 
   @Inject private AlertService alertService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private DelegateService delegateService;
   @Inject private EmailHelperUtil emailHelperUtil;
   @Inject private MainConfiguration mainConfiguration;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -120,19 +117,13 @@ public class AlertCheckJob implements Job {
                delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.NoActiveDelegates,
           NoActiveDelegatesAlert.builder().accountId(accountId).build());
-      if (!sendEmailForNoActiveDelegates) {
-        delegateService.sendAlertNotificationsForNoActiveDelegates(accountId);
-        sendEmailForNoActiveDelegates = true;
-      }
     } else {
-      // reset this flag as all delegates are not down
-      sendEmailForNoActiveDelegates = false;
       checkIfAnyDelegatesAreDown(accountId, delegates);
     }
     checkForInvalidValidSMTP(accountId);
   }
 
-  List<Delegate> getDelegatesForAccount(String accountId) {
+  private List<Delegate> getDelegatesForAccount(String accountId) {
     return wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).asList();
   }
 
@@ -147,43 +138,31 @@ public class AlertCheckJob implements Job {
     }
   }
 
-  /**
-   * If any delegate hasn't sent heartbeat for last MAX_HB_TIMEOUT (5 mins currently),
-   * raise a dashboard alert
-   */
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
     Query<DelegateConnection> query =
-        wingsPersistence.createQuery(DelegateConnection.class).filter(DelegateConnection.ACCOUNT_ID_KEY, accountId);
+        wingsPersistence.createQuery(DelegateConnection.class).filter(DelegateConnectionKeys.accountId, accountId);
     String primaryVersion = wingsPersistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
     if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
-      query.filter("version", primaryVersion);
+      query.filter(DelegateConnectionKeys.version, primaryVersion);
     }
-    Map<String, DelegateConnection> primaryConnections =
-        query.project("delegateId", true)
-            .project("lastHeartbeat", true)
-            .asList()
-            .stream()
-            .collect(toMap(DelegateConnection::getDelegateId, connection -> connection));
+    Set<String> primaryConnections = query.project(DelegateConnectionKeys.delegateId, true)
+                                         .asList()
+                                         .stream()
+                                         .map(DelegateConnection::getDelegateId)
+                                         .collect(toSet());
 
-    List<Delegate> delegatesDown =
-        delegates.stream().filter(delegate -> !primaryConnections.containsKey(delegate.getUuid())).collect(toList());
+    for (Delegate delegate : delegates) {
+      AlertData alertData = DelegatesDownAlert.builder()
+                                .accountId(accountId)
+                                .hostName(delegate.getHostName())
+                                .ip(delegate.getIp())
+                                .build();
 
-    List<Delegate> delegatesUp =
-        delegates.stream().filter(delegate -> primaryConnections.containsKey(delegate.getUuid())).collect(toList());
-
-    if (CollectionUtils.isNotEmpty(delegatesDown)) {
-      delegateService.sendAlertNotificationsForDownDelegates(accountId, delegatesDown);
-    }
-
-    // close if any alert is open
-    if (CollectionUtils.isNotEmpty(delegatesUp)) {
-      delegatesUp.forEach(delegate
-          -> alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
-              DelegatesDownAlert.builder()
-                  .accountId(accountId)
-                  .hostName(delegate.getHostName())
-                  .ip(delegate.getIp())
-                  .build()));
+      if (primaryConnections.contains(delegate.getUuid())) {
+        alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
+      } else {
+        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
+      }
     }
   }
 }
