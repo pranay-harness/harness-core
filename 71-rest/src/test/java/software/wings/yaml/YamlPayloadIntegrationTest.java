@@ -41,7 +41,7 @@ public class YamlPayloadIntegrationTest extends BaseIntegrationTest {
     assertThat(appPost.getDescription()).isEqualTo(TEST_DESCRIPTION_POST);
     assertThat(appPost.getAccountId()).isEqualTo(accountId);
 
-    String appId = appPost.getAppId();
+    String appId = appPost.getApplicationId();
 
     //-------------- PUT (Update) ------------------
 

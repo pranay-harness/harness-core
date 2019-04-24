@@ -59,7 +59,7 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   //  public void shouldTestCRUDArtifactoryArtifactStream() {
   //    artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
   //        ArtifactoryArtifactStream.builder()
-  //            .appId(application.getAppId())
+  //            .appId(application.getApplicationId())
   //            .serviceId(service.getUuid())
   //            .name("harness-maven_todolist-war")
   //            .sourceName(settingAttribute.getName())
@@ -69,10 +69,11 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   //            .metadataOnly(false)
   //            .build());
   //    artifactStream.setServiceId(service.getUuid());
-  //    artifactStream.setAppId(application.getAppId());
+  //    artifactStream.setAppId(application.getApplicationId());
   //
   //    ArtifactoryArtifactStream created =
-  //        (ArtifactoryArtifactStream) artifactStreamService.get(application.getAppId(), artifactStream.getUuid());
+  //        (ArtifactoryArtifactStream) artifactStreamService.get(application.getApplicationId(),
+  //        artifactStream.getUuid());
   //    assertEquals(artifactStream.getUuid(), created.getUuid());
   //    assertEquals(artifactStream.isMetadataOnly(), created.isMetadataOnly());
   //    assertEquals("harness-maven", created.getJobname());
@@ -85,7 +86,8 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   //
   //    artifactStreamService.delete(application.getUuid(), created.getUuid());
   //    ArtifactoryArtifactStream deleted =
-  //        (ArtifactoryArtifactStream) artifactStreamService.get(application.getAppId(), artifactStream.getUuid());
+  //        (ArtifactoryArtifactStream) artifactStreamService.get(application.getApplicationId(),
+  //        artifactStream.getUuid());
   //    assertNull(deleted);
   //  }
   //
@@ -94,11 +96,11 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   //  public void testAddArtifactStream() {
   //    loginAdminUser();
   //    Application app = createApp(APP_NAME);
-  //    Service service = createService(app.getAppId(),
+  //    Service service = createService(app.getApplicationId(),
   //        ImmutableMap.of(
   //            "name", SERVICE_NAME, "description", randomText(40), "appId", app.getUuid(), "artifactType",
   //            WAR.name()));
-  //    addArtifactStream(app.getAppId(), service.getUuid());
+  //    addArtifactStream(app.getApplicationId(), service.getUuid());
   //  }
   //
   //  private void addArtifactStream(String appId, String serviceId) {

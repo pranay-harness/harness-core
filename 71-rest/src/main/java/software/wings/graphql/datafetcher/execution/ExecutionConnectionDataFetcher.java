@@ -29,8 +29,8 @@ public class ExecutionConnectionDataFetcher extends AbstractConnectionDataFetche
     final Query<WorkflowExecution> query =
         persistence.createQuery(WorkflowExecution.class).order(Sort.descending(WorkflowExecutionKeys.createdAt));
 
-    if (qlQuery.getAppId() != null) {
-      query.filter(WorkflowExecutionKeys.appId, qlQuery.getAppId());
+    if (qlQuery.getApplicationId() != null) {
+      query.filter(WorkflowExecutionKeys.appId, qlQuery.getApplicationId());
     }
     if (qlQuery.getWorkflowId() != null) {
       query.filter(WorkflowExecutionKeys.workflowId, qlQuery.getWorkflowId());

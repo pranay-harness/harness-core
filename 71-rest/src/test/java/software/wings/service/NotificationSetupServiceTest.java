@@ -284,7 +284,8 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  public void shouldReadNotificationRule() {
   //    String appId = UUIDGenerator.generateUuid();
   //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
-  //    NotificationRule notificationRule2 = notificationSetupService.readNotificationRule(notificationRule.getAppId(),
+  //    NotificationRule notificationRule2 =
+  //    notificationSetupService.readNotificationRule(notificationRule.getApplicationId(),
   //    notificationRule.generateUuid());
   //    assertThat(notificationRule2).isNotNull().isEqualToIgnoringGivenFields(notificationRule);
   //  }
@@ -293,7 +294,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  public void shouldDeleteNotificationRule() {
   //    String appId = UUIDGenerator.generateUuid();
   //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
-  //    boolean deleted = notificationSetupService.deleteNotificationRule(notificationRule.getAppId(),
+  //    boolean deleted = notificationSetupService.deleteNotificationRule(notificationRule.getApplicationId(),
   //    notificationRule.generateUuid()); assertThat(deleted).isTrue();
   //  }
   //

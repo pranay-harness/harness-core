@@ -6,22 +6,27 @@ schema {
 
 # Harness GraphQL SDL details
 type Query {
+  # Get details about an application
+  application(applicationId: String!): Application @dataFetcher(name: "application")
+
   # Get a pipeline object by id
   pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
 
-  pipelines(appId: String!, limit: Int!, offset: Int): PipelineConnection @dataFetcher(name: "pipelineConnection")
+  pipelines(applicationId: String!, limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: "pipelineConnection")
 
   # Get workflow object by id
   workflow(workflowId: String!): Workflow @dataFetcher(name: "workflow")
 
-  # Get list of workflows for an appId. It will return paginated data
-  workflows(appId: String!, limit: Int!, offset: Int): WorkflowConnection @dataFetcher(name: "workflowConnection")
+  # Get list of workflows for an applicationId. It will return paginated data
+  workflows(applicationId: String!, limit: Int!, offset: Int): WorkflowConnection
+    @dataFetcher(name: "workflowConnection")
 
   # Get the execution status of a workflow
   execution(executionId: String!): Execution @dataFetcher(name: "execution")
 
   # Get the list of executions.
-  executionsByApplication(appId: String!, limit: Int!, offset: Int): ExecutionConnection
+  executionsByApplication(applicationId: String!, limit: Int!, offset: Int): ExecutionConnection
     @dataFetcher(name: "executionConnection")
   executionsByWorkflow(workflowId: String!, limit: Int!, offset: Int): ExecutionConnection
     @dataFetcher(name: "executionConnection")
@@ -29,20 +34,18 @@ type Query {
     @dataFetcher(name: "executionConnection")
 
   # Get list of successfully deployed articacts.
-  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact] @dataFetcher(name: "artifact")
-
-  # Get details about an application
-  application(appId: String!): Application @dataFetcher(name: "application")
+  deployedArtifacts(applicationId: String!, envId: String!, serviceId: String!): [Artifact]
+    @dataFetcher(name: "artifact")
 
   #Asking accountID temporarily because there is no auth support as of now.
   #Will remove it once authentication is available
   applications(accountId: String!): PagedData @dataFetcher(name: "applications")
 
   # Get details about an environment
-  environment(appId: String!, envId: String!): Environment @dataFetcher(name: "environment")
+  environment(applicationId: String!, envId: String!): Environment @dataFetcher(name: "environment")
 
   # Get page data of environments
-  environments(appId: String!, environmentType: String, limit: Int, offset: Int): PagedData
+  environments(applicationId: String!, environmentType: String, limit: Int, offset: Int): PagedData
     @dataFetcher(name: "environments")
 
   # Get count of instances in your application
@@ -233,7 +236,11 @@ type Artifact {
   lastDeployedBy: String
   # Application of the artifact
   application: Application
-    @dataFetcher(name: "application", contextFieldArgsMap: "{ \"appId\": \"appId\"}", batchLoader: "application")
+    @dataFetcher(
+      name: "application"
+      contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}"
+      batchLoader: "application"
+    )
 }
 
 type Application {

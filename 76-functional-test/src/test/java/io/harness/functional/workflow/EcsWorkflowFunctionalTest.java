@@ -372,7 +372,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
 
     logger.info("Invoking workflow execution");
-    //    WorkflowExecution workflowExecution = workflowExecutionService.triggerEnvExecution(service.getAppId(),
+    //    WorkflowExecution workflowExecution = workflowExecutionService.triggerEnvExecution(service.getApplicationId(),
     //        infrastructureMapping.getEnvId(), executionArgs, Trigger.builder().name("adwait").uuid("uuId").build());
 
     WorkflowExecution workflowExecution =
