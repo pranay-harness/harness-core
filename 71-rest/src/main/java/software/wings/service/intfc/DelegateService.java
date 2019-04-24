@@ -108,10 +108,6 @@ public interface DelegateService extends OwnedByAccount {
 
   List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly);
 
-  void sendAlertNotificationsForDownDelegates(String accountId, List<Delegate> delegates);
-
-  void sendAlertNotificationsForNoActiveDelegates(String accountId);
-
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
 
   Delegate handleEcsDelegateRequest(Delegate delegate);

@@ -1,9 +1,7 @@
 package software.wings.scheduler;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -33,7 +31,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.EmailHelperUtil;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class AlertCheckJobTest extends WingsBaseTest {
@@ -75,13 +72,11 @@ public class AlertCheckJobTest extends WingsBaseTest {
     saveDelegate("host2", 10, false);
     doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
-    doNothing().when(delegateService).sendAlertNotificationsForNoActiveDelegates(any());
     alertCheckJob.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).openAlert(any(), any(), any(), any());
 
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);
     verify(alertService).openAlert(any(), any(), captor.capture(), any());
-    verify(delegateService, times(1)).sendAlertNotificationsForNoActiveDelegates(anyString());
     AlertType alertType = captor.getValue();
     assertEquals(AlertType.NoActiveDelegates, alertType);
   }
@@ -95,20 +90,10 @@ public class AlertCheckJobTest extends WingsBaseTest {
     saveDelegate("host1", 2, true);
     saveDelegate("host2", 10, false);
 
-    doNothing().when(delegateService).sendAlertNotificationsForDownDelegates(any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
 
     alertCheckJob.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).closeAlert(any(), any(), any(), any());
-    verify(delegateService, times(1)).sendAlertNotificationsForDownDelegates(any(), any());
-
-    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(delegateService).sendAlertNotificationsForDownDelegates(any(), captor.capture());
-    List list = captor.getValue();
-    assertNotNull(list);
-    assertEquals(1, list.size());
-    Delegate delegate = (Delegate) list.get(0);
-    assertEquals("host2", delegate.getHostName());
   }
 
   private void saveDelegate(String host, int timeAfterLastHB, boolean createConnection) {

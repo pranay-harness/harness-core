@@ -21,10 +21,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -47,8 +45,6 @@ import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aD
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
@@ -58,8 +54,6 @@ import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.Constants.SELF_DESTRUCT;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -113,13 +107,11 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.BroadcasterFactory;
-import org.atteo.evo.inflector.English;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -130,6 +122,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfile;
@@ -142,10 +135,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FileMetadata;
-import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
 import software.wings.beans.TaskType;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
@@ -170,8 +160,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.LearningEngineService;
-import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -209,9 +197,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
-  public static final String ECS = "ECS";
-  public static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
+  private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
   private static final String DELIMITER = "_";
+  public static final String ECS = "ECS";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -228,8 +216,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
-  @Inject private NotificationService notificationService;
-  @Inject private NotificationSetupService notificationSetupService;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private Injector injector;
@@ -356,10 +342,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     List<Delegate> delegates =
         wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).asList();
     List<DelegateConnection> delegateConnections = wingsPersistence.createQuery(DelegateConnection.class)
-                                                       .filter(DelegateConnection.ACCOUNT_ID_KEY, accountId)
-                                                       .project(DelegateConnection.DELEGATE_ID_KEY, true)
-                                                       .project("version", true)
-                                                       .project(DelegateConnection.LAST_HEARTBEAT_KEY, true)
+                                                       .filter(DelegateConnectionKeys.accountId, accountId)
+                                                       .project(DelegateConnectionKeys.delegateId, true)
+                                                       .project(DelegateConnectionKeys.version, true)
+                                                       .project(DelegateConnectionKeys.lastHeartbeat, true)
                                                        .asList();
 
     return DelegateStatus.builder()
@@ -1306,11 +1292,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public void doConnectionHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat) {
     UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(DelegateConnection.class)
-                                                        .filter(DelegateConnection.ACCOUNT_ID_KEY, accountId)
+                                                        .filter(DelegateConnectionKeys.accountId, accountId)
                                                         .filter(ID_KEY, heartbeat.getDelegateConnectionId()),
         wingsPersistence.createUpdateOperations(DelegateConnection.class)
-            .set("lastHeartbeat", System.currentTimeMillis())
-            .set("validUntil", Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant())));
+            .set(DelegateConnectionKeys.lastHeartbeat, System.currentTimeMillis())
+            .set(DelegateConnectionKeys.validUntil,
+                Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant())));
 
     if (updated != null && updated.getWriteResult() != null && updated.getWriteResult().getN() == 0) {
       // connection does not exist. Create one.
@@ -1323,7 +1310,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .validUntil(Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant()))
               .build();
       connection.setUuid(heartbeat.getDelegateConnectionId());
-      wingsPersistence.saveAndGet(DelegateConnection.class, connection);
+      wingsPersistence.save(connection);
     }
   }
 
@@ -1975,78 +1962,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                    .withSync(false)
                    .build())
         .collect(toList());
-  }
-
-  @Override
-  public void sendAlertNotificationsForDownDelegates(String accountId, List<Delegate> delegatesDown) {
-    if (CollectionUtils.isNotEmpty(delegatesDown)) {
-      List<AlertData> alertDatas = delegatesDown.stream()
-                                       .map(delegate
-                                           -> DelegatesDownAlert.builder()
-                                                  .accountId(accountId)
-                                                  .hostName(delegate.getHostName())
-                                                  .ip(delegate.getIp())
-                                                  .build())
-                                       .collect(toList());
-
-      // Find out new Alerts to be created
-      List<AlertData> alertsToBeCreated = new ArrayList<>();
-      for (AlertData alertData : alertDatas) {
-        if (!alertService.findExistingAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData).isPresent()) {
-          alertsToBeCreated.add(alertData);
-        }
-      }
-
-      if (CollectionUtils.isNotEmpty(alertsToBeCreated)) {
-        // create dashboard alerts
-        alertService.openAlerts(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertsToBeCreated);
-        // TODO(brett): disabling until we understand why false notifications are going out
-        // sendDelegateDownNotification(accountId, alertsToBeCreated);
-      }
-    }
-  }
-
-  @Override
-  public void sendAlertNotificationsForNoActiveDelegates(String accountId) {
-    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
-
-    notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(GLOBAL_APP_ID)
-            .withAccountId(accountId)
-            .withNotificationTemplateId(ALL_DELEGATE_DOWN_NOTIFICATION.name())
-            .withNotificationTemplateVariables(ImmutableMap.of("ACCOUNT_ID", accountId))
-            .build(),
-        singletonList(notificationRule));
-  }
-
-  private void sendDelegateDownNotification(String accountId, List<AlertData> alertsToBeCreated) {
-    // send slack/email notification
-    String hostNamesForDownDelegates = "\n"
-        + alertsToBeCreated.stream()
-              .map(alertData -> ((DelegatesDownAlert) alertData).getHostName())
-              .collect(joining("\n"));
-
-    StringBuilder hostNamesForDownDelegatesHtml = new StringBuilder().append("<br />");
-    alertsToBeCreated.forEach(alertData
-        -> hostNamesForDownDelegatesHtml.append(((DelegatesDownAlert) alertData).getHostName()).append("<br />"));
-
-    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
-
-    notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(GLOBAL_APP_ID)
-            .withAccountId(accountId)
-            .withNotificationTemplateId(DELEGATE_STATE_NOTIFICATION.name())
-            .withNotificationTemplateVariables(ImmutableMap.of("HOST_NAMES", hostNamesForDownDelegates,
-                "HOST_NAMES_HTML", hostNamesForDownDelegatesHtml.toString(), "ENTITY_AFFECTED",
-                English.plural("Delegate", alertsToBeCreated.size()), "DESCRIPTION_FIELD",
-                English.plural("hostname", alertsToBeCreated.size()), "COUNT",
-                Integer.toString(alertsToBeCreated.size())))
-            .build(),
-        singletonList(notificationRule));
   }
 
   private String getVersion() {

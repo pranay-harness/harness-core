@@ -2,31 +2,39 @@ package software.wings.beans.alert;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
+import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
-import software.wings.beans.Base;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by brett on 10/18/17
  */
+@FieldNameConstants(innerTypeName = "AlertKeys")
 @Data
-@EqualsAndHashCode(callSuper = true)
+@Builder
 @Entity(value = "alerts")
-public class Alert extends Base {
-  public static final String CLOSED_AT_KEY = "closedAt";
-  public static final String STATUS_KEY = "status";
-  public static final String VALID_UNTIL_KEY = "validUntil";
-  public static final String TYPE_KEY = "type";
-
+public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
   @Indexed private String accountId;
   @Indexed private AlertType type;
   @Indexed private AlertStatus status;
@@ -39,85 +47,6 @@ public class Alert extends Base {
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
-
-  public static final class AlertBuilder {
-    private Alert alert;
-
-    private AlertBuilder() {
-      alert = new Alert();
-    }
-
-    public static AlertBuilder anAlert() {
-      return new AlertBuilder();
-    }
-
-    public AlertBuilder withAccountId(String accountId) {
-      alert.setAccountId(accountId);
-      return this;
-    }
-
-    public AlertBuilder withType(AlertType type) {
-      alert.setType(type);
-      return this;
-    }
-
-    public AlertBuilder withStatus(AlertStatus status) {
-      alert.setStatus(status);
-      return this;
-    }
-
-    public AlertBuilder withTitle(String title) {
-      alert.setTitle(title);
-      return this;
-    }
-
-    public AlertBuilder withCategory(AlertCategory category) {
-      alert.setCategory(category);
-      return this;
-    }
-
-    public AlertBuilder withSeverity(AlertSeverity severity) {
-      alert.setSeverity(severity);
-      return this;
-    }
-
-    public AlertBuilder withAlertData(AlertData alertData) {
-      alert.setAlertData(alertData);
-      return this;
-    }
-
-    public AlertBuilder withClosedAt(long closedAt) {
-      alert.setClosedAt(closedAt);
-      return this;
-    }
-
-    public AlertBuilder withAppId(String appId) {
-      alert.setAppId(appId);
-      return this;
-    }
-
-    public AlertBuilder withCreatedAt(long createdAt) {
-      alert.setCreatedAt(createdAt);
-      return this;
-    }
-
-    public AlertBuilder but() {
-      return anAlert()
-          .withAccountId(alert.getAccountId())
-          .withType(alert.getType())
-          .withStatus(alert.getStatus())
-          .withTitle(alert.getTitle())
-          .withCategory(alert.getCategory())
-          .withSeverity(alert.getSeverity())
-          .withAlertData(alert.getAlertData())
-          .withClosedAt(alert.getClosedAt())
-          .withAppId(alert.getAppId())
-          .withCreatedAt(alert.getCreatedAt());
-    }
-
-    public Alert build() {
-      return alert;
-    }
-  }
 }

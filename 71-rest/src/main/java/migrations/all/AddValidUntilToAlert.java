@@ -10,6 +10,7 @@ import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Instant;
@@ -28,9 +29,9 @@ public class AddValidUntilToAlert implements Migration {
 
     int i = 1;
     try (HIterator<Alert> alerts = new HIterator<>(wingsPersistence.createQuery(Alert.class)
-                                                       .field("validUntil")
+                                                       .field(AlertKeys.validUntil)
                                                        .doesNotExist()
-                                                       .project("closedAt", true)
+                                                       .project(AlertKeys.closedAt, true)
                                                        .fetch())) {
       while (alerts.hasNext()) {
         final Alert alert = alerts.next();
@@ -46,9 +47,9 @@ public class AddValidUntilToAlert implements Migration {
         ++i;
 
         bulkWriteOperation
-            .find(wingsPersistence.createQuery(Alert.class).filter(Alert.ID_KEY, alert.getUuid()).getQueryObject())
+            .find(wingsPersistence.createQuery(Alert.class).filter(AlertKeys.uuid, alert.getUuid()).getQueryObject())
             .updateOne(new BasicDBObject(
-                "$set", new BasicDBObject("validUntil", java.util.Date.from(zonedDateTime.toInstant()))));
+                "$set", new BasicDBObject(AlertKeys.validUntil, java.util.Date.from(zonedDateTime.toInstant()))));
       }
     }
     if (i % 1000 != 1) {

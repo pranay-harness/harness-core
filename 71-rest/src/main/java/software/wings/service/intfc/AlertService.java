@@ -8,7 +8,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Future;
 
@@ -16,8 +15,6 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Alert> list(PageRequest<Alert> pageRequest);
 
   Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
-
-  Future openAlerts(String accountId, String appId, AlertType alertType, List<AlertData> alertData);
 
   void closeAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 

@@ -16,6 +16,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
@@ -55,7 +56,7 @@ public class AlertResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Alert>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Alert> request) {
-    request.addFilter(Alert.TYPE_KEY, Operator.NOT_IN, ALERT_TYPES_TO_NOT_SHOW_UNDER_BELL_ICON.toArray());
+    request.addFilter(AlertKeys.type, Operator.NOT_IN, ALERT_TYPES_TO_NOT_SHOW_UNDER_BELL_ICON.toArray());
     return new RestResponse<>(alertService.list(request));
   }
 

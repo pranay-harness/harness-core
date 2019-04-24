@@ -2,11 +2,9 @@ package software.wings.service.impl;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.beans.alert.AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT;
@@ -21,8 +19,8 @@ import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.AlertType.RESOURCE_USAGE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
+import static software.wings.utils.Misc.getDurationString;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -38,8 +36,8 @@ import io.harness.event.publisher.EventPublisher;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -77,28 +75,13 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
-    pageRequest.addFilter("type", Operator.NOT_EQ, AlertType.CONTINUOUS_VERIFICATION_ALERT);
+    pageRequest.addFilter(AlertKeys.type, Operator.NOT_EQ, AlertType.CONTINUOUS_VERIFICATION_ALERT);
     return wingsPersistence.query(Alert.class, pageRequest);
   }
 
   @Override
   public Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     return executorService.submit(() -> openInternal(accountId, appId, alertType, alertData));
-  }
-
-  /**
-   * This method opens multiple alerts of the same type.
-   * E.g. there can be multiple delegates down at a time (not all but multiple),
-   * in this scenario, we want to create 1 alert per delegate of the type "DelegateDown".
-   * @param accountId
-   * @param appId
-   * @param alertType
-   * @param alertData
-   * @return
-   */
-  @Override
-  public Future openAlerts(String accountId, String appId, AlertType alertType, List<AlertData> alertData) {
-    return executorService.submit(() -> openAlertsInternal(accountId, appId, alertType, alertData));
   }
 
   @Override
@@ -121,30 +104,27 @@ public class AlertServiceImpl implements AlertService {
     executorService.submit(() -> deploymentCompletedInternal(appId, executionId));
   }
 
-  private void openAlertsInternal(String accountId, String appId, AlertType alertType, List<AlertData> alertData) {
-    alertData.forEach(data -> openInternal(accountId, appId, alertType, data));
-  }
-
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    // TODO(raghu): Remove this CV check and implement in matches method
     if (!AlertType.CONTINUOUS_VERIFICATION_ALERT.equals(alertType)
         && findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
       return;
     }
     injector.injectMembers(alertData);
-    Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
-        anAlert()
-            .withAppId(appId)
-            .withAccountId(accountId)
-            .withType(alertType)
-            .withStatus(Open)
-            .withAlertData(alertData)
-            .withTitle(alertData.buildTitle())
-            .withCategory(alertType.getCategory())
-            .withSeverity(alertType.getSeverity())
-            .build());
+    Alert alert = Alert.builder()
+                      .appId(appId)
+                      .accountId(accountId)
+                      .type(alertType)
+                      .status(Open)
+                      .alertData(alertData)
+                      .title(alertData.buildTitle())
+                      .category(alertType.getCategory())
+                      .severity(alertType.getSeverity())
+                      .build();
+    wingsPersistence.save(alert);
 
-    publishEvent(persistedAlert);
-    logger.info("Alert opened: {}", persistedAlert);
+    publishEvent(alert);
+    logger.info("Alert opened: {}", alert);
   }
 
   private void publishEvent(Alert persistedAlert) {
@@ -166,8 +146,7 @@ public class AlertServiceImpl implements AlertService {
     }
   }
 
-  @VisibleForTesting
-  static EventData alertEventData(Alert alert) {
+  private static EventData alertEventData(Alert alert) {
     return EventData.builder().eventInfo(new AlertEvent(alert)).build();
   }
 
@@ -176,9 +155,9 @@ public class AlertServiceImpl implements AlertService {
         accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
         .ifPresent(this ::close);
     wingsPersistence.createQuery(Alert.class)
-        .filter(Alert.ACCOUNT_ID_KEY, accountId)
-        .filter("type", NoEligibleDelegates)
-        .filter("status", Open)
+        .filter(AlertKeys.accountId, accountId)
+        .filter(AlertKeys.type, NoEligibleDelegates)
+        .filter(AlertKeys.status, Open)
         .asList()
         .stream()
         .filter(alert -> {
@@ -191,10 +170,10 @@ public class AlertServiceImpl implements AlertService {
 
   private void deploymentCompletedInternal(String appId, String executionId) {
     wingsPersistence.createQuery(Alert.class)
-        .filter(Alert.APP_ID_KEY, appId)
-        .field("type")
+        .filter(AlertKeys.appId, appId)
+        .field(AlertKeys.type)
         .in(asList(ApprovalNeeded, ManualInterventionNeeded))
-        .filter("status", Open)
+        .filter(AlertKeys.status, Open)
         .asList()
         .stream()
         .filter(alert
@@ -212,9 +191,10 @@ public class AlertServiceImpl implements AlertService {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }
     injector.injectMembers(alertData);
-    Query<Alert> query = wingsPersistence.createQuery(Alert.class).filter("type", alertType).filter("status", Open);
-    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(Alert.ACCOUNT_ID_KEY, accountId)
-                                                         : query.filter(Alert.APP_ID_KEY, appId);
+    Query<Alert> query =
+        wingsPersistence.createQuery(Alert.class).filter(AlertKeys.type, alertType).filter(AlertKeys.status, Open);
+    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(AlertKeys.accountId, accountId)
+                                                         : query.filter(AlertKeys.appId, appId);
     return query.asList()
         .stream()
         .filter(alert -> {
@@ -225,33 +205,40 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private List<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
-    Query<Alert> query = wingsPersistence.createQuery(Alert.class).filter("type", alertType).filter("status", Open);
-    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(Alert.ACCOUNT_ID_KEY, accountId)
-                                                         : query.filter(Alert.APP_ID_KEY, appId);
+    Query<Alert> query =
+        wingsPersistence.createQuery(Alert.class).filter(AlertKeys.type, alertType).filter(AlertKeys.status, Open);
+    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(AlertKeys.accountId, accountId)
+                                                         : query.filter(AlertKeys.appId, appId);
     return query.asList();
   }
 
   private void close(Alert alert) {
-    UpdateOperations<Alert> alertUpdateOperations = wingsPersistence.createUpdateOperations(Alert.class);
-    alertUpdateOperations.set(Alert.STATUS_KEY, Closed);
-    alertUpdateOperations.set(Alert.CLOSED_AT_KEY, System.currentTimeMillis());
-    alertUpdateOperations.set(Alert.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plusDays(7).toInstant()));
+    long now = System.currentTimeMillis();
+    Date expiration = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
+
     wingsPersistence.update(wingsPersistence.createQuery(Alert.class)
-                                .filter(Alert.ACCOUNT_ID_KEY, alert.getAccountId())
-                                .filter(ID_KEY, alert.getUuid()),
-        alertUpdateOperations);
-    logger.info("Alert closed: {}", alert);
+                                .filter(AlertKeys.accountId, alert.getAccountId())
+                                .filter(AlertKeys.uuid, alert.getUuid()),
+        wingsPersistence.createUpdateOperations(Alert.class)
+            .set(AlertKeys.status, Closed)
+            .set(AlertKeys.closedAt, now)
+            .set(AlertKeys.validUntil, expiration));
+
+    alert.setStatus(Closed);
+    alert.setClosedAt(now);
+    alert.setValidUntil(expiration);
+    logger.info("Alert closed after {} : {}", getDurationString(alert.getCreatedAt(), now), alert);
   }
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(Alert.ACCOUNT_ID_KEY, accountId).asList();
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.accountId, accountId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }
 
   @Override
   public void pruneByApplication(String appId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(Alert.APP_ID_KEY, appId).asList();
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }
 }
