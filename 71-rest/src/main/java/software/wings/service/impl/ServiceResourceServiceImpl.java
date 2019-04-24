@@ -153,6 +153,7 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
@@ -240,6 +241,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private AuditServiceHelper auditServiceHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   /**
    * {@inheritDoc}
@@ -1774,26 +1776,40 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service setHelmValueYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload) {
-    Service savedService = get(appId, serviceId, false);
-    notNullCheck("Service", savedService);
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByServiceId(appId, serviceId, AppManifestKind.VALUES);
 
-    String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
-    // helmHelper.validateHelmValueYamlFile(helmValueYaml);
-
-    UpdateOperations<Service> updateOperations;
-    if (isNotBlank(helmValueYaml)) {
-      updateOperations = wingsPersistence.createUpdateOperations(Service.class).set("helmValueYaml", helmValueYaml);
-    } else {
-      updateOperations = wingsPersistence.createUpdateOperations(Service.class).unset("helmValueYaml");
+    ManifestFile manifestFile = null;
+    if (applicationManifest != null) {
+      manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), VALUES_YAML_KEY);
     }
 
-    wingsPersistence.update(savedService, updateOperations);
-    Service updatedService = get(appId, serviceId, false);
+    if (manifestFile == null) {
+      manifestFile = ManifestFile.builder().build();
+      manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
 
-    String accountId = appService.getAccountIdByAppId(updatedService.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, updatedService, updatedService, Type.UPDATE, false, false);
+      createValuesYaml(appId, serviceId, manifestFile);
+    } else {
+      manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
+      updateValuesYaml(appId, serviceId, manifestFile.getUuid(), manifestFile);
+    }
 
-    return updatedService;
+    return get(appId, serviceId, false);
+  }
+
+  @Override
+  public Service deleteHelmValueYaml(String appId, String serviceId) {
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByServiceId(appId, serviceId, AppManifestKind.VALUES);
+
+    if (applicationManifest != null) {
+      applicationManifestService.deleteAppManifest(appId, applicationManifest.getUuid());
+    }
+
+    deleteHelmValuesFromService(appId, serviceId);
+
+    return get(appId, serviceId, false);
   }
 
   @Override
@@ -1920,13 +1936,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return service;
     }
 
-    ArtifactType artifactType = service.getArtifactType();
+    if (DeploymentType.HELM.equals(service.getDeploymentType())) {
+      ManifestFile manifestFile = ManifestFile.builder().fileContent(DEFAULT_HELM_VALUE_YAML).build();
 
-    if (artifactType != null && artifactType.equals(ArtifactType.DOCKER)) {
-      KubernetesPayload kubernetesPayload = new KubernetesPayload();
-
-      kubernetesPayload.setAdvancedConfig(DEFAULT_HELM_VALUE_YAML);
-      return setHelmValueYaml(service.getAppId(), service.getUuid(), kubernetesPayload);
+      createValuesYaml(service.getAppId(), service.getUuid(), manifestFile);
+      service.setHelmValueYaml(DEFAULT_HELM_VALUE_YAML);
     }
 
     return service;
@@ -1934,7 +1948,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public boolean checkArtifactNeededForHelm(String appId, String serviceTemplateId) {
-    List<String> valueOverridesYamlFiles = serviceTemplateService.helmValueOverridesYamlFiles(appId, serviceTemplateId);
+    List<String> valueOverridesYamlFiles = applicationManifestUtils.getHelmValuesYamlFiles(appId, serviceTemplateId);
     if (isEmpty(valueOverridesYamlFiles)) {
       return false;
     }
@@ -2061,7 +2075,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public ManifestFile createK8sValueYaml(String appId, String serviceId, ManifestFile manifestFile) {
+  public ManifestFile createValuesYaml(String appId, String serviceId, ManifestFile manifestFile) {
     ApplicationManifest appManifest =
         applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
     if (appManifest == null) {
@@ -2080,12 +2094,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public ManifestFile getK8sValueYaml(String appId, String serviceId, String manifestFileId) {
+  public ManifestFile getValuesYaml(String appId, String serviceId, String manifestFileId) {
     return applicationManifestService.getManifestFileById(appId, manifestFileId);
   }
 
   @Override
-  public ManifestFile updateK8sValueYaml(
+  public ManifestFile updateValuesYaml(
       String appId, String serviceId, String manifestFileId, ManifestFile manifestFile) {
     ApplicationManifest appManifest =
         applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
@@ -2104,13 +2118,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void deleteK8sValueYaml(String appId, String serviceId, String manifestFileId) {
+  public void deleteValuesYaml(String appId, String serviceId, String manifestFileId) {
     applicationManifestService.deleteManifestFileById(appId, manifestFileId);
   }
 
   @Override
-  public ApplicationManifest createK8sValueAppManifest(
-      String appId, String serviceId, ApplicationManifest appManifest) {
+  public ApplicationManifest createValuesAppManifest(String appId, String serviceId, ApplicationManifest appManifest) {
     if (isNotEmpty(appManifest.getUuid())) {
       throw new InvalidRequestException("Application Manifest already has an id", USER);
     }
@@ -2121,12 +2134,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public ApplicationManifest getK8sValueAppManifest(String appId, String serviceId, String appManifestId) {
+  public ApplicationManifest getValuesAppManifest(String appId, String serviceId, String appManifestId) {
     return applicationManifestService.getById(appId, appManifestId);
   }
 
   @Override
-  public ApplicationManifest updateK8sValueAppManifest(
+  public ApplicationManifest updateValuesAppManifest(
       String appId, String serviceId, String appManifestId, ApplicationManifest applicationManifest) {
     ApplicationManifest savedAppManifest = applicationManifestService.getById(appId, appManifestId);
     if (savedAppManifest == null) {
@@ -2139,7 +2152,51 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void deleteK8sValueAppManifest(String appId, String serviceId, String appManifestId) {
+  public void deleteValuesAppManifest(String appId, String serviceId, String appManifestId) {
     applicationManifestService.deleteAppManifest(appId, appManifestId);
+  }
+
+  private Service updateServiceWithHelmValues(Service service) {
+    if (service == null) {
+      return null;
+    }
+
+    service.setHelmValueYaml(null);
+
+    ApplicationManifest appManifest =
+        applicationManifestService.getAppManifest(service.getAppId(), null, service.getUuid(), AppManifestKind.VALUES);
+    if (appManifest != null) {
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), VALUES_YAML_KEY);
+      if (manifestFile != null) {
+        service.setHelmValueYaml(manifestFile.getFileContent());
+      }
+    }
+
+    return service;
+  }
+
+  @Override
+  public Service getWithHelmValues(String appId, String serviceId, SetupStatus status) {
+    Service service = get(appId, serviceId);
+
+    return updateServiceWithHelmValues(service);
+  }
+
+  @Override
+  public Service updateWithHelmValues(Service service) {
+    service = update(service, false);
+
+    return updateServiceWithHelmValues(service);
+  }
+
+  private void deleteHelmValuesFromService(String appId, String serviceId) {
+    UpdateOperations<Service> updateOperations =
+        wingsPersistence.createUpdateOperations(Service.class).unset("helmValueYaml");
+
+    Query<Service> query =
+        wingsPersistence.createQuery(Service.class).filter(Service.APP_ID_KEY, appId).filter(Service.ID_KEY, serviceId);
+
+    wingsPersistence.update(query, updateOperations);
   }
 }

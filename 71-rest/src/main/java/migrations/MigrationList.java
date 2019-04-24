@@ -73,6 +73,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextNameKeyWordsMigration;
+import migrations.all.ServiceHelmValuesToManifestFileMigration;
 import migrations.all.ServiceNameMigrationIfEmpty;
 import migrations.all.SetIsDeletedFlagForInstances;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
@@ -215,6 +216,7 @@ public class MigrationList {
         .add(Pair.of(240, DeleteCVAlertsMigration.class))
         .add(Pair.of(241, BaseMigration.class))
         .add(Pair.of(242, BaseMigration.class))
+        .add(Pair.of(243, ServiceHelmValuesToManifestFileMigration.class))
         .build();
   }
 }

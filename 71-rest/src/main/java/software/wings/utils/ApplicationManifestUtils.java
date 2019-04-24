@@ -21,6 +21,8 @@ import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -34,14 +36,18 @@ import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 @Singleton
 public class ApplicationManifestUtils {
@@ -51,6 +57,8 @@ public class ApplicationManifestUtils {
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   public Map<K8sValuesLocation, ApplicationManifest> getValuesApplicationManifests(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
@@ -198,5 +206,45 @@ public class ApplicationManifestUtils {
             getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath()));
       }
     }
+  }
+
+  public List<String> getHelmValuesYamlFiles(String appId, String templateId) {
+    ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, templateId);
+    if (serviceTemplate == null) {
+      return new ArrayList<>();
+    }
+
+    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+
+    ApplicationManifest serviceAppManifest =
+        applicationManifestService.getByServiceId(appId, serviceTemplate.getServiceId(), AppManifestKind.VALUES);
+    if (serviceAppManifest != null) {
+      appManifestMap.put(K8sValuesLocation.ServiceOverride, serviceAppManifest);
+    } else {
+      // Todo anshul Remove this else once the backend ServiceHelmValuesToManifestFileMigration is complete
+      // This is just a fallback mechanism in case the  ServiceHelmValuesToManifestFileMigration fails
+
+      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId(), false);
+      if (service != null && isNotBlank(service.getHelmValueYaml())) {
+        valuesFiles.put(K8sValuesLocation.ServiceOverride, service.getHelmValueYaml());
+      }
+    }
+
+    ApplicationManifest appManifest =
+        applicationManifestService.getByEnvId(appId, serviceTemplate.getEnvId(), AppManifestKind.VALUES);
+    if (appManifest != null) {
+      appManifestMap.put(K8sValuesLocation.EnvironmentGlobal, appManifest);
+    }
+
+    appManifest = applicationManifestService.getByEnvAndServiceId(
+        appId, serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), AppManifestKind.VALUES);
+    if (appManifest != null) {
+      appManifestMap.put(K8sValuesLocation.Environment, appManifest);
+    }
+
+    populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+
+    return valuesFiles.values().stream().collect(Collectors.toList());
   }
 }
