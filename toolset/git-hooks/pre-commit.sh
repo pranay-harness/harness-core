@@ -79,3 +79,25 @@ else
         fi
     done
 fi
+
+GRAPHQL_FORMAT_PROPERTY=hook.pre-commit.format.graphql
+if [ "`git config $GRAPHQL_FORMAT_PROPERTY`" == "false" ]
+then
+    echo '\033[0;31m' formatting graphqls is disabled - to enable: '\033[0;37m'git config --unset $GRAPHQL_FORMAT_PROPERTY '\033[0m'
+else
+    echo '\033[0;34m' formatting graphqls ... to disable: '\033[0;37m'git config --add $GRAPHQL_FORMAT_PROPERTY false '\033[0m'
+
+    #do the formatting
+    for file in `git diff-index --cached --name-only $against | grep "\.graphql$"`
+    do
+        if [ -e "${file}" ]
+        then
+            prettier --write --print-width=120 "${file}"
+            git diff --exit-code -- "${file}"
+            if [ "$?" -ne "0" ]
+            then
+                git add "${file}"
+            fi
+        fi
+    done
+fi
