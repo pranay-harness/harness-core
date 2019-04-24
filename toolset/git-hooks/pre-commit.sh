@@ -63,21 +63,26 @@ then
 else
     echo '\033[0;34m' formatting poms ... to disable: '\033[0;37m'git config --add $POM_FORMAT_PROPERTY false '\033[0m'
 
-    mvn sortpom:sort > /dev/null
-    pushd tools > /dev/null; mvn sortpom:sort > /dev/null; popd > /dev/null
+    POMS=`git diff-index --cached --name-only $against | grep "^pom\.xml$"`
 
-    #do the formatting
-    for file in `find . -type f -name pom.xml`
-    do
-        if [ -e "${file}" ]
-        then
-            git diff --exit-code -- "${file}"
-            if [ "$?" -ne "0" ]
+    if [ ! -z "$POMS" ]
+    then
+        mvn sortpom:sort > /dev/null
+        pushd tools > /dev/null; mvn sortpom:sort > /dev/null; popd > /dev/null
+
+        #do the formatting
+        for file in `find . -type f -name pom.xml`
+        do
+            if [ -e "${file}" ]
             then
-                git add "${file}"
+                git diff --exit-code -- "${file}"
+                if [ "$?" -ne "0" ]
+                then
+                    git add "${file}"
+                fi
             fi
-        fi
-    done
+        done
+    fi
 fi
 
 GRAPHQL_FORMAT_PROPERTY=hook.pre-commit.format.graphql
