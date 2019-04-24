@@ -136,19 +136,17 @@ public class Service extends Base implements KeywordsAware, NameAccess {
     private String artifactType;
     private String deploymentType;
     private String configMapYaml;
-    private String helmValueYaml;
     private String applicationStack;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
-        String configMapYaml, String helmValueYaml, String applicationStack, List<NameValuePair.Yaml> configVariables) {
+        String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
       this.deploymentType = deploymentType;
       this.configMapYaml = configMapYaml;
-      this.helmValueYaml = helmValueYaml;
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
     }
