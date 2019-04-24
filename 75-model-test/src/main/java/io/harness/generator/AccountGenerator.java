@@ -159,6 +159,11 @@ public class AccountGenerator {
   public Account ensureHarnessTest() {
     Account account = this.getOrCreateAccount(TEST_ACCOUNT_ID, "Harness Test", "Harness");
 
+    return ensureAccount(account);
+  }
+
+  // TODO: this needs serious refactoring
+  public Account ensureAccount(Account account) {
     try {
       this.setLicenseInfo(account);
 
@@ -175,7 +180,7 @@ public class AccountGenerator {
     return account;
   }
 
-  private Account getOrCreateAccount(String accountId, String accountName, String companyName) {
+  public Account getOrCreateAccount(String accountId, String accountName, String companyName) {
     Account account = anAccount().withAccountName(accountName).withCompanyName(companyName).build();
 
     account = exists(account);

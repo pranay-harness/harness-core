@@ -9,6 +9,14 @@ type Query {
   # Get details about an application
   application(applicationId: String!): Application @dataFetcher(name: "application")
 
+  #Asking accountID temporarily because there is no auth support as of now.
+  #Will remove it once authentication is available
+  applications(accountId: String!, limit: Int!, offset: Int): ApplicationConnection
+    @dataFetcher(name: "applicationConnection")
+
+  # Get details about an environment
+  environment(environmentId: String!): Environment @dataFetcher(name: "environment")
+
   # Get a pipeline object by id
   pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
 
@@ -34,15 +42,8 @@ type Query {
     @dataFetcher(name: "executionConnection")
 
   # Get list of successfully deployed articacts.
-  deployedArtifacts(applicationId: String!, envId: String!, serviceId: String!): [Artifact]
+  deployedArtifacts(applicationId: String!, environmentId: String!, serviceId: String!): [Artifact]
     @dataFetcher(name: "artifact")
-
-  #Asking accountID temporarily because there is no auth support as of now.
-  #Will remove it once authentication is available
-  applications(accountId: String!): PagedData @dataFetcher(name: "applications")
-
-  # Get details about an environment
-  environment(applicationId: String!, envId: String!): Environment @dataFetcher(name: "environment")
 
   # Get page data of environments
   environments(applicationId: String!, environmentType: String, limit: Int, offset: Int): PagedData
@@ -56,7 +57,7 @@ type Query {
   instancesByService(serviceId: String, limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: "instancesByService")
 
-  instancesByEnvironment(envId: String, limit: Int!, offset: Int): InstanceConnection
+  instancesByEnvironment(environmentId: String, limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: "instancesByEnvironment")
 
   #Adding accountId as input temporarily since there is no auth support as of now
@@ -249,13 +250,18 @@ type Application {
   description: String
 }
 
+type ApplicationConnection {
+  pageInfo: PageInfo
+  nodes: [Application]
+}
+
 type Environment {
   id: String
   name: String
   description: String
-  environmentType: String
+  type: EnvironmentType
   instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByEnvironment", contextFieldArgsMap: "{ \"envId\": \"id\"}")
+    @dataFetcher(name: "instancesByEnvironment", contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
 }
 
 enum InstanceType {

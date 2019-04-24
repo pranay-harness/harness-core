@@ -458,4 +458,11 @@ public class Application extends Base implements KeywordsAware, NameAccess {
       this.description = description;
     }
   }
+
+  public static final class ApplicationKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+  }
 }
