@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -37,8 +38,10 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmDeployChartSpec;
+import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -81,6 +84,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmCommandHelper helmCommandHelper;
   @Inject private DelegateLogService delegateLogService;
   @Inject private GitClient gitClient;
+  @Inject private HelmTaskHelper helmTaskHelper;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
@@ -99,27 +103,38 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
-      if (commandRequest.getRepoConfig() == null) {
+
+      K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
+      if (repoConfig == null) {
         addRepoForCommand(commandRequest);
         repoUpdate(commandRequest);
-      }
-      fetchSourceRepo(commandRequest);
+        if (!helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
+          String msg =
+              new StringBuilder("Couldn't find valid helm chart specification from service or values.yaml from git\n")
+                  .append((commandRequest.getChartSpecification() != null)
+                          ? commandRequest.getChartSpecification() + "\n"
+                          : "")
+                  .append("Please specify helm chart specification either in service or git repo\n")
+                  .toString();
 
-      if (commandRequest.getRepoConfig() == null
-          && !helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
-        String msg =
-            new StringBuilder("Couldn't find valid helm chart specification from service or values.yaml from git\n")
-                .append((commandRequest.getChartSpecification() != null) ? commandRequest.getChartSpecification() + "\n"
-                                                                         : "")
-                .append("Please specify helm chart specification either in service or git repo\n")
-                .toString();
-
-        logger.info(msg);
-        executionLogCallback.saveExecutionLog(msg);
-        return HelmInstallCommandResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .output(msg)
-            .build();
+          logger.info(msg);
+          executionLogCallback.saveExecutionLog(msg);
+          return HelmInstallCommandResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+              .output(msg)
+              .build();
+        }
+      } else {
+        switch (repoConfig.getManifestStoreTypes()) {
+          case HelmSourceRepo:
+            fetchSourceRepo(commandRequest);
+            break;
+          case HelmChartRepo:
+            fetchChartRepo(commandRequest);
+            break;
+          default:
+            throw new WingsException("Unsupported store type: " + repoConfig.getManifestStoreTypes());
+        }
       }
 
       executionLogCallback =
@@ -175,6 +190,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
+  private void fetchChartRepo(HelmInstallCommandRequest commandRequest) throws Exception {
+    HelmChartConfigParams helmChartConfigParams = commandRequest.getRepoConfig().getHelmChartConfigParams();
+    List<FileData> files = helmTaskHelper.fetchChartFiles(helmChartConfigParams, null);
+    writeFilesToWorkingDirectory(commandRequest, files);
+    commandRequest.setWorkingDir(getWorkingDirectory(commandRequest));
+    commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");
+  }
+
   private void fetchSourceRepo(HelmInstallCommandRequest commandRequest) throws IOException {
     K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getRepoConfig();
     if (sourceRepoConfig == null) {
@@ -192,10 +215,26 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         gitFileConfig.getCommitId(), gitFileConfig.getBranch(), Collections.singletonList(gitFileConfig.getFilePath()),
         gitFileConfig.isUseBranch());
 
+    writeFilesToWorkingDirectory(commandRequest, convertToFileData(gitFetchFilesResult.getFiles()));
+    commandRequest.setWorkingDir(
+        Paths.get(getWorkingDirectory(commandRequest), gitFileConfig.getFilePath()).toString());
+    commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
+  }
+
+  private List<FileData> convertToFileData(List<GitFile> gitFiles) {
+    List<FileData> files = new ArrayList<>();
+    for (GitFile file : gitFiles) {
+      files.add(FileData.builder().filePath(file.getFilePath()).fileContent(file.getFileContent()).build());
+    }
+    return files;
+  }
+
+  private void writeFilesToWorkingDirectory(HelmInstallCommandRequest commandRequest, List<FileData> files)
+      throws IOException {
     String workingDirectory = getWorkingDirectory(commandRequest);
     FileIo.createDirectoryIfDoesNotExist(workingDirectory);
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
-    for (GitFile file : gitFetchFilesResult.getFiles()) {
+    for (FileData file : files) {
       Path filePath = Paths.get(workingDirectory, file.getFilePath());
       Path parentPath = filePath.getParent();
       if (parentPath == null) {
@@ -205,8 +244,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       FileIo.waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
       FileIo.writeUtf8StringToFile(filePath.toString(), file.getFileContent());
     }
-    commandRequest.setWorkingDir(Paths.get(workingDirectory, gitFileConfig.getFilePath()).toString());
-    commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
   }
 
   private LogCallback markDoneAndStartNew(
