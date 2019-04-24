@@ -25,6 +25,7 @@ import software.wings.graphql.datafetcher.instance.InstancesByEnvironmentDataFet
 import software.wings.graphql.datafetcher.instance.InstancesByServiceDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
+import software.wings.graphql.datafetcher.service.ServiceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
@@ -81,6 +82,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
   }
 
   @NotNull
