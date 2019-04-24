@@ -4,7 +4,7 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import lombok.Value;
 
 @Value
-public class QLServicesQueryParameters implements QLPageQueryParameters {
+public class QLEnvironmentsQueryParameters implements QLPageQueryParameters {
   private String applicationId;
   private int limit;
   private int offset;

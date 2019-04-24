@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class QLArtifact implements QLObject, BaseInfo {
+public class QLArtifact implements QLObject {
   String id;
   String name;
   String sourceName;
@@ -18,6 +18,5 @@ public class QLArtifact implements QLObject, BaseInfo {
   String pipelineExecutionName;
   String lastDeployedBy;
   long lastDeployedAt;
-  String debugInfo;
   String appId;
 }

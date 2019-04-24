@@ -18,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLScalars;
-import software.wings.graphql.schema.type.resolvers.TypeResolverManager;
+import software.wings.graphql.schema.TypeResolverManager;
 
 import java.io.IOException;
 import java.net.URL;

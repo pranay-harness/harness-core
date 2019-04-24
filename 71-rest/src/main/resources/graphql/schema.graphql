@@ -17,6 +17,10 @@ type Query {
   # Get details about an environment
   environment(environmentId: String!): Environment @dataFetcher(name: "environment")
 
+  # Get page data of environments
+  environments(applicationId: String!, limit: Int!, offset: Int): EnvironmentConnection
+    @dataFetcher(name: "environmentConnection")
+
   # Get a pipeline object by id
   pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
 
@@ -45,10 +49,6 @@ type Query {
   deployedArtifacts(applicationId: String!, environmentId: String!, serviceId: String!): [Artifact]
     @dataFetcher(name: "artifact")
 
-  # Get page data of environments
-  environments(applicationId: String!, environmentType: String, limit: Int, offset: Int): PagedData
-    @dataFetcher(name: "environments")
-
   # Get count of instances in your application
   # Taking accountId as input temporarily since there is no auth support as of now.
   instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
@@ -67,8 +67,8 @@ type Query {
   # Get details about a service
   service(serviceId: String!): Service @dataFetcher(name: "service")
 
-  # Get list of services for appId. It will return paginated data
-  services(appId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: "serviceConnection")
+  # Get list of services for applicationId. It will return paginated data
+  services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: "serviceConnection")
 }
 
 # DateTime which will return date based on PST zone
@@ -202,21 +202,6 @@ type ServiceConnection {
   nodes: [Service]
 }
 
-# Type for returning paged data
-type PagedData {
-  # Total number of entries matching the result
-  total: Int
-  # offset of current page data
-  offset: Int
-  # limit of current page data
-  limit: Int
-  # Data returned
-  data: [Result]
-}
-
-# Union for Workflow and Workflow Execution
-union Result = Workflow | WorkflowExecution | Application | Environment
-
 # Aritifact type
 type Artifact {
   # Artifact Id
@@ -248,6 +233,9 @@ type Application {
   id: String
   name: String
   description: String
+
+  services(limit: Int!, offset: Int): ServiceConnection
+    @dataFetcher(name: "serviceConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
 }
 
 type ApplicationConnection {
@@ -262,6 +250,11 @@ type Environment {
   type: EnvironmentType
   instances(limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: "instancesByEnvironment", contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
+}
+
+type EnvironmentConnection {
+  pageInfo: PageInfo
+  nodes: [Application]
 }
 
 enum InstanceType {

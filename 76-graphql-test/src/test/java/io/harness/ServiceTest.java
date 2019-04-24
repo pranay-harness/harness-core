@@ -22,6 +22,8 @@ import software.wings.beans.Service.ServiceBuilder;
 import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLServiceConnection;
 
+import java.util.LinkedHashMap;
+
 @Slf4j
 public class ServiceTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;
@@ -64,22 +66,34 @@ public class ServiceTest extends GraphQLTest {
     final Service service3 = serviceGenerator.ensureService(
         seed, owners, serviceBuilder.name("Service3").uuid(UUIDGenerator.generateUuid()).build());
 
-    String query = "{ services(appId: \"" + application.getUuid()
-        + "\", limit: 2) { nodes { id name description artifactType deploymentType} } }";
+    {
+      String query = "{ services(applicationId: \"" + application.getUuid()
+          + "\", limit: 2) { nodes { id name description artifactType deploymentType} } }";
 
-    QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query);
-    assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
+      QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query);
+      assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
 
-    assertThat(serviceConnection.getNodes().get(0).getId()).isEqualTo(service3.getUuid());
-    assertThat(serviceConnection.getNodes().get(1).getId()).isEqualTo(service2.getUuid());
+      assertThat(serviceConnection.getNodes().get(0).getId()).isEqualTo(service3.getUuid());
+      assertThat(serviceConnection.getNodes().get(1).getId()).isEqualTo(service2.getUuid());
+    }
 
-    query = "{ services(appId: \"" + application.getUuid()
-        + "\", limit: 2, offset: 1) { nodes { id name description artifactType, deploymentType} } }";
+    {
+      String query = "{ services(applicationId: \"" + application.getUuid()
+          + "\", limit: 2, offset: 1) { nodes { id name description artifactType, deploymentType} } }";
 
-    serviceConnection = qlExecute(QLServiceConnection.class, query);
-    assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
+      QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query);
+      assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
 
-    assertThat(serviceConnection.getNodes().get(0).getId()).isEqualTo(service2.getUuid());
-    assertThat(serviceConnection.getNodes().get(1).getId()).isEqualTo(service1.getUuid());
+      assertThat(serviceConnection.getNodes().get(0).getId()).isEqualTo(service2.getUuid());
+      assertThat(serviceConnection.getNodes().get(1).getId()).isEqualTo(service1.getUuid());
+    }
+
+    {
+      String query = "{ application(applicationId: \"" + application.getUuid()
+          + "\") { services(limit: 2, offset: 1) { nodes { id } } } }";
+
+      final LinkedHashMap linkedHashMap = qlExecute(query);
+      assertThat(linkedHashMap.size()).isEqualTo(1);
+    }
   }
 }

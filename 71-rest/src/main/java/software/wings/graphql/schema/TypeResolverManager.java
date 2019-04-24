@@ -1,13 +1,10 @@
-package software.wings.graphql.schema.type.resolvers;
+package software.wings.graphql.schema;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import graphql.schema.TypeResolver;
-import software.wings.graphql.schema.type.QLApplication;
-import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLPipelineExecution;
-import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
 
 import java.util.Map;
@@ -17,10 +14,7 @@ import java.util.Set;
 @Singleton
 public class TypeResolverManager {
   // Uniface is a short for union or interface
-  public static final class TypeResolverManagerUnifaces {
-    public static final String Execution = "Execution";
-    public static final String Result = "Result";
-  }
+  public static final class TypeResolverManagerUnifaces { public static final String Execution = "Execution"; }
 
   public static final class TypeResolverManagerTypes {
     public static final String Application = "Application";
@@ -40,13 +34,6 @@ public class TypeResolverManager {
    */
   public Map<String, TypeResolver> getTypeResolverMap() {
     return ImmutableMap.<String, TypeResolver>builder()
-        .put(TypeResolverManagerUnifaces.Result,
-            getResultTypeResolver(ImmutableMap.<Class, String>builder()
-                                      .put(QLApplication.class, TypeResolverManagerTypes.Application)
-                                      .put(QLEnvironment.class, TypeResolverManagerTypes.Environment)
-                                      .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
-                                      .put(QLWorkflow.class, TypeResolverManagerTypes.Workflow)
-                                      .build()))
         .put(TypeResolverManagerUnifaces.Execution,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
