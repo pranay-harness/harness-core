@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 public class QLPipelinesQueryParameters implements QLPageQueryParameters {
-  private String appId;
+  private String applicationId;
   private int limit;
   private int offset;
 

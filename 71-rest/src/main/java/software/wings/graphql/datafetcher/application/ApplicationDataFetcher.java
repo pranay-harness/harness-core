@@ -3,68 +3,37 @@ package software.wings.graphql.datafetcher.application;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.dataloader.DataLoader;
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.schema.query.QLApplicationQueryParameters;
 import software.wings.graphql.schema.type.QLApplication;
-import software.wings.graphql.utils.GraphQLConstants;
+import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.AppService;
-
-import java.util.concurrent.ExecutionException;
-import javax.validation.constraints.NotNull;
 
 @Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication> {
-  AppService appService;
+  @Inject HPersistence persistence;
 
   @Inject
-  public ApplicationDataFetcher(AppService appService, AuthHandler authHandler) {
+  public ApplicationDataFetcher(AuthHandler authHandler) {
     super(authHandler);
-    this.appService = appService;
   }
 
   @Override
   public QLApplication fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID_ARG);
+    QLApplicationQueryParameters qlQuery = fetchParameters(QLApplicationQueryParameters.class, dataFetchingEnvironment);
 
-    if (StringUtils.isBlank(appId)) {
-      QLApplication applicationInfo = QLApplication.builder().build();
-      addInvalidInputInfo(applicationInfo, GraphQLConstants.APP_ID_ARG);
-      return applicationInfo;
+    Application application = persistence.get(Application.class, qlQuery.getApplicationId());
+    if (application == null) {
+      throw new InvalidRequestException("Application does not exist", WingsException.USER);
     }
 
-    String batchDataLoader = getBatchedDataLoaderName();
-    if (StringUtils.isBlank(batchDataLoader)) {
-      return loadApplicationInfo(appId);
-    } else {
-      return loadApplicationInfoWithBatching(appId, dataFetchingEnvironment.getDataLoader(batchDataLoader));
-    }
-  }
-
-  private QLApplication loadApplicationInfo(String appId) {
-    QLApplication applicationInfo;
-    Application application = appService.get(appId);
-    if (null == application) {
-      applicationInfo = QLApplication.builder().build();
-      addNoRecordFoundInfo(applicationInfo, GraphQLConstants.APP_ID_ARG);
-    } else {
-      applicationInfo = ApplicationController.getApplicationInfo(application);
-    }
-    return applicationInfo;
-  }
-
-  private QLApplication loadApplicationInfoWithBatching(
-      @NotNull String appId, DataLoader<String, QLApplication> dataLoader) {
-    try {
-      return dataLoader.load(appId).get();
-    } catch (InterruptedException | ExecutionException e) {
-      throw batchFetchException(e);
-    }
+    final QLApplicationBuilder builder = QLApplication.builder();
+    ApplicationController.populateApplication(application, builder);
+    return builder.build();
   }
 }

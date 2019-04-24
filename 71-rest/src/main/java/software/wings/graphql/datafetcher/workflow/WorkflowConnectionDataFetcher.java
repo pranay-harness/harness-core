@@ -28,7 +28,7 @@ public class WorkflowConnectionDataFetcher extends AbstractConnectionDataFetcher
     QLWorkflowsQueryParameters qlQuery = fetchParameters(QLWorkflowsQueryParameters.class, dataFetchingEnvironment);
 
     final Query<Workflow> query = persistence.createQuery(Workflow.class)
-                                      .filter(WorkflowKeys.appId, qlQuery.getAppId())
+                                      .filter(WorkflowKeys.appId, qlQuery.getApplicationId())
                                       .order(Sort.descending(WorkflowKeys.createdAt));
 
     QLWorkflowConnectionBuilder connectionBuilder = QLWorkflowConnection.builder();

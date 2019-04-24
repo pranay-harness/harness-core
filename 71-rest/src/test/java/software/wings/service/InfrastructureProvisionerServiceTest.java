@@ -31,7 +31,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //    Randomizer.Seed seed = Randomizer.seed();
   //    final InfrastructureProvisioner infrastructureProvisioner =
   //    infrastructureProvisionerGenerator.ensureRandom(seed); final InfrastructureProvisioner provisioner =
-  //        infrastructureProvisionerService.get(infrastructureProvisioner.getAppId(),
+  //        infrastructureProvisionerService.get(infrastructureProvisioner.getApplicationId(),
   //        infrastructureProvisioner.getUuid());
   //
   //    assertThat(provisioner).isEqualTo(infrastructureProvisioner);
@@ -84,7 +84,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //    final PageResponse<InfrastructureProvisionerDetails> pageResponse =
   //    infrastructureProvisionerService.listDetails(
   //        aPageRequest().addFilter(InfrastructureProvisioner.APP_ID_KEY, Operator.EQ,
-  //        provisioner.getAppId()).build());
+  //        provisioner.getApplicationId()).build());
   //    assertThat(pageResponse.size()).isEqualTo(1);
   //    InfrastructureProvisionerDetails details = pageResponse.get(0);
   //    assertThat(details.getName()).isEqualTo("Test");
@@ -101,7 +101,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //    Randomizer.Seed seed = Randomizer.seed();
   //    final InfrastructureProvisioner infrastructureProvisioner =
   //    infrastructureProvisionerGenerator.ensureRandom(seed);
-  //    infrastructureProvisionerService.delete(infrastructureProvisioner.getAppId(),
+  //    infrastructureProvisionerService.delete(infrastructureProvisioner.getApplicationId(),
   //    infrastructureProvisioner.getUuid()); final List<InfrastructureProvisioner> provisioners =
   //    infrastructureProvisionerService.list(aPageRequest().build()); assertThat(provisioners.size()).isEqualTo(0);
   //  }
@@ -120,7 +120,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //    Workflow workflow = workflowGenerator.ensureWorkflow(seed, null,
   //        aWorkflow()
   //            .name("basic")
-  //            .appId(infrastructureMapping.getAppId())
+  //            .appId(infrastructureMapping.getApplicationId())
   //            .envId(infrastructureMapping.getEnvId())
   //            .workflowType(WorkflowType.ORCHESTRATION)
   //            .serviceId(infrastructureMapping.getK8sManifestByServiceId())
@@ -134,7 +134,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //
   //    assertThatThrownBy(()
   //                           -> infrastructureProvisionerService.delete(
-  //                               infrastructureProvisioner.getAppId(), infrastructureProvisioner.getUuid()));
+  //                               infrastructureProvisioner.getApplicationId(), infrastructureProvisioner.getUuid()));
   //  }
   //
   //  @Test
@@ -154,7 +154,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //                .build());
   //
   //    ExecutionContext context = mock(ExecutionContext.class);
-  //    when(context.getAppId()).thenReturn(infrastructureProvisioner.getAppId());
+  //    when(context.getApplicationId()).thenReturn(infrastructureProvisioner.getApplicationId());
   //    when(context.asMap()).thenReturn(new HashMap<>());
   //
   //    Map<String, Object> outputs = new HashMap<>();
@@ -173,7 +173,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //        infrastructureProvisioner.getUuid(), context, outputs);
   //
   //    AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.get(
-  //        infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+  //        infrastructureMapping.getApplicationId(), infrastructureMapping.getUuid());
   //
   //    assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
   //  }

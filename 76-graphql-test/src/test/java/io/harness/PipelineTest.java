@@ -77,7 +77,7 @@ public class PipelineTest extends GraphQLTest {
 
     {
       String query =
-          "{ pipelines(appId: \"" + application.getUuid() + "\", limit: 2) { nodes { id name description } } }";
+          "{ pipelines(applicationId: \"" + application.getUuid() + "\", limit: 2) { nodes { id name description } } }";
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
@@ -87,7 +87,7 @@ public class PipelineTest extends GraphQLTest {
     }
 
     {
-      String query = "{ pipelines(appId: \"" + application.getUuid()
+      String query = "{ pipelines(applicationId: \"" + application.getUuid()
           + "\", limit: 2, offset: 1) { nodes { id name description } } }";
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);

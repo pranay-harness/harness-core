@@ -140,7 +140,8 @@ public class NewRelicDeploymentMarkerState extends State {
                                       .infrastructureMappingId(infrastructureMappingId)
                                       .build());
 
-    // waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
+    // waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getApplicationId(), correlationId, false),
+    // waitId);
 
     final NewRelicMarkerExecutionData executionData =
         NewRelicMarkerExecutionData.builder().payload(body).evaluatedPayload(evaluatedBody).build();

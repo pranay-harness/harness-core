@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 public class QLExecutionsParameters implements QLPageQueryParameters {
-  private String appId;
+  private String applicationId;
   private String pipelineId;
   private String workflowId;
   private int limit;

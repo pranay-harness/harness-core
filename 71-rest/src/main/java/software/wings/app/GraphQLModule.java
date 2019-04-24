@@ -13,7 +13,6 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationsDataFetcher;
-import software.wings.graphql.datafetcher.application.batchloader.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentsDataFetcher;
@@ -60,9 +59,6 @@ public class GraphQLModule extends AbstractModule {
 
     // DATA FETCHERS ARE NOT SINGLETON AS THEY CAN HAVE DIFFERENT CONTEXT MAP
     bindDataFetchers();
-
-    // Add all batched data fetchers are SINGLETON .
-    bindBatchedDataLoaders();
   }
 
   private void bindDataFetchers() {
@@ -93,10 +89,6 @@ public class GraphQLModule extends AbstractModule {
 
     c[0] = Character.toLowerCase(c[0]);
     return new String(c);
-  }
-
-  private void bindBatchedDataLoaders() {
-    bindBatchedDataLoaderWithAnnotation(ApplicationBatchDataLoader.class);
   }
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {

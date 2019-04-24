@@ -34,7 +34,7 @@ public class PipelineConnectionDataFetcher extends AbstractConnectionDataFetcher
     QLPipelinesQueryParameters qlQuery = fetchParameters(QLPipelinesQueryParameters.class, dataFetchingEnvironment);
 
     final Query<Pipeline> query = persistence.createQuery(Pipeline.class)
-                                      .filter(PipelineKeys.appId, qlQuery.getAppId())
+                                      .filter(PipelineKeys.appId, qlQuery.getApplicationId())
                                       .order(Sort.descending(PipelineKeys.createdAt));
 
     QLPipelineConnectionBuilder connectionBuilder = QLPipelineConnection.builder();

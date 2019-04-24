@@ -1126,7 +1126,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.setEnvId(envId);
           setUnset(ops, "envId", envId);
         }
-        //        updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
+        //        updateRequiredEntityTypes(workflow.getApplicationId(), orchestrationWorkflow);
       }
       if (!cloned) {
         EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), WORKFLOW,
