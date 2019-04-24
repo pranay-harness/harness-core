@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
@@ -21,6 +22,7 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.state.inspection.StateInspection;
 import io.harness.state.inspection.StateInspectionService;
+import io.harness.time.EpochUtils;
 import io.swagger.annotations.Api;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalAuthorization;
@@ -31,6 +33,7 @@ import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -42,6 +45,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -73,6 +77,7 @@ public class ExecutionResource {
   @Inject private StateInspectionService stateInspectionService;
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
+  @Inject private AccountService accountService;
 
   /**
    * List.
@@ -121,6 +126,12 @@ public class ExecutionResource {
     if (isNotBlank(orchestrationId)) {
       pageRequest.addFilter("workflowId", Operator.EQ, orchestrationId);
     }
+
+    if (accountService.isCommunityAccount(accountId)) {
+      pageRequest.addFilter(
+          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(3, "UTC"));
+    }
+
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
 

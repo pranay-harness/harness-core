@@ -136,6 +136,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -160,6 +161,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private AppService appService;
+  @Mock private AccountService accountService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -573,6 +575,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                                  .triggeredBy(user)
                                                  .build();
 
+      when(accountService.isCommunityAccount(ACCOUNT_1_ID)).thenReturn(false);
       ServiceInstanceDashboard serviceInstanceDashboard =
           dashboardService.getServiceInstanceDashboard(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
       assertNotNull(serviceInstanceDashboard);

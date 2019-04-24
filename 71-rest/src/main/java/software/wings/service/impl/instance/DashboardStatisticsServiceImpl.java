@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
@@ -29,6 +30,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
@@ -39,6 +41,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
+import io.harness.time.EpochUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,6 +87,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.ServiceInstanceCount.EnvType;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -122,6 +126,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private AccountService accountService;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(
@@ -724,7 +729,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public ServiceInstanceDashboard getServiceInstanceDashboard(String accountId, String appId, String serviceId) {
     List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(accountId, appId, serviceId);
-    List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(appId, serviceId);
+    List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(accountId, appId, serviceId);
     Service service = serviceResourceService.get(appId, serviceId);
     Validator.notNullCheck("Service not found", service);
     EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
@@ -853,16 +858,20 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return appIdsFromInstances;
   }
 
-  private List<DeploymentHistory> getDeploymentHistory(String appId, String serviceId) {
+  private List<DeploymentHistory> getDeploymentHistory(String accountId, String appId, String serviceId) {
     List<DeploymentHistory> deploymentExecutionHistoryList = new ArrayList<>();
 
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                     .addFilter("appId", EQ, appId)
-                                                     .addFilter("workflowType", EQ, ORCHESTRATION)
-                                                     .addFilter("serviceIds", HAS, serviceId)
-                                                     .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
-                                                     .withLimit("10")
-                                                     .build();
+    PageRequestBuilder pageRequestBuilder = aPageRequest()
+                                                .addFilter("appId", EQ, appId)
+                                                .addFilter("workflowType", EQ, ORCHESTRATION)
+                                                .addFilter("serviceIds", HAS, serviceId)
+                                                .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
+                                                .withLimit("10");
+    if (accountService.isCommunityAccount(accountId)) {
+      pageRequestBuilder.addFilter(
+          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(3, "UTC"));
+    }
+    PageRequest<WorkflowExecution> pageRequest = pageRequestBuilder.build();
 
     List<WorkflowExecution> workflowExecutionList =
         workflowExecutionService.listExecutions(pageRequest, false).getResponse();
