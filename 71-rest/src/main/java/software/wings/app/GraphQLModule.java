@@ -11,8 +11,8 @@ import org.dataloader.MappedBatchLoader;
 import org.jetbrains.annotations.NotNull;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
+import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
-import software.wings.graphql.datafetcher.application.ApplicationsDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentsDataFetcher;
@@ -62,8 +62,8 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetchers() {
+    bindDataFetcherWithAnnotation(ApplicationConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
-    bindDataFetcherWithAnnotation(ApplicationsDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentsDataFetcher.class);
@@ -75,10 +75,10 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(InstancesByServiceDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
+    bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
-    bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
   }
 
   @NotNull

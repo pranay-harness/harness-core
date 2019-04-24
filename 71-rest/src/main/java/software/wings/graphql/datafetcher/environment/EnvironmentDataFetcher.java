@@ -1,55 +1,39 @@
 package software.wings.graphql.datafetcher.environment;
 
-import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
-import static software.wings.graphql.utils.GraphQLConstants.ENV_ID_ARG;
-
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Environment;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.schema.query.QLEnvironmentQueryParameters;
 import software.wings.graphql.schema.type.QLEnvironment;
-import software.wings.graphql.utils.GraphQLConstants;
+import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.EnvironmentService;
 
 @Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment> {
-  EnvironmentService environmentService;
-  AuthHandler authHandler;
+  @Inject HPersistence persistence;
 
   @Inject
-  public EnvironmentDataFetcher(AuthHandler authHandler, EnvironmentService environmentService) {
+  public EnvironmentDataFetcher(AuthHandler authHandler) {
     super(authHandler);
-    this.environmentService = environmentService;
   }
 
   @Override
   public QLEnvironment fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    QLEnvironment environmentInfo = QLEnvironment.builder().build();
-    String appId = (String) getArgumentValue(dataFetchingEnvironment, APP_ID_ARG);
-    // Pre-checks
-    if (StringUtils.isBlank(appId)) {
-      addInvalidInputInfo(environmentInfo, GraphQLConstants.APP_ID_ARG);
-      return environmentInfo;
+    QLEnvironmentQueryParameters qlQuery = fetchParameters(QLEnvironmentQueryParameters.class, dataFetchingEnvironment);
+
+    Environment environment = persistence.get(Environment.class, qlQuery.getEnvironmentId());
+    if (environment == null) {
+      throw new InvalidRequestException("Environment does not exist", WingsException.USER);
     }
 
-    String envId = (String) getArgumentValue(dataFetchingEnvironment, ENV_ID_ARG);
-    if (StringUtils.isBlank(envId)) {
-      addInvalidInputInfo(environmentInfo, GraphQLConstants.ENV_ID_ARG);
-      return environmentInfo;
-    }
-
-    Environment env = environmentService.get(appId, envId);
-    if (null == env) {
-      addNoRecordFoundInfo(environmentInfo, ENV_ID_ARG);
-      return environmentInfo;
-    }
-    return EnvironmentController.getEnvironmentInfo(env);
+    final QLEnvironmentBuilder builder = QLEnvironment.builder();
+    EnvironmentController.populateEnvironment(environment, builder);
+    return builder.build();
   }
 }
