@@ -60,6 +60,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -73,6 +74,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest.HelmInstallCommandRequestBuilder;
@@ -85,6 +87,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -138,6 +141,7 @@ public class HelmDeployState extends State {
   @Inject private transient GitConfigHelperService gitConfigHelperService;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private ApplicationManifestUtils appManifestHelper;
+  @Inject private transient HelmChartConfigHelperService helmChartConfigHelperService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -236,7 +240,7 @@ public class HelmDeployState extends State {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig repoConfig,
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     List<String> helmValueOverridesYamlFilesEvaluated = getValuesYamlOverrides(
         context, containerServiceParams, appId, imageDetails, infrastructureMapping, appManifestMap);
@@ -260,7 +264,7 @@ public class HelmDeployState extends State {
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
             .commandFlags(commandFlags)
-            .sourceRepoConfig(sourceRepoConfig);
+            .sourceRepoConfig(repoConfig);
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -573,22 +577,38 @@ public class HelmDeployState extends State {
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
 
-    K8sDelegateManifestConfig sourceRepoConfig = null;
+    K8sDelegateManifestConfig repoConfig = null;
     ApplicationManifest appManifest = applicationManifestService.getAppManifest(
         app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
     if (appManifest != null) {
-      GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
-      GitConfig sourceRepoGitConfig =
-          settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
-      sourceRepoConfig = K8sDelegateManifestConfig.builder()
-                             .gitFileConfig(sourceRepoGitFileConfig)
-                             .gitConfig(sourceRepoGitConfig)
-                             .encryptedDataDetails(fetchEncryptedDataDetail(context, sourceRepoGitConfig))
-                             .build();
+      switch (appManifest.getStoreType()) {
+        case HelmSourceRepo:
+          GitFileConfig sourceRepoGitFileConfig = appManifest.getGitFileConfig();
+          GitConfig sourceRepoGitConfig =
+              settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
+          repoConfig = K8sDelegateManifestConfig.builder()
+                           .gitFileConfig(sourceRepoGitFileConfig)
+                           .gitConfig(sourceRepoGitConfig)
+                           .encryptedDataDetails(fetchEncryptedDataDetail(context, sourceRepoGitConfig))
+                           .manifestStoreTypes(StoreType.HelmSourceRepo)
+                           .build();
+
+          break;
+        case HelmChartRepo:
+          HelmChartConfigParams helmChartConfigTaskParams =
+              helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest);
+          repoConfig = K8sDelegateManifestConfig.builder()
+                           .helmChartConfigParams(helmChartConfigTaskParams)
+                           .manifestStoreTypes(StoreType.HelmChartRepo)
+                           .build();
+          break;
+        default:
+          throw new WingsException("Unsupported store type: " + appManifest.getStoreType());
+      }
     }
 
     if (StateType.HELM_DEPLOY.name().equals(getStateType())) {
-      if ((gitFileConfig == null || gitFileConfig.getConnectorId() == null) && sourceRepoConfig == null) {
+      if ((gitFileConfig == null || gitFileConfig.getConnectorId() == null) && repoConfig == null) {
         validateChartSpecification(helmChartSpecification);
       }
       evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
@@ -641,7 +661,7 @@ public class HelmDeployState extends State {
         encryptedDataDetails, commandFlags);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, containerInfraMapping, repoName,
-        gitConfig, encryptedDataDetails, commandFlags, sourceRepoConfig, appManifestMap);
+        gitConfig, encryptedDataDetails, commandFlags, repoConfig, appManifestMap);
 
     delegateService.queueTask(DelegateTask.builder()
                                   .async(true)

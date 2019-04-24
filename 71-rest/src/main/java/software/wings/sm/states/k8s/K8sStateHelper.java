@@ -40,7 +40,6 @@ import io.harness.serializer.KryoUtils;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
@@ -57,9 +56,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmChartConfig;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -68,14 +65,11 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
-import software.wings.helpers.ext.helm.request.HelmChartConfigParams.HelmChartConfigParamsBuilder;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -88,6 +82,7 @@ import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitFileConfigHelperService;
+import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -96,7 +91,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -130,6 +124,7 @@ public class K8sStateHelper {
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
   @Inject ApplicationManifestUtils applicationManifestUtils;
+  @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {
@@ -187,7 +182,8 @@ public class K8sStateHelper {
         break;
 
       case HelmChartRepo:
-        manifestConfigBuilder.helmChartConfigParams(getHelmChartConfigTaskParams(context, appManifest));
+        manifestConfigBuilder.helmChartConfigParams(
+            helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest));
         break;
 
       default:
@@ -650,7 +646,8 @@ public class K8sStateHelper {
         .accountId(context.getAccountId())
         .appId(context.getAppId())
         .activityId(activityId)
-        .helmChartConfigTaskParams(getHelmChartConfigTaskParams(context, applicationManifest))
+        .helmChartConfigTaskParams(
+            helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
         .workflowExecutionId(context.getWorkflowExecutionId())
         .build();
   }
@@ -734,57 +731,5 @@ public class K8sStateHelper {
                                     .build())
         .withDelegateTaskId(delegateTaskId)
         .build();
-  }
-
-  private String generateRepoName(
-      HelmRepoConfig helmRepoConfig, String settingAttributeId, String workflowExecutionId) {
-    switch (helmRepoConfig.getSettingType()) {
-      case HTTP_HELM_REPO:
-        return convertBase64UuidToCanonicalForm(settingAttributeId);
-
-      default:
-        return convertBase64UuidToCanonicalForm(workflowExecutionId);
-    }
-  }
-
-  private HelmChartConfigParams getHelmChartConfigTaskParams(
-      ExecutionContext context, ApplicationManifest applicationManifest) {
-    HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
-    if (helmChartConfig == null) {
-      return null;
-    }
-
-    String connectorId = helmChartConfig.getConnectorId();
-    SettingAttribute settingAttribute = settingsService.get(connectorId);
-    notNullCheck("Helm repo config not found with id " + connectorId, settingAttribute);
-
-    HelmRepoConfig helmRepoConfig = (HelmRepoConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDataDetails =
-        secretManager.getEncryptionDetails(helmRepoConfig, context.getAppId(), null);
-
-    String repoName = generateRepoName(helmRepoConfig, settingAttribute.getUuid(), context.getWorkflowExecutionId());
-
-    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = HelmChartConfigParams.builder()
-                                                                    .chartName(helmChartConfig.getChartName())
-                                                                    .chartVersion(helmChartConfig.getChartVersion())
-                                                                    .helmRepoConfig(helmRepoConfig)
-                                                                    .encryptedDataDetails(encryptionDataDetails)
-                                                                    .repoDisplayName(settingAttribute.getName())
-                                                                    .repoName(repoName);
-
-    if (isNotBlank(helmRepoConfig.getConnectorId())) {
-      SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());
-      notNullCheck(
-          format("Parent connector with id %s not found for helm repo config", helmRepoConfig.getConnectorId()),
-          settingAttribute);
-
-      SettingValue value = connectorSettingAttribute.getValue();
-      List<EncryptedDataDetail> connectorEncryptedDataDetails =
-          secretManager.getEncryptionDetails((EncryptableSetting) value, context.getAppId(), null);
-
-      helmChartConfigParamsBuilder.connectorConfig(value).connectorEncryptedDataDetails(connectorEncryptedDataDetails);
-    }
-
-    return helmChartConfigParamsBuilder.build();
   }
 }
