@@ -50,6 +50,8 @@ public class AuditHelper {
   }
 
   private void setGlobalContext(AuditHeader header) {
+    // if GlobalContextManager.getGlobalContext() is null, init will create new GlobalContext
+    GlobalContextManager.initGlobalContextGuard(GlobalContextManager.getGlobalContext());
     GlobalContextManager.upsertGlobalContextRecord(AuditGlobalContextData.builder().auditId(header.getUuid()).build());
   }
 
