@@ -1,4 +1,4 @@
-directive @dataFetcher(name : String!, contextFieldArgsMap: String, batchLoader: String) on FIELD_DEFINITION
+directive @dataFetcher(name: String!, contextFieldArgsMap: String, batchLoader: String) on FIELD_DEFINITION
 
 schema {
   query: Query
@@ -7,52 +7,60 @@ schema {
 # Harness GraphQL SDL details
 type Query {
   # Get a pipeline object by id
-  pipeline(pipelineId: String!): Pipeline @dataFetcher(name : "pipeline")
+  pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
 
-  pipelines(appId: String!, limit: Int!, offset: Int): PipelineConnection @dataFetcher(name : "pipelineConnection")
+  pipelines(appId: String!, limit: Int!, offset: Int): PipelineConnection @dataFetcher(name: "pipelineConnection")
 
-    # Get workflow object by id
-  workflow(workflowId: String!): Workflow   @dataFetcher(name : "workflow")
+  # Get workflow object by id
+  workflow(workflowId: String!): Workflow @dataFetcher(name: "workflow")
 
   # Get list of workflows for an appId. It will return paginated data
-  workflows(appId: String!, limit: Int!, offset: Int): WorkflowConnection  @dataFetcher(name : "workflowConnection")
+  workflows(appId: String!, limit: Int!, offset: Int): WorkflowConnection @dataFetcher(name: "workflowConnection")
 
   # Get the execution status of a workflow
-  execution(executionId: String!) : Execution  @dataFetcher(name : "execution")
+  execution(executionId: String!): Execution @dataFetcher(name: "execution")
 
   # Get the list of executions.
-  executionsByApplication(appId: String!, limit: Int!, offset: Int): ExecutionConnection  @dataFetcher(name : "executionConnection")
-  executionsByWorkflow(workflowId: String!, limit: Int!, offset: Int): ExecutionConnection  @dataFetcher(name : "executionConnection")
-  executionsByPipeline(pipelineId: String!, limit: Int!, offset: Int): ExecutionConnection  @dataFetcher(name : "executionConnection")
+  executionsByApplication(appId: String!, limit: Int!, offset: Int): ExecutionConnection
+    @dataFetcher(name: "executionConnection")
+  executionsByWorkflow(workflowId: String!, limit: Int!, offset: Int): ExecutionConnection
+    @dataFetcher(name: "executionConnection")
+  executionsByPipeline(pipelineId: String!, limit: Int!, offset: Int): ExecutionConnection
+    @dataFetcher(name: "executionConnection")
 
   # Get list of successfully deployed articacts.
-  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact]  @dataFetcher(name : "artifact")
+  deployedArtifacts(appId: String!, envId: String!, serviceId: String!): [Artifact] @dataFetcher(name: "artifact")
 
   # Get details about an application
-  application(appId:String!): Application @dataFetcher(name : "application")
+  application(appId: String!): Application @dataFetcher(name: "application")
 
-  #Asking accountID temporarily because there is no auth support as of now. Will remove it once authentication is available
-  applications(accountId:String!): PagedData  @dataFetcher(name : "applications")
+  #Asking accountID temporarily because there is no auth support as of now.
+  #Will remove it once authentication is available
+  applications(accountId: String!): PagedData @dataFetcher(name: "applications")
 
   # Get details about an environment
-  environment(appId: String!, envId: String! ): Environment  @dataFetcher(name : "environment")
+  environment(appId: String!, envId: String!): Environment @dataFetcher(name: "environment")
 
   # Get page data of environments
-  environments(appId: String!, environmentType: String,limit: Int, offset: Int): PagedData  @dataFetcher(name : "environments")
+  environments(appId: String!, environmentType: String, limit: Int, offset: Int): PagedData
+    @dataFetcher(name: "environments")
 
   # Get count of instances in your application
   # Taking accountId as input temporarily since there is no auth support as of now.
-  instanceCount(accountId:String!, instanceCountType: InstanceCountType=TOTAL) : InstanceCount @dataFetcher(name : "instanceCount")
+  instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
+    @dataFetcher(name: "instanceCount")
 
-  instancesByService(serviceId : String,limit: Int, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByService")
+  instancesByService(serviceId: String, limit: Int, offset: Int): InstanceConnection
+    @dataFetcher(name: "instancesByService")
 
-  instancesByEnvironment(envId : String,limit: Int, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByEnvironment")
+  instancesByEnvironment(envId: String, limit: Int, offset: Int): InstanceConnection
+    @dataFetcher(name: "instancesByEnvironment")
 
-  instancesByEnvironmentType(envType : EnvType,limit: Int, offset: Int) : InstanceConnection @dataFetcher(name : "instancesByEnvType")
+  instancesByEnvironmentType(envType: EnvironmentType, limit: Int, offset: Int): InstanceConnection
+    @dataFetcher(name: "instancesByEnvType")
 
-    # Get details about a service
-  service(serviceId: String! ): Service  @dataFetcher(name : "service")
-
+  # Get details about a service
+  service(serviceId: String!): Service @dataFetcher(name: "service")
 }
 
 # DateTime which will return date based on PST zone
@@ -60,10 +68,10 @@ scalar DateTime
 scalar Object
 
 type PageInfo {
-  hasMore : Boolean
+  hasMore: Boolean
   total: Int
-  offset : Int
-  limit : Int
+  offset: Int
+  limit: Int
 }
 
 # Type for pipeline
@@ -79,8 +87,8 @@ type Pipeline {
 }
 
 type PipelineConnection {
-  pageInfo : PageInfo
-  nodes : [Pipeline]
+  pageInfo: PageInfo
+  nodes: [Pipeline]
 }
 
 # Type workflow
@@ -96,36 +104,36 @@ type Workflow {
 }
 
 type WorkflowConnection {
-  pageInfo : PageInfo
-  nodes : [Workflow]
+  pageInfo: PageInfo
+  nodes: [Workflow]
 }
 
 enum ExecutionStatus {
-  ABORTED,
-  ERROR,
-  FAILED,
-  PAUSED,
-  QUEUED,
-  RESUMED,
-  RUNNING,
-  SUCCESS,
-  WAITING,
-  SKIPPED,
-  REJECTED,
+  ABORTED
+  ERROR
+  FAILED
+  PAUSED
+  QUEUED
+  RESUMED
+  RUNNING
+  SUCCESS
+  WAITING
+  SKIPPED
+  REJECTED
   EXPIRED
 }
 
 interface Execution {
-  id : String
-  queuedTime : DateTime
-  startTime : DateTime
-  endTime : DateTime
-  status : ExecutionStatus
+  id: String
+  queuedTime: DateTime
+  startTime: DateTime
+  endTime: DateTime
+  status: ExecutionStatus
 }
 
 type ExecutionConnection {
-  pageInfo : PageInfo
-  nodes : [Execution]
+  pageInfo: PageInfo
+  nodes: [Execution]
 }
 
 # Type for workflow execution
@@ -134,7 +142,7 @@ type WorkflowExecution implements Execution {
   id: String
 
   # DateTime when execution started
-  queuedTime : DateTime
+  queuedTime: DateTime
 
   # DateTime when execution started
   startTime: DateTime
@@ -152,7 +160,7 @@ type PipelineExecution implements Execution {
   id: String
 
   # DateTime when execution started
-  queuedTime : DateTime
+  queuedTime: DateTime
 
   # DateTime when execution started
   startTime: DateTime
@@ -166,16 +174,20 @@ type PipelineExecution implements Execution {
 
 # Service Type
 type Service {
-   # Service Id
-   id: String
-   # Name of the service
-   name: String
-   # Description of the Service
-   description: String
-   # Artifact type deployed by this service
-   artifactType: String
-   # Deployment Type SSH, Helm, Kubernetes
-   deploymentType: String
+  # Service Id
+  id: String
+
+  # Name of the service
+  name: String
+
+  # Description of the Service
+  description: String
+
+  # Artifact type deployed by this service
+  artifactType: String
+
+  # Deployment Type SSH, Helm, Kubernetes
+  deploymentType: String
 }
 
 # Type for returning paged data
@@ -195,58 +207,74 @@ union Result = Workflow | WorkflowExecution | Application | Environment
 
 # Aritifact type
 type Artifact {
-    # Artifact Id
-    id: String
-    # Source of the artifact Docker Jenkins
-    sourceName: String
-    # Display name of the artifact
-    displayName: String
-    # Build number of the artifiact
-    buildNo: String
-    # Workflow that successfully deployed it last
-    workflowExecutionName: String
-    # Pipeline that successfully deployed it last
-    pipelineflowExecutionName: String
-    # DateTime when artifact was last successfully last
-    lastDeployedAt: DateTime
-    # Last User who deployed successfully this artifact
-    lastDeployedBy: String
-    # Application of the artifact
-    application: Application @dataFetcher(name : "application", contextFieldArgsMap: "{ \"appId\": \"appId\"}", batchLoader: "application")
+  # Artifact Id
+  id: String
+  # Source of the artifact Docker Jenkins
+  sourceName: String
+  # Display name of the artifact
+  displayName: String
+  # Build number of the artifiact
+  buildNo: String
+  # Workflow that successfully deployed it last
+  workflowExecutionName: String
+  # Pipeline that successfully deployed it last
+  pipelineflowExecutionName: String
+  # DateTime when artifact was last successfully last
+  lastDeployedAt: DateTime
+  # Last User who deployed successfully this artifact
+  lastDeployedBy: String
+  # Application of the artifact
+  application: Application
+    @dataFetcher(name: "application", contextFieldArgsMap: "{ \"appId\": \"appId\"}", batchLoader: "application")
 }
 
 type Application {
   id: String
-  name : String
-  description : String
+  name: String
+  description: String
 }
 
-type Environment  {
+type Environment {
   id: String
-  name : String
-  description : String
+  name: String
+  description: String
   environmentType: String
 }
 
-enum InstanceType {PHYSICAL_HOST_INSTANCE,EC2_CLOUD_INSTANCE,GCP_CLOUD_INSTANCE,ECS_CONTAINER_INSTANCE,KUBERNETES_CONTAINER_INSTANCE,PCF_INSTANCE}
+enum InstanceType {
+  PHYSICAL_HOST_INSTANCE
+  EC2_CLOUD_INSTANCE
+  GCP_CLOUD_INSTANCE
+  ECS_CONTAINER_INSTANCE
+  KUBERNETES_CONTAINER_INSTANCE
+  PCF_INSTANCE
+}
 
-enum EnvType {PROD,NON_PROD,ALL}
+enum EnvironmentType {
+  PROD
+  NON_PROD
+  ALL
+}
 
-type InstanceCount{
+type InstanceCount {
   count: Int
   instanceCountType: InstanceCountType
 }
 
 type Instance {
-  id : String
-  type : InstanceType
-  service : Service @dataFetcher(name : "service", contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
-  environment : Environment @dataFetcher(name : "environment", contextFieldArgsMap: "{ \"envId\": \"envId\",\"appId\": \"appId\"}")
+  id: String
+  type: InstanceType
+  service: Service @dataFetcher(name: "service", contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  environment: Environment
+    @dataFetcher(name: "environment", contextFieldArgsMap: "{ \"envId\": \"envId\",\"appId\": \"appId\"}")
 }
 
 type InstanceConnection {
-  pageInfo : PageInfo
-  nodes : [Instance]
+  pageInfo: PageInfo
+  nodes: [Instance]
 }
 
-enum InstanceCountType {TOTAL,NINETY_FIVE_PERCENTILE}
+enum InstanceCountType {
+  TOTAL
+  NINETY_FIVE_PERCENTILE
+}
