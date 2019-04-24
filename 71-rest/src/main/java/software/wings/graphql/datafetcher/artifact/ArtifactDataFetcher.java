@@ -63,19 +63,16 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<QLArtifact>> {
 
     String appId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.APP_ID_ARG);
     if (StringUtils.isBlank(appId)) {
-      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.APP_ID_ARG);
       return deployedArtifactList;
     }
 
     String serviceId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.SERVICE_ID_ARG);
     if (StringUtils.isBlank(serviceId)) {
-      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.SERVICE_ID_ARG);
       return deployedArtifactList;
     }
 
     String envId = (String) getArgumentValue(dataFetchingEnvironment, GraphQLConstants.ENV_ID_ARG);
     if (StringUtils.isBlank(envId)) {
-      addInvalidInputDebugInfo(deployedArtifactList, GraphQLConstants.ENV_ID_ARG);
       return deployedArtifactList;
     }
 
@@ -149,17 +146,5 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<List<QLArtifact>> {
             .build();
 
     return this.instanceService.list(instancePageRequest);
-  }
-
-  private void addInvalidInputDebugInfo(List<QLArtifact> artifactInfoList, String entityName) {
-    QLArtifact artifactInfo = QLArtifact.builder().build();
-    artifactInfoList.add(artifactInfo);
-    addInvalidInputInfo(artifactInfo, entityName);
-  }
-
-  private void addNoRecordFoundDebugInfo(List<QLArtifact> artifactInfoList, String messageString, Object... values) {
-    QLArtifact artifactInfo = QLArtifact.builder().build();
-    artifactInfoList.add(artifactInfo);
-    addNoRecordFoundInfo(artifactInfo, messageString, values);
   }
 }

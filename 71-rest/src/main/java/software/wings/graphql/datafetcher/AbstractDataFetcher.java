@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static software.wings.graphql.utils.GraphQLConstants.EMPTY_OR_NULL_INPUT_FIELD;
 import static software.wings.graphql.utils.GraphQLConstants.MAX_PAGE_SIZE;
 import static software.wings.graphql.utils.GraphQLConstants.USER_NOT_AUTHORIZED_TO_VIEW_ENTITY;
 
@@ -24,7 +23,6 @@ import org.modelmapper.internal.objenesis.Objenesis;
 import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.graphql.schema.type.BaseInfo;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
@@ -73,16 +71,6 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
       offset = GraphQLConstants.ZERO_OFFSET;
     }
     return offset;
-  }
-
-  protected void addInvalidInputInfo(BaseInfo baseInfo, String entityName) {
-    String invalidInputMsg = format(EMPTY_OR_NULL_INPUT_FIELD, entityName);
-    baseInfo.setDebugInfo(invalidInputMsg);
-  }
-
-  protected void addNoRecordFoundInfo(BaseInfo baseInfo, String messageString, Object... values) {
-    String noRecordsFoundMsg = format(messageString, values);
-    baseInfo.setDebugInfo(noRecordsFoundMsg);
   }
 
   protected WingsException notAuthorizedException(String entityName, String id, String appId) {

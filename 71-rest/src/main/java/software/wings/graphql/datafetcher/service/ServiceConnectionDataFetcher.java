@@ -27,7 +27,7 @@ public class ServiceConnectionDataFetcher extends AbstractConnectionDataFetcher<
   protected QLServiceConnection fetch(DataFetchingEnvironment dataFetchingEnvironment) {
     QLServicesQueryParameters qlQuery = fetchParameters(QLServicesQueryParameters.class, dataFetchingEnvironment);
     final Query<Service> query = persistence.createQuery(Service.class)
-                                     .filter(ServiceKeys.appId, qlQuery.getAppId())
+                                     .filter(ServiceKeys.appId, qlQuery.getApplicationId())
                                      .order(Sort.descending(ServiceKeys.createdAt));
 
     QLServiceConnectionBuilder qlServiceConnectionBuilder = QLServiceConnection.builder();

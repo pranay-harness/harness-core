@@ -14,6 +14,7 @@ import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -42,6 +43,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "EnvironmentKeys")
 public class Environment extends Base implements KeywordsAware, NameAccess {
   public static final String APP_ID_KEY = "appId";
   public static final String NAME_KEY = "name";
@@ -497,5 +499,12 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
       super(name, value, valueType);
       this.serviceName = serviceName;
     }
+  }
+
+  public static final class EnvironmentKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
   }
 }
