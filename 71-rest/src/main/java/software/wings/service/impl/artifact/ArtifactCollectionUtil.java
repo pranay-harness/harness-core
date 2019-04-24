@@ -55,6 +55,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
@@ -116,22 +117,32 @@ public class ArtifactCollectionUtil {
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
 
   public Artifact getArtifact(ArtifactStream artifactStream, BuildDetails buildDetails) {
-    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-    if (settingAttribute == null) {
-      throw new InvalidRequestException(
-          format("Setting attribute not found for artifact stream %s", artifactStream.getName()), USER);
+    String accountId = null;
+    String settingId = artifactStream.getSettingId();
+    if (settingId != null) {
+      SettingAttribute settingAttribute = settingsService.get(settingId);
+      if (settingAttribute == null) {
+        throw new InvalidRequestException(
+            format("Setting attribute not found for artifact stream %s", artifactStream.getName()), USER);
+      }
+      accountId = settingAttribute.getAccountId();
     }
-    return anArtifact()
-        .withAppId(artifactStream.getAppId())
-        .withArtifactStreamId(artifactStream.getUuid())
-        .withArtifactSourceName(artifactStream.getSourceName())
-        .withDisplayName(getDisplayName(artifactStream, buildDetails))
-        .withDescription(buildDetails.getDescription())
-        .withMetadata(getMetadata(artifactStream, buildDetails))
-        .withRevision(buildDetails.getRevision())
-        .withSettingId(artifactStream.getSettingId())
-        .withAccountId(settingAttribute.getAccountId())
-        .build();
+
+    Builder builder = anArtifact()
+                          .withAppId(artifactStream.getAppId())
+                          .withArtifactStreamId(artifactStream.getUuid())
+                          .withArtifactSourceName(artifactStream.getSourceName())
+                          .withDisplayName(getDisplayName(artifactStream, buildDetails))
+                          .withDescription(buildDetails.getDescription())
+                          .withMetadata(getMetadata(artifactStream, buildDetails))
+                          .withRevision(buildDetails.getRevision());
+    if (settingId != null) {
+      builder.withSettingId(settingId);
+    }
+    if (accountId != null) {
+      builder.withAccountId(accountId);
+    }
+    return builder.build();
   }
 
   private String getDisplayName(ArtifactStream artifactStream, BuildDetails buildDetails) {
