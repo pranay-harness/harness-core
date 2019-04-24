@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.config.Configuration;
@@ -29,10 +30,8 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -114,7 +113,13 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
         .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
 
     P parameters = objenesis.newInstance(clazz);
-    modelMapper.map(dataFetchingEnvironment.getArguments(), parameters);
+    Map<String, Object> map = new HashMap<>(dataFetchingEnvironment.getArguments());
+
+    if (contextFieldArgsMap != null) {
+      contextFieldArgsMap.forEach(
+          (key, value) -> map.put(key, getFieldValue(dataFetchingEnvironment.getSource(), value)));
+    }
+    modelMapper.map(map, parameters);
     if (FieldUtils.getField(clazz, SELECTION_SET_FIELD_NAME, true) != null) {
       try {
         FieldUtils.writeField(parameters, SELECTION_SET_FIELD_NAME, dataFetchingEnvironment.getSelectionSet(), true);
@@ -137,15 +142,9 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
 
   private Object getFieldValue(Object obj, String fieldName) {
     Object fieldValue = null;
-    Class<?> clazz = obj.getClass();
     try {
-      Field field = clazz.getDeclaredField(fieldName);
-      if (field != null) {
-        PropertyDescriptor pd = new PropertyDescriptor(field.getName(), obj.getClass());
-        fieldValue = pd.getReadMethod().invoke(obj);
-      }
-    } catch (
-        NoSuchFieldException | IllegalAccessException | IntrospectionException | InvocationTargetException exception) {
+      fieldValue = PropertyUtils.getProperty(obj, fieldName);
+    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
       logger.warn(format("NoSuchFieldException occurred while fetching value for field %s", fieldName), exception);
     }
 

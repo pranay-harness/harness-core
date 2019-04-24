@@ -7,10 +7,6 @@ import javax.validation.constraints.NotNull;
 
 public class InstanceController {
   public static void populateInstance(@NotNull Instance instance, QLInstanceBuilder builder) {
-    builder.id(instance.getUuid())
-        .type(instance.getInstanceType())
-        .serviceId(instance.getServiceId())
-        .appId(instance.getAppId())
-        .envId(instance.getEnvId());
+    builder.id(instance.getUuid()).type(instance.getInstanceType());
   }
 }

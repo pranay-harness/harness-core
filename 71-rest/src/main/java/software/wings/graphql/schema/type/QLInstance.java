@@ -12,8 +12,4 @@ import software.wings.beans.infrastructure.instance.InstanceType;
 public class QLInstance {
   String id;
   InstanceType type;
-
-  String serviceId;
-  String envId;
-  String appId;
 }

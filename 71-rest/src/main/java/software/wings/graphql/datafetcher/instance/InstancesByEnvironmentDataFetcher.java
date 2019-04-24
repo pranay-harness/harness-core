@@ -28,6 +28,7 @@ public class InstancesByEnvironmentDataFetcher extends AbstractConnectionDataFet
 
     final Query<Instance> query = persistence.createQuery(Instance.class)
                                       .filter(InstanceKeys.envId, qlQuery.getEnvId())
+                                      .filter(InstanceKeys.isDeleted, false)
                                       .order(Sort.descending(InstanceKeys.lastDeployedAt));
 
     QLInstanceConnectionBuilder connectionBuilder = QLInstanceConnection.builder();
