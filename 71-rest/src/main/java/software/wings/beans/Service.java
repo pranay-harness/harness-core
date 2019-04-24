@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -45,6 +46,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "ServiceKeys")
 public class Service extends Base implements KeywordsAware, NameAccess {
   public static final String NAME_KEY = "name";
   public static final String ARTIFACT_TYPE = "artifactType";
@@ -150,5 +152,12 @@ public class Service extends Base implements KeywordsAware, NameAccess {
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
     }
+  }
+
+  public static final class ServiceKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
   }
 }

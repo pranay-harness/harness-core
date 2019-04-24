@@ -6,7 +6,7 @@ import software.wings.utils.ArtifactType;
 
 @Value
 @Builder
-public class QLService {
+public class QLService implements QLObject {
   private String id;
   private String name;
   private String description;
