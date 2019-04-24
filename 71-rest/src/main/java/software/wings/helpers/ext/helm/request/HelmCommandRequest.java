@@ -33,7 +33,7 @@ public class HelmCommandRequest {
   private List<EncryptedDataDetail> encryptedDataDetails;
   @JsonIgnore private transient LogCallback executionLogCallback;
   private String commandFlags;
-  private K8sDelegateManifestConfig sourceRepoConfig;
+  private K8sDelegateManifestConfig repoConfig;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

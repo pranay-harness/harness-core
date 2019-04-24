@@ -99,13 +99,13 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
-      if (commandRequest.getSourceRepoConfig() == null) {
+      if (commandRequest.getRepoConfig() == null) {
         addRepoForCommand(commandRequest);
         repoUpdate(commandRequest);
       }
       fetchSourceRepo(commandRequest);
 
-      if (commandRequest.getSourceRepoConfig() == null
+      if (commandRequest.getRepoConfig() == null
           && !helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
         String msg =
             new StringBuilder("Couldn't find valid helm chart specification from service or values.yaml from git\n")
@@ -176,7 +176,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private void fetchSourceRepo(HelmInstallCommandRequest commandRequest) throws IOException {
-    K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getSourceRepoConfig();
+    K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getRepoConfig();
     if (sourceRepoConfig == null) {
       return;
     }

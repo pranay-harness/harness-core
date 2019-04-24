@@ -51,7 +51,7 @@ public class HelmRollbackState extends HelmDeployState {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageTag,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig repoConfig,
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Integer previousReleaseRevision = null;
 
@@ -76,7 +76,7 @@ public class HelmRollbackState extends HelmDeployState {
         .gitConfig(gitConfig)
         .encryptedDataDetails(encryptedDataDetails)
         .commandFlags(commandFlags)
-        .sourceRepoConfig(sourceRepoConfig)
+        .sourceRepoConfig(repoConfig)
         .build();
   }
 

@@ -80,7 +80,7 @@ public class HelmClientImpl implements HelmClient {
 
   private String getChartReference(HelmInstallCommandRequest commandRequest) {
     String chartReference;
-    if (commandRequest.getSourceRepoConfig() == null) {
+    if (commandRequest.getRepoConfig() == null) {
       chartReference = getChartReference(commandRequest.getChartSpecification());
     } else {
       chartReference = Paths.get(commandRequest.getWorkingDir()).toString();
