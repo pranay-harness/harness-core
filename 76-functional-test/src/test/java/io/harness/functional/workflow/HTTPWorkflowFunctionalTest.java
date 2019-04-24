@@ -24,7 +24,7 @@ import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.restutils.WorkflowRestUtils;
+import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;

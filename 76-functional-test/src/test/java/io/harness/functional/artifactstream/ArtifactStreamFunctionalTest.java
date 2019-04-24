@@ -7,7 +7,6 @@ import static software.wings.beans.template.artifactsource.CustomRepositoryMappi
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
-import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -17,6 +16,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.rest.RestResponse;
+import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;

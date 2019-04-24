@@ -17,8 +17,7 @@ import io.dropwizard.Configuration;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.factory.ClosingFactory;
-import io.harness.framework.ManagerExecutor;
-import io.harness.framework.Setup;
+import io.harness.functional.AbstractFunctionalTest;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -27,6 +26,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
+import io.harness.testframework.framework.ManagerExecutor;
+import io.harness.testframework.framework.Setup;
 import io.harness.threading.CurrentThreadExecutor;
 import lombok.Getter;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -73,11 +74,14 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
   protected AdvancedDatastore datastore;
   private ExecutorService executorService = new CurrentThreadExecutor();
+  private static final String alpnJar =
+      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
   @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    ManagerExecutor.ensureManager();
+    String alpn = "/home/jenkins/maven-repositories/0/";
+    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()

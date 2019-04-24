@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
-import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
@@ -13,6 +12,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
 import io.harness.rest.RestResponse;
+import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import org.junit.Before;
 import org.junit.Test;

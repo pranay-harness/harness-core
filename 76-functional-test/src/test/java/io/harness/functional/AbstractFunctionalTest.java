@@ -8,14 +8,14 @@ import graphql.GraphQL;
 import io.harness.CategoryTest;
 import io.harness.GraphQLTestMixin;
 import io.harness.beans.ExecutionStatus;
-import io.harness.framework.DelegateExecutor;
-import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
-import io.harness.restutils.PipelineRestUtils;
-import io.harness.restutils.WorkflowRestUtils;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
-import io.harness.utils.FileUtils;
+import io.harness.testframework.framework.DelegateExecutor;
+import io.harness.testframework.framework.Setup;
+import io.harness.testframework.framework.utils.FileUtils;
+import io.harness.testframework.restutils.PipelineRestUtils;
+import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.RestAssured;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Before
   public void testSetup() throws IOException {
     account = accountSetupService.ensureAccount();
-    delegateExecutor.ensureDelegate(account);
+    delegateExecutor.ensureDelegate(account, AbstractFunctionalTest.class);
     bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
     logger.info("Basic setup completed");
   }
@@ -79,7 +79,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   @AfterClass
   public static void cleanup() {
-    FileUtils.deleteModifiedConfig();
+    FileUtils.deleteModifiedConfig(AbstractFunctionalTest.class);
     logger.info("All tests exit");
   }
 
