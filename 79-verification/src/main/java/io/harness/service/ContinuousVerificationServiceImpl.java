@@ -537,6 +537,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                logRecordMinute > 0 && logRecordMinute <= lastCVDataCollectionMinute; logRecordMinute++) {
             Set<String> hosts = logAnalysisService.getHostsForMinute(
                 cvConfiguration.getAppId(), cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L0);
+
+            // there can be a race between finding all the host for a min and le finishing the cluster task and deleting
+            // L0 data
+            if (isEmpty(hosts)) {
+              logger.info("For {} minute {} did not find hosts for level {} continuing...", cvConfiguration.getUuid(),
+                  logRecordMinute, ClusterLevel.L0);
+              continue;
+            }
             String inputLogsUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
                 + LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId=" + cvConfiguration.getUuid()
                 + "&appId=" + cvConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L0
