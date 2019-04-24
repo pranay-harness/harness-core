@@ -1,7 +1,7 @@
 package io.harness.functional;
 
 import io.harness.category.element.FunctionalTests;
-import io.harness.framework.Setup;
+import io.harness.testframework.framework.Setup;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

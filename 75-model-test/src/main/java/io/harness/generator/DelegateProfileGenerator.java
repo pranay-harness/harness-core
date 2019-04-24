@@ -13,7 +13,7 @@ import software.wings.service.intfc.DelegateProfileService;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 @Singleton
 public class DelegateProfileGenerator {
@@ -54,6 +54,6 @@ public class DelegateProfileGenerator {
 
   private String getScript() throws IOException {
     InputStream inputStream = getClass().getResourceAsStream("/script.properties");
-    return IOUtils.toString(inputStream, Charset.forName("UTF-8"));
+    return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
   }
 }

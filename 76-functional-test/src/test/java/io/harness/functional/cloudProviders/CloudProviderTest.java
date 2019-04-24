@@ -7,10 +7,10 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.restutils.SettingsUtils;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.testframework.restutils.SettingsUtils;
 import io.restassured.path.json.JsonPath;
 import org.junit.FixMethodOrder;
 import org.junit.Test;

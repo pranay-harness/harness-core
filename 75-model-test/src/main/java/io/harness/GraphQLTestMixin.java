@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
-import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.Provider;
 import org.modelmapper.config.Configuration.AccessLevel;
@@ -31,7 +30,6 @@ public interface GraphQLTestMixin {
     }
   }
 
-  @NotNull
   default ModelMapper modelMapper() {
     ModelMapper modelMapper = new ModelMapper();
     modelMapper.getConfiguration()

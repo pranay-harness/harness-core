@@ -6,9 +6,9 @@ import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.restutils.SecretsRestUtils;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.utils.SecretsUtils;
+import io.harness.testframework.framework.utils.SecretsUtils;
+import io.harness.testframework.restutils.SecretsRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;

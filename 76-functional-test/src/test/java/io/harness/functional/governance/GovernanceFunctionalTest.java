@@ -26,7 +26,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.rest.RestResponse;
-import io.harness.restutils.WorkflowRestUtils;
+import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.awaitility.Awaitility;
