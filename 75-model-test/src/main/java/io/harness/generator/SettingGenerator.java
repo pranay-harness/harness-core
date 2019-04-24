@@ -390,6 +390,7 @@ public class SettingGenerator {
                            .nexusUrl("https://nexus3.harness.io")
                            .username("admin")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
+                           .version("3.x")
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();

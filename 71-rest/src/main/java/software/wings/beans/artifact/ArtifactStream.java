@@ -102,6 +102,8 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
 
   public abstract String fetchArtifactDisplayName(String buildNo);
 
+  public void validateRequiredFields() {}
+
   @Override
   public Long obtainNextIteration(String fieldName) {
     return ArtifactStreamKeys.nextCleanupIteration.equals(fieldName) ? nextCleanupIteration : nextIteration;

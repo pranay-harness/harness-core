@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
@@ -21,6 +22,7 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.util.List;
 import java.util.Map;
@@ -45,15 +47,30 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
+  public Map<String, String> getPlans(
+      NexusConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType) {
+    return nexusService.getRepositories(config, encryptionDetails, repositoryType.name());
+  }
+
+  @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
-    if (artifactStreamAttributes.getArtifactType() != null
-        && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
-      return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      if (artifactStreamAttributes.getArtifactType() != null
+          && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
+        return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
+      } else {
+        return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+      }
     } else {
-      return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-          artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+      if (artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name())) {
+        return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
+      } else {
+        return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+      }
     }
   }
 

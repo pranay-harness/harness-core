@@ -29,6 +29,14 @@ public interface NexusService {
    * @return map RepoId and Name
    */
   Map<String, String> getRepositories(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType);
+
+  /**
+   * Get Repositories
+   *
+   * @return map RepoId and Name
+   */
+  Map<String, String> getRepositories(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType);
 
   /**

@@ -75,6 +75,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -210,10 +211,18 @@ public class ArtifactServiceImpl implements ArtifactService {
       return;
     }
     if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) { // TODO: if (isNotEmpty(artifactPaths) ||not
-                                                                       // Null) ->not_downloaded
-      artifact.setContentStatus(getArtifactType(artifactStream).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
-      artifact.setStatus(APPROVED);
-      return;
+      if (!artifact.getAppId().equals(GLOBAL_APP_ID)) { // Null) ->not_downloaded
+        artifact.setContentStatus(getArtifactType(artifactStream).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
+        artifact.setStatus(APPROVED);
+        return;
+      } else {
+        artifact.setContentStatus(
+            RepositoryType.docker.name().equals(((NexusArtifactStream) artifactStream).getRepositoryType())
+                ? METADATA_ONLY
+                : NOT_DOWNLOADED);
+        artifact.setStatus(APPROVED);
+        return;
+      }
     }
 
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
@@ -226,7 +235,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         artifact.setStatus(QUEUED);
         return;
       } else {
-        if (((ArtifactoryArtifactStream) artifactStream).getRepositoryType().equals(RepositoryType.docker.name())) {
+        if (RepositoryType.docker.name().equals(((ArtifactoryArtifactStream) artifactStream).getRepositoryType())) {
           artifact.setContentStatus(METADATA_ONLY);
           artifact.setStatus(APPROVED);
           return;

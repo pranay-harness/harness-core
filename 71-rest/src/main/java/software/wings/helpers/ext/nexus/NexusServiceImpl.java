@@ -26,6 +26,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,16 +90,50 @@ public class NexusServiceImpl implements NexusService {
   }
 
   public Map<String, String> getRepositories(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType) {
+    try {
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      return timeLimiter.callWithTimeout(() -> {
+        if (isNexusTwo) {
+          if (RepositoryType.docker.name().equals(repositoryType)) {
+            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+                .addParam("message", "Nexus 2.x does not support Docker artifact type");
+          }
+          return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
+        } else {
+          if (RepositoryType.docker.name().equals(repositoryType)) {
+            return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
+          } else {
+            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+                .addParam("message", "Not supported for Nexus 3.x version");
+          }
+        }
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.warn("Nexus server request did not succeed within 20 secs");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+          .addParam("message", "Nexus server took too long to respond");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
+      if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
+      }
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+    }
+  }
+  public Map<String, String> getRepositories(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       return timeLimiter.callWithTimeout(() -> {
         if (isNexusTwo) {
-          if (!DOCKER.equals(artifactType)) {
-            return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
+          if (DOCKER.equals(artifactType)) {
+            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+                .addParam("message", "Nexus 2.x does not support Docker artifact type");
           }
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-              .addParam("message", "Nexus 2.x does not support Docker artifact type");
+          return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
         } else {
           if (DOCKER.equals(artifactType)) {
             return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);

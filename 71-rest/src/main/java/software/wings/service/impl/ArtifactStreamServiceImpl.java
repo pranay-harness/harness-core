@@ -141,6 +141,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream, boolean validate) { // todo: error if svc_id is null
+    artifactStream.validateRequiredFields();
     if (validate && artifactStream.getTemplateUuid() == null) {
       validateArtifactSourceData(artifactStream);
     }
@@ -231,6 +232,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (existingArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
+
+    artifactStream.validateRequiredFields();
 
     if (artifactStream.getArtifactStreamType() != null && existingArtifactStream.getArtifactStreamType() != null
         && !artifactStream.getArtifactStreamType().equals(existingArtifactStream.getArtifactStreamType())) {
