@@ -379,11 +379,24 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream();
-
+    validateNexusArtifactStream(savedArtifactSteam, APP_ID);
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("io.harness.test");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddNexusArtifactStreamAtConnectorLevel() {
+    ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel();
+    validateNexusArtifactStream(savedArtifactSteam, GLOBAL_APP_ID);
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
+    assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
+    assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("io.harness.test");
+    assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
   }
 
   private ArtifactStream createNexusArtifactStream() {
@@ -398,9 +411,29 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .build();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    return savedArtifactSteam;
+  }
+
+  private ArtifactStream createNexusArtifactStreamAtConnectorLevel() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .appId(GLOBAL_APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("todolist"))
+                                                  .autoPopulate(true)
+                                                  .repositoryType("maven")
+                                                  .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    return savedArtifactSteam;
+  }
+
+  private void validateNexusArtifactStream(ArtifactStream savedArtifactSteam, String appId) {
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(NEXUS.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("releases/io.harness.test/todolist__");
@@ -410,16 +443,27 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("releases");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("io.harness.test");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactName()).isEqualTo("todolist");
-    return savedArtifactSteam;
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream();
-    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
+    updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateNexusArtifactStreamAtConnectorLevel() {
+    ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel();
+    updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, GLOBAL_APP_ID);
+  }
+
+  private void updateNexusArtifactStreamAndValidate(NexusArtifactStream savedArtifactSteam, String appId) {
+    NexusArtifactStream savedNexusArtifactStream = savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
 
     savedNexusArtifactStream.setName("Nexus_Changed");
     savedNexusArtifactStream.setJobname("snapshots");
@@ -430,7 +474,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty();
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(NEXUS.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactStream.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("snapshots/io.harness.test.changed/todolist-changed__");
@@ -440,14 +484,16 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getJobName()).isEqualTo("snapshots");
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("io.harness.test.changed");
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactName()).isEqualTo("todolist-changed");
-    NexusArtifactStream updatedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
+    NexusArtifactStream updatedNexusArtifactStream = savedArtifactSteam;
     assertThat(updatedNexusArtifactStream.getJobname()).isEqualTo("snapshots");
     assertThat(updatedNexusArtifactStream.getArtifactPaths()).contains("todolist-changed");
 
-    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlPushService, times(2))
-        .pushYamlChangeSet(
-            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    if (appId.equals(APP_ID)) {
+      verify(appService, times(2)).getAccountIdByAppId(appId);
+      verify(yamlPushService, times(2))
+          .pushYamlChangeSet(any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(),
+              anyBoolean(), anyBoolean());
+    }
   }
 
   @Test
@@ -462,11 +508,30 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .autoPopulate(true)
                                                         .serviceId(SERVICE_ID)
                                                         .build();
+    validateNexusDockerArtifactStream(nexusDockerArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddNexusDockerArtifactStreamAtConnectorLevel() {
+    NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
+                                                        .appId(GLOBAL_APP_ID)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("docker-private")
+                                                        .groupId("wingsplugings/todolist")
+                                                        .imageName("wingsplugings/todolist")
+                                                        .autoPopulate(true)
+                                                        .repositoryType(RepositoryType.docker.name())
+                                                        .build();
+    validateNexusDockerArtifactStream(nexusDockerArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void validateNexusDockerArtifactStream(NexusArtifactStream nexusDockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusDockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(NEXUS.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("docker-private/wingsplugings/todolist__");
@@ -496,11 +561,39 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .serviceId(SERVICE_ID)
                                                         .dockerRegistryUrl("https://nexus3.harness.io")
                                                         .build();
+    updateNexusDockerArtifactStreamAndValidate(nexusDockerArtifactStream, APP_ID);
+    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateNexusDockerArtifactStreamAtConnectorLevel() {
+    NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
+                                                        .appId(GLOBAL_APP_ID)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("docker-private")
+                                                        .groupId("wingsplugings/todolist")
+                                                        .imageName("wingsplugings/todolist")
+                                                        .autoPopulate(true)
+                                                        .dockerRegistryUrl("https://nexus3.harness.io")
+                                                        .repositoryType("docker")
+                                                        .build();
+    updateNexusDockerArtifactStreamAndValidate(nexusDockerArtifactStream, GLOBAL_APP_ID);
+    //    verify(yamlPushService, times(1))
+    //            .pushYamlChangeSet(
+    //                    any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(),
+    //                    anyBoolean());
+  }
+
+  private void updateNexusDockerArtifactStreamAndValidate(NexusArtifactStream nexusDockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusDockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(NEXUS.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("docker-private/wingsplugings/todolist");
@@ -518,6 +611,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("docker-private");
     assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("wingsplugings/todolist");
     assertThat(savedNexusArtifactStream.getImageName()).isEqualTo("wingsplugings/todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo("docker");
 
     savedNexusArtifactStream.setName("Nexus_Changed");
     savedNexusArtifactStream.setJobname("docker-hub");
@@ -528,7 +622,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("Nexus_Changed");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(NEXUS.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactStream.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("docker-hub/wingsplugings/todolist-changed");
@@ -544,11 +638,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     NexusArtifactStream updatedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
     assertThat(updatedNexusArtifactStream.getJobname()).isEqualTo("docker-hub");
     assertThat(updatedNexusArtifactStream.getImageName()).isEqualTo("wingsplugings/todolist-changed");
-
-    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlPushService, times(2))
-        .pushYamlChangeSet(
-            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    assertThat(updatedNexusArtifactStream.getRepositoryType()).isEqualTo("docker");
   }
 
   @Test

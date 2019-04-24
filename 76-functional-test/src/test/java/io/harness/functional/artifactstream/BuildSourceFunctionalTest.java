@@ -195,4 +195,48 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
     assertThat(restResponse.getResource().size()).isGreaterThan(0);
     assertThat(restResponse.getResource().containsKey("harness-maven"));
   }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getGroupIdsForNexus() {
+    GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
+
+    };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_NEXUS_CONNECTOR);
+    RestResponse<Set<String>> restResponse = Setup.portal()
+                                                 .auth()
+                                                 .oauth2(bearerToken)
+                                                 .queryParam("accountId", application.getAccountId())
+                                                 .queryParam("settingId", settingAttribute.getUuid())
+                                                 .pathParam("jobName", "releases")
+                                                 .contentType(ContentType.JSON)
+                                                 .get("/settings/build-sources/jobs/{jobName}/groupIds")
+                                                 .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().size()).isGreaterThan(0);
+    assertThat(restResponse.getResource().contains("releases")).isNotNull();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getGroupIdsForNexus3() {
+    GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
+
+    };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_NEXU3_CONNECTOR);
+    RestResponse<Set<String>> restResponse = Setup.portal()
+                                                 .auth()
+                                                 .oauth2(bearerToken)
+                                                 .queryParam("accountId", application.getAccountId())
+                                                 .queryParam("settingId", settingAttribute.getUuid())
+                                                 .pathParam("jobName", "docker-private")
+                                                 .contentType(ContentType.JSON)
+                                                 .get("/settings/build-sources/jobs/{jobName}/groupIds")
+                                                 .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().size()).isGreaterThan(0);
+    assertThat(restResponse.getResource().contains("harness/todolist-sample")).isNotNull();
+  }
 }

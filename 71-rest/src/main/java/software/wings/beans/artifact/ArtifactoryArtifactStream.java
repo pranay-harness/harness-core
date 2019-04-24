@@ -1,12 +1,15 @@
 package software.wings.beans.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -105,6 +108,15 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .metadataOnly(isMetadataOnly())
         .artifactoryDockerRepositoryServer(dockerRepositoryServer)
         .build();
+  }
+
+  @Override
+  public void validateRequiredFields() {
+    if (appId.equals(GLOBAL_APP_ID)) {
+      if (isEmpty(repositoryType)) {
+        throw new InvalidRequestException("Repository Type cannot be empty", USER);
+      }
+    }
   }
 
   @Data

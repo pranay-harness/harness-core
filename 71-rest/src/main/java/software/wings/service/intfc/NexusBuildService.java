@@ -8,6 +8,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,10 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
   @DelegateTaskType(TaskType.NEXUS_GET_PLANS)
   Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType);
+
+  @DelegateTaskType(TaskType.NEXUS_GET_PLANS)
+  Map<String, String> getPlans(
+      NexusConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType);
 
   @DelegateTaskType(TaskType.NEXUS_GET_ARTIFACT_PATHS)
   List<String> getArtifactPaths(

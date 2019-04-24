@@ -26,6 +26,7 @@ public class NexusArtifactStreamYamlHandler
       yaml.setImageName(bean.getImageName());
       yaml.setDockerRegistryUrl(bean.getDockerRegistryUrl());
     }
+    yaml.setRepositoryType(bean.getRepositoryType());
     return yaml;
   }
 
@@ -40,6 +41,7 @@ public class NexusArtifactStreamYamlHandler
       bean.setDockerRegistryUrl(yaml.getDockerRegistryUrl());
     }
     bean.setJobname(yaml.getRepositoryName());
+    bean.setRepositoryType(yaml.getRepositoryType());
   }
 
   @Override
