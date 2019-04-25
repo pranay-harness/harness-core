@@ -28,7 +28,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateResults;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.WhereCriteria;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -36,6 +36,7 @@ import software.wings.service.intfc.AssignDelegateService;
 
 import java.time.Clock;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -88,8 +89,9 @@ public class DelegateQueueTask implements Runnable {
   private void markTimedOutTasksAsFailed() {
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-            .filter("status", STARTED)
-            .where("this.lastUpdatedAt + this." + DelegateTaskKeys.data_timeout + " < " + clock.millis())
+            .filter(DelegateTaskKeys.status, STARTED)
+            .where("this." + DelegateTaskKeys.lastUpdatedAt + " + this." + DelegateTaskKeys.data_timeout + " < "
+                + clock.millis())
             .asKeyList(new FindOptions().limit(100));
 
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
@@ -102,11 +104,11 @@ public class DelegateQueueTask implements Runnable {
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long and update their status to ERROR.
 
-    List<Key<DelegateTask>> longQueuedTaskKeys =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-            .filter("status", QUEUED)
-            .where("this.createdAt + this." + DelegateTaskKeys.data_timeout + " < " + clock.millis())
-            .asKeyList(new FindOptions().limit(100));
+    List<Key<DelegateTask>> longQueuedTaskKeys = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                     .filter(DelegateTaskKeys.status, QUEUED)
+                                                     .where("this." + DelegateTaskKeys.createdAt + " + this."
+                                                         + DelegateTaskKeys.data_timeout + " < " + clock.millis())
+                                                     .asKeyList(new FindOptions().limit(100));
 
     if (!longQueuedTaskKeys.isEmpty()) {
       List<String> keyList = longQueuedTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
@@ -124,9 +126,9 @@ public class DelegateQueueTask implements Runnable {
                                      .in(taskIds)
                                      .project(ID_KEY, true)
                                      .project(DelegateTaskKeys.delegateId, true)
-                                     .project("waitId", true)
-                                     .project("tags", true)
-                                     .project("accountId", true)
+                                     .project(DelegateTaskKeys.waitId, true)
+                                     .project(DelegateTaskKeys.tags, true)
+                                     .project(DelegateTaskKeys.accountId, true)
                                      .project(DelegateTaskKeys.data_taskType, true)
                                      .project(DelegateTaskKeys.data_parameters, true)
                                      .asList();
@@ -142,9 +144,9 @@ public class DelegateQueueTask implements Runnable {
                                   .filter(ID_KEY, taskId)
                                   .project(ID_KEY, true)
                                   .project(DelegateTaskKeys.delegateId, true)
-                                  .project("waitId", true)
-                                  .project("tags", true)
-                                  .project("accountId", true)
+                                  .project(DelegateTaskKeys.waitId, true)
+                                  .project(DelegateTaskKeys.tags, true)
+                                  .project(DelegateTaskKeys.accountId, true)
                                   .project(DelegateTaskKeys.data_taskType, true)
                                   .project(DelegateTaskKeys.data_parameters, true)
                                   .get();
@@ -191,44 +193,40 @@ public class DelegateQueueTask implements Runnable {
 
   private void rebroadcastUnassignedTasks() {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
-    Query<DelegateTask> unassignedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                                   .filter("status", QUEUED)
-                                                   .filter("version", versionInfoManager.getVersionInfo().getVersion())
-                                                   .field(DelegateTaskKeys.delegateId)
-                                                   .doesNotExist();
+    Query<DelegateTask> unassignedTasksQuery =
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+            .filter(DelegateTaskKeys.status, QUEUED)
+            .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
+            .field(DelegateTaskKeys.delegateId)
+            .doesNotExist();
 
     long now = clock.millis();
 
     unassignedTasksQuery.and(
-        unassignedTasksQuery.or(unassignedTasksQuery.criteria("validationStartedAt").doesNotExist(),
-            unassignedTasksQuery.criteria("validationStartedAt").lessThan(now - VALIDATION_TIMEOUT)),
-        unassignedTasksQuery.or(unassignedTasksQuery.criteria("lastBroadcastAt").doesNotExist(),
-            new WhereCriteria(
-                "this.lastBroadcastAt < " + now + " - Math.pow(2, this.broadcastCount) * " + REBROADCAST_FACTOR)));
-    // TODO: there is a race between these two queries
-    List<DelegateTask> unassignedTasks = unassignedTasksQuery.asList();
-    if (isNotEmpty(unassignedTasks)) {
-      UpdateResults results = wingsPersistence.update(unassignedTasksQuery,
-          wingsPersistence.createUpdateOperations(DelegateTask.class)
-              .set("lastBroadcastAt", now)
-              .inc("broadcastCount")
-              .unset("preAssignedDelegateId"));
-      if (results.getUpdatedCount() > 0) {
-        if (unassignedTasks.size() != results.getUpdatedCount()) {
-          logger.info("Found {} tasks to rebroadcast. Updated {} tasks in DB.", unassignedTasks.size(),
-              results.getUpdatedCount());
-        } else {
-          logger.info("Rebroadcasting {} tasks", unassignedTasks.size());
-        }
-        for (DelegateTask delegateTask : unassignedTasks) {
-          logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
-              delegateTask.getBroadcastCount());
-          delegateTask.setPreAssignedDelegateId(null);
-          broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-        }
-      }
-    } else {
-      logger.info("No tasks found to rebroadcast");
+        unassignedTasksQuery.or(unassignedTasksQuery.criteria(DelegateTaskKeys.validationStartedAt).doesNotExist(),
+            unassignedTasksQuery.criteria(DelegateTaskKeys.validationStartedAt).lessThan(now - VALIDATION_TIMEOUT)),
+        unassignedTasksQuery.or(unassignedTasksQuery.criteria(DelegateTaskKeys.lastBroadcastAt).doesNotExist(),
+            new WhereCriteria("this." + DelegateTaskKeys.lastBroadcastAt + " < " + now + " - Math.pow(2, this."
+                + DelegateTaskKeys.broadcastCount + ") * " + REBROADCAST_FACTOR)));
+
+    Iterator<DelegateTask> iterator = unassignedTasksQuery.iterator();
+
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .set(DelegateTaskKeys.lastBroadcastAt, now)
+                                                          .inc(DelegateTaskKeys.broadcastCount)
+                                                          .unset(DelegateTaskKeys.preAssignedDelegateId);
+
+    int count = 0;
+    while (iterator.hasNext()) {
+      DelegateTask delegateTask = iterator.next();
+      wingsPersistence.update(delegateTask, updateOperations);
+      logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
+          delegateTask.getBroadcastCount());
+      delegateTask.setPreAssignedDelegateId(null);
+      broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+      count++;
     }
+
+    logger.info("{} tasks were rebroadcast", count);
   }
 }
