@@ -1,4 +1,4 @@
-package io.harness.graphql;
+package io.harness.testframework.graphql;
 
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -40,7 +40,7 @@ import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConne
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoKeys;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionKeys;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 
 public class GraphQLExecutionTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -86,23 +86,21 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
           + "\") { id queuedTime startTime endTime status } }";
 
-      final LinkedHashMap linkedHashMap = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query);
 
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
     }
 
     {
       String query = "{ executionsByWorkflow(workflowId: \"" + workflow.getUuid()
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
-      final LinkedHashMap linkedHashMap = qlExecute(query);
-
-      Assertions
-          .assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+      final QLTestObject qlTestObject = qlExecute(query);
+      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
           .isEqualTo(1);
     }
 
@@ -112,10 +110,8 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       String query = "{ executionsByWorkflow(workflowId: \"" + workflow.getUuid()
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
-      final LinkedHashMap linkedHashMap = qlExecute(query);
-
-      Assertions
-          .assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+      final QLTestObject qlTestObject = qlExecute(query);
+      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
           .isEqualTo(2);
     }
   }
@@ -170,23 +166,20 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
           + "\") { id queuedTime startTime endTime status } }";
 
-      final LinkedHashMap linkedHashMap = qlExecute(query);
-
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
-      Assertions.assertThat(linkedHashMap.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+      final QLTestObject qlTestObject = qlExecute(query);
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
     }
 
     {
       String query = "{ executionsByPipeline(pipelineId: \"" + pipeline.getUuid()
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
-      final LinkedHashMap linkedHashMap = qlExecute(query);
-
-      Assertions
-          .assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+      final QLTestObject qlTestObject = qlExecute(query);
+      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
           .isEqualTo(1);
     }
 
@@ -196,11 +189,18 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       String query = "{ executionsByPipeline(pipelineId: \"" + pipeline.getUuid()
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
-      final LinkedHashMap linkedHashMap = qlExecute(query);
-
-      Assertions
-          .assertThat(((LinkedHashMap) linkedHashMap.get(QLExecutionConnectionKeys.pageInfo)).get(QLPageInfoKeys.total))
+      final QLTestObject qlTestObject = qlExecute(query);
+      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
           .isEqualTo(2);
+    }
+
+    {
+      String query =
+          "{ pipeline(pipelineId: \"" + pipeline.getUuid() + "\") { executions(limit: 2) { nodes { id } } } }";
+
+      final QLTestObject qlTestObject = qlExecute(query);
+
+      Assertions.assertThat(((ArrayList) qlTestObject.sub("executions").get("nodes")).size()).isEqualTo(2);
     }
   }
 }

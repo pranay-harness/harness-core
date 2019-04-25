@@ -1,0 +1,92 @@
+type Application {
+  id: String
+  name: String
+  description: String
+
+  services(limit: Int!, offset: Int): ServiceConnection
+    @dataFetcher(name: "serviceConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+}
+
+type ApplicationConnection {
+  pageInfo: PageInfo
+  nodes: [Application]
+}
+
+enum EnvironmentType {
+  PROD
+  NON_PROD
+  ALL
+}
+
+type Environment {
+  id: String
+  name: String
+  description: String
+  type: EnvironmentType
+  instances(limit: Int!, offset: Int): InstanceConnection
+    @dataFetcher(name: "instancesByEnvironment", contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
+}
+
+type EnvironmentConnection {
+  pageInfo: PageInfo
+  nodes: [Application]
+}
+
+# Type for pipeline
+type Pipeline {
+  # Pipeline Id
+  id: String
+
+  # Name of the pipeline
+  name: String
+
+  # Description of the pipeline
+  description: String
+
+  executions(limit: Int!, offset: Int): ExecutionConnection
+    @dataFetcher(name: "executionConnection", contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
+}
+
+type PipelineConnection {
+  pageInfo: PageInfo
+  nodes: [Pipeline]
+}
+
+# Type workflow
+type Workflow {
+  # Workflow Id
+  id: String
+
+  # Name of the workflow
+  name: String
+
+  # Description of the workflow
+  description: String
+}
+
+type WorkflowConnection {
+  pageInfo: PageInfo
+  nodes: [Workflow]
+}
+
+# Service Type
+type Service {
+  # Service Id
+  id: String
+  # Name of the service
+  name: String
+  # Description of the Service
+  description: String
+  # Artifact type deployed by this service
+  artifactType: String
+  # Deployment Type SSH, Helm, Kubernetes
+  deploymentType: String
+
+  instances(limit: Int!, offset: Int): InstanceConnection
+    @dataFetcher(name: "instancesByService", contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+}
+
+type ServiceConnection {
+  pageInfo: PageInfo
+  nodes: [Service]
+}

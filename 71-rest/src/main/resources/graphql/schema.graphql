@@ -71,137 +71,6 @@ type Query {
   services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: "serviceConnection")
 }
 
-# DateTime which will return date based on PST zone
-scalar DateTime
-scalar Object
-
-type PageInfo {
-  hasMore: Boolean
-  total: Int
-  offset: Int
-  limit: Int
-}
-
-# Type for pipeline
-type Pipeline {
-  # Pipeline Id
-  id: String
-
-  # Name of the pipeline
-  name: String
-
-  # Description of the pipeline
-  description: String
-}
-
-type PipelineConnection {
-  pageInfo: PageInfo
-  nodes: [Pipeline]
-}
-
-# Type workflow
-type Workflow {
-  # Workflow Id
-  id: String
-
-  # Name of the workflow
-  name: String
-
-  # Description of the workflow
-  description: String
-}
-
-type WorkflowConnection {
-  pageInfo: PageInfo
-  nodes: [Workflow]
-}
-
-enum ExecutionStatus {
-  ABORTED
-  ERROR
-  FAILED
-  PAUSED
-  QUEUED
-  RESUMED
-  RUNNING
-  SUCCESS
-  WAITING
-  SKIPPED
-  REJECTED
-  EXPIRED
-}
-
-interface Execution {
-  id: String
-  queuedTime: DateTime
-  startTime: DateTime
-  endTime: DateTime
-  status: ExecutionStatus
-}
-
-type ExecutionConnection {
-  pageInfo: PageInfo
-  nodes: [Execution]
-}
-
-# Type for workflow execution
-type WorkflowExecution implements Execution {
-  # Workflow Execution Id
-  id: String
-
-  # DateTime when execution started
-  queuedTime: DateTime
-
-  # DateTime when execution started
-  startTime: DateTime
-
-  # DateTime when execution ended
-  endTime: DateTime
-
-  # Status of the workflow
-  status: ExecutionStatus
-}
-
-# Type for pipeline execution
-type PipelineExecution implements Execution {
-  # Workflow Execution Id
-  id: String
-
-  # DateTime when execution started
-  queuedTime: DateTime
-
-  # DateTime when execution started
-  startTime: DateTime
-
-  # DateTime when execution ended
-  endTime: DateTime
-
-  # Status of the workflow
-  status: ExecutionStatus
-}
-
-# Service Type
-type Service {
-  # Service Id
-  id: String
-  # Name of the service
-  name: String
-  # Description of the Service
-  description: String
-  # Artifact type deployed by this service
-  artifactType: String
-  # Deployment Type SSH, Helm, Kubernetes
-  deploymentType: String
-
-  instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByService", contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
-}
-
-type ServiceConnection {
-  pageInfo: PageInfo
-  nodes: [Service]
-}
-
 # Aritifact type
 type Artifact {
   # Artifact Id
@@ -229,34 +98,6 @@ type Artifact {
     )
 }
 
-type Application {
-  id: String
-  name: String
-  description: String
-
-  services(limit: Int!, offset: Int): ServiceConnection
-    @dataFetcher(name: "serviceConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
-}
-
-type ApplicationConnection {
-  pageInfo: PageInfo
-  nodes: [Application]
-}
-
-type Environment {
-  id: String
-  name: String
-  description: String
-  type: EnvironmentType
-  instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByEnvironment", contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
-}
-
-type EnvironmentConnection {
-  pageInfo: PageInfo
-  nodes: [Application]
-}
-
 enum InstanceType {
   PHYSICAL_HOST_INSTANCE
   EC2_CLOUD_INSTANCE
@@ -264,12 +105,6 @@ enum InstanceType {
   ECS_CONTAINER_INSTANCE
   KUBERNETES_CONTAINER_INSTANCE
   PCF_INSTANCE
-}
-
-enum EnvironmentType {
-  PROD
-  NON_PROD
-  ALL
 }
 
 type InstanceCount {
