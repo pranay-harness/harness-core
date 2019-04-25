@@ -144,6 +144,14 @@ public class UserTest extends AbstractFunctionalTest {
     assertNotNull("Bearer Token not successfully provided", bearerToken);
     statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertTrue(statusCode == HttpStatus.SC_OK);
+    // Delete Email
+    messageDetails = null;
+    messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
+    logger.info("Email deleted for the inbox : " + emailId);
+    assertNotNull(messageDetails.getAdditionalProperties());
+    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
+
     logger.info("All validation completed");
     logger.info("All validation for reset also done");
   }

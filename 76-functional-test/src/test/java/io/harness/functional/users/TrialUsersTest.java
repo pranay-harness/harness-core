@@ -132,6 +132,13 @@ public class TrialUsersTest extends AbstractFunctionalTest {
     assertNotNull("Bearer Token not successfully provided", bearerToken);
     statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertTrue(statusCode == org.apache.http.HttpStatus.SC_OK);
+    // Delete Email
+    messageDetails = null;
+    messageDetails = MailinatorRestUtils.deleteEmail(fullEmailId, emailFetchId);
+    logger.info("Email deleted for the inbox : " + fullEmailId);
+    assertNotNull(messageDetails.getAdditionalProperties());
+    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
     logger.info("All validation completed");
     logger.info("All validation for reset also done");
   }
