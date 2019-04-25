@@ -19,6 +19,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Inject private EnvironmentExpressionBuilder envExpressionBuilder;
   @Inject private WorkflowExpressionBuilder workflowExpressionBuilder;
   @Inject private ApplicationExpressionBuilder applicationExpressionBuilder;
+  @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   @Override
   public Set<String> listExpressions(String appId, String entityId, EntityType entityType) {
@@ -89,5 +91,12 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(applicationExpressionBuilder.getExpressions(appId, entityId));
     }
     return expressions;
+  }
+
+  @Override
+  public Set<String> listExpressionsFromValuesForService(String appId, String serviceId) {
+    notNullCheck("ServiceId is mandatory", serviceId, USER);
+
+    return applicationManifestUtils.listExpressionsFromValuesForService(appId, serviceId);
   }
 }

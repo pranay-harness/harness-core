@@ -5,6 +5,7 @@ import static io.harness.k8s.manifest.ObjectYamlUtils.newLineRegex;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
 import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.KubernetesResource.redactSecretValues;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.ImmutableSet;
@@ -15,14 +16,17 @@ import com.esotericsoftware.yamlbeans.parser.Parser.ParserException;
 import com.esotericsoftware.yamlbeans.tokenizer.Tokenizer.TokenizerException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
+import io.harness.exception.WingsException;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,9 @@ public class ManifestHelper {
   public static final String previousReleaseWorkloadExpression = "${k8s.previousReleaseWorkload}";
   public static final String primaryServiceNameExpression = "${k8s.primaryServiceName}";
   public static final String stageServiceNameExpression = "${k8s.stageServiceName}";
+
+  private static final String VALUES_EXPRESSION = ".Values";
+  public static final int MAX_VALUES_EXPRESSION_RECURSION_DEPTH = 10;
 
   public static KubernetesResource getKubernetesResourceFromSpec(String spec) {
     Map map = null;
@@ -217,6 +224,60 @@ public class ManifestHelper {
       }
       throw new KubernetesValuesException(message, e.getCause());
     }
+  }
+
+  public static Map getMapFromValuesFileContent(String valuesFileContent) {
+    Map map = null;
+
+    try {
+      YamlReader reader = new YamlReader(valuesFileContent);
+      Object o = reader.read();
+      if (o == null) {
+        return map;
+      }
+      if (o instanceof Map) {
+        map = (Map) o;
+      } else {
+        throw new WingsException("Invalid Yaml. Object is not a map.");
+      }
+    } catch (YamlException e) {
+      String message = e.getMessage();
+
+      if (e.getCause() != null) {
+        Throwable cause = e.getCause();
+        if (cause instanceof ParserException || cause instanceof TokenizerException) {
+          String lineSnippet = getYamlLineKey(valuesFileContent, cause.getMessage());
+          message += " " + cause.getMessage() + ". @[" + lineSnippet + "]";
+        }
+      }
+
+      throw new WingsException(message, e.getCause());
+    }
+
+    return map;
+  }
+
+  public static Set<String> getValuesExpressionKeysFromMap(Map map, String parentExpression, int recursionDepth) {
+    if (recursionDepth == MAX_VALUES_EXPRESSION_RECURSION_DEPTH) {
+      throw new WingsException(
+          format("Map is too deep. Max levels supported are %d", MAX_VALUES_EXPRESSION_RECURSION_DEPTH),
+          WingsException.USER);
+    }
+
+    Set<String> result = new HashSet<>();
+
+    for (Object o : map.entrySet()) {
+      Entry<String, Object> entry = (Entry<String, Object>) o;
+      String expression = parentExpression + "." + entry.getKey();
+      Object value = entry.getValue();
+
+      result.add(VALUES_EXPRESSION + expression);
+      if (value instanceof Map) {
+        result.addAll(getValuesExpressionKeysFromMap((Map) value, expression, recursionDepth + 1));
+      }
+    }
+
+    return result;
   }
 
   private static String getYamlLineKey(String valuesFileContent, String errorMessage) {
