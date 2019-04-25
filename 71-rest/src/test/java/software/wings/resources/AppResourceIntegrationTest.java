@@ -180,10 +180,10 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     val appId = "appId-" + rand + "-" + AppResourceIntegrationTest.class.getSimpleName();
 
     return anApplication()
-        .withName(appName)
-        .withAccountId(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
-        .withUuid(appId)
-        .withAppId(appId)
+        .name(appName)
+        .accountId(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
+        .uuid(appId)
+        .appId(appId)
         .build();
   }
 }

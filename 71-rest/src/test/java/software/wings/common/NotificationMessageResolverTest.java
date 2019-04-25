@@ -80,7 +80,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
 
     String ManualInterventionUrl = String.format("PORTAL_URL/#/account/%s/app/%s/env/%s/executions/%s/details",
         ACCOUNT_ID, APP_ID, ENV_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
-    Application app = anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build();
+    Application app = anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build();
 
     // Pipeline placeholder values
     when(context.getApp()).thenReturn(app);

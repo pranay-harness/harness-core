@@ -36,8 +36,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
   public void setup() {
     accountId = generateUuid();
     appName = generateUuid();
-    appId =
-        wingsPersistence.save(Application.Builder.anApplication().withName(appName).withAccountId(accountId).build());
+    appId = wingsPersistence.save(Application.Builder.anApplication().name(appName).accountId(accountId).build());
   }
 
   @After

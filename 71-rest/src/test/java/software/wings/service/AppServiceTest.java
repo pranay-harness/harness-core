@@ -148,14 +148,9 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveApplication() {
-    Application app =
-        anApplication().withName("AppA").withAccountId(ACCOUNT_ID).withDescription("Description1").build();
-    Application savedApp = anApplication()
-                               .withUuid(APP_ID)
-                               .withAccountId("ACCOUNT_ID")
-                               .withName("AppA")
-                               .withDescription("Description1")
-                               .build();
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).description("Description1").build();
+    Application savedApp =
+        anApplication().uuid(APP_ID).accountId("ACCOUNT_ID").name("AppA").description("Description1").build();
     when(wingsPersistence.saveAndGet(eq(Application.class), any(Application.class))).thenReturn(savedApp);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(savedApp);
     when(notificationService.list(any(PageRequest.class))).thenReturn(new PageResponse<Notification>());
@@ -214,7 +209,7 @@ public class AppServiceTest extends WingsBaseTest {
   public void shouldGetApplicationWithDetails() {
     PageResponse<Notification> notificationPageResponse = new PageResponse<>();
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
-    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().uuid(APP_ID).build());
     Application application = appService.get(APP_ID, true);
     verify(wingsPersistence).get(Application.class, APP_ID);
     assertThat(application).isNotNull();
@@ -224,7 +219,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetApplicationWithDefaults() {
     when(wingsPersistence.get(Application.class, APP_ID))
-        .thenReturn(anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
+        .thenReturn(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
     List<SettingAttribute> settingAttributes = asList(aSettingAttribute()
                                                           .withName("NAME")
                                                           .withAccountId("ACCOUNT_ID")
@@ -280,14 +275,10 @@ public class AppServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateApplication() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
-      Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
+      Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
       when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
-      appService.update(anApplication()
-                            .withUuid(APP_ID)
-                            .withName("App_Name")
-                            .withDescription("Description")
-                            .withAccountId(ACCOUNT_ID)
-                            .build());
+      appService.update(
+          anApplication().uuid(APP_ID).name("App_Name").description("Description").accountId(ACCOUNT_ID).build());
       verify(query).filter(ID_KEY, APP_ID);
       verify(updateOperations).set("name", "App_Name");
       verify(updateOperations).set("description", "Description");
@@ -308,9 +299,9 @@ public class AppServiceTest extends WingsBaseTest {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     Application application = anApplication()
-                                  .withUuid(APP_ID)
-                                  .withName("APP_NAME")
-                                  .withAccountId("some-account-id-" + AppServiceTest.class.getSimpleName())
+                                  .uuid(APP_ID)
+                                  .name("APP_NAME")
+                                  .accountId("some-account-id-" + AppServiceTest.class.getSimpleName())
                                   .build();
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
     appService.delete(APP_ID);

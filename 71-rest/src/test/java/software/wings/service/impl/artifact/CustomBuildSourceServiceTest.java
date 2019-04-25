@@ -61,9 +61,9 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(customArtifactStream);
     when(appService.get(APP_ID))
         .thenReturn(Application.Builder.anApplication()
-                        .withName("Custom Repository App")
-                        .withUuid(APP_ID)
-                        .withAccountId(ACCOUNT_ID)
+                        .name("Custom Repository App")
+                        .uuid(APP_ID)
+                        .accountId(ACCOUNT_ID)
                         .build());
 
     when(delegateProxyFactory.get(any(), any())).thenReturn(customBuildService);

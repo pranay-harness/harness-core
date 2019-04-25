@@ -888,7 +888,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
 
-    when(context.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
+    when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(mockWorkflowService.readWorkflow(any(), any())).thenReturn(workflow);
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);

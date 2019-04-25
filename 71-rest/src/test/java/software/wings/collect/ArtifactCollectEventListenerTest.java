@@ -51,7 +51,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 
 public class ArtifactCollectEventListenerTest extends WingsBaseTest {
-  private final Application APP = anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+  private final Application APP = anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build();
 
   @InjectMocks @Inject private ArtifactCollectEventListener artifactCollectEventListener;
 

@@ -156,7 +156,7 @@ public class SecretTextTest extends WingsBaseTest {
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
 
-    appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     workflowName = generateUuid();
     envId = generateUuid();
     workflowExecutionId = wingsPersistence.save(WorkflowExecution.builder().name(workflowName).envId(envId).build());
@@ -507,8 +507,7 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
-    serviceVariable.setAppId(
-        wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build()));
+    serviceVariable.setAppId(wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build()));
     String savedAttributeId = wingsPersistence.save(serviceVariable);
 
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
@@ -562,8 +561,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertTrue(isEmpty(encryptedData.getParentIds()));
 
     String updatedName = "updatedName" + getRandomServiceVariableName();
-    String updatedAppId =
-        wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    String updatedAppId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
     keyValuePairs.put("appId", updatedAppId);

@@ -52,7 +52,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() {
-    wingsRule.getDatastore().save(anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
+    wingsRule.getDatastore().save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
     wingsRule.getDatastore().save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
   }
 

@@ -64,7 +64,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   public void setUp() throws Exception {
     super.setUp();
     loginAdminUser();
-    appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());

@@ -76,7 +76,7 @@ public class WorkflowTest extends GraphQLTest {
     final Owners owners = ownerManager.create();
 
     final Application application =
-        applicationGenerator.ensureApplication(seed, owners, anApplication().withName("Application Workflows").build());
+        applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Workflows").build());
     owners.add(application);
 
     InfrastructureMapping infrastructureMapping =

@@ -60,7 +60,7 @@ public class ServiceExpressionProcessorTest {
     List<ServiceElement> services = Lists.newArrayList(aServiceElement().withName("A1234").build(),
         aServiceElement().withName("B1234").build(), aServiceElement().withName("C1234").build());
 
-    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
@@ -93,7 +93,7 @@ public class ServiceExpressionProcessorTest {
         Service.builder().name("B1234").build(), Service.builder().name("C1234").build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
 
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
@@ -126,7 +126,7 @@ public class ServiceExpressionProcessorTest {
     ServiceElement serviceCElement =
         aServiceElement().withName(serviceC.getName()).withUuid(serviceC.getUuid()).build();
 
-    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
 
@@ -148,7 +148,7 @@ public class ServiceExpressionProcessorTest {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
         Service.builder().name("B1234").build(), Service.builder().name("C1234").build());
 
-    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
 
     PageResponse<Service> res = new PageResponse<>();
@@ -174,7 +174,7 @@ public class ServiceExpressionProcessorTest {
   @Test
   @Category(UnitTests.class)
   public void shouldReturnSelectedListSomeByName() {
-    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD))
         .thenReturn(aWorkflowStandardParams()
                         .withServices(Lists.newArrayList(aServiceElement().withName("A1234").build(),
@@ -205,7 +205,7 @@ public class ServiceExpressionProcessorTest {
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());
 
-    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
 

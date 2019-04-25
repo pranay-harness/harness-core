@@ -84,7 +84,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
         SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).withName("Name").build();
     doReturn(settingAttribute).when(mockSettingsService).getSettingAttributeByName(anyString(), anyString());
     doReturn(settingAttribute).when(mockSettingsService).get(anyString(), anyString());
-    doReturn(Application.Builder.anApplication().withUuid(APP_ID).build()).when(appService).get(any());
+    doReturn(Application.Builder.anApplication().uuid(APP_ID).build()).when(appService).get(any());
     handler.upsertFromYaml(changeContext, asList(changeContext));
     ArgumentCaptor<TerraformInfrastructureProvisioner> captor =
         ArgumentCaptor.forClass(TerraformInfrastructureProvisioner.class);

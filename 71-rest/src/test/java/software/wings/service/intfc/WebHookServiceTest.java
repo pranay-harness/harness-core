@@ -92,8 +92,7 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    final Application application =
-        anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build();
+    final Application application = anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build();
     doReturn(application).when(appService).get(APP_ID);
     doReturn(execution)
         .when(triggerService)
@@ -376,8 +375,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testPopulateUrlFieldsWhenTriggering() {
-    final Application application =
-        anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build();
+    final Application application = anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build();
     doReturn(application).when(appService).get(APP_ID);
     final WorkflowExecution execution =
         WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();

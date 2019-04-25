@@ -342,8 +342,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(accountService.get(anyString())).thenReturn(account);
     when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, WORKFLOW_ID))
         .thenReturn(false);
-    when(appService.get(TARGET_APP_ID))
-        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
 
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());

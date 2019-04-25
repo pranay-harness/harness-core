@@ -142,13 +142,13 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().name(APP_NAME).build());
     when(appService.getApplicationWithDefaults(APP_ID))
         .thenReturn(anApplication()
-                        .withName(APP_NAME)
-                        .withAccountId(ACCOUNT_ID)
-                        .withDescription("Awesome app")
-                        .withDefaults(ImmutableMap.of("Param1", "Value1"))
+                        .name(APP_NAME)
+                        .accountId(ACCOUNT_ID)
+                        .description("Awesome app")
+                        .defaults(ImmutableMap.of("Param1", "Value1"))
                         .build());
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))

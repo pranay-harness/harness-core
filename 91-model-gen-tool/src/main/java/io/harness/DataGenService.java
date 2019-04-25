@@ -454,8 +454,8 @@ public class DataGenService {
       Seed seed = new Seed(0);
       Owners owners = ownerManager.create();
 
-      Application application = applicationGenerator.ensureApplication(
-          seed, owners, anApplication().withAccountId(accountId).withName(name).build());
+      Application application =
+          applicationGenerator.ensureApplication(seed, owners, anApplication().accountId(accountId).name(name).build());
       apps.add(application);
     }
     return apps;

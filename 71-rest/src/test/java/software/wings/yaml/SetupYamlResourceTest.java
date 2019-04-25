@@ -53,24 +53,12 @@ public class SetupYamlResourceTest {
   // adds TEST_APP_NAME4 to, and removes TEST_APP_NAME3 from TEST_YAML2
   private final YamlPayload TEST_YP3 = new YamlPayload(TEST_YAML1 + "  - " + TEST_APP_NAME4 + "\n");
 
-  private final Application testApp1 = anApplication()
-                                           .withUuid(TEST_APP1)
-                                           .withAccountId(TEST_ACCOUNT_ID)
-                                           .withAppId(TEST_APP1)
-                                           .withName(TEST_APP_NAME1)
-                                           .build();
-  private final Application testApp2 = anApplication()
-                                           .withUuid(TEST_APP2)
-                                           .withAccountId(TEST_ACCOUNT_ID)
-                                           .withAppId(TEST_APP2)
-                                           .withName(TEST_APP_NAME2)
-                                           .build();
-  private final Application testApp3 = anApplication()
-                                           .withUuid(TEST_APP3)
-                                           .withAccountId(TEST_ACCOUNT_ID)
-                                           .withAppId(TEST_APP3)
-                                           .withName(TEST_APP_NAME3)
-                                           .build();
+  private final Application testApp1 =
+      anApplication().uuid(TEST_APP1).accountId(TEST_ACCOUNT_ID).appId(TEST_APP1).name(TEST_APP_NAME1).build();
+  private final Application testApp2 =
+      anApplication().uuid(TEST_APP2).accountId(TEST_ACCOUNT_ID).appId(TEST_APP2).name(TEST_APP_NAME2).build();
+  private final Application testApp3 =
+      anApplication().uuid(TEST_APP3).accountId(TEST_ACCOUNT_ID).appId(TEST_APP3).name(TEST_APP_NAME3).build();
 
   private final List<String> testApps1 = asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3);
   private final List<String> testApps2 = asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3, TEST_APP_NAME4);

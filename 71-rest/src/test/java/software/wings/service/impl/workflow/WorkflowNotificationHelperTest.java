@@ -101,7 +101,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(executionContext.getApp())
-        .thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).withName(APP_NAME).build());
+        .thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).name(APP_NAME).build());
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")

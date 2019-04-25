@@ -92,7 +92,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
     artifactoryId = ConnectorUtils.createArtifactoryConnector(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
     sshKeyId = SSHKeysUtils.createSSHKey(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
 
-    Application warApp = anApplication().withName(APP_NAME).build();
+    Application warApp = anApplication().name(APP_NAME).build();
     application = ApplicationRestUtils.createApplication(bearerToken, getAccount(), warApp);
     assertThat(application).isNotNull();
   }

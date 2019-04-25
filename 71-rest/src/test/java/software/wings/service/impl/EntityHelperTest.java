@@ -41,7 +41,7 @@ public class EntityHelperTest extends WingsBaseTest {
     doReturn(mockQuery).when(mockWingsPersistence).createQuery(any());
     doReturn(mockQuery).when(mockQuery).filter(anyString(), anyString());
     doReturn(mockQuery).when(mockQuery).project(anyString(), anyBoolean());
-    doReturn(singletonList(anApplication().withName(APP_NAME).build())).when(mockQuery).asList();
+    doReturn(singletonList(anApplication().name(APP_NAME).build())).when(mockQuery).asList();
     entityHelper.loadMetaDataForEntity(environment, builder, Type.CREATE);
     EntityAuditRecord record = builder.build();
     assertThat(record).isNotNull();

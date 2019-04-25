@@ -59,8 +59,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
     super.setUp();
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    app = appService.save(
-        anApplication().withAccountId(ACCOUNT_ID).withName(APP_NAME + System.currentTimeMillis()).build());
+    app = appService.save(anApplication().accountId(ACCOUNT_ID).name(APP_NAME + System.currentTimeMillis()).build());
     service = serviceResourceService.save(
         Service.builder().appId(app.getUuid()).name(SERVICE_NAME + System.currentTimeMillis()).build());
     env = anEnvironment().withAppId(app.getAppId()).withUuid(generateUuid()).withName(ENV_NAME).build();

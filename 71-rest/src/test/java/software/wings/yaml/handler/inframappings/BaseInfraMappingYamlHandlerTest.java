@@ -79,11 +79,11 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
 
   protected void setup(String yamlFilePath, String infraMappingName) {
     when(appService.getAppByName(anyString(), anyString()))
-        .thenReturn(anApplication().withName(APP_NAME).withUuid(APP_ID).build());
+        .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).build());
 
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
     when(yamlHelper.getApplicationIfPresent(anyString(), anyString()))
-        .thenReturn(Optional.of(anApplication().withUuid(APP_ID).build()));
+        .thenReturn(Optional.of(anApplication().uuid(APP_ID).build()));
     when(yamlHelper.getEnvIfPresent(anyString(), anyString()))
         .thenReturn(Optional.of(anEnvironment().withUuid(ENV_ID).build()));
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(ENV_ID);

@@ -111,7 +111,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     loginAdminUser();
 
-    appId = appService.save(anApplication().withName(generateUuid()).withAccountId(accountId).build()).getUuid();
+    appId = appService.save(anApplication().name(generateUuid()).accountId(accountId).build()).getUuid();
     envId = generateUuid();
     appDynamicsApplicationId = generateUuid();
 

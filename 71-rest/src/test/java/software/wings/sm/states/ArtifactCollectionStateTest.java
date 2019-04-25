@@ -112,11 +112,9 @@ public class ArtifactCollectionStateTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://portalUrl");
     when(appService.get(APP_ID))
-        .thenReturn(
-            Application.Builder.anApplication().withAppId(APP_ID).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
+        .thenReturn(Application.Builder.anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
     when(appService.getApplicationWithDefaults(APP_ID))
-        .thenReturn(
-            Application.Builder.anApplication().withAppId(APP_ID).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
+        .thenReturn(Application.Builder.anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());

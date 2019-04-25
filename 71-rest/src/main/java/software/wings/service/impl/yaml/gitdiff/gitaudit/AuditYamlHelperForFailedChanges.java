@@ -46,7 +46,6 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
-
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.EntityHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -248,9 +247,9 @@ public class AuditYamlHelperForFailedChanges {
       String name = yamlHelper.extractEntityNameFromYamlPath(
           YamlType.APPLICATION.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
       application = anApplication()
-                        .withAppId(auditRequestData.getAppId())
-                        .withAccountId(auditRequestData.getAccountId())
-                        .withName(name)
+                        .appId(auditRequestData.getAppId())
+                        .accountId(auditRequestData.getAccountId())
+                        .name(name)
                         .build();
     }
 
@@ -597,7 +596,7 @@ public class AuditYamlHelperForFailedChanges {
       }
     }
 
-    return anApplication().withAccountId(accountId).withAppId(appId).withUuid(appId).withName(appName).build();
+    return anApplication().accountId(accountId).appId(appId).uuid(appId).name(appName).build();
   }
 
   private String getSettingAttributeType(String yamlFilePath) {

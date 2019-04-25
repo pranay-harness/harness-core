@@ -105,7 +105,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                 aTransition().withFromState(s1).withToState(s2).withTransitionType(TransitionType.REPEAT).build())
             .build();
 
-    Application app = anApplication().withName("App1").withUuid(generateUuid()).build();
+    Application app = anApplication().name("App1").uuid(generateUuid()).build();
     Environment env = anEnvironment().withName("DEV").withUuid(generateUuid()).withAppId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
@@ -160,7 +160,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                 aTransition().withFromState(s4).withToState(s5).withTransitionType(TransitionType.SUCCESS).build())
             .build();
 
-    Application app = anApplication().withName("App1").withUuid(generateUuid()).build();
+    Application app = anApplication().name("App1").uuid(generateUuid()).build();
     Environment env = anEnvironment().withName("DEV").withUuid(generateUuid()).withAppId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
@@ -257,7 +257,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                 aTransition().withFromState(s4).withToState(s6).withTransitionType(TransitionType.FAILURE).build())
             .build();
 
-    Application app = anApplication().withName("App1").withUuid(generateUuid()).build();
+    Application app = anApplication().name("App1").uuid(generateUuid()).build();
     Environment env = anEnvironment().withName("DEV").withUuid(generateUuid()).withAppId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();

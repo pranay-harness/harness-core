@@ -73,7 +73,7 @@ public class PauseStateTest extends WingsBaseTest {
 
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
-    on(workflowStandardParams).set("app", anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
+    on(workflowStandardParams).set("app", anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     on(workflowStandardParams).set("env", anEnvironment().withUuid(ENV_ID).build());
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("accountService", accountService);

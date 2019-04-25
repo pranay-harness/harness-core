@@ -60,7 +60,7 @@ public class ExecutionResourceTest {
     String appId = generateUuid();
 
     PageResponse<Application> applicationPageResponse =
-        aPageResponse().withResponse(newArrayList(anApplication().withUuid(appId).build())).build();
+        aPageResponse().withResponse(newArrayList(anApplication().uuid(appId).build())).build();
     when(appService.list(anyObject())).thenReturn(applicationPageResponse);
 
     PageResponse<WorkflowExecution> workflowExecutionPageResponse = aPageResponse().build();

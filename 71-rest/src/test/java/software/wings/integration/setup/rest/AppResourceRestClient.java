@@ -66,7 +66,7 @@ public class AppResourceRestClient {
     WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
     RestResponse<Application> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)
-            .post(entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
+            .post(entity(anApplication().name(appName).description(appName).accountId(accountId).build(),
                       APPLICATION_JSON),
                 new GenericType<RestResponse<Application>>() {});
     assertThat(response.getResource()).isInstanceOf(Application.class);

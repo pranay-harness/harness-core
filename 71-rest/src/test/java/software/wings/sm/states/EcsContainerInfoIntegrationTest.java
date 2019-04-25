@@ -89,7 +89,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     when(containerInstanceHandler.isContainerDeployment(anyObject())).thenReturn(true);
     when(infraMappingService.get(anyString(), anyString())).thenReturn(null);
     when(appService.get(appId))
-        .thenReturn(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
+        .thenReturn(Application.Builder.anApplication().uuid(appId).accountId(accountId).build());
     when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
   }
 

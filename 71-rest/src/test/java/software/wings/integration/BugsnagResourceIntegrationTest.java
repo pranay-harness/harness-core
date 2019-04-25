@@ -52,7 +52,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
     super.setUp();
     loginAdminUser();
 
-    appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     settingId = wingsPersistence.save(
         Builder.aSettingAttribute()
             .withName(generateUuid())

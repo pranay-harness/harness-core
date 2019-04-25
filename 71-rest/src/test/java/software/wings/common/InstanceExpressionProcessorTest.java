@@ -136,7 +136,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore // Ignoring as instance without any filter is disabled
   public void shouldReturnInstances() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
 
@@ -205,7 +205,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromParam() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
 
@@ -255,7 +255,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
 
@@ -308,7 +308,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam2() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
 
@@ -366,7 +366,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
@@ -441,7 +441,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore
   public void shouldFetchInstanceElements() {
-    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
@@ -498,7 +498,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromPartition() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
 

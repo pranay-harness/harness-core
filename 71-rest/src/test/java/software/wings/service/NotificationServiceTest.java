@@ -67,8 +67,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(appService.get(APP_ID))
-        .thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId("ACCOUNT_ID").build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).appId(APP_ID).accountId("ACCOUNT_ID").build());
   }
 
   /**

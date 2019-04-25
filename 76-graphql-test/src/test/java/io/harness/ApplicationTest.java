@@ -70,11 +70,11 @@ public class ApplicationTest extends GraphQLTest {
     owners.add(account);
 
     final Application application1 = applicationGenerator.ensureApplication(
-        seed, owners, anApplication().withName("Application - " + generateUuid()).build());
+        seed, owners, anApplication().name("Application - " + generateUuid()).build());
     final Application application2 = applicationGenerator.ensureApplication(
-        seed, owners, anApplication().withName("Application - " + generateUuid()).build());
+        seed, owners, anApplication().name("Application - " + generateUuid()).build());
     final Application application3 = applicationGenerator.ensureApplication(
-        seed, owners, anApplication().withName("Application - " + generateUuid()).build());
+        seed, owners, anApplication().name("Application - " + generateUuid()).build());
 
     {
       String query =

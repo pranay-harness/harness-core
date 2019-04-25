@@ -91,7 +91,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     doReturn(mockPhaseElement).when(mockContext).getContextElement(any(), anyString());
     doReturn(mockParams).when(mockContext).getContextElement(eq(STANDARD));
     doReturn(null).when(mockContext).getContextElement(eq(INSTANCE));
-    Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
+    Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     doReturn(app).when(mockAppService).get(anyString());
     doReturn(app).when(mockContext).getApp();
     Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();

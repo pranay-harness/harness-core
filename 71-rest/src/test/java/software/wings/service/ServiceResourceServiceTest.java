@@ -247,9 +247,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
     when(mockWingsPersistence.getWithAppId(ServiceCommand.class, APP_ID, SERVICE_COMMAND_ID))
         .thenReturn(serviceCommandBuilder.but().build());
-    when(appService.get(TARGET_APP_ID))
-        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
 
     when(mockWingsPersistence.createUpdateOperations(Service.class)).thenReturn(updateOperations);
     when(updateOperations.set(anyString(), any())).thenReturn(updateOperations);

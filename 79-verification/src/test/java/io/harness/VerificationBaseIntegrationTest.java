@@ -203,7 +203,7 @@ public abstract class VerificationBaseIntegrationTest
 
   protected Application createApp(String appName) {
     WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
-    Application app = anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build();
+    Application app = anApplication().name(appName).description(appName).accountId(accountId).build();
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(app, APPLICATION_JSON));
     if (response.getStatus() != Status.OK.getStatusCode()) {
       log().error("Non-ok-status. Headers: {}", response.getHeaders());

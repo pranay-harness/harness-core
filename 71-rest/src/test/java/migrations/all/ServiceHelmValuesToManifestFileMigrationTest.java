@@ -50,7 +50,7 @@ public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest 
   public void setupMocks() {
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
-    wingsPersistence.save(anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
+    wingsPersistence.save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
 
     service = Service.builder()
                   .uuid(SERVICE_ID)

@@ -162,7 +162,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     // capture arg
     doReturn(Instance.builder().build()).when(instanceService).saveOrUpdate(any(Instance.class));
 
-    doReturn(Application.Builder.anApplication().withName("app").withUuid("app_1").withAccountId(ACCOUNT_ID).build())
+    doReturn(Application.Builder.anApplication().name("app").uuid("app_1").accountId(ACCOUNT_ID).build())
         .when(appService)
         .get(anyString());
 

@@ -69,11 +69,8 @@ public class YamlIntegrationTestHelper {
   public static final String URL_FOR_GIT_SYNC = "https://github.com/wings-software/yamlIntegrationTest.git";
 
   public Application createApplication(String appName, String accountId, AppService appService) {
-    return appService.save(anApplication()
-                               .withAccountId(accountId)
-                               .withName(appName)
-                               .withDescription("Application for Integration Test")
-                               .build());
+    return appService.save(
+        anApplication().accountId(accountId).name(appName).description("Application for Integration Test").build());
   }
 
   public Service createService(

@@ -40,7 +40,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
     super.setUp();
     loginAdminUser();
     stateExecutionId = generateUuid();
-    appId = wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
+    appId = wingsPersistence.save(anApplication().name(generateUuid()).accountId(accountId).build());
     delegateId = generateUuid();
     delegateTaskId = generateUuid();
   }

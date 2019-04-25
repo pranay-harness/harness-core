@@ -44,7 +44,7 @@ public class ApplicationGenerator {
       account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     }
     return ensureApplication(
-        seed, owners, anApplication().withAccountId(account.getUuid()).withName("Test Application").build());
+        seed, owners, anApplication().accountId(account.getUuid()).name("Test Application").build());
   }
 
   private Application ensureFunctionalTest(Randomizer.Seed seed, Owners owners) {
@@ -53,7 +53,7 @@ public class ApplicationGenerator {
       account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     }
     return ensureApplication(
-        seed, owners, anApplication().withAccountId(account.getUuid()).withName("Functional Test Application").build());
+        seed, owners, anApplication().accountId(account.getUuid()).name("Functional Test Application").build());
   }
 
   public Application ensureRandom(Randomizer.Seed seed, Owners owners) {
@@ -75,16 +75,16 @@ public class ApplicationGenerator {
     final Builder builder = anApplication();
 
     if (application != null && application.getAccountId() != null) {
-      builder.withAccountId(application.getAccountId());
+      builder.accountId(application.getAccountId());
     } else {
       Account account = owners.obtainAccount(() -> accountGenerator.ensureRandom(seed, owners));
-      builder.withAccountId(account.getUuid());
+      builder.accountId(account.getUuid());
     }
 
     if (application != null && application.getName() != null) {
-      builder.withName(application.getName());
+      builder.name(application.getName());
     } else {
-      builder.withName(random.nextObject(String.class));
+      builder.name(random.nextObject(String.class));
     }
 
     Application existing = exists(builder.build());

@@ -55,7 +55,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
                                     .getBytes(Charset.forName("UTF-8")),
             null));
     accountId = wingsPersistence.save(account);
-    appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUUID()).build());
+    appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUUID()).build());
     envName = generateUuid();
     connectorId = generateUuid();
     serviceId = wingsPersistence.save(Service.builder().appId(appId).name(generateUuid()).build());

@@ -841,8 +841,7 @@ public class UserServiceTest extends WingsBaseTest {
     List<Role> roles =
         asList(aRole().withUuid(generateUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
-    when(appService.get(APP_ID))
-        .thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build());
 
     ApplicationRole applicationRole = userService.getUserApplicationRole(USER_ID, APP_ID);
     assertThat(applicationRole)

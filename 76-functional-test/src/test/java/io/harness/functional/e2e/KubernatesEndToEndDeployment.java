@@ -57,7 +57,7 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void t1_testApplicationCreation() {
     availableGlobalDataMap = GlobalSettingsDataStorage.getAvailableGlobalDataMap(bearerToken, getAccount());
-    Application application = anApplication().withName("Sample App" + System.currentTimeMillis()).build();
+    Application application = anApplication().name("Sample App" + System.currentTimeMillis()).build();
     sampleApp = ApplicationRestUtils.createApplication(bearerToken, getAccount(), application);
     assertThat(sampleApp).isNotNull();
   }

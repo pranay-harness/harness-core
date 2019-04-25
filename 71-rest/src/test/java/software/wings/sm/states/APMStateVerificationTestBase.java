@@ -97,7 +97,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     serviceId = UUID.randomUUID().toString();
     user = new User();
 
-    wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
+    wingsPersistence.save(Application.Builder.anApplication().uuid(appId).accountId(accountId).build());
     wingsPersistence.save(WorkflowExecution.builder()
                               .appId(appId)
                               .workflowId(workflowId)

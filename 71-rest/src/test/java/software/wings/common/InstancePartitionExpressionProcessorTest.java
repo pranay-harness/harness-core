@@ -103,7 +103,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldPartitionInstances() {
     Application app =
-        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
 

@@ -434,7 +434,7 @@ public class AccountServiceTest extends WingsBaseTest {
 
     wingsPersistence.saveAndGet(
         Service.class, Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());
-    wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withName("appName").build());
+    wingsPersistence.save(Application.Builder.anApplication().uuid(appId).name("appName").build());
     wingsPersistence.save(config);
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
       { put(appId, buildAppPermissionSummary(serviceId, workflowId, envId)); }

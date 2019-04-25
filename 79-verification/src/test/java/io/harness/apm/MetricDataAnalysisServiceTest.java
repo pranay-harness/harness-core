@@ -90,7 +90,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     setInternalState(metricDataAnalysisService, "managerClientHelper", managerClientHelper);
     setInternalState(metricDataAnalysisService, "usageMetricsHelper", usageMetricsHelper);
     accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
-    appId = wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
+    appId = wingsPersistence.save(anApplication().name(generateUuid()).accountId(accountId).build());
     stateExecutionId = generateUuid();
     workflowExecutionId = generateUuid();
     serviceId = generateUuid();

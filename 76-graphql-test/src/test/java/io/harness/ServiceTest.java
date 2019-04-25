@@ -54,7 +54,7 @@ public class ServiceTest extends GraphQLTest {
     final Owners owners = ownerManager.create();
 
     final Application application = applicationGenerator.ensureApplication(
-        seed, owners, Application.Builder.anApplication().withName("Service App").build());
+        seed, owners, Application.Builder.anApplication().name("Service App").build());
 
     final ServiceBuilder serviceBuilder = Service.builder().appId(application.getUuid());
 

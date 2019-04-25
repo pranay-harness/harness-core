@@ -114,9 +114,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   public void setUp() throws IOException {
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
-    when(appService.get(TARGET_APP_ID))
-        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
   }
 
   /**

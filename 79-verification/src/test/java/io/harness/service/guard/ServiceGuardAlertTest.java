@@ -43,8 +43,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
-    final String appId =
-        wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    final String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setName("Config 1");
     logsCVConfiguration.setAppId(appId);
