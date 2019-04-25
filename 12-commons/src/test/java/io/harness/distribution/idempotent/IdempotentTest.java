@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
@@ -30,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
-public class IdempotentTest {
+public class IdempotentTest extends CategoryTest {
   IdempotentId id = new IdempotentId("foo");
 
   @Value

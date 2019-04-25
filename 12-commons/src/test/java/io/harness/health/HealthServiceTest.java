@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.threading.Morpheus;
 import org.junit.Test;
@@ -16,7 +17,7 @@ import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class HealthServiceTest {
+public class HealthServiceTest extends CategoryTest {
   private static final Duration DEFAULT_VALID_FOR = Duration.ofMillis(110);
   private static final Duration DEFAULT_EXPECTED_RESPONSE_TIMEOUT = Duration.ofMillis(100);
 

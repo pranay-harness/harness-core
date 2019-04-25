@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static org.junit.Assume.assumeTrue;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
@@ -19,7 +21,9 @@ public interface BypassRuleMixin {
 
   class NoopStatement extends Statement {
     @Override
-    public void evaluate() throws Throwable {}
+    public void evaluate() throws Throwable {
+      assumeTrue("Do not run this test", false);
+    }
   }
 
   default Statement noopStatement() {

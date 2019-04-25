@@ -2,11 +2,12 @@ package io.harness.version;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class VersionInfoManagerTest {
+public class VersionInfoManagerTest extends CategoryTest {
   private static String sampleVersionInfoYaml = "version   : 1.1.1.1\n"
       + "buildNo   : 1.0\n"
       + "gitCommit : 6f6df35\n"

@@ -4,12 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class KryoUtilsTest {
+public class KryoUtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void shouldInitConcurrently() {

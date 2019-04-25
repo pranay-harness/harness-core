@@ -4,6 +4,7 @@ import static io.harness.observer.AsyncInformObserverTest.Sync.CALLBACK_IS_DONE;
 import static io.harness.observer.AsyncInformObserverTest.Sync.FIRE_IS_DONE;
 import static io.harness.observer.AsyncInformObserverTest.Sync.INITIAL;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -14,7 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Slf4j
-public class AsyncInformObserverTest {
+public class AsyncInformObserverTest extends CategoryTest {
   public interface ObserverProtocol { void method(); }
 
   enum Sync { INITIAL, FIRE_IS_DONE, CALLBACK_IS_DONE }

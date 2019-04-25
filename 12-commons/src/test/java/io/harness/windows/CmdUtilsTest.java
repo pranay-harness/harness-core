@@ -2,11 +2,12 @@ package io.harness.windows;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CmdUtilsTest {
+public class CmdUtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testEscapeEnvironmentValue() {

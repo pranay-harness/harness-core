@@ -6,6 +6,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,7 +22,7 @@ import java.util.Map;
  *
  * @author Rishi.
  */
-public class YamlUtilsTest {
+public class YamlUtilsTest extends CategoryTest {
   private YamlUtils yamlUtils = new YamlUtils();
 
   /**

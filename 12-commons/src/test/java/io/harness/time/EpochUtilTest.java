@@ -2,11 +2,12 @@ package io.harness.time;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class EpochUtilTest {
+public class EpochUtilTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void shouldCalculateEpochMilliOfStartOfDayForXDaysInPastFromNow() {

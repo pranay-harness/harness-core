@@ -6,6 +6,7 @@ package io.harness.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -20,7 +21,7 @@ import javax.xml.xpath.XPathExpressionException;
  *
  * @author Rishi
  */
-public class XmlUtilsTest {
+public class XmlUtilsTest extends CategoryTest {
   /**
    * Should get xpath.
    *

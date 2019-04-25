@@ -11,13 +11,14 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.net.URL;
 
-public class EncodingUtilsTest {
+public class EncodingUtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testCompression() throws Exception {

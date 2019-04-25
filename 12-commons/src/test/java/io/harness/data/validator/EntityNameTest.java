@@ -4,6 +4,7 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import lombok.Builder;
 import org.junit.Test;
@@ -13,7 +14,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-public class EntityNameTest {
+public class EntityNameTest extends CategoryTest {
   @Builder
   static class EntityNameTestStructure {
     @EntityName String str;

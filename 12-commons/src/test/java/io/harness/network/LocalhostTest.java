@@ -2,6 +2,7 @@ package io.harness.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -10,7 +11,7 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.concurrent.ExecutionException;
 
-public class LocalhostTest {
+public class LocalhostTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetLocalHostAddress() {

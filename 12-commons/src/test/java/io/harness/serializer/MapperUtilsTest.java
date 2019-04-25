@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Maps;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import lombok.Data;
 import org.junit.Test;
@@ -12,7 +13,7 @@ import org.junit.experimental.categories.Category;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapperUtilsTest {
+public class MapperUtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void mapObject() throws Exception {

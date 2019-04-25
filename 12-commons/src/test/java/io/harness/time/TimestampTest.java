@@ -2,13 +2,14 @@ package io.harness.time;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class TimestampTest {
+public class TimestampTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testCurrentMinuteBoundary() {

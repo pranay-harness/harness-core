@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.codahale.metrics.MetricRegistry;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
@@ -15,7 +16,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Created by Pranjal on 11/15/2018
  */
-public class HarnessMetricRegistryTest {
+public class HarnessMetricRegistryTest extends CategoryTest {
   private HarnessMetricRegistry harnessMetricRegistry;
 
   @Before

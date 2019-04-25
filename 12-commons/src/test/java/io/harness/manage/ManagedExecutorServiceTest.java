@@ -2,6 +2,7 @@ package io.harness.manage;
 
 import static org.junit.Assert.assertTrue;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import org.junit.Test;
@@ -12,7 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ManagedExecutorServiceTest {
+public class ManagedExecutorServiceTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testSubmit_Runnable() throws Exception {

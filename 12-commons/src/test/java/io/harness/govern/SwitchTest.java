@@ -7,13 +7,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
-public class SwitchTest implements MockableTestMixin {
+public class SwitchTest extends CategoryTest implements MockableTestMixin {
   @Test
   @Category(UnitTests.class)
   public void unhandled() throws IllegalAccessException {

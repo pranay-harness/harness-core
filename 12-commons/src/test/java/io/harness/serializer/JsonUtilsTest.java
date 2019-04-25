@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtilsTest.Base.BaseType;
 import io.harness.serializer.JsonUtilsTest.CustomResponse.Result;
@@ -34,7 +35,7 @@ import java.util.Map;
  * @author Rishi.
  */
 @Slf4j
-public class JsonUtilsTest {
+public class JsonUtilsTest extends CategoryTest {
   private static final String json =
       "{\"store\":{\"book\":[{\"category\":\"reference\",\"author\":\"NigelRees\",\"title\":\"SayingsoftheCentury\","
       + "\"price\":8.95},{\"category\":\"fiction\",\"author\":\"EvelynWaugh\",\"title\":\"SwordofHonour\",\"price\":12.99},{\"category\":\"fiction\","
