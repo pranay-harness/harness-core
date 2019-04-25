@@ -114,6 +114,15 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
           .isEqualTo(2);
     }
+
+    {
+      String query =
+          "{ workflow(workflowId: \"" + workflow.getUuid() + "\") { executions(limit: 2) { nodes { id } } } }";
+
+      final QLTestObject qlTestObject = qlExecute(query);
+
+      Assertions.assertThat(((ArrayList) qlTestObject.sub("executions").get("nodes")).size()).isEqualTo(2);
+    }
   }
 
   @Test
