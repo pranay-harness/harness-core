@@ -42,6 +42,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.SettingsService;
@@ -60,6 +61,11 @@ public class SettingGenerator {
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   private static final String HARNESS_GCP_EXPLORATION = "harness-exploration";
   private static final String HARNESS_EXPLORATION_GCS = "harness-exploration-gcs";
+
+  private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
+  private static final String HELM_CHART_REPO = "Helm Chart Repo";
+  private static final String HELM_SOURCE_REPO_URL = "https://github.com/helm/charts.git";
+  private static final String HELM_SOURCE_REPO = "Helm Source Repo";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -85,7 +91,9 @@ public class SettingGenerator {
     HARNESS_JIRA,
     PHYSICAL_DATA_CENTER,
     WINRM_TEST_CONNECTOR,
-    PAID_EMAIL_SMTP_CONNECTOR
+    PAID_EMAIL_SMTP_CONNECTOR,
+    HELM_CHART_REPO_CONNECTOR,
+    HELM_SOURCE_REPO_CONNECTOR
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -130,6 +138,10 @@ public class SettingGenerator {
         return ensureTerraformMainGitRepo(seed, owners);
       case PAID_EMAIL_SMTP_CONNECTOR:
         return ensurePaidSMTPSettings(seed, owners);
+      case HELM_CHART_REPO_CONNECTOR:
+        return ensureHelmChartRepoSetting(seed, owners);
+      case HELM_SOURCE_REPO_CONNECTOR:
+        return ensureHelmSourceRepoSetting(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -487,6 +499,39 @@ public class SettingGenerator {
                                                  .withValue(smtpConfig)
                                                  .build();
     return ensureSettingAttribute(seed, emailSettingAttribute);
+  }
+
+  private SettingAttribute ensureHelmChartRepoSetting(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+
+    HttpHelmRepoConfig httpHelmRepoConfig =
+        HttpHelmRepoConfig.builder().accountId(account.getUuid()).chartRepoUrl(HELM_CHART_REPO_URL).build();
+
+    SettingAttribute helmRepoSettingAttribute = aSettingAttribute()
+                                                    .withCategory(SettingCategory.HELM_REPO)
+                                                    .withName(HELM_CHART_REPO)
+                                                    .withAccountId(account.getUuid())
+                                                    .withValue(httpHelmRepoConfig)
+                                                    .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                                    .build();
+
+    return ensureSettingAttribute(seed, helmRepoSettingAttribute);
+  }
+
+  private SettingAttribute ensureHelmSourceRepoSetting(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+
+    GitConfig gitConfig =
+        GitConfig.builder().repoUrl(HELM_SOURCE_REPO_URL).branch("master").accountId(account.getUuid()).build();
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(CONNECTOR)
+                                            .withName(HELM_SOURCE_REPO)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(gitConfig)
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
   }
 
   public SettingAttribute exists(SettingAttribute settingAttribute) {
