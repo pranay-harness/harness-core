@@ -1111,11 +1111,28 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .serviceId(SERVICE_ID)
                                                         .artifactPaths(asList("dev/todolist.war"))
                                                         .build();
+    validateS3ArtifactStream(amazonS3ArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddS3ArtifactStreamAtConnectorLevel() {
+    AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
+                                                        .appId(GLOBAL_APP_ID)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("harnessapps")
+                                                        .autoPopulate(true)
+                                                        .artifactPaths(asList("dev/todolist.war"))
+                                                        .build();
+    validateS3ArtifactStream(amazonS3ArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void validateS3ArtifactStream(AmazonS3ArtifactStream amazonS3ArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(amazonS3ArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMAZON_S3.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("harnessapps");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("harnessapps/dev/todolist.war");
     assertThat(savedArtifactSteam).isInstanceOf(AmazonS3ArtifactStream.class);
@@ -1137,11 +1154,28 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .serviceId(SERVICE_ID)
                                                         .artifactPaths(asList("dev/todolist.war"))
                                                         .build();
+    updateS3ArtifactStreamAndValidate(amazonS3ArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateS3ArtifactStreamAtConnectorLevel() {
+    AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
+                                                        .appId(GLOBAL_APP_ID)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("harnessapps")
+                                                        .autoPopulate(true)
+                                                        .artifactPaths(asList("dev/todolist.war"))
+                                                        .build();
+    updateS3ArtifactStreamAndValidate(amazonS3ArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void updateS3ArtifactStreamAndValidate(AmazonS3ArtifactStream amazonS3ArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(amazonS3ArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMAZON_S3.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("harnessapps");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("harnessapps/dev/todolist.war");
     assertThat(savedArtifactSteam).isInstanceOf(AmazonS3ArtifactStream.class);
@@ -1159,7 +1193,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("s3 stream");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(AMAZON_S3.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("harnessapps-changed");
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo("harnessapps-changed/qa/todolist.war");
     assertThat(updatedArtifactStream).isInstanceOf(AmazonS3ArtifactStream.class);

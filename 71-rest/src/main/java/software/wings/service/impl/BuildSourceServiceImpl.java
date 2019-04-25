@@ -437,4 +437,27 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(getBuildService(settingAttribute).getGroupIds(repoType, settingValue, encryptedDataDetails));
   }
+
+  @Override
+  public String getProject(String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "GCP Cloud provider Settings Attribute is null");
+    }
+    SettingValue settingValue = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+
+    GcpConfig gcpConfig = (GcpConfig) settingValue;
+    return gcsService.getProject(gcpConfig, encryptedDataDetails);
+  }
+
+  @Override
+  public Map<String, String> getBuckets(String projectId, String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    return getBuildService(GCS.name(), settingAttribute)
+        .getBuckets(
+            getSettingValue(settingAttribute), projectId, getEncryptedDataDetails((EncryptableSetting) settingValue));
+  }
 }
