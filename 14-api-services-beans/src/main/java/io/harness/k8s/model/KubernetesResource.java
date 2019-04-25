@@ -9,6 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMapEnvSource;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelector;
+import io.fabric8.kubernetes.api.model.ConfigMapProjection;
 import io.fabric8.kubernetes.api.model.ConfigMapVolumeSource;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvFromSource;
@@ -23,9 +24,11 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretEnvSource;
 import io.fabric8.kubernetes.api.model.SecretKeySelector;
+import io.fabric8.kubernetes.api.model.SecretProjection;
 import io.fabric8.kubernetes.api.model.SecretVolumeSource;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeProjection;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
@@ -331,6 +334,16 @@ public class KubernetesResource {
         String name = configMap.getName();
         configMap.setName((String) transformer.apply(name));
       }
+
+      if (volume.getProjected() != null && volume.getProjected().getSources() != null) {
+        for (VolumeProjection volumeProjection : volume.getProjected().getSources()) {
+          ConfigMapProjection configMapProjection = volumeProjection.getConfigMap();
+          if (configMapProjection != null) {
+            String name = configMapProjection.getName();
+            configMapProjection.setName((String) transformer.apply(name));
+          }
+        }
+      }
     }
   }
 
@@ -366,6 +379,16 @@ public class KubernetesResource {
       if (secret != null) {
         String name = secret.getSecretName();
         secret.setSecretName((String) transformer.apply(name));
+      }
+
+      if (volume.getProjected() != null && volume.getProjected().getSources() != null) {
+        for (VolumeProjection volumeProjection : volume.getProjected().getSources()) {
+          SecretProjection secretProjection = volumeProjection.getSecret();
+          if (secretProjection != null) {
+            String name = secretProjection.getName();
+            secretProjection.setName((String) transformer.apply(name));
+          }
+        }
       }
     }
   }
