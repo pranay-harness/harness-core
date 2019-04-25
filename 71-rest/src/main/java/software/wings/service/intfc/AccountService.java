@@ -52,6 +52,8 @@ public interface AccountService {
 
   boolean sampleDelegateExists(String accountId);
 
+  String sampleDelegateProgress(String accountId);
+
   /**
    * List.
    *

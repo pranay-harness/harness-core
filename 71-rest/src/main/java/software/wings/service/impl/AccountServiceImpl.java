@@ -23,6 +23,7 @@ import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
+import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 import static software.wings.utils.Misc.generateSecretKey;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -38,6 +39,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
@@ -106,12 +108,10 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.KubernetesConvention;
 import software.wings.verification.CVConfiguration;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -149,6 +149,7 @@ public class AccountServiceImpl implements AccountService {
       + "\"parameters\":{\"Environment\":\"%s\",\"delegate\":\"delegate\","
       + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\"}}'";
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
+  private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   @Inject protected AuthService authService;
   @Inject protected CacheHelper cacheHelper;
   @Inject private WingsPersistence wingsPersistence;
@@ -174,7 +175,6 @@ public class AccountServiceImpl implements AccountService {
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private Clock clock;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -608,9 +608,8 @@ public class AccountServiceImpl implements AccountService {
       return err;
     }
 
-    String script =
-        String.format(GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING, mainConfiguration.getSampleTargetEnv(),
-            accountId, KubernetesConvention.getAccountIdentifier(accountId), account.getAccountKey());
+    String script = String.format(GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING,
+        mainConfiguration.getSampleTargetEnv(), accountId, getAccountIdentifier(accountId), account.getAccountKey());
     Logger scriptLogger = LoggerFactory.getLogger("generate-delegate-" + accountId);
     try {
       ProcessExecutor processExecutor = new ProcessExecutor()
@@ -660,6 +659,27 @@ public class AccountServiceImpl implements AccountService {
                .filter(DelegateConnectionKeys.delegateId, delegateKey.getId())
                .getKey()
         != null;
+  }
+
+  @Override
+  public String sampleDelegateProgress(String accountId) {
+    if (isBlank(mainConfiguration.getSampleTargetStatusHost())) {
+      String err = "Sample target status host not configured";
+      logger.error(err);
+      return err;
+    }
+
+    try {
+      String url = String.format(SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING,
+          mainConfiguration.getSampleTargetStatusHost(), getAccountIdentifier(accountId));
+      logger.info("Fetching delegate provisioning progress for account {} from {}", accountId, url);
+      String result = Http.getResponseStringFromUrl(url, 10, 10).trim();
+      logger.info("Provisioning progress for account {}: {}", accountId, result);
+      return result;
+    } catch (IOException e) {
+      logger.warn(String.format("Exception in fetching delegate provisioning progress for account %s", accountId), e);
+    }
+    return null;
   }
 
   @Override
