@@ -104,6 +104,10 @@ if [[ -v "SAMPLE_TARGET_ENV" ]]; then
     sed -i "s|sampleTargetEnv:|sampleTargetEnv: ${SAMPLE_TARGET_ENV}|" /opt/harness/config.yml
 fi
 
+if [[ -v "SAMPLE_TARGET_STATUS_HOST" ]]; then
+    sed -i "s|sampleTargetStatusHost:|sampleTargetStatusHost: ${SAMPLE_TARGET_STATUS_HOST}|" /opt/harness/config.yml
+fi
+
 if [[ -v "COMPANYNAME" ]]; then
    sed -i "s|manager-saas|manager-${COMPANYNAME}-${DEPLOY_MODE}|" /opt/harness/config.yml
 fi

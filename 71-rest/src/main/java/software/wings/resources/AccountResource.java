@@ -217,11 +217,19 @@ public class AccountResource {
   }
 
   @GET
-  @Path("delegate/sample-check/{accountId}")
+  @Path("delegate/check/{accountId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> checkSampleDelegate(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.sampleDelegateExists(accountId));
+  }
+
+  @GET
+  @Path("delegate/progress/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> checkProgressSampleDelegate(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.sampleDelegateProgress(accountId));
   }
 
   @POST

@@ -92,6 +92,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("gitlabConfig") private GitlabConfig gitlabConfig;
   @JsonProperty("mktPlaceConfig") private MarketPlaceConfig marketPlaceConfig;
   @JsonProperty("sampleTargetEnv") private String sampleTargetEnv;
+  @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
 
   private int applicationPort;
   private boolean sslEnabled;
