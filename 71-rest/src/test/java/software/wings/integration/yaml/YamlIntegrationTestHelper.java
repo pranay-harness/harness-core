@@ -241,11 +241,8 @@ public class YamlIntegrationTestHelper {
   }
 
   public Environment createEnvironment(String envName, String appId, EnvironmentService environmentService) {
-    Environment.Builder builder = anEnvironment()
-                                      .withName(envName)
-                                      .withAppId(appId)
-                                      .withEnvironmentType(EnvironmentType.PROD)
-                                      .withDescription(DESCRIPTION);
+    Environment.Builder builder =
+        anEnvironment().name(envName).appId(appId).environmentType(EnvironmentType.PROD).description(DESCRIPTION);
 
     return environmentService.save(builder.build());
   }

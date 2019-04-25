@@ -21,11 +21,9 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Environment.APP_ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.ENVIRONMENT_TYPE_KEY;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -60,6 +58,7 @@ import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -340,8 +339,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       return new ArrayList<>();
     }
     List<Environment> environments = wingsPersistence.createQuery(Environment.class)
-                                         .project(NAME_KEY, true)
-                                         .project(ENVIRONMENT_TYPE_KEY, true)
+                                         .project(EnvironmentKeys.name, true)
+                                         .project(EnvironmentKeys.environmentType, true)
                                          .project(APP_ID_KEY, true)
                                          .filter(APP_ID_KEY, appId)
                                          .field(Environment.ID_KEY)
@@ -485,9 +484,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void createDefaultEnvironments(String appId) {
-    save(anEnvironment().withAppId(appId).withName(DEV_ENV).withEnvironmentType(NON_PROD).build());
-    save(anEnvironment().withAppId(appId).withName(QA_ENV).withEnvironmentType(NON_PROD).build());
-    save(anEnvironment().withAppId(appId).withName(PROD_ENV).withEnvironmentType(PROD).build());
+    save(anEnvironment().appId(appId).name(DEV_ENV).environmentType(NON_PROD).build());
+    save(anEnvironment().appId(appId).name(QA_ENV).environmentType(NON_PROD).build());
+    save(anEnvironment().appId(appId).name(PROD_ENV).environmentType(PROD).build());
   }
 
   @Override

@@ -119,7 +119,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     when(serviceResourceService.get(anyString(), anyString())).thenReturn(getService());
     when(serviceResourceService.getServiceByName(anyString(), anyString())).thenReturn(getService());
     when(environmentService.getEnvironmentByName(anyString(), anyString()))
-        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+        .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(serviceTemplateService.getTemplateRefKeysByService(anyString(), anyString(), anyString()))
         .thenReturn(Arrays.asList(new Key(ServiceTemplate.class, "serviceTemplates", SERVICE_ID)));
     when(serviceTemplateService.get(anyString(), anyString()))

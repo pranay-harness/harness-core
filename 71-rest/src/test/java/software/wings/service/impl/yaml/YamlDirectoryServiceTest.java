@@ -257,7 +257,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     doReturn(Collections.EMPTY_LIST).when(configService).getConfigFilesForEntity(anyString(), anyString(), anyString());
 
-    doReturn(Arrays.asList(anEnvironment().withName(ENV_NAME).withUuid(ENV_ID).withAppId(APP_ID).build()))
+    doReturn(Arrays.asList(anEnvironment().name(ENV_NAME).uuid(ENV_ID).appId(APP_ID).build()))
         .when(environmentService)
         .getEnvByApp(anyString());
 

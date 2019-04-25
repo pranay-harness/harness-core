@@ -39,6 +39,7 @@ import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -439,7 +440,7 @@ public class EntityHelper {
     List<Environment> environments = wingsPersistence.createQuery(Environment.class)
                                          .filter(ID_KEY, envId)
                                          .filter(APP_ID_KEY, appId)
-                                         .project(Environment.NAME_KEY, true)
+                                         .project(EnvironmentKeys.name, true)
                                          .asList();
     if (isEmpty(environments)) {
       return "";

@@ -70,14 +70,14 @@ public class EnvironmentTest extends GraphQLTest {
     final Application application =
         applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Environments").build());
 
-    final Builder builder = anEnvironment().withAppId(application.getUuid());
+    final Builder builder = anEnvironment().appId(application.getUuid());
 
     final Environment environment1 = environmentGenerator.ensureEnvironment(
-        seed, owners, builder.withUuid(generateUuid()).withName("Environment - " + generateUuid()).build());
+        seed, owners, builder.uuid(generateUuid()).name("Environment - " + generateUuid()).build());
     final Environment environment2 = environmentGenerator.ensureEnvironment(
-        seed, owners, builder.withUuid(generateUuid()).withName("Environment - " + generateUuid()).build());
+        seed, owners, builder.uuid(generateUuid()).name("Environment - " + generateUuid()).build());
     final Environment environment3 = environmentGenerator.ensureEnvironment(
-        seed, owners, builder.withUuid(generateUuid()).withName("Environment - " + generateUuid()).build());
+        seed, owners, builder.uuid(generateUuid()).name("Environment - " + generateUuid()).build());
 
     {
       String query = "{ environments(applicationId: \"" + application.getUuid()

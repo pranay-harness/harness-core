@@ -166,7 +166,7 @@ public class HostServiceTest extends WingsBaseTest {
     Host host = hostBuilder.withAppId(APP_ID).withUuid(HOST_ID).build();
     when(hostQuery.get()).thenReturn(host);
     when(wingsPersistence.delete(any(Host.class))).thenReturn(true);
-    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
+    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().name("PROD").build());
     hostService.delete(APP_ID, ENV_ID, HOST_ID);
     verify(hostQuery).filter("appId", APP_ID);
     verify(hostQuery).filter("envId", ENV_ID);

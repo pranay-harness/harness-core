@@ -82,8 +82,8 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     app = appService.save(anApplication().name("AppA" + System.currentTimeMillis()).accountId(accountId).build());
     service = serviceResourceService.save(Service.builder().appId(app.getUuid()).name("Catalog").build());
 
-    environment = environmentService.save(
-        Environment.Builder.anEnvironment().withAppId(app.getUuid()).withName("Developmenet").build());
+    environment =
+        environmentService.save(Environment.Builder.anEnvironment().appId(app.getUuid()).name("Developmenet").build());
   }
 
   @Test

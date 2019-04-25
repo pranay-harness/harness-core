@@ -35,7 +35,7 @@ public class EntityHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testLoad() {
-    Environment environment = anEnvironment().withName(ENV_NAME).withAppId(APP_ID).build();
+    Environment environment = anEnvironment().name(ENV_NAME).appId(APP_ID).build();
     EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
     Query mockQuery = mock(Query.class);
     doReturn(mockQuery).when(mockWingsPersistence).createQuery(any());

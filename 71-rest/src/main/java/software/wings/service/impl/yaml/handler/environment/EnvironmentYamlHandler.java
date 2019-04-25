@@ -164,12 +164,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     Yaml yaml = changeContext.getYaml();
     String environmentName = yamlHelper.getEnvironmentName(changeContext.getChange().getFilePath());
     Environment current = Builder.anEnvironment()
-                              .withAppId(appId)
-                              .withName(environmentName)
-                              .withDescription(yaml.getDescription())
-                              .withConfigMapYaml(yaml.getConfigMapYaml())
-                              .withConfigMapYamlByServiceTemplateId(yaml.getConfigMapYamlByServiceTemplateId())
-                              .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
+                              .appId(appId)
+                              .name(environmentName)
+                              .description(yaml.getDescription())
+                              .configMapYaml(yaml.getConfigMapYaml())
+                              .configMapYamlByServiceTemplateId(yaml.getConfigMapYamlByServiceTemplateId())
+                              .environmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
 
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();

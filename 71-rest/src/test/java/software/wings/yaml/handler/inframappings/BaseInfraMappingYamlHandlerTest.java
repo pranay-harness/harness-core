@@ -55,7 +55,7 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   protected InfrastructureProvisioner infrastructureProvisioner =
       TerraformInfrastructureProvisioner.builder().name(PROVISIONER_NAME).appId(APP_ID).uuid(PROVISIONER_ID).build();
 
-  protected Environment environment = anEnvironment().withName(ENV_NAME).withAppId(APP_ID).withUuid(ENV_ID).build();
+  protected Environment environment = anEnvironment().name(ENV_NAME).appId(APP_ID).uuid(ENV_ID).build();
 
   @Mock protected YamlHelper yamlHelper;
   @Mock protected YamlHandlerFactory yamlHandlerFactory;
@@ -85,7 +85,7 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     when(yamlHelper.getApplicationIfPresent(anyString(), anyString()))
         .thenReturn(Optional.of(anApplication().uuid(APP_ID).build()));
     when(yamlHelper.getEnvIfPresent(anyString(), anyString()))
-        .thenReturn(Optional.of(anEnvironment().withUuid(ENV_ID).build()));
+        .thenReturn(Optional.of(anEnvironment().uuid(ENV_ID).build()));
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(ENV_ID);
     when(yamlHelper.getNameFromYamlFilePath(yamlFilePath)).thenReturn(infraMappingName);
     when(yamlHelper.extractEntityNameFromYamlPath(

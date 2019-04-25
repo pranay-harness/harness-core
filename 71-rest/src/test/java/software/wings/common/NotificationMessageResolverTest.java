@@ -97,8 +97,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
     assertThat(placeholderValues.get("WORKFLOW_NAME")).isEqualTo(BUILD_JOB_NAME);
     assertThat(placeholderValues.get("WORKFLOW_URL")).isEqualTo(ApprovalUrl);
 
-    when(context.getEnv())
-        .thenReturn(anEnvironment().withAppId(app.getUuid()).withName(ENV_NAME).withUuid(ENV_ID).build());
+    when(context.getEnv()).thenReturn(anEnvironment().appId(app.getUuid()).name(ENV_NAME).uuid(ENV_ID).build());
     placeholderValues = notificationMessageResolver.getPlaceholderValues(
         context, "", 500L, 100L, "1000", "", "", ExecutionStatus.PAUSED, AlertType.ManualInterventionNeeded);
     assertThat(placeholderValues.get("VERB")).isEqualTo("paused");
@@ -115,7 +114,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
     assertThat(placeholderValues.get("WORKFLOW_URL")).isEqualTo(ManualInterventionUrl);
 
     // Direct workflow placeholder values
-    Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
+    Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).build();
     when(context.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
     when(context.getEnv()).thenReturn(env);
     when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);

@@ -106,7 +106,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
             .build();
 
     Application app = anApplication().name("App1").uuid(generateUuid()).build();
-    Environment env = anEnvironment().withName("DEV").withUuid(generateUuid()).withAppId(app.getUuid()).build();
+    Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
     List<InstanceElement> instances =
@@ -161,7 +161,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
             .build();
 
     Application app = anApplication().name("App1").uuid(generateUuid()).build();
-    Environment env = anEnvironment().withName("DEV").withUuid(generateUuid()).withAppId(app.getUuid()).build();
+    Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
     InstanceElement inst1 = anInstanceElement().withUuid(generateUuid()).withDisplayName("instance1").build();
@@ -258,7 +258,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
             .build();
 
     Application app = anApplication().name("App1").uuid(generateUuid()).build();
-    Environment env = anEnvironment().withName("DEV").withUuid(generateUuid()).withAppId(app.getUuid()).build();
+    Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
     InstanceElement inst1 = anInstanceElement().withUuid(generateUuid()).withDisplayName("instance1").build();

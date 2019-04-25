@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -37,7 +38,9 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "environments", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId"), @Field("name") })
+  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = {
+    @Field(EnvironmentKeys.appId), @Field(EnvironmentKeys.name)
+  })
 })
 @HarnessExportableEntity
 @Data
@@ -45,10 +48,6 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
 public class Environment extends Base implements KeywordsAware, NameAccess {
-  public static final String APP_ID_KEY = "appId";
-  public static final String NAME_KEY = "name";
-  public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
-
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @NotEmpty @EntityName private String name;
@@ -206,15 +205,15 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
 
   public Environment cloneInternal() {
     return anEnvironment()
-        .withName(getName())
-        .withAppId(getAppId())
-        .withAccountId(getAccountId())
-        .withDescription(getDescription())
-        .withConfigMapYaml(getConfigMapYaml())
-        .withConfigMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
-        .withHelmValueYaml(getHelmValueYaml())
-        .withHelmValueYamlByServiceTemplateId(getHelmValueYamlByServiceTemplateId())
-        .withEnvironmentType(getEnvironmentType())
+        .name(getName())
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .description(getDescription())
+        .configMapYaml(getConfigMapYaml())
+        .configMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
+        .helmValueYaml(getHelmValueYaml())
+        .helmValueYamlByServiceTemplateId(getHelmValueYamlByServiceTemplateId())
+        .environmentType(getEnvironmentType())
         .build();
   }
 
@@ -280,7 +279,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param name the name
      * @return the builder
      */
-    public Builder withName(String name) {
+    public Builder name(String name) {
       this.name = name;
       return this;
     }
@@ -291,27 +290,27 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param description the description
      * @return the builder
      */
-    public Builder withDescription(String description) {
+    public Builder description(String description) {
       this.description = description;
       return this;
     }
 
-    public Builder withConfigMapYaml(String configMapYaml) {
+    public Builder configMapYaml(String configMapYaml) {
       this.configMapYaml = configMapYaml;
       return this;
     }
 
-    public Builder withConfigMapYamlByServiceTemplateId(Map<String, String> configMapYamlByServiceTemplateId) {
+    public Builder configMapYamlByServiceTemplateId(Map<String, String> configMapYamlByServiceTemplateId) {
       this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
       return this;
     }
 
-    public Builder withHelmValueYaml(String helmValueYaml) {
+    public Builder helmValueYaml(String helmValueYaml) {
       this.helmValueYaml = helmValueYaml;
       return this;
     }
 
-    public Builder withHelmValueYamlByServiceTemplateId(Map<String, String> helmValueYamlByServiceTemplateId) {
+    public Builder helmValueYamlByServiceTemplateId(Map<String, String> helmValueYamlByServiceTemplateId) {
       this.helmValueYamlByServiceTemplateId = helmValueYamlByServiceTemplateId;
       return this;
     }
@@ -322,7 +321,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param environmentType the environment type
      * @return the builder
      */
-    public Builder withEnvironmentType(EnvironmentType environmentType) {
+    public Builder environmentType(EnvironmentType environmentType) {
       this.environmentType = environmentType;
       return this;
     }
@@ -333,7 +332,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param configFiles the config files
      * @return the builder
      */
-    public Builder withConfigFiles(List<ConfigFile> configFiles) {
+    public Builder configFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
@@ -344,7 +343,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param uuid the uuid
      * @return the builder
      */
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
@@ -355,7 +354,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param appId the app id
      * @return the builder
      */
-    public Builder withAppId(String appId) {
+    public Builder appId(String appId) {
       this.appId = appId;
       return this;
     }
@@ -366,7 +365,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param accountId the account id
      * @return the builder
      */
-    public Builder withAccountId(String accountId) {
+    public Builder accountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
@@ -377,7 +376,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -388,7 +387,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param createdAt the created at
      * @return the builder
      */
-    public Builder withCreatedAt(long createdAt) {
+    public Builder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
@@ -399,7 +398,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
@@ -410,7 +409,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      * @param lastUpdatedAt the last updated at
      * @return the builder
      */
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
@@ -422,21 +421,21 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
      */
     public Builder but() {
       return anEnvironment()
-          .withName(name)
-          .withDescription(description)
-          .withConfigMapYaml(configMapYaml)
-          .withConfigMapYamlByServiceTemplateId(configMapYamlByServiceTemplateId)
-          .withHelmValueYaml(helmValueYaml)
-          .withHelmValueYamlByServiceTemplateId(helmValueYamlByServiceTemplateId)
-          .withEnvironmentType(environmentType)
-          .withConfigFiles(configFiles)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .name(name)
+          .description(description)
+          .configMapYaml(configMapYaml)
+          .configMapYamlByServiceTemplateId(configMapYamlByServiceTemplateId)
+          .helmValueYaml(helmValueYaml)
+          .helmValueYamlByServiceTemplateId(helmValueYamlByServiceTemplateId)
+          .environmentType(environmentType)
+          .configFiles(configFiles)
+          .uuid(uuid)
+          .appId(appId)
+          .accountId(accountId)
+          .createdBy(createdBy)
+          .createdAt(createdAt)
+          .lastUpdatedBy(lastUpdatedBy)
+          .lastUpdatedAt(lastUpdatedAt);
     }
 
     /**

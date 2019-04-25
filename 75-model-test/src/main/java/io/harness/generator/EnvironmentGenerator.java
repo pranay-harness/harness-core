@@ -12,6 +12,7 @@ import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
@@ -42,11 +43,7 @@ public class EnvironmentGenerator {
     final Application application =
         owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     return ensureEnvironment(seed, owners,
-        anEnvironment()
-            .withAppId(application.getUuid())
-            .withName("Test Environment")
-            .withEnvironmentType(NON_PROD)
-            .build());
+        anEnvironment().appId(application.getUuid()).name("Test Environment").environmentType(NON_PROD).build());
   }
 
   private Environment ensureFunctionalTest(Randomizer.Seed seed, Owners owners) {
@@ -54,9 +51,9 @@ public class EnvironmentGenerator {
         () -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
     return ensureEnvironment(seed, owners,
         anEnvironment()
-            .withAppId(application.getUuid())
-            .withName("FunctionalTest Environment")
-            .withEnvironmentType(NON_PROD)
+            .appId(application.getUuid())
+            .name("FunctionalTest Environment")
+            .environmentType(NON_PROD)
             .build());
   }
 
@@ -69,7 +66,7 @@ public class EnvironmentGenerator {
   public Environment exists(Environment environment) {
     return wingsPersistence.createQuery(Environment.class)
         .filter(Environment.APP_ID_KEY, environment.getAppId())
-        .filter(Environment.NAME_KEY, environment.getName())
+        .filter(EnvironmentKeys.name, environment.getName())
         .get();
   }
 
@@ -79,19 +76,19 @@ public class EnvironmentGenerator {
     Environment.Builder builder = anEnvironment();
 
     if (environment != null && environment.getAppId() != null) {
-      builder.withAppId(environment.getAppId());
+      builder.appId(environment.getAppId());
     } else {
       Application application = owners.obtainApplication();
       if (application == null) {
         application = applicationGenerator.ensureRandom(seed, owners);
       }
-      builder.withAppId(application.getUuid());
+      builder.appId(application.getUuid());
     }
 
     if (environment != null && environment.getName() != null) {
-      builder.withName(environment.getName());
+      builder.name(environment.getName());
     } else {
-      builder.withName(random.nextObject(String.class));
+      builder.name(random.nextObject(String.class));
     }
 
     Environment existing = exists(builder.build());
@@ -100,9 +97,9 @@ public class EnvironmentGenerator {
     }
 
     if (environment != null && environment.getEnvironmentType() != null) {
-      builder.withEnvironmentType(environment.getEnvironmentType());
+      builder.environmentType(environment.getEnvironmentType());
     } else {
-      builder.withEnvironmentType(random.nextObject(EnvironmentType.class));
+      builder.environmentType(random.nextObject(EnvironmentType.class));
     }
 
     final Environment finalEnvironment = builder.build();

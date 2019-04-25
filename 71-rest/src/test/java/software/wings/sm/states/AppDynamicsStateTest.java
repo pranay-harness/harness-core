@@ -148,7 +148,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
-        .thenReturn(Environment.Builder.anEnvironment().withUuid(UUID.randomUUID().toString()).build());
+        .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
@@ -219,7 +219,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(appdynamicsService.getTiers(anyString(), anyLong()))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(30889).name("tier").build()));
     when(workflowStandardParams.getEnv())
-        .thenReturn(Environment.Builder.anEnvironment().withUuid(UUID.randomUUID().toString()).build());
+        .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());

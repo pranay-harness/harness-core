@@ -345,12 +345,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
 
     when(environmentService.get(APP_ID, ENV_ID, false))
-        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
+        .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
 
     when(environmentService.exist(APP_ID, ENV_ID)).thenReturn(true);
 
     when(environmentService.get(APP_ID, ENV_ID))
-        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
+        .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);

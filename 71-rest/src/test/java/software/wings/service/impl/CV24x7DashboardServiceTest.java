@@ -59,7 +59,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     envName = generateUuid();
     connectorId = generateUuid();
     serviceId = wingsPersistence.save(Service.builder().appId(appId).name(generateUuid()).build());
-    envId = wingsPersistence.save(anEnvironment().withAppId(appId).withName(envName).build());
+    envId = wingsPersistence.save(anEnvironment().appId(appId).name(envName).build());
   }
 
   private String createDDCVConfig() {

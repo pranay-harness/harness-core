@@ -135,7 +135,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
-    Environment env = anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    Environment env = anEnvironment().appId(app.getUuid()).name("DEV").build();
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();

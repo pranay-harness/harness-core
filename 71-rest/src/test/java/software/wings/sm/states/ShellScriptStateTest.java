@@ -71,7 +71,7 @@ public class ShellScriptStateTest {
     shellScriptState.setSweepingOutputName("test");
     shellScriptState.setSweepingOutputScope(PIPELINE);
     when(executionContext.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
-    when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+    when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     HostConnectionAttributes hostConnectionAttributes = aHostConnectionAttributes()
                                                             .withAccessType(HostConnectionAttributes.AccessType.KEY)
                                                             .withAccountId(UUIDGenerator.generateUuid())

@@ -79,7 +79,7 @@ public class EmailStateTest extends WingsBaseTest {
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
     on(workflowStandardParams).set("app", anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
-    on(workflowStandardParams).set("env", anEnvironment().withUuid(ENV_ID).build());
+    on(workflowStandardParams).set("env", anEnvironment().uuid(ENV_ID).build());
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("currentUser", EmbeddedUser.builder().name("admin").build());
     on(workflowStandardParams).set("accountService", accountService);

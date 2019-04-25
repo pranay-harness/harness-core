@@ -118,8 +118,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                 .withMetadata(ImmutableMap.of(BUILD_NO, "build-3"))
                 .withServiceIds(ImmutableList.of("service-3"))
                 .build()));
-    when(executionContext.getEnv())
-        .thenReturn(anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
+    when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
     when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
     when(executionContext.getWorkflowExecutionName()).thenReturn(WORKFLOW_NAME);
     when(executionContext.getAppId()).thenReturn(APP_ID);

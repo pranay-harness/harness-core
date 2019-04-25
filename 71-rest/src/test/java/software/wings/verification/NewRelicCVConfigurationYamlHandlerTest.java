@@ -72,7 +72,7 @@ public class NewRelicCVConfigurationYamlHandlerTest {
     setInternalState(yamlHandler, "settingsService", settingsService);
     setInternalState(yamlHandler, "newRelicService", newRelicService);
 
-    Environment env = Environment.Builder.anEnvironment().withUuid(envId).withName(envName).build();
+    Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
     when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);
     when(environmentService.get(appId, envId)).thenReturn(env);
 

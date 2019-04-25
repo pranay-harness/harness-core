@@ -172,7 +172,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
 
     when(appService.get(APP_ID)).thenReturn(application);
 
-    Environment environment = anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build();
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(environment);
 
     when(environmentService.getEnvironmentByName(anyString(), anyString(), anyBoolean())).thenReturn(environment);

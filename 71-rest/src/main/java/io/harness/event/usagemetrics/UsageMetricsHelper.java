@@ -24,6 +24,7 @@ import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
@@ -65,7 +66,7 @@ public class UsageMetricsHelper {
 
   public String getEnvironmentName(String appId, String environmentId) {
     Environment environment = wingsPersistence.createQuery(Environment.class)
-                                  .project(Environment.NAME_KEY, true)
+                                  .project(EnvironmentKeys.name, true)
                                   .filter(APP_ID_KEY, appId)
                                   .filter(Environment.ID_KEY, environmentId)
                                   .get();

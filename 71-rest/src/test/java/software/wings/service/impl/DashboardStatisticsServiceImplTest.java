@@ -510,8 +510,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       when(serviceResourceService.get(anyString(), anyString())).thenReturn(service1);
 
       List<Environment> envList = Lists.newArrayList();
-      envList.add(
-          Environment.Builder.anEnvironment().withUuid(ENV_1_ID).withName(ENV_NAME).withAppId(APP_1_ID).build());
+      envList.add(Environment.Builder.anEnvironment().uuid(ENV_1_ID).name(ENV_NAME).appId(APP_1_ID).build());
       PageResponse<Environment> envsPageResponse = aPageResponse().withResponse(envList).build();
       when(environmentService.list(any(PageRequest.class), anyBoolean())).thenReturn(envsPageResponse);
 

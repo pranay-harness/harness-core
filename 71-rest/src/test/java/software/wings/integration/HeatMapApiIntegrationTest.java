@@ -71,8 +71,8 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     savedService = wingsPersistence.saveAndGet(
         Service.class, Service.builder().name(generateUuid()).appId(savedApp.getUuid()).build());
 
-    savedEnv = wingsPersistence.saveAndGet(Environment.class,
-        Environment.Builder.anEnvironment().withName(generateUuid()).withAppId(savedApp.getUuid()).build());
+    savedEnv = wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().name(generateUuid()).appId(savedApp.getUuid()).build());
 
     settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                            .withAccountId(accountId)

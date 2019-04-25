@@ -137,7 +137,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
         .when(context)
         .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams wsp = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
-    Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().withUuid(envId).build());
+    Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().uuid(envId).build());
     doReturn(wsp).when(context).getContextElement(ContextElementType.STANDARD);
     doReturn(appId).when(context).getAppId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
@@ -234,7 +234,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
 
     WorkflowStandardParams wsp = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
-    Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().withUuid(envId).build());
+    Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().uuid(envId).build());
     doReturn(wsp).when(context).getContextElement(ContextElementType.STANDARD);
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));

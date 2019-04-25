@@ -78,7 +78,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     doReturn(app).when(mockContext).getApp();
-    Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
+    Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();

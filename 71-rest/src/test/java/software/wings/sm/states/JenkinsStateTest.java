@@ -66,7 +66,7 @@ public class JenkinsStateTest {
     jenkinsState.setJenkinsConfigId(SETTING_ID);
     jenkinsState.setJobName("testjob");
     when(executionContext.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
-    when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+    when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
     when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID))
         .thenReturn(JenkinsConfig.builder()

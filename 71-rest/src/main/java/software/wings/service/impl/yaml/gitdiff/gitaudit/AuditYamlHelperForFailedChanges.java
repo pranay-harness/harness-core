@@ -271,9 +271,9 @@ public class AuditYamlHelperForFailedChanges {
       String name =
           yamlHelper.extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
       environment = anEnvironment()
-                        .withAppId(auditRequestData.getAppId())
-                        .withAccountId(auditRequestData.getAccountId())
-                        .withName(name)
+                        .appId(auditRequestData.getAppId())
+                        .accountId(auditRequestData.getAccountId())
+                        .name(name)
                         .build();
     }
 
