@@ -65,7 +65,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
         .artifactType(service.getArtifactType().name())
         .deploymentType(deploymentType)
         .configMapYaml(service.getConfigMapYaml())
-        .helmValueYaml(service.getHelmValueYaml())
         .configVariables(nameValuePairList)
         .applicationStack(applicationStack)
         .build();
@@ -117,7 +116,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     currentService.setName(serviceName);
     currentService.setDescription(yaml.getDescription());
     currentService.setConfigMapYaml(yaml.getConfigMapYaml());
-    currentService.setHelmValueYaml(yaml.getHelmValueYaml());
 
     String applicationStack = yaml.getApplicationStack();
     if (StringUtils.isNotBlank(applicationStack)) {
