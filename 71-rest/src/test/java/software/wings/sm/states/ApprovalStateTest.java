@@ -282,7 +282,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testApprovalNeededAlertParamsForWorkflow() {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
-    when(context.getEnv()).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    when(context.getEnv()).thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
 
     approvalState.execute(context);
     ArgumentCaptor<ApprovalNeededAlert> argumentCaptor = ArgumentCaptor.forClass(ApprovalNeededAlert.class);
@@ -317,7 +317,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testApprovalNeededAlertParamsForPipelineWithWorkflowApproval() {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
-    when(context.getEnv()).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    when(context.getEnv()).thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
     when(context.getContextElement(ContextElementType.STANDARD))
         .thenReturn(
             aWorkflowStandardParams()

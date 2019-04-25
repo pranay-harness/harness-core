@@ -395,19 +395,19 @@ public class UsageRestrictionsServiceImplTest {
 
   private void setupEnvMocks() {
     Environment env1 = Environment.Builder.anEnvironment()
-                           .withUuid(ENV_ID_1)
-                           .withAppId(APP_ID_1)
-                           .withEnvironmentType(EnvironmentType.PROD)
+                           .uuid(ENV_ID_1)
+                           .appId(APP_ID_1)
+                           .environmentType(EnvironmentType.PROD)
                            .build();
     Environment env2 = Environment.Builder.anEnvironment()
-                           .withUuid(ENV_ID_2)
-                           .withAppId(APP_ID_2)
-                           .withEnvironmentType(EnvironmentType.NON_PROD)
+                           .uuid(ENV_ID_2)
+                           .appId(APP_ID_2)
+                           .environmentType(EnvironmentType.NON_PROD)
                            .build();
     Environment env3 = Environment.Builder.anEnvironment()
-                           .withUuid(ENV_ID_3)
-                           .withAppId(APP_ID_3)
-                           .withEnvironmentType(EnvironmentType.PROD)
+                           .uuid(ENV_ID_3)
+                           .appId(APP_ID_3)
+                           .environmentType(EnvironmentType.PROD)
                            .build();
     when(envService.list(any(PageRequest.class), anyBoolean()))
         .thenReturn(PageResponseBuilder.aPageResponse().withResponse(asList(env1, env2, env3)).build());
@@ -417,21 +417,21 @@ public class UsageRestrictionsServiceImplTest {
     Map<String, List<Base>> appIdEnvMap = new HashMap<>();
     appIdEnvMap.put(APP_ID_1,
         asList(Environment.Builder.anEnvironment()
-                   .withAppId(APP_ID_1)
-                   .withUuid(ENV_ID_1)
-                   .withEnvironmentType(EnvironmentType.PROD)
+                   .appId(APP_ID_1)
+                   .uuid(ENV_ID_1)
+                   .environmentType(EnvironmentType.PROD)
                    .build()));
     appIdEnvMap.put(APP_ID_2,
         asList(Environment.Builder.anEnvironment()
-                   .withAppId(APP_ID_2)
-                   .withUuid(ENV_ID_2)
-                   .withEnvironmentType(EnvironmentType.NON_PROD)
+                   .appId(APP_ID_2)
+                   .uuid(ENV_ID_2)
+                   .environmentType(EnvironmentType.NON_PROD)
                    .build()));
     appIdEnvMap.put(APP_ID_3,
         asList(Environment.Builder.anEnvironment()
-                   .withAppId(APP_ID_3)
-                   .withUuid(ENV_ID_3)
-                   .withEnvironmentType(EnvironmentType.PROD)
+                   .appId(APP_ID_3)
+                   .uuid(ENV_ID_3)
+                   .environmentType(EnvironmentType.PROD)
                    .build()));
     return appIdEnvMap;
   }

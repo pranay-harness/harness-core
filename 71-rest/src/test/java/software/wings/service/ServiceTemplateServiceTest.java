@@ -140,7 +140,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldCreateDefaultServiceTemplateByEnv() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
     when(serviceResourceService.findServicesByApp(APP_ID)).thenReturn(asList(service));
-    templateService.createDefaultTemplatesByEnv(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    templateService.createDefaultTemplatesByEnv(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
     verify(serviceResourceService).findServicesByApp(APP_ID);
     verify(wingsPersistence)
         .saveAndGet(ServiceTemplate.class,
@@ -160,7 +160,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateDefaultServiceTemplateByService() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
-    Environment environment = Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
+    Environment environment = Builder.anEnvironment().appId(APP_ID).uuid(ENV_ID).build();
     when(environmentService.getEnvIdsByApp(APP_ID)).thenReturn(asList(environment.getUuid()));
     templateService.createDefaultTemplatesByService(service);
     verify(environmentService).getEnvIdsByApp(APP_ID);

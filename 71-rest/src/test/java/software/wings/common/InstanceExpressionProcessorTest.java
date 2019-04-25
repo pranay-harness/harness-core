@@ -138,7 +138,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldReturnInstances() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -207,7 +207,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldReturnInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -257,7 +257,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldReturnCommonInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -310,7 +310,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldReturnCommonInstancesFromParam2() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -368,8 +368,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).name("DEV").build());
     Service service = wingsPersistence.saveAndGet(Service.class, Service.builder().name("svc1").build());
 
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
@@ -444,7 +444,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
-        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
+        Environment.class, Environment.Builder.anEnvironment().appId(app.getUuid()).build());
     Host applicationHost = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
 
@@ -500,7 +500,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldReturnInstancesFromPartition() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);

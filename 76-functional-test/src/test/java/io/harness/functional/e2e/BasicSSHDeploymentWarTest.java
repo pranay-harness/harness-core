@@ -124,7 +124,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   @Owner(emails = "sunil@harness.io", resent = false)
   @Category(FunctionalTests.class)
   public void TC3_createEnvironment() {
-    Environment myEnv = anEnvironment().withName(ENV_MAME).withEnvironmentType(EnvironmentType.NON_PROD).build();
+    Environment myEnv = anEnvironment().name(ENV_MAME).environmentType(EnvironmentType.NON_PROD).build();
     environment = EnvironmentRestUtils.createEnvironment(bearerToken, getAccount(), application.getAppId(), myEnv);
     assertThat(environment).isNotNull();
 

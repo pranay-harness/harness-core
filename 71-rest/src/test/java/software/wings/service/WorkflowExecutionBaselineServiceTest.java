@@ -682,7 +682,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
       ExecutionContextImpl executionContext = Mockito.mock(ExecutionContextImpl.class);
       WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
-      when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().withUuid(envId).build());
+      when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(envId).build());
       when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
       when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
           .thenReturn(aPhaseElement().withServiceElement(aServiceElement().withUuid(serviceId).build()).build());

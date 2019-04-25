@@ -1772,7 +1772,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
-        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+        .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
@@ -1809,7 +1809,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
-        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+        .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).build());
     when(infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME))

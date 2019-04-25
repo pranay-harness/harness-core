@@ -430,7 +430,7 @@ public class AccountServiceTest extends WingsBaseTest {
     config.setName("NewRelic");
     config.setStateType(StateType.NEW_RELIC);
 
-    wingsPersistence.save(Environment.Builder.anEnvironment().withAppId(appId).withUuid(envId).build());
+    wingsPersistence.save(Environment.Builder.anEnvironment().appId(appId).uuid(envId).build());
 
     wingsPersistence.saveAndGet(
         Service.class, Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());

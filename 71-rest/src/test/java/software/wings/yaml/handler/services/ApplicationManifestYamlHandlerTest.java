@@ -133,7 +133,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(serviceResourceService.exist(any(), any())).thenReturn(true);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME))
-        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).build());
+        .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).build());
 
     SettingAttribute settingAttribute =
         Builder.aSettingAttribute().withName(CONNECTOR_NAME).withUuid(CONNECTOR_ID).build();

@@ -105,7 +105,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);

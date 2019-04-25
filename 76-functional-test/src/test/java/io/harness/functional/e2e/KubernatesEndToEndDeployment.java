@@ -82,7 +82,7 @@ public class KubernatesEndToEndDeployment extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   public void t3_testEnvironmentCreation() {
-    Environment myEnv = anEnvironment().withName("MyEnv").withEnvironmentType(EnvironmentType.PROD).build();
+    Environment myEnv = anEnvironment().name("MyEnv").environmentType(EnvironmentType.PROD).build();
     sampleEnvironment = EnvironmentRestUtils.createEnvironment(bearerToken, getAccount(), sampleApp.getAppId(), myEnv);
     assertThat(sampleEnvironment).isNotNull();
 

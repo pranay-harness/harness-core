@@ -267,8 +267,7 @@ public class SecureResourceTest {
     when(genericDbCache.get(Application.class, APP_ID))
         .thenReturn(anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build());
     when(genericDbCache.get(Environment.class, ENV_ID))
-        .thenReturn(
-            anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.NON_PROD).build());
+        .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).environmentType(EnvironmentType.NON_PROD).build());
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build());

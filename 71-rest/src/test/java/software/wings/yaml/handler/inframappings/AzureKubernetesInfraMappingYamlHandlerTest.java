@@ -127,7 +127,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   }
 
   private Environment getEnvironment() {
-    return Environment.Builder.anEnvironment().withUuid("ANY_UUID").withName("ENV_NAME").build();
+    return Environment.Builder.anEnvironment().uuid("ANY_UUID").name("ENV_NAME").build();
   }
 
   private Application getApplication() {

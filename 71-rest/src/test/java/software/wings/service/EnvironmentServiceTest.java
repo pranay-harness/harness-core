@@ -19,10 +19,8 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.APP_ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.ENVIRONMENT_TYPE_KEY;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
@@ -77,6 +75,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -163,7 +162,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldListEnvironments() {
-    Environment environment = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
+    Environment environment = anEnvironment().appId(APP_ID).uuid(ENV_ID).build();
     PageRequest<Environment> envPageRequest = new PageRequest<>();
     PageResponse<Environment> envPageResponse = new PageResponse<>();
     envPageResponse.setResponse(asList(environment));
@@ -192,7 +191,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetEnvironment() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
-        .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+        .thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
     environmentService.get(APP_ID, ENV_ID, true);
@@ -203,7 +202,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetEnvironmentOnly() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
-        .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+        .thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     Environment environment = environmentService.get(APP_ID, ENV_ID);
     assertThat(environment).isNotNull();
     verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
@@ -223,10 +222,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveEnvironment() {
-    Environment environment =
-        anEnvironment().withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+    Environment environment = anEnvironment().appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
     Environment savedEnvironment =
-        anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+        anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
     when(wingsPersistence.saveAndGet(Environment.class, environment)).thenReturn(savedEnvironment);
 
     environmentService.save(environment);
@@ -241,7 +239,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     }
 
     Environment environment =
-        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+        anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
     Environment clonedEnvironment = environment.cloneInternal();
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
     when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
@@ -306,14 +304,14 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateEnvironment() {
-    Environment savedEnv = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build();
+    Environment savedEnv = anEnvironment().appId(APP_ID).uuid(ENV_ID).name("PROD").build();
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(savedEnv);
     Environment environment = anEnvironment()
-                                  .withAppId(APP_ID)
-                                  .withUuid(ENV_ID)
-                                  .withName(ENV_NAME)
-                                  .withEnvironmentType(PROD)
-                                  .withDescription(ENV_DESCRIPTION)
+                                  .appId(APP_ID)
+                                  .uuid(ENV_ID)
+                                  .name(ENV_NAME)
+                                  .environmentType(PROD)
+                                  .description(ENV_DESCRIPTION)
                                   .build();
     environmentService.update(environment);
     verify(wingsPersistence).update(savedEnv, updateOperations);
@@ -327,7 +325,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDeleteEnvironment() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
-        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
+        .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).name("PROD").build());
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     environmentService.delete(APP_ID, ENV_ID);
@@ -342,7 +340,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnReferencedEnvironmentDelete() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
-        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
+        .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).name("PROD").build());
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(Pipeline.builder().name("PIPELINE_NAME").build())).build());
@@ -357,8 +355,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldPruneByApplication() {
-    when(query.asList())
-        .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
+    when(query.asList()).thenReturn(asList(anEnvironment().appId(APP_ID).uuid(ENV_ID).name("PROD").build()));
     when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     environmentService.pruneByApplication(APP_ID);
@@ -408,7 +405,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetServicesWithOverridesEmpty() {
     Environment environment =
-        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+        anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
@@ -447,15 +444,14 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldObtainEnvironmentSummaries() {
-    when(query.project(NAME_KEY, true)).thenReturn(query);
+    when(query.project(EnvironmentKeys.name, true)).thenReturn(query);
     when(query.project(APP_ID_KEY, true)).thenReturn(query);
-    when(query.project(ENVIRONMENT_TYPE_KEY, true)).thenReturn(query);
+    when(query.project(EnvironmentKeys.environmentType, true)).thenReturn(query);
     when(query.project(Environment.ID_KEY, true)).thenReturn(query);
     when(query.field(Environment.ID_KEY)).thenReturn(end);
     when(end.in(asList(ENV_ID))).thenReturn(query);
     when(query.asList())
-        .thenReturn(
-            asList(Environment.Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build()));
+        .thenReturn(asList(Environment.Builder.anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build()));
     List<EnvSummary> environmentSummaries = environmentService.obtainEnvironmentSummaries(APP_ID, asList(ENV_ID));
     assertThat(environmentSummaries).isNotEmpty();
     assertThat(environmentSummaries).extracting(EnvSummary::getName).contains(ENV_NAME);
@@ -467,7 +463,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetServicesWithOverrides() {
     Environment environment =
-        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+        anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
@@ -534,7 +530,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCreateValues() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
     Application application =
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
 
@@ -564,7 +560,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCreateValuesWithExistingAppManifest() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
     Application application =
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     ApplicationManifest applicationManifest =
@@ -595,7 +591,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testUpdateValues() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
     Application application =
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     ApplicationManifest applicationManifest =
@@ -629,7 +625,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
   public void testUpdateValuesWithException() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).build();
     Application application = Application.Builder.anApplication().uuid(APP_ID).build();
 
     realWingsPersistence.save(environment);
@@ -642,7 +638,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCreateValuesWithEnvServiceOverride() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
     Application application =
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
@@ -675,7 +671,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCreateValuesWithExistingAppManifestForEnvServiceOverride() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
     Application application =
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
@@ -713,7 +709,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testUpdateValuesWithEnvServiceOverride() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
     Application application =
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
@@ -753,7 +749,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
   public void testUpdateValuesWithEnvServiceOverrideException() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).build();
     Application application = Application.Builder.anApplication().uuid(APP_ID).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
 

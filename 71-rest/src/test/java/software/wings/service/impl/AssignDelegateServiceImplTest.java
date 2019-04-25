@@ -57,7 +57,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withEnvironmentType(PROD).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).environmentType(PROD).build();
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(environment);
   }
 

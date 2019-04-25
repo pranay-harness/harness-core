@@ -168,7 +168,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private Environment getEnvironment() {
-    return Environment.Builder.anEnvironment().withName(ENV_NAME).withAppId(APP_ID).withUuid(ENV_ID).build();
+    return Environment.Builder.anEnvironment().name(ENV_NAME).appId(APP_ID).uuid(ENV_ID).build();
   }
 
   private ArtifactStream getArtifactStream() {

@@ -1765,8 +1765,8 @@ public class SecretTextTest extends WingsBaseTest {
       String serviceId = wingsPersistence.save(service);
 
       for (int j = 0; j < numOfEnvs; j++) {
-        String envId = wingsPersistence.save(
-            Environment.Builder.anEnvironment().withAppId(appId).withName("env-" + i + "-j" + j).build());
+        String envId =
+            wingsPersistence.save(Environment.Builder.anEnvironment().appId(appId).name("env-" + i + "-j" + j).build());
         ServiceTemplate serviceTemplate = aServiceTemplate()
                                               .withAppId(appId)
                                               .withServiceId(serviceId)
@@ -1946,8 +1946,7 @@ public class SecretTextTest extends WingsBaseTest {
     List<String> envNames = new ArrayList<>();
 
     for (int j = 0; j < numOfEnvs; j++) {
-      String envId =
-          wingsPersistence.save(Environment.Builder.anEnvironment().withAppId(appId).withName("env-j" + j).build());
+      String envId = wingsPersistence.save(Environment.Builder.anEnvironment().appId(appId).name("env-j" + j).build());
       envNames.add("env-j" + j);
 
       for (int k = 0; k < numOfServiceVariables; k++) {
@@ -2175,7 +2174,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       for (int j = 0; j < numOfEnvs; j++) {
         String envId = wingsPersistence.save(
-            Environment.Builder.anEnvironment().withAppId(appId).withName("environment-" + i + "-" + j).build());
+            Environment.Builder.anEnvironment().appId(appId).name("environment-" + i + "-" + j).build());
         ServiceTemplate serviceTemplate = aServiceTemplate()
                                               .withAppId(appId)
                                               .withServiceId(serviceId)

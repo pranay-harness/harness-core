@@ -96,13 +96,13 @@ public class AuthHandlerTest extends WingsBaseTest {
       TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
 
   private Environment dev =
-      anEnvironment().withUuid(generateUuid()).withAppId(APP_ID).withEnvironmentType(EnvironmentType.NON_PROD).build();
+      anEnvironment().uuid(generateUuid()).appId(APP_ID).environmentType(EnvironmentType.NON_PROD).build();
   private Environment qa =
-      anEnvironment().withUuid(generateUuid()).withAppId(APP_ID).withEnvironmentType(EnvironmentType.NON_PROD).build();
+      anEnvironment().uuid(generateUuid()).appId(APP_ID).environmentType(EnvironmentType.NON_PROD).build();
   private Environment prod =
-      anEnvironment().withUuid(generateUuid()).withAppId(APP_ID).withEnvironmentType(EnvironmentType.PROD).build();
+      anEnvironment().uuid(generateUuid()).appId(APP_ID).environmentType(EnvironmentType.PROD).build();
   private Environment dr =
-      anEnvironment().withUuid(generateUuid()).withAppId(APP_ID).withEnvironmentType(EnvironmentType.PROD).build();
+      anEnvironment().uuid(generateUuid()).appId(APP_ID).environmentType(EnvironmentType.PROD).build();
 
   private Workflow workflow1 = aWorkflow().uuid(generateUuid()).appId(APP_ID).envId(dev.getUuid()).build();
   private Workflow workflow2 = aWorkflow().uuid(generateUuid()).appId(APP_ID).envId(qa.getUuid()).build();
@@ -912,10 +912,10 @@ public class AuthHandlerTest extends WingsBaseTest {
     List<Environment> envList = Lists.newArrayList();
     for (int i = start; i < end; i++) {
       envList.add(anEnvironment()
-                      .withUuid(Integer.toString(i))
-                      .withName(prefix + i)
-                      .withAppId(APP_ID)
-                      .withEnvironmentType(EnvironmentType.NON_PROD)
+                      .uuid(Integer.toString(i))
+                      .name(prefix + i)
+                      .appId(APP_ID)
+                      .environmentType(EnvironmentType.NON_PROD)
                       .build());
     }
     return envList;

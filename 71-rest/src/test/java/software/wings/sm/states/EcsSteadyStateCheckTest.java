@@ -94,7 +94,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     doReturn(app).when(mockAppService).get(anyString());
     doReturn(app).when(mockContext).getApp();
-    Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
+    Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
     doReturn(env).when(mockContext).getEnv();
     doReturn(env).when(mockParams).getEnv();
     ContainerInfrastructureMapping containerInfrastructureMapping =

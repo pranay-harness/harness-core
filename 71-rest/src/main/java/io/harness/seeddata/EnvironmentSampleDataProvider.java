@@ -18,11 +18,11 @@ public class EnvironmentSampleDataProvider {
 
   public Environment createQAEnvironment(String appId) {
     return environmentService.save(
-        anEnvironment().withAppId(appId).withEnvironmentType(NON_PROD).withName(K8S_QA_ENVIRONMENT).build());
+        anEnvironment().appId(appId).environmentType(NON_PROD).name(K8S_QA_ENVIRONMENT).build());
   }
 
   public Environment createProdEnvironment(String appId) {
     return environmentService.save(
-        anEnvironment().withAppId(appId).withEnvironmentType(PROD).withName(K8S_PROD_ENVIRONMENT).build());
+        anEnvironment().appId(appId).environmentType(PROD).name(K8S_PROD_ENVIRONMENT).build());
   }
 }

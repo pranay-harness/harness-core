@@ -98,7 +98,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
-    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    Environment env = Builder.anEnvironment().appId(app.getUuid()).name("DEV").build();
     env = environmentService.save(env);
     app = appService.get(app.getUuid());
 
@@ -152,7 +152,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
     Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
-    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    Environment env = Builder.anEnvironment().appId(app.getUuid()).name("DEV").build();
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();
@@ -196,7 +196,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
-    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    Environment env = Builder.anEnvironment().appId(app.getUuid()).name("DEV").build();
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();

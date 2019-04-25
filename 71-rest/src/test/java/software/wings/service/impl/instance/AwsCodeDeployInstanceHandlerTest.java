@@ -166,7 +166,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
         .when(appService)
         .get(anyString());
 
-    doReturn(Environment.Builder.anEnvironment().withEnvironmentType(EnvironmentType.PROD).withName(ENV_NAME).build())
+    doReturn(Environment.Builder.anEnvironment().environmentType(EnvironmentType.PROD).name(ENV_NAME).build())
         .when(environmentService)
         .get(anyString(), anyString(), anyBoolean());
 

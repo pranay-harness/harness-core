@@ -59,11 +59,11 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   @Before
   public void setUp() throws IOException {
     environment = Environment.Builder.anEnvironment()
-                      .withName(ENV_NAME)
-                      .withUuid(ENV_ID)
-                      .withAppId(APP_ID)
-                      .withEnvironmentType(EnvironmentType.NON_PROD)
-                      .withDescription("valid env yaml")
+                      .name(ENV_NAME)
+                      .uuid(ENV_ID)
+                      .appId(APP_ID)
+                      .environmentType(EnvironmentType.NON_PROD)
+                      .description("valid env yaml")
                       .build();
     when(appService.getAppByName(anyString(), anyString()))
         .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).build());

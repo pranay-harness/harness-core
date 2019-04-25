@@ -62,7 +62,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
     app = appService.save(anApplication().accountId(ACCOUNT_ID).name(APP_NAME + System.currentTimeMillis()).build());
     service = serviceResourceService.save(
         Service.builder().appId(app.getUuid()).name(SERVICE_NAME + System.currentTimeMillis()).build());
-    env = anEnvironment().withAppId(app.getAppId()).withUuid(generateUuid()).withName(ENV_NAME).build();
+    env = anEnvironment().appId(app.getAppId()).uuid(generateUuid()).name(ENV_NAME).build();
     serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                       .withEnvId(env.getUuid())
                                                       .withAppId(app.getAppId())

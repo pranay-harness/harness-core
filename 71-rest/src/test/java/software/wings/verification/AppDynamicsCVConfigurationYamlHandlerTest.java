@@ -78,7 +78,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
     setInternalState(yamlHandler, "settingsService", settingsService);
     setInternalState(yamlHandler, "appdynamicsService", appdynamicsService);
 
-    Environment env = Environment.Builder.anEnvironment().withUuid(envId).withName(envName).build();
+    Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
     when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);
     when(environmentService.get(appId, envId)).thenReturn(env);
 
