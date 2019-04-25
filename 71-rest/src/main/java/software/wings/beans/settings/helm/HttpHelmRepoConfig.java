@@ -37,7 +37,7 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
     this.accountId = accountId;
     this.chartRepoUrl = chartRepoUrl;
     this.username = username;
-    this.password = Arrays.copyOf(password, password.length);
+    this.password = (password != null) ? Arrays.copyOf(password, password.length) : null;
     this.encryptedPassword = encryptedPassword;
   }
 
