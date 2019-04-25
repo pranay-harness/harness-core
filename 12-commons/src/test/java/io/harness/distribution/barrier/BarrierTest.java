@@ -11,12 +11,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.barrier.Barrier.State;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BarrierTest {
+public class BarrierTest extends CategoryTest {
   BarrierId id = new BarrierId("foo");
   ForcerId topId = new ForcerId("top");
   ForcerId child1Id = new ForcerId("child1");

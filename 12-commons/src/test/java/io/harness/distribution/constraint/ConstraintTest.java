@@ -7,6 +7,7 @@ import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.Constraint.Strategy;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class ConstraintTest {
+public class ConstraintTest extends CategoryTest {
   ConstraintId id = new ConstraintId("foo");
 
   ConstraintUnit unit1 = new ConstraintUnit("unit1");

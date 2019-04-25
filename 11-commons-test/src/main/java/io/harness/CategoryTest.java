@@ -3,6 +3,7 @@ package io.harness;
 import static org.junit.rules.RuleChain.outerRule;
 
 import io.harness.rule.CategoryTimeoutRule;
+import io.harness.rule.DistributeRule;
 import io.harness.rule.OwnerRule;
 import io.harness.rule.RepeatRule;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,9 @@ public class CategoryTest {
   private RepeatRule repeatRule = new RepeatRule();
 
   @Rule
-  public TestRule chain = outerRule(repeatRule).around(outerRule(new OwnerRule()).around(new CategoryTimeoutRule()));
+  public TestRule chain =
+      outerRule(new DistributeRule())
+          .around(outerRule(repeatRule).around(outerRule(new OwnerRule()).around(new CategoryTimeoutRule())));
 
   /**
    * Log test case name.

@@ -3,6 +3,7 @@ package io.harness.logging;
 import static io.harness.logging.LoggingInitializer.RESPONSE_MESSAGE_FILE;
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -16,7 +17,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ErrorCodePropertiesTest {
+public class ErrorCodePropertiesTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testErrorCodesInProperties() {

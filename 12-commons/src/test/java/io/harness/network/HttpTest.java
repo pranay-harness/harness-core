@@ -4,13 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.threading.Concurrent;
 import okhttp3.OkHttpClient;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class HttpTest {
+public class HttpTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testValidUrl() {

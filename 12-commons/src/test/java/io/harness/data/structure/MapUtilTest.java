@@ -3,6 +3,7 @@ package io.harness.data.structure;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -10,7 +11,7 @@ import org.junit.experimental.categories.Category;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapUtilTest {
+public class MapUtilTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void shouldPutIfNotEmpty() {

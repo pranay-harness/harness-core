@@ -2,12 +2,13 @@ package io.harness.observer;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class SubjectTest {
+public class SubjectTest extends CategoryTest {
   private static final String OBSERVER_KEY = "observer";
   private static final String OBSERVER_1_KEY = "observer1";
   private Subject<String> subject;
