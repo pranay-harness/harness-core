@@ -1,10 +1,13 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
+import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -44,9 +47,11 @@ import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -143,7 +148,7 @@ public class ApplicationManifestUtils {
     }
 
     ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
-    return StoreType.Local.equals(applicationManifest.getStoreType());
+    return Local.equals(applicationManifest.getStoreType());
   }
 
   public boolean isValuesInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
@@ -186,7 +191,7 @@ public class ApplicationManifestUtils {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
       ApplicationManifest applicationManifest = entry.getValue();
-      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+      if (Local.equals(applicationManifest.getStoreType())) {
         ManifestFile manifestFile =
             applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
         if (manifestFile != null) {
@@ -246,5 +251,28 @@ public class ApplicationManifestUtils {
     populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
     return valuesFiles.values().stream().collect(Collectors.toList());
+  }
+
+  public Set<String> listExpressionsFromValuesForService(String appId, String serviceId) {
+    Set<String> expressionSet = new HashSet<>();
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByServiceId(appId, serviceId, AppManifestKind.K8S_MANIFEST);
+    if (applicationManifest == null || !Local.equals(applicationManifest.getStoreType())) {
+      return expressionSet;
+    }
+
+    ManifestFile manifestFile =
+        applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
+    if (manifestFile == null) {
+      return expressionSet;
+    }
+
+    Map map = getMapFromValuesFileContent(manifestFile.getFileContent());
+    if (map == null) {
+      return expressionSet;
+    }
+
+    return getValuesExpressionKeysFromMap(map, "", 0);
   }
 }

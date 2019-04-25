@@ -61,4 +61,13 @@ public class ExpressionBuilderResource {
     return new RestResponse(
         expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId, stateType, subEntityType));
   }
+
+  @GET
+  @Path("/values")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> listExpressionsFromValues(
+      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(expressionBuilderService.listExpressionsFromValuesForService(appId, serviceId));
+  }
 }
