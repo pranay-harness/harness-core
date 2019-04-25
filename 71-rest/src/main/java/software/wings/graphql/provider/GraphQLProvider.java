@@ -28,7 +28,10 @@ import javax.validation.constraints.NotNull;
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
-  private static final String GRAPHQL_SCHEMA_FILE_PATH = "graphql/schema.graphql";
+  private static final String FRAMEWORK_FILE_PATH = "graphql/framework.graphql";
+  private static final String MODEL_FILE_PATH = "graphql/model.graphql";
+  private static final String RUNTIME_FILE_PATH = "graphql/runtime.graphql";
+  private static final String SCHEMA_FILE_PATH = "graphql/schema.graphql";
 
   GraphQL graphQL;
 
@@ -50,7 +53,11 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   public void init() {
     if (graphQL == null) {
       SchemaParser schemaParser = new SchemaParser();
-      TypeDefinitionRegistry typeDefinitionRegistry = schemaParser.parse(loadSchemaFile());
+      TypeDefinitionRegistry typeDefinitionRegistry = new TypeDefinitionRegistry();
+      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(FRAMEWORK_FILE_PATH)));
+      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(MODEL_FILE_PATH)));
+      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(RUNTIME_FILE_PATH)));
+      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(SCHEMA_FILE_PATH)));
 
       RuntimeWiring runtimeWiring = buildRuntimeWiring();
 
@@ -83,9 +90,9 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     return builder.build();
   }
 
-  private String loadSchemaFile() {
+  private String loadSchemaFile(String resource) {
     String resouceAsString;
-    URL url = GraphQLProvider.class.getClassLoader().getResource(GRAPHQL_SCHEMA_FILE_PATH);
+    URL url = GraphQLProvider.class.getClassLoader().getResource(resource);
     try {
       resouceAsString = Resources.toString(url, Charset.defaultCharset());
     } catch (IOException e) {

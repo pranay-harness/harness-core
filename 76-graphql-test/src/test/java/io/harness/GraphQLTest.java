@@ -3,6 +3,7 @@ package io.harness;
 import graphql.GraphQL;
 import io.harness.rule.GraphQLRule;
 import io.harness.rule.LifecycleRule;
+import io.harness.testframework.graphql.GraphQLTestMixin;
 import org.junit.Rule;
 
 public class GraphQLTest extends CategoryTest implements GraphQLTestMixin {

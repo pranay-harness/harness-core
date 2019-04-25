@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 
 import graphql.GraphQL;
 import io.harness.CategoryTest;
-import io.harness.GraphQLTestMixin;
 import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
@@ -14,6 +13,7 @@ import io.harness.rule.LifecycleRule;
 import io.harness.testframework.framework.DelegateExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.FileUtils;
+import io.harness.testframework.graphql.GraphQLTestMixin;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.RestAssured;

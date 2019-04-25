@@ -1,4 +1,4 @@
-package io.harness;
+package io.harness.testframework.graphql;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -40,20 +40,22 @@ public interface GraphQLTestMixin {
     return modelMapper;
   }
 
-  default LinkedHashMap qlExecute(String query) {
+  default QLTestObject qlExecute(String query) {
     final ExecutionResult result = getGraphQL().execute(query);
     if (isNotEmpty(result.getErrors())) {
       throw new RuntimeException(result.getErrors().toString());
     }
-    return (LinkedHashMap) result.<LinkedHashMap>getData().values().iterator().next();
+    return QLTestObject.builder()
+        .map((LinkedHashMap) result.<LinkedHashMap>getData().values().iterator().next())
+        .build();
   }
 
   // TODO: add support for scalars
   default<T> T qlExecute(Class<T> clazz, String query) {
-    final LinkedHashMap map = qlExecute(query);
+    final QLTestObject testObject = qlExecute(query);
 
     final T t = objenesis.newInstance(clazz);
-    modelMapper().map(map, t);
+    modelMapper().map(testObject.getMap(), t);
     return t;
   }
 }

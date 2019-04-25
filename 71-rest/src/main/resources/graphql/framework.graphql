@@ -1,0 +1,10 @@
+# DateTime which will return date based on PST zone
+scalar DateTime
+scalar Object
+
+type PageInfo {
+  hasMore: Boolean
+  total: Int
+  offset: Int
+  limit: Int
+}

@@ -13,6 +13,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
+import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,8 +22,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceBuilder;
 import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLServiceConnection;
-
-import java.util.LinkedHashMap;
 
 @Slf4j
 public class ServiceTest extends GraphQLTest {
@@ -92,8 +91,8 @@ public class ServiceTest extends GraphQLTest {
       String query = "{ application(applicationId: \"" + application.getUuid()
           + "\") { services(limit: 2, offset: 1) { nodes { id } } } }";
 
-      final LinkedHashMap linkedHashMap = qlExecute(query);
-      assertThat(linkedHashMap.size()).isEqualTo(1);
+      final QLTestObject qlTestObject = qlExecute(query);
+      assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
   }
 }

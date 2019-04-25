@@ -21,7 +21,6 @@ public class GraphQLConstants {
 
   // Error messages
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";
-  public static final String EMPTY_OR_NULL_INPUT_FIELD = "Input field %s is either null or empty";
   public static final String USER_NOT_AUTHORIZED_TO_VIEW_ENTITY =
       "User is not authorized to view entity %s = %s  for appId = %s";
   public static final String NO_RECORDS_FOUND_FOR_APP_ID = "No records found for %s entity appId = %s";
