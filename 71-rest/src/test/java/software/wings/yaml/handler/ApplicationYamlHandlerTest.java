@@ -53,10 +53,10 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   @Before
   public void setUp() throws IOException {
     application = Application.Builder.anApplication()
-                      .withName(APP_NAME)
-                      .withUuid(APP_ID)
-                      .withAccountId(ACCOUNT_ID)
-                      .withDescription("valid application yaml")
+                      .name(APP_NAME)
+                      .uuid(APP_ID)
+                      .accountId(ACCOUNT_ID)
+                      .description("valid application yaml")
                       .build();
   }
 

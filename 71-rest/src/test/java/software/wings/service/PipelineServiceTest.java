@@ -146,7 +146,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Pipeline.class)).thenReturn(pipelineQuery);
     when(pipelineQuery.filter(any(), any())).thenReturn(pipelineQuery);
     when(wingsPersistence.createUpdateOperations(Pipeline.class)).thenReturn(updateOperations);
-    when(appService.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.unset(any())).thenReturn(updateOperations);
     when(serviceResourceService.fetchServicesByUuids(APP_ID, Arrays.asList(SERVICE_ID)))

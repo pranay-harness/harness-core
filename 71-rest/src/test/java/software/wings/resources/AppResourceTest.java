@@ -44,13 +44,13 @@ public class AppResourceTest {
   private final String TEST_YAML =
       "--- # app.yaml for new Application\nname: " + TEST_NAME + "\ndescription: " + TEST_DESCRIPTION;
 
-  private final Application testApp = anApplication().withUuid(TEST_UUID).build();
+  private final Application testApp = anApplication().uuid(TEST_UUID).build();
   private final Application testApp2 = anApplication()
-                                           .withUuid(TEST_UUID2)
-                                           .withAccountId(TEST_ACCOUNT_ID)
-                                           .withAppId(TEST_UUID2)
-                                           .withName(TEST_NAME)
-                                           .withDescription(TEST_DESCRIPTION)
+                                           .uuid(TEST_UUID2)
+                                           .accountId(TEST_ACCOUNT_ID)
+                                           .appId(TEST_UUID2)
+                                           .name(TEST_NAME)
+                                           .description(TEST_DESCRIPTION)
                                            .build();
 
   /**

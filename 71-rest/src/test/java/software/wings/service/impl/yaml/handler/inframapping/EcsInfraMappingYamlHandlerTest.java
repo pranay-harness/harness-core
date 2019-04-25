@@ -178,11 +178,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private Application getApplication() {
-    return Application.Builder.anApplication()
-        .withUuid("ANY_UUID")
-        .withName(APP_NAME)
-        .withAccountId(ACCOUNT_ID)
-        .build();
+    return Application.Builder.anApplication().uuid("ANY_UUID").name(APP_NAME).accountId(ACCOUNT_ID).build();
   }
 
   private SettingAttribute getSettingAttribute() {

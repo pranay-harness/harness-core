@@ -101,7 +101,7 @@ public class AuthServiceTest extends WingsBaseTest {
 
     when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
     when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
-    when(cache.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).build());
+    when(cache.get(Application.class, APP_ID)).thenReturn(anApplication().uuid(APP_ID).appId(APP_ID).build());
     when(cache.get(Environment.class, ENV_ID))
         .thenReturn(
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.NON_PROD).build());

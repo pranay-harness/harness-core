@@ -104,11 +104,11 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
 
   protected void setup(String yamlFilePath, String workflowName) {
     when(appService.getAppByName(anyString(), anyString()))
-        .thenReturn(anApplication().withName(APP_NAME).withUuid(APP_ID).build());
+        .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).build());
 
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
     when(yamlHelper.getApplicationIfPresent(anyString(), anyString()))
-        .thenReturn(Optional.of(anApplication().withUuid(APP_ID).build()));
+        .thenReturn(Optional.of(anApplication().uuid(APP_ID).build()));
     when(yamlHelper.getNameFromYamlFilePath(yamlFilePath)).thenReturn(workflowName);
     when(yamlHelper.extractEntityNameFromYamlPath(YamlType.WORKFLOW.getPathExpression(), yamlFilePath, PATH_DELIMITER))
         .thenReturn(workflowName);

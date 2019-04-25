@@ -128,7 +128,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(appService.getAppByName(ACCOUNT_ID, APP_NAME))
-        .thenReturn(Application.Builder.anApplication().withUuid(APP_ID).withName(APP_NAME).build());
+        .thenReturn(Application.Builder.anApplication().uuid(APP_ID).name(APP_NAME).build());
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(serviceResourceService.exist(any(), any())).thenReturn(true);

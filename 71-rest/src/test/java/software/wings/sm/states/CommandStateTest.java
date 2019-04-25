@@ -252,8 +252,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
-    when(appService.get(APP_ID))
-        .thenReturn(anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).name(APP_NAME).build());
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))

@@ -69,8 +69,7 @@ public class ServiceVariableResourceTest {
                                                               .build();
   static {
     when(VARIABLE_SERVICE.save(anyObject())).then(AdditionalAnswers.returnsFirstArg());
-    when(APP_SERVICE.get(anyString()))
-        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(APP_SERVICE.get(anyString())).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
     setInternalState(VARIABLE_RESOURCE, "serviceVariablesService", VARIABLE_SERVICE);
     setInternalState(VARIABLE_RESOURCE, "appService", APP_SERVICE);
     setInternalState(VARIABLE_RESOURCE, "authHandler", AUTH_HANDLER);

@@ -47,7 +47,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   public void setUp() throws Exception {
     super.setUp();
     loginAdminUser();
-    appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     settingId = wingsPersistence.save(
         Builder.aSettingAttribute()
             .withName(generateUuid())

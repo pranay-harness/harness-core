@@ -175,8 +175,8 @@ public class KmsTest extends WingsBaseTest {
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
 
-    appId = wingsPersistence.save(
-        Application.Builder.anApplication().withName(generateUuid()).withAccountId(accountId).build());
+    appId =
+        wingsPersistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
     workflowName = generateUuid();
     envId = generateUuid();
     workflowExecutionId = wingsPersistence.save(WorkflowExecution.builder().name(workflowName).envId(envId).build());

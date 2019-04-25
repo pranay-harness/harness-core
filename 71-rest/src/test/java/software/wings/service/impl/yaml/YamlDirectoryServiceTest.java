@@ -235,7 +235,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   private void performMocking() {
-    Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
+    Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
 
     doReturn(Arrays.asList(application)).when(appService).getAppsByAccountId(anyString());
 

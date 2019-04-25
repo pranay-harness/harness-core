@@ -53,7 +53,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
   @Before
   public void setUp() {
     accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
-    appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     CVConfiguration cvConfiguration = new CVConfiguration();
     cvConfiguration.setName(generateUuid());
     cvConfiguration.setAppId(appId);

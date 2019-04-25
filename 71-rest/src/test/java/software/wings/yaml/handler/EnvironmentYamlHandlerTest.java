@@ -66,9 +66,9 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
                       .withDescription("valid env yaml")
                       .build();
     when(appService.getAppByName(anyString(), anyString()))
-        .thenReturn(anApplication().withName(APP_NAME).withUuid(APP_ID).build());
+        .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).build());
     when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
-    when(appService.get(anyString())).thenReturn(anApplication().withName(APP_NAME).withUuid(APP_ID).build());
+    when(appService.get(anyString())).thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).build());
   }
 
   @Test

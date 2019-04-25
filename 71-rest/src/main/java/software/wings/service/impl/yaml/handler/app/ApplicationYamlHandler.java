@@ -57,8 +57,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
     Application previous = get(accountId, yamlFilePath);
 
     String appName = yamlHelper.getAppName(yamlFilePath);
-    Application current =
-        anApplication().withAccountId(accountId).withName(appName).withDescription(yaml.getDescription()).build();
+    Application current = anApplication().accountId(accountId).name(appName).description(yaml.getDescription()).build();
 
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 

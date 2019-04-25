@@ -212,7 +212,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testGetDataForNode() throws Exception {
-    String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
     String workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());

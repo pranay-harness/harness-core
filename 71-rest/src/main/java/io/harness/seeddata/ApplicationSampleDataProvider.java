@@ -15,20 +15,17 @@ public class ApplicationSampleDataProvider {
 
   public Application createKubernetesApp(String accountId) {
     Application application = Application.Builder.anApplication()
-                                  .withName(HARNESS_SAMPLE_APP)
-                                  .withDescription(HARNESS_SAMPLE_APP_DESC)
-                                  .withAccountId(accountId)
+                                  .name(HARNESS_SAMPLE_APP)
+                                  .description(HARNESS_SAMPLE_APP_DESC)
+                                  .accountId(accountId)
                                   .build();
 
     return appService.save(application);
   }
 
   public Application createApp(String accountId, String name, String description) {
-    Application application = Application.Builder.anApplication()
-                                  .withName(name)
-                                  .withDescription(description)
-                                  .withAccountId(accountId)
-                                  .build();
+    Application application =
+        Application.Builder.anApplication().name(name).description(description).accountId(accountId).build();
 
     return appService.save(application);
   }

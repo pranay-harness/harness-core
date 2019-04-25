@@ -167,7 +167,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
     Application application =
-        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     when(appService.getAppByName(anyString(), anyString())).thenReturn(application);
 
     when(appService.get(APP_ID)).thenReturn(application);

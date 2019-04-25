@@ -153,9 +153,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(Environment.class)).thenReturn(updateOperations);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.unset(any())).thenReturn(updateOperations);
-    when(appService.get(TARGET_APP_ID))
-        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
   }
 
   /**
@@ -537,7 +536,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void testCreateValues() {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
     Application application =
-        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
 
     realWingsPersistence.save(environment);
     realWingsPersistence.save(application);
@@ -567,7 +566,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void testCreateValuesWithExistingAppManifest() {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
     Application application =
-        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(AppManifestKind.VALUES).envId(ENV_ID).build();
     applicationManifest.setAppId(APP_ID);
@@ -598,7 +597,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void testUpdateValues() {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
     Application application =
-        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(AppManifestKind.VALUES).envId(ENV_ID).build();
     applicationManifest.setAppId(APP_ID);
@@ -631,7 +630,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateValuesWithException() {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build();
-    Application application = Application.Builder.anApplication().withUuid(APP_ID).build();
+    Application application = Application.Builder.anApplication().uuid(APP_ID).build();
 
     realWingsPersistence.save(environment);
     realWingsPersistence.save(application);
@@ -645,7 +644,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void testCreateValuesWithEnvServiceOverride() {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
     Application application =
-        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
 
     realWingsPersistence.save(environment);
@@ -679,7 +678,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
     Application application =
-        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .storeType(Local)
                                                   .kind(AppManifestKind.VALUES)
@@ -717,7 +716,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
     Application application =
-        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .storeType(Local)
                                                   .kind(AppManifestKind.VALUES)
@@ -755,7 +754,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateValuesWithEnvServiceOverrideException() {
     Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build();
-    Application application = Application.Builder.anApplication().withUuid(APP_ID).build();
+    Application application = Application.Builder.anApplication().uuid(APP_ID).build();
     Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
 
     realWingsPersistence.save(environment);

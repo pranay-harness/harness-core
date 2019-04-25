@@ -194,7 +194,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withLicenseInfo(licenseInfo)
                                       .build());
     app = wingsPersistence.saveAndGet(
-        Application.class, anApplication().withName(APP_NAME).withAccountId(account.getUuid()).build());
+        Application.class, anApplication().name(APP_NAME).accountId(account.getUuid()).build());
     env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     artifact = anArtifact()
                    .withAppId(app.getAppId())

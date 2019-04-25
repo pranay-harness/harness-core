@@ -101,7 +101,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   public void setup() throws Exception {
     yamlCloneServiceImpl = (YamlCloneServiceImpl) yamlCloneService;
     gitFileChangeList = new ArrayList<>();
-    doReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).withName(APP_NAME).build())
+    doReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).name(APP_NAME).build())
         .when(appService)
         .get(anyString());
   }

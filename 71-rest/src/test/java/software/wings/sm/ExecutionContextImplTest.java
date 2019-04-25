@@ -132,7 +132,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     host.setHostName("host1");
     context.pushContextElement(host);
 
-    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
     Environment env = anEnvironment().withAppId(app.getUuid()).withName("DEV").build();

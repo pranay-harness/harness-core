@@ -111,7 +111,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     // capture arg
     doReturn(Instance.builder().build()).when(instanceService).save(any(Instance.class));
 
-    doReturn(Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build())
+    doReturn(Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build())
         .when(appService)
         .get(anyString());
 

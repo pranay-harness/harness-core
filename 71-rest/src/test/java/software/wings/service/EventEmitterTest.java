@@ -78,7 +78,7 @@ public class EventEmitterTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetAccountIdToBroadcast() throws Exception {
-    when(appService.get(APP_ID)).thenReturn(anApplication().withAccountId("ACCOUNT_ID").withAppId(APP_ID).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().accountId("ACCOUNT_ID").appId(APP_ID).build());
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).withAppId(APP_ID).build();
     eventEmitter.send(Channel.ARTIFACTS, event);
     verify(broadcasterFactory).lookup("/stream/ui/ACCOUNT_ID/APP_ID/all/all/artifacts", true);

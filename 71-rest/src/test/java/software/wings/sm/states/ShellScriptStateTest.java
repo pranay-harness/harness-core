@@ -70,7 +70,7 @@ public class ShellScriptStateTest {
   public void setUp() throws Exception {
     shellScriptState.setSweepingOutputName("test");
     shellScriptState.setSweepingOutputScope(PIPELINE);
-    when(executionContext.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
+    when(executionContext.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     HostConnectionAttributes hostConnectionAttributes = aHostConnectionAttributes()
                                                             .withAccessType(HostConnectionAttributes.AccessType.KEY)

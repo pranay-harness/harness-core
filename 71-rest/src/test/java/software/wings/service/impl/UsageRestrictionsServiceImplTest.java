@@ -149,9 +149,8 @@ public class UsageRestrictionsServiceImplTest {
             (Answer<SettingAttribute>) invocationOnMock -> (SettingAttribute) invocationOnMock.getArguments()[1]);
     when(appService.get(anyString())).thenReturn(application);
     when(application.getAccountId()).thenReturn("ACCOUNT_ID");
-    when(appService.get(TARGET_APP_ID))
-        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
   }
 
   private void setUserGroupMocks(AppPermission appPermission, List<String> appIds) {

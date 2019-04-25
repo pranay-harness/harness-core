@@ -76,7 +76,7 @@ public class ElkCVConfigurationYamlHandlerTest {
     when(serviceResourceService.get(appId, serviceId)).thenReturn(service);
     when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
 
-    Application app = Application.Builder.anApplication().withName(appName).withUuid(appId).build();
+    Application app = Application.Builder.anApplication().name(appName).uuid(appId).build();
     when(appService.get(appId)).thenReturn(app);
     when(appService.getAppByName(accountId, appName)).thenReturn(app);
 

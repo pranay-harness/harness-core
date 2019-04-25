@@ -95,7 +95,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   public void shouldGetApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
     Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
@@ -150,7 +150,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   public void shouldGetArtifactWithSourceProperties() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
     env = environmentService.save(env);
@@ -193,7 +193,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   public void shouldGetAccountDefaults() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
     Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();

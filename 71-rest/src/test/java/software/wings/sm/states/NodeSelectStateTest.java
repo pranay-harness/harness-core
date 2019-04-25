@@ -117,7 +117,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   public void setUp() throws Exception {
     stateExecutionInstance.setUuid(generateUuid());
     stateExecutionInstance.setDisplayName("DC_NODE_SELECT");
-    when(context.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(context.getApp()).thenReturn(anApplication().uuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
         .thenReturn(aPhaseElement()
                         .withServiceElement(aServiceElement().withUuid(SERVICE_ID).build())

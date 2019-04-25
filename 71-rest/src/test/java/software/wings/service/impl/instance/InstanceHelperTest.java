@@ -146,7 +146,7 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     when(instanceService.saveOrUpdate(anyList())).thenAnswer(i -> i.getArguments()[0]);
 
-    doReturn(Application.Builder.anApplication().withName("app").withUuid("app_1").withAccountId(ACCOUNT_ID).build())
+    doReturn(Application.Builder.anApplication().name("app").uuid("app_1").accountId(ACCOUNT_ID).build())
         .when(appService)
         .get(anyString());
 

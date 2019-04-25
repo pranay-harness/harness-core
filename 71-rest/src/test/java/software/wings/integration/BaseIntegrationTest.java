@@ -214,8 +214,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   protected Application createApp(String appName) {
     WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
     RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
-        entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
-            APPLICATION_JSON),
+        entity(anApplication().name(appName).description(appName).accountId(accountId).build(), APPLICATION_JSON),
         new GenericType<RestResponse<Application>>() {});
     assertThat(response.getResource()).isInstanceOf(Application.class);
     assertThat(response.getResource().getName()).isEqualTo(appName);

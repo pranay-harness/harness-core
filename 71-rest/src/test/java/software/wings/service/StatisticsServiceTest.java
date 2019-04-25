@@ -70,7 +70,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID));
-    when(appService.getAppsByAccountId(ACCOUNT_ID)).thenReturn(asList(anApplication().withUuid(APP_ID).build()));
+    when(appService.getAppsByAccountId(ACCOUNT_ID)).thenReturn(asList(anApplication().uuid(APP_ID).build()));
     when(workflowExecutionService.obtainWorkflowExecutionIterator(anyList(), anyLong())).thenReturn(executionIterator);
   }
 
@@ -78,8 +78,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetServiceInstanceStatistics() {
     when(appService.list(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
+        .thenReturn(aPageResponse().withResponse(asList(anApplication().uuid(APP_ID).name(APP_NAME).build())).build());
 
     List<ElementExecutionSummary> serviceExecutionSummaries =
         asList(anElementExecutionSummary()
@@ -118,8 +117,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void setWingsPersistence() {
     when(appService.list(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
+        .thenReturn(aPageResponse().withResponse(asList(anApplication().uuid(APP_ID).name(APP_NAME).build())).build());
 
     List<ElementExecutionSummary> serviceExecutionSummaries =
         asList(anElementExecutionSummary()

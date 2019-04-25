@@ -117,7 +117,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   private StateExecutionInstance stateExecutionInstance =
       pcfStateTestHelper.getStateExecutionInstanceForDeployState(workflowStandardParams, phaseElement, serviceElement);
 
-  private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
+  private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
   private SettingAttribute computeProvider =

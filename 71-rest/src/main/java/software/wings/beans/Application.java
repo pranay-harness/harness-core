@@ -21,6 +21,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -38,9 +39,9 @@ import java.util.Objects;
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
-@Indexes(
-    @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
-                                                                             , @Field("name") }))
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
+    fields = { @Field(ApplicationKeys.accountId)
+               , @Field(ApplicationKeys.name) }))
 public class Application extends Base implements KeywordsAware, NameAccess {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
@@ -311,109 +312,109 @@ public class Application extends Base implements KeywordsAware, NameAccess {
       return new Builder();
     }
 
-    public Builder withName(String name) {
+    public Builder name(String name) {
       this.name = name;
       return this;
     }
 
-    public Builder withDescription(String description) {
+    public Builder description(String description) {
       this.description = description;
       return this;
     }
 
-    public Builder withAccountId(String accountId) {
+    public Builder accountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public Builder withServices(List<Service> services) {
+    public Builder services(List<Service> services) {
       this.services = services;
       return this;
     }
 
-    public Builder withEnvironments(List<Environment> environments) {
+    public Builder environments(List<Environment> environments) {
       this.environments = environments;
       return this;
     }
 
-    public Builder withSetup(Setup setup) {
+    public Builder setup(Setup setup) {
       this.setup = setup;
       return this;
     }
 
-    public Builder withRecentExecutions(List<WorkflowExecution> recentExecutions) {
+    public Builder recentExecutions(List<WorkflowExecution> recentExecutions) {
       this.recentExecutions = recentExecutions;
       return this;
     }
 
-    public Builder withNotifications(List<Notification> notifications) {
+    public Builder notifications(List<Notification> notifications) {
       this.notifications = notifications;
       return this;
     }
 
-    public Builder withNextDeploymentOn(long nextDeploymentOn) {
+    public Builder nextDeploymentOn(long nextDeploymentOn) {
       this.nextDeploymentOn = nextDeploymentOn;
       return this;
     }
 
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withAppId(String appId) {
+    public Builder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withCreatedAt(long createdAt) {
+    public Builder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withDefaults(Map<String, String> defaults) {
+    public Builder defaults(Map<String, String> defaults) {
       this.defaults = defaults;
       return this;
     }
 
-    public Builder withYamlGitConfig(YamlGitConfig yamlGitConfig) {
+    public Builder yamlGitConfig(YamlGitConfig yamlGitConfig) {
       this.yamlGitConfig = yamlGitConfig;
       return this;
     }
 
     public Builder but() {
       return anApplication()
-          .withName(name)
-          .withDescription(description)
-          .withAccountId(accountId)
-          .withServices(services)
-          .withEnvironments(environments)
-          .withSetup(setup)
-          .withRecentExecutions(recentExecutions)
-          .withNotifications(notifications)
-          .withNextDeploymentOn(nextDeploymentOn)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withYamlGitConfig(yamlGitConfig);
+          .name(name)
+          .description(description)
+          .accountId(accountId)
+          .services(services)
+          .environments(environments)
+          .setup(setup)
+          .recentExecutions(recentExecutions)
+          .notifications(notifications)
+          .nextDeploymentOn(nextDeploymentOn)
+          .uuid(uuid)
+          .appId(appId)
+          .createdBy(createdBy)
+          .createdAt(createdAt)
+          .lastUpdatedBy(lastUpdatedBy)
+          .lastUpdatedAt(lastUpdatedAt)
+          .yamlGitConfig(yamlGitConfig);
     }
 
     public Application build() {

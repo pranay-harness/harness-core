@@ -134,7 +134,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private Application getApplication() {
-    return Application.Builder.anApplication().withName("app").withUuid("id").build();
+    return Application.Builder.anApplication().name("app").uuid("id").build();
   }
 
   @Test

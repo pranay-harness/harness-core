@@ -67,8 +67,8 @@ public class EnvironmentTest extends GraphQLTest {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
 
-    final Application application = applicationGenerator.ensureApplication(
-        seed, owners, anApplication().withName("Application Environments").build());
+    final Application application =
+        applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Environments").build());
 
     final Builder builder = anEnvironment().withAppId(application.getUuid());
 

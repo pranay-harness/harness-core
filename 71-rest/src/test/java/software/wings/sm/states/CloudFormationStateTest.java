@@ -193,7 +193,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
           .addStateExecutionData(aCommandStateExecutionData().build())
           .build();
 
-  private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
+  private Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID_CF).withName(ENV_NAME).build();
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
   private Artifact artifact = anArtifact()

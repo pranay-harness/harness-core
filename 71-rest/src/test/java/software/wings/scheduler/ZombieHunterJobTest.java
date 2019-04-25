@@ -59,12 +59,12 @@ public class ZombieHunterJobTest extends WingsBaseTest {
     Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
     wingsPersistence.save(account);
 
-    Application existApplication = anApplication().withName("dummy1").withAccountId(account.getUuid()).build();
+    Application existApplication = anApplication().name("dummy1").accountId(account.getUuid()).build();
     wingsPersistence.save(existApplication);
 
-    Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
+    Application application1 = anApplication().name("dummy1").accountId("deleted").build();
     wingsPersistence.save(application1);
-    Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
+    Application application2 = anApplication().name("dummy2").accountId("deleted").build();
     wingsPersistence.save(application2);
     assertThat(
         job.huntingExpedition(new ZombieHunterJob.ZombieType("applications", "accountId", asList("accounts"), null)))
@@ -82,12 +82,12 @@ public class ZombieHunterJobTest extends WingsBaseTest {
     Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
     wingsPersistence.save(account);
 
-    Application existApplication = anApplication().withName("dummy1").withAccountId(account.getUuid()).build();
+    Application existApplication = anApplication().name("dummy1").accountId(account.getUuid()).build();
     wingsPersistence.save(existApplication);
 
-    Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
+    Application application1 = anApplication().name("dummy1").accountId("deleted").build();
     wingsPersistence.save(application1);
-    Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
+    Application application2 = anApplication().name("dummy2").accountId("deleted").build();
     wingsPersistence.save(application2);
     assertThat(job.huntingExpedition(
                    new ZombieHunterJob.ZombieType("applications", "accountId", asList("accounts"), appService)))
@@ -106,12 +106,12 @@ public class ZombieHunterJobTest extends WingsBaseTest {
     Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
     wingsPersistence.save(account);
 
-    Application existApplication = anApplication().withName("dummy1").withAccountId(account.getUuid()).build();
+    Application existApplication = anApplication().name("dummy1").accountId(account.getUuid()).build();
     wingsPersistence.save(existApplication);
 
-    Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
+    Application application1 = anApplication().name("dummy1").accountId("deleted").build();
     wingsPersistence.save(application1);
-    Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
+    Application application2 = anApplication().name("dummy2").accountId("deleted").build();
     wingsPersistence.save(application2);
     assertThat(job.huntingExpedition(new ZombieHunterJob.ZombieType(
                    "applications", "accountId", asList("environments", "accounts"), appService)))

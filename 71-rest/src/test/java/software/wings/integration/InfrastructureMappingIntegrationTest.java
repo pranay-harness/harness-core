@@ -79,8 +79,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     super.setUp();
-    app =
-        appService.save(anApplication().withName("AppA" + System.currentTimeMillis()).withAccountId(accountId).build());
+    app = appService.save(anApplication().name("AppA" + System.currentTimeMillis()).accountId(accountId).build());
     service = serviceResourceService.save(Service.builder().appId(app.getUuid()).name("Catalog").build());
 
     environment = environmentService.save(

@@ -60,7 +60,7 @@ public class EnvStateTest extends WingsBaseTest {
   public void setUp() throws Exception {
     envState.setEnvId(ENV_ID);
     envState.setWorkflowId(WORKFLOW_ID);
-    when(context.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(context.getApp()).thenReturn(anApplication().uuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(workflowExecutionService.triggerOrchestrationExecution(

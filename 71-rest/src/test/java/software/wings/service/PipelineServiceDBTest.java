@@ -66,7 +66,7 @@ public class PipelineServiceDBTest extends WingsBaseTest {
   }
 
   private Application createApplication(Account account) {
-    Application application = anApplication().withName("test-application").withAccountId(account.getUuid()).build();
+    Application application = anApplication().name("test-application").accountId(account.getUuid()).build();
     return appService.save(application);
   }
 

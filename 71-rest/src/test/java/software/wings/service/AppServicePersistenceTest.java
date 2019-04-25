@@ -63,11 +63,11 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     // Create some other application. We make this to make sure that deleting items that belong to one
     // application does not affect others.
     Application dummyApplication =
-        anApplication().withUuid(dummyAppID).withName("DUMMY_APP_NAME").withAccountId(ACCOUNT_ID).build();
+        anApplication().uuid(dummyAppID).name("DUMMY_APP_NAME").accountId(ACCOUNT_ID).build();
     appService.save(dummyApplication);
 
     // Create the test target application
-    Application application = anApplication().withUuid(appId).withName("APP_NAME").withAccountId(ACCOUNT_ID).build();
+    Application application = anApplication().uuid(appId).name("APP_NAME").accountId(ACCOUNT_ID).build();
     appService.save(application);
 
     // Make sure that we can obtain the application after we saved it

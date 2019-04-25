@@ -78,7 +78,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   private StateExecutionInstance stateExecutionInstance = pcfStateTestHelper.getStateExecutionInstanceForRollbackState(
       workflowStandardParams, phaseElement, serviceElement);
 
-  private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
+  private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
   private SettingAttribute computeProvider =
@@ -120,8 +120,8 @@ public class PcfRollbackStateTest extends WingsBaseTest {
             .build();
 
     PcfCommandRequest pcfCommandRequest =
-        pcfRollbackState.getPcfCommandRequest(context, anApplication().withName(APP_NAME).withUuid(APP_ID).build(),
-            ACTIVITY_ID, pcfSetupContextElement, (PcfConfig) computeProvider.getValue(), -1, -1, stateExecutionData,
+        pcfRollbackState.getPcfCommandRequest(context, anApplication().name(APP_NAME).uuid(APP_ID).build(), ACTIVITY_ID,
+            pcfSetupContextElement, (PcfConfig) computeProvider.getValue(), -1, -1, stateExecutionData,
             pcfStateTestHelper.getPcfInfrastructureMapping(Arrays.asList("R1", "R2"), Arrays.asList("R3")));
 
     PcfCommandRollbackRequest commandRollbackRequest = (PcfCommandRollbackRequest) pcfCommandRequest;

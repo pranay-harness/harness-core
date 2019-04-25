@@ -67,7 +67,7 @@ public class PipelineTest extends GraphQLTest {
     final Owners owners = ownerManager.create();
 
     final Application application =
-        applicationGenerator.ensureApplication(seed, owners, anApplication().withName("Application Pipelines").build());
+        applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Pipelines").build());
 
     final PipelineBuilder builder = Pipeline.builder().name("pipeline").appId(application.getUuid());
 
