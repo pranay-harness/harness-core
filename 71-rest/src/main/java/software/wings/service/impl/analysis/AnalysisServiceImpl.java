@@ -853,6 +853,10 @@ public class AnalysisServiceImpl implements AnalysisService {
         clusterSummary.setClusterLabel(analysisCluster.getCluster_label());
         clusterSummary.getHostSummary().put(Misc.replaceUnicodeWithDot(hostEntry.getKey()), hostSummary);
 
+        if (cluster_type.equals(CLUSTER_TYPE.IGNORE)) {
+          clusterSummary.setLogMLFeedbackId(analysisCluster.getFeedback_id());
+        }
+
         double score;
         if (clusterScores != null && clusterScores.containsKey(labelEntry.getKey())) {
           switch (cluster_type) {
