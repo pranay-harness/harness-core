@@ -22,7 +22,10 @@ public class GlobalContextManager {
   }
 
   public static GlobalContextGuard globalContextGuard(GlobalContextData globalContextData) {
-    GlobalContext globalContext = new GlobalContext();
+    GlobalContext globalContext = getGlobalContext();
+    if (globalContext == null) {
+      globalContext = new GlobalContext();
+    }
     globalContext.setGlobalContextRecord(globalContextData);
     return new GlobalContextGuard(globalContext);
   }
