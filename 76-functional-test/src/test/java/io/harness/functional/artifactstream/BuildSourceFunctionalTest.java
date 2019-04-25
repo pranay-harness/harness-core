@@ -239,4 +239,46 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
     assertThat(restResponse.getResource().size()).isGreaterThan(0);
     assertThat(restResponse.getResource().contains("harness/todolist-sample")).isNotNull();
   }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getPlansForAmazonS3AtConnectorLevel() {
+    GenericType<RestResponse<Map<String, String>>> artifactStreamType =
+        new GenericType<RestResponse<Map<String, String>>>() {
+
+        };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER);
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .queryParam("accountId", application.getAccountId())
+                                                         .queryParam("settingId", settingAttribute.getUuid())
+                                                         .queryParam("streamType", "AMAZON_S3")
+                                                         .contentType(ContentType.JSON)
+                                                         .get("/settings/build-sources/plans")
+                                                         .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().size()).isGreaterThan(0);
+    assertThat(restResponse.getResource().containsKey("harness-example"));
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getProjectForGCS() {
+    GenericType<RestResponse<String>> artifactStreamType = new GenericType<RestResponse<String>>() {
+
+    };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_EXPLORATION_GCS);
+    RestResponse<String> restResponse = Setup.portal()
+                                            .auth()
+                                            .oauth2(bearerToken)
+                                            .queryParam("accountId", application.getAccountId())
+                                            .queryParam("settingId", settingAttribute.getUuid())
+                                            .contentType(ContentType.JSON)
+                                            .get("/settings/build-sources/project")
+                                            .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+  }
 }

@@ -25,6 +25,7 @@ import io.swagger.annotations.Api;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -469,6 +470,36 @@ public class SettingResource {
     List<BuildDetails> buildDetails = buildSourceService.getBuilds(artifactStreamId, settingId);
     buildDetails = buildDetails.stream().sorted(new BuildDetailsComparator()).collect(toList());
     return new RestResponse<>(buildDetails);
+  }
+
+  /**
+   * Get GCS projects
+   *
+   * @param settingId the setting id
+   * @return the project for the service account
+   */
+  @GET
+  @Path("build-sources/project")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getProject(@QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getProject(settingId));
+  }
+
+  /**
+   * Get GCS buckets
+   *
+   * @param projectId GCS project Id
+   * @param settingId the setting id
+   * @return list of buckets
+   */
+  @GET
+  @Path("build-sources/buckets")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getBuckets(
+      @QueryParam("projectId") @NotEmpty String projectId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getBuckets(projectId, settingId));
   }
 
   /**

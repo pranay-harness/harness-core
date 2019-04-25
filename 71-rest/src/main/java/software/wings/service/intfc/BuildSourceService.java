@@ -308,4 +308,25 @@ public interface BuildSourceService {
       @NotEmpty String settingId, String streamType, RepositoryType repositoryType) {
     throw new UnsupportedOperationException();
   }
+
+  /**
+   * Get project.
+   *
+   * @param settingId the setting id
+   * @return the project (now GCS only)
+   */
+  default String getProject(String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Get buckets.
+   *
+   * @param projectId the project id
+   * @param settingId the setting id
+   * @return the project (now GCS only)
+   */
+  default Map<String, String> getBuckets(String projectId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
 }
