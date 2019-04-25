@@ -42,7 +42,6 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -553,41 +552,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
 
     return configMapYaml;
-  }
-
-  @Override
-  public List<String> helmValueOverridesYamlFiles(String appId, String templateId) {
-    List<String> values = new ArrayList<>();
-
-    ServiceTemplate serviceTemplate = get(appId, templateId);
-    if (serviceTemplate != null) {
-      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
-      Environment env = environmentService.get(appId, serviceTemplate.getEnvId(), false);
-
-      if (isNotBlank(service.getHelmValueYaml())) {
-        values.add(service.getHelmValueYaml());
-      }
-
-      ApplicationManifest appManifest =
-          applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
-      addValuesYamlFromAppManifest(appManifest, values);
-
-      appManifest = applicationManifestService.getByEnvAndServiceId(
-          env.getAppId(), env.getUuid(), service.getUuid(), AppManifestKind.VALUES);
-      addValuesYamlFromAppManifest(appManifest, values);
-    }
-
-    return values;
-  }
-
-  private void addValuesYamlFromAppManifest(ApplicationManifest appManifest, List<String> values) {
-    if (appManifest != null && StoreType.Local.equals(appManifest.getStoreType())) {
-      ManifestFile manifestFile =
-          applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), VALUES_YAML_KEY);
-      if (manifestFile != null && isNotBlank(manifestFile.getFileContent())) {
-        values.add(manifestFile.getFileContent());
-      }
-    }
   }
 
   /* (non-Javadoc)

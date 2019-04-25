@@ -85,13 +85,13 @@ public class ServiceResourceTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetService() {
-    when(RESOURCE_SERVICE.get(APP_ID, SERVICE_ID, SetupStatus.COMPLETE)).thenReturn(aSERVICE);
+    when(RESOURCE_SERVICE.getWithHelmValues(APP_ID, SERVICE_ID, SetupStatus.COMPLETE)).thenReturn(aSERVICE);
     RestResponse<Service> restResponse = RESOURCES.client()
                                              .target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID))
                                              .request()
                                              .get(new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(RESOURCE_SERVICE).get(APP_ID, SERVICE_ID, SetupStatus.COMPLETE);
+    verify(RESOURCE_SERVICE).getWithHelmValues(APP_ID, SERVICE_ID, SetupStatus.COMPLETE);
   }
 
   /**
@@ -117,14 +117,14 @@ public class ServiceResourceTest {
   @Category(UnitTests.class)
   public void shouldUpdateService() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
-    when(RESOURCE_SERVICE.update(any(Service.class))).thenReturn(service);
+    when(RESOURCE_SERVICE.updateWithHelmValues(any(Service.class))).thenReturn(service);
     RestResponse<Service> restResponse =
         RESOURCES.client()
             .target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID))
             .request()
             .put(entity(service, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(RESOURCE_SERVICE).update(service);
+    verify(RESOURCE_SERVICE).updateWithHelmValues(service);
   }
 
   /**

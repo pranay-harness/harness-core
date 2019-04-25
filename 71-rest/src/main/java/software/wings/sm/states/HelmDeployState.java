@@ -811,11 +811,13 @@ public class HelmDeployState extends State {
     appManifestHelper.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
     // ToDo anshul - Remove this piece of code once the values yaml in service has been migrated to ManifestFiles format
-    ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, infrastructureMapping.getServiceTemplateId());
-    if (serviceTemplate != null) {
-      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
-      if (isNotBlank(service.getHelmValueYaml())) {
-        valuesFiles.put(K8sValuesLocation.Service, service.getHelmValueYaml());
+    if (!appManifestMap.containsKey(K8sValuesLocation.ServiceOverride)) {
+      ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, infrastructureMapping.getServiceTemplateId());
+      if (serviceTemplate != null) {
+        Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId(), false);
+        if (service != null && isNotBlank(service.getHelmValueYaml())) {
+          valuesFiles.put(K8sValuesLocation.ServiceOverride, service.getHelmValueYaml());
+        }
       }
     }
 
