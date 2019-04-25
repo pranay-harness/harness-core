@@ -44,6 +44,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -85,6 +86,7 @@ public class AlertServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
+    AlertServiceImpl.DISBLED_ALERT_TYPES = Collections.emptyList();
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
   }

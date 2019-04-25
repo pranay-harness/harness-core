@@ -21,6 +21,7 @@ import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
 import static software.wings.utils.Misc.getDurationString;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -67,6 +68,9 @@ public class AlertServiceImpl implements AlertService {
       DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED,
       RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError, InvalidKMS, CONTINUOUS_VERIFICATION_ALERT));
 
+  // should not be used liberally. Use only if some alert type is misbheaving and we want to prevent customer impact.
+  @VisibleForTesting static List<AlertType> DISBLED_ALERT_TYPES = Arrays.asList(NoEligibleDelegates);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private AssignDelegateService assignDelegateService;
@@ -105,6 +109,10 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    if (DISBLED_ALERT_TYPES.contains(alertType)) {
+      return;
+    }
+
     // TODO(raghu): Remove this CV check and implement in matches method
     if (!AlertType.CONTINUOUS_VERIFICATION_ALERT.equals(alertType)
         && findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
