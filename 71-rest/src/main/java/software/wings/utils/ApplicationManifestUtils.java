@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
@@ -33,6 +34,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.common.Constants;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -274,5 +276,36 @@ public class ApplicationManifestUtils {
     }
 
     return getValuesExpressionKeysFromMap(map, "", 0);
+  }
+
+  public Map<K8sValuesLocation, ApplicationManifest> getApplicationManifests(ExecutionContext context) {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+
+    ApplicationManifest serviceAppManifest = getApplicationManifestForService(context);
+    if (serviceAppManifest != null) {
+      appManifestMap.put(K8sValuesLocation.Service, getApplicationManifestForService(context));
+    }
+    appManifestMap.putAll(getValuesApplicationManifests(context));
+    return appManifestMap;
+  }
+
+  public ApplicationManifest getApplicationManifestForService(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    Application app = appService.get(context.getAppId());
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    Service service = serviceResourceService.get(app.getUuid(), serviceElement.getUuid());
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getK8sManifestByServiceId(app.getUuid(), serviceElement.getUuid());
+    if (service.getDeploymentType() != DeploymentType.HELM && applicationManifest == null) {
+      throw new InvalidRequestException("Manifests not found for service.");
+    }
+
+    return applicationManifest;
+  }
+
+  public boolean isValuesInHelmChartRepo(ExecutionContext context) {
+    ApplicationManifest applicationManifest = getApplicationManifestForService(context);
+    return applicationManifest != null && StoreType.HelmChartRepo.equals(applicationManifest.getStoreType());
   }
 }

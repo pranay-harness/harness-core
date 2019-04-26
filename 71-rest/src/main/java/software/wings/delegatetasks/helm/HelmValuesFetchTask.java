@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
@@ -64,7 +65,7 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
       if (isEmpty(files)) {
         executionLogCallback.saveExecutionLog("No values.yaml found", WARN);
       } else {
-        executionLogCallback.saveExecutionLog("\nSuccessfully fetched values.yaml");
+        executionLogCallback.saveExecutionLog("\nSuccessfully fetched values.yaml", INFO, SUCCESS);
         valuesFileContent = files.get(0).getFileContent();
       }
 
