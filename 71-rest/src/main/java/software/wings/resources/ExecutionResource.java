@@ -129,7 +129,7 @@ public class ExecutionResource {
 
     if (accountService.isCommunityAccount(accountId)) {
       pageRequest.addFilter(
-          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(3, "UTC"));
+          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(7, "UTC"));
     }
 
     final PageResponse<WorkflowExecution> workflowExecutions =

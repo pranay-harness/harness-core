@@ -869,7 +869,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                 .withLimit("10");
     if (accountService.isCommunityAccount(accountId)) {
       pageRequestBuilder.addFilter(
-          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(3, "UTC"));
+          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(7, "UTC"));
     }
     PageRequest<WorkflowExecution> pageRequest = pageRequestBuilder.build();
 
