@@ -3,6 +3,7 @@ package io.harness.eraro;
 import static java.util.stream.Collectors.joining;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.EXPECTATION_FAILED;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.GATEWAY_TIMEOUT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
@@ -245,6 +246,8 @@ public enum ErrorCode {
   VAULT_OPERATION_ERROR,
 
   UNSUPPORTED_OPERATION_EXCEPTION,
+
+  FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION(EXPECTATION_FAILED),
 
   GENERAL_ERROR,
 
