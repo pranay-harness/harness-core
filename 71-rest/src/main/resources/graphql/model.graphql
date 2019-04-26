@@ -29,7 +29,7 @@ type Environment {
 
 type EnvironmentConnection {
   pageInfo: PageInfo
-  nodes: [Application]
+  nodes: [Environment]
 }
 
 # Type for pipeline
