@@ -32,6 +32,7 @@ import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import okhttp3.internal.http.RealResponseBody;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -85,14 +86,14 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   private String accountId;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     delegateService = spy(new AppdynamicsDelegateServiceImpl());
     doReturn(appdynamicsRestClient).when(delegateService).getAppdynamicsRestClient(any(AppDynamicsConfig.class));
     when(delegateProxyFactory.get(eq(AppdynamicsDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(delegateService);
     doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
 
-    setInternalState(appdynamicsService, "delegateProxyFactory", delegateProxyFactory);
+    FieldUtils.writeField(appdynamicsService, "delegateProxyFactory", delegateProxyFactory, true);
     setInternalState(appdynamicsResource, "appdynamicsService", appdynamicsService);
     setInternalState(delegateService, "encryptionService", encryptionService);
     setInternalState(delegateService, "delegateLogService", delegateLogService);

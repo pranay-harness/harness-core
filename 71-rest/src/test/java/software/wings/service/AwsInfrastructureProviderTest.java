@@ -11,7 +11,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -33,6 +32,7 @@ import com.amazonaws.services.ec2.model.InstanceState;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,8 +85,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     MockitoAnnotations.initMocks(this);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(null);
-    setInternalState(infrastructureProvider, "secretManager", secretManager);
-    setInternalState(infrastructureProvider, "serviceResourceService", serviceResourceService);
+    FieldUtils.writeField(infrastructureProvider, "secretManager", secretManager, true);
+    FieldUtils.writeField(infrastructureProvider, "serviceResourceService", serviceResourceService, true);
   }
 
   @Test

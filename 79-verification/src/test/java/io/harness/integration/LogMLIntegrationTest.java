@@ -12,7 +12,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
@@ -35,6 +34,7 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
@@ -136,8 +136,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     serviceId = UUID.randomUUID().toString();
     delegateTaskId = UUID.randomUUID().toString();
     r = new Random(System.currentTimeMillis());
-    setInternalState(mgrAnalysisService, "wingsPersistence", wingsPersistence);
-    setInternalState(mgrAnalysisService, "dataStoreService", new MongoDataStoreServiceImpl(wingsPersistence));
+    FieldUtils.writeField(mgrAnalysisService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(
+        mgrAnalysisService, "dataStoreService", new MongoDataStoreServiceImpl(wingsPersistence), true);
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {

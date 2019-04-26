@@ -10,7 +10,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
@@ -34,6 +33,7 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,7 +85,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   private SumoConfig sumoConfig;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     accountId = generateUuid();
     appId = generateUuid();
     envId = generateUuid();
@@ -118,8 +118,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     cvConfigId = wingsPersistence.save(logsCVConfiguration);
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
-    setInternalState(continuousVerificationService, "cvConfigurationService", cvConfigurationService);
-    setInternalState(continuousVerificationService, "metricRegistry", metricRegistry);
+    FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
+    FieldUtils.writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
 
     when(delegateService.queueTask(anyObject()))
         .then(invocation -> wingsPersistence.save((DelegateTask) invocation.getArguments()[0]));
@@ -127,11 +127,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     software.wings.service.impl.analysis.ContinuousVerificationService managerVerificationService =
         new ContinuousVerificationServiceImpl();
-    setInternalState(managerVerificationService, "delegateService", delegateService);
-    setInternalState(managerVerificationService, "waitNotifyEngine", waitNotifyEngine);
-    setInternalState(managerVerificationService, "wingsPersistence", wingsPersistence);
-    setInternalState(managerVerificationService, "settingsService", settingsService);
-    setInternalState(managerVerificationService, "secretManager", secretManager);
+    FieldUtils.writeField(managerVerificationService, "delegateService", delegateService, true);
+    FieldUtils.writeField(managerVerificationService, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(managerVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(managerVerificationService, "settingsService", settingsService, true);
+    FieldUtils.writeField(managerVerificationService, "secretManager", secretManager, true);
 
     when(verificationManagerClient.triggerCVDataCollection(anyString(), anyObject(), anyLong(), anyLong()))
         .then(invocation -> {
@@ -150,7 +150,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       when(restCall.execute()).thenReturn(Response.success(true));
       return restCall;
     });
-    setInternalState(continuousVerificationService, "verificationManagerClient", verificationManagerClient);
+    FieldUtils.writeField(continuousVerificationService, "verificationManagerClient", verificationManagerClient, true);
   }
 
   @Test

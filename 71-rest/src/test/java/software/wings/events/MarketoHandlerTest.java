@@ -5,7 +5,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -17,6 +16,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,14 +49,14 @@ public class MarketoHandlerTest extends WingsBaseTest {
   private MarketoHandler marketoHandler;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     MarketoConfig marketoConfig = eventTestHelper.initializeMarketoConfig();
     marketoHandler = new MarketoHandler(marketoConfig, eventListener);
-    setInternalState(marketoHandler, "userService", userService);
-    setInternalState(marketoHandler, "marketoHelper", marketoHelper);
-    setInternalState(marketoHelper, "marketoConfig", marketoConfig);
-    setInternalState(marketoHelper, "accountService", accountService);
-    setInternalState(marketoHelper, "userService", userService);
+    FieldUtils.writeField(marketoHandler, "userService", userService, true);
+    FieldUtils.writeField(marketoHandler, "marketoHelper", marketoHelper, true);
+    FieldUtils.writeField(marketoHelper, "marketoConfig", marketoConfig, true);
+    FieldUtils.writeField(marketoHelper, "accountService", accountService, true);
+    FieldUtils.writeField(marketoHelper, "userService", userService, true);
     when(accountService.get(anyString())).thenReturn(account);
     when(accountService.save(any())).thenReturn(account);
     account = eventTestHelper.createAccount();

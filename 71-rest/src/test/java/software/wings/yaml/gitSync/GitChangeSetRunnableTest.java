@@ -14,6 +14,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -35,14 +36,15 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testShouldPerformStuckJobCheck() {
+  public void testShouldPerformStuckJobCheck() throws IllegalAccessException {
     assertTrue(gitChangeSetRunnable.shouldPerformStuckJobCheck());
 
     setInternalState(gitChangeSetRunnable, "lastTimestampForStuckJobCheck",
         new AtomicLong(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(120)));
     assertTrue(gitChangeSetRunnable.shouldPerformStuckJobCheck());
 
-    setInternalState(gitChangeSetRunnable, "lastTimestampForStuckJobCheck", new AtomicLong(System.currentTimeMillis()));
+    FieldUtils.writeField(
+        gitChangeSetRunnable, "lastTimestampForStuckJobCheck", new AtomicLong(System.currentTimeMillis()), true);
     assertFalse(gitChangeSetRunnable.shouldPerformStuckJobCheck());
   }
 

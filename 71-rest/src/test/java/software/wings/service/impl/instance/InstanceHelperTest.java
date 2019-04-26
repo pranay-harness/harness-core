@@ -24,6 +24,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.queue.Queue;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,7 +33,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -738,7 +738,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     InstanceHandlerFactory instanceHandlerFactory =
         spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
             awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler));
-    Whitebox.setInternalState(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory);
+    FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
       @Override
@@ -794,7 +794,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     InstanceHandlerFactory instanceHandlerFactory =
         spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
             awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler));
-    Whitebox.setInternalState(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory);
+    FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
       @Override

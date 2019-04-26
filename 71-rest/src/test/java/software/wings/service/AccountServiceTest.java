@@ -7,7 +7,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -24,6 +23,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -91,9 +91,9 @@ public class AccountServiceTest extends WingsBaseTest {
   private static final String HARNESS_NAME = "Harness";
 
   @Before
-  public void setup() {
-    setInternalState(licenseService, "accountService", accountService);
-    setInternalState(accountService, "licenseService", licenseService);
+  public void setup() throws IllegalAccessException {
+    FieldUtils.writeField(licenseService, "accountService", accountService, true);
+    FieldUtils.writeField(accountService, "licenseService", licenseService, true);
   }
 
   @Test

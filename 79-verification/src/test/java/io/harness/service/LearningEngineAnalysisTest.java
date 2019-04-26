@@ -10,7 +10,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -30,6 +29,7 @@ import io.harness.persistence.ReadPref;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -81,11 +81,11 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   private String stateExecutionId;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
-    setInternalState(timeSeriesAnalysisService, "managerClientHelper", managerClientHelper);
-    setInternalState(continuousVerificationService, "timeSeriesAnalysisService", timeSeriesAnalysisService);
+    FieldUtils.writeField(timeSeriesAnalysisService, "managerClientHelper", managerClientHelper, true);
+    FieldUtils.writeField(continuousVerificationService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
     Account account = anAccount().withAccountName(generateUUID()).build();
     account.setEncryptedLicenseInfo(
         EncryptionUtils.encrypt(LicenseUtil.convertToString(LicenseInfo.builder().accountType(AccountType.PAID).build())

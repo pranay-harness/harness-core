@@ -5,7 +5,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -17,6 +16,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,7 +58,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
   @Mock JobExecutionContext jobExecutionContext;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
@@ -104,8 +104,8 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
 
     metricAnalysisJob = new MetricAnalysisJob(timeSeriesAnalysisService, learningEngineService, managerClient);
 
-    setInternalState(metricAnalysisJob, "timeSeriesAnalysisService", timeSeriesAnalysisService);
-    setInternalState(metricAnalysisJob, "learningEngineService", learningEngineService);
+    FieldUtils.writeField(metricAnalysisJob, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
+    FieldUtils.writeField(metricAnalysisJob, "learningEngineService", learningEngineService, true);
   }
 
   @Test

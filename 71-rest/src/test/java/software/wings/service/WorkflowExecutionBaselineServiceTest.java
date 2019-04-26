@@ -10,7 +10,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -25,6 +24,7 @@ import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -647,7 +647,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetBaselineDetails() {
+  public void testGetBaselineDetails() throws IllegalAccessException {
     StateMachineExecutor stateMachineExecutor = Mockito.mock(StateMachineExecutor.class);
     int numOfWorkflowExecutions = 10;
     List<String> envIds = new ArrayList<>();
@@ -690,7 +690,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
           .thenReturn(executionContext);
     }
 
-    setInternalState(workflowExecutionService, "stateMachineExecutor", stateMachineExecutor);
+    FieldUtils.writeField(workflowExecutionService, "stateMachineExecutor", stateMachineExecutor, true);
 
     for (int i = 0; i < numOfWorkflowExecutions; i++) {
       WorkflowExecution workflowExecution =

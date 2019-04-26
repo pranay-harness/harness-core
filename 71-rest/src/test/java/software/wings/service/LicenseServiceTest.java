@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.Constants.HARNESS_NAME;
 
@@ -10,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,9 +38,9 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setup() {
-    setInternalState(licenseService, "accountService", accountService);
-    setInternalState(accountService, "licenseService", licenseService);
+  public void setup() throws IllegalAccessException {
+    FieldUtils.writeField(licenseService, "accountService", accountService, true);
+    FieldUtils.writeField(accountService, "licenseService", licenseService, true);
   }
 
   @Test

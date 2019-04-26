@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.smb;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -11,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,8 +42,8 @@ public class SmbServiceTest extends WingsBaseTest {
                                                  .build();
 
   @Before
-  public void setUp() {
-    setInternalState(smbService, "smbHelperService", smbHelperService);
+  public void setUp() throws IllegalAccessException {
+    FieldUtils.writeField(smbService, "smbHelperService", smbHelperService, true);
   }
 
   @Test

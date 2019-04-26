@@ -81,6 +81,9 @@
             <!-- use org.apache.commons.text.StrSubstitutor instead -->
             <property name="illegalClasses" value="org.apache.commons.lang3.text.StrSubstitutor"/>
 
+            <!-- use org.apache.commons.lang3.reflect.FieldUtils instead -->
+            <property name="illegalClasses" value="org.mockito.internal.util.reflection.Whitebox"/>
+
             <!-- use org.assertj.core.api.Assertions.assertThat instead -->
             <property name="illegalClasses" value="com.google.common.truth.Truth.assertThat,
                                                    com.shazam.shazamcrest.MatcherAssert.assertThat,

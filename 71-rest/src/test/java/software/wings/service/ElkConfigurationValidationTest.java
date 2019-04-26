@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -13,6 +12,7 @@ import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -46,12 +46,12 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   @Inject private ScmSecret scmSecret;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     accountId = UUID.randomUUID().toString();
     MockitoAnnotations.initMocks(this);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(elkDelegateService);
-    setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(elkDelegateService, "encryptionService", encryptionService);
+    FieldUtils.writeField(analysisService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(elkDelegateService, "encryptionService", encryptionService, true);
   }
 
   @Test

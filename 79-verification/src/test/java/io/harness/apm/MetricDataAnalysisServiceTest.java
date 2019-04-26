@@ -10,7 +10,6 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -26,9 +25,11 @@ import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
@@ -77,18 +78,16 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Mock private UsageMetricsHelper usageMetricsHelper;
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private TimeSeriesAnalysisService metricDataAnalysisService;
-  @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject @InjectMocks private TimeSeriesAnalysisService metricDataAnalysisService;
+  @Inject @InjectMocks private ContinuousVerificationService continuousVerificationService;
   private MetricDataAnalysisService managerAnalysisService;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
     when(usageMetricsHelper.getCVConfig(anyString())).thenReturn(mockCVConfig());
     when(usageMetricsHelper.getApplication(anyString())).thenReturn(mockApplication());
-    setInternalState(metricDataAnalysisService, "managerClientHelper", managerClientHelper);
-    setInternalState(metricDataAnalysisService, "usageMetricsHelper", usageMetricsHelper);
     accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
     appId = wingsPersistence.save(anApplication().name(generateUuid()).accountId(accountId).build());
     stateExecutionId = generateUuid();
@@ -98,9 +97,9 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     groupName = "groupName-";
     delegateTaskId = UUID.randomUUID().toString();
     managerAnalysisService = new MetricDataAnalysisServiceImpl();
-    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
-    setInternalState(continuousVerificationService, "verificationManagerClientHelper", managerClientHelper);
-    setInternalState(metricDataAnalysisService, "continuousVerificationService", continuousVerificationService);
+    FieldUtils.writeField(managerAnalysisService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(
+        metricDataAnalysisService, "continuousVerificationService", continuousVerificationService, true);
   }
 
   @Test
