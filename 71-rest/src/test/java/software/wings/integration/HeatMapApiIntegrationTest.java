@@ -11,6 +11,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -213,7 +214,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   //  @Test @Category(IntegrationTests.class)
+  // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
+  @Ignore
   public void testTimeSeries() {
     String url = API_BASE + "/cvdash" + VerificationConstants.TIMESERIES + "?accountId=" + accountId
         + "&appId=" + savedApp.getUuid() + "&cvConfigId=" + newRelicCVServiceConfiguration.getUuid()
