@@ -10,7 +10,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.reflect.Whitebox.setInternalState;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -21,12 +20,12 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -72,9 +71,9 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     initMocks(this);
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(secretManager, "kmsService", kmsService);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
+    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
+    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
   }
 
   @Test
@@ -182,12 +181,12 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     }
   }
 
-  private Thread startTransitionListener() {
+  private Thread startTransitionListener() throws IllegalAccessException {
     transitionEventListener = new KmsTransitionEventListener();
-    Whitebox.setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
-    Whitebox.setInternalState(transitionEventListener, "queueController", new ConfigurationController(1));
-    Whitebox.setInternalState(transitionEventListener, "queue", transitionKmsQueue);
-    Whitebox.setInternalState(transitionEventListener, "secretManager", secretManager);
+    FieldUtils.writeField(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1), true);
+    FieldUtils.writeField(transitionEventListener, "queueController", new ConfigurationController(1), true);
+    FieldUtils.writeField(transitionEventListener, "queue", transitionKmsQueue, true);
+    FieldUtils.writeField(transitionEventListener, "secretManager", secretManager, true);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();

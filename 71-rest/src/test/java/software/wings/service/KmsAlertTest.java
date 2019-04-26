@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -18,6 +17,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.KmsOperationException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,12 +72,12 @@ public class KmsAlertTest extends WingsBaseTest {
         .thenThrow(new KmsOperationException("reason"));
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class))).thenThrow(new KmsOperationException("reason"));
-    setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(secretManager, "kmsService", kmsService);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
-    setInternalState(vaultService, "kmsService", kmsService);
-    setInternalState(secretManager, "vaultService", vaultService);
+    FieldUtils.writeField(vaultService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
+    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
+    FieldUtils.writeField(vaultService, "kmsService", kmsService, true);
+    FieldUtils.writeField(secretManager, "vaultService", vaultService, true);
 
     accountId =
         wingsPersistence.save(Account.Builder.anAccount().withAccountName(UUID.randomUUID().toString()).build());

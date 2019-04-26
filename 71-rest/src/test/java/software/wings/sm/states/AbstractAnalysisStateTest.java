@@ -12,7 +12,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
@@ -27,6 +26,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -101,7 +101,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetLastExecutionNodes() throws NoSuchAlgorithmException, KeyManagementException {
+  public void testGetLastExecutionNodes()
+      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
       List<InstanceStatusSummary> instanceStatusSummaryList = new ArrayList<>();
@@ -145,9 +146,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
 
-    setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
-    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
-    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
+    FieldUtils.writeField(splunkV2State, "containerInstanceHandler", containerInstanceHandler, true);
+    FieldUtils.writeField(splunkV2State, "infraMappingService", infraMappingService, true);
+    FieldUtils.writeField(splunkV2State, "serviceResourceService", serviceResourceService, true);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
 
     Reflect.on(splunkV2State).set("stateExecutionService", stateExecutionService);
@@ -172,7 +173,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetLastExecutionNodesWithPhase() throws NoSuchAlgorithmException, KeyManagementException {
+  public void testGetLastExecutionNodesWithPhase()
+      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
       List<InstanceStatusSummary> instanceStatusSummaryList = new ArrayList<>();
@@ -240,9 +242,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
 
-    setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
-    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
-    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
+    FieldUtils.writeField(splunkV2State, "containerInstanceHandler", containerInstanceHandler, true);
+    FieldUtils.writeField(splunkV2State, "infraMappingService", infraMappingService, true);
+    FieldUtils.writeField(splunkV2State, "serviceResourceService", serviceResourceService, true);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Reflect.on(splunkV2State).set("stateExecutionService", stateExecutionService);
 
@@ -271,7 +273,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException {
+  public void testGetCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
       instanceElements.add(anInstanceElement()
@@ -290,8 +292,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
 
-    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
-    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
+    FieldUtils.writeField(splunkV2State, "infraMappingService", infraMappingService, true);
+    FieldUtils.writeField(splunkV2State, "serviceResourceService", serviceResourceService, true);
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
@@ -308,7 +310,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetCanaryNewNodesHelm() throws NoSuchAlgorithmException, KeyManagementException {
+  public void testGetCanaryNewNodesHelm()
+      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                         .withDeploymentType(DeploymentType.HELM.name())
@@ -332,8 +335,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
 
-    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
-    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
+    FieldUtils.writeField(splunkV2State, "infraMappingService", infraMappingService, true);
+    FieldUtils.writeField(splunkV2State, "serviceResourceService", serviceResourceService, true);
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {

@@ -8,7 +8,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -31,6 +30,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -86,10 +86,10 @@ public class EventPublishHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private EventPublishHelper eventPublishHelper = spy(EventPublishHelper.class);
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     account = eventTestHelper.createAccount();
     MarketoConfig marketoConfig = eventTestHelper.initializeMarketoConfig();
-    setInternalState(eventPublishHelper, "marketoConfig", marketoConfig);
+    FieldUtils.writeField(eventPublishHelper, "marketoConfig", marketoConfig, true);
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(accountService.getFromCache(ACCOUNT_ID)).thenReturn(account);
     when(accountService.save(any())).thenReturn(account);

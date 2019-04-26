@@ -2,7 +2,6 @@ package software.wings.helpers.ext.gcs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.api.client.util.Maps;
 import com.google.api.services.storage.Storage;
@@ -11,6 +10,7 @@ import com.google.api.services.storage.model.Buckets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,8 +38,8 @@ public class GcsServiceTest extends WingsBaseTest {
                                                  .build();
 
   @Before
-  public void setUp() {
-    setInternalState(gcsService, "gcpHelperService", gcpHelperService);
+  public void setUp() throws IllegalAccessException {
+    FieldUtils.writeField(gcsService, "gcpHelperService", gcpHelperService, true);
   }
 
   @Test

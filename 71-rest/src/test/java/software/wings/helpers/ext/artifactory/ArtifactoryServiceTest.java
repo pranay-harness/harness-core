@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.artifactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.utils.ArtifactType.RPM;
@@ -13,6 +12,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ListNotifyResponseData;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,8 +52,8 @@ public class ArtifactoryServiceTest {
   private ArtifactoryConfig artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
 
   @Before
-  public void setUp() {
-    setInternalState(artifactoryService, "encryptionService", new EncryptionServiceImpl());
+  public void setUp() throws IllegalAccessException {
+    FieldUtils.writeField(artifactoryService, "encryptionService", new EncryptionServiceImpl(), true);
   }
 
   @Test

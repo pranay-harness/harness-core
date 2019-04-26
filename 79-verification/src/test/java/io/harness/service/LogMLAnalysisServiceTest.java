@@ -9,7 +9,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.sm.StateType.ELK;
 
@@ -27,6 +26,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -116,7 +116,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Mock VerificationManagerClient verificationManagerClient;
 
   @Before
-  public void setup() throws IOException {
+  public void setup() throws IOException, IllegalAccessException {
     long seed = System.currentTimeMillis();
     logger.info("random seed: " + seed);
     r = new Random(seed);
@@ -132,27 +132,27 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
-    setInternalState(analysisService, "managerClient", verificationManagerClient);
+    FieldUtils.writeField(analysisService, "managerClient", verificationManagerClient, true);
 
     dataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
     managerAnalysisService = new AnalysisServiceImpl();
     cv24x7DashboardService = new CV24x7DashboardServiceImpl();
     cvConfigurationService = new CVConfigurationServiceImpl();
     WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
-    setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
-    setInternalState(managerAnalysisService, "dataStoreService", dataStoreService);
-    setInternalState(analysisService, "dataStoreService", dataStoreService);
+    FieldUtils.writeField(workflowExecutionService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(managerAnalysisService, "dataStoreService", dataStoreService, true);
+    FieldUtils.writeField(analysisService, "dataStoreService", dataStoreService, true);
 
-    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
-    setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
-    setInternalState(managerAnalysisService, "metricRegistry", metricRegistry);
-    setInternalState(managerAnalysisService, "cv24x7DashboardService", cv24x7DashboardService);
+    FieldUtils.writeField(managerAnalysisService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(managerAnalysisService, "workflowExecutionService", workflowExecutionService, true);
+    FieldUtils.writeField(managerAnalysisService, "metricRegistry", metricRegistry, true);
+    FieldUtils.writeField(managerAnalysisService, "cv24x7DashboardService", cv24x7DashboardService, true);
 
-    setInternalState(cv24x7DashboardService, "wingsPersistence", wingsPersistence);
-    setInternalState(cv24x7DashboardService, "analysisService", managerAnalysisService);
-    setInternalState(cv24x7DashboardService, "cvConfigurationService", cvConfigurationService);
+    FieldUtils.writeField(cv24x7DashboardService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(cv24x7DashboardService, "analysisService", managerAnalysisService, true);
+    FieldUtils.writeField(cv24x7DashboardService, "cvConfigurationService", cvConfigurationService, true);
 
-    setInternalState(cvConfigurationService, "wingsPersistence", wingsPersistence);
+    FieldUtils.writeField(cvConfigurationService, "wingsPersistence", wingsPersistence, true);
 
     AnalysisContext context =
         AnalysisContext.builder().serviceId(serviceId).stateExecutionId(stateExecutionId).appId(appId).build();

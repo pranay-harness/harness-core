@@ -3,7 +3,6 @@ package software.wings.helpers.ext.s3;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -15,6 +14,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import io.harness.category.element.UnitTests;
 import io.harness.waiter.ListNotifyResponseData;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,8 +50,8 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
       AwsConfig.builder().accessKey("access").secretKey("secret".toCharArray()).accountId("accountId").build();
 
   @Before
-  public void setUp() {
-    setInternalState(amazonS3Service, "awsHelperService", awsHelperService);
+  public void setUp() throws IllegalAccessException {
+    FieldUtils.writeField(amazonS3Service, "awsHelperService", awsHelperService, true);
   }
 
   @Test

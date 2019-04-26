@@ -16,7 +16,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -39,6 +38,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -149,7 +149,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Before
-  public void setup() throws IOException {
+  public void setup() throws IOException, IllegalAccessException {
     initMocks(this);
 
     Account account = getAccount();
@@ -187,15 +187,15 @@ public class SecretTextTest extends WingsBaseTest {
         .thenReturn(secretManagementDelegateService);
     when(delegateProxyFactory.get(eq(EncryptionService.class), any(SyncTaskContext.class)))
         .thenReturn(encryptionService);
-    setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(secretManager, "kmsService", kmsService);
-    setInternalState(secretManager, "vaultService", vaultService);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
-    setInternalState(vaultService, "kmsService", kmsService);
-    setInternalState(configService, "secretManager", secretManager);
-    setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
-    setInternalState(secretManagementResource, "secretManager", secretManager);
+    FieldUtils.writeField(vaultService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
+    FieldUtils.writeField(secretManager, "vaultService", vaultService, true);
+    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
+    FieldUtils.writeField(vaultService, "kmsService", kmsService, true);
+    FieldUtils.writeField(configService, "secretManager", secretManager, true);
+    FieldUtils.writeField(encryptionService, "secretManagementDelegateService", secretManagementDelegateService, true);
+    FieldUtils.writeField(secretManagementResource, "secretManager", secretManager, true);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 

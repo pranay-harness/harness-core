@@ -21,7 +21,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
@@ -48,6 +47,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -196,17 +196,17 @@ public class KmsTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(containerService.validate(any(ContainerServiceParams.class))).thenReturn(true);
     doNothing().when(newRelicService).validateConfig(anyObject(), anyObject(), anyObject());
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(managerDecryptionService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(secretManager, "kmsService", kmsService);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
-    setInternalState(configService, "secretManager", secretManager);
-    setInternalState(settingValidationService, "newRelicService", newRelicService);
-    setInternalState(settingsService, "settingValidationService", settingValidationService);
-    setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
-    setInternalState(infrastructureMappingService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(kmsResource, "kmsService", kmsService);
-    setInternalState(secretManagementResource, "secretManager", secretManager);
+    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(managerDecryptionService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
+    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
+    FieldUtils.writeField(configService, "secretManager", secretManager, true);
+    FieldUtils.writeField(settingValidationService, "newRelicService", newRelicService, true);
+    FieldUtils.writeField(settingsService, "settingValidationService", settingValidationService, true);
+    FieldUtils.writeField(encryptionService, "secretManagementDelegateService", secretManagementDelegateService, true);
+    FieldUtils.writeField(infrastructureMappingService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(kmsResource, "kmsService", kmsService, true);
+    FieldUtils.writeField(secretManagementResource, "secretManager", secretManager, true);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
   }
@@ -2218,7 +2218,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionKms() throws IOException, InterruptedException {
+  public void transitionKms() throws IOException, InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       KmsConfig fromConfig = getKmsConfig();
@@ -2299,7 +2299,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionAndDeleteKms() throws IOException, InterruptedException {
+  public void transitionAndDeleteKms() throws IOException, InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       KmsConfig fromConfig = getKmsConfig();
@@ -2362,7 +2362,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void transitionKmsForConfigFile() throws IOException, InterruptedException {
+  public void transitionKmsForConfigFile() throws IOException, InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       final long seed = System.currentTimeMillis();
@@ -3298,12 +3298,12 @@ public class KmsTest extends WingsBaseTest {
     return kmsConfig;
   }
 
-  private Thread startTransitionListener() {
+  private Thread startTransitionListener() throws IllegalAccessException {
     transitionEventListener = new KmsTransitionEventListener();
-    setInternalState(transitionEventListener, "timer", new TimerScheduledExecutorService());
-    setInternalState(transitionEventListener, "queueController", new ConfigurationController(1));
-    setInternalState(transitionEventListener, "queue", transitionKmsQueue);
-    setInternalState(transitionEventListener, "secretManager", secretManager);
+    FieldUtils.writeField(transitionEventListener, "timer", new TimerScheduledExecutorService(), true);
+    FieldUtils.writeField(transitionEventListener, "queueController", new ConfigurationController(1), true);
+    FieldUtils.writeField(transitionEventListener, "queue", transitionKmsQueue, true);
+    FieldUtils.writeField(transitionEventListener, "secretManager", secretManager, true);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();

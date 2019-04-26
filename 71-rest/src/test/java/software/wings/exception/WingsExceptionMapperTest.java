@@ -12,17 +12,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
 
-public class WingsExceptionMapperTest extends WingsBaseTest {
+public class WingsExceptionMapperTest extends WingsBaseTest implements MockableTestMixin {
   @Test
   @Category(UnitTests.class)
   public void sanity() throws IllegalAccessException {
@@ -94,15 +94,14 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void recursiveParamTest() {
+  public void recursiveParamTest() throws IllegalAccessException {
     WingsException exception = new WingsException(VAULT_OPERATION_ERROR, USER);
     exception.addParam("reason", "recursive call to ${reason}");
 
-    final WingsExceptionMapper mapper = new WingsExceptionMapper();
-
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(mapper, "logger", mockLogger);
+    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
 
+    final WingsExceptionMapper mapper = new WingsExceptionMapper();
     mapper.toResponse(exception); // should not throw.
   }
 }

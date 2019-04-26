@@ -36,6 +36,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -142,7 +143,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     //    assumeTrue(getClass().getClassLoader().getResource("vault_token.txt") != null);
     initMocks(this);
     appId = UUID.randomUUID().toString();
@@ -173,14 +174,14 @@ public class VaultTest extends WingsBaseTest {
     });
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
-    setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(vaultService, "kmsService", kmsService);
-    setInternalState(secretManager, "kmsService", kmsService);
-    setInternalState(secretManager, "vaultService", vaultService);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
-    setInternalState(configService, "secretManager", secretManager);
-    setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
+    FieldUtils.writeField(vaultService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(vaultService, "kmsService", kmsService, true);
+    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
+    FieldUtils.writeField(secretManager, "vaultService", vaultService, true);
+    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
+    FieldUtils.writeField(configService, "secretManager", secretManager, true);
+    FieldUtils.writeField(encryptionService, "secretManagementDelegateService", secretManagementDelegateService, true);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
@@ -1203,7 +1204,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionVault() throws IOException, InterruptedException {
+  public void transitionVault() throws IOException, InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
@@ -1283,7 +1284,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionAndDeleteVault() throws IOException, InterruptedException {
+  public void transitionAndDeleteVault() throws IOException, InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
@@ -1355,7 +1356,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionFromKmsToVault() throws IOException, InterruptedException {
+  public void transitionFromKmsToVault() throws IOException, InterruptedException, IllegalAccessException {
     if (isKmsEnabled) {
       return;
     }
@@ -1654,10 +1655,10 @@ public class VaultTest extends WingsBaseTest {
     }
   }
 
-  private Thread startTransitionListener() {
+  private Thread startTransitionListener() throws IllegalAccessException {
     transitionEventListener = new KmsTransitionEventListener();
-    setInternalState(transitionEventListener, "timer", new TimerScheduledExecutorService());
-    setInternalState(transitionEventListener, "queueController", new ConfigurationController(1));
+    FieldUtils.writeField(transitionEventListener, "timer", new TimerScheduledExecutorService(), true);
+    FieldUtils.writeField(transitionEventListener, "queueController", new ConfigurationController(1), true);
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);
     setInternalState(transitionEventListener, "secretManager", secretManager);
 
