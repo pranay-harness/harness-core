@@ -26,6 +26,7 @@ public class FeatureUsageViolation extends FeatureViolation {
   }
 
   @Value
+  @Builder
   public static class Usage {
     @NonNull @NotEmpty String entityId;
     @NonNull @NotEmpty EntityType entityType;

@@ -3,12 +3,14 @@ package software.wings.licensing.violations;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
+import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
 import software.wings.licensing.violations.checkers.UsersViolationChecker;
 
 @Getter
 @ToString
 public enum RestrictedFeature {
-  USERS(UsersViolationChecker.class);
+  USERS(UsersViolationChecker.class),
+  FLOW_CONTROL(FlowControlViolationChecker.class);
 
   private final Class<? extends FeatureViolationChecker> violationsCheckerClass;
 
