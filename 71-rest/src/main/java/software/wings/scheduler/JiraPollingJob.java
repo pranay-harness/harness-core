@@ -66,32 +66,33 @@ public class JiraPollingJob implements Job {
 
     if (rejectionField != null && rejectionValue != null) {
       logger.info(
-          "Polling Approval Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} , rejectionField {}, RejectionValue {}",
+          "Polling JIRA Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} , rejectionField {}, RejectionValue {}",
           approvalId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
     } else {
-      logger.info("Polling Approval Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} ",
-          approvalId, issueId, approvalField, approvalValue);
+      logger.info("Polling JIRA Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} ", approvalId,
+          issueId, approvalField, approvalValue);
     }
     try {
       JiraExecutionData jiraExecutionData = jiraHelperService.getApprovalStatus(
           connectorId, accountId, appId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
 
-      ExecutionStatus approval = jiraExecutionData.getExecutionStatus();
-      logger.info("Jira Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
-          workflowExecutionId);
+      ExecutionStatus issueStatus = jiraExecutionData.getExecutionStatus();
+      logger.info("Issue: {} Status from JIRA: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
+          issueId, issueStatus, jiraExecutionData.getCurrentStatus(), approvalId, workflowExecutionId);
 
-      if (approval == ExecutionStatus.SUCCESS || approval == ExecutionStatus.REJECTED) {
+      if (issueStatus == ExecutionStatus.SUCCESS || issueStatus == ExecutionStatus.REJECTED) {
         ApprovalDetails.Action action =
-            approval == ExecutionStatus.SUCCESS ? ApprovalDetails.Action.APPROVE : ApprovalDetails.Action.REJECT;
+            issueStatus == ExecutionStatus.SUCCESS ? ApprovalDetails.Action.APPROVE : ApprovalDetails.Action.REJECT;
 
-        jiraHelperService.approveWorkflow(action, approvalId, appId, workflowExecutionId, approval,
+        jiraHelperService.approveWorkflow(action, approvalId, appId, workflowExecutionId, issueStatus,
             jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
-      } else if (approval == ExecutionStatus.PAUSED) {
-        jiraHelperService.continuePauseWorkflow(approvalId, appId, workflowExecutionId, approval,
-            jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
+      } else if (issueStatus == ExecutionStatus.WAITING) {
+        logger.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
+            issueId, issueStatus, jiraExecutionData.getCurrentStatus());
       }
     } catch (Exception ex) {
-      logger.error("Exception in execute JiraPollingJob. approvalId: {}, workflowExecutionId: {} , issueId: {}",
+      logger.warn(
+          "Exception occurred while Polling Issue Status from JIRA approvalId: {}, workflowExecutionId: {} , issueId: {}",
           approvalId, workflowExecutionId, issueId, ex);
     }
   }
