@@ -7,10 +7,13 @@ import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
+import software.wings.yaml.setting.HelmRepoYaml;
 
 import java.util.Arrays;
 
@@ -44,5 +47,23 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   @Override
   public String getConnectorId() {
     return null;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends HelmRepoYaml {
+    private String url;
+    private String username;
+    private String password;
+
+    @Builder
+    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
+        UsageRestrictions.Yaml usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
+      this.url = url;
+      this.username = username;
+      this.password = password;
+    }
   }
 }

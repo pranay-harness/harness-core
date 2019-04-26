@@ -129,6 +129,8 @@ import software.wings.service.impl.yaml.handler.setting.artifactserver.Artifacto
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.GitConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.HelmRepoYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.HttpHelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.JenkinsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AwsConfigYamlHandler;
@@ -261,6 +263,11 @@ public class YamlModule extends AbstractModule {
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.JENKINS.name())
         .to(JenkinsConfigYamlHandler.class);
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.NEXUS.name()).to(NexusConfigYamlHandler.class);
+
+    MapBinder<String, HelmRepoYamlHandler> helmRepoYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, HelmRepoYamlHandler.class);
+    helmRepoYamlHandlerMapBinder.addBinding(SettingVariableTypes.HTTP_HELM_REPO.name())
+        .to(HttpHelmRepoConfigYamlHandler.class);
 
     MapBinder<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VerificationProviderYamlHandler.class);

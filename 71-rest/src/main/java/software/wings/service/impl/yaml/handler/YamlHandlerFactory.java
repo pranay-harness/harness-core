@@ -56,6 +56,7 @@ import software.wings.service.impl.yaml.handler.service.ApplicationManifestYamlH
 import software.wings.service.impl.yaml.handler.service.ManifestFileYamlHandler;
 import software.wings.service.impl.yaml.handler.service.ServiceYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.HelmRepoYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
@@ -70,6 +71,7 @@ import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.verification.CVConfigurationYamlHandler;
 
 import java.util.HashSet;
@@ -99,6 +101,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandler;
   @Inject private Map<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMap;
   @Inject private Map<String, CloudProviderYamlHandler> cloudProviderYamlHelperMap;
+  @Inject private Map<String, HelmRepoYamlHandler> helmRepoYamlHelperMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private EnvironmentYamlHandler environmentYamlHandler;
@@ -140,7 +143,11 @@ public class YamlHandlerFactory {
         yamlHandler = cloudProviderYamlHelperMap.get(subType);
         break;
       case ARTIFACT_SERVER:
-        yamlHandler = artifactServerYamlHelperMap.get(subType);
+        if (SettingVariableTypes.HTTP_HELM_REPO.name().equals(subType)) {
+          yamlHandler = helmRepoYamlHelperMap.get(subType);
+        } else {
+          yamlHandler = artifactServerYamlHelperMap.get(subType);
+        }
         break;
       case COLLABORATION_PROVIDER:
         yamlHandler = collaborationProviderYamlHelperMap.get(subType);
