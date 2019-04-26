@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -14,6 +13,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,7 +79,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     appId = appService.getAppByName(accountId, "Test Application").getUuid();
     serviceId = appsMap.get(appId).getServicePermissions().get(Action.READ).iterator().next();
     workflowId = appsMap.get(appId).getWorkflowPermissions().get(Action.READ).iterator().next();
-    setInternalState(continuousVerificationService, "featureFlagService", featureFlagService);
+    FieldUtils.writeField(continuousVerificationService, "featureFlagService", featureFlagService, true);
   }
 
   private void saveExecutions() {

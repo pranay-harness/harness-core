@@ -10,7 +10,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 
 import com.google.common.collect.Sets;
@@ -23,6 +22,7 @@ import io.harness.context.ContextElementType;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -96,7 +96,8 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Test
   @Category(IntegrationTests.class)
   @Ignore
-  public void testGetLastExecutionNodesECS() throws NoSuchAlgorithmException, KeyManagementException {
+  public void testGetLastExecutionNodesECS()
+      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     AwsConfig awsConfig = AwsConfig.builder()
                               .accessKey(scmSecret.decryptToString(new SecretName("aws_config_access_key_1")))
                               .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_config_secret_key_1")))
@@ -147,13 +148,13 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
-    setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
-    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
-    setInternalState(splunkV2State, "settingsService", settingsService);
-    setInternalState(splunkV2State, "secretManager", secretManager);
-    setInternalState(splunkV2State, "awsHelperService", awsHelperService);
-    setInternalState(splunkV2State, "appService", appService);
-    setInternalState(splunkV2State, "delegateProxyFactory", delegateProxyFactory);
+    FieldUtils.writeField(splunkV2State, "containerInstanceHandler", containerInstanceHandler, true);
+    FieldUtils.writeField(splunkV2State, "infraMappingService", infraMappingService, true);
+    FieldUtils.writeField(splunkV2State, "settingsService", settingsService, true);
+    FieldUtils.writeField(splunkV2State, "secretManager", secretManager, true);
+    FieldUtils.writeField(splunkV2State, "awsHelperService", awsHelperService, true);
+    FieldUtils.writeField(splunkV2State, "appService", appService, true);
+    FieldUtils.writeField(splunkV2State, "delegateProxyFactory", delegateProxyFactory, true);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertTrue(nodes.size() >= 1);

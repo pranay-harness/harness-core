@@ -3,7 +3,6 @@ package software.wings.service.impl.sumo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoLogicClient;
@@ -11,6 +10,7 @@ import com.sumologic.client.SumoServerException;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,10 +45,10 @@ public class SumoDelegateServiceImplTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testValidateConfigBadUrl() throws IOException {
+  public void testValidateConfigBadUrl() throws IOException, IllegalAccessException {
     when(sumoConfig.getSumoUrl()).thenReturn("htt//localhost:9000/");
     SumoDelegateServiceImpl sumoDelegateService = new SumoDelegateServiceImpl();
-    setInternalState(sumoDelegateService, "encryptionService", new EncryptionServiceImpl());
+    FieldUtils.writeField(sumoDelegateService, "encryptionService", new EncryptionServiceImpl(), true);
     String exceptionMsg = "";
     try {
       sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());

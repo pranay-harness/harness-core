@@ -13,7 +13,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
@@ -94,9 +93,9 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
 
     FieldUtils.writeField(appdynamicsService, "delegateProxyFactory", delegateProxyFactory, true);
-    setInternalState(appdynamicsResource, "appdynamicsService", appdynamicsService);
-    setInternalState(delegateService, "encryptionService", encryptionService);
-    setInternalState(delegateService, "delegateLogService", delegateLogService);
+    FieldUtils.writeField(appdynamicsResource, "appdynamicsService", appdynamicsService, true);
+    FieldUtils.writeField(delegateService, "encryptionService", encryptionService, true);
+    FieldUtils.writeField(delegateService, "delegateLogService", delegateLogService, true);
     accountId = UUID.randomUUID().toString();
   }
 

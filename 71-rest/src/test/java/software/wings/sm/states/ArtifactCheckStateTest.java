@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 
@@ -14,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,15 +43,15 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   private ArtifactCheckState artifactCheckState = new ArtifactCheckState("ArtifactCheckState");
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     appId = UUID.randomUUID().toString();
     workflowStandardParams = aWorkflowStandardParams().withAppId(appId).build();
-    setInternalState(workflowStandardParams, "artifactService", artifactService);
+    FieldUtils.writeField(workflowStandardParams, "artifactService", artifactService, true);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(context.getAppId()).thenReturn(appId);
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
-    setInternalState(artifactCheckState, "artifactService", artifactService);
-    setInternalState(artifactCheckState, "delayEventHelper", delayEventHelper);
+    FieldUtils.writeField(artifactCheckState, "artifactService", artifactService, true);
+    FieldUtils.writeField(artifactCheckState, "delayEventHelper", delayEventHelper, true);
   }
 
   @Test

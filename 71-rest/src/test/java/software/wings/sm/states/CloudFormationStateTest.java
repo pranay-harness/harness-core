@@ -14,7 +14,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -55,6 +54,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -215,7 +215,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     when(infrastructureProvisionerService.get(anyString(), anyString()))
         .thenReturn(
             CloudFormationInfrastructureProvisioner.builder()
@@ -271,9 +271,11 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
     when(settingsService.get(any())).thenReturn(awsConfig);
 
-    setInternalState(cloudFormationCreateStackState, "secretManager", secretManager);
-    setInternalState(cloudFormationCreateStackState, "templateExpressionProcessor", templateExpressionProcessor);
-    setInternalState(cloudFormationDeleteStackState, "templateExpressionProcessor", templateExpressionProcessor);
+    FieldUtils.writeField(cloudFormationCreateStackState, "secretManager", secretManager, true);
+    FieldUtils.writeField(
+        cloudFormationCreateStackState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    FieldUtils.writeField(
+        cloudFormationDeleteStackState, "templateExpressionProcessor", templateExpressionProcessor, true);
 
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(WorkflowExecution.builder().build());

@@ -19,7 +19,6 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
@@ -68,6 +67,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -181,7 +181,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(InfrastructureMapping.class)).thenReturn(updateOperations);
     when(query.filter(any(), any())).thenReturn(query);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(infrastructureMappingService, "secretManager", secretManager);
+    FieldUtils.writeField(infrastructureMappingService, "secretManager", secretManager, true);
 
     when(appService.get(APP_ID)).thenReturn(app);
     when(envService.get(APP_ID, ENV_ID, false)).thenReturn(env);

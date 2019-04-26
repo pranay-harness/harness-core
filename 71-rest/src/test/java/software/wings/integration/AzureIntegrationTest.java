@@ -1,7 +1,6 @@
 package software.wings.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -12,6 +11,7 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,8 +43,8 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Inject private EncryptionService encryptionService;
 
   @Before
-  public void setUp() {
-    setInternalState(azureHelperService, "encryptionService", encryptionService);
+  public void setUp() throws IllegalAccessException {
+    FieldUtils.writeField(azureHelperService, "encryptionService", encryptionService, true);
     clientId = scmSecret.decryptToString(new SecretName("azure_client_id"));
     tenantId = scmSecret.decryptToString(new SecretName("azure_tenant_id"));
     key = scmSecret.decryptToString(new SecretName("azure_key"));

@@ -11,7 +11,6 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -21,6 +20,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by peeyushaggarwal on 9/27/16.
  */
+@Slf4j
 public class ServiceVariableResourceTest {
   private static final String ACCOUNT_ID = UUID.randomUUID().toString();
   private static final ServiceVariableService VARIABLE_SERVICE = mock(ServiceVariableService.class);
@@ -70,9 +72,13 @@ public class ServiceVariableResourceTest {
   static {
     when(VARIABLE_SERVICE.save(anyObject())).then(AdditionalAnswers.returnsFirstArg());
     when(APP_SERVICE.get(anyString())).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
-    setInternalState(VARIABLE_RESOURCE, "serviceVariablesService", VARIABLE_SERVICE);
-    setInternalState(VARIABLE_RESOURCE, "appService", APP_SERVICE);
-    setInternalState(VARIABLE_RESOURCE, "authHandler", AUTH_HANDLER);
+    try {
+      FieldUtils.writeField(VARIABLE_RESOURCE, "serviceVariablesService", VARIABLE_SERVICE, true);
+      FieldUtils.writeField(VARIABLE_RESOURCE, "appService", APP_SERVICE, true);
+      FieldUtils.writeField(VARIABLE_RESOURCE, "authHandler", AUTH_HANDLER, true);
+    } catch (IllegalAccessException e) {
+      logger.error("", e);
+    }
     SERVICE_VARIABLE.setUuid(WingsTestConstants.SERVICE_VARIABLE_ID);
     SERVICE_VARIABLE.setAppId(APP_ID);
     when(AUTH_HANDLER.authorize(any(), any(), any())).thenReturn(true);

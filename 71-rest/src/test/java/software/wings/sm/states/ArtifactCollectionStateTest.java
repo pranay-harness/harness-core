@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -25,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -103,11 +103,11 @@ public class ArtifactCollectionStateTest {
   @Before
   public void setUp() throws Exception {
     artifactCollectionState.setArtifactStreamId(ARTIFACT_STREAM_ID);
-    setInternalState(executionContext, "variableProcessor", variableProcessor);
-    setInternalState(executionContext, "evaluator", expressionEvaluator);
-    setInternalState(workflowStandardParams, "appService", appService);
-    setInternalState(workflowStandardParams, "configuration", configuration);
-    setInternalState(workflowStandardParams, "accountService", accountService);
+    FieldUtils.writeField(executionContext, "variableProcessor", variableProcessor, true);
+    FieldUtils.writeField(executionContext, "evaluator", expressionEvaluator, true);
+    FieldUtils.writeField(workflowStandardParams, "appService", appService, true);
+    FieldUtils.writeField(workflowStandardParams, "configuration", configuration, true);
+    FieldUtils.writeField(workflowStandardParams, "accountService", accountService, true);
 
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://portalUrl");

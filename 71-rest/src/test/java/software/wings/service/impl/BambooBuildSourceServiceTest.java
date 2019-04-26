@@ -4,7 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
@@ -12,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -54,13 +54,13 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Inject private ScmSecret scmSecret;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     MockitoAnnotations.initMocks(this);
     when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
         .thenReturn(bambooBuildService);
-    setInternalState(buildSourceService, "delegateProxyFactory", delegateProxyFactory);
+    FieldUtils.writeField(buildSourceService, "delegateProxyFactory", delegateProxyFactory, true);
     settingAttribute =
         aSettingAttribute()
             .withName("bamboo")

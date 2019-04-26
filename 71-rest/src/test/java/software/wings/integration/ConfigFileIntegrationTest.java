@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -24,6 +23,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -85,7 +85,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setInternalState(configService, "secretManager", secretManager);
+    FieldUtils.writeField(configService, "secretManager", secretManager, true);
     loginAdminUser();
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(delegateService);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

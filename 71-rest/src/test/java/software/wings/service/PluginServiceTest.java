@@ -3,7 +3,6 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
@@ -15,6 +14,7 @@ import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -71,9 +71,9 @@ public class PluginServiceTest {
   @Mock private FeatureFlagService mockFeatureFlagService;
 
   @Before
-  public void setup() throws IOException {
+  public void setup() throws IOException, IllegalAccessException {
     initMocks(this);
-    setInternalState(pluginService, "featureFlagService", mockFeatureFlagService);
+    FieldUtils.writeField(pluginService, "featureFlagService", mockFeatureFlagService, true);
   }
 
   @Test

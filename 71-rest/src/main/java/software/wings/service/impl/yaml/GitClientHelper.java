@@ -13,8 +13,8 @@ import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Singleton;
 
-import groovy.lang.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;

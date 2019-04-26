@@ -16,7 +16,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
@@ -1659,8 +1658,8 @@ public class VaultTest extends WingsBaseTest {
     transitionEventListener = new KmsTransitionEventListener();
     FieldUtils.writeField(transitionEventListener, "timer", new TimerScheduledExecutorService(), true);
     FieldUtils.writeField(transitionEventListener, "queueController", new ConfigurationController(1), true);
-    setInternalState(transitionEventListener, "queue", transitionKmsQueue);
-    setInternalState(transitionEventListener, "secretManager", secretManager);
+    FieldUtils.writeField(transitionEventListener, "queue", transitionKmsQueue, true);
+    FieldUtils.writeField(transitionEventListener, "secretManager", secretManager, true);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();

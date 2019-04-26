@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
@@ -18,6 +17,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,7 +54,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   private List<String> serviceMethods = Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
@@ -63,19 +63,19 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     String serviceMethodsString = serviceMethods.get(0) + "\n" + serviceMethods.get(1);
     dynatraceState.setServiceMethods(serviceMethodsString);
     dynatraceState.setTimeDuration("15");
-    setInternalState(dynatraceState, "appService", appService);
-    setInternalState(dynatraceState, "configuration", configuration);
-    setInternalState(dynatraceState, "metricAnalysisService", metricDataAnalysisService);
-    setInternalState(dynatraceState, "settingsService", settingsService);
-    setInternalState(dynatraceState, "waitNotifyEngine", waitNotifyEngine);
-    setInternalState(dynatraceState, "delegateService", delegateService);
-    setInternalState(dynatraceState, "wingsPersistence", wingsPersistence);
-    setInternalState(dynatraceState, "secretManager", secretManager);
-    setInternalState(dynatraceState, "workflowExecutionService", workflowExecutionService);
-    setInternalState(dynatraceState, "continuousVerificationService", continuousVerificationService);
-    setInternalState(dynatraceState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
-    setInternalState(dynatraceState, "featureFlagService", featureFlagService);
-    setInternalState(dynatraceState, "versionInfoManager", versionInfoManager);
+    FieldUtils.writeField(dynatraceState, "appService", appService, true);
+    FieldUtils.writeField(dynatraceState, "configuration", configuration, true);
+    FieldUtils.writeField(dynatraceState, "metricAnalysisService", metricDataAnalysisService, true);
+    FieldUtils.writeField(dynatraceState, "settingsService", settingsService, true);
+    FieldUtils.writeField(dynatraceState, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(dynatraceState, "delegateService", delegateService, true);
+    FieldUtils.writeField(dynatraceState, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(dynatraceState, "secretManager", secretManager, true);
+    FieldUtils.writeField(dynatraceState, "workflowExecutionService", workflowExecutionService, true);
+    FieldUtils.writeField(dynatraceState, "continuousVerificationService", continuousVerificationService, true);
+    FieldUtils.writeField(dynatraceState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
+    FieldUtils.writeField(dynatraceState, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(dynatraceState, "versionInfoManager", versionInfoManager, true);
   }
 
   @Test
