@@ -47,11 +47,11 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   public Role save(Role role) {
-    Role savedRole = wingsPersistence.saveAndGet(Role.class, role);
+    wingsPersistence.save(role);
 
     // TODO: AUDIT: Once this entity is yamlized, this can be removed
     auditServiceHelper.reportForAuditingUsingAccountId(role.getAccountId(), null, role, Type.CREATE);
-    return savedRole;
+    return role;
   }
 
   /* (non-Javadoc)
