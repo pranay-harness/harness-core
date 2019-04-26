@@ -110,7 +110,7 @@ public class NotificationServiceTest extends WingsBaseTest {
             .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", APP_NAME))
             .build();
     notificationService.sendNotificationAsync(notification);
-    verify(wingsPersistence).saveAndGet(Notification.class, notification);
+    verify(wingsPersistence).save(notification);
     verify(notificationDispatcherService).dispatchNotification(any(), any());
     verifyNoMoreInteractions(wingsPersistence, injector);
   }

@@ -138,7 +138,8 @@ public class NotificationServiceImpl implements NotificationService {
       notification.getNotificationTemplateVariables().putAll(placeHolderData);
     }
 
-    return wingsPersistence.saveAndGet(Notification.class, notification);
+    wingsPersistence.save(notification);
+    return notification;
   }
 
   @Override

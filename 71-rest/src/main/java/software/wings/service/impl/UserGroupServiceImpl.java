@@ -45,6 +45,7 @@ import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.UserGroupUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AuthService;
@@ -240,6 +241,12 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup updateOverview(UserGroup userGroup) {
     Validator.notNullCheck("name", userGroup.getName());
+    UserGroup userGroupFromDB = get(userGroup.getAccountId(), userGroup.getUuid());
+    if (UserGroupUtils.isAdminUserGroup(userGroupFromDB)) {
+      throw new WingsException(
+          ErrorCode.UPDATE_NOT_ALLOWED, "Can not update name/description of Account Administrator user group");
+    }
+
     UpdateOperations<UserGroup> operations =
         wingsPersistence.createUpdateOperations(UserGroup.class).set("name", userGroup.getName());
     setUnset(operations, "description", userGroup.getDescription());
@@ -282,6 +289,12 @@ public class UserGroupServiceImpl implements UserGroupService {
                          .collect(Collectors.toSet());
     }
     UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
+
+    if (UserGroupUtils.isAdminUserGroup(existingUserGroup) && newMemberIds.size() < 1) {
+      throw new WingsException(
+          ErrorCode.UPDATE_NOT_ALLOWED, "Account Administrator user group must have at least one user");
+    }
+
     Set<String> existingMemberIds = isEmpty(existingUserGroup.getMemberIds())
         ? Sets.newHashSet()
         : Sets.newHashSet(existingUserGroup.getMemberIds());
