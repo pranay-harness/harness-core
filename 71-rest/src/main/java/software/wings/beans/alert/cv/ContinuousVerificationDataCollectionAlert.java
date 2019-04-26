@@ -2,6 +2,7 @@ package software.wings.beans.alert.cv;
 
 import lombok.Builder;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.alert.AlertData;
 import software.wings.verification.CVConfiguration;
 
@@ -16,8 +17,8 @@ public class ContinuousVerificationDataCollectionAlert implements AlertData {
 
   @Override
   public boolean matches(AlertData alertData) {
-    return cvConfiguration.getUuid().equals(
-        ((ContinuousVerificationDataCollectionAlert) alertData).cvConfiguration.getUuid());
+    return StringUtils.equals(cvConfiguration.getUuid(),
+        ((ContinuousVerificationDataCollectionAlert) alertData).getCvConfiguration().getUuid());
   }
 
   @Override

@@ -6,8 +6,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
@@ -25,36 +26,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Data
+@Builder
 public class NoEligibleDelegatesAlert implements AlertData {
   @Inject @Transient @SchemaIgnore private transient EnvironmentService environmentService;
-
   @Inject @Transient @SchemaIgnore private transient AppService appService;
-
   @Inject @Transient @SchemaIgnore private transient InfrastructureMappingService infrastructureMappingService;
-
   @Inject @Transient @SchemaIgnore private transient CatalogService catalogService;
 
+  private String accountId;
   private String appId;
   private String envId;
   private String infraMappingId;
   private TaskGroup taskGroup;
   private TaskType taskType;
-  @Getter @Setter private List<String> tags = new ArrayList<>();
+  @Default private List<String> tags = new ArrayList<>();
 
   @Override
   public boolean matches(AlertData alertData) {
     NoEligibleDelegatesAlert otherAlertData = (NoEligibleDelegatesAlert) alertData;
 
-    boolean match = taskGroup == otherAlertData.getTaskGroup() && taskType == otherAlertData.getTaskType()
-        && StringUtils.equals(appId, otherAlertData.getAppId()) && StringUtils.equals(envId, otherAlertData.getEnvId())
+    return StringUtils.equals(accountId, otherAlertData.getAccountId()) && taskGroup == otherAlertData.getTaskGroup()
+        && taskType == otherAlertData.getTaskType() && StringUtils.equals(appId, otherAlertData.getAppId())
+        && StringUtils.equals(envId, otherAlertData.getEnvId())
         && StringUtils.equals(infraMappingId, otherAlertData.getInfraMappingId());
-
-    if (match && isNotBlank(appId) && isNotBlank(envId)) {
-      match = environmentService.get(appId, envId, false).getEnvironmentType()
-          == environmentService.get(otherAlertData.getAppId(), otherAlertData.getEnvId(), false).getEnvironmentType();
-    }
-
-    return match;
   }
 
   @Override
@@ -91,101 +86,5 @@ public class NoEligibleDelegatesAlert implements AlertData {
       }
     }
     return taskGroup.name() + taskTypeName;
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  public String getEnvId() {
-    return envId;
-  }
-
-  public void setEnvId(String envId) {
-    this.envId = envId;
-  }
-
-  public String getInfraMappingId() {
-    return infraMappingId;
-  }
-
-  public void setInfraMappingId(String infraMappingId) {
-    this.infraMappingId = infraMappingId;
-  }
-
-  public TaskGroup getTaskGroup() {
-    return taskGroup;
-  }
-
-  public void setTaskGroup(TaskGroup taskGroup) {
-    this.taskGroup = taskGroup;
-  }
-
-  public TaskType getTaskType() {
-    return taskType;
-  }
-
-  public void setTaskType(TaskType taskType) {
-    this.taskType = taskType;
-  }
-
-  public static final class NoEligibleDelegatesAlertBuilder {
-    private NoEligibleDelegatesAlert noEligibleDelegatesAlert;
-
-    private NoEligibleDelegatesAlertBuilder() {
-      noEligibleDelegatesAlert = new NoEligibleDelegatesAlert();
-    }
-
-    public static NoEligibleDelegatesAlertBuilder aNoEligibleDelegatesAlert() {
-      return new NoEligibleDelegatesAlertBuilder();
-    }
-
-    public NoEligibleDelegatesAlertBuilder withAppId(String appId) {
-      noEligibleDelegatesAlert.setAppId(appId);
-      return this;
-    }
-
-    public NoEligibleDelegatesAlertBuilder withEnvId(String envId) {
-      noEligibleDelegatesAlert.setEnvId(envId);
-      return this;
-    }
-
-    public NoEligibleDelegatesAlertBuilder withInfraMappingId(String infraMappingId) {
-      noEligibleDelegatesAlert.setInfraMappingId(infraMappingId);
-      return this;
-    }
-
-    public NoEligibleDelegatesAlertBuilder withTaskGroup(TaskGroup taskGroup) {
-      noEligibleDelegatesAlert.setTaskGroup(taskGroup);
-      return this;
-    }
-
-    public NoEligibleDelegatesAlertBuilder withTaskType(TaskType taskType) {
-      noEligibleDelegatesAlert.setTaskType(taskType);
-      return this;
-    }
-
-    public NoEligibleDelegatesAlertBuilder withTags(List<String> tags) {
-      noEligibleDelegatesAlert.setTags(tags);
-      return this;
-    }
-
-    public NoEligibleDelegatesAlertBuilder but() {
-      return aNoEligibleDelegatesAlert()
-          .withAppId(noEligibleDelegatesAlert.getAppId())
-          .withEnvId(noEligibleDelegatesAlert.getEnvId())
-          .withInfraMappingId(noEligibleDelegatesAlert.getInfraMappingId())
-          .withTaskGroup(noEligibleDelegatesAlert.getTaskGroup())
-          .withTaskType(noEligibleDelegatesAlert.getTaskType())
-          .withTags(noEligibleDelegatesAlert.getTags());
-    }
-
-    public NoEligibleDelegatesAlert build() {
-      return noEligibleDelegatesAlert;
-    }
   }
 }

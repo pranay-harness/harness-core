@@ -47,7 +47,6 @@ import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.ECS_DELEGATE;
@@ -140,6 +139,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
+import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
@@ -1392,9 +1392,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return;
     }
 
-    DelegatePackage delegatePackage = getDelegataePackgeWithEncryptionConfig(task, task.getDelegateId());
+    DelegatePackage delegatePackage = getDelegataePackageWithEncryptionConfig(task, task.getDelegateId());
     CapabilityHelper.embedCapabilitiesInDelegateTask(task,
-        isEmpty(delegatePackage.getEncryptionConfigs()) ? EMPTY_LIST : delegatePackage.getEncryptionConfigs().values());
+        delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
+            ? EMPTY_LIST
+            : delegatePackage.getEncryptionConfigs().values());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
       logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
@@ -1434,12 +1436,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getData().getTaskType(), task.getAccountId());
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-          aNoEligibleDelegatesAlert()
-              .withAppId(task.getAppId())
-              .withEnvId(task.getEnvId())
-              .withInfraMappingId(task.getInfrastructureMappingId())
-              .withTaskGroup(TaskType.valueOf(task.getData().getTaskType()).getTaskGroup())
-              .withTaskType(TaskType.valueOf(task.getData().getTaskType()))
+          NoEligibleDelegatesAlert.builder()
+              .accountId(task.getAccountId())
+              .appId(task.getAppId())
+              .envId(task.getEnvId())
+              .infraMappingId(task.getInfrastructureMappingId())
+              .taskGroup(TaskType.valueOf(task.getData().getTaskType()).getTaskGroup())
+              .taskType(TaskType.valueOf(task.getData().getTaskType()))
               .build());
     }
 
@@ -1681,7 +1684,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return DelegatePackage.builder().delegateTask(delegateTask).build();
   }
 
-  private DelegatePackage getDelegataePackgeWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
+  private DelegatePackage getDelegataePackageWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
     try {
       if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
         return resolvePreAssignmentExpressions(delegateTask, delegateId);

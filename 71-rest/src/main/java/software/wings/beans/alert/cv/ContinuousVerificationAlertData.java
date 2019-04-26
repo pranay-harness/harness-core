@@ -3,6 +3,7 @@ package software.wings.beans.alert.cv;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.alert.AlertData;
@@ -29,8 +30,11 @@ public class ContinuousVerificationAlertData implements AlertData {
 
   @Override
   public boolean matches(AlertData alertData) {
-    return cvConfiguration.getUuid().equals(
-        ((ContinuousVerificationAlertData) alertData).getCvConfiguration().getUuid());
+    ContinuousVerificationAlertData other = (ContinuousVerificationAlertData) alertData;
+
+    return StringUtils.equals(cvConfiguration.getUuid(), other.getCvConfiguration().getUuid())
+        && StringUtils.equals(portalUrl, other.getPortalUrl()) && StringUtils.equals(accountId, other.getAccountId())
+        && analysisStartTime == other.getAnalysisStartTime() && analysisEndTime == other.getAnalysisEndTime();
   }
 
   @Override
