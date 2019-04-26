@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;
+import io.harness.testframework.framework.constants.FrameworkConstants;
 import io.harness.testframework.framework.email.mailinator.MailinatorInbox;
 import io.harness.testframework.framework.matchers.MailinatorEmailMatcher;
 import io.harness.testframework.restutils.MailinatorRestUtils;
@@ -101,5 +102,13 @@ public class TestUtils {
     Gson gson = new Gson();
     String jsonString = gson.toJson(alertNotificationRule);
     return gson.fromJson(jsonString, JsonObject.class);
+  }
+
+  public static String getExecutionEnvironment() {
+    return System.getProperty("test.env", FrameworkConstants.LOCAL_ENV);
+  }
+
+  public static String getDecryptedValue(String secretKey) {
+    return new ScmSecret().decryptToString(new SecretName(secretKey));
   }
 }
