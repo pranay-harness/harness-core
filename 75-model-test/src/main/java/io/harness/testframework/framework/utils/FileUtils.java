@@ -60,7 +60,7 @@ public class FileUtils {
     File file = new File(config.toString());
     if (file.exists()) {
       logger.info("Deleting the config file as all the tests are completed : " + file.getName());
-      if (file.delete()) {
+      if (!file.delete()) {
         logger.error("Configuration files was not deleted");
       }
     }
