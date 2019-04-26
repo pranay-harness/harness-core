@@ -80,8 +80,10 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest.HelmInstallCommandRequestBuilder;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
+import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
+import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
@@ -141,7 +143,7 @@ public class HelmDeployState extends State {
   @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private transient GitConfigHelperService gitConfigHelperService;
   @Inject private transient ApplicationManifestService applicationManifestService;
-  @Inject private ApplicationManifestUtils appManifestHelper;
+  @Inject private transient ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient HelmChartConfigHelperService helmChartConfigHelperService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
@@ -181,15 +183,20 @@ public class HelmDeployState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
     boolean valuesInGit = false;
+    boolean valuesInHelmChartRepo = false;
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
     if (HELM_DEPLOY.name().equals(this.getStateType())) {
-      appManifestMap = appManifestHelper.getValuesApplicationManifests(context);
-      valuesInGit = appManifestHelper.isValuesInGit(appManifestMap);
+      appManifestMap = applicationManifestUtils.getApplicationManifests(context);
+      valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
+      valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
     }
 
-    Activity activity = createActivity(context, getCommandUnits(valuesInGit));
+    Activity activity = createActivity(context, getCommandUnits(valuesInGit, valuesInHelmChartRepo));
 
+    if (valuesInHelmChartRepo) {
+      return executeHelmValuesFetchTask(context, activity.getUuid());
+    }
     if (valuesInGit) {
       return executeGitTask(context, activity.getUuid(), appManifestMap);
     }
@@ -197,10 +204,10 @@ public class HelmDeployState extends State {
     return executeHelmTask(context, activity.getUuid(), appManifestMap);
   }
 
-  protected List<CommandUnit> getCommandUnits(boolean valuesInGit) {
+  protected List<CommandUnit> getCommandUnits(boolean valuesInGit, boolean valuesInHelmChartRepo) {
     List<CommandUnit> commandUnits = new ArrayList<>();
 
-    if (valuesInGit) {
+    if (valuesInGit || valuesInHelmChartRepo) {
       commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.FetchFiles));
     }
 
@@ -357,15 +364,53 @@ public class HelmDeployState extends State {
 
     TaskType taskType = helmStateExecutionData.getCurrentTaskType();
     switch (taskType) {
+      case HELM_VALUES_FETCH:
+        return handleAsyncResponseForHelmFetchTask(context, response);
       case GIT_COMMAND:
         return handleAsyncResponseForGitFetchFilesTask(context, response);
-
       case HELM_COMMAND_TASK:
         return handleAsyncResponseForHelmTask(context, response);
 
       default:
         throw new WingsException("Unhandled task type " + taskType);
     }
+  }
+
+  private ExecutionResponse handleAsyncResponseForHelmFetchTask(
+      ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String activityId = getActivityId(context);
+    HelmValuesFetchTaskResponse executionResponse = (HelmValuesFetchTaskResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
+                                                                                             : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return anExecutionResponse().withExecutionStatus(executionStatus).build();
+    }
+
+    if (isNotBlank(executionResponse.getValuesFileContent())) {
+      HelmDeployStateExecutionData helmDeployStateExecutionData =
+          (HelmDeployStateExecutionData) context.getStateExecutionData();
+      helmDeployStateExecutionData.getValuesFiles().put(
+          K8sValuesLocation.Service, executionResponse.getValuesFileContent());
+    }
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        applicationManifestUtils.getValuesApplicationManifests(context);
+
+    boolean valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
+    if (valuesInGit) {
+      return executeGitTask(context, activityId, appManifestMap);
+    } else {
+      return executeHelmTask(context, activityId, appManifestMap);
+    }
+  }
+
+  public String getActivityId(ExecutionContext context) {
+    return ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
 
   @Override
@@ -689,9 +734,9 @@ public class HelmDeployState extends State {
     Application app = appService.get(context.getAppId());
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
-        appManifestHelper.createGitFetchFilesTaskParams(context, app, appManifestMap);
+        applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
-    appManifestHelper.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
+    applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
@@ -777,7 +822,7 @@ public class HelmDeployState extends State {
       ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
-    String activityId = ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
+    String activityId = getActivityId(context);
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
@@ -790,7 +835,7 @@ public class HelmDeployState extends State {
     }
 
     Map<K8sValuesLocation, String> valuesFiles =
-        appManifestHelper.getValuesFilesFromGitFetchFilesResponse(executionResponse);
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(executionResponse);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
     helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
@@ -809,7 +854,7 @@ public class HelmDeployState extends State {
       valuesFiles.putAll(helmDeployStateExecutionData.getValuesFiles());
     }
 
-    appManifestHelper.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
     // ToDo anshul - Remove this piece of code once the values yaml in service has been migrated to ManifestFiles format
     if (!appManifestMap.containsKey(K8sValuesLocation.ServiceOverride)) {
@@ -867,5 +912,52 @@ public class HelmDeployState extends State {
     }
 
     return valuesList;
+  }
+
+  public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId) {
+    Application app = appService.get(context.getAppId());
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters = getHelmValuesFetchTaskParameters(context, activityId);
+
+    String waitId = generateUuid();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .waitId(waitId)
+                                    .async(true)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.HELM_VALUES_FETCH.name())
+                                              .parameters(new Object[] {helmValuesFetchTaskParameters})
+                                              .timeout(TimeUnit.MINUTES.toMillis(10))
+                                              .build())
+                                    .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+
+    return ExecutionResponse.Builder.anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Arrays.asList(waitId))
+        .withStateExecutionData(HelmDeployStateExecutionData.builder()
+                                    .activityId(activityId)
+                                    .commandName(HELM_COMMAND_NAME)
+                                    .currentTaskType(TaskType.HELM_VALUES_FETCH)
+                                    .build())
+        .withDelegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
+    ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
+    if (!StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())) {
+      return null;
+    }
+
+    return HelmValuesFetchTaskParameters.builder()
+        .accountId(context.getAccountId())
+        .appId(context.getAppId())
+        .activityId(activityId)
+        .helmChartConfigTaskParams(
+            helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .build();
   }
 }

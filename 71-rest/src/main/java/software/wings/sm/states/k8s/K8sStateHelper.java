@@ -45,7 +45,6 @@ import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
-import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
@@ -237,25 +236,6 @@ public class K8sStateHelper {
         .build();
   }
 
-  public Map<K8sValuesLocation, ApplicationManifest> getApplicationManifests(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    Application app = appService.get(context.getAppId());
-    ServiceElement serviceElement = phaseElement.getServiceElement();
-
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
-
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(app.getUuid(), serviceElement.getUuid());
-    if (applicationManifest == null) {
-      throw new InvalidRequestException("Manifests not found for service.");
-    }
-    appManifestMap.put(K8sValuesLocation.Service, applicationManifest);
-
-    appManifestMap.putAll(applicationManifestUtils.getValuesApplicationManifests(context));
-
-    return appManifestMap;
-  }
-
   public boolean doManifestsUseArtifact(String appId, String infraMappingId) {
     InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infraMapping == null) {
@@ -433,9 +413,10 @@ public class K8sStateHelper {
     try {
       k8sStateExecutor.validateParameters(context);
 
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap = getApplicationManifests(context);
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+          applicationManifestUtils.getApplicationManifests(context);
       boolean valuesInGit = isValuesInGit(appManifestMap);
-      boolean valuesInHelmChartRepo = isValuesInHelmChartRepo(context);
+      boolean valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
 
       Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
           activityService, k8sStateExecutor.commandUnitList(valuesInGit || valuesInHelmChartRepo));
@@ -638,7 +619,7 @@ public class K8sStateHelper {
   }
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
-    ApplicationManifest applicationManifest = getApplicationManifestForService(context);
+    ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
     if (!StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())) {
       return null;
     }
@@ -651,26 +632,6 @@ public class K8sStateHelper {
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
         .workflowExecutionId(context.getWorkflowExecutionId())
         .build();
-  }
-
-  private ApplicationManifest getApplicationManifestForService(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    Application app = appService.get(context.getAppId());
-    ServiceElement serviceElement = phaseElement.getServiceElement();
-
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(app.getUuid(), serviceElement.getUuid());
-    if (applicationManifest == null) {
-      throw new InvalidRequestException("Application manifest not found for service.");
-    }
-
-    return applicationManifest;
-  }
-
-  private boolean isValuesInHelmChartRepo(ExecutionContext context) {
-    ApplicationManifest applicationManifest = getApplicationManifestForService(context);
-
-    return StoreType.HelmChartRepo.equals(applicationManifest.getStoreType());
   }
 
   private ExecutionResponse handleAsyncResponseForHelmFetchTask(
@@ -693,7 +654,8 @@ public class K8sStateHelper {
       k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, executionResponse.getValuesFileContent());
     }
 
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = getApplicationManifests(context);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        applicationManifestUtils.getApplicationManifests(context);
 
     boolean valuesInGit = isValuesInGit(appManifestMap);
     if (valuesInGit) {

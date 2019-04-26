@@ -78,7 +78,8 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   }
 
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        k8sStateHelper.applicationManifestUtils.getApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
     boolean inCanaryFlow = false;
