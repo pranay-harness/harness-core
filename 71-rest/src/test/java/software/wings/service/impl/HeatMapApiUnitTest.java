@@ -272,9 +272,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     });
   }
 
+  // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   @Category(UnitTests.class)
+  @Ignore
   public void testTimeSeries() {
     final int DURATION_IN_HOURS = 12;
 
@@ -844,9 +846,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals(expectedTimeSeries, actualTimeSeries);
   }
 
+  // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   @Category(UnitTests.class)
+  @Ignore
   public void testRiskArrayEndpointContainment() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
