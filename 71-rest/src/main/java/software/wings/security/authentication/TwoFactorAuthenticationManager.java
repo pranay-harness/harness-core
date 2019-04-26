@@ -100,10 +100,10 @@ public class TwoFactorAuthenticationManager {
   }
 
   private boolean isAllowed2FAEnable(User user) {
-    return CollectionUtils.isEmpty(user.getAccounts()) || !isPrimaryAccountLite(user);
+    return CollectionUtils.isEmpty(user.getAccounts()) || !isPrimaryAccountCommunity(user);
   }
 
-  private boolean isPrimaryAccountLite(User user) {
+  private boolean isPrimaryAccountCommunity(User user) {
     return getPrimaryAccount(user).map(account -> accountService.isCommunityAccount(account.getUuid())).orElse(false);
   }
 

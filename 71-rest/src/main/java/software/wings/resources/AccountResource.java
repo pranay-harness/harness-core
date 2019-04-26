@@ -3,43 +3,45 @@ package software.wings.resources;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ErrorCode;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+import io.harness.rest.RestResponse.Builder;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountSalesContactsInfo;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
+import software.wings.beans.FeatureViolation;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.User;
-import software.wings.beans.governance.GovernanceConfig;
 import software.wings.licensing.LicenseService;
+import software.wings.licensing.violations.FeatureViolationsService;
+import software.wings.licensing.violations.RestrictedFeature;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheHelper;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -63,6 +65,8 @@ public class AccountResource {
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private UserService userService;
   @Inject private TOTPAuthHandler totpHandler;
+  @Inject private HarnessUserGroupService harnessUserGroupService;
+  @Inject private FeatureViolationsService featureViolationsService;
 
   @GET
   @Path("{accountId}/status")
@@ -145,46 +149,34 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Boolean> updateAccountLicense(
       @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User not allowed to update account license");
-    if (response == null) {
-      response = new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
-    }
-    return response;
-  }
-
-  @PUT
-  @Path("accountType")
-  public RestResponse<Boolean> makeCommunity(
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("type") @NotEmpty String type) {
-    if (!accountService.isFeatureFlagEnabled(FeatureName.HARNESS_LITE.name(), accountId)) {
-      throw new InvalidRequestException("HARNESS_LITE feature is disabled");
+    User authenticatedUser = UserThreadLocal.get();
+    if (authenticatedUser == null) {
+      throw new InvalidRequestException("Invalid User");
     }
 
-    if (!AccountType.isValid(type)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Type");
+    Optional<String> currentAccountType = accountService.getAccountType(accountId);
+    String newAccountType = licenseInfo.getAccountType();
+    boolean accountTransitionFromTrialToCommunity = currentAccountType.isPresent()
+        && AccountType.TRIAL.equals(currentAccountType.get()) && newAccountType.equals(AccountType.COMMUNITY);
+
+    if (!featureViolationsService.getViolations(accountId, licenseInfo.getAccountType()).isEmpty()) {
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder()
+                  .message("Account is using restricted features. Fix the violations before proceeding.")
+                  .build()))
+          .build();
     }
 
-    cacheHelper.getUserPermissionInfoCache().clear();
-    Account account = accountService.get(accountId);
-
-    if (type.equals(AccountType.COMMUNITY)) {
-      governanceConfigService.update(accountId, GovernanceConfig.builder().deploymentFreeze(false).build());
-      accountService.updateTwoFactorEnforceInfo(accountId, false);
-      List<User> usersWithThisPrimaryAccount = userService.getUsersOfAccount(accountId)
-                                                   .stream()
-                                                   .filter(u -> u.getAccounts().get(0).getUuid().equals(accountId))
-                                                   .collect(Collectors.toList());
-      for (User u : usersWithThisPrimaryAccount) {
-        totpHandler.disableTwoFactorAuthentication(u);
-      }
-      account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
-      accountService.update(account);
+    if (harnessUserGroupService.isHarnessSupportUser(authenticatedUser.getUuid())
+        || (accountTransitionFromTrialToCommunity && authenticatedUser.isAccountAdmin(accountId))) {
+      return new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
     }
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    licenseInfo.setAccountType(type);
 
-    return new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
+    return Builder.aRestResponse()
+        .withResponseMessages(
+            Lists.newArrayList(ResponseMessage.builder().message("User not allowed to update account license").build()))
+        .build();
   }
 
   @PUT
@@ -270,5 +262,21 @@ public class AccountResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<Account> getAccount(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.getFromCache(accountId));
+  }
+
+  @GET
+  @Path("{accountId}/license-violations")
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @Timed
+  public RestResponse<List<FeatureViolation>> getLicenseViolations(@PathParam("accountId") @NotEmpty String accountId,
+      @QueryParam("targetAccountType") @NotEmpty String targetAccountType) {
+    return new RestResponse<>(featureViolationsService.getViolations(accountId, targetAccountType));
+  }
+
+  @GET
+  @Path("{accountId}/restricted-features")
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<List<RestrictedFeature>> getRestrictedFeatures(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(featureViolationsService.getRestrictedFeatures(accountId));
   }
 }
