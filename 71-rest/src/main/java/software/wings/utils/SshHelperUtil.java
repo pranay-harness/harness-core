@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.CONNECTION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_KEY;
@@ -22,7 +23,6 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import com.jcraft.jsch.JSchException;
 import com.sun.mail.iap.ConnectionException;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.netty.channel.ConnectTimeoutException;
 import software.wings.beans.BastionConnectionAttributes;
@@ -142,27 +142,38 @@ public class SshHelperUtil {
     HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) hostConnectionSetting.getValue();
 
     if (executorType.equals(KEY_AUTH)) {
-      if (EmptyPredicate.isNotEmpty(hostConnectionAttributes.getKey())) {
+      if (isNotEmpty(hostConnectionAttributes.getKey())) {
         builder.withKey(new String(hostConnectionAttributes.getKey()).toCharArray());
       }
+
+      if (isNotEmpty(hostConnectionAttributes.getPassphrase())) {
+        builder.withKeyPassphrase(new String(hostConnectionAttributes.getPassphrase()).toCharArray());
+      }
+
       builder.withUserName(hostConnectionAttributes.getUserName())
           .withPort(hostConnectionAttributes.getSshPort())
           .withKeyName(hostConnectionSetting.getUuid())
           .withPassword(null)
           .withKeyLess(hostConnectionAttributes.isKeyless())
-          .withKeyPath(hostConnectionAttributes.getKeyPath())
-          .withKeyPassphrase(hostConnectionAttributes.getPassphrase());
+          .withKeyPath(hostConnectionAttributes.getKeyPath());
     } else if (KERBEROS.equals(hostConnectionAttributes.getAuthenticationScheme())) {
       KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
-      builder.withPassword(hostConnectionAttributes.getKerberosPassword())
-          .withAuthenticationScheme(KERBEROS)
+
+      if (isNotEmpty(hostConnectionAttributes.getKerberosPassword())) {
+        builder.withPassword(new String(hostConnectionAttributes.getKerberosPassword()).toCharArray());
+      }
+
+      builder.withAuthenticationScheme(KERBEROS)
           .withKerberosConfig(kerberosConfig)
           .withPort(hostConnectionAttributes.getSshPort());
     } else if (USER_PASSWORD.equals(hostConnectionAttributes.getAccessType())) {
+      if (isNotEmpty(hostConnectionAttributes.getSshPassword())) {
+        builder.withSshPassword(new String(hostConnectionAttributes.getSshPassword()).toCharArray());
+      }
+
       builder.withAuthenticationScheme(AuthenticationScheme.SSH_KEY)
           .withAccessType(hostConnectionAttributes.getAccessType())
           .withUserName(hostConnectionAttributes.getUserName())
-          .withSshPassword(hostConnectionAttributes.getSshPassword())
           .withPort(hostConnectionAttributes.getSshPort());
     }
 
@@ -170,11 +181,18 @@ public class SshHelperUtil {
       BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) bastionHostConnectionSetting.getValue();
       Builder sshSessionConfig = aSshSessionConfig()
                                      .withHost(bastionAttrs.getHostName())
-                                     .withKey(bastionAttrs.getKey())
                                      .withKeyName(bastionHostConnectionSetting.getUuid())
                                      .withUserName(bastionAttrs.getUserName())
-                                     .withPort(bastionAttrs.getSshPort())
-                                     .withKeyPassphrase(bastionAttrs.getPassphrase());
+                                     .withPort(bastionAttrs.getSshPort());
+
+      if (isNotEmpty(bastionAttrs.getKey())) {
+        sshSessionConfig.withKey(new String(bastionAttrs.getKey()).toCharArray());
+      }
+
+      if (isNotEmpty(bastionAttrs.getPassphrase())) {
+        sshSessionConfig.withKeyPassphrase(new String(bastionAttrs.getPassphrase()).toCharArray());
+      }
+
       builder.withBastionHostConfig(sshSessionConfig.build());
     }
   }
