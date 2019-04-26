@@ -55,6 +55,7 @@ public class AuditHeader extends Base {
   private String responsePayloadUuid;
   private Long requestTime;
   private Long responseTime;
+  private String failureStatusMsg;
 
   // For Audit Headers created by Git user actions
   @Getter @Setter private String accountId;
@@ -439,6 +440,13 @@ public class AuditHeader extends Base {
     this.responsePayloadUuid = responsePayloadUuid;
   }
 
+  public String getFailureStatusMsg() {
+    return failureStatusMsg;
+  }
+
+  public void setFailureStatusMsg(String failureStatusMsg) {
+    this.failureStatusMsg = failureStatusMsg;
+  }
   /**
    * The Enum RequestType.
    */
@@ -514,6 +522,7 @@ public class AuditHeader extends Base {
     private long lastUpdatedAt;
     private GitAuditDetails gitAuditDetails;
     private List<EntityAuditRecord> entityAuditRecords;
+    private String failureStatusMsg;
 
     private Builder() {}
 
@@ -833,6 +842,11 @@ public class AuditHeader extends Base {
       return this;
     }
 
+    public Builder withFailureStatusMsg(String failureStatusMsg) {
+      this.failureStatusMsg = failureStatusMsg;
+      return this;
+    }
+
     /**
      * Builds the.
      *
@@ -868,6 +882,7 @@ public class AuditHeader extends Base {
       auditHeader.setLastUpdatedBy(lastUpdatedBy);
       auditHeader.setLastUpdatedAt(lastUpdatedAt);
       auditHeader.setGitAuditDetails(gitAuditDetails);
+      auditHeader.setFailureStatusMsg(failureStatusMsg);
       return auditHeader;
     }
   }

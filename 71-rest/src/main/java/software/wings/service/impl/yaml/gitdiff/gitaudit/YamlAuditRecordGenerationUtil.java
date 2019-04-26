@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.gitdiff.gitaudit;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
 import static software.wings.beans.User.Builder.anUser;
@@ -122,21 +123,40 @@ public class YamlAuditRecordGenerationUtil {
       }
     });
 
-    auditHeader.setResponseType(ResponseType.COMPLETED_WITH_ERRORS);
-    auditHeader.setResponseStatusCode(207);
+    String failureStatusMsg = generateFailureStatusMessage(changeWithErrorMsgs);
+    boolean ifAllChangesFailed = gitDiffResult.getGitFileChanges().size() == changeWithErrorMsgs.size();
+    auditHeader.setResponseType(ifAllChangesFailed ? ResponseType.FAILED : ResponseType.COMPLETED_WITH_ERRORS);
+    auditHeader.setResponseStatusCode(ifAllChangesFailed ? 400 : 207);
     String msg = generateResponseMessage(
         accountId, auditHeader, changeListWithFailedChanges, gitDiffResult, changeWithErrorMsgs);
-    updateAuditHeader(accountId, auditHeader, msg);
+    updateAuditHeader(accountId, auditHeader, msg, failureStatusMsg);
+  }
+
+  private String generateFailureStatusMessage(Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
+    try {
+      StringBuilder msg = new StringBuilder(128);
+      msg.append("Failed paths are:  \n");
+      changeWithErrorMsgs.keySet().forEach(path -> msg.append(path).append("  \n"));
+      return msg.toString();
+    } catch (Exception e) {
+      logger.warn("Exception in handling audit for GitChanges: " + e);
+    }
+
+    return null;
   }
 
   /**
    * Update audit header with all details
    */
-  private void updateAuditHeader(String accountId, AuditHeader auditHeader, String msg) {
+  private void updateAuditHeader(String accountId, AuditHeader auditHeader, String msg, String failureStatusMsg) {
     UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
     if (isNotEmpty(auditHeader.getEntityAuditRecords())) {
       operations.addToSet("entityAuditRecords", auditHeader.getEntityAuditRecords());
       operations.set("accountId", accountId);
+    }
+
+    if (isNotBlank(failureStatusMsg)) {
+      operations.set("failureStatusMsg", failureStatusMsg);
     }
 
     // Add EntityAuditRecords to AuditHeader
@@ -154,27 +174,33 @@ public class YamlAuditRecordGenerationUtil {
   private String generateResponseMessage(String accountId, AuditHeader auditHeader,
       List<GitFileChange> changeListWithFailedChanges, GitDiffResult gitDiffResult,
       Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
-    List<GitFileChange> changeListWithSuccessfulChanges =
-        gitDiffResult.getGitFileChanges()
-            .stream()
-            .filter(gitFileChange -> !changeWithErrorMsgs.containsKey(gitFileChange.getFilePath()))
-            .collect(toList());
+    try {
+      List<GitFileChange> changeListWithSuccessfulChanges =
+          gitDiffResult.getGitFileChanges()
+              .stream()
+              .filter(gitFileChange -> !changeWithErrorMsgs.containsKey(gitFileChange.getFilePath()))
+              .collect(toList());
 
-    StringBuilder msg = new StringBuilder(128)
-                            .append("Status: AccountId: ")
-                            .append(accountId)
-                            .append(", CommitId: ")
-                            .append(auditHeader.getGitAuditDetails().getGitCommitId())
-                            .append("Repo: ")
-                            .append(auditHeader.getGitAuditDetails().getRepoUrl())
-                            .append("\nSuccessful Paths: \n");
+      StringBuilder msg = new StringBuilder(128)
+                              .append("Status: AccountId: ")
+                              .append(accountId)
+                              .append(", CommitId: ")
+                              .append(auditHeader.getGitAuditDetails().getGitCommitId())
+                              .append("Repo: ")
+                              .append(auditHeader.getGitAuditDetails().getRepoUrl())
+                              .append("\nSuccessful Paths: \n");
 
-    changeListWithSuccessfulChanges.forEach(change -> { msg.append(getChangePath(change)); });
+      changeListWithSuccessfulChanges.forEach(change -> { msg.append(getChangePath(change)); });
 
-    msg.append("--------------------------\nFailed Paths: \n");
+      msg.append("--------------------------\nFailed Paths: \n");
 
-    changeListWithFailedChanges.forEach(change -> { msg.append(getChangePath(change)); });
-    return msg.toString();
+      changeListWithFailedChanges.forEach(change -> { msg.append(getChangePath(change)); });
+      return msg.toString();
+    } catch (Exception e) {
+      logger.warn("Exception in handling audit for GitChanges: " + e);
+    }
+
+    return null;
   }
 
   /**
