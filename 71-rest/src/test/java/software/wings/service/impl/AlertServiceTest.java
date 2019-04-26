@@ -11,7 +11,6 @@ import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
@@ -44,7 +43,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -69,10 +67,10 @@ public class AlertServiceTest extends WingsBaseTest {
       NoActiveDelegatesAlert.builder().accountId(ACCOUNT_ID).build();
 
   @InjectMocks
-  private final NoEligibleDelegatesAlert noEligibleDelegatesAlert = aNoEligibleDelegatesAlert()
-                                                                        .withAppId(GLOBAL_APP_ID)
-                                                                        .withTaskGroup(TaskGroup.JENKINS)
-                                                                        .withTaskType(TaskType.JENKINS_COLLECTION)
+  private final NoEligibleDelegatesAlert noEligibleDelegatesAlert = NoEligibleDelegatesAlert.builder()
+                                                                        .appId(GLOBAL_APP_ID)
+                                                                        .taskGroup(TaskGroup.JENKINS)
+                                                                        .taskType(TaskType.JENKINS_COLLECTION)
                                                                         .build();
 
   private final ApprovalNeededAlert approvalNeededAlert =
@@ -86,7 +84,6 @@ public class AlertServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    AlertServiceImpl.DISBLED_ALERT_TYPES = Collections.emptyList();
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
   }
@@ -183,10 +180,10 @@ public class AlertServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldBuildAlertTitle() {
-    AlertData alertData = aNoEligibleDelegatesAlert()
-                              .withAppId(GLOBAL_APP_ID)
-                              .withTaskGroup(TaskGroup.CONTAINER)
-                              .withTaskType(TaskType.LIST_CLUSTERS)
+    AlertData alertData = NoEligibleDelegatesAlert.builder()
+                              .appId(GLOBAL_APP_ID)
+                              .taskGroup(TaskGroup.CONTAINER)
+                              .taskType(TaskType.LIST_CLUSTERS)
                               .build();
 
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, alertData);
