@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ResponseMessage;
@@ -209,26 +210,27 @@ public class AccountResource {
   }
 
   @GET
-  @Path("delegate/check/{accountId}")
+  @Path("delegate/active")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> checkSampleDelegate(@PathParam("accountId") @NotEmpty String accountId) {
+  public RestResponse<Boolean> checkSampleDelegate(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.sampleDelegateExists(accountId));
   }
 
   @GET
-  @Path("delegate/progress/{accountId}")
+  @Path("delegate/progress")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> checkProgressSampleDelegate(@PathParam("accountId") @NotEmpty String accountId) {
+  public RestResponse<List<ProvisionStep>> checkProgressSampleDelegate(
+      @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.sampleDelegateProgress(accountId));
   }
 
   @POST
-  @Path("delegate/generate/{accountId}")
+  @Path("delegate/generate")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> generateSampleDelegate(@PathParam("accountId") @NotEmpty String accountId) {
+  public RestResponse<String> generateSampleDelegate(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.generateSampleDelegate(accountId));
   }
 
