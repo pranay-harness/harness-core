@@ -37,6 +37,7 @@ import software.wings.beans.sso.LdapUserResponse;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -78,6 +79,7 @@ public class LdapGroupSyncJob implements Job {
   @Inject private SecretManager secretManager;
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
+  @Inject private AccountService accountService;
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId, String ssoId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
@@ -260,6 +262,11 @@ public class LdapGroupSyncJob implements Job {
   }
 
   private void executeInternal(String accountId, String ssoId) {
+    if (accountService.isCommunityAccount(accountId)) {
+      logger.info("Skipping LDAP sync. Account is Community Edition. accountId={} ssoId={}", accountId, ssoId);
+      return;
+    }
+
     try {
       ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
       logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
