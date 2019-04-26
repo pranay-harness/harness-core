@@ -6,13 +6,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,7 +53,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     nrState = new NewRelicState("nrStateName");
     setupCommon();
     MockitoAnnotations.initMocks(this);
-    setInternalState(nrState, "metricAnalysisService", metricAnalysisService);
+    FieldUtils.writeField(nrState, "metricAnalysisService", metricAnalysisService, true);
     requestsPerMinuteMetric = NewRelicState.Metric.builder()
                                   .metricName(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)
                                   .mlMetricType(MetricType.THROUGHPUT)

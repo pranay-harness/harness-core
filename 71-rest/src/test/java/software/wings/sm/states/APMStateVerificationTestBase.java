@@ -6,7 +6,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -15,6 +14,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mockito.Mock;
@@ -109,7 +109,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     configuration.getPortal().setJwtExternalServiceSecret(accountId);
   }
 
-  protected void setupCommonMocks() {
+  protected void setupCommonMocks() throws IllegalAccessException {
     when(executionContext.getAppId()).thenReturn(appId);
     when(executionContext.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
     when(executionContext.getStateExecutionInstanceId()).thenReturn(stateExecutionId);
@@ -132,8 +132,8 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     Broadcaster broadcaster = mock(Broadcaster.class);
     when(broadcaster.broadcast(anyObject())).thenReturn(null);
     when(broadcasterFactory.lookup(anyObject(), anyBoolean())).thenReturn(broadcaster);
-    setInternalState(delegateService, "broadcasterFactory", broadcasterFactory);
-    setInternalState(continuousVerificationService, "authService", mockAuthService);
+    FieldUtils.writeField(delegateService, "broadcasterFactory", broadcasterFactory, true);
+    FieldUtils.writeField(continuousVerificationService, "authService", mockAuthService, true);
     // Setup authService for continuousVerificationService
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
       { put(appId, buildAppPermissionSummary()); }

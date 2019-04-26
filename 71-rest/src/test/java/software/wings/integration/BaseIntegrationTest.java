@@ -13,7 +13,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.User.Builder.anUser;
 
@@ -39,6 +38,7 @@ import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -165,10 +165,10 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   public void setUp() throws Exception {
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(delegateService);
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(secretManager, "kmsService", kmsService);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
-    //    setInternalState(wingsPersistence, "featureFlagService", featureFlagService);
+    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
+    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
+    //    FieldUtils.writeField(wingsPersistence, "featureFlagService", featureFlagService, true);
   }
 
   protected String loginUser(final String userName, final String password) {

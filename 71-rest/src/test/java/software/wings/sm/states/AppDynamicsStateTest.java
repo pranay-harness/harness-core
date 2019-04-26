@@ -11,7 +11,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -22,6 +21,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -70,7 +70,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   private String infraMappingId;
 
   @Before
-  public void setup() throws IOException {
+  public void setup() throws IOException, IllegalAccessException {
     setupCommon();
 
     MockitoAnnotations.initMocks(this);
@@ -83,23 +83,23 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
     when(appdynamicsService.getTiers(anyString(), anyLong()))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(456).name("tier").build()));
-    setInternalState(appDynamicsState, "appService", appService);
-    setInternalState(appDynamicsState, "configuration", configuration);
-    setInternalState(appDynamicsState, "settingsService", settingsService);
-    setInternalState(appDynamicsState, "waitNotifyEngine", waitNotifyEngine);
-    setInternalState(appDynamicsState, "delegateService", delegateService);
-    setInternalState(appDynamicsState, "wingsPersistence", wingsPersistence);
-    setInternalState(appDynamicsState, "secretManager", secretManager);
-    setInternalState(appDynamicsState, "metricAnalysisService", metricAnalysisService);
-    setInternalState(appDynamicsState, "templateExpressionProcessor", templateExpressionProcessor);
-    setInternalState(appDynamicsState, "workflowExecutionService", workflowExecutionService);
-    setInternalState(appDynamicsState, "continuousVerificationService", continuousVerificationService);
-    setInternalState(appDynamicsState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
-    setInternalState(appDynamicsState, "appdynamicsService", appdynamicsService);
-    setInternalState(appDynamicsState, "featureFlagService", featureFlagService);
-    setInternalState(appDynamicsState, "infraMappingService", infraMappingService);
-    setInternalState(appDynamicsState, "versionInfoManager", versionInfoManager);
-    setInternalState(appDynamicsState, "serviceResourceService", serviceResourceService);
+    FieldUtils.writeField(appDynamicsState, "appService", appService, true);
+    FieldUtils.writeField(appDynamicsState, "configuration", configuration, true);
+    FieldUtils.writeField(appDynamicsState, "settingsService", settingsService, true);
+    FieldUtils.writeField(appDynamicsState, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(appDynamicsState, "delegateService", delegateService, true);
+    FieldUtils.writeField(appDynamicsState, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(appDynamicsState, "secretManager", secretManager, true);
+    FieldUtils.writeField(appDynamicsState, "metricAnalysisService", metricAnalysisService, true);
+    FieldUtils.writeField(appDynamicsState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    FieldUtils.writeField(appDynamicsState, "workflowExecutionService", workflowExecutionService, true);
+    FieldUtils.writeField(appDynamicsState, "continuousVerificationService", continuousVerificationService, true);
+    FieldUtils.writeField(appDynamicsState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
+    FieldUtils.writeField(appDynamicsState, "appdynamicsService", appdynamicsService, true);
+    FieldUtils.writeField(appDynamicsState, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(appDynamicsState, "infraMappingService", infraMappingService, true);
+    FieldUtils.writeField(appDynamicsState, "versionInfoManager", versionInfoManager, true);
+    FieldUtils.writeField(appDynamicsState, "serviceResourceService", serviceResourceService, true);
 
     when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
     when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);

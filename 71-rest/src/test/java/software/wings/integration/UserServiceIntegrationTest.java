@@ -12,7 +12,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.User.Builder.anUser;
 
 import com.google.common.collect.Sets;
@@ -28,6 +27,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Before;
@@ -208,7 +208,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  public void testLoginUserUsingIdentityServiceAuth() {
+  public void testLoginUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user/login?email=" + adminUserEmail);
 
     String identityServiceToken = generateIdentityServiceJwtToken();
@@ -227,7 +227,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  public void testGetUserUsingIdentityServiceAuth() {
+  public void testGetUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user");
 
     User adminUser = userService.getUserByEmail(adminUserEmail);
@@ -245,12 +245,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertTrue(user.getSupportAccounts().size() > 0);
   }
 
-  private String generateIdentityServiceJwtToken() {
+  private String generateIdentityServiceJwtToken() throws IllegalAccessException {
     MainConfiguration configuration = new MainConfiguration();
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setJwtIdentityServiceSecret("HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=");
     configuration.setPortal(portalConfig);
-    setInternalState(secretManager, "configuration", configuration);
+    FieldUtils.writeField(secretManager, "configuration", configuration, true);
     return secretManager.generateJWTToken(new HashMap<>(), JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
   }
 

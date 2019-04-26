@@ -18,7 +18,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -77,6 +76,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -248,7 +248,7 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Before
-  public void setUpMocks() {
+  public void setUpMocks() throws IllegalAccessException {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
@@ -300,7 +300,7 @@ public class CommandStateTest extends WingsBaseTest {
     commandState.setExecutorService(executorService);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
-    setInternalState(commandState, "secretManager", secretManager);
+    FieldUtils.writeField(commandState, "secretManager", secretManager, true);
 
     when(activityHelperService.createAndSaveActivity(any(ExecutionContext.class), any(Activity.Type.class), anyString(),
              anyString(), anyList(), any(Artifact.class)))

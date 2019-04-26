@@ -7,7 +7,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
@@ -17,6 +16,7 @@ import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,13 +64,13 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     initMocks(this);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
-    setInternalState(appdynamicsDelegateService, "encryptionService", encryptionService);
+    FieldUtils.writeField(appdynamicsDelegateService, "encryptionService", encryptionService, true);
     when(appdDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(appdynamicsDelegateService);
-    setInternalState(appdynamicsService, "delegateProxyFactory", appdDelegateProxyFactory);
+    FieldUtils.writeField(appdynamicsService, "delegateProxyFactory", appdDelegateProxyFactory, true);
 
     accountId = UUID.randomUUID().toString();
 

@@ -9,7 +9,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
@@ -30,6 +29,7 @@ import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -136,7 +136,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     initMocks(this);
     //    accountId = UUID.randomUUID().toString();
     //    appId = UUID.randomUUID().toString();
@@ -293,7 +293,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     }
     //    wingsPersistence.save(artifactStream);
     //    wingsPersistence.save(settingAttribute);
-    setInternalState(buildSourceService, "delegateProxyFactory", delegateProxyFactory);
+    FieldUtils.writeField(buildSourceService, "delegateProxyFactory", delegateProxyFactory, true);
   }
 
   @Test

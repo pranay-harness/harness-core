@@ -5,11 +5,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,13 +38,13 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   private String serviceId;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     accountId = generateUuid();
     serviceId = generateUuid();
     labelingService = new LogLabelingServiceImpl();
     dataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
-    setInternalState(labelingService, "dataStoreService", dataStoreService);
-    setInternalState(labelingService, "featureFlagService", featureFlagService);
+    FieldUtils.writeField(labelingService, "dataStoreService", dataStoreService, true);
+    FieldUtils.writeField(labelingService, "featureFlagService", featureFlagService, true);
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)).thenReturn(true);
   }
 

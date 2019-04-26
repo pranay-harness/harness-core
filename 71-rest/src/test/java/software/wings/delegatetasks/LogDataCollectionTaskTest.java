@@ -7,12 +7,12 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.powermock.reflect.Whitebox.setInternalState;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -45,7 +45,8 @@ public class LogDataCollectionTaskTest {
   @Mock private ScheduledFuture future;
   private LogDataCollectionTask dataCollectionTask;
 
-  public void setup(Map<String, Map<String, ResponseMapper>> logDefinition, Set<String> hosts) {
+  public void setup(Map<String, Map<String, ResponseMapper>> logDefinition, Set<String> hosts)
+      throws IllegalAccessException {
     String delegateId = UUID.randomUUID().toString();
     String appId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -72,9 +73,9 @@ public class LogDataCollectionTaskTest {
     MockitoAnnotations.initMocks(this);
 
     when(future.cancel(anyBoolean())).thenReturn(true);
-    setInternalState(dataCollectionTask, "future", future);
-    setInternalState(dataCollectionTask, "delegateLogService", delegateLogService);
-    setInternalState(dataCollectionTask, "logAnalysisStoreService", logAnalysisStoreService);
+    FieldUtils.writeField(dataCollectionTask, "future", future, true);
+    FieldUtils.writeField(dataCollectionTask, "delegateLogService", delegateLogService, true);
+    FieldUtils.writeField(dataCollectionTask, "logAnalysisStoreService", logAnalysisStoreService, true);
   }
 
   private CustomLogDataCollectionInfo getDataCollectionInfo(
@@ -96,7 +97,7 @@ public class LogDataCollectionTaskTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testFetchElkLogs() throws IOException {
+  public void testFetchElkLogs() throws IOException, IllegalAccessException {
     // setup
 
     String searchUrl = "_search?pretty=true&q=*&size=5";
@@ -138,7 +139,7 @@ public class LogDataCollectionTaskTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testFetchElkLogsRetry() throws IOException {
+  public void testFetchElkLogsRetry() throws IOException, IllegalAccessException {
     // setup
 
     String searchUrl = "_search?pretty=true&q=*&size=5";

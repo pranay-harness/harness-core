@@ -13,8 +13,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import groovy.lang.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;

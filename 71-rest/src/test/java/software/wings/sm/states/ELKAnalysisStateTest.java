@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
@@ -21,6 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -63,7 +63,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   private ElkAnalysisState elkAnalysisState;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
@@ -71,20 +71,20 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
     elkAnalysisState.setQuery("exception");
     elkAnalysisState.setTimeDuration("15");
-    setInternalState(elkAnalysisState, "appService", appService);
-    setInternalState(elkAnalysisState, "configuration", configuration);
-    setInternalState(elkAnalysisState, "analysisService", analysisService);
-    setInternalState(elkAnalysisState, "settingsService", settingsService);
-    setInternalState(elkAnalysisState, "waitNotifyEngine", waitNotifyEngine);
-    setInternalState(elkAnalysisState, "delegateService", delegateService);
-    setInternalState(elkAnalysisState, "wingsPersistence", wingsPersistence);
-    setInternalState(elkAnalysisState, "secretManager", secretManager);
-    setInternalState(elkAnalysisState, "workflowExecutionService", workflowExecutionService);
-    setInternalState(elkAnalysisState, "continuousVerificationService", continuousVerificationService);
-    setInternalState(elkAnalysisState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
-    setInternalState(elkAnalysisState, "featureFlagService", featureFlagService);
-    setInternalState(elkAnalysisState, "versionInfoManager", versionInfoManager);
-    setInternalState(elkAnalysisState, "elkAnalysisService", elkAnalysisService);
+    FieldUtils.writeField(elkAnalysisState, "appService", appService, true);
+    FieldUtils.writeField(elkAnalysisState, "configuration", configuration, true);
+    FieldUtils.writeField(elkAnalysisState, "analysisService", analysisService, true);
+    FieldUtils.writeField(elkAnalysisState, "settingsService", settingsService, true);
+    FieldUtils.writeField(elkAnalysisState, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(elkAnalysisState, "delegateService", delegateService, true);
+    FieldUtils.writeField(elkAnalysisState, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(elkAnalysisState, "secretManager", secretManager, true);
+    FieldUtils.writeField(elkAnalysisState, "workflowExecutionService", workflowExecutionService, true);
+    FieldUtils.writeField(elkAnalysisState, "continuousVerificationService", continuousVerificationService, true);
+    FieldUtils.writeField(elkAnalysisState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
+    FieldUtils.writeField(elkAnalysisState, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(elkAnalysisState, "versionInfoManager", versionInfoManager, true);
+    FieldUtils.writeField(elkAnalysisState, "elkAnalysisService", elkAnalysisService, true);
   }
 
   @Test

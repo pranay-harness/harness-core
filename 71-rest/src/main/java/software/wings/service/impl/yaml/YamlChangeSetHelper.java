@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import groovy.lang.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.SettingAttribute;

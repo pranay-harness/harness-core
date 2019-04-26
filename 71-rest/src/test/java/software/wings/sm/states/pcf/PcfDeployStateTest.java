@@ -14,7 +14,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -43,6 +42,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -130,10 +130,10 @@ public class PcfDeployStateTest extends WingsBaseTest {
    * Set up.
    */
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(pcfDeployState, "secretManager", secretManager);
-    setInternalState(pcfDeployState, "pcfStateHelper", new PcfStateHelper());
+    FieldUtils.writeField(pcfDeployState, "secretManager", secretManager, true);
+    FieldUtils.writeField(pcfDeployState, "pcfStateHelper", new PcfStateHelper(), true);
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     workflowStandardParams.setCurrentUser(currentUser);

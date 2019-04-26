@@ -25,10 +25,10 @@ import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import groovy.lang.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;

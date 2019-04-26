@@ -10,7 +10,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -18,6 +17,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -74,10 +74,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
-    setInternalState(service, "wingsPersistence", wingsPersistence);
-    setInternalState(service, "featureFlagService", featureFlagService);
+    FieldUtils.writeField(service, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(service, "featureFlagService", featureFlagService, true);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
   }
 

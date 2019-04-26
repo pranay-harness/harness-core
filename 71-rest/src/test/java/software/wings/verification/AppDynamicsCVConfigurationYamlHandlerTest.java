@@ -4,10 +4,10 @@ import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -70,13 +70,13 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
     tierId = "123456";
 
     MockitoAnnotations.initMocks(this);
-    setInternalState(yamlHandler, "yamlHelper", yamlHelper);
-    setInternalState(yamlHandler, "cvConfigurationService", cvConfigurationService);
-    setInternalState(yamlHandler, "appService", appService);
-    setInternalState(yamlHandler, "environmentService", environmentService);
-    setInternalState(yamlHandler, "serviceResourceService", serviceResourceService);
-    setInternalState(yamlHandler, "settingsService", settingsService);
-    setInternalState(yamlHandler, "appdynamicsService", appdynamicsService);
+    FieldUtils.writeField(yamlHandler, "yamlHelper", yamlHelper, true);
+    FieldUtils.writeField(yamlHandler, "cvConfigurationService", cvConfigurationService, true);
+    FieldUtils.writeField(yamlHandler, "appService", appService, true);
+    FieldUtils.writeField(yamlHandler, "environmentService", environmentService, true);
+    FieldUtils.writeField(yamlHandler, "serviceResourceService", serviceResourceService, true);
+    FieldUtils.writeField(yamlHandler, "settingsService", settingsService, true);
+    FieldUtils.writeField(yamlHandler, "appdynamicsService", appdynamicsService, true);
 
     Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
     when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);

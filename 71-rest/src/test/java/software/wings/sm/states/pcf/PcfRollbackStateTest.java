@@ -10,7 +10,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -31,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -95,8 +95,8 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   private ExecutionContextImpl context;
 
   @Before
-  public void setup() {
-    setInternalState(pcfRollbackState, "secretManager", secretManager);
+  public void setup() throws IllegalAccessException {
+    FieldUtils.writeField(pcfRollbackState, "secretManager", secretManager, true);
     context = new ExecutionContextImpl(stateExecutionInstance);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))

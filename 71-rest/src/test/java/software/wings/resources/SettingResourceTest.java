@@ -2,12 +2,12 @@ package software.wings.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.HARNESS_BAMBOO;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,7 +36,7 @@ public class SettingResourceTest extends WingsBaseTest {
   private SettingAttribute settingAttribute;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     BambooConfig bambooConfig = BambooConfig.builder()
                                     .accountId(ACCOUNT_ID)
                                     .bambooUrl(WingsTestConstants.JENKINS_URL)
@@ -51,9 +51,9 @@ public class SettingResourceTest extends WingsBaseTest {
                            .withValue(bambooConfig)
                            .build();
 
-    setInternalState(settingResource, "secretManager", secretManager);
-    setInternalState(settingResource, "settingsService", settingsService);
-    setInternalState(settingResource, "usageRestrictionsService", usageRestrictionsService);
+    FieldUtils.writeField(settingResource, "secretManager", secretManager, true);
+    FieldUtils.writeField(settingResource, "settingsService", settingsService, true);
+    FieldUtils.writeField(settingResource, "usageRestrictionsService", usageRestrictionsService, true);
   }
 
   @Test

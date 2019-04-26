@@ -3,7 +3,6 @@ package software.wings.integration.yaml;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
@@ -11,6 +10,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.scm.ScmSecret;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -69,8 +69,8 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   public void setUp() throws Exception {
     super.setUp();
     GitClient gitClient = new GitClientImpl();
-    setInternalState(gitClient, "gitClientHelper", new GitClientHelper());
-    setInternalState(gitIntegrationTestUtil, "gitClient", gitClient);
+    FieldUtils.writeField(gitClient, "gitClientHelper", new GitClientHelper(), true);
+    FieldUtils.writeField(gitIntegrationTestUtil, "gitClient", gitClient, true);
     loginAdminUser();
     setYamlGitConfig();
     setGitConnector();

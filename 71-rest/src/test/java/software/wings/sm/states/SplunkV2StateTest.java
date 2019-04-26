@@ -7,7 +7,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Sets;
@@ -19,6 +18,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,7 +56,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   private SplunkV2State splunkState;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
@@ -64,19 +64,19 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     splunkState = new SplunkV2State("SplunkState");
     splunkState.setQuery("exception");
     splunkState.setTimeDuration("15");
-    setInternalState(splunkState, "appService", appService);
-    setInternalState(splunkState, "configuration", configuration);
-    setInternalState(splunkState, "analysisService", analysisService);
-    setInternalState(splunkState, "settingsService", settingsService);
-    setInternalState(splunkState, "waitNotifyEngine", waitNotifyEngine);
-    setInternalState(splunkState, "delegateService", delegateService);
-    setInternalState(splunkState, "wingsPersistence", wingsPersistence);
-    setInternalState(splunkState, "secretManager", secretManager);
-    setInternalState(splunkState, "workflowExecutionService", workflowExecutionService);
-    setInternalState(splunkState, "continuousVerificationService", continuousVerificationService);
-    setInternalState(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
-    setInternalState(splunkState, "featureFlagService", featureFlagService);
-    setInternalState(splunkState, "versionInfoManager", versionInfoManager);
+    FieldUtils.writeField(splunkState, "appService", appService, true);
+    FieldUtils.writeField(splunkState, "configuration", configuration, true);
+    FieldUtils.writeField(splunkState, "analysisService", analysisService, true);
+    FieldUtils.writeField(splunkState, "settingsService", settingsService, true);
+    FieldUtils.writeField(splunkState, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(splunkState, "delegateService", delegateService, true);
+    FieldUtils.writeField(splunkState, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(splunkState, "secretManager", secretManager, true);
+    FieldUtils.writeField(splunkState, "workflowExecutionService", workflowExecutionService, true);
+    FieldUtils.writeField(splunkState, "continuousVerificationService", continuousVerificationService, true);
+    FieldUtils.writeField(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
+    FieldUtils.writeField(splunkState, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(splunkState, "versionInfoManager", versionInfoManager, true);
   }
 
   @Test
