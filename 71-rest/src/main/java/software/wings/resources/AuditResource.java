@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -10,6 +12,7 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.service.intfc.AuditService;
 
@@ -59,7 +62,9 @@ public class AuditResource {
   @ExceptionMetered
   @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
-  public RestResponse<PageResponse<AuditHeader>> list(@BeanParam PageRequest<AuditHeader> pageRequest) {
+  public RestResponse<PageResponse<AuditHeader>> list(
+      @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
+    pageRequest.addFilter(AuditHeaderKeys.accountId, EQ, accountId);
     return new RestResponse<>(httpAuditService.list(pageRequest));
   }
 
@@ -69,8 +74,8 @@ public class AuditResource {
   @ExceptionMetered
   @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
-  public RestResponse<AuditHeaderYamlResponse> listAuditHeaderDetails(@PathParam("auditHeaderId") String auditHeaderId,
-      @QueryParam("entityId") String entityId, @QueryParam("entityType") String entityType) {
-    return new RestResponse<>(httpAuditService.fetchAuditEntityYamls(auditHeaderId, entityId, entityType));
+  public RestResponse<AuditHeaderYamlResponse> getAuditHeaderDetails(
+      @PathParam("auditHeaderId") String auditHeaderId, @QueryParam("entityId") String entityId) {
+    return new RestResponse<>(httpAuditService.fetchAuditEntityYamls(auditHeaderId, entityId));
   }
 }

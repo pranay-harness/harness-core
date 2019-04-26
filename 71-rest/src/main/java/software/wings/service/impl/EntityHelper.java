@@ -93,6 +93,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 
@@ -302,8 +303,14 @@ public class EntityHelper {
       }
     } else if (entity instanceof SettingAttribute) {
       SettingAttribute settingAttribute = (SettingAttribute) entity;
-      entityType = getEntityTypeForSettingValue(settingAttribute.getValue());
+      SettingValue value = settingAttribute.getValue();
+      entityType = getEntityTypeForSettingValue(value);
       entityName = settingAttribute.getName();
+      if (value != null && SettingVariableTypes.STRING.name().equals(value.getType())) {
+        // For String value, appId != __GLOBAL_APP_ID__
+        // We need this appId for Yaml handling
+        appId = settingAttribute.getAppId();
+      }
       affectedResourceId = settingAttribute.getUuid();
       affectedResourceName = settingAttribute.getName();
       affectedResourceType =
@@ -380,6 +387,7 @@ public class EntityHelper {
           affectedResourceName = getServiceName(affectedResourceId, appId);
           affectedResourceOperation =
               getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
+          affectedResourceType = EntityType.SERVICE.name();
         } else if (EntityType.ENVIRONMENT.equals(entityTypeForVariable)) {
           affectedResourceId = variable.getEntityId();
           affectedResourceName = getEnvironmentName(affectedResourceId, appId);
