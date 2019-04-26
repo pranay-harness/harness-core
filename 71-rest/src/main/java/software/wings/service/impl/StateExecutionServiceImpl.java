@@ -127,6 +127,9 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   public void updateStateExecutionData(String appId, String stateExecutionId, StateExecutionData stateExecutionData) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionId);
+    if (stateExecutionInstance == null) {
+      return;
+    }
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     stateExecutionMap.put(stateExecutionInstance.getDisplayName(), stateExecutionData);
     wingsPersistence.save(stateExecutionInstance);
