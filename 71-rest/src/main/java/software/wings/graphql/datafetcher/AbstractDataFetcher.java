@@ -7,6 +7,7 @@ import static software.wings.graphql.utils.GraphQLConstants.USER_NOT_AUTHORIZED_
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,6 +24,7 @@ import org.modelmapper.internal.objenesis.Objenesis;
 import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
@@ -113,6 +115,16 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
         FieldUtils.writeField(parameters, SELECTION_SET_FIELD_NAME, dataFetchingEnvironment.getSelectionSet(), true);
       } catch (IllegalAccessException exception) {
         logger.error("This should not happen", exception);
+      }
+    }
+
+    if (parameters instanceof QLPageQueryParameters) {
+      QLPageQueryParameters pageParameters = (QLPageQueryParameters) parameters;
+      if (pageParameters.getLimit() < 0) {
+        throw new InvalidRequestException("Limit argument accepts only non negative values");
+      }
+      if (pageParameters.getOffset() < 0) {
+        throw new InvalidRequestException("Offset argument accepts only non negative values");
       }
     }
 

@@ -8,6 +8,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.inject.Inject;
 
+import graphql.ExecutionResult;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.ApplicationGenerator;
@@ -151,6 +152,40 @@ public class ConnectionTest extends GraphQLTest {
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
       assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(5);
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
+    }
+  }
+
+  @Test
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testPagingArguments() {
+    final Seed seed = new Seed(0);
+    final Owners owners = ownerManager.create();
+
+    final Application application =
+        applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Pipelines").build());
+
+    {
+      String query = "{ pipelines(applicationId: \"" + application.getUuid()
+          + "\", limit: -5, offset: 5) { nodes { id } pageInfo { limit offset total } } }";
+
+      final ExecutionResult result = getGraphQL().execute(query);
+      assertThat(result.getErrors().size()).isEqualTo(1);
+
+      // TODO: this message is wrong
+      assertThat(result.getErrors().get(0).getMessage())
+          .isEqualTo("Exception while fetching data (/pipelines) : INVALID_REQUEST");
+    }
+
+    {
+      String query = "{ pipelines(applicationId: \"" + application.getUuid()
+          + "\", limit: 5, offset: -5) { nodes { id } pageInfo { limit offset total } } }";
+
+      final ExecutionResult result = getGraphQL().execute(query);
+      assertThat(result.getErrors().size()).isEqualTo(1);
+
+      // TODO: this message is wrong
+      assertThat(result.getErrors().get(0).getMessage())
+          .isEqualTo("Exception while fetching data (/pipelines) : INVALID_REQUEST");
     }
   }
 }
