@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -52,7 +53,7 @@ public interface AccountService {
 
   boolean sampleDelegateExists(String accountId);
 
-  String sampleDelegateProgress(String accountId);
+  List<ProvisionStep> sampleDelegateProgress(String accountId);
 
   /**
    * List.

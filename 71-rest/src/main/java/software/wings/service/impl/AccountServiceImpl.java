@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
@@ -28,15 +29,21 @@ import static software.wings.utils.Misc.generateSecretKey;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.account.ProvisionStep;
+import io.harness.account.ProvisionStep.ProvisionStepKeys;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -596,20 +603,17 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public String generateSampleDelegate(String accountId) {
-    Account account = get(accountId);
-
-    if (!AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType())) {
-      return "Not a trial account";
-    }
+    assertTrialAccount(accountId);
 
     if (isBlank(mainConfiguration.getSampleTargetEnv())) {
       String err = "Sample target env not configured";
-      logger.error(err);
-      return err;
+      logger.warn(err);
+      throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION, err);
     }
 
-    String script = String.format(GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING,
-        mainConfiguration.getSampleTargetEnv(), accountId, getAccountIdentifier(accountId), account.getAccountKey());
+    String script =
+        String.format(GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING, mainConfiguration.getSampleTargetEnv(),
+            accountId, getAccountIdentifier(accountId), getFromCache(accountId).getAccountKey());
     Logger scriptLogger = LoggerFactory.getLogger("generate-delegate-" + accountId);
     try {
       ProcessExecutor processExecutor = new ProcessExecutor()
@@ -632,7 +636,7 @@ public class AccountServiceImpl implements AccountService {
       if (exitCode == 0) {
         return "SUCCESS";
       }
-
+      logger.error("Curl script to generate delegate returned non-zero exit code: ", exitCode);
     } catch (IOException e) {
       logger.error("Error executing generate delegate curl command", e);
     } catch (InterruptedException e) {
@@ -641,11 +645,15 @@ public class AccountServiceImpl implements AccountService {
       logger.info("Timed out", e);
     }
 
-    return "FAILED";
+    String err = "Failed to provision";
+    logger.warn(err);
+    throw new WingsException(ErrorCode.GENERAL_ERROR, err);
   }
 
   @Override
   public boolean sampleDelegateExists(String accountId) {
+    assertTrialAccount(accountId);
+
     Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
                                     .filter(ACCOUNT_ID_KEY, accountId)
                                     .filter(DELEGATE_NAME_KEY, SAMPLE_DELEGATE_NAME)
@@ -662,11 +670,13 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public String sampleDelegateProgress(String accountId) {
+  public List<ProvisionStep> sampleDelegateProgress(String accountId) {
+    assertTrialAccount(accountId);
+
     if (isBlank(mainConfiguration.getSampleTargetStatusHost())) {
       String err = "Sample target status host not configured";
-      logger.error(err);
-      return err;
+      logger.warn(err);
+      throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION, err);
     }
 
     try {
@@ -675,11 +685,29 @@ public class AccountServiceImpl implements AccountService {
       logger.info("Fetching delegate provisioning progress for account {} from {}", accountId, url);
       String result = Http.getResponseStringFromUrl(url, 10, 10).trim();
       logger.info("Provisioning progress for account {}: {}", accountId, result);
-      return result;
+      List<ProvisionStep> steps = new ArrayList<>();
+      for (JsonElement element : new JsonParser().parse(result).getAsJsonArray()) {
+        JsonObject jsonObject = element.getAsJsonObject();
+        steps.add(ProvisionStep.builder()
+                      .step(jsonObject.get(ProvisionStepKeys.step).getAsString())
+                      .done(jsonObject.get(ProvisionStepKeys.done).getAsBoolean())
+                      .build());
+      }
+      return steps;
     } catch (IOException e) {
       logger.warn(String.format("Exception in fetching delegate provisioning progress for account %s", accountId), e);
     }
-    return null;
+    return singletonList(ProvisionStep.builder().step("Provisioning Started").done(false).build());
+  }
+
+  private void assertTrialAccount(String accountId) {
+    Account account = getFromCache(accountId);
+
+    if (!AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType())) {
+      String err = "Not a trial account";
+      logger.warn(err);
+      throw new InvalidRequestException(err);
+    }
   }
 
   @Override
