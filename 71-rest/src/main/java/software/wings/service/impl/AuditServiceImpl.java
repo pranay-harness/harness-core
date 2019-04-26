@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -10,11 +12,13 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.service.intfc.FileService.FileBucket;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -32,6 +36,7 @@ import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -46,18 +51,22 @@ import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.yaml.YamlPayload;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -74,8 +83,13 @@ public class AuditServiceImpl implements AuditService {
   @Inject private EntityHelper entityHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;
+  @Inject private YamlResourceService yamlResourceService;
 
   private WingsPersistence wingsPersistence;
+
+  private static Set<String> nonYamlEntities =
+      newHashSet(EntityType.SERVICE_VARIABLE.name(), EntityType.TRIGGER.name(), EntityType.ROLE.name(),
+          EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(), EntityType.MANIFEST_FILE.name());
 
   /**
    * Instantiates a new audit service impl.
@@ -96,7 +110,11 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
-  public AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String entityType) {
+  public AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId) {
+    if (isEmpty(entityId)) {
+      throw new WingsException("EntityId is needed.").addParam("message", "EntityId is needed.");
+    }
+
     AuditHeader header = wingsPersistence.createQuery(AuditHeader.class)
                              .filter(AuditHeader.ID_KEY, headerId)
                              .project("entityAuditRecords", true)
@@ -107,36 +125,40 @@ public class AuditServiceImpl implements AuditService {
           .addParam("message", "Audit Header Id does not exists");
     }
 
-    Set<String> yamlIds = new HashSet<>();
-    AuditHeaderYamlResponseBuilder builder = AuditHeaderYamlResponse.builder().auditHeaderId(headerId);
+    AuditHeaderYamlResponseBuilder builder =
+        AuditHeaderYamlResponse.builder().auditHeaderId(headerId).entityId(entityId);
+
     if (isEmpty(header.getEntityAuditRecords())) {
       return builder.build();
     }
 
-    header.getEntityAuditRecords().forEach(entityAuditRecord -> {
-      if (isNotEmpty(entityAuditRecord.getEntityNewYamlRecordId())) {
-        yamlIds.add(entityAuditRecord.getEntityNewYamlRecordId());
-      }
-      if (isNotEmpty(entityAuditRecord.getEntityOldYamlRecordId())) {
-        yamlIds.add(entityAuditRecord.getEntityOldYamlRecordId());
-      }
-    });
+    Set<String> yamlIds = newHashSet();
+    Optional<EntityAuditRecord> recordForPath =
+        header.getEntityAuditRecords().stream().filter(record -> entityId.equals(record.getEntityId())).findFirst();
+    if (!recordForPath.isPresent()) {
+      return builder.build();
+    }
+
+    if (isNotEmpty(recordForPath.get().getEntityOldYamlRecordId())) {
+      yamlIds.add(recordForPath.get().getEntityOldYamlRecordId());
+    }
+    if (isNotEmpty(recordForPath.get().getEntityNewYamlRecordId())) {
+      yamlIds.add(recordForPath.get().getEntityNewYamlRecordId());
+    }
 
     if (isNotEmpty(yamlIds)) {
       Query<EntityYamlRecord> query =
           wingsPersistence.createQuery(EntityYamlRecord.class).field(EntityYamlRecordKeys.uuid).in(yamlIds);
-
-      if (isNotBlank(entityId)) {
-        if (isBlank(entityType)) {
-          throw new WingsException("EntityType is required, when entityId is set.")
-              .addParam("message", "EntityType is required, when entityId is set.");
-        }
-
-        query.filter("entityId", entityId).filter("entityType", entityType);
-      }
-
       List<EntityYamlRecord> entityAuditYamls = query.asList();
-      builder.entityAuditYamls(entityAuditYamls);
+      if (isNotEmpty(entityAuditYamls)) {
+        entityAuditYamls.forEach(yaml -> {
+          if (yaml.getUuid().equals(recordForPath.get().getEntityOldYamlRecordId())) {
+            builder.oldYaml(yaml.getYamlContent());
+          } else if (yaml.getUuid().equals(recordForPath.get().getEntityNewYamlRecordId())) {
+            builder.newYaml(yaml.getYamlContent());
+          }
+        });
+      }
     }
 
     return builder.build();
@@ -318,7 +340,26 @@ public class AuditServiceImpl implements AuditService {
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
       EntityAuditRecord record = builder.build();
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
-
+      switch (type) {
+        case CREATE: {
+          record.setEntityNewYamlRecordId(saveEntityYamlForAudit(newEntity, record, accountId));
+          break;
+        }
+        case UPDATE: {
+          record.setEntityOldYamlRecordId(getLatestYamlRecordIdForEntity(record.getEntityType(), record.getEntityId()));
+          record.setEntityNewYamlRecordId(saveEntityYamlForAudit(newEntity, record, accountId));
+          break;
+        }
+        case DELETE: {
+          record.setEntityOldYamlRecordId(getLatestYamlRecordIdForEntity(record.getEntityType(), record.getEntityId()));
+          break;
+        }
+        default: {
+          logger.warn(
+              format("Unknown type class while registering audit actions: [%s]", type.getClass().getSimpleName()));
+          return;
+        }
+      }
       UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
       operations.addToSet("entityAuditRecords", record);
       operations.set("accountId", accountId);
@@ -346,5 +387,51 @@ public class AuditServiceImpl implements AuditService {
       throw new Exception("Object of unknown class returned when querying for audit header Id");
     }
     return ((AuditGlobalContextData) globalContextData).getAuditId();
+  }
+
+  @VisibleForTesting
+  String getLatestYamlRecordIdForEntity(String entityType, String entityId) {
+    Key<EntityYamlRecord> key = wingsPersistence.createQuery(EntityYamlRecord.class)
+                                    .filter(EntityYamlRecordKeys.entityId, entityId)
+                                    .filter(EntityYamlRecordKeys.entityType, entityType)
+                                    .order(descending(EntityYamlRecordKeys.createdAt))
+                                    .getKey();
+    return (key != null) ? key.getId().toString() : EMPTY;
+  }
+
+  @VisibleForTesting
+  String saveEntityYamlForAudit(Object entity, EntityAuditRecord record, String accountId) {
+    if (nonYamlEntities.contains(record.getEntityType()) || entity == null) {
+      return EMPTY;
+    }
+    String yamlContent;
+    try {
+      YamlPayload resource;
+      if (entity instanceof SettingAttribute
+          && SettingVariableTypes.STRING.name().equals(((SettingAttribute) entity).getValue().getType())) {
+        resource = yamlResourceService.getDefaultVariables(accountId, record.getAppId()).getResource();
+      } else {
+        resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
+      }
+      yamlContent = resource.getYaml();
+      String yamlPath = resource.getPath();
+      if (isNotEmpty(yamlPath)) {
+        record.setYamlPath(yamlPath);
+      }
+    } catch (Exception ex) {
+      yamlContent =
+          format("Exception: [%s] while generating Yamls for entityId: [%s], entityType: [%s], accountId: [%s]",
+              ex.getMessage(), record.getEntityId(), record.getEntityType(), accountId);
+      logger.error(yamlContent, ex);
+    }
+    EntityYamlRecord yamlRecord = EntityYamlRecord.builder()
+                                      .uuid(generateUuid())
+                                      .createdAt(currentTimeMillis())
+                                      .entityId(record.getEntityId())
+                                      .entityType(record.getEntityType())
+                                      .yamlSha(sha1Hex(yamlContent))
+                                      .yamlContent(yamlContent)
+                                      .build();
+    return wingsPersistence.save(yamlRecord);
   }
 }

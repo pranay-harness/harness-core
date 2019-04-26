@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -21,6 +22,7 @@ import java.util.List;
  */
 @Entity(value = "audits", noClassnameStored = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 public class AuditHeader extends Base {
   /**
    * The Remote user.

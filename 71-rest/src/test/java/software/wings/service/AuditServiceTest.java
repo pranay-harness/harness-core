@@ -31,8 +31,8 @@ import java.io.IOException;
  * Created by rishi on 5/19/16.
  */
 public class AuditServiceTest extends WingsBaseTest {
-  @Inject protected AuditService auditService;
   @Inject protected FileService fileService;
+  @Inject protected AuditService auditService;
 
   protected String appId = generateUuid();
 
