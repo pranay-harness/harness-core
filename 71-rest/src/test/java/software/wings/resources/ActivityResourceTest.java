@@ -37,6 +37,7 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
@@ -63,6 +64,8 @@ public class ActivityResourceTest {
    */
   public static final LogService LOG_SERVICE = mock(LogService.class);
 
+  public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
+
   public static final DataStoreService LOG_DATA_STORE_SERVICE = mock(DataStoreService.class);
 
   /**
@@ -71,7 +74,7 @@ public class ActivityResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, LOG_DATA_STORE_SERVICE))
+          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, LOG_DATA_STORE_SERVICE, ACCOUNT_SERVICE))
           .addProvider(WingsExceptionMapper.class)
           .build();
 
