@@ -135,7 +135,9 @@ public class ArtifactCollectionUtil {
                           .withDisplayName(getDisplayName(artifactStream, buildDetails))
                           .withDescription(buildDetails.getDescription())
                           .withMetadata(getMetadata(artifactStream, buildDetails))
-                          .withRevision(buildDetails.getRevision());
+                          .withRevision(buildDetails.getRevision())
+                          .withArtifactStreamType(artifactStream.getArtifactStreamType())
+                          .withUiDisplayName(buildDetails.getUiDisplayName());
     if (settingId != null) {
       builder.withSettingId(settingId);
     }
@@ -517,7 +519,8 @@ public class ArtifactCollectionUtil {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
-        || isArtifactoryDockerOrGeneric(artifactStream)) {
+        || isArtifactoryDockerOrGeneric(artifactStream) || artifactStreamType.equals(JENKINS.name())
+        || artifactStreamType.equals(BAMBOO.name())) {
       return BuildSourceRequestType.GET_BUILDS;
     } else {
       return BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD;

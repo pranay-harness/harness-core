@@ -48,6 +48,7 @@ public class Artifact extends Base {
   public static final String ARTIFACT_FILES_KEY = "artifactFiles";
   public static final String METADATA_KEY = "metadata";
   public static final String REVISION_KEY = "revision";
+  public static final String SETTING_ID_KEY = "settingId";
   public static final String URL_KEY = "url";
   public static final String METADATA_IMAGE_KEY = "metadata.image";
   public static final String METADATA_TAG_KEY = "metadata.tag";
@@ -67,6 +68,8 @@ public class Artifact extends Base {
   private transient Map<String, String> source;
   private String settingId;
   private String accountId;
+  private String artifactStreamType;
+  private String uiDisplayName;
 
   /**
    * Gets buildNo.
@@ -286,6 +289,8 @@ public class Artifact extends Base {
     private ContentStatus contentStatus;
     private String settingId;
     private String accountId;
+    private String artifactStreamType;
+    private String uiDisplayName;
 
     private Builder() {}
 
@@ -398,6 +403,16 @@ public class Artifact extends Base {
       return this;
     }
 
+    public Builder withArtifactStreamType(String artifactStreamType) {
+      this.artifactStreamType = artifactStreamType;
+      return this;
+    }
+
+    public Builder withUiDisplayName(String uiDisplayName) {
+      this.uiDisplayName = uiDisplayName;
+      return this;
+    }
+
     public Builder but() {
       return anArtifact()
           .withArtifactStreamId(artifactStreamId)
@@ -420,7 +435,9 @@ public class Artifact extends Base {
           .withContentStatus(contentStatus)
           .withEntityYamlPath(entityYamlPath)
           .withSettingId(settingId)
-          .withAccountId(accountId);
+          .withAccountId(accountId)
+          .withArtifactStreamType(artifactStreamType)
+          .withUiDisplayName(uiDisplayName);
     }
 
     public Artifact build() {
@@ -446,6 +463,8 @@ public class Artifact extends Base {
       artifact.setEntityYamlPath(entityYamlPath);
       artifact.setSettingId(settingId);
       artifact.setAccountId(accountId);
+      artifact.setArtifactStreamType(artifactStreamType);
+      artifact.setUiDisplayName(uiDisplayName);
       return artifact;
     }
   }

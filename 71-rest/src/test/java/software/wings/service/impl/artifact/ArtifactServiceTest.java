@@ -10,6 +10,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
@@ -23,11 +24,11 @@ import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -82,6 +83,8 @@ import javax.validation.ConstraintViolationException;
 
 @SetupScheduler
 public class ArtifactServiceTest extends WingsBaseTest {
+  private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+  private static final String SETTING_ID = "SETTING_ID";
   @Inject @Spy private WingsPersistence wingsPersistence;
 
   @Mock private FileService fileService;
@@ -311,6 +314,33 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldListSortByBuildNoAtConnectorLevel() {
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID))
+        .thenReturn(JenkinsArtifactStream.builder()
+                        .uuid(ARTIFACT_STREAM_ID)
+                        .appId(GLOBAL_APP_ID)
+                        .sourceName("ARTIFACT_SOURCE")
+                        .settingId(SETTING_ID)
+                        .build());
+    constructArtifactsAtConnectorLevel();
+
+    List<Artifact> artifacts =
+        artifactService.listSortByBuildNo(aPageRequest()
+                                              .addFilter(Artifact.APP_ID_KEY, EQ, GLOBAL_APP_ID)
+                                              .addFilter(Artifact.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID)
+                                              .addFilter(ARTIFACT_STREAM_ID_KEY, EQ, ARTIFACT_STREAM_ID)
+                                              .addFilter(Artifact.SETTING_ID_KEY, EQ, SETTING_ID)
+                                              .build());
+
+    assertThat(artifacts)
+        .hasSize(4)
+        .extracting(Artifact::getBuildNo)
+        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-1.x86_64.rpm");
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldListSortByBuildNoWithNoServiceId() {
     constructArtifacts();
 
@@ -336,6 +366,29 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   private void constructArtifacts() {
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
+
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build());
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build());
+
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
+  }
+
+  private void constructArtifactsAtConnectorLevel() {
+    Builder artifactBuilder = anArtifact()
+                                  .withAppId(GLOBAL_APP_ID)
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                  .withSettingId(SETTING_ID)
+                                  .withAccountId(ACCOUNT_ID)
+                                  .withRevision("1.0")
+                                  .withDisplayName("DISPLAY_NAME")
+                                  .withCreatedAt(System.currentTimeMillis())
+                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+
     artifactService.create(
         artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
 

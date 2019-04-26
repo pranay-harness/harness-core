@@ -42,6 +42,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
+import software.wings.common.BuildDetailsComparator;
+import software.wings.helpers.ext.jenkins.BuildDetails.BuildStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -296,11 +298,16 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException {
+    return getBuildsForJob(jobname, lastN, false);
+  }
+
+  @Override
+  public List<BuildDetails> getBuildsForJob(String jobname, int lastN, boolean allStatuses) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
       return null;
     }
-    return Lists.newArrayList(
+    List<BuildDetails> buildDetails = Lists.newArrayList(
         jobWithDetails.getBuilds()
             .parallelStream()
             .limit(lastN)
@@ -313,11 +320,15 @@ public class JenkinsImpl implements Jenkins {
             })
             .filter(BuildWithDetails.class ::isInstance)
             .map(build -> (BuildWithDetails) build)
-            .filter(build
-                -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE)
+            .filter(!allStatuses ? build
+                -> (build.getResult() == BuildResult.SUCCESS) && isNotEmpty(build.getArtifacts())
+                                 : build
+                -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE
+                       || build.getResult() == BuildResult.FAILURE)
                     && isNotEmpty(build.getArtifacts()))
             .map(this ::getBuildDetails)
             .collect(toList()));
+    return buildDetails.stream().sorted(new BuildDetailsComparator()).collect(toList());
   }
 
   public BuildDetails getBuildDetails(BuildWithDetails buildWithDetails) {
@@ -328,6 +339,8 @@ public class JenkinsImpl implements Jenkins {
                                     .withBuildDisplayName(buildWithDetails.getDisplayName())
                                     .withBuildUrl(buildWithDetails.getUrl())
                                     .withBuildFullDisplayName(buildWithDetails.getFullDisplayName())
+                                    .withStatus(BuildStatus.valueOf(buildWithDetails.getResult().name()))
+                                    .withUiDisplayName("build# " + buildWithDetails.getNumber())
                                     .build();
     populateBuildParams(buildWithDetails, buildDetails);
     return buildDetails;

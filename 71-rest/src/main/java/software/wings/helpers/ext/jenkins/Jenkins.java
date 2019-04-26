@@ -42,6 +42,17 @@ public interface Jenkins {
   List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException;
 
   /**
+   * Gets the builds for job.
+   *
+   * @param jobname the jobname
+   * @param lastN   the last n
+   * @param allStatuses statuses to include
+   * @return the builds for job
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  List<BuildDetails> getBuildsForJob(String jobname, int lastN, boolean allStatuses) throws IOException;
+
+  /**
    * Gets last successful build for job.
    *
    * @param jobName the job name

@@ -39,6 +39,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
@@ -82,6 +83,7 @@ public class SettingResource {
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ArtifactService artifactService;
 
   /**
    * List.
@@ -460,14 +462,15 @@ public class SettingResource {
    * @param artifactStreamId the artifact source id
    * @param settingId        the setting id
    * @return the builds
+   * @return the builds
    */
   @GET
   @Path("build-sources/builds")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<BuildDetails>> getBuilds(
-      @QueryParam("artifactStreamId") String artifactStreamId, @QueryParam("settingId") String settingId) {
-    List<BuildDetails> buildDetails = buildSourceService.getBuilds(artifactStreamId, settingId);
+  public RestResponse<List<BuildDetails>> getBuilds(@QueryParam("artifactStreamId") String artifactStreamId,
+      @QueryParam("settingId") String settingId, @DefaultValue("-1") @QueryParam("maxResults") int maxResults) {
+    List<BuildDetails> buildDetails = buildSourceService.getBuilds(artifactStreamId, settingId, maxResults);
     buildDetails = buildDetails.stream().sorted(new BuildDetailsComparator()).collect(toList());
     return new RestResponse<>(buildDetails);
   }
@@ -577,5 +580,21 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse delete(@PathParam("id") String id) {
     return new RestResponse<>(artifactStreamService.delete(id));
+  }
+
+  /**
+   * List.
+   *
+   * @param pageRequest the page request
+   * @return the rest response
+   */
+  @GET
+  @Path("artifact-streams/artifacts")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<Artifact>> list(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
+    pageRequest.addFilter("appId", EQ, GLOBAL_APP_ID);
+    return new RestResponse<>(artifactService.listSortByBuildNo(pageRequest));
   }
 }

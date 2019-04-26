@@ -149,6 +149,15 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
+  public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
+    List<Artifact> artifacts = new ArrayList<>();
+    PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
+    artifacts.addAll(pageResponse.getResponse().stream().sorted(new ArtifactComparator()).collect(Collectors.toList()));
+    pageResponse.setResponse(artifacts);
+    return pageResponse;
+  }
+
+  @Override
   public PageResponse<Artifact> listSortByBuildNo(String appId, String serviceId, PageRequest<Artifact> pageRequest) {
     List<Artifact> artifacts = new ArrayList<>();
     if (serviceId != null) {

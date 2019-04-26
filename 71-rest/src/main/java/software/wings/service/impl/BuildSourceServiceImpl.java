@@ -7,8 +7,10 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
+import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -166,12 +168,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public List<BuildDetails> getBuilds(String artifactStreamId, String settingId) {
-    return getBuilds(GLOBAL_APP_ID, artifactStreamId, settingId, -1);
+  public List<BuildDetails> getBuilds(String artifactStreamId, String settingId, int limit) {
+    return getBuilds(GLOBAL_APP_ID, artifactStreamId, settingId, limit);
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+    return getBuildDetails(appId, artifactStreamId, settingId, limit);
+  }
+
+  private List<BuildDetails> getBuildDetails(String appId, String artifactStreamId, String settingId, int limit) {
     ArtifactStream artifactStream;
     if (!appId.equals(GLOBAL_APP_ID)) {
       artifactStream = getArtifactStream(appId, artifactStreamId);
@@ -200,7 +206,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     if (GCS.name().equals(artifactStreamType)) {
       limit = (limit != -1) ? limit : 100;
     }
-
     return getBuildDetails(appId, limit, settingAttribute, settingValue, encryptedDataDetails, artifactStreamType,
         artifactStreamAttributes);
   }
@@ -214,6 +219,17 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     } else if (AMAZON_S3.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
+    } else if (JENKINS.name().equals(artifactStreamType) || BAMBOO.name().equals(artifactStreamType)) {
+      if (appId.equals(GLOBAL_APP_ID)) {
+        if (limit == -1) {
+          limit = 500;
+        }
+        return getBuildService(settingAttribute, appId)
+            .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit);
+      } else {
+        return getBuildService(settingAttribute, appId)
+            .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
+      }
     } else {
       return getBuildService(settingAttribute, appId)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);

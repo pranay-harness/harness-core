@@ -1232,5 +1232,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceNowFields.class, 7169);
     kryo.register(ServiceNowExecutionData.class, 7170);
     kryo.register(RepositoryType.class, 7171);
+    kryo.register(BuildDetails.BuildStatus.class, 7174);
   }
 }
