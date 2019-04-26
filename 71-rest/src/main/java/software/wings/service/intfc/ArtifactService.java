@@ -26,6 +26,13 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * List.
    *
    * @param pageRequest  the page request
+   * @return the page response
+   */
+  PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest);
+  /**
+   * List.
+   *
+   * @param pageRequest  the page request
    * @param withServices the with services
    * @return the page response
    */

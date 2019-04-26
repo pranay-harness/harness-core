@@ -140,7 +140,7 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
-  default List<BuildDetails> getBuilds(String artifactStreamId, String settingId) {
+  default List<BuildDetails> getBuilds(String artifactStreamId, String settingId, int limit) {
     throw new UnsupportedOperationException();
   }
 

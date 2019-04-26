@@ -57,10 +57,8 @@ public interface BambooRestClient {
    * @param maxResult     the max result
    * @return the call
    */
-  @GET(
-      "rest/api/latest/result/{planKey}.json?authType=basic&buildstate=Successful&max-results=10000&expand=results.result")
-  Call<JsonNode>
-  listBuildsForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey,
+  @GET("rest/api/latest/result/{planKey}.json?authType=basic&buildstate=Successful&expand=results.result")
+  Call<JsonNode> listBuildsForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey,
       @Query("max-result") int maxResult);
 
   /**

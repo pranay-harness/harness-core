@@ -181,7 +181,10 @@ public class BuildSourceCallback implements NotifyCallback {
       collectGenericArtifacts(artifactStream, newArtifacts);
     } else {
       // Jenkins or Bamboo case
-      collectLatestArtifact(appId, artifactStream, newArtifacts);
+      if (!appId.equals(GLOBAL_APP_ID)) {
+        collectLatestArtifact(appId, artifactStream, newArtifacts);
+      }
+      collectSuccessfulArtifacts(artifactStream, newArtifacts);
     }
     return newArtifacts;
   }
@@ -216,6 +219,18 @@ public class BuildSourceCallback implements NotifyCallback {
           buildNo, lastSuccessfulBuild.getNumber(), artifactStream.getUuid());
       newArtifacts.add(artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, lastSuccessfulBuild)));
     }
+  }
+
+  private void collectSuccessfulArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+    if (isEmpty(builds)) {
+      return;
+    }
+    Set<String> newBuildNumbers = getNewBuildNumbers(artifactStream, builds);
+    builds.forEach(buildDetails -> {
+      if (newBuildNumbers.contains(buildDetails.getNumber())) {
+        newArtifacts.add(artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails)));
+      }
+    });
   }
 
   private void collectMetaDataOnlyArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {

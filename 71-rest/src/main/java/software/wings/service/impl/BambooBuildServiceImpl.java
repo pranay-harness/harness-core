@@ -40,6 +40,13 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   }
 
   @Override
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
+    return bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), limit);
+  }
+
+  @Override
   public List<JobDetails> getJobs(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     List<String> strings = Lists.newArrayList(bambooService.getPlanKeys(bambooConfig, encryptionDetails).keySet());

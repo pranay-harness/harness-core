@@ -18,9 +18,25 @@ public class BuildDetails {
   private String buildDisplayName;
   private String buildFullDisplayName;
   private String artifactFileSize;
+  private String uiDisplayName;
+
+  private BuildStatus status;
   private Map<String, String> buildParameters = new HashMap<>();
   private Map<String, String> metadata = new HashMap<>();
+  public enum BuildStatus {
+    FAILURE("Failure"),
+    UNSTABLE("Unstable"),
+    SUCCESS("Success");
 
+    BuildStatus(String displayName) {
+      this.displayName = displayName;
+    }
+
+    private String displayName;
+    public String getDisplayName() {
+      return displayName;
+    }
+  }
   public String getBuildDisplayName() {
     return buildDisplayName;
   }
@@ -35,6 +51,14 @@ public class BuildDetails {
 
   public void setBuildFullDisplayName(String buildFullDisplayName) {
     this.buildFullDisplayName = buildFullDisplayName;
+  }
+
+  public String getUiDisplayName() {
+    return uiDisplayName;
+  }
+
+  public void setUiDisplayName(String uiDisplayName) {
+    this.uiDisplayName = uiDisplayName;
   }
 
   /**
@@ -104,6 +128,14 @@ public class BuildDetails {
 
   public void setArtifactFileSize(String artifactFileSize) {
     this.artifactFileSize = artifactFileSize;
+  }
+
+  public BuildStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(BuildStatus status) {
+    this.status = status;
   }
 
   @Override
@@ -180,7 +212,9 @@ public class BuildDetails {
     private String buildDisplayName;
     private String buildFullDisplayName;
     private String artifactFileSize;
+    private BuildStatus status;
     private Map<String, String> metadata = new HashMap<>();
+    private String uiDisplayName;
 
     private Builder() {}
 
@@ -270,6 +304,16 @@ public class BuildDetails {
       return this;
     }
 
+    public Builder withStatus(BuildStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withUiDisplayName(String uiDisplayName) {
+      this.uiDisplayName = uiDisplayName;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -286,7 +330,9 @@ public class BuildDetails {
           .withBuildDisplayName(buildDisplayName)
           .withBuildFullDisplayName(buildFullDisplayName)
           .withArtifactFileSize(artifactFileSize)
-          .withMetadata(metadata);
+          .withMetadata(metadata)
+          .withStatus(status)
+          .withUiDisplayName(uiDisplayName);
     }
 
     /**
@@ -306,6 +352,8 @@ public class BuildDetails {
       buildDetails.setBuildFullDisplayName(buildFullDisplayName);
       buildDetails.setArtifactFileSize(artifactFileSize);
       buildDetails.setMetadata(metadata);
+      buildDetails.setStatus(status);
+      buildDetails.setUiDisplayName(uiDisplayName);
       return buildDetails;
     }
   }

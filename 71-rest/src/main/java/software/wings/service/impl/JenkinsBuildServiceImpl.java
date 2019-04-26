@@ -61,17 +61,23 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails);
+    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, 50);
+  }
+
+  @Override
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails, int limit) {
+    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, limit);
   }
 
   private List<BuildDetails> getBuildDetails(ArtifactStreamAttributes artifactStreamAttributes, String appId,
-      JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
+      JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     try {
       equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
       encryptionService.decrypt(jenkinsConfig, encryptionDetails);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
-      return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), 50);
+      return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), limit);
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {

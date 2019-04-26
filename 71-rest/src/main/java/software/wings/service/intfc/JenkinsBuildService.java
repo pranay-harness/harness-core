@@ -20,6 +20,10 @@ public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config,
       List<EncryptedDataDetail> encryptionDetails);
 
+  @DelegateTaskType(TaskType.JENKINS_GET_BUILDS)
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config,
+      List<EncryptedDataDetail> encryptionDetails, int limit);
+
   @DelegateTaskType(TaskType.JENKINS_GET_JOBS)
   List<JobDetails> getJobs(
       JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName);

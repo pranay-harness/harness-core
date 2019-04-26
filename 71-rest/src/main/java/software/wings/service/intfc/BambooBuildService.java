@@ -20,6 +20,10 @@ public interface BambooBuildService extends BuildService<BambooConfig> {
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, BambooConfig config,
       List<EncryptedDataDetail> encryptionDetails);
 
+  @DelegateTaskType(TaskType.BAMBOO_GET_BUILDS)
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, BambooConfig config,
+      List<EncryptedDataDetail> encryptionDetails, int limit);
+
   @DelegateTaskType(TaskType.BAMBOO_GET_JOBS)
   List<JobDetails> getJobs(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName);
