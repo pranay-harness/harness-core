@@ -33,6 +33,7 @@ import software.wings.common.Constants;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.licensing.violations.FeatureViolationsService;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtil;
 import software.wings.service.intfc.AccountService;
@@ -60,6 +61,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
   @Inject private AccountService accountService;
+  @Inject private LicenseService licenseService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private GenericDbCache dbCache;
   @Inject private ExecutorService executorService;
@@ -67,6 +69,7 @@ public class LicenseServiceImpl implements LicenseService {
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private FeatureViolationsService featureViolationsService;
 
   @Override
   public void checkForLicenseExpiry() {
@@ -106,6 +109,7 @@ public class LicenseServiceImpl implements LicenseService {
             continue;
           }
 
+          String accountStatus = licenseInfo.getAccountStatus();
           String accountType = licenseInfo.getAccountType();
           if (isEmpty(accountType)) {
             continue;
@@ -129,13 +133,11 @@ public class LicenseServiceImpl implements LicenseService {
                     Constants.EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
               }
             }
-          } else {
-            if (AccountStatus.ACTIVE.equals(licenseInfo.getAccountStatus())) {
-              expireLicense(account.getUuid(), licenseInfo);
-              sendEmail(account, expiryTime, accountType, Constants.EMAIL_SUBJECT_ACCOUNT_EXPIRED,
-                  Constants.EMAIL_BODY_ACCOUNT_EXPIRED,
-                  accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
-            }
+          } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
+            expireLicense(account.getUuid(), licenseInfo);
+            sendEmail(account, expiryTime, accountType, Constants.EMAIL_SUBJECT_ACCOUNT_EXPIRED,
+                Constants.EMAIL_BODY_ACCOUNT_EXPIRED,
+                accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
           }
         } catch (Exception e) {
           logger.warn("Failed to check license info for account id {}", account.getUuid(), e);

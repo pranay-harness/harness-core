@@ -9,8 +9,6 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.harness.OrchestrationModule;
-import io.harness.event.lite.FeatureAvailabilityProviderService;
-import io.harness.event.lite.FeatureAvailabilityProviderServiceImpl;
 import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
 import io.harness.limits.LimitCheckerFactory;
@@ -93,6 +91,8 @@ import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
+import software.wings.licensing.violations.FeatureViolationsService;
+import software.wings.licensing.violations.FeatureViolationsServiceImpl;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.security.saml.SamlUserGroupSync;
@@ -681,8 +681,6 @@ public class WingsModule extends DependencyModule {
     bind(MarketPlaceService.class).to(MarketPlaceServiceImpl.class);
     bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
 
-    bind(FeatureAvailabilityProviderService.class).to(FeatureAvailabilityProviderServiceImpl.class);
-
     bind(ServiceNowService.class).to(ServiceNowServiceImpl.class);
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
@@ -700,6 +698,7 @@ public class WingsModule extends DependencyModule {
 
     bind(FileService.class).to(FileServiceImpl.class);
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
+    bind(FeatureViolationsService.class).to(FeatureViolationsServiceImpl.class);
 
     bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})
         .annotatedWith(UseUserGroup.class)
