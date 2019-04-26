@@ -13,6 +13,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -701,7 +702,7 @@ public class HelmDeployState extends State {
                                     .data(TaskData.builder()
                                               .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
                                               .parameters(new Object[] {fetchFilesTaskParams})
-                                              .timeout(TimeUnit.MINUTES.toMillis(60))
+                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
                                               .build())
                                     .build();
 
