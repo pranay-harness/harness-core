@@ -479,9 +479,9 @@ public class AuditYamlHelperForFailedChanges {
 
   private EntityAuditRecordBuilder handleServiceConfigFileChange(GitAuditDataWrapper auditRequestData) {
     ConfigFile configFile;
+    String targetFilePath =
+        getTargetFilePathFromYaml(auditRequestData.getFileContent(), auditRequestData.getYamlFilePath());
     try {
-      String targetFilePath =
-          getTargetFilePathFromYaml(auditRequestData.getFileContent(), auditRequestData.getYamlFilePath());
       configFile = yamlHelper.getServiceConfigFile(
           auditRequestData.getAccountId(), auditRequestData.getYamlFilePath(), targetFilePath);
     } catch (Exception e) {
@@ -494,6 +494,7 @@ public class AuditYamlHelperForFailedChanges {
       String serviceId = getServiceId(auditRequestData);
 
       configFile = ConfigFile.builder().envId(serviceId).entityType(EntityType.SERVICE).envId(GLOBAL_ENV_ID).build();
+      configFile.setRelativeFilePath(targetFilePath);
       configFile.setAppId(auditRequestData.getAppId());
       configFile.setName(name);
     }
@@ -504,9 +505,9 @@ public class AuditYamlHelperForFailedChanges {
 
   private EntityAuditRecordBuilder handleEnvironmentConfigFileChange(GitAuditDataWrapper auditRequestData) {
     ConfigFile configFile;
+    String targetFilePath =
+        getTargetFilePathFromYaml(auditRequestData.getFileContent(), auditRequestData.getYamlFilePath());
     try {
-      String targetFilePath =
-          getTargetFilePathFromYaml(auditRequestData.getFileContent(), auditRequestData.getYamlFilePath());
       configFile = yamlHelper.getEnvironmentConfigFile(
           auditRequestData.getAccountId(), auditRequestData.getYamlFilePath(), targetFilePath);
     } catch (Exception e) {
@@ -528,6 +529,7 @@ public class AuditYamlHelperForFailedChanges {
                        .entityId(envId)
                        .entityType(isBlank(serviceNameOverriden) ? EntityType.ENVIRONMENT : EntityType.SERVICE_TEMPLATE)
                        .envId(isBlank(serviceNameOverriden) ? GLOBAL_ENV_ID : envId)
+                       .relativeFilePath(targetFilePath)
                        .build();
       configFile.setAppId(auditRequestData.getAppId());
       configFile.setName(name);
