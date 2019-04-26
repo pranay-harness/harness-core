@@ -12,6 +12,7 @@ import static software.wings.beans.appmanifest.ManifestFile.APPLICATION_MANIFEST
 import static software.wings.beans.appmanifest.ManifestFile.FILE_NAME_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.common.Constants.VALUES_YAML_KEY;
+import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
@@ -222,6 +223,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
     validateApplicationManifest(applicationManifest);
+    sanitizeApplicationManifestConfigs(applicationManifest);
+
     if (isCreate && exists(applicationManifest)) {
       throw new InvalidRequestException("App Manifest already exists with given parameters");
     }
@@ -487,6 +490,31 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
+  private void sanitizeApplicationManifestConfigs(ApplicationManifest applicationManifest) {
+    switch (applicationManifest.getStoreType()) {
+      case Local:
+      case Remote:
+      case HelmSourceRepo:
+        break;
+
+      case HelmChartRepo:
+        HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
+
+        if (isNotBlank(helmChartConfig.getChartName())) {
+          helmChartConfig.setChartName(helmChartConfig.getChartName().trim());
+        }
+
+        String chartVersion =
+            isNotBlank(helmChartConfig.getChartVersion()) ? helmChartConfig.getChartVersion().trim() : null;
+        helmChartConfig.setChartVersion(chartVersion);
+
+        break;
+
+      default:
+        unhandled(applicationManifest.getStoreType());
+    }
+  }
+
   @Override
   public DirectoryNode getManifestFilesFromGit(String appId, String appManifestId) {
     Application app = appService.get(appId);
@@ -514,7 +542,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                     .data(TaskData.builder()
                                               .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
                                               .parameters(new Object[] {fetchFilesTaskParams})
-                                              .timeout(TimeUnit.MINUTES.toMillis(60))
+                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
                                               .build())
                                     .build();
 

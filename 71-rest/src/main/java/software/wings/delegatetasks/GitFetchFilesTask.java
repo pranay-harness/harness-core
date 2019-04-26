@@ -47,6 +47,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
 
+  public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
+
   public GitFetchFilesTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
