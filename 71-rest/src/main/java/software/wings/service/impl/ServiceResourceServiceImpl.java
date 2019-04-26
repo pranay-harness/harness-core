@@ -57,6 +57,8 @@ import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.globalcontex.EntityOperationIdentifier;
+import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -282,6 +284,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       setKeyWords(service);
       Service savedService =
           duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
+
+      // Mark this create op into GlobalAuditContext so nested entity creation can be related to it
+      updateGlobalContextWithServiceCreationEvent(savedService);
       if (createDefaultCommands && !skipDefaultCommands(service)) {
         savedService = addDefaultCommands(savedService, !createdFromYaml);
       }
@@ -299,6 +304,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       return savedService;
     });
+  }
+
+  private void updateGlobalContextWithServiceCreationEvent(Service savedService) {
+    auditServiceHelper.addEntityOperationIdentifierDataToAuditContext(EntityOperationIdentifier.builder()
+                                                                          .entityId(savedService.getUuid())
+                                                                          .entityType(EntityType.SERVICE.name())
+                                                                          .entityName(savedService.getName())
+                                                                          .operation(entityOperation.CREATE)
+                                                                          .build());
   }
 
   private void sendNotificationAsync(Service savedService, NotificationMessageType entityCreateNotification) {

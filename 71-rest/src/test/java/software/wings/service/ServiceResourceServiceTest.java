@@ -217,6 +217,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private ApplicationManifestService applicationManifestService;
+  @Mock private AuditServiceHelper auditServiceHelper;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -310,6 +311,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     Service service = serviceBuilder.build();
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
+    doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
     Service savedService = spyServiceResourceService.save(service);
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);

@@ -16,6 +16,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.context.GlobalContextData;
+import io.harness.globalcontex.AuditGlobalContextData;
+import io.harness.globalcontex.EntityOperationIdentifier;
+import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.UuidAccess;
@@ -108,9 +111,7 @@ public class EntityHelper {
     String affectedResourceName = StringUtils.EMPTY;
     String affectedResourceType = StringUtils.EMPTY;
 
-    boolean purgeActivity = isPurgeActivity();
-    String opTypeForAffectedResource = purgeActivity ? Type.DELETE.name() : Type.UPDATE.name();
-    String affectedResourceOperation = opTypeForAffectedResource;
+    String affectedResourceOperation = Type.UPDATE.name();
 
     if (entity instanceof Environment) {
       Environment environment = (Environment) entity;
@@ -151,6 +152,8 @@ public class EntityHelper {
       affectedResourceId = mapping.getEnvId();
       affectedResourceName = getEnvironmentName(mapping.getEnvId(), appId);
       affectedResourceType = EntityType.ENVIRONMENT.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
     } else if (entity instanceof Workflow) {
       Workflow workflow = (Workflow) entity;
       entityType = EntityType.WORKFLOW.name();
@@ -186,6 +189,8 @@ public class EntityHelper {
       affectedResourceId = artifactStream.getServiceId();
       affectedResourceName = getServiceName(artifactStream.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof Service) {
       Service service = (Service) entity;
       entityType = EntityType.SERVICE.name();
@@ -203,6 +208,8 @@ public class EntityHelper {
       affectedResourceId = chartSpecification.getServiceId();
       affectedResourceName = getServiceName(chartSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof PcfServiceSpecification) {
       PcfServiceSpecification serviceSpecification = (PcfServiceSpecification) entity;
       entityType = EntityType.PCF_SERVICE_SPECIFICATION.name();
@@ -211,6 +218,8 @@ public class EntityHelper {
       affectedResourceId = serviceSpecification.getServiceId();
       affectedResourceName = getServiceName(serviceSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof LambdaSpecification) {
       LambdaSpecification lambdaSpecification = (LambdaSpecification) entity;
       entityType = EntityType.LAMBDA_SPECIFICATION.name();
@@ -219,6 +228,8 @@ public class EntityHelper {
       affectedResourceId = lambdaSpecification.getServiceId();
       affectedResourceName = getServiceName(lambdaSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof UserDataSpecification) {
       UserDataSpecification dataSpecification = (UserDataSpecification) entity;
       entityType = EntityType.USER_DATA_SPECIFICATION.name();
@@ -227,6 +238,8 @@ public class EntityHelper {
       affectedResourceId = dataSpecification.getServiceId();
       affectedResourceName = getServiceName(dataSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof EcsContainerTask) {
       EcsContainerTask task = (EcsContainerTask) entity;
       entityType = EntityType.ECS_CONTAINER_SPECIFICATION.name();
@@ -235,6 +248,8 @@ public class EntityHelper {
       affectedResourceId = task.getServiceId();
       affectedResourceName = getServiceName(task.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof EcsServiceSpecification) {
       EcsServiceSpecification ecsServiceSpecification = (EcsServiceSpecification) entity;
       entityType = EntityType.ECS_SERVICE_SPECIFICATION.name();
@@ -243,6 +258,8 @@ public class EntityHelper {
       affectedResourceId = ecsServiceSpecification.getServiceId();
       affectedResourceName = getServiceName(ecsServiceSpecification.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof KubernetesContainerTask) {
       KubernetesContainerTask task = (KubernetesContainerTask) entity;
       entityType = EntityType.K8S_CONTAINER_SPECIFICATION.name();
@@ -251,6 +268,8 @@ public class EntityHelper {
       affectedResourceId = task.getServiceId();
       affectedResourceName = getServiceName(task.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof ConfigFile) {
       ConfigFile configFile = (ConfigFile) entity;
       entityType = EntityType.CONFIG_FILE.name();
@@ -264,16 +283,22 @@ public class EntityHelper {
         if (EntityType.SERVICE.equals(entityTypeForFile)) {
           affectedResourceName = getServiceName(affectedResourceId, appId);
           affectedResourceType = EntityType.SERVICE.name();
+          affectedResourceOperation =
+              getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
         } else if (EntityType.ENVIRONMENT.equals(entityTypeForFile)) {
           // Config file override in ENV for all services
           affectedResourceName = getEnvironmentName(affectedResourceId, appId);
           affectedResourceType = EntityType.ENVIRONMENT.name();
+          affectedResourceOperation =
+              getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
         }
       } else {
         // Config file override in ENV for specific service.
         affectedResourceId = envId;
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
+        affectedResourceOperation =
+            getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
       }
     } else if (entity instanceof SettingAttribute) {
       SettingAttribute settingAttribute = (SettingAttribute) entity;
@@ -292,6 +317,8 @@ public class EntityHelper {
       affectedResourceId = serviceCommand.getServiceId();
       affectedResourceName = getServiceName(serviceCommand.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
     } else if (entity instanceof ManifestFile) {
       ManifestFile manifestFile = (ManifestFile) entity;
       entityType = EntityType.MANIFEST_FILE.name();
@@ -305,12 +332,16 @@ public class EntityHelper {
           affectedResourceId = envId;
           affectedResourceName = getEnvironmentName(envId, appId);
           affectedResourceType = EntityType.ENVIRONMENT.name();
+          affectedResourceOperation =
+              getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
         } else {
           String serviceId = manifest.getServiceId();
           if (isNotEmpty(serviceId)) {
             affectedResourceId = serviceId;
             affectedResourceName = getServiceName(serviceId, appId);
             affectedResourceType = EntityType.SERVICE.name();
+            affectedResourceOperation =
+                getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
           }
         }
       }
@@ -324,12 +355,16 @@ public class EntityHelper {
         affectedResourceId = envId;
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
+        affectedResourceOperation =
+            getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
       } else {
         String serviceId = applicationManifest.getServiceId();
         if (isNotEmpty(serviceId)) {
           affectedResourceId = serviceId;
           affectedResourceName = getServiceName(serviceId, appId);
           affectedResourceType = EntityType.SERVICE.name();
+          affectedResourceOperation =
+              getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
         }
       }
     } else if (entity instanceof ServiceVariable) {
@@ -343,15 +378,21 @@ public class EntityHelper {
         if (EntityType.SERVICE.equals(entityTypeForVariable)) {
           affectedResourceId = variable.getEntityId();
           affectedResourceName = getServiceName(affectedResourceId, appId);
+          affectedResourceOperation =
+              getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);
         } else if (EntityType.ENVIRONMENT.equals(entityTypeForVariable)) {
           affectedResourceId = variable.getEntityId();
           affectedResourceName = getEnvironmentName(affectedResourceId, appId);
           affectedResourceType = EntityType.ENVIRONMENT.name();
+          affectedResourceOperation =
+              getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
         }
       } else {
         affectedResourceId = envId;
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
+        affectedResourceOperation =
+            getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
       }
     } else if (entity instanceof Role) {
       Role role = (Role) entity;
@@ -400,6 +441,31 @@ public class EntityHelper {
         .affectedResourceName(affectedResourceName)
         .affectedResourceType(affectedResourceType)
         .affectedResourceOperation(affectedResourceOperation);
+  }
+
+  private String getAffectedResourceOperation(
+      EntityType entityType, String affectedResourceId, String affectedResourceName) {
+    if (isPurgeActivity()) {
+      return Type.DELETE.name();
+    }
+
+    AuditGlobalContextData auditGlobalContextData =
+        (AuditGlobalContextData) GlobalContextManager.get(AuditGlobalContextData.AUDIT_ID);
+    if (auditGlobalContextData == null || auditGlobalContextData.getEntityOperationIdentifierSet() == null) {
+      return Type.UPDATE.name();
+    }
+
+    EntityOperationIdentifier operationIdentifier = EntityOperationIdentifier.builder()
+                                                        .entityId(affectedResourceId)
+                                                        .entityName(affectedResourceName)
+                                                        .entityType(entityType.name())
+                                                        .operation(entityOperation.CREATE)
+                                                        .build();
+    if (auditGlobalContextData.getEntityOperationIdentifierSet().contains(operationIdentifier)) {
+      return Type.CREATE.name();
+    }
+
+    return Type.UPDATE.name();
   }
 
   private boolean isPurgeActivity() {

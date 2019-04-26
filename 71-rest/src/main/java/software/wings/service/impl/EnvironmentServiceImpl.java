@@ -43,6 +43,8 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.globalcontex.EntityOperationIdentifier;
+import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.Queue;
@@ -56,6 +58,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
@@ -233,12 +236,26 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     environment.setKeywords(trimStrings(environment.generateKeywords()));
     Environment savedEnvironment = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
+
+    // Mark this create op into GlobalAuditContext so nested entity creation can be related to it
+    auditServiceHelper.addEntityOperationIdentifierDataToAuditContext(
+        generateEntityOperationIdentity(savedEnvironment));
+
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
     sendNotifaction(savedEnvironment, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
     yamlPushService.pushYamlChangeSet(
         accountId, null, savedEnvironment, Type.CREATE, environment.isSyncFromGit(), false);
 
     return savedEnvironment;
+  }
+
+  private EntityOperationIdentifier generateEntityOperationIdentity(Environment savedEnvironment) {
+    return EntityOperationIdentifier.builder()
+        .entityId(savedEnvironment.getUuid())
+        .entityName(savedEnvironment.getName())
+        .entityType(EntityType.ENVIRONMENT.name())
+        .operation(entityOperation.CREATE)
+        .build();
   }
 
   private void sendNotifaction(Environment savedEnvironment, NotificationMessageType entityCreateNotification) {
