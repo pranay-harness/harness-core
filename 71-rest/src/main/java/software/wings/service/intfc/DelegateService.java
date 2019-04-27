@@ -69,6 +69,8 @@ public interface DelegateService extends OwnedByAccount {
 
   void delete(String accountId, String delegateId);
 
+  void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
+
   Delegate register(@Valid Delegate delegate);
 
   DelegateProfileParams checkForProfile(String accountId, String delegateId, String profileId, long lastUpdatedAt);

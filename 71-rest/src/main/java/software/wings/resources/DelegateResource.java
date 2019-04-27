@@ -211,6 +211,16 @@ public class DelegateResource {
     return new RestResponse<>();
   }
 
+  @DELETE
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Void> delete(
+      @QueryParam("accountId") @NotEmpty String accountId, List<String> delegatesToRetain) {
+    delegateService.retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
+    return new RestResponse<>();
+  }
+
   @PUT
   @Path("{delegateId}/scopes")
   @Timed
