@@ -163,4 +163,9 @@ public class WhitelistResource {
       @QueryParam("accountId") String accountId, @PathParam("whitelistId") String whitelistId) {
     return new RestResponse<>(whitelistService.delete(accountId, whitelistId));
   }
+
+  @DELETE
+  public RestResponse<Boolean> deleteAll(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(whitelistService.deleteAll(accountId));
+  }
 }

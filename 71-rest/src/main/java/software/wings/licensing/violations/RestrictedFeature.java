@@ -6,6 +6,7 @@ import lombok.ToString;
 import software.wings.licensing.violations.checkers.APIKeyViolationChecker;
 import software.wings.licensing.violations.checkers.DelegateViolationChecker;
 import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
+import software.wings.licensing.violations.checkers.IpWhitelistViolationChecker;
 import software.wings.licensing.violations.checkers.SSOViolationChecker;
 import software.wings.licensing.violations.checkers.UsersViolationChecker;
 
@@ -13,6 +14,7 @@ import software.wings.licensing.violations.checkers.UsersViolationChecker;
 @ToString
 public enum RestrictedFeature {
   USERS(UsersViolationChecker.class),
+  IP_WHITELIST(IpWhitelistViolationChecker.class),
   FLOW_CONTROL(FlowControlViolationChecker.class),
   API_KEYS(APIKeyViolationChecker.class),
   SSO(SSOViolationChecker.class),
