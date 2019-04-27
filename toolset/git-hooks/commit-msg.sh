@@ -9,10 +9,13 @@ else
 
     # regex to validate in commit msg
     commit_regex='^\[(HAR|CD|PL|LE)-[0-9]+]: |Merge branch '
-    error_msg="Aborting commit. Your commit message is missing a JIRA Issue"
+    error_msg="Aborting commit. [`cat $1`] is missing a JIRA Issue"
 
-    if ! grep -iqE "$commit_regex" "$1"; then
-        echo "$error_msg" >&2
-        exit 1
+    if [ ! -z "`cat $1`" ]
+    then
+        if ! grep -iqE "$commit_regex" "$1"; then
+            echo "$error_msg" >&2
+            exit 1
+        fi
     fi
 fi
