@@ -18,6 +18,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.builder;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.UserThreadLocal.userGuard;
@@ -40,10 +43,8 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -139,7 +140,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testSaveAndRead() {
-    UserGroup userGroup = UserGroup.builder()
+    UserGroup userGroup = builder()
                               .accountId(accountId)
                               .uuid(userGroupId)
                               .description(description)
@@ -153,12 +154,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
     compare(savedUserGroup, userGroupFromGet);
 
-    userGroup = UserGroup.builder()
-                    .accountId(accountId)
-                    .uuid(userGroupId)
-                    .description(description)
-                    .memberIds(asList(user1Id))
-                    .build();
+    userGroup =
+        builder().accountId(accountId).uuid(userGroupId).description(description).memberIds(asList(user1Id)).build();
     savedUserGroup = userGroupService.save(userGroup);
     compare(userGroup, savedUserGroup);
 
@@ -191,7 +188,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testList() {
-    UserGroup userGroup1 = UserGroup.builder()
+    UserGroup userGroup1 = builder()
                                .uuid(userGroupId)
                                .name(name)
                                .accountId(accountId)
@@ -201,7 +198,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                .build();
     UserGroup savedUserGroup1 = userGroupService.save(userGroup1);
 
-    UserGroup userGroup2 = UserGroup.builder()
+    UserGroup userGroup2 = builder()
                                .name(name2)
                                .uuid(userGroup2Id)
                                .accountId(accountId)
@@ -223,7 +220,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testListByName() {
-    UserGroup userGroup1 = UserGroup.builder()
+    UserGroup userGroup1 = builder()
                                .uuid(userGroupId)
                                .name(name)
                                .accountId(accountId)
@@ -242,7 +239,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCloneUserGroup() {
-    final UserGroup storedGroupToClone = UserGroup.builder()
+    final UserGroup storedGroupToClone = builder()
                                              .uuid(USER_GROUP_ID)
                                              .appId(APP_ID)
                                              .createdBy(null)
@@ -279,21 +276,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       AppPermission appPermission =
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
-      UserGroup userGroup1 = UserGroup.builder()
-                                 .accountId(ACCOUNT_ID)
-                                 .name("USER_GROUP1")
-                                 .appPermissions(Sets.newHashSet(appPermission))
-                                 .build();
-      UserGroup userGroup2 = UserGroup.builder()
-                                 .accountId(ACCOUNT_ID)
-                                 .name("USER_GROUP2")
-                                 .appPermissions(Sets.newHashSet(appPermission))
-                                 .build();
-      UserGroup userGroup3 = UserGroup.builder()
-                                 .accountId(ACCOUNT_ID)
-                                 .name("USER_GROUP3")
-                                 .appPermissions(Sets.newHashSet(appPermission))
-                                 .build();
+      UserGroup userGroup1 =
+          builder().accountId(ACCOUNT_ID).name("USER_GROUP1").appPermissions(Sets.newHashSet(appPermission)).build();
+      UserGroup userGroup2 =
+          builder().accountId(ACCOUNT_ID).name("USER_GROUP2").appPermissions(Sets.newHashSet(appPermission)).build();
+      UserGroup userGroup3 =
+          builder().accountId(ACCOUNT_ID).name("USER_GROUP3").appPermissions(Sets.newHashSet(appPermission)).build();
 
       userGroup1 = userGroupService.save(userGroup1);
       userGroup2 = userGroupService.save(userGroup2);
@@ -351,7 +339,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateNotificationSettings() {
     String accountId = "some-account-id";
-    UserGroup ug = UserGroup.builder().accountId(accountId).name("some-name").build();
+    UserGroup ug = builder().accountId(accountId).name("some-name").build();
     UserGroup saved = userGroupService.save(ug);
 
     UserGroup fetchedGroup = userGroupService.get(accountId, saved.getUuid(), false);
@@ -376,11 +364,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       AppPermission appPermission =
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
-      UserGroup userGroup1 = UserGroup.builder()
-                                 .accountId(ACCOUNT_ID)
-                                 .name("USER_GROUP1")
-                                 .appPermissions(Sets.newHashSet(appPermission))
-                                 .build();
+      UserGroup userGroup1 =
+          builder().accountId(ACCOUNT_ID).name("USER_GROUP1").appPermissions(Sets.newHashSet(appPermission)).build();
       User user1 = anUser()
                        .withAppId(APP_ID)
                        .withEmail("user1@wings.software")
@@ -458,37 +443,39 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
         .isFalse();
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Category(UnitTests.class)
-  public void testDefaultUserGroupShouldNotBeDeleted() {
-    UserGroup defaultUserGroup = UserGroup.builder().accountId(ACCOUNT_ID).name(name).isDefault(true).build();
+  public void testAdminUserGroupShouldNotBeDeleted() {
+    UserGroup defaultUserGroup =
+        builder().accountId(ACCOUNT_ID).name(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME).isDefault(true).build();
     wingsPersistence.save(defaultUserGroup);
 
-    userGroupService.delete(ACCOUNT_ID, defaultUserGroup.getUuid());
+    boolean deleted = userGroupService.delete(ACCOUNT_ID, defaultUserGroup.getUuid(), false);
+    assertFalse(deleted);
   }
 
   @Test
   @Category(UnitTests.class)
-  public void testNonDefaultUserGroupShouldBeDeleted() {
-    UserGroup nonDefaultUserGroup = UserGroup.builder().accountId(ACCOUNT_ID).name(name).isDefault(false).build();
+  public void testNonAdminUserGroupShouldBeDeleted() {
+    UserGroup nonDefaultUserGroup =
+        builder().accountId(ACCOUNT_ID).name(DEFAULT_READ_ONLY_USER_GROUP_NAME).isDefault(true).build();
     wingsPersistence.save(nonDefaultUserGroup);
 
-    boolean deleted = userGroupService.delete(ACCOUNT_ID, nonDefaultUserGroup.getUuid());
+    boolean deleted = userGroupService.delete(ACCOUNT_ID, nonDefaultUserGroup.getUuid(), false);
 
     assertTrue(deleted);
   }
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
   public void testUserGroups() {
-    UserGroup defaultUserGroup = UserGroup.builder()
+    UserGroup defaultUserGroup = builder()
                                      .accountId(ACCOUNT_ID)
                                      .name(name)
                                      .memberIds(Collections.singletonList(user.getUuid()))
                                      .isDefault(true)
                                      .build();
-    UserGroup nonDefaultUserGroup = UserGroup.builder()
+    UserGroup nonDefaultUserGroup = builder()
                                         .accountId(ACCOUNT_ID)
                                         .name(name2)
                                         .memberIds(Collections.singletonList(user.getUuid()))
@@ -535,6 +522,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   private UserGroup createUserGroup(List<String> memberIds) {
-    return UserGroup.builder().accountId(ACCOUNT_ID).uuid(USER_GROUP_ID).memberIds(memberIds).build();
+    return builder().accountId(ACCOUNT_ID).uuid(USER_GROUP_ID).memberIds(memberIds).build();
   }
 }

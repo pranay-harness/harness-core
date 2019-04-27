@@ -165,7 +165,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     List<UserGroup> userGroups =
         wingsPersistence.createQuery(UserGroup.class).filter(UserGroup.ACCOUNT_ID_KEY, accountId).asList();
     for (UserGroup userGroup : userGroups) {
-      delete(accountId, userGroup.getUuid());
+      delete(accountId, userGroup.getUuid(), true);
     }
   }
 
@@ -368,12 +368,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public boolean delete(String accountId, String userGroupId) {
+  public boolean delete(String accountId, String userGroupId, boolean forceDelete) {
     UserGroup userGroup = get(accountId, userGroupId, false);
     Validator.notNullCheck("userGroup", userGroup);
-    if (userGroup.isDefault()) {
-      throw new WingsException(ErrorCode.DELETE_NOT_ALLOWED)
-          .addParam("message", "Default User Groups cannot be deleted.");
+    if (!forceDelete && UserGroupUtils.isAdminUserGroup(userGroup)) {
+      return false;
     }
     Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
                                           .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
@@ -560,5 +559,16 @@ public class UserGroupServiceImpl implements UserGroupService {
         .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
         .filter(UserGroup.NAME_KEY, groupName)
         .get();
+  }
+
+  @Override
+  public boolean deleteNonAdminUserGroups(String accountId) {
+    List<UserGroup> userGroups =
+        wingsPersistence.createQuery(UserGroup.class).filter(UserGroup.ACCOUNT_ID_KEY, accountId).asList();
+
+    return userGroups.stream()
+        .filter(userGroup -> !UserGroupUtils.isAdminUserGroup(userGroup))
+        .map(userGroup -> delete(accountId, userGroup.getUuid(), false))
+        .reduce(true, (a, b) -> a && b);
   }
 }

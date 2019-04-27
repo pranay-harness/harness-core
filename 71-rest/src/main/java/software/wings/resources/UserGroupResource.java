@@ -258,7 +258,15 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<Boolean> delete(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {
-    return new RestResponse<>(userGroupService.delete(accountId, userGroupId));
+    return new RestResponse<>(userGroupService.delete(accountId, userGroupId, false));
+  }
+
+  @DELETE
+  @Path("non-admin")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteNonAdminUserGroups(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(userGroupService.deleteNonAdminUserGroups(accountId));
   }
 
   /**
