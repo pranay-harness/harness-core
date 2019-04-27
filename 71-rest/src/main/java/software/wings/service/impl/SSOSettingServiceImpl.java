@@ -314,4 +314,12 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     wingsPersistence.delete(
         wingsPersistence.createQuery(SSOSettings.class).filter(SSOSettings.ACCOUNT_ID_KEY, accountId));
   }
+
+  @Override
+  public List<SSOSettings> getAllSsoSettings(String accountId) {
+    return wingsPersistence.createQuery(SSOSettings.class)
+        .disableValidation()
+        .filter(SSOSettings.ACCOUNT_ID_KEY, accountId)
+        .asList();
+  }
 }

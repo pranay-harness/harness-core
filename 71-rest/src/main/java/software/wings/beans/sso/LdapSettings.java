@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
@@ -54,6 +55,7 @@ public class LdapSettings extends SSOSettings {
    */
 
   @JsonCreator
+  @Builder
   public LdapSettings(@JsonProperty("displayName") String displayName, @JsonProperty("accountId") String accountId,
       @JsonProperty("connectionSettings") LdapConnectionSettings connectionSettings,
       @JsonProperty("userSettingsList") List<LdapUserSettings> userSettingsList,
