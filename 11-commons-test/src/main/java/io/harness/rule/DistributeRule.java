@@ -5,7 +5,9 @@ import static org.junit.Assume.assumeTrue;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
+import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 @Slf4j
 public class DistributeRule implements TestRule {
@@ -25,15 +27,15 @@ public class DistributeRule implements TestRule {
         logger.info("Distributed test execution on {} workers", TOTAL_WORKERS);
       }
     }
-
-    logger.info("No distribution");
   }
 
   private int worker(Description description) {
     if (TOTAL_WORKERS == 0) {
       return 0;
     }
-    int hash = description.getDisplayName().hashCode();
+
+    final String identifier = description.getDisplayName();
+    int hash = identifier.hashCode();
     if (hash < 0) {
       hash = -(hash + 1);
     }
@@ -46,8 +48,17 @@ public class DistributeRule implements TestRule {
       @Override
       public void evaluate() throws Throwable {
         final int worker = worker(description);
-        assumeTrue(String.format("This test will be executed in worker %d", worker), worker == CURRENT_WORKER);
-        statement.evaluate();
+
+        // PowerMockRunner does not support assume
+        final RunWith annotation = description.getTestClass().getAnnotation(RunWith.class);
+        if (annotation != null && annotation.value() == PowerMockRunner.class) {
+          if (worker == CURRENT_WORKER) {
+            statement.evaluate();
+          }
+        } else {
+          assumeTrue(String.format("This test will be executed in worker %d", worker), worker == CURRENT_WORKER);
+          statement.evaluate();
+        }
       }
     };
   }

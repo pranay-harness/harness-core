@@ -17,13 +17,12 @@ import org.slf4j.LoggerFactory;
 @Slf4j
 public class CategoryTest {
   @Rule public TestName testName = new TestName();
+  @Rule public DistributeRule distributeRule = new DistributeRule();
 
   private RepeatRule repeatRule = new RepeatRule();
 
   @Rule
-  public TestRule chain =
-      outerRule(new DistributeRule())
-          .around(outerRule(repeatRule).around(outerRule(new OwnerRule()).around(new CategoryTimeoutRule())));
+  public TestRule chain = outerRule(repeatRule).around(outerRule(new OwnerRule()).around(new CategoryTimeoutRule()));
 
   /**
    * Log test case name.
