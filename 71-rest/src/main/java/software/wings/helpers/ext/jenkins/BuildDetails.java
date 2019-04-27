@@ -19,7 +19,6 @@ public class BuildDetails {
   private String buildFullDisplayName;
   private String artifactFileSize;
   private String uiDisplayName;
-
   private BuildStatus status;
   private Map<String, String> buildParameters = new HashMap<>();
   private Map<String, String> metadata = new HashMap<>();

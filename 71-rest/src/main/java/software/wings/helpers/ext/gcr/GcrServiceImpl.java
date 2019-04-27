@@ -102,7 +102,7 @@ public class GcrServiceImpl implements GcrService {
             Map<String, String> metadata = new HashMap();
             metadata.put(IMAGE, imageName + ":" + tag);
             metadata.put(TAG, tag);
-            return aBuildDetails().withNumber(tag).withMetadata(metadata).build();
+            return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
           })
           .collect(toList());
     }

@@ -29,6 +29,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
@@ -41,6 +42,8 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.AwsHelperResourceService;
+import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -84,6 +87,8 @@ public class SettingResource {
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
+  @Inject private AzureResourceService azureResourceService;
+  @Inject private AwsHelperResourceService awsHelperResourceService;
 
   /**
    * List.
@@ -475,6 +480,47 @@ public class SettingResource {
     return new RestResponse<>(buildDetails);
   }
 
+  @GET
+  @Path("subscriptions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> listSubscriptions(
+      @QueryParam("accountId") String accountId, @QueryParam("settingId") String settingId) {
+    return new RestResponse(azureResourceService.listSubscriptions(settingId));
+  }
+
+  @GET
+  @Path("subscriptions/{subscriptionId}/containerRegistries")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listContainerRegistries(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") String settingId, @PathParam(value = "subscriptionId") String subscriptionId) {
+    return new RestResponse(azureResourceService.listContainerRegistries(settingId, subscriptionId));
+  }
+
+  @GET
+  @Path("subscriptions/{subscriptionId}/containerRegistries/{registryName}/repositories")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listRepositories(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") String settingId, @PathParam(value = "subscriptionId") String subscriptionId,
+      @PathParam(value = "registryName") String registryName) {
+    return new RestResponse(azureResourceService.listRepositories(settingId, subscriptionId, registryName));
+  }
+
+  /**
+   * List.
+   *
+   * @param accountId                the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("aws-regions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NameValuePair>> listAwsRegions(@QueryParam("accountId") String accountId) {
+    return new RestResponse(awsHelperResourceService.getAwsRegions());
+  }
   /**
    * Get GCS projects
    *
