@@ -9,6 +9,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AccountType;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -31,9 +33,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import javax.validation.constraints.NotNull;
 
 @Singleton
+@Slf4j
 public class FlowControlViolationChecker implements FeatureViolationChecker {
   private Predicate<String> flowControlPredicate;
   private WorkflowService workflowService;
@@ -48,21 +50,9 @@ public class FlowControlViolationChecker implements FeatureViolationChecker {
   }
 
   @Override
-  public List<FeatureViolation> check(@NotNull String accountId, @NotNull String targetAccountType) {
-    List<FeatureViolation> featureViolationList = null;
-
-    switch (targetAccountType) {
-      case AccountType.COMMUNITY:
-        featureViolationList = findCommunityFlowControlViolation(accountId);
-        break;
-      default:
-    }
-
-    return featureViolationList != null ? featureViolationList : Collections.EMPTY_LIST;
-  }
-
-  private List<FeatureViolation> findCommunityFlowControlViolation(String accountId) {
-    List<FeatureViolation> featureViolationList = null;
+  public List<FeatureViolation> getViolationsForCommunityAccount(String accountId) {
+    logger.info(
+        "Checking Flow control violations for accountId={} and targetAccountType={}", accountId, AccountType.COMMUNITY);
     List<Usage> flowControlUsages = Lists.newArrayList();
 
     List<Workflow> workflowList = workflowService
@@ -85,20 +75,23 @@ public class FlowControlViolationChecker implements FeatureViolationChecker {
           flowControlUsages.add(Usage.builder()
                                     .entityId(workflow.getUuid())
                                     .entityName(workflow.getName())
-                                    .entityType(EntityType.WORKFLOW)
+                                    .entityType(EntityType.WORKFLOW.name())
                                     .build());
         }
       }
     });
 
+    List<FeatureViolation> featureViolationList = null;
     if (isNotEmpty(flowControlUsages)) {
+      logger.info("Found {} Flow control violations for accountId={} and targetAccountType={}",
+          flowControlUsages.size(), accountId, AccountType.COMMUNITY);
       featureViolationList = Collections.singletonList(FeatureUsageViolation.builder()
                                                            .restrictedFeature(RestrictedFeature.FLOW_CONTROL)
                                                            .usages(flowControlUsages)
                                                            .build());
     }
 
-    return featureViolationList;
+    return CollectionUtils.emptyIfNull(featureViolationList);
   }
 
   private boolean checkFlowControlViolation(PhaseStep phaseStep) {

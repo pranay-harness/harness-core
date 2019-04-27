@@ -2,6 +2,7 @@ package software.wings.licensing.violations.checkers;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.CollectionUtils;
 import software.wings.beans.AccountType;
 import software.wings.beans.FeatureUsageLimitExceededViolation;
 import software.wings.beans.FeatureViolation;
@@ -24,20 +25,21 @@ public class UsersViolationChecker implements FeatureViolationChecker {
   @Inject private UserService userService;
 
   @Override
-  public List<FeatureViolation> check(String accountId, String targetAccountType) {
+  public List<FeatureViolation> getViolationsForCommunityAccount(String accountId) {
     int currentNumberOfUsers = userService.getUsersOfAccount(accountId).size();
-    int allowedNumberOfUsers = maxUsersAllowedByAccountType.get(targetAccountType);
+    int allowedNumberOfUsers = maxUsersAllowedByAccountType.get(AccountType.COMMUNITY);
 
+    List<FeatureViolation> featureViolationList = null;
     if (currentNumberOfUsers > allowedNumberOfUsers) {
-      return Collections.singletonList(FeatureUsageLimitExceededViolation.builder()
-                                           .restrictedFeature(RestrictedFeature.USERS)
-                                           .paidLicenseUsageLimit(MAX_USERS_ALLOWED_IN_PAID)
-                                           .usageCount(currentNumberOfUsers)
-                                           .usageLimit(allowedNumberOfUsers)
-                                           .build());
+      featureViolationList = Collections.singletonList(FeatureUsageLimitExceededViolation.builder()
+                                                           .restrictedFeature(RestrictedFeature.USERS)
+                                                           .paidLicenseUsageLimit(MAX_USERS_ALLOWED_IN_PAID)
+                                                           .usageCount(currentNumberOfUsers)
+                                                           .usageLimit(allowedNumberOfUsers)
+                                                           .build());
     }
 
-    return Collections.emptyList();
+    return CollectionUtils.emptyIfNull(featureViolationList);
   }
 
   private static Map<String, Integer> getMaxUsersAllowedByAccountType() {

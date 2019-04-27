@@ -10,6 +10,7 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Iterator;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -80,4 +81,11 @@ public interface SSOSettingService extends OwnedByAccount {
   OauthSettings updateOauthSettings(String accountId, String displayName, String filter);
 
   boolean deleteOauthSettings(String accountId);
+
+  /**
+   * Get ALL SSO Setting required for an account. Required for Community version.
+   * @param accountId
+   * @return
+   */
+  List<SSOSettings> getAllSsoSettings(String accountId);
 }

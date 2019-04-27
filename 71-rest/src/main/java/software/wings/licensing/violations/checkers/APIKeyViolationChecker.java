@@ -30,11 +30,11 @@ public class APIKeyViolationChecker implements FeatureViolationChecker {
   @Inject private ApiKeyService apiKeyService;
 
   @Override
-  public List<FeatureViolation> check(String accountId, String targetAccountType) {
+  public List<FeatureViolation> getViolationsForCommunityAccount(String accountId) {
     final PageRequest<ApiKeyEntry> request = aPageRequest().addFilter(ACCOUNT_ID_KEY, EQ, accountId).build();
 
     final int currentCount = apiKeyService.list(request, accountId).size();
-    final int allowedCount = allowedUsageByAccountType.get(targetAccountType);
+    final int allowedCount = allowedUsageByAccountType.get(AccountType.COMMUNITY);
 
     if (currentCount > allowedCount) {
       return Collections.singletonList(FeatureEnabledViolation.builder()

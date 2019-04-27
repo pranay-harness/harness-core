@@ -94,6 +94,7 @@ import software.wings.licensing.LicenseServiceImpl;
 import software.wings.licensing.violations.FeatureViolationsService;
 import software.wings.licensing.violations.FeatureViolationsServiceImpl;
 import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
+import software.wings.licensing.violations.checkers.SSOViolationChecker;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.security.saml.SamlUserGroupSync;
@@ -701,6 +702,7 @@ public class WingsModule extends DependencyModule {
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
     bind(FeatureViolationsService.class).to(FeatureViolationsServiceImpl.class);
     bind(FlowControlViolationChecker.class);
+    bind(SSOViolationChecker.class);
 
     bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})
         .annotatedWith(UseUserGroup.class)
