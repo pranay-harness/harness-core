@@ -115,10 +115,10 @@ public class TwoFactorAuthenticationManager {
     return accountService.getTwoFactorEnforceInfo(accountId);
   }
 
-  public boolean isTwoFactorEnabledForAdmin(String accountId, User user) {
+  public boolean isTwoFactorEnabled(String accountId, User user) {
     boolean twoFactorEnabled = false;
     if (accountId != null && user != null) {
-      twoFactorEnabled = userService.isTwoFactorEnabledForAdmin(accountId, user.getUuid());
+      twoFactorEnabled = userService.isTwoFactorEnabled(accountId, user.getUuid());
     }
     return twoFactorEnabled;
   }
@@ -161,5 +161,12 @@ public class TwoFactorAuthenticationManager {
       logger.warn("Two Factor authentication is not enabled for user [{}]", userId);
       return false;
     }
+  }
+
+  public boolean disableTwoFactorAuthentication(String accountId) {
+    accountService.updateTwoFactorEnforceInfo(accountId, false);
+    userService.getUsersWithThisAsPrimaryAccount(accountId).forEach(u -> totpHandler.disableTwoFactorAuthentication(u));
+
+    return true;
   }
 }

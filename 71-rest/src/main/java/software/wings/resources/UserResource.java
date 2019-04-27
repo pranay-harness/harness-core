@@ -595,7 +595,7 @@ public class UserResource {
       @PathParam("accountId") @NotEmpty String accountId, TwoFactorAdminOverrideSettings settings) {
     // Trying Override = true
     if (settings.isAdminOverrideTwoFactorEnabled()) {
-      if (twoFactorAuthenticationManager.isTwoFactorEnabledForAdmin(accountId, UserThreadLocal.get())) {
+      if (twoFactorAuthenticationManager.isTwoFactorEnabled(accountId, UserThreadLocal.get())) {
         return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
       } else {
         return Builder.aRestResponse()
@@ -610,6 +610,15 @@ public class UserResource {
     else {
       return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
     }
+  }
+
+  @PUT
+  @Path("disable-two-factor-auth/{accountId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  public RestResponse<Boolean> disableTwoFactorAuth(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(twoFactorAuthenticationManager.disableTwoFactorAuthentication(accountId));
   }
 
   @GET

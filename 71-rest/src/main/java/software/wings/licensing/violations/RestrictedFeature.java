@@ -10,6 +10,7 @@ import software.wings.licensing.violations.checkers.GovernanceViolationChecker;
 import software.wings.licensing.violations.checkers.IpWhitelistViolationChecker;
 import software.wings.licensing.violations.checkers.SSOViolationChecker;
 import software.wings.licensing.violations.checkers.TemplateLibraryViolationChecker;
+import software.wings.licensing.violations.checkers.TwoFactorAuthenticationViolationChecker;
 import software.wings.licensing.violations.checkers.UserGroupsViolationChecker;
 import software.wings.licensing.violations.checkers.UsersViolationChecker;
 
@@ -18,6 +19,7 @@ import software.wings.licensing.violations.checkers.UsersViolationChecker;
 public enum RestrictedFeature {
   USERS(UsersViolationChecker.class),
   FLOW_CONTROL(FlowControlViolationChecker.class),
+  TWO_FACTOR_AUTHENTICATION(TwoFactorAuthenticationViolationChecker.class),
   USER_GROUPS(UserGroupsViolationChecker.class),
   API_KEYS(APIKeyViolationChecker.class),
   SSO(SSOViolationChecker.class),

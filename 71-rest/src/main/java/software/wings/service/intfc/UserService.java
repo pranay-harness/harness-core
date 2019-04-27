@@ -159,7 +159,7 @@ public interface UserService extends OwnedByAccount {
    * @param adminOverrideTwoFactorEnabled boolean
    */
   boolean overrideTwoFactorforAccount(String accountId, boolean adminOverrideTwoFactorEnabled);
-  boolean isTwoFactorEnabledForAdmin(String accountId, String usedId);
+  boolean isTwoFactorEnabled(String accountId, String usedId);
 
   /**
    * Gets the.
@@ -458,6 +458,8 @@ public interface UserService extends OwnedByAccount {
   boolean isUserVerified(User user);
 
   List<User> getUsersOfAccount(@NotEmpty String accountId);
+
+  List<User> getUsersWithThisAsPrimaryAccount(@NotEmpty String accountId);
 
   AuthenticationMechanism getAuthenticationMechanism(User user);
 
