@@ -20,6 +20,8 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApiKeyService;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -92,11 +94,14 @@ public class ApiKeyResource {
   }
 
   @DELETE
-  public RestResponse<Boolean> deleteAll(@NotEmpty @QueryParam("accountId") String accountId) {
+  public RestResponse<Map<String, Object>> deleteAll(@NotEmpty @QueryParam("accountId") String accountId) {
     boolean deleted = apiKeyService.deleteAll(accountId);
     if (!deleted) {
       logger.error("API keys were not deleted. accountId={}", accountId);
     }
-    return new RestResponse<>();
+
+    Map<String, Object> status = new HashMap<>();
+    status.put("success", deleted);
+    return new RestResponse<>(status);
   }
 }
