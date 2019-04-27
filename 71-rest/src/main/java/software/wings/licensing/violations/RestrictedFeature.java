@@ -9,16 +9,18 @@ import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
 import software.wings.licensing.violations.checkers.GovernanceViolationChecker;
 import software.wings.licensing.violations.checkers.IpWhitelistViolationChecker;
 import software.wings.licensing.violations.checkers.SSOViolationChecker;
+import software.wings.licensing.violations.checkers.TemplateLibraryViolationChecker;
 import software.wings.licensing.violations.checkers.UsersViolationChecker;
 
 @Getter
 @ToString
 public enum RestrictedFeature {
   USERS(UsersViolationChecker.class),
-  IP_WHITELIST(IpWhitelistViolationChecker.class),
   FLOW_CONTROL(FlowControlViolationChecker.class),
   API_KEYS(APIKeyViolationChecker.class),
   SSO(SSOViolationChecker.class),
+  TEMPLATE_LIBRARY(TemplateLibraryViolationChecker.class),
+  IP_WHITELIST(IpWhitelistViolationChecker.class),
   GOVERNANCE(GovernanceViolationChecker.class),
   DELEGATE(DelegateViolationChecker.class);
 
