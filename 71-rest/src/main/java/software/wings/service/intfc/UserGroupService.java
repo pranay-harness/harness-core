@@ -113,7 +113,7 @@ public interface UserGroupService extends OwnedByAccount {
    */
   boolean existsLinkedUserGroup(@NotBlank String ssoId);
 
-  boolean delete(String accountId, String userGroupId);
+  boolean delete(String accountId, String userGroupId, boolean forceDelete);
 
   /**
    * Gets default "Account Administrator" user group for an account.
@@ -157,4 +157,6 @@ public interface UserGroupService extends OwnedByAccount {
   List<UserGroup> getUserGroupsBySsoId(@NotBlank String accountId, @NotBlank String ssoId);
 
   UserGroup fetchUserGroupByName(@NotEmpty String accountId, @NotEmpty String groupName);
+
+  boolean deleteNonAdminUserGroups(String accountId);
 }

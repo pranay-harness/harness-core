@@ -17,8 +17,8 @@ import java.util.Map;
 
 public class UsersViolationChecker implements FeatureViolationChecker {
   private static final int MAX_USERS_ALLOWED_IN_PAID = Integer.MAX_VALUE;
-  private static final int MAX_USERS_ALLOWED_IN_TRIAL = 10;
-  private static final int MAX_USERS_ALLOWED_IN_COMMUNITY = 10;
+  private static final int MAX_USERS_ALLOWED_IN_TRIAL = Integer.MAX_VALUE;
+  private static final int MAX_USERS_ALLOWED_IN_COMMUNITY = 5;
 
   private static final Map<String, Integer> maxUsersAllowedByAccountType = getMaxUsersAllowedByAccountType();
 
