@@ -281,4 +281,44 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                             .as(artifactStreamType.getType());
     assertThat(restResponse.getResource()).isNotNull();
   }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getSubscriptionsForACR() {
+    GenericType<RestResponse<Map<String, String>>> artifactStreamType =
+        new GenericType<RestResponse<Map<String, String>>>() {
+
+        };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER);
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .queryParam("accountId", application.getAccountId())
+                                                         .queryParam("settingId", settingAttribute.getUuid())
+                                                         .contentType(ContentType.JSON)
+                                                         .get("/settings/subscriptions")
+                                                         .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().size()).isGreaterThan(0);
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void getAWSRegionsForECR() {
+    GenericType<RestResponse<List<Object>>> artifactStreamType = new GenericType<RestResponse<List<Object>>>() {
+
+    };
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER);
+    RestResponse<List<Object>> restResponse = Setup.portal()
+                                                  .auth()
+                                                  .oauth2(bearerToken)
+                                                  .queryParam("accountId", application.getAccountId())
+                                                  .contentType(ContentType.JSON)
+                                                  .get("/settings/aws-regions")
+                                                  .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().size()).isGreaterThan(0);
+  }
 }

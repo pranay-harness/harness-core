@@ -1215,11 +1215,27 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .autoPopulate(true)
                                                     .serviceId(SERVICE_ID)
                                                     .build();
+    validateDockerArtifactStream(dockerArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddDockerArtifactStreamAtConnectorLevel() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .appId(GLOBAL_APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .build();
+    validateDockerArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void validateDockerArtifactStream(DockerArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(dockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(DOCKER.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("wingsplugins/todolist");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("wingsplugins/todolist");
     assertThat(savedArtifactSteam).isInstanceOf(DockerArtifactStream.class);
@@ -1241,11 +1257,27 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .autoPopulate(true)
                                                     .serviceId(SERVICE_ID)
                                                     .build();
+    updateAndValidateDockerArtifactStream(dockerArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateDockerArtifactStreamAtConnectorLevel() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .appId(GLOBAL_APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .build();
+    updateAndValidateDockerArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void updateAndValidateDockerArtifactStream(DockerArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(dockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(DOCKER.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("wingsplugins/todolist");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("wingsplugins/todolist");
     assertThat(savedArtifactSteam).isInstanceOf(DockerArtifactStream.class);
@@ -1261,7 +1293,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("Docker Stream");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(DOCKER.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("harness/todolist");
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo("harness/todolist");
     assertThat(updatedArtifactStream).isInstanceOf(DockerArtifactStream.class);
@@ -1285,11 +1317,28 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                  .autoPopulate(true)
                                                  .serviceId(SERVICE_ID)
                                                  .build();
+    validateECRArtifactStream(dockerArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddEcrArtifactStreamAtCloudProviderLevel() {
+    EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
+                                                 .appId(GLOBAL_APP_ID)
+                                                 .settingId(SETTING_ID)
+                                                 .imageName("todolist")
+                                                 .region("us-east-1")
+                                                 .autoPopulate(true)
+                                                 .build();
+    validateECRArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void validateECRArtifactStream(EcrArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(dockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ECR.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("todolist");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("todolist");
     assertThat(savedArtifactSteam).isInstanceOf(EcrArtifactStream.class);
@@ -1313,11 +1362,28 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                  .autoPopulate(true)
                                                  .serviceId(SERVICE_ID)
                                                  .build();
+    updateAndValidateECRArtifactStream(dockerArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateEcrArtifactStreamAtCloudProviderLevel() {
+    EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
+                                                 .appId(GLOBAL_APP_ID)
+                                                 .settingId(SETTING_ID)
+                                                 .imageName("todolist")
+                                                 .region("us-east-1")
+                                                 .autoPopulate(true)
+                                                 .build();
+    updateAndValidateECRArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void updateAndValidateECRArtifactStream(EcrArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(dockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ECR.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("todolist");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("todolist");
     assertThat(savedArtifactSteam).isInstanceOf(EcrArtifactStream.class);
@@ -1334,7 +1400,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("Ecr Stream");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(ECR.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("todolist-changed");
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo("todolist-changed");
 
@@ -1359,11 +1425,28 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
+    validateGCRArtifactStream(gcrArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddGcrArtifactStreamAtCloudProviderLevel() {
+    GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
+                                              .appId(GLOBAL_APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .dockerImageName("exploration-161417/todolist")
+                                              .registryHostName("gcr.io")
+                                              .autoPopulate(true)
+                                              .build();
+    validateGCRArtifactStream(gcrArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void validateGCRArtifactStream(GcrArtifactStream gcrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(gcrArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(GCR.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("exploration-161417/todolist");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("gcr.io/exploration-161417/todolist");
     assertThat(savedArtifactSteam).isInstanceOf(GcrArtifactStream.class);
@@ -1389,11 +1472,28 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
+    updateAndValidateGCRArtifactStream(gcrArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateGcrArtifactStreamAtCloudProviderLevel() {
+    GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
+                                              .appId(GLOBAL_APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .dockerImageName("exploration-161417/todolist")
+                                              .registryHostName("gcr.io")
+                                              .autoPopulate(true)
+                                              .build();
+    updateAndValidateGCRArtifactStream(gcrArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void updateAndValidateGCRArtifactStream(GcrArtifactStream gcrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(gcrArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(GCR.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("exploration-161417/todolist");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("gcr.io/exploration-161417/todolist");
     assertThat(savedArtifactSteam).isInstanceOf(GcrArtifactStream.class);
@@ -1413,7 +1513,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(updatedArtifactSteam.getName()).isNotEmpty().isEqualTo("Gcr Stream");
     assertThat(updatedArtifactSteam.getArtifactStreamType()).isEqualTo(GCR.name());
-    assertThat(updatedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactSteam.fetchArtifactDisplayName(""))
         .isNotEmpty()
         .contains("exploration-161417/todolist-changed");
@@ -1440,11 +1540,29 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
+    validateAcrArtifactStream(acrArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddAcrArtifactStreamAtCloudProviderLevel() {
+    AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
+                                              .appId(GLOBAL_APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .subscriptionId("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0")
+                                              .repositoryName("nginx")
+                                              .registryName("harnessqa")
+                                              .autoPopulate(true)
+                                              .build();
+    validateAcrArtifactStream(acrArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void validateAcrArtifactStream(AcrArtifactStream acrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(acrArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.ACR.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("harnessqa/nginx");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("harnessqa/nginx");
     assertThat(savedArtifactSteam).isInstanceOf(AcrArtifactStream.class);
@@ -1474,11 +1592,29 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
+    updateAndValidateACRArtifactStream(acrArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateAcrArtifactStreamAtCloudProviderLevel() {
+    AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
+                                              .appId(GLOBAL_APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .subscriptionId("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0")
+                                              .repositoryName("nginx")
+                                              .registryName("harnessqa")
+                                              .autoPopulate(true)
+                                              .build();
+    updateAndValidateACRArtifactStream(acrArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void updateAndValidateACRArtifactStream(AcrArtifactStream acrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(acrArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.ACR.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("harnessqa/nginx");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("harnessqa/nginx");
     assertThat(savedArtifactSteam).isInstanceOf(AcrArtifactStream.class);
@@ -1501,7 +1637,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty();
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(ArtifactStreamType.ACR.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("harnessprod/istio");
     assertThat(updatedArtifactStream.getSourceName()).isEqualTo("harnessprod/istio");
     assertThat(updatedArtifactStream).isInstanceOf(AcrArtifactStream.class);
@@ -1516,7 +1652,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedAcrArtifactStream.getSubscriptionId()).isEqualTo("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0");
     assertThat(updatedAcrArtifactStream.getRepositoryName()).isEqualTo("istio");
     assertThat(updatedAcrArtifactStream.getRegistryName()).isEqualTo("harnessprod");
-
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }

@@ -56,8 +56,11 @@ public class EcrServiceImpl implements EcrService {
               Map<String, String> metadata = new HashMap();
               metadata.put(METADATA_IMAGE_KEY, imageUrl + ":" + imageIdentifier.getImageTag());
               metadata.put(METADATA_TAG_KEY, imageIdentifier.getImageTag());
-              buildDetails.add(
-                  aBuildDetails().withNumber(imageIdentifier.getImageTag()).withMetadata(metadata).build());
+              buildDetails.add(aBuildDetails()
+                                   .withNumber(imageIdentifier.getImageTag())
+                                   .withMetadata(metadata)
+                                   .withUiDisplayName("Tag# " + imageIdentifier.getImageTag())
+                                   .build());
             });
         listImagesRequest.setNextToken(listImagesResult.getNextToken());
       } while (listImagesRequest.getNextToken() != null);
