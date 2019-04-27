@@ -1,6 +1,7 @@
 package software.wings.licensing.violations.checkers;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.data.structure.CollectionUtils;
 import software.wings.beans.AccountType;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Singleton
 public class UsersViolationChecker implements FeatureViolationChecker {
   private static final int MAX_USERS_ALLOWED_IN_PAID = Integer.MAX_VALUE;
   private static final int MAX_USERS_ALLOWED_IN_TRIAL = Integer.MAX_VALUE;

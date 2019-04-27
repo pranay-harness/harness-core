@@ -1466,7 +1466,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean isTwoFactorEnabledForAdmin(String accountId, String userId) {
+  public boolean isTwoFactorEnabled(String accountId, String userId) {
     // Check if admin has 2FA enabled
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
@@ -2106,6 +2106,14 @@ public class UserServiceImpl implements UserService {
     PageRequest<User> pageRequest = aPageRequest().addFilter("accounts", HAS, account).build();
     PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
     return pageResponse.getResponse();
+  }
+
+  @Override
+  public List<User> getUsersWithThisAsPrimaryAccount(String accountId) {
+    return getUsersOfAccount(accountId)
+        .stream()
+        .filter(u -> u.getAccounts().get(0).getUuid().equals(accountId))
+        .collect(Collectors.toList());
   }
 
   public AuthenticationMechanism getAuthenticationMechanism(User user) {
