@@ -79,6 +79,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateMetaInfo;
@@ -96,6 +97,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.network.Http;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptionConfig;
@@ -174,6 +177,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -196,6 +200,7 @@ import javax.ws.rs.NotFoundException;
 public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
+  public static final int MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT = 1;
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
   private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
   private static final String DELIMITER = "_";
@@ -231,6 +236,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private PersistentLocker persistentLocker;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -1030,9 +1036,25 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Delegate add(Delegate delegate) {
-    logger.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
-    delegate.setAppId(GLOBAL_APP_ID);
-    Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
+    Delegate savedDelegate;
+    String accountId = delegate.getAccountId();
+    if (accountService.isCommunityAccount(accountId)) {
+      try (AcquiredLock ignored =
+               persistentLocker.acquireLock("delegateCountLock-" + accountId, Duration.ofMinutes(3))) {
+        long currentDelegateCount = getTotalNumberOfDelegates(accountId);
+        if (currentDelegateCount < MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT) {
+          savedDelegate = saveDelegate(delegate);
+        } else {
+          throw new WingsException(
+              String.format("Can not add delegate to the account. Community account supports maximum %d delegates.",
+                  MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT),
+              USER_SRE);
+        }
+      }
+    } else {
+      savedDelegate = saveDelegate(delegate);
+    }
+
     logger.info("Delegate saved: {}", savedDelegate);
 
     // When polling is enabled for delegate, do not perform these event publishing
@@ -1044,6 +1066,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
+    return savedDelegate;
+  }
+
+  private long getTotalNumberOfDelegates(String accountId) {
+    return wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).count();
+  }
+
+  private Delegate saveDelegate(Delegate delegate) {
+    delegate.setAppId(GLOBAL_APP_ID);
+    Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
+    logger.info("Delegate saved: {}", savedDelegate);
     return savedDelegate;
   }
 
@@ -1076,6 +1109,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
                                 .filter(Delegate.ACCOUNT_ID_KEY, accountId)
                                 .filter(ID_KEY, delegateId));
+  }
+
+  public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
+    if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
+      wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
+                                  .filter(Delegate.ACCOUNT_ID_KEY, accountId)
+                                  .field(Delegate.ID_KEY)
+                                  .notIn(delegatesToRetain));
+    } else {
+      logger.info("List of delegates to retain is empty. In order to delete delegates, pass a list of delegate IDs");
+    }
   }
 
   private void deleteDelegateSequenceConfig(String accountId, Delegate existingDelegate) {

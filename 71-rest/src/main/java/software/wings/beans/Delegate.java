@@ -32,6 +32,7 @@ public class Delegate extends Base {
   public static final String HOST_NAME_KEY = "hostName";
   public static final String KEYWORDS_KEY = "keywords";
   public static final String VERSION_KEY = "version";
+  public static final String STATUS = "status";
 
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
   public static final String SEQUENCE_NUM_KEY = "sequenceNum";

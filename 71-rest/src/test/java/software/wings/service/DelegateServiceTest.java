@@ -11,6 +11,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -48,6 +49,7 @@ import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -91,6 +93,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -116,6 +119,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -245,6 +249,29 @@ public class DelegateServiceTest extends WingsBaseTest {
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddDelegateForCommunityAccount() {
+    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(true);
+    Delegate delegate = delegateService.add(BUILDER.but().build());
+    verify(eventEmitter)
+        .send(Channel.DELEGATES,
+            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotAddMoreThanAllowedDelegatesForCommunityAccount() {
+    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(true);
+    IntStream.range(0, DelegateServiceImpl.MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT)
+        .forEach(i -> delegateService.add(BUILDER.but().build()));
+    try {
+      delegateService.add(BUILDER.but().build());
+      fail();
+    } catch (WingsException ignored) {
+    }
   }
 
   @Test
