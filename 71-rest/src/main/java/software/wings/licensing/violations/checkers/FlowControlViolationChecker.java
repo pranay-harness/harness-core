@@ -53,16 +53,25 @@ public class FlowControlViolationChecker implements FeatureViolationChecker {
   public List<FeatureViolation> getViolationsForCommunityAccount(String accountId) {
     logger.info(
         "Checking Flow control violations for accountId={} and targetAccountType={}", accountId, AccountType.COMMUNITY);
+
+    List<FeatureViolation> featureViolationList = null;
+    List<Usage> flowControlUsages = getFlowControlViolationUsages(accountId);
+    if (isNotEmpty(flowControlUsages)) {
+      logger.info("Found {} Flow control violations for accountId={} and targetAccountType={}",
+          flowControlUsages.size(), accountId, AccountType.COMMUNITY);
+      featureViolationList = Collections.singletonList(FeatureUsageViolation.builder()
+                                                           .restrictedFeature(RestrictedFeature.FLOW_CONTROL)
+                                                           .usages(flowControlUsages)
+                                                           .build());
+    }
+
+    return CollectionUtils.emptyIfNull(featureViolationList);
+  }
+
+  private List<Usage> getFlowControlViolationUsages(String accountId) {
     List<Usage> flowControlUsages = Lists.newArrayList();
 
-    List<Workflow> workflowList = workflowService
-                                      .listWorkflows(aPageRequest()
-                                                         .withLimit(PageRequest.UNLIMITED)
-                                                         .addFilter(WorkflowKeys.accountId, Operator.EQ, accountId)
-                                                         .build())
-                                      .getResponse();
-
-    workflowList.forEach(workflow -> {
+    getAllWorkflowsByAccountId(accountId).forEach(workflow -> {
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
@@ -80,18 +89,15 @@ public class FlowControlViolationChecker implements FeatureViolationChecker {
         }
       }
     });
+    return flowControlUsages;
+  }
 
-    List<FeatureViolation> featureViolationList = null;
-    if (isNotEmpty(flowControlUsages)) {
-      logger.info("Found {} Flow control violations for accountId={} and targetAccountType={}",
-          flowControlUsages.size(), accountId, AccountType.COMMUNITY);
-      featureViolationList = Collections.singletonList(FeatureUsageViolation.builder()
-                                                           .restrictedFeature(RestrictedFeature.FLOW_CONTROL)
-                                                           .usages(flowControlUsages)
-                                                           .build());
-    }
-
-    return CollectionUtils.emptyIfNull(featureViolationList);
+  private List<Workflow> getAllWorkflowsByAccountId(String accountId) {
+    PageRequest<Workflow> pageRequest = aPageRequest()
+                                            .withLimit(PageRequest.UNLIMITED)
+                                            .addFilter(WorkflowKeys.accountId, Operator.EQ, accountId)
+                                            .build();
+    return workflowService.listWorkflows(pageRequest).getResponse();
   }
 
   private boolean checkFlowControlViolation(PhaseStep phaseStep) {
