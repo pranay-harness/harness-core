@@ -63,7 +63,7 @@ then
 else
     echo '\033[0;34m' formatting poms ... to disable: '\033[0;37m'git config --add $POM_FORMAT_PROPERTY false '\033[0m'
 
-    POMS=`git diff-index --cached --name-only $against | grep "^pom\.xml$"`
+    POMS=`git diff-index --cached --name-only $against | grep "pom\.xml$"`
 
     if [ ! -z "$POMS" ]
     then
