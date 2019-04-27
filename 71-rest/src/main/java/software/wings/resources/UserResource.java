@@ -24,6 +24,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.swagger.annotations.Api;
 import lombok.Data;
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
@@ -308,6 +309,18 @@ public class UserResource {
   public RestResponse delete(@QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId) {
     userService.delete(accountId, userId);
     return new RestResponse();
+  }
+
+  @DELETE
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  public RestResponse<Boolean> delete(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotEmpty List<String> usersToRetain) {
+    if (CollectionUtils.isEmpty(usersToRetain)) {
+      throw new InvalidRequestException("All users in the account can not be deleted");
+    }
+    return new RestResponse<>(userService.deleteUsers(accountId, usersToRetain));
   }
 
   /**
