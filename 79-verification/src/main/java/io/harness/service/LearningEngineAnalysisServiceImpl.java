@@ -29,6 +29,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -143,14 +144,19 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
-      ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task) {
+      ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task, Optional<List<MLAnalysisType>> taskTypes) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter("version", serviceApiVersion)
                                                   .field("retry")
                                                   .lessThanOrEq(LearningEngineAnalysisTask.RETRIES);
     if (is24x7Task.isPresent()) {
-      query.filter("is24x7Task", is24x7Task.get());
+      query.filter(LearningEngineAnalysisTaskKeys.is24x7Task, is24x7Task.get());
     }
+
+    if (taskTypes.isPresent()) {
+      query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
+    }
+
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
