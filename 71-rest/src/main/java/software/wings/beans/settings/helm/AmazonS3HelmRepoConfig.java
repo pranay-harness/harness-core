@@ -5,8 +5,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
+import software.wings.yaml.setting.HelmRepoYaml;
 
 @JsonTypeName("AMAZON_S3_HELM_REPO")
 @Data
@@ -32,5 +35,25 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
     this.bucketName = bucketName;
     this.folderPath = folderPath;
     this.region = region;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends HelmRepoYaml {
+    private String cloudProvider;
+    private String bucket;
+    private String folderPath;
+    private String region;
+
+    @Builder
+    public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket, String folderPath,
+        String region, UsageRestrictions.Yaml usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
+      this.cloudProvider = cloudProvider;
+      this.bucket = bucket;
+      this.folderPath = folderPath;
+      this.region = region;
+    }
   }
 }

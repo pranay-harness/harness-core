@@ -31,7 +31,7 @@ import java.util.List;
 public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B extends SettingValue>
     extends BaseYamlHandler<Y, SettingAttribute> {
   @Inject protected SecretManager secretManager;
-  @Inject private SettingsService settingsService;
+  @Inject protected SettingsService settingsService;
   @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;
   @Inject protected EncryptionService encryptionService;
   @Inject protected YamlHelper yamlHelper;

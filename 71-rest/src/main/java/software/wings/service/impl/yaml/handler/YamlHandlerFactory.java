@@ -143,7 +143,8 @@ public class YamlHandlerFactory {
         yamlHandler = cloudProviderYamlHelperMap.get(subType);
         break;
       case ARTIFACT_SERVER:
-        if (SettingVariableTypes.HTTP_HELM_REPO.name().equals(subType)) {
+        if (SettingVariableTypes.HTTP_HELM_REPO.name().equals(subType)
+            || SettingVariableTypes.AMAZON_S3_HELM_REPO.name().equals(subType)) {
           yamlHandler = helmRepoYamlHelperMap.get(subType);
         } else {
           yamlHandler = artifactServerYamlHelperMap.get(subType);
