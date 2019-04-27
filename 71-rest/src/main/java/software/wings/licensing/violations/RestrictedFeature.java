@@ -6,6 +6,7 @@ import lombok.ToString;
 import software.wings.licensing.violations.checkers.APIKeyViolationChecker;
 import software.wings.licensing.violations.checkers.DelegateViolationChecker;
 import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
+import software.wings.licensing.violations.checkers.GovernanceViolationChecker;
 import software.wings.licensing.violations.checkers.IpWhitelistViolationChecker;
 import software.wings.licensing.violations.checkers.SSOViolationChecker;
 import software.wings.licensing.violations.checkers.UsersViolationChecker;
@@ -18,6 +19,7 @@ public enum RestrictedFeature {
   FLOW_CONTROL(FlowControlViolationChecker.class),
   API_KEYS(APIKeyViolationChecker.class),
   SSO(SSOViolationChecker.class),
+  GOVERNANCE(GovernanceViolationChecker.class),
   DELEGATE(DelegateViolationChecker.class);
 
   private final Class<? extends FeatureViolationChecker> violationsCheckerClass;
