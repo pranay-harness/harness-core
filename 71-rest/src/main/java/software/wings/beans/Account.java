@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -30,6 +31,7 @@ import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @HarnessExportableEntity
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
