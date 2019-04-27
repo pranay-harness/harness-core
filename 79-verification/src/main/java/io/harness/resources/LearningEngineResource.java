@@ -12,9 +12,11 @@ import io.swagger.annotations.Api;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 
+import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -45,8 +47,8 @@ public class LearningEngineResource {
   @LearningEngineAuth
   @Produces({"application/json", "application/v1+json"})
   public RestResponse<LearningEngineAnalysisTask> getNextTask(@HeaderParam("Accept") String acceptHeaders) {
-    return new RestResponse<>(
-        learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders), Optional.empty()));
+    return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(
+        parseApisVersion(acceptHeaders), Optional.empty(), Optional.empty()));
   }
 
   /**
@@ -60,10 +62,10 @@ public class LearningEngineResource {
   @ExceptionMetered
   @LearningEngineAuth
   @Produces({"application/json", "application/v1+json"})
-  public RestResponse<LearningEngineAnalysisTask> getNext24x7Task(
-      @HeaderParam("Accept") String acceptHeaders, @QueryParam("is24x7") boolean is24x7) {
-    return new RestResponse<>(
-        learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders), Optional.of(is24x7)));
+  public RestResponse<LearningEngineAnalysisTask> getNext24x7Task(@HeaderParam("Accept") String acceptHeaders,
+      @QueryParam("is24x7") boolean is24x7, @QueryParam("taskTypes") List<MLAnalysisType> taskTypes) {
+    return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(
+        parseApisVersion(acceptHeaders), Optional.of(is24x7), Optional.of(taskTypes)));
   }
 
   /**

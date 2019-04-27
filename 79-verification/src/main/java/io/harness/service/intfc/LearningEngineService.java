@@ -22,7 +22,7 @@ public interface LearningEngineService {
   boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask);
 
   LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
-      ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task);
+      ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task, Optional<List<MLAnalysisType>> taskTypes);
   LearningEngineExperimentalAnalysisTask getNextLearningEngineExperimentalAnalysisTask(
       String experimentName, ServiceApiVersion serviceApiVersion);
 
