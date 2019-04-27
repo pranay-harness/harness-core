@@ -151,7 +151,7 @@ public class NexusThreeServiceImpl {
               Map<String, String> metadata = new HashMap();
               metadata.put(IMAGE, repoName + ":" + tag);
               metadata.put(TAG, tag);
-              return aBuildDetails().withNumber(tag).withMetadata(metadata).build();
+              return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
             })
             .collect(toList());
       }

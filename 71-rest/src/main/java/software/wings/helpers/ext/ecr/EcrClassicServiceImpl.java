@@ -39,8 +39,10 @@ public class EcrClassicServiceImpl implements EcrClassicService {
           .stream()
           .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
           .forEach(imageIdentifier
-              -> buildDetails.add(
-                  BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getImageTag()).build()));
+              -> buildDetails.add(BuildDetails.Builder.aBuildDetails()
+                                      .withNumber(imageIdentifier.getImageTag())
+                                      .withUiDisplayName("Tag# " + imageIdentifier.getImageTag())
+                                      .build()));
       listImagesRequest.setNextToken(listImagesResult.getNextToken());
     } while (listImagesRequest.getNextToken() != null);
     return buildDetails;

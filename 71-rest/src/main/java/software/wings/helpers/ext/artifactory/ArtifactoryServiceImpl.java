@@ -230,15 +230,19 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         String repoName = ArtifactUtilities.getArtifactoryRepositoryName(artifactoryConfig.getArtifactoryUrl(),
             artifactStreamAttributes.getArtifactoryDockerRepositoryServer(), artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getImageName());
-        buildDetails =
-            tags.stream()
-                .map(tag -> {
-                  Map<String, String> metadata = new HashMap();
-                  metadata.put(IMAGE, repoName + ":" + tag);
-                  metadata.put(TAG, tag);
-                  return aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).withMetadata(metadata).build();
-                })
-                .collect(toList());
+        buildDetails = tags.stream()
+                           .map(tag -> {
+                             Map<String, String> metadata = new HashMap();
+                             metadata.put(IMAGE, repoName + ":" + tag);
+                             metadata.put(TAG, tag);
+                             return aBuildDetails()
+                                 .withNumber(tag)
+                                 .withBuildUrl(tagUrl + tag)
+                                 .withMetadata(metadata)
+                                 .withUiDisplayName("Tag# " + tag)
+                                 .build();
+                           })
+                           .collect(toList());
         logger.info(
             "Retrieving docker tags for repoKey {} imageName {} success. Retrieved tags {}", repoKey, imageName, tags);
       }
@@ -320,6 +324,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                        .withArtifactPath(path)
                        .withBuildUrl(getBaseUrl(artifactoryConfig) + path)
                        .withArtifactFileSize(map.get(path))
+                       .withUiDisplayName(
+                           "Build# " + constructBuildNumber(finalArtifactPath, path.substring(path.indexOf('/') + 1)))
                        .build())
             .collect(toList());
       } else {
@@ -340,6 +346,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                          .withNumber(constructBuildNumber(finalArtifactPath, path.substring(path.indexOf('/') + 1)))
                          .withArtifactPath(path)
                          .withBuildUrl(getBaseUrl(artifactoryConfig) + path)
+                         .withUiDisplayName(
+                             "Build# " + constructBuildNumber(finalArtifactPath, path.substring(path.indexOf('/') + 1)))
                          .build())
               .collect(toList());
         }

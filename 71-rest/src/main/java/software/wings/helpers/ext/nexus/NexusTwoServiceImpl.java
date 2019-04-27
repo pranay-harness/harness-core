@@ -210,6 +210,7 @@ public class NexusTwoServiceImpl {
                    .withNumber(version)
                    .withRevision(version)
                    .withBuildUrl(versionToArtifactUrls.get(version))
+                   .withUiDisplayName("Version# " + version)
                    .build())
         .collect(toList());
   }
@@ -235,7 +236,7 @@ public class NexusTwoServiceImpl {
     Project project = getPomModel(nexusConfig, encryptionDetails, repoId, groupId, artifactName, "LATEST");
     String version = project.getVersion() != null ? project.getVersion() : project.getParent().getVersion();
     logger.info("Retrieving the latest version {}", project);
-    return aBuildDetails().withNumber(version).withRevision(version).build();
+    return aBuildDetails().withNumber(version).withRevision(version).withUiDisplayName("Version# " + version).build();
   }
 
   public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,

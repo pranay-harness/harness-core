@@ -232,6 +232,7 @@ public class GcsServiceImpl implements GcsService {
           .withRevision(versionId)
           .withArtifactPath(objName)
           .withBuildParameters(map)
+          .withUiDisplayName("Build# " + versionId)
           .build();
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
