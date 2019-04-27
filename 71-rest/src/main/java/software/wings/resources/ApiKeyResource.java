@@ -11,6 +11,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -36,6 +37,7 @@ import javax.ws.rs.QueryParam;
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.API_KEY)
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@Slf4j
 public class ApiKeyResource {
   private ApiKeyService apiKeyService;
 
@@ -86,6 +88,15 @@ public class ApiKeyResource {
   public RestResponse<Void> delete(
       @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @PathParam("apiKeyId") String uuid) {
     apiKeyService.delete(accountId, uuid);
+    return new RestResponse<>();
+  }
+
+  @DELETE
+  public RestResponse<Boolean> deleteAll(@NotEmpty @QueryParam("accountId") String accountId) {
+    boolean deleted = apiKeyService.deleteAll(accountId);
+    if (!deleted) {
+      logger.error("API keys were not deleted. accountId={}", accountId);
+    }
     return new RestResponse<>();
   }
 }

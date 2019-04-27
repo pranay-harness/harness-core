@@ -172,6 +172,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   @Override
+  public boolean deleteAll(String accountId) {
+    Query<ApiKeyEntry> query =
+        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntry.ACCOUNT_ID_KEY, accountId);
+
+    return wingsPersistence.delete(query);
+  }
+
+  @Override
   public void validate(String key, String accountId) {
     PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId).build();
     if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
