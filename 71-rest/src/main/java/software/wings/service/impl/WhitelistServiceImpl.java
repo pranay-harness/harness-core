@@ -29,6 +29,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WhitelistService;
+import software.wings.service.intfc.WhitelistServiceForCommunity;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.Validator;
 
@@ -51,8 +52,14 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private AccountService accountService;
 
+  @Inject private WhitelistServiceForCommunity communityEditionWhiteListService;
+
   @Override
   public Whitelist save(Whitelist whitelist) {
+    if (accountService.isCommunityAccount(whitelist.getAccountId())) {
+      return communityEditionWhiteListService.save(whitelist);
+    }
+
     validate(whitelist);
     Whitelist savedWhitelist = wingsPersistence.saveAndGet(Whitelist.class, whitelist);
     evictWhitelistConfigCache(whitelist.getAccountId());
@@ -100,8 +107,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Override
   public boolean isValidIPAddress(String accountId, String ipAddress) {
     if (accountService.isCommunityAccount(accountId)) {
-      logger.debug("Account is COMMUNITY. No IP Whitelisting - So, all IPs are valid IPs. accountId={}", accountId);
-      return true;
+      return communityEditionWhiteListService.isValidIPAddress(accountId, ipAddress);
     }
 
     List<Whitelist> whitelistConfigList = getWhitelistConfig(accountId);
@@ -216,6 +222,10 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public Whitelist update(Whitelist whitelist) {
+    if (accountService.isCommunityAccount(whitelist.getAccountId())) {
+      return communityEditionWhiteListService.update(whitelist);
+    }
+
     validate(whitelist);
     UpdateOperations<Whitelist> operations = wingsPersistence.createUpdateOperations(Whitelist.class);
 
@@ -243,6 +253,13 @@ public class WhitelistServiceImpl implements WhitelistService {
       evictWhitelistConfigCache(whitelist.getAccountId());
     }
     return delete;
+  }
+
+  @Override
+  public boolean deleteAll(String accountId) {
+    Query<Whitelist> query = wingsPersistence.createQuery(Whitelist.class).filter(Whitelist.ACCOUNT_ID_KEY, accountId);
+
+    return wingsPersistence.delete(query);
   }
 
   @Override

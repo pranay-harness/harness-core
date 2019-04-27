@@ -1,5 +1,6 @@
 package software.wings.licensing.violations;
 
+import io.harness.data.structure.CollectionUtils;
 import software.wings.beans.AccountType;
 import software.wings.beans.FeatureViolation;
 
@@ -17,7 +18,7 @@ public interface FeatureViolationChecker {
       default:
     }
 
-    return featureViolationList;
+    return CollectionUtils.emptyIfNull(featureViolationList);
   }
 
   List<FeatureViolation> getViolationsForCommunityAccount(@NotNull String accountId);

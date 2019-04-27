@@ -55,4 +55,6 @@ public interface WhitelistService extends OwnedByAccount {
    * @return
    */
   boolean delete(String accountId, String whitelistId);
+
+  boolean deleteAll(String accountId);
 }
