@@ -340,7 +340,7 @@ public class JenkinsImpl implements Jenkins {
                                     .withBuildUrl(buildWithDetails.getUrl())
                                     .withBuildFullDisplayName(buildWithDetails.getFullDisplayName())
                                     .withStatus(BuildStatus.valueOf(buildWithDetails.getResult().name()))
-                                    .withUiDisplayName("build# " + buildWithDetails.getNumber())
+                                    .withUiDisplayName("Build# " + buildWithDetails.getNumber())
                                     .build();
     populateBuildParams(buildWithDetails, buildDetails);
     return buildDetails;

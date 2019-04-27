@@ -116,6 +116,7 @@ public class BambooServiceImpl implements BambooService {
             .withNumber(next.get("buildNumber").asText())
             .withRevision(next.get("vcsRevisionKey").asText())
             .withBuildUrl(next.get("link").get("href").asText())
+            .withUiDisplayName("Build# " + next.get("buildNumber").asText())
             .build();
       }
     } catch (Exception e) {
@@ -225,7 +226,7 @@ public class BambooServiceImpl implements BambooService {
                 buildDetailsList.add(aBuildDetails()
                                          .withNumber(jsonNode.get("buildNumber").asText())
                                          .withRevision(jsonNode.get("vcsRevisionKey").asText())
-                                         .withUiDisplayName("build# " + jsonNode.get("buildNumber").asText())
+                                         .withUiDisplayName("Build# " + jsonNode.get("buildNumber").asText())
                                          .build());
               });
             }

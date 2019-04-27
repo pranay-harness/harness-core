@@ -262,6 +262,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         .withArtifactPath(key)
         .withArtifactFileSize(String.valueOf(artifactFileSize))
         .withBuildParameters(map)
+        .withUiDisplayName("Build# " + versionId)
         .build();
   }
 
