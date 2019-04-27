@@ -124,6 +124,7 @@ import software.wings.service.impl.yaml.handler.infraprovisioner.CloudFormationI
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.ShellScriptProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.TerraformInfrastructureProvisionerYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3HelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
@@ -268,6 +269,8 @@ public class YamlModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, HelmRepoYamlHandler.class);
     helmRepoYamlHandlerMapBinder.addBinding(SettingVariableTypes.HTTP_HELM_REPO.name())
         .to(HttpHelmRepoConfigYamlHandler.class);
+    helmRepoYamlHandlerMapBinder.addBinding(SettingVariableTypes.AMAZON_S3_HELM_REPO.name())
+        .to(AmazonS3HelmRepoConfigYamlHandler.class);
 
     MapBinder<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VerificationProviderYamlHandler.class);

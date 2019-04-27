@@ -486,6 +486,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case AMAZON_S3:
       case GIT:
       case HTTP_HELM_REPO:
+      case AMAZON_S3_HELM_REPO:
         return yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SERVER, settingVariableType.name());
 
       // collaboration providers
