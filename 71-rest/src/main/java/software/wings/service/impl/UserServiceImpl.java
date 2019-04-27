@@ -25,6 +25,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
@@ -79,6 +80,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -2152,6 +2154,24 @@ public class UserServiceImpl implements UserService {
       }
       eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
     });
+    return true;
+  }
+
+  @Override
+  public boolean deleteUsers(String accountId, List<String> usersToRetain) {
+    if (CollectionUtils.isEmpty(usersToRetain)) {
+      throw new IllegalArgumentException("'usersToRetain' is empty");
+    }
+    Set<String> usersToDelete = getUsersOfAccount(accountId)
+                                    .stream()
+                                    .map(UuidAware::getUuid)
+                                    .filter(user -> !usersToRetain.contains(user))
+                                    .collect(toSet());
+
+    for (String userToDelete : usersToDelete) {
+      delete(accountId, userToDelete);
+    }
+
     return true;
   }
 }

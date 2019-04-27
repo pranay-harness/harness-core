@@ -469,4 +469,6 @@ public interface UserService extends OwnedByAccount {
   boolean setDefaultAccount(User user, @NotEmpty String accountId);
 
   boolean updateLead(String email, String accountId);
+
+  boolean deleteUsers(String accountId, List<String> usersToRetain);
 }
