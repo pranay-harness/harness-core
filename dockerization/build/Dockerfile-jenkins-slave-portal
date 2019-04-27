@@ -31,7 +31,7 @@ VOLUME /home/${user}/.jenkins
 VOLUME ${AGENT_WORKDIR}
 WORKDIR /home/${user}
 
-COPY dockerization/build/jenkins-slave /usr/local/bin/jenkins-slave
+COPY jenkins-slave /usr/local/bin/jenkins-slave
 
 USER root
 ENV PATH ${PATH}:/opt/gsutil
@@ -41,5 +41,9 @@ RUN curl -O https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_l
     && unzip terraform_0.11.11_linux_amd64.zip \
     && chmod 755 terraform \
     && mv terraform /usr/local/bin
+
+RUN yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm \
+    && yum install -y git \
+    && git version
 
 ENTRYPOINT ["jenkins-slave"]
