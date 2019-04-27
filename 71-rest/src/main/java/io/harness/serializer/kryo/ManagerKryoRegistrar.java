@@ -405,6 +405,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -1233,5 +1234,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceNowExecutionData.class, 7170);
     kryo.register(RepositoryType.class, 7171);
     kryo.register(BuildDetails.BuildStatus.class, 7174);
+    kryo.register(MLAnalysisType.class, 7175);
   }
 }
