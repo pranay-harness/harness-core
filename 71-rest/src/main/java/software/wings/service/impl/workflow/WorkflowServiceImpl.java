@@ -92,6 +92,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.data.parser.CsvParser;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidArgumentsException;
@@ -234,7 +235,6 @@ import javax.validation.executable.ValidateOnExecution;
  *
  * @author Rishi
  */
-@SuppressWarnings("ALL")
 @Singleton
 @ValidateOnExecution
 @Slf4j
@@ -945,6 +945,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       // Add environment expressions
       WorkflowServiceTemplateHelper.transformEnvTemplateExpressions(workflow, orchestrationWorkflow);
+
+      // Validate Workflow Variables
+      validateWorkflowVariables(orchestrationWorkflow);
+
       orchestrationWorkflow.onSave();
       workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
 
@@ -1073,8 +1077,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
-    workflowServiceHelper.validateServiceandInframapping(
+    workflowServiceHelper.validateServiceAndInfraMapping(
         workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
+    validateWorkflowVariables(orchestrationWorkflow);
     return updateWorkflow(workflow, orchestrationWorkflow, true, false, false, false);
   }
 
@@ -1418,7 +1423,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public WorkflowPhase createWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
     notNullCheck("workflow", workflowPhase, USER);
 
-    workflowServiceHelper.validateServiceandInframapping(
+    workflowServiceHelper.validateServiceAndInfraMapping(
         appId, workflowPhase.getServiceId(), workflowPhase.getInfraMappingId());
 
     Workflow workflow = readWorkflow(appId, workflowId);
@@ -1926,7 +1931,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables) {
     if (isNotEmpty(userVariables)) {
       userVariables.forEach(variable -> ManagerExpressionEvaluator.isValidVariableName(variable.getName()));
-      validateWorkflowVariables(userVariables);
     }
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow was deleted", workflow, USER);
@@ -1940,17 +1944,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getUserVariables();
   }
 
-  private void validateWorkflowVariables(List<Variable> userVariables) {
+  private void validateWorkflowVariables(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow == null || isEmpty(orchestrationWorkflow.getUserVariables())) {
+      return;
+    }
     Set<String> variableNames = new HashSet<>();
+    List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
     for (Variable variable : userVariables) {
+      final String defaultValue = variable.getValue();
       if (variable.isFixed()) {
-        if (isBlank(variable.getValue())) {
+        if (isBlank(defaultValue)) {
           throw new InvalidRequestException(
               "Workflow Variable value is mandatory for Fixed Variable Name [" + variable.getName() + "]", USER);
         }
       }
       if (!variableNames.add(variable.getName())) {
-        throw new InvalidRequestException("Duplicate variable names are not allowed.", USER);
+        throw new InvalidRequestException(
+            "Duplicate variable name [" + variable.getName() + "]. Duplicates are not allowed.", USER);
+      }
+      if (isNotEmpty(variable.getAllowedValues())) {
+        variable.setAllowedList(CsvParser.parse(variable.getAllowedValues()));
+        if (isNotEmpty(defaultValue)) {
+          if (!variable.getAllowedList().contains(defaultValue)) {
+            throw new InvalidRequestException(
+                "Default value [" + defaultValue + " is not in Allowed Values" + variable.getAllowedList());
+          }
+        }
       }
     }
   }

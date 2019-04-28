@@ -30,6 +30,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
         .name(yaml.getName())
         .type(variableType)
         .value(yaml.getValue())
+        .allowedValues(yaml.getAllowedValues())
         .build();
   }
 
@@ -42,6 +43,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
         .name(bean.getName())
         .type(bean.getType().name())
         .value(bean.getValue())
+        .allowedValues(bean.getAllowedValues())
         .build();
   }
 

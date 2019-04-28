@@ -1109,6 +1109,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
         continue;
       }
+      // Verify for allowed values
+      if (isNotEmpty(variable.getAllowedValues())) {
+        if (isNotEmpty(variable.getValue())) {
+          if (!variable.getAllowedList().contains(variable.getValue())) {
+            throw new InvalidRequestException("Workflow variable value [" + variable.getValue()
+                + " is not in Allowed Values [" + variable.getAllowedList() + "]");
+          }
+        }
+      }
       setVariables(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()), variables);
     }
     return variables;
@@ -2350,20 +2359,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     parentInstanceIds.add(stateExecutionInstanceId);
 
     while (isNotEmpty(parentInstanceIds)) {
-      try (HIterator<StateExecutionInstance> iterator = new HIterator<StateExecutionInstance>(
-               wingsPersistence.createQuery(StateExecutionInstance.class)
-                   .filter(StateExecutionInstanceKeys.appId, appId)
-                   .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
-                   .field(StateExecutionInstanceKeys.parentInstanceId)
-                   .in(parentInstanceIds)
-                   .project(StateExecutionInstanceKeys.contextElement, true)
-                   .project(StateExecutionInstanceKeys.displayName, true)
-                   .project(StateExecutionInstanceKeys.uuid, true)
-                   .project(StateExecutionInstanceKeys.parentInstanceId, true)
-                   .project(StateExecutionInstanceKeys.stateExecutionMap, true)
-                   .project(StateExecutionInstanceKeys.stateType, true)
-                   .project(StateExecutionInstanceKeys.status, true)
-                   .fetch())) {
+      try (HIterator<StateExecutionInstance> iterator =
+               new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
+                                   .filter(StateExecutionInstanceKeys.appId, appId)
+                                   .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                                   .field(StateExecutionInstanceKeys.parentInstanceId)
+                                   .in(parentInstanceIds)
+                                   .project(StateExecutionInstanceKeys.contextElement, true)
+                                   .project(StateExecutionInstanceKeys.displayName, true)
+                                   .project(StateExecutionInstanceKeys.uuid, true)
+                                   .project(StateExecutionInstanceKeys.parentInstanceId, true)
+                                   .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+                                   .project(StateExecutionInstanceKeys.stateType, true)
+                                   .project(StateExecutionInstanceKeys.status, true)
+                                   .fetch())) {
         if (!iterator.hasNext()) {
           return null;
         }

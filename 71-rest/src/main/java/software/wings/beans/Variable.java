@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYamlWithType;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -23,6 +24,8 @@ public class Variable {
   private boolean mandatory;
   private String value;
   private boolean fixed;
+  private String allowedValues;
+  private List<String> allowedList;
 
   public static final String ENTITY_TYPE = "entityType";
   public static final String ARTIFACT_TYPE = "artifactType";
@@ -43,6 +46,7 @@ public class Variable {
         .mandatory(mandatory)
         .fixed(fixed)
         .metadata(metadata)
+        .allowedValues(allowedValues)
         .build();
   }
 
@@ -55,13 +59,6 @@ public class Variable {
       return null;
     }
     return entityType instanceof EntityType ? (EntityType) entityType : EntityType.valueOf((String) entityType);
-  }
-
-  public Object obtainArtifactType() {
-    if (metadata == null) {
-      return null;
-    }
-    return metadata.get(ARTIFACT_TYPE);
   }
 
   public String obtainRelatedField() {
@@ -111,6 +108,7 @@ public class Variable {
     private boolean fixed;
     private VariableType type = VariableType.TEXT;
     private Map<String, Object> metadata = Maps.newHashMap();
+    private String allowedValues;
 
     private VariableBuilder() {}
 
@@ -183,6 +181,12 @@ public class Variable {
       if (!isEmpty(parentFields)) {
         this.metadata.put(PARENT_FIELDS, parentFields);
       }
+
+      return this;
+    }
+
+    public VariableBuilder allowedValues(String allowedValues) {
+      this.allowedValues = allowedValues;
       return this;
     }
 
@@ -195,6 +199,7 @@ public class Variable {
       variable.setFixed(fixed);
       variable.setType(type);
       variable.setMetadata(metadata);
+      variable.setAllowedValues(allowedValues);
       return variable;
     }
   }
@@ -208,15 +213,18 @@ public class Variable {
     private boolean mandatory;
     private String value;
     private boolean fixed;
+    private String allowedValues;
 
     @Builder
-    public Yaml(String type, String name, String description, boolean mandatory, String value, boolean fixed) {
+    public Yaml(String type, String name, String description, boolean mandatory, String value, boolean fixed,
+        String allowedValues) {
       super(type);
       this.name = name;
       this.description = description;
       this.mandatory = mandatory;
       this.value = value;
       this.fixed = fixed;
+      this.allowedValues = allowedValues;
     }
   }
 }

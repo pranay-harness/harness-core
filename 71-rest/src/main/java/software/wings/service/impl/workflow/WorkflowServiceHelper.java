@@ -345,18 +345,18 @@ public class WorkflowServiceHelper {
     }
   }
 
-  public void validateServiceandInframapping(String appId, String serviceId, String inframappingId) {
+  public void validateServiceAndInfraMapping(String appId, String serviceId, String infraMappingId) {
     // Validate if service Id is valid or not
-    if (serviceId == null || inframappingId == null) {
+    if (serviceId == null || infraMappingId == null) {
       return;
     }
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
       throw new InvalidRequestException("Service [" + serviceId + "] does not exist", USER);
     }
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, inframappingId);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
-      throw new InvalidRequestException("Service Infrastructure [" + inframappingId + "] does not exist", USER);
+      throw new InvalidRequestException("Service Infrastructure [" + infraMappingId + "] does not exist", USER);
     }
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new InvalidRequestException("Service Infrastructure [" + infrastructureMapping.getName()
