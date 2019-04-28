@@ -211,9 +211,18 @@ public class JiraHelperService {
     ApprovalStateExecutionData executionData =
         workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
             appId, workflowExecutionId, stateExecutionInstanceId, approvalDetails);
+
+    String message;
+    if (action == Action.APPROVE) {
+      message = "Approval provided on ticket: " + executionData.getIssueKey();
+    } else {
+      message = "Rejection provided on ticket: " + executionData.getIssueKey();
+    }
+
     executionData.setStatus(approvalStatus);
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(currentStatus);
+    executionData.setErrorMsg(message);
 
     logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     waitNotifyEngine.notify(approvalId, executionData);
@@ -221,12 +230,18 @@ public class JiraHelperService {
 
   public void continuePauseWorkflow(String approvalId, String appId, String workflowExecutionId,
       ExecutionStatus approvalStatus, String currentStatus, String stateExecutionInstanceId) {
+    if (stateExecutionInstanceId == null) {
+      return;
+    }
     ApprovalDetails approvalDetails = new ApprovalDetails();
     approvalDetails.setApprovalId(approvalId);
     ApprovalStateExecutionData executionData =
         workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
             appId, workflowExecutionId, stateExecutionInstanceId, approvalDetails);
-    executionData.setStatus(approvalStatus);
+    if (executionData.getCurrentStatus() != null && executionData.getCurrentStatus().equalsIgnoreCase(currentStatus)) {
+      return;
+    }
+    executionData.setStatus(ExecutionStatus.PAUSED);
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(currentStatus);
 
