@@ -22,6 +22,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.WorkflowGenerator;
+import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -114,6 +115,14 @@ public class WorkflowTest extends GraphQLTest {
 
       assertThat(workflowConnection.getNodes().get(0).getId()).isEqualTo(workflow2.getUuid());
       assertThat(workflowConnection.getNodes().get(1).getId()).isEqualTo(workflow1.getUuid());
+    }
+
+    {
+      String query = "{ application(applicationId: \"" + application.getUuid()
+          + "\") { workflows(limit: 2, offset: 1) { nodes { id } } } }";
+
+      final QLTestObject qlTestObject = qlExecute(query);
+      assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
   }
 }

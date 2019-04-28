@@ -15,6 +15,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.PipelineGenerator;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -95,6 +96,14 @@ public class PipelineTest extends GraphQLTest {
 
       assertThat(pipelineConnection.getNodes().get(0).getId()).isEqualTo(pipeline2.getUuid());
       assertThat(pipelineConnection.getNodes().get(1).getId()).isEqualTo(pipeline1.getUuid());
+    }
+
+    {
+      String query = "{ application(applicationId: \"" + application.getUuid()
+          + "\") { pipelines(limit: 2, offset: 1) { nodes { id } } } }";
+
+      final QLTestObject qlTestObject = qlExecute(query);
+      assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
   }
 }
