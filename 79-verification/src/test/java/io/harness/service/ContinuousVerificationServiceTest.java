@@ -524,7 +524,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testLogsL2ClusteringRetry() {
+  public void testLogsL2ClusteringRetryBackoff() throws Exception {
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
@@ -553,7 +553,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       }
     }
     final int clusterMinute = 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
-    createFailedLETask("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, null, null, clusterMinute);
+    createFailedLETask("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, null, null, clusterMinute, false);
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
@@ -580,7 +580,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class).filter("clusterLevel", ClusterLevel.L0));
 
-    createFailedLETask("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, null, null, clusterMinute);
+    createFailedLETask("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, null, null, clusterMinute, true);
+    Thread.sleep(1000); // introducing this sleep so the "nextScheduleTime" in backoff takes effect.
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
@@ -608,8 +609,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertNull(learningEngineAnalysisTask.getTest_nodes());
   }
 
-  private void createFailedLETask(
-      String stateExecutionId, String workflowId, String workflowExecutionId, int analysisMin) {
+  private void createFailedLETask(String stateExecutionId, String workflowId, String workflowExecutionId,
+      int analysisMin, boolean changeLastUpdated) {
     LearningEngineAnalysisTask task = LearningEngineAnalysisTask.builder()
                                           .state_execution_id(stateExecutionId)
                                           .workflow_id(workflowId)
@@ -618,10 +619,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                           .executionStatus(ExecutionStatus.RUNNING)
                                           .cluster_level(ClusterLevel.L2.getLevel())
                                           .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
+                                          .service_guard_backoff_count(0)
                                           .retry(4)
                                           .build();
 
     task.setAppId(appId);
+
+    if (changeLastUpdated) {
+      task.setLastUpdatedAt(Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(12));
+    }
     wingsPersistence.save(task);
   }
 }
