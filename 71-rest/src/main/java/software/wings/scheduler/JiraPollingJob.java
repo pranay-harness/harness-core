@@ -1,10 +1,13 @@
 package software.wings.scheduler;
 
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.scheduler.ServiceNowApprovalJob.scheduleJob;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -12,9 +15,12 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import software.wings.api.JiraExecutionData;
+import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.sm.states.ApprovalState;
 
 @Slf4j
 public class JiraPollingJob implements Job {
@@ -64,22 +70,26 @@ public class JiraPollingJob implements Job {
     String workflowExecutionId = jobExecutionContext.getMergedJobDataMap().getString(WORKFLOW_EXECUTION_ID);
     String stateExecutionInstanceId = jobExecutionContext.getMergedJobDataMap().getString(STATE_EXECUTION_INSTANCE_ID);
 
-    if (rejectionField != null && rejectionValue != null) {
-      logger.info(
-          "Polling JIRA Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} , rejectionField {}, RejectionValue {}",
-          approvalId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
-    } else {
-      logger.info("Polling JIRA Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} ", approvalId,
-          issueId, approvalField, approvalValue);
-    }
+    logger.info(
+        "Polling Approval Status for approvalId {}, issueId {}, approvalField {}, approvalValue {} , rejectionField {}, RejectionValue {}",
+        approvalId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
+
+    JiraExecutionData jiraExecutionData = null;
     try {
-      JiraExecutionData jiraExecutionData = jiraHelperService.getApprovalStatus(
+      jiraExecutionData = jiraHelperService.getApprovalStatus(
           connectorId, accountId, appId, issueId, approvalField, approvalValue, rejectionField, rejectionValue);
+    } catch (Exception ex) {
+      logger.warn(
+          "Error occurred while polling JIRA status. Continuing to poll next minute. approvalId: {}, workflowExecutionId: {} , issueId: {}",
+          approvalId, workflowExecutionId, issueId, ex);
+      return;
+    }
 
-      ExecutionStatus issueStatus = jiraExecutionData.getExecutionStatus();
-      logger.info("Issue: {} Status from JIRA: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
-          issueId, issueStatus, jiraExecutionData.getCurrentStatus(), approvalId, workflowExecutionId);
+    ExecutionStatus issueStatus = jiraExecutionData.getExecutionStatus();
+    logger.info("Issue: {} Status from JIRA: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
+        issueId, issueStatus, jiraExecutionData.getCurrentStatus(), approvalId, workflowExecutionId);
 
+    try {
       if (issueStatus == ExecutionStatus.SUCCESS || issueStatus == ExecutionStatus.REJECTED) {
         ApprovalDetails.Action action =
             issueStatus == ExecutionStatus.SUCCESS ? ApprovalDetails.Action.APPROVE : ApprovalDetails.Action.REJECT;
@@ -89,11 +99,19 @@ public class JiraPollingJob implements Job {
       } else if (issueStatus == ExecutionStatus.WAITING) {
         logger.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
             issueId, issueStatus, jiraExecutionData.getCurrentStatus());
+        jiraHelperService.continuePauseWorkflow(approvalId, appId, workflowExecutionId, issueStatus,
+            jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
+      } else if (issueStatus == ExecutionStatus.FAILED) {
+        logger.info("Jira delegate task failed with error: " + jiraExecutionData.getErrorMessage());
       }
-    } catch (Exception ex) {
-      logger.warn(
-          "Exception occurred while Polling Issue Status from JIRA approvalId: {}, workflowExecutionId: {} , issueId: {}",
-          approvalId, workflowExecutionId, issueId, ex);
+    } catch (WingsException exception) {
+      exception.addContext(Application.class, appId);
+      exception.addContext(WorkflowExecution.class, workflowExecutionId);
+      exception.addContext(ApprovalState.class, approvalId);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+    } catch (Exception exception) {
+      logger.warn("Error while getting execution data, approvalId: {}, workflowExecutionId: {} , issueId: {}",
+          approvalId, workflowExecutionId, issueId, exception);
     }
   }
 

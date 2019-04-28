@@ -306,6 +306,11 @@ public class ApprovalState extends State {
 
     JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
+
+    executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
+    executionData.setIssueKey(jiraExecutionData.getIssueKey());
+    executionData.setCurrentStatus(jiraExecutionData.getCurrentStatus());
+
     if (jiraExecutionData.getExecutionStatus().equals(FAILED)) {
       return anExecutionResponse()
           .withExecutionStatus(FAILED)
@@ -313,15 +318,30 @@ public class ApprovalState extends State {
           .withStateExecutionData(executionData)
           .build();
     }
+
+    if (jiraExecutionData.getCurrentStatus().equalsIgnoreCase(jiraApprovalParams.getApprovalValue())) {
+      return anExecutionResponse()
+          .withExecutionStatus(SUCCESS)
+          .withErrorMessage("Approval provided on ticket: " + jiraExecutionData.getIssueKey())
+          .withStateExecutionData(executionData)
+          .build();
+    }
+
+    if (jiraApprovalParams.getRejectionValue() != null
+        && jiraExecutionData.getCurrentStatus().equalsIgnoreCase(jiraApprovalParams.getRejectionValue())) {
+      return anExecutionResponse()
+          .withExecutionStatus(REJECTED)
+          .withErrorMessage("Rejection provided on ticket: " + jiraExecutionData.getIssueKey())
+          .withStateExecutionData(executionData)
+          .build();
+    }
+
     // Create a cron job which polls JIRA for approval status
     logger.info("IssueId = {} while creating Jira polling Job", jiraApprovalParams.getIssueId());
     JiraPollingJob.doPollingJob(serviceJobScheduler, jiraApprovalParams, executionData.getApprovalId(),
         app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId());
 
     // issue Url on which approval is waiting in case of jira.
-    executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
-    executionData.setIssueKey(jiraExecutionData.getIssueKey());
-    executionData.setCurrentStatus(jiraExecutionData.getCurrentStatus());
     return anExecutionResponse()
         .withAsync(true)
         .withExecutionStatus(PAUSED)
@@ -489,7 +509,7 @@ public class ApprovalState extends State {
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
-        .withErrorMessage("Approval/Rejection provided on ticket: " + executionData.getIssueKey())
+        .withErrorMessage(approvalNotifyResponse.getErrorMsg())
         .build();
   }
 

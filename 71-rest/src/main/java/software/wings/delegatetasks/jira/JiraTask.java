@@ -419,7 +419,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
     }
 
-    logger.info("Issue fetched successfully");
+    logger.info("Issue fetched successfully for {}", parameters.getIssueId());
     String approvalFieldValue = null;
     if (EmptyPredicate.isNotEmpty(parameters.getApprovalField())) {
       Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getApprovalField());
