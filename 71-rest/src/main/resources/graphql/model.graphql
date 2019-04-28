@@ -5,6 +5,12 @@ type Application {
 
   services(limit: Int!, offset: Int): ServiceConnection
     @dataFetcher(name: "serviceConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+
+  workflows(limit: Int!, offset: Int): WorkflowConnection
+    @dataFetcher(name: "workflowConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+
+  pipelines(limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: "pipelineConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
 }
 
 type ApplicationConnection {
