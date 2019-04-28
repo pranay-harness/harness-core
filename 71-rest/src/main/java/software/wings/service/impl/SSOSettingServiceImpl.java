@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.eraro.ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -17,8 +18,11 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotBlank;
+import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -88,6 +92,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public SamlSettings saveSamlSettings(SamlSettings settings) {
+    checkOperationSupportedForAccount(settings.getAccountId(), SSOType.SAML);
     SamlSettings queriedSettings = getSamlSettingsByAccountId(settings.getAccountId());
     SamlSettings savedSettings;
     if (queriedSettings != null) {
@@ -149,6 +154,11 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     if (samlSettings == null) {
       throw new InvalidRequestException("No Saml settings found for this account");
     }
+    return deleteSamlSettings(samlSettings);
+  }
+
+  @Override
+  public boolean deleteSamlSettings(SamlSettings samlSettings) {
     if (userGroupService.existsLinkedUserGroup(samlSettings.getUuid())) {
       throw new InvalidRequestException(
           "Deleting Saml provider with linked user groups is not allowed. Unlink the user groups first.");
@@ -168,6 +178,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings createLdapSettings(@NotNull LdapSettings settings) {
+    checkOperationSupportedForAccount(settings.getAccountId(), SSOType.LDAP);
     if (getLdapSettingsByAccountId(settings.getAccountId()) != null) {
       throw new InvalidRequestException("Ldap settings already exist for this account.");
     }
@@ -180,6 +191,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings updateLdapSettings(@NotNull LdapSettings settings) {
+    checkOperationSupportedForAccount(settings.getAccountId(), SSOType.LDAP);
     LdapSettings oldSettings = getLdapSettingsByAccountId(settings.getAccountId());
     if (oldSettings == null) {
       throw new InvalidRequestException("No existing Ldap settings found for this account.");
@@ -203,13 +215,18 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     if (settings == null) {
       throw new InvalidRequestException("No Ldap settings found for this account.");
     }
+    return deleteLdapSettings(settings);
+  }
+
+  @Override
+  public LdapSettings deleteLdapSettings(@NotNull LdapSettings settings) {
     if (userGroupService.existsLinkedUserGroup(settings.getUuid())) {
       throw new InvalidRequestException(
           "Deleting SSO provider with linked user groups is not allowed. Unlink the user groups first.");
     }
     secretManager.deleteSecretUsingUuid(settings.getConnectionSettings().getEncryptedBindPassword());
     wingsPersistence.delete(settings);
-    LdapGroupSyncJob.delete(jobScheduler, this, accountId, settings.getUuid());
+    LdapGroupSyncJob.delete(jobScheduler, this, settings.getAccountId(), settings.getUuid());
     return settings;
   }
 
@@ -321,5 +338,19 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         .disableValidation()
         .filter(SSOSettings.ACCOUNT_ID_KEY, accountId)
         .asList();
+  }
+
+  private boolean checkOperationSupportedForAccount(String accountId, SSOType ssoType) {
+    Account account = accountService.get(accountId);
+    if (account != null && account.isCommunity()) {
+      throw new WingsException(FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION,
+          new StringBuilder()
+              .append(ssoType)
+              .append(" SSO not supported for accountType=")
+              .append(AccountType.COMMUNITY)
+              .toString(),
+          WingsException.USER);
+    }
+    return true;
   }
 }

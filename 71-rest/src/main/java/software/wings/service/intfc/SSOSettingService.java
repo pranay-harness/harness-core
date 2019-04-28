@@ -28,6 +28,8 @@ public interface SSOSettingService extends OwnedByAccount {
 
   boolean deleteSamlSettings(@NotNull String accountId);
 
+  boolean deleteSamlSettings(SamlSettings samlSettings);
+
   SamlSettings getSamlSettingsByOrigin(@NotNull String origin);
 
   Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin);
@@ -37,6 +39,8 @@ public interface SSOSettingService extends OwnedByAccount {
   LdapSettings updateLdapSettings(@NotNull LdapSettings settings);
 
   LdapSettings deleteLdapSettings(@NotBlank String accountId);
+
+  LdapSettings deleteLdapSettings(@NotNull LdapSettings settings);
 
   LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId);
 

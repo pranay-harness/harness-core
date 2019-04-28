@@ -9,12 +9,17 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 
@@ -22,8 +27,14 @@ import javax.validation.ConstraintViolationException;
 
 public class SSOSettingServiceTest extends WingsBaseTest {
   @Mock UserGroupService userGroupService;
+  @Mock AccountService accountService;
   @Inject @InjectMocks SSOSettingService ssoSettingService;
 
+  @Before
+  public void setup() {
+    when(accountService.get(Mockito.anyString()))
+        .thenReturn(Account.Builder.anAccount().withAuthenticationMechanism(AuthenticationMechanism.SAML).build());
+  }
   @Test
   @Category(UnitTests.class)
   public void testSamlSettingsCRUD() {

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -14,10 +15,12 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
@@ -55,6 +58,7 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class SSOServiceImpl implements SSOService {
   @Inject AccountService accountService;
   @Inject SSOSettingService ssoSettingService;
@@ -125,6 +129,15 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public SSOConfig setAuthenticationMechanism(String accountId, AuthenticationMechanism mechanism) {
     Account account = accountService.get(accountId);
+    if (account.isCommunity() && AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(mechanism)) {
+      throw new WingsException(FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION,
+          new StringBuilder()
+              .append(mechanism)
+              .append(" authenticationMechanism not supported for accountType=")
+              .append(AccountType.COMMUNITY)
+              .toString(),
+          WingsException.USER);
+    }
     account.setAuthenticationMechanism(mechanism);
     accountService.update(account);
     return getAccountAccessManagementSettings(accountId);
@@ -340,7 +353,49 @@ public class SSOServiceImpl implements SSOService {
   }
 
   @Override
+  public Boolean deleteSSOSettingsForAccount(String accountId, String targetAccountType) {
+    boolean violationsRemoved = false;
+    if (AccountType.COMMUNITY.equals(targetAccountType)) {
+      if (AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(
+              accountService.get(accountId).getAuthenticationMechanism())) {
+        logger.info(
+            "Setting AuthenticationMechanism for accountId={} to {}", accountId, AuthenticationMechanism.USER_PASSWORD);
+        setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
+      }
+
+      logger.info("Deleting SSO violations for accountId={} and targetAccountType={}", accountId, targetAccountType);
+
+      violationsRemoved =
+          deleteSamlSettings(accountId, targetAccountType) && deleteLdapSettings(accountId, targetAccountType);
+    } else {
+      logger.info("SSO violations deletion is not supported for accountId={} and targetAccountType={}", accountId,
+          targetAccountType);
+    }
+    return violationsRemoved;
+  }
+
+  @Override
   public OauthSettings updateOauthSettings(String accountId, String displayName, String filter) {
     return ssoSettingService.updateOauthSettings(accountId, displayName, filter);
+  }
+
+  private boolean deleteSamlSettings(String accountId, String targetAccountType) {
+    boolean samlSettingsDeleted = true;
+    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    if (samlSettings != null) {
+      logger.info("Deleting SAML SSO Settings for accountId={} and targetAccountType={}", accountId, targetAccountType);
+      samlSettingsDeleted = ssoSettingService.deleteSamlSettings(samlSettings);
+    }
+    return samlSettingsDeleted;
+  }
+
+  private boolean deleteLdapSettings(String accountId, String targetAccountType) {
+    boolean ldapSettingsDeleted = true;
+    LdapSettings ldapSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
+    if (ldapSettings != null) {
+      logger.info("Deleting LDAP SSO settings for accountId={} and targetAccountType={}", accountId, targetAccountType);
+      ldapSettingsDeleted = ssoSettingService.deleteLdapSettings(accountId) != null;
+    }
+    return ldapSettingsDeleted;
   }
 }

@@ -210,12 +210,6 @@ public class Account extends Base {
   }
 
   public AuthenticationMechanism getAuthenticationMechanism() {
-    boolean shouldBeDisabled = AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(authenticationMechanism);
-
-    if (this.isCommunity() && shouldBeDisabled) {
-      return AuthenticationMechanism.USER_PASSWORD;
-    }
-
     return authenticationMechanism;
   }
 
