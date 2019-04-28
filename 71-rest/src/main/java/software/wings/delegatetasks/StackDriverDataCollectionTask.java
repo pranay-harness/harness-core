@@ -26,6 +26,7 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -61,6 +62,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
 
   @Inject private StackDriverDelegateService stackDriverDelegateService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private GcpHelperService gcpHelperService;
 
   public StackDriverDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -193,8 +195,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
 
       String projectId = stackDriverDelegateService.getProjectId(dataCollectionInfo.getGcpConfig());
-      Monitoring monitoring =
-          stackDriverDelegateService.getMonitoringClient(dataCollectionInfo.getGcpConfig(), projectId);
+      Monitoring monitoring = gcpHelperService.getMonitoringService(
+          dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), projectId);
 
       switch (dataCollectionInfo.getTimeSeriesMlAnalysisType()) {
         case COMPARATIVE:

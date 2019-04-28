@@ -17,6 +17,7 @@ import software.wings.service.intfc.stackdriver.StackDriverService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -58,5 +59,23 @@ public class StackDriverResource {
       @QueryParam("accountId") final String accountId, @Valid StackDriverSetupTestNodeData stackDriverSetupTestNodeData)
       throws IOException {
     return new RestResponse<>(stackDriverService.getMetricsWithDataForNode(stackDriverSetupTestNodeData));
+  }
+
+  @GET
+  @Path("/get-regions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getRegions(@QueryParam("accountId") final String accountId,
+      @QueryParam("settingId") final String settingId) throws IOException {
+    return new RestResponse<>(stackDriverService.listRegions(settingId));
+  }
+
+  @GET
+  @Path("/get-load-balancers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getLoadBalancers(@QueryParam("accountId") final String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) throws IOException {
+    return new RestResponse<>(stackDriverService.listForwardingRules(settingId, region));
   }
 }

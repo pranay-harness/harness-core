@@ -30,6 +30,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.service.intfc.stackdriver.StackDriverService;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,50 @@ public class StackDriverServiceImpl implements StackDriverService {
   @Override
   public Map<String, List<StackDriverMetric>> getMetrics() {
     return metricsByNameSpace;
+  }
+
+  @Override
+  public List<String> listRegions(String settingId) throws IOException {
+    try {
+      SettingAttribute settingAttribute = settingsService.get(settingId);
+
+      if (settingAttribute == null || !(settingAttribute.getValue() instanceof GcpConfig)) {
+        throw new WingsException("AWS account setting not found " + settingId);
+      }
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .build();
+      return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
+          .listRegions((GcpConfig) settingAttribute.getValue(), encryptionDetails);
+    } catch (Exception e) {
+      throw new WingsException(STACKDRIVER_ERROR).addParam("message", "Error in fetching Regions. " + e.getMessage());
+    }
+  }
+
+  @Override
+  public Map<String, String> listForwardingRules(String settingId, String region) throws IOException {
+    try {
+      SettingAttribute settingAttribute = settingsService.get(settingId);
+
+      if (settingAttribute == null || !(settingAttribute.getValue() instanceof GcpConfig)) {
+        throw new WingsException("AWS account setting not found " + settingId);
+      }
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .build();
+      return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
+          .listForwardingRules((GcpConfig) settingAttribute.getValue(), encryptionDetails, region);
+    } catch (Exception e) {
+      throw new WingsException(STACKDRIVER_ERROR).addParam("message", "Error in fetching Regions. " + e.getMessage());
+    }
   }
 
   private static Map<String, List<StackDriverMetric>> fetchMetrics() {

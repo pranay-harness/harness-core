@@ -15,7 +15,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -72,7 +73,6 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
@@ -87,6 +87,31 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
     assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  @Test
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
+  public void testGetRegionsForStackdriver() throws Exception {
+    WebTarget target =
+        client.target(API_BASE + "/stackdriver/get-regions?accountId=" + accountId + "&settingId=" + gcpConfigId);
+    RestResponse<List<String>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<String>>>() {});
+
+    assertTrue(restResponse.getResource().size() > 0);
+  }
+
+  @Test
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
+  public void testGetLoadBalancersForStackdriver() throws Exception {
+    String region = "us-central1";
+    WebTarget target = client.target(API_BASE + "/stackdriver/get-load-balancers?accountId=" + accountId
+        + "&settingId=" + gcpConfigId + "&region=" + region);
+    RestResponse<Map<String, String>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Map<String, String>>>() {});
+
+    assertTrue(restResponse.getResource().size() > 0);
   }
 
   private StackDriverSetupTestNodeData getStackDriverSetupTestNodedata() {
