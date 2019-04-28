@@ -328,7 +328,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   /**
-   * Re orderes the user variables first by Entity - Envirorment, Service - Service Infra
+   * Re orders the user variables first by Entity - Environment, Service - Service Infra
    */
   private void reorderUserVariables() {
     List<Variable> reorderVariables = new ArrayList<>();
