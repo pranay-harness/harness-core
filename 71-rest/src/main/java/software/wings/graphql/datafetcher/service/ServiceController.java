@@ -8,6 +8,7 @@ public class ServiceController {
     builder.id(service.getUuid())
         .name(service.getName())
         .description(service.getDescription())
-        .artifactType(service.getArtifactType());
+        .artifactType(service.getArtifactType())
+        .deploymentType(service.getDeploymentType());
   }
 }

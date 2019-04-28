@@ -2,6 +2,7 @@ package software.wings.graphql.schema.type;
 
 import lombok.Builder;
 import lombok.Value;
+import software.wings.api.DeploymentType;
 import software.wings.utils.ArtifactType;
 
 @Value
@@ -11,4 +12,5 @@ public class QLService implements QLObject {
   private String name;
   private String description;
   private ArtifactType artifactType;
+  private DeploymentType deploymentType;
 }

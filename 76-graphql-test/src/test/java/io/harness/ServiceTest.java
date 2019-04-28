@@ -38,13 +38,15 @@ public class ServiceTest extends GraphQLTest {
     final Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     assertThat(service).isNotNull();
 
-    String query = "{ service(serviceId: \"" + service.getUuid() + "\") { id name description artifactType } }";
+    String query =
+        "{ service(serviceId: \"" + service.getUuid() + "\") { id name description artifactType deploymentType } }";
 
     QLService qlService = qlExecute(QLService.class, query);
     assertThat(qlService.getId()).isEqualTo(service.getUuid());
     assertThat(qlService.getName()).isEqualTo(service.getName());
     assertThat(qlService.getDescription()).isEqualTo(service.getDescription());
     assertThat(qlService.getArtifactType()).isEqualTo(service.getArtifactType());
+    assertThat(qlService.getDeploymentType()).isEqualTo(service.getDeploymentType());
   }
 
   @Test
@@ -89,7 +91,7 @@ public class ServiceTest extends GraphQLTest {
 
     {
       String query = "{ application(applicationId: \"" + application.getUuid()
-          + "\") { services(limit: 2, offset: 1) { nodes { id } } } }";
+          + "\") { services(limit: 2, offset: 1) { nodes { id name description artifactType, deploymentType } } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
