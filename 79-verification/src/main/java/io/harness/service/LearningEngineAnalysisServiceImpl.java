@@ -50,11 +50,27 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class LearningEngineAnalysisServiceImpl implements LearningEngineService {
   private static final String SERVICE_VERSION_FILE = "/service_version.properties";
+  private static final int BACKOFF_TIME_MINS = 5;
+  private static final int BACKOFF_LIMIT = 10;
+  private static int[] FIBONACCI_SERIES;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessMetricRegistry metricRegistry;
 
   private final ServiceApiVersion learningEngineApiVersion;
+
+  static {
+    FIBONACCI_SERIES = new int[BACKOFF_LIMIT + 2];
+    int i;
+
+    // 0th and 1st number of the series are 0 and 1
+    FIBONACCI_SERIES[0] = 1;
+    FIBONACCI_SERIES[1] = 2;
+
+    for (i = 2; i <= BACKOFF_LIMIT; i++) {
+      FIBONACCI_SERIES[i] = FIBONACCI_SERIES[i - 1] + FIBONACCI_SERIES[i - 2];
+    }
+  }
 
   public LearningEngineAnalysisServiceImpl() throws IOException {
     Properties messages = new Properties();
@@ -341,7 +357,9 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                                                   .filter("analysis_minute", analysisMinute);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.FAILED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria("retry").greaterThan(LearningEngineAnalysisTask.RETRIES)));
+            query.criteria("retry").greaterThanOrEq(1),
+            query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+                .greaterThanOrEq(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
 
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
@@ -349,5 +367,62 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                 stateExecutionId + "-retry-" + TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .set("executionStatus", ExecutionStatus.FAILED);
     wingsPersistence.update(query, updateOperations);
+  }
+
+  /**
+   *
+   * @param stateExecutionId
+   * @param analysisMinute
+   * @param cvConfig
+   * @param analysisType
+   * @return a positive backoff number if task is schedulable. Else returns -1 (not schedulable now)
+   */
+  public int getNextServiceGuardBackoffCount(
+      String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType) {
+    Query<LearningEngineAnalysisTask> query =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.analysis_minute, analysisMinute)
+            .field(LearningEngineAnalysisTaskKeys.state_execution_id)
+            .startsWith(stateExecutionId + "-retry-")
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, analysisType)
+            .order("-lastUpdatedAt");
+
+    LearningEngineAnalysisTask previousTask = query.get();
+    if (previousTask == null) {
+      return 1;
+    }
+
+    int nextBackoffCount = previousTask.getService_guard_backoff_count() == 0
+        ? 1
+        : getNextFibonacciNumber(previousTask.getService_guard_backoff_count());
+    if (nextBackoffCount > BACKOFF_LIMIT) {
+      logger.info("For cvConfig {} analysisMinute {} the count has reached the total backoff time. No more retries.",
+          cvConfig, analysisMinute);
+      return -1;
+    }
+    long nextSchedulableTime = previousTask.getLastUpdatedAt()
+        + previousTask.getService_guard_backoff_count() * TimeUnit.MINUTES.toMillis(BACKOFF_TIME_MINS);
+    if (Timestamp.currentMinuteBoundary() >= Timestamp.minuteBoundary(nextSchedulableTime)) {
+      return nextBackoffCount;
+    } else {
+      logger.info("For cvConfig {} analysisMinute {} the next schedule time is {}", cvConfig, analysisMinute,
+          nextSchedulableTime);
+      return -1;
+    }
+  }
+
+  private int getNextFibonacciNumber(int n) {
+    if (n == 0) {
+      return 1;
+    } else if (n == 1) {
+      return 2;
+    }
+
+    for (int i = 2; i <= BACKOFF_LIMIT; i++) {
+      if (n == FIBONACCI_SERIES[i - 1]) {
+        return FIBONACCI_SERIES[i];
+      }
+    }
+    return FIBONACCI_SERIES[BACKOFF_LIMIT];
   }
 }

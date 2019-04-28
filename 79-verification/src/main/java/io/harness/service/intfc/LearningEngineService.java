@@ -44,4 +44,6 @@ public interface LearningEngineService {
 
   void markJobScheduled(AnalysisContext verificationAnalysisTask);
   void checkAndUpdateFailedLETask(String stateExecutionId, int analysisMinute);
+  int getNextServiceGuardBackoffCount(
+      String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType);
 }

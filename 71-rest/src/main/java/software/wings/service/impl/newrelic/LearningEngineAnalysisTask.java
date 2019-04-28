@@ -86,6 +86,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String cvConfigId;
   private boolean is24x7Task;
   private String tag = "default";
+  private int service_guard_backoff_count;
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
