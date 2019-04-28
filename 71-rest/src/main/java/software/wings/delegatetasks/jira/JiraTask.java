@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.jira;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -387,10 +385,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       }
 
       Issue issue = fluentCreate.execute();
-
-      if (isNotBlank(parameters.getStatus())) {
-        issue.transition().execute(parameters.getStatus());
-      }
 
       logger.info("Script execution finished with status SUCCESS");
 
