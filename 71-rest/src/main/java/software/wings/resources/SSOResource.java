@@ -12,6 +12,7 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotBlank;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.SSO)
+@Slf4j
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
 public class SSOResource {
   private SSOService ssoService;
@@ -296,5 +298,14 @@ public class SSOResource {
   public static class LDAPTestAuthenticationRequest {
     @NotBlank String email;
     @NotBlank String password;
+  }
+
+  @DELETE
+  @Path("settings")
+  public RestResponse<Boolean> deleteSSOSettingsForAccount(@QueryParam("accountId") @NotBlank String accountId,
+      @QueryParam("targetAccountType") @NotBlank String targetAccountType) {
+    logger.info("Received request to delete SSO violations for accountId={} and targetAccountType={}", accountId,
+        targetAccountType);
+    return new RestResponse<>(ssoService.deleteSSOSettingsForAccount(accountId, targetAccountType));
   }
 }
