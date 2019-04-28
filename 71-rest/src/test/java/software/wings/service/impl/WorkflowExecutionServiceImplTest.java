@@ -601,6 +601,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
+  @Ignore
   public void shouldUpdateFailedCount() throws InterruptedException {
     String appId = app.getUuid();
     triggerWorkflow(appId, env);
