@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 import software.wings.licensing.violations.checkers.APIKeyViolationChecker;
+import software.wings.licensing.violations.checkers.ApprovalStepViolationChecker;
 import software.wings.licensing.violations.checkers.DelegateViolationChecker;
 import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
 import software.wings.licensing.violations.checkers.GovernanceViolationChecker;
@@ -26,7 +27,8 @@ public enum RestrictedFeature {
   TEMPLATE_LIBRARY(TemplateLibraryViolationChecker.class),
   IP_WHITELIST(IpWhitelistViolationChecker.class),
   GOVERNANCE(GovernanceViolationChecker.class),
-  DELEGATE(DelegateViolationChecker.class);
+  DELEGATE(DelegateViolationChecker.class),
+  APPROVAL_STEP(ApprovalStepViolationChecker.class);
 
   private final Class<? extends FeatureViolationChecker> violationsCheckerClass;
 

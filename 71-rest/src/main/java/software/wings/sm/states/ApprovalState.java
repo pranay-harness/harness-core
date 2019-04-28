@@ -127,6 +127,8 @@ public class ApprovalState extends State {
   String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
   String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
   String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
+  public static final String APPROVAL_STATE_TYPE_VARIABLE = "approvalStateType";
+  public static final String USER_GROUPS_VARIABLE = "userGroups";
 
   @Getter @Setter ApprovalStateParams approvalStateParams;
   @Getter @Setter ApprovalStateType approvalStateType = USER_GROUP;
