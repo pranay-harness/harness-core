@@ -93,6 +93,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
 import software.wings.licensing.violations.FeatureViolationsService;
 import software.wings.licensing.violations.FeatureViolationsServiceImpl;
+import software.wings.licensing.violations.checkers.ApprovalStepViolationChecker;
 import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
 import software.wings.licensing.violations.checkers.SSOViolationChecker;
 import software.wings.licensing.violations.checkers.TemplateLibraryViolationChecker;
@@ -705,6 +706,7 @@ public class WingsModule extends DependencyModule {
     bind(FlowControlViolationChecker.class);
     bind(SSOViolationChecker.class);
     bind(TemplateLibraryViolationChecker.class);
+    bind(ApprovalStepViolationChecker.class);
 
     bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})
         .annotatedWith(UseUserGroup.class)
