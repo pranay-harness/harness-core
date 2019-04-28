@@ -4,13 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.VMINSTANCE;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.compute.Compute;
+import com.google.api.services.compute.model.ForwardingRule;
+import com.google.api.services.compute.model.Region;
 import com.google.api.services.monitoring.v3.Monitoring;
-import com.google.api.services.monitoring.v3.MonitoringScopes;
 import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -21,22 +18,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.FastDateFormat;
 import software.wings.beans.GcpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 /**
  * Created by Pranjal on 11/27/2018
@@ -48,6 +44,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
 
   @Inject private EncryptionService encryptionService;
+  @Inject private GcpHelperService gcpHelperService;
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(GcpConfig gcpConfig,
@@ -55,7 +52,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       ThirdPartyApiCallLog apiCallLog) throws IOException {
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
-    Monitoring monitoring = getMonitoringClient(gcpConfig, projectId);
+    Monitoring monitoring = gcpHelperService.getMonitoringService(gcpConfig, encryptionDetails, projectId);
     String projectResource = "projects/" + projectId;
     List<ListTimeSeriesResponse> responses = new ArrayList<>();
 
@@ -84,6 +81,31 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
         .build();
   }
 
+  public List<String> listRegions(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
+    encryptionService.decrypt(gcpConfig, encryptionDetails);
+    String projectId = getProjectId(gcpConfig);
+    List<Region> regions = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
+                               .regions()
+                               .list(projectId)
+                               .execute()
+                               .getItems();
+    return regions.stream().map(Region::getName).collect(Collectors.toList());
+  }
+
+  public Map<String, String> listForwardingRules(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String region) throws IOException {
+    encryptionService.decrypt(gcpConfig, encryptionDetails);
+    String projectId = getProjectId(gcpConfig);
+    Compute gceService = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId);
+    gceService.forwardingRules().list(getProjectId(gcpConfig), region).execute();
+    List<ForwardingRule> forwardingRules = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
+                                               .forwardingRules()
+                                               .list(projectId, "us-central1")
+                                               .execute()
+                                               .getItems();
+    return forwardingRules.stream().collect(Collectors.toMap(ForwardingRule::getIPAddress, ForwardingRule::getName));
+  }
+
   public String createFilter(StackDriverNameSpace nameSpace, String metric, String hostName, String ruleName) {
     String filter;
     switch (nameSpace) {
@@ -99,18 +121,6 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
         throw new WingsException("Invalid namespace " + nameSpace);
     }
     return filter;
-  }
-
-  public Monitoring getMonitoringClient(GcpConfig gcpConfig, String projectId) throws IOException {
-    HttpTransport httpTransport = new NetHttpTransport();
-    JsonFactory jsonFactory = new JacksonFactory();
-    GoogleCredential credentials =
-        GoogleCredential
-            .fromStream(new ByteArrayInputStream(
-                Charset.forName("UTF-8").encode(CharBuffer.wrap(gcpConfig.getServiceAccountKeyFileContent())).array()))
-            .createScoped(MonitoringScopes.all());
-
-    return new Monitoring.Builder(httpTransport, jsonFactory, credentials).setApplicationName(projectId).build();
   }
 
   private ListTimeSeriesResponse getTimeSeriesResponse(

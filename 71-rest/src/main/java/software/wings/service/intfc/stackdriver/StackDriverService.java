@@ -25,4 +25,8 @@ public interface StackDriverService {
    * @return
    */
   Map<String, List<StackDriverMetric>> getMetrics();
+
+  List<String> listRegions(String settingId) throws IOException;
+
+  Map<String, String> listForwardingRules(String settingId, String region) throws IOException;
 }

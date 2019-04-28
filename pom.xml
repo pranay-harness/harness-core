@@ -391,6 +391,11 @@
             </dependency>
             <dependency>
                 <groupId>com.google.apis</groupId>
+                <artifactId>google-api-services-compute</artifactId>
+                <version>v1-rev213-1.25.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.apis</groupId>
                 <artifactId>google-api-services-container</artifactId>
                 <version>v1-rev48-1.23.0</version>
                 <exclusions>
