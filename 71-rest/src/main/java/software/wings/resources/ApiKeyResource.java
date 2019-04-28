@@ -101,7 +101,7 @@ public class ApiKeyResource {
     }
 
     Map<String, Object> status = new HashMap<>();
-    status.put("success", deleted);
+    status.put("deleted", deleted);
     return new RestResponse<>(status);
   }
 }

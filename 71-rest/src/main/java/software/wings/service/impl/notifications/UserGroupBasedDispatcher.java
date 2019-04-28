@@ -13,6 +13,7 @@ import software.wings.beans.Notification;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserService;
 
@@ -25,6 +26,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
   @Inject private EmailDispatcher emailDispatcher;
   @Inject private SlackMessageDispatcher slackMessageDispatcher;
   @Inject private UserService userService;
+  @Inject private AccountService accountService;
 
   @Override
   public void dispatch(List<Notification> notifications, UserGroup userGroup) {
@@ -50,7 +52,12 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       emailDispatcher.dispatch(notifications, emails);
     }
 
-    if (null != userGroup.getSlackConfig()) {
+    String accountId = notifications.get(0).getAccountId();
+
+    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
+    if (isCommunityAccount) {
+      log.info("Slack Configuration will be ignored since it's a community account. accountId={}", accountId);
+    } else if (null != userGroup.getSlackConfig()) {
       try {
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
