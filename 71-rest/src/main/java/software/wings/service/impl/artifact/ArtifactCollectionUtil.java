@@ -171,12 +171,12 @@ public class ArtifactCollectionUtil {
         metadata.put(ARTIFACT_PATH, buildDetails.getArtifactPath());
         metadata.put(
             ARTIFACT_FILE_NAME, buildDetails.getNumber().substring(buildDetails.getNumber().lastIndexOf('/') + 1));
-        if (isNotEmpty(buildDetails.getBuildUrl())) {
-          metadata.put(URL_KEY, buildDetails.getBuildUrl());
-        }
         if (buildDetails.getArtifactFileSize() != null) {
           metadata.put(ARTIFACT_FILE_SIZE, buildDetails.getArtifactFileSize());
         }
+      }
+      if (isNotEmpty(buildDetails.getBuildUrl())) {
+        metadata.put(URL_KEY, buildDetails.getBuildUrl());
       }
       metadata.put(BUILD_NO, buildDetails.getNumber());
       return metadata;
