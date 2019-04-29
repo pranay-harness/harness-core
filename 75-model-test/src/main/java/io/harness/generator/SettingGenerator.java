@@ -437,8 +437,6 @@ public class SettingGenerator {
             .withValue(DockerConfig.builder()
                            .accountId(account.getUuid())
                            .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                           .username("wingsplugins")
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_docker_hub")))
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
