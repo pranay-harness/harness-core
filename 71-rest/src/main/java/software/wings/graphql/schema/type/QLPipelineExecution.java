@@ -7,8 +7,8 @@ import lombok.Value;
 @Builder
 public class QLPipelineExecution implements QLExecution {
   private String id;
-  private long queuedTime;
-  private long startTime;
-  private long endTime;
+  private Long queuedTime;
+  private Long startTime;
+  private Long endTime;
   private QLExecutionStatus status;
 }
