@@ -27,6 +27,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Log;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.Command.CommandKeys;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.WingsPersistence;
@@ -213,11 +214,12 @@ public class ActivityServiceImpl implements ActivityService {
     //        wingsPersistence.createQuery(Activity.class).filter(Mapper.ID_KEY, activityId).filter("appId",
     //        appId).disableValidation().filter("commandUnits.name",
     //            unitName);
-    Query<Activity> query = wingsPersistence.createQuery(Activity.class)
-                                .filter(Mapper.ID_KEY, activityId)
-                                .filter(ActivityKeys.appId, appId)
-                                .field(ActivityKeys.commandUnits)
-                                .elemMatch(wingsPersistence.createQuery(Command.class).filter("name", unitName));
+    Query<Activity> query =
+        wingsPersistence.createQuery(Activity.class)
+            .filter(Mapper.ID_KEY, activityId)
+            .filter(ActivityKeys.appId, appId)
+            .field(ActivityKeys.commandUnits)
+            .elemMatch(wingsPersistence.createQuery(Command.class).filter(CommandKeys.name, unitName));
 
     UpdateOperations<Activity> updateOperations = wingsPersistence.createUpdateOperations(Activity.class)
                                                       .disableValidation()

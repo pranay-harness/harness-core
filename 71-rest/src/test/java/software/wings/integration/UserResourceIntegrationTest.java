@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureFlag.FeatureFlagKeys;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 
@@ -53,8 +54,9 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   private void enableLoginPromptWhenNoUser() {
-    FeatureFlag featureFlag =
-        wingsPersistence.createQuery(FeatureFlag.class).filter("name", LOGIN_PROMPT_WHEN_NO_USER.name()).get();
+    FeatureFlag featureFlag = wingsPersistence.createQuery(FeatureFlag.class)
+                                  .filter(FeatureFlagKeys.name, LOGIN_PROMPT_WHEN_NO_USER.name())
+                                  .get();
 
     if (featureFlag == null) {
       featureFlag = FeatureFlag.builder().name(LOGIN_PROMPT_WHEN_NO_USER.name()).enabled(true).build();

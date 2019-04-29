@@ -80,6 +80,7 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
@@ -795,8 +796,9 @@ public class AccountServiceImpl implements AccountService {
 
   private List<LdapSettings> getAllLdapSettingsForAccount(String accountId) {
     List<LdapSettings> ldapSettings = new ArrayList<>();
-    Query<LdapSettings> query =
-        wingsPersistence.createQuery(LdapSettings.class).filter("accountId", accountId).filter("type", SSOType.LDAP);
+    Query<LdapSettings> query = wingsPersistence.createQuery(LdapSettings.class)
+                                    .filter(LdapSettingsKeys.accountId, accountId)
+                                    .filter("type", SSOType.LDAP);
     Iterator<LdapSettings> iterator = query.iterator();
     while (iterator.hasNext()) {
       ldapSettings.add(iterator.next());

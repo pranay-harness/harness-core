@@ -1315,7 +1315,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     // prune state machines
-    wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).filter("appId", appId));
+    wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).filter(StateMachineKeys.appId, appId));
   }
 
   /**

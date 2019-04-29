@@ -9,6 +9,7 @@ import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.util.ArrayList;
@@ -31,9 +32,7 @@ public class DeleteCVAlertsMigration implements Migration {
     harnessAccounts.forEach(account -> harnessAccountIds.add(account.getUuid()));
 
     Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
-                                  .field("accountId")
-                                  .notIn(harnessAccountIds)
-                                  .filter("type", "CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT");
+                                  .filter(AlertKeys.type, "CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT");
 
     List<Alert> alerts = alertQuery.asList();
     logger.info("Total number of CV Datacollection alerts to be deleted {}", alerts.size());

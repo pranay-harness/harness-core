@@ -9,6 +9,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
 import java.util.List;
 
@@ -18,8 +19,9 @@ public class AppDTemplateMigration implements Migration {
 
   @Override
   public void migrate() {
-    List<CVConfiguration> cvConfigurationList =
-        wingsPersistence.createQuery(CVConfiguration.class).filter("stateType", "APP_DYNAMICS").asList();
+    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
+                                                    .filter(CVConfigurationKeys.stateType, "APP_DYNAMICS")
+                                                    .asList();
 
     logger.info("Adding metric templates for {} APP_DYNAMICS cvConfigurations", cvConfigurationList.size());
 

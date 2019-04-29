@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "DelegateConnectionResultKeys")
-public class DelegateConnectionResult implements UuidAware, PersistentEntity, UpdatedAtAware {
+public class DelegateConnectionResult implements PersistentEntity, UuidAware, UpdatedAtAware {
   @Id private String uuid;
 
   @NotNull private long lastUpdatedAt;

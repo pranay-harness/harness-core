@@ -12,6 +12,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +33,9 @@ public class FixCVDashboardStatusMigration implements Migration {
 
       for (ContinuousVerificationExecutionMetaData cvData : cvMetadataList) {
         String stateExecId = cvData.getStateExecutionId();
-        StateExecutionInstance instance =
-            wingsPersistence.createQuery(StateExecutionInstance.class).filter("_id", stateExecId).get();
+        StateExecutionInstance instance = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .filter(StateExecutionInstanceKeys.uuid, stateExecId)
+                                              .get();
         ExecutionStatus realStatus = cvData.getExecutionStatus();
         if (instance != null) {
           realStatus = instance.getStatus();

@@ -60,10 +60,14 @@ import software.wings.metrics.RiskLevel;
 import software.wings.resources.AccountResource;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
@@ -134,19 +138,19 @@ public class AnalysisServiceImpl implements AnalysisService {
   public void cleanUpForLogRetry(String stateExecutionId) {
     // delete log data records
     wingsPersistence.delete(
-        wingsPersistence.createQuery(LogDataRecord.class).filter("stateExecutionId", stateExecutionId));
+        wingsPersistence.createQuery(LogDataRecord.class).filter(LogDataRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete log analysis records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete cv dashboard execution data
     wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
                                 .filter("stateExecutionId", stateExecutionId));
 
     // delete learning engine tasks
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId));
 
     // delete experimental learning engine tasks
     wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
@@ -157,8 +161,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                                 .filter("stateExecutionId", stateExecutionId));
 
     // delete verification service tasks
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(AnalysisContext.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
+                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId));
   }
 
   private boolean deleteFeedbackHelper(String feedbackId) {

@@ -21,6 +21,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -73,10 +74,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
         entity(LogMLAnalysisRecord.builder().score(0.4).build(), APPLICATION_JSON),
         new GenericType<RestResponse<String>>() {});
 
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class)
-                             .filter("type", AlertType.CONTINUOUS_VERIFICATION_ALERT)
-                             .filter("appId", appId)
-                             .asList();
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
     assertTrue(alerts.isEmpty());
 
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
@@ -89,10 +87,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<String>>() {});
 
     sleep(ofMillis(5000));
-    alerts = wingsPersistence.createQuery(Alert.class)
-                 .filter("type", AlertType.CONTINUOUS_VERIFICATION_ALERT)
-                 .filter("appId", appId)
-                 .asList();
+    alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
     assertEquals(1, alerts.size());
     Alert alert = alerts.get(0);
     assertEquals(accountId, alert.getAccountId());
@@ -114,10 +109,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<String>>() {});
 
     sleep(ofMillis(5000));
-    alerts = wingsPersistence.createQuery(Alert.class)
-                 .filter("type", AlertType.CONTINUOUS_VERIFICATION_ALERT)
-                 .filter("appId", appId)
-                 .asList();
+    alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
     assertEquals(2, alerts.size());
 
     // snooze should not create new alert
@@ -135,10 +127,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<String>>() {});
 
     sleep(ofMillis(5000));
-    alerts = wingsPersistence.createQuery(Alert.class)
-                 .filter("type", AlertType.CONTINUOUS_VERIFICATION_ALERT)
-                 .filter("appId", appId)
-                 .asList();
+    alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
     assertEquals(2, alerts.size());
   }
 }

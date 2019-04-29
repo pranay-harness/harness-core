@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -59,6 +60,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
+@FieldNameConstants(innerTypeName = "LogDataRecordKeys")
 public class LogDataRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty private StateType stateType;
 
