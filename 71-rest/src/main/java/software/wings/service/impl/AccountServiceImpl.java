@@ -684,20 +684,27 @@ public class AccountServiceImpl implements AccountService {
           mainConfiguration.getSampleTargetStatusHost(), getAccountIdentifier(accountId));
       logger.info("Fetching delegate provisioning progress for account {} from {}", accountId, url);
       String result = Http.getResponseStringFromUrl(url, 10, 10).trim();
-      logger.info("Provisioning progress for account {}: {}", accountId, result);
-      List<ProvisionStep> steps = new ArrayList<>();
-      for (JsonElement element : new JsonParser().parse(result).getAsJsonArray()) {
-        JsonObject jsonObject = element.getAsJsonObject();
-        steps.add(ProvisionStep.builder()
-                      .step(jsonObject.get(ProvisionStepKeys.step).getAsString())
-                      .done(jsonObject.get(ProvisionStepKeys.done).getAsBoolean())
-                      .build());
+      if (isNotEmpty(result)) {
+        logger.info("Provisioning progress for account {}: {}", accountId, result);
+        if (result.contains("<title>404 Not Found</title>")) {
+          return singletonList(ProvisionStep.builder().step("Provisioning Started").done(false).build());
+        }
+        List<ProvisionStep> steps = new ArrayList<>();
+        for (JsonElement element : new JsonParser().parse(result).getAsJsonArray()) {
+          JsonObject jsonObject = element.getAsJsonObject();
+          steps.add(ProvisionStep.builder()
+                        .step(jsonObject.get(ProvisionStepKeys.step).getAsString())
+                        .done(jsonObject.get(ProvisionStepKeys.done).getAsBoolean())
+                        .build());
+        }
+        return steps;
       }
-      return steps;
+      throw new WingsException(
+          ErrorCode.GENERAL_ERROR, String.format("Empty provisioning result for account %s", accountId));
     } catch (IOException e) {
-      logger.warn(String.format("Exception in fetching delegate provisioning progress for account %s", accountId), e);
+      throw new WingsException(ErrorCode.GENERAL_ERROR,
+          String.format("Exception in fetching delegate provisioning progress for account %s", accountId), e);
     }
-    return singletonList(ProvisionStep.builder().step("Provisioning Started").done(false).build());
   }
 
   private void assertTrialAccount(String accountId) {
