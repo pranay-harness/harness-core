@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.service.intfc.LearningEngineService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -45,12 +46,15 @@ public class LogMLClusterGenerator implements Runnable {
         + "&stateExecutionId=" + context.getStateExecutionId() + "&workflowId=" + context.getWorkflowId()
         + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&serviceId=" + context.getServiceId()
         + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name() + "&stateType=" + context.getStateType();
-
+    String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+        + VerificationConstants.NOTIFY_LEARNING_FAILURE
+        + "?is24x7=false&stateExecutionId=" + context.getStateExecutionId();
     logger.info("Creating Learning Engine Analysis Task for Log ML clustering with context {}", context);
 
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
                                                   .control_input_url(inputLogsUrl)
                                                   .analysis_save_url(clusteredLogSaveUrl)
+                                                  .analysis_failure_url(failureUrl)
                                                   .workflow_id(context.getWorkflowId())
                                                   .workflow_execution_id(context.getWorkflowExecutionId())
                                                   .state_execution_id(context.getStateExecutionId())

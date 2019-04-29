@@ -199,7 +199,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
       ClusterLevel clusterLevel, String delegateTaskId, List<LogElement> logData) {
     try {
-      if (isEmpty(cvConfigId) && !isStateValid(appId, stateExecutionId)) {
+      if (isEmpty(cvConfigId) && !learningEngineService.isStateValid(appId, stateExecutionId)) {
         logger.warn(
             "State is no longer active " + stateExecutionId + ". Sending delegate abort request " + delegateTaskId);
         return false;
@@ -871,11 +871,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                    .test_events(Collections.emptyMap())
                                                    .build();
     saveLogAnalysisRecords(analysisRecord, stateType, Optional.empty());
-  }
-
-  @Override
-  public boolean isStateValid(String appId, String stateExecutionId) {
-    return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId)).getResource();
   }
 
   @Override

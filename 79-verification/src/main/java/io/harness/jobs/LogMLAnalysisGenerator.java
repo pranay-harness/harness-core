@@ -12,6 +12,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -187,7 +188,9 @@ public class LogMLAnalysisGenerator implements Runnable {
       if (context.getStateType().equals(StateType.BUG_SNAG)) {
         featureName = null;
       }
-
+      String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+          + VerificationConstants.NOTIFY_LEARNING_FAILURE
+          + "?is24x7=false&stateExecutionId=" + context.getStateExecutionId();
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder;
       analysisTaskBuilder = LearningEngineAnalysisTask.builder()
                                 .query(Lists.newArrayList(query.split(" ")))
@@ -202,7 +205,8 @@ public class LogMLAnalysisGenerator implements Runnable {
                                 .log_analysis_get_url(logAnalysisGetUrl)
                                 .ml_analysis_type(MLAnalysisType.LOG_ML)
                                 .feature_name(featureName)
-                                .stateType(context.getStateType());
+                                .stateType(context.getStateType())
+                                .analysis_failure_url(failureUrl);
 
       if (!isEmpty(feedback_url)) {
         analysisTaskBuilder.feedback_url(feedback_url);

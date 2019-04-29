@@ -68,8 +68,6 @@ public interface LogAnalysisService {
 
   Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
 
-  boolean isStateValid(String appId, String stateExecutionID);
-
   boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId);
 

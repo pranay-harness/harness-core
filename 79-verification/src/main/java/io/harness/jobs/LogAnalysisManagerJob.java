@@ -140,7 +140,7 @@ public class LogAnalysisManagerJob implements Job {
          * exit immediately
          */
         boolean createExperiment;
-        if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+        if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
           return -1L;
         }
@@ -210,7 +210,7 @@ public class LogAnalysisManagerJob implements Job {
       } finally {
         try {
           // send notification to state manager and delete cron.
-          if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          if (completeCron || !learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
               logger.info(
                   "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errorMsg);
@@ -234,7 +234,7 @@ public class LogAnalysisManagerJob implements Job {
     }
 
     private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {
-      if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+      if (learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
 
         VerificationStateAnalysisExecutionData logAnalysisExecutionData =

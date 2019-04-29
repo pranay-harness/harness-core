@@ -9,6 +9,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.sm.StateType.ELK;
 
@@ -23,6 +24,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
+import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -108,6 +110,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private HarnessMetricRegistry metricRegistry;
   @Inject private LogAnalysisService analysisService;
+  @Inject private LearningEngineService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
   private DataStoreService dataStoreService;
   private CV24x7DashboardService cv24x7DashboardService;
@@ -132,6 +135,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
+    setInternalState(analysisService, "managerClient", verificationManagerClient);
+    setInternalState(learningEngineService, "managerClient", verificationManagerClient);
+    setInternalState(analysisService, "learningEngineService", learningEngineService);
     FieldUtils.writeField(analysisService, "managerClient", verificationManagerClient, true);
 
     dataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);

@@ -7,7 +7,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.Integer.max;
-import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
@@ -107,7 +106,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         metric.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
       }
     });
-    if (!isStateValid(appId, stateExecutionId)) {
+    if (!learningEngineService.isStateValid(appId, stateExecutionId)) {
       logger.info("State is no longer active {}. Sending delegate abort request {}", stateExecutionId, delegateTaskId);
       return false;
     }
@@ -701,14 +700,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     });
     Collections.sort(analysisRecords);
     return analysisRecords;
-  }
-
-  @Override
-  public boolean isStateValid(String appId, String stateExecutionId) {
-    if (stateExecutionId.contains(CV_24x7_STATE_EXECUTION)) {
-      return true;
-    }
-    return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId)).getResource();
   }
 
   @Override

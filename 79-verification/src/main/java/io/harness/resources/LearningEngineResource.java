@@ -7,8 +7,10 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
+import io.harness.service.LearningEngineError;
 import io.harness.service.intfc.LearningEngineService;
 import io.swagger.annotations.Api;
+import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
@@ -18,8 +20,10 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -84,5 +88,18 @@ public class LearningEngineResource {
       @QueryParam("experimentName") String experimentName, @HeaderParam("Accept") String acceptHeaders) {
     return new RestResponse<>(learningEngineService.getNextLearningEngineExperimentalAnalysisTask(
         experimentName, parseApisVersion(acceptHeaders)));
+  }
+
+  @POST
+  @Path(VerificationConstants.NOTIFY_LEARNING_FAILURE)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @Produces({"application/json", "application/v1+json"})
+  public RestResponse<Boolean> notifyFailure(@HeaderParam("Accept") String acceptHeaders,
+      @QueryParam("is24x7") boolean is24x7, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("cvConfigId") String cvConfigId, @Valid LearningEngineError learningEngineError) {
+    return new RestResponse<>(
+        learningEngineService.notifyFailure(is24x7, stateExecutionId, cvConfigId, learningEngineError));
   }
 }
