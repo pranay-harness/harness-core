@@ -456,7 +456,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     return JiraExecutionData.builder()
         .currentStatus(approvalFieldValue)
-        .executionStatus(ExecutionStatus.WAITING)
+        .executionStatus(ExecutionStatus.PAUSED)
         .build();
   }
 

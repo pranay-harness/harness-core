@@ -96,7 +96,7 @@ public class JiraPollingJob implements Job {
 
         jiraHelperService.approveWorkflow(action, approvalId, appId, workflowExecutionId, issueStatus,
             jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
-      } else if (issueStatus == ExecutionStatus.WAITING) {
+      } else if (issueStatus == ExecutionStatus.PAUSED) {
         logger.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
             issueId, issueStatus, jiraExecutionData.getCurrentStatus());
         jiraHelperService.continuePauseWorkflow(approvalId, appId, workflowExecutionId, issueStatus,
