@@ -16,7 +16,6 @@ import com.google.inject.Singleton;
 
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
-import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
@@ -283,7 +282,7 @@ public class ApplicationManifestUtils {
 
     ApplicationManifest serviceAppManifest = getApplicationManifestForService(context);
     if (serviceAppManifest != null) {
-      appManifestMap.put(K8sValuesLocation.Service, getApplicationManifestForService(context));
+      appManifestMap.put(K8sValuesLocation.Service, serviceAppManifest);
     }
     appManifestMap.putAll(getValuesApplicationManifests(context));
     return appManifestMap;
@@ -293,11 +292,12 @@ public class ApplicationManifestUtils {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     Application app = appService.get(context.getAppId());
     ServiceElement serviceElement = phaseElement.getServiceElement();
-    Service service = serviceResourceService.get(app.getUuid(), serviceElement.getUuid());
+    Service service = serviceResourceService.get(app.getUuid(), serviceElement.getUuid(), false);
 
     ApplicationManifest applicationManifest =
         applicationManifestService.getK8sManifestByServiceId(app.getUuid(), serviceElement.getUuid());
-    if (service.getDeploymentType() != DeploymentType.HELM && applicationManifest == null) {
+
+    if (service.isK8sV2() && applicationManifest == null) {
       throw new InvalidRequestException("Manifests not found for service.");
     }
 

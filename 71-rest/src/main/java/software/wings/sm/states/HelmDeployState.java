@@ -947,7 +947,7 @@ public class HelmDeployState extends State {
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
-    if (!StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())) {
+    if (applicationManifest == null || !StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())) {
       return null;
     }
 
