@@ -10,12 +10,14 @@ import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
-import org.json.JSONObject;
 import software.wings.app.MainConfiguration;
 import software.wings.security.SecretManager;
 
@@ -25,12 +27,13 @@ import java.util.concurrent.ExecutionException;
 
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
   OAuth20Service service;
 
-  static final String PROTECTED_RESOURCE_URL = "https://api.linkedin.com/v1/people/~:(%s)";
-  static final String EMAIL_FIELD_NAME = "email-address";
-  static final String NAME_FIELD_NAME = "firstName";
+  static final String PROTECTED_RESOURCE_URL = "https://api.linkedin.com/v2/me";
+  private static final String GET_EMAIL_ADDRESS_URL =
+      "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))";
 
   @Inject
   public LinkedinClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager) {
@@ -39,7 +42,7 @@ public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
     service = new ServiceBuilder(linkedinConfig.getClientId())
                   .apiSecret(linkedinConfig.getClientSecret())
                   .callback(linkedinConfig.getCallbackUrl())
-                  .scope("r_basicprofile r_emailaddress")
+                  .scope("r_liteprofile r_emailaddress")
                   .build(LinkedInApi20.instance());
   }
 
@@ -77,19 +80,38 @@ public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
 
   private OauthUserInfo parseResponseAndFetchUserInfo(OAuth2AccessToken accessToken)
       throws IOException, ExecutionException, InterruptedException {
-    String email = getValueFromLinkedin(accessToken, EMAIL_FIELD_NAME, "emailAddress");
-    String name = getValueFromLinkedin(accessToken, NAME_FIELD_NAME, "firstName");
+    String email = getEmailAddressFromLinkedIn(accessToken);
+    String name = getValueFromLinkedin(accessToken, email);
     return OauthUserInfo.builder().email(email).name(name).build();
   }
 
-  private String getValueFromLinkedin(OAuth2AccessToken accessToken, String emailFieldName, String jsonkey)
+  private String getEmailAddressFromLinkedIn(OAuth2AccessToken accessToken)
       throws InterruptedException, ExecutionException, IOException {
-    final OAuthRequest request = new OAuthRequest(Verb.GET, String.format(PROTECTED_RESOURCE_URL, emailFieldName));
+    final OAuthRequest request = new OAuthRequest(Verb.GET, GET_EMAIL_ADDRESS_URL);
     request.addHeader("x-li-format", "json");
-    request.addHeader("Accept-Language", "ru-RU");
     service.signRequest(accessToken, request);
     final Response response = service.execute(request);
-    JSONObject jsonObject = new JSONObject(response.getBody());
-    return jsonObject.getString(jsonkey);
+    String responseJson = response.getBody();
+    logger.info("LinkedIn json response for get email address: {}", responseJson);
+    DocumentContext jsonContext = JsonPath.parse(responseJson);
+    return jsonContext.read("$['elements'][0]['handle~']['emailAddress']");
+  }
+
+  private String getValueFromLinkedin(OAuth2AccessToken accessToken, String email)
+      throws InterruptedException, ExecutionException, IOException {
+    final OAuthRequest request = new OAuthRequest(Verb.GET, PROTECTED_RESOURCE_URL);
+    request.addHeader("x-li-format", "json");
+    service.signRequest(accessToken, request);
+    final Response response = service.execute(request);
+    String responseJson = response.getBody();
+    logger.info("LinkedIn json response for getting user profile: {}", responseJson);
+    DocumentContext jsonContext = JsonPath.parse(responseJson);
+    String firstName = jsonContext.read("$['firstName']['localized']['en_US']");
+    String lastName = jsonContext.read("$['lastName']['localized']['en_US']");
+    String name = email;
+    if (firstName != null || lastName != null) {
+      name = firstName + " " + lastName;
+    }
+    return name;
   }
 }
