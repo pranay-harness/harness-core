@@ -26,6 +26,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
@@ -76,6 +77,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test(timeout = TIMEOUT)
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
