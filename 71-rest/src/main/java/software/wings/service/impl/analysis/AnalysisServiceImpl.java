@@ -40,6 +40,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Sort;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.ElementExecutionSummary;
@@ -52,6 +53,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.config.LogzConfig;
+import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -67,6 +69,7 @@ import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -125,6 +128,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private CV24x7DashboardService cv24x7DashboardService;
+  @Inject private HostService hostService;
 
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
@@ -1014,7 +1018,15 @@ public class AnalysisServiceImpl implements AnalysisService {
         continue;
       }
       for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-        hosts.put(instanceStatusSummary.getInstanceElement().getHostName(), instanceStatusSummary.getInstanceElement());
+        final InstanceElement instanceElement = instanceStatusSummary.getInstanceElement();
+        final HostElement hostElement = instanceElement.getHost();
+        if (hostElement != null && hostElement.getEc2Instance() == null) {
+          final Host host = hostService.get(appId, workflowExecution.getEnvId(), hostElement.getUuid());
+          if (host != null && host.getEc2Instance() != null) {
+            hostElement.setEc2Instance(host.getEc2Instance());
+          }
+        }
+        hosts.put(instanceElement.getHostName(), instanceElement);
       }
     }
     if (isEmpty(hosts)) {
