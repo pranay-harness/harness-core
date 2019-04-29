@@ -1074,6 +1074,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private Delegate saveDelegate(Delegate delegate) {
+    logger.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
     delegate.setAppId(GLOBAL_APP_ID);
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
     logger.info("Delegate saved: {}", savedDelegate);
