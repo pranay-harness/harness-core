@@ -83,6 +83,8 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
+    resetCache();
+
     // Test running the workflow
 
     ExecutionArgs executionArgs = new ExecutionArgs();

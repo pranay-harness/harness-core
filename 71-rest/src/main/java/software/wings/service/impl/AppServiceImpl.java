@@ -312,7 +312,10 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public Application getAppByName(String accountId, String appName) {
-    return wingsPersistence.createQuery(Application.class).filter("accountId", accountId).filter("name", appName).get();
+    return wingsPersistence.createQuery(Application.class)
+        .filter(ApplicationKeys.accountId, accountId)
+        .filter(ApplicationKeys.name, appName)
+        .get();
   }
 
   /* (non-Javadoc)
@@ -401,13 +404,13 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public List<Application> getAppsByAccountId(String accountId) {
-    return wingsPersistence.createQuery(Application.class).filter("accountId", accountId).asList();
+    return wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).asList();
   }
 
   @Override
   public List<String> getAppIdsByAccountId(String accountId) {
     return wingsPersistence.createQuery(Application.class)
-        .filter("accountId", accountId)
+        .filter(ApplicationKeys.accountId, accountId)
         .asKeyList()
         .stream()
         .map(applicationKey -> applicationKey.getId().toString())
@@ -417,7 +420,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public Set<String> getAppIdsAsSetByAccountId(String accountId) {
     return wingsPersistence.createQuery(Application.class)
-        .filter("accountId", accountId)
+        .filter(ApplicationKeys.accountId, accountId)
         .asKeyList()
         .stream()
         .map(applicationKey -> applicationKey.getId().toString())
@@ -428,7 +431,7 @@ public class AppServiceImpl implements AppService {
   public List<String> getAppNamesByAccountId(String accountId) {
     return wingsPersistence.createQuery(Application.class)
         .project(ApplicationKeys.name, true)
-        .filter("accountId", accountId)
+        .filter(ApplicationKeys.accountId, accountId)
         .asList()
         .stream()
         .map(Application::getName)

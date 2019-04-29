@@ -93,7 +93,7 @@ public class GraphQLModule extends AbstractModule {
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {
     String annotationName = calculateAnnotationName(clazz, "DataFetcher");
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
+    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz).asEagerSingleton();
   }
 
   private void bindBatchedDataLoaderWithAnnotation(Class<? extends MappedBatchLoader> clazz) {

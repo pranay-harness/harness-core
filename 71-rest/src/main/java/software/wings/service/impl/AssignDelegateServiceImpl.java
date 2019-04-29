@@ -72,7 +72,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                 public Optional<DelegateConnectionResult> load(ImmutablePair<String, String> key) {
                   return Optional.ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                  .filter("delegateId", key.getLeft())
-                                                 .filter("criteria", key.getRight())
+                                                 .filter(DelegateConnectionResultKeys.criteria, key.getRight())
                                                  .get());
                 }
               });
@@ -319,8 +319,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public void clearConnectionResults(String accountId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(DelegateConnectionResult.class).filter("accountId", accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                .filter(DelegateConnectionResultKeys.accountId, accountId));
   }
 
   @Override

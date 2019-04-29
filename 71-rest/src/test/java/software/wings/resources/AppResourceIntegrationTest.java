@@ -27,6 +27,7 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.IntegrationTestUtil;
@@ -109,7 +110,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   private long appCount(String accountId) {
-    return wingsPersistence.createQuery(Application.class).filter("accountId", accountId).count();
+    return wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).count();
   }
 
   @Test

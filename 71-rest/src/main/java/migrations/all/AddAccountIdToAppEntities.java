@@ -14,6 +14,7 @@ import migrations.Migration;
 import org.mongodb.morphia.Key;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
@@ -41,8 +42,9 @@ public class AddAccountIdToAppEntities implements Migration {
       while (accounts.hasNext()) {
         final Account account = accounts.next();
 
-        List<Key<Application>> appIdKeyList =
-            wingsPersistence.createQuery(Application.class).filter("accountId", account.getUuid()).asKeyList();
+        List<Key<Application>> appIdKeyList = wingsPersistence.createQuery(Application.class)
+                                                  .filter(ApplicationKeys.accountId, account.getUuid())
+                                                  .asKeyList();
         if (isNotEmpty(appIdKeyList)) {
           Set<String> appIdSet =
               appIdKeyList.stream().map(applicationKey -> (String) applicationKey.getId()).collect(Collectors.toSet());

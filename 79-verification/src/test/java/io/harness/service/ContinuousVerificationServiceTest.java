@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
@@ -188,18 +189,20 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
-        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(0, delegateTasks.size());
 
     logsCVConfiguration.setBaselineStartMinute(currentMinute - 2);
     continuousVerificationService.triggerLogDataCollection(accountId);
-    delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(0, delegateTasks.size());
 
     logsCVConfiguration.setBaselineStartMinute(currentMinute - 20);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
-    delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(1, delegateTasks.size());
 
     DelegateTask delegateTask = delegateTasks.get(0);
@@ -231,7 +234,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
-        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(0, delegateTasks.size());
   }
 
@@ -240,7 +243,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testLogsCollection() {
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
-        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(1, delegateTasks.size());
     DelegateTask delegateTask = delegateTasks.get(0);
     assertEquals(accountId, delegateTask.getAccountId());
@@ -273,7 +276,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       wingsPersistence.save(logDataRecord);
     }
     continuousVerificationService.triggerLogDataCollection(accountId);
-    delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(2, delegateTasks.size());
 
     delegateTask = delegateTasks.get(1);
@@ -305,7 +309,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(context);
     continuousVerificationService.triggerLogDataCollection(context);
     List<DelegateTask> delegateTasks =
-        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(1, delegateTasks.size());
     DelegateTask delegateTask = delegateTasks.get(0);
 
