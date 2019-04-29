@@ -393,6 +393,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     notNullCheck("ApprovalDetails", approvalDetails, USER);
     notNullCheck("ApprovalId", approvalDetails.getApprovalId());
     String approvalId = approvalDetails.getApprovalId();
+    notNullCheck("Approval action", approvalDetails.getAction());
 
     notNullCheck("workflowExecutionId", workflowExecutionId, USER);
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);

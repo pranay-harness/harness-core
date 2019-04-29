@@ -23,6 +23,8 @@ public interface StateExecutionService {
 
   void updateStateExecutionData(String appId, String stateExecutionId, StateExecutionData stateExecutionData);
 
+  StateExecutionInstance getStateExecutionData(String appId, String stateExecutionId);
+
   PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest);
 
   List<ServiceInstance> getHostExclusionList(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement);

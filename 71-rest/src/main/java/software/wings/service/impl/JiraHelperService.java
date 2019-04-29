@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.delegatetasks.jira.JiraAction.CHECK_APPROVAL;
 import static software.wings.delegatetasks.jira.JiraAction.FETCH_ISSUE;
 
@@ -29,6 +31,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.StateExecutionInstance;
 
 /**
  * All Jira apis should be accessed via this object.
@@ -205,13 +208,23 @@ public class JiraHelperService {
 
   public void approveWorkflow(Action action, String approvalId, String appId, String workflowExecutionId,
       ExecutionStatus approvalStatus, String currentStatus, String stateExecutionInstanceId) {
-    ApprovalDetails approvalDetails = new ApprovalDetails();
-    approvalDetails.setAction(action);
-    approvalDetails.setApprovalId(approvalId);
-    ApprovalStateExecutionData executionData =
-        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
-            appId, workflowExecutionId, stateExecutionInstanceId, approvalDetails);
-
+    ApprovalStateExecutionData executionData;
+    if (stateExecutionInstanceId == null) {
+      ApprovalDetails approvalDetails = new ApprovalDetails();
+      approvalDetails.setAction(action);
+      approvalDetails.setApprovalId(approvalId);
+      executionData = workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+          appId, workflowExecutionId, null, approvalDetails);
+    } else {
+      StateExecutionInstance stateExecutionInstance =
+          stateExecutionService.getStateExecutionData(appId, stateExecutionInstanceId);
+      if (stateExecutionInstance == null) {
+        throw new WingsException(INVALID_ARGUMENT, USER)
+            .addParam("args", "No stateExecutionInstace found for id " + stateExecutionInstanceId);
+      }
+      executionData = (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(
+          stateExecutionInstance.getDisplayName());
+    }
     String message;
     if (action == Action.APPROVE) {
       message = "Approval provided on ticket: " + executionData.getIssueKey();
@@ -222,7 +235,6 @@ public class JiraHelperService {
     executionData.setStatus(approvalStatus);
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(currentStatus);
-    executionData.setErrorMsg(message);
 
     logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     waitNotifyEngine.notify(approvalId, executionData);
@@ -233,15 +245,20 @@ public class JiraHelperService {
     if (stateExecutionInstanceId == null) {
       return;
     }
-    ApprovalDetails approvalDetails = new ApprovalDetails();
-    approvalDetails.setApprovalId(approvalId);
+    StateExecutionInstance stateExecutionInstance =
+        stateExecutionService.getStateExecutionData(appId, stateExecutionInstanceId);
+    if (stateExecutionInstance == null) {
+      throw new WingsException(INVALID_ARGUMENT, USER)
+          .addParam("args", "No stateExecutionInstace found for id " + stateExecutionInstanceId);
+    }
+
     ApprovalStateExecutionData executionData =
-        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
-            appId, workflowExecutionId, stateExecutionInstanceId, approvalDetails);
+        (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(
+            stateExecutionInstance.getDisplayName());
+
     if (executionData.getCurrentStatus() != null && executionData.getCurrentStatus().equalsIgnoreCase(currentStatus)) {
       return;
     }
-    executionData.setStatus(ExecutionStatus.PAUSED);
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(currentStatus);
 

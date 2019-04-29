@@ -136,6 +136,11 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   }
 
   @Override
+  public StateExecutionInstance getStateExecutionData(String appId, String stateExecutionId) {
+    return wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionId);
+  }
+
+  @Override
   public PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest) {
     return wingsPersistence.query(StateExecutionInstance.class, pageRequest);
   }
