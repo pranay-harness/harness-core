@@ -2,10 +2,10 @@ package software.wings.graphql.schema.type;
 
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
-@Data
+@Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class QLArtifact implements QLObject {
