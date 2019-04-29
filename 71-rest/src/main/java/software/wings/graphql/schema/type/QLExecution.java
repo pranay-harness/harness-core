@@ -1,8 +1,8 @@
 package software.wings.graphql.schema.type;
 
 public interface QLExecution extends QLObject {
-  long getQueuedTime();
-  long getStartTime();
-  long getEndTime();
+  Long getQueuedTime();
+  Long getStartTime();
+  Long getEndTime();
   QLExecutionStatus getStatus();
 }

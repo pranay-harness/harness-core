@@ -8,9 +8,9 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLWorkflowExecutionKeys")
 public class QLWorkflowExecution implements QLExecution {
-  String id;
-  long queuedTime;
-  long startTime;
-  long endTime;
-  QLExecutionStatus status;
+  private String id;
+  private Long queuedTime;
+  private Long startTime;
+  private Long endTime;
+  private QLExecutionStatus status;
 }
