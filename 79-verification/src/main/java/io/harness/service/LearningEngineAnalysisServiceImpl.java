@@ -3,6 +3,7 @@ package io.harness.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 import static software.wings.utils.Misc.generateSecretKey;
@@ -14,6 +15,9 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.WingsException;
+import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.time.Timestamp;
@@ -22,22 +26,27 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +65,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessMetricRegistry metricRegistry;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Inject private VerificationManagerClient managerClient;
 
   private final ServiceApiVersion learningEngineApiVersion;
 
@@ -369,6 +380,74 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     wingsPersistence.update(query, updateOperations);
   }
 
+  @Override
+  public boolean notifyFailure(
+      boolean is24x7, String stateExecutionId, String cvConfigId, LearningEngineError learningEngineError) {
+    logger.info("error payload {}", learningEngineError);
+    if (is24x7) {
+      Preconditions.checkState(isNotEmpty(cvConfigId));
+      // TODO figure out and implement what to do for service guard tasks
+      return false;
+    } else {
+      Preconditions.checkState(isNotEmpty(stateExecutionId));
+    }
+
+    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                                .get();
+
+    if (analysisContext == null) {
+      throw new WingsException("No context found for {}" + stateExecutionId);
+    }
+
+    if (!isStateValid(analysisContext.getAppId(), analysisContext.getStateExecutionId())) {
+      logger.info("For {} state is not in running state", analysisContext.getStateExecutionId());
+      return false;
+    }
+
+    final VerificationStateAnalysisExecutionData executionData =
+        VerificationStateAnalysisExecutionData.builder()
+            .appId(analysisContext.getAppId())
+            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+            .stateExecutionInstanceId(analysisContext.getStateExecutionId())
+            .serverConfigId(analysisContext.getAnalysisServerConfigId())
+            .timeDuration(analysisContext.getTimeDuration())
+            .canaryNewHostNames(analysisContext.getTestNodes().keySet())
+            .lastExecutionNodes(analysisContext.getControlNodes() == null ? new HashSet<>()
+                                                                          : analysisContext.getControlNodes().keySet())
+            .correlationId(analysisContext.getCorrelationId())
+            .mlAnalysisType(analysisContext.getAnalysisType())
+            .build();
+    executionData.setStatus(ExecutionStatus.ERROR);
+    executionData.setErrorMsg(learningEngineError.getErrorMsg());
+    final VerificationDataAnalysisResponse response =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+    response.setExecutionStatus(ExecutionStatus.ERROR);
+    logger.info("Notifying state id: {} , corr id: {}", analysisContext.getStateExecutionId(),
+        analysisContext.getCorrelationId());
+
+    managerClientHelper.notifyManagerForVerificationAnalysis(analysisContext, response);
+    markTasksFailed(stateExecutionId);
+    return true;
+  }
+
+  private void markTasksFailed(String stateExecutionId) {
+    final UpdateResults updateResults =
+        wingsPersistence.update(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                                    .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
+                                    .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING),
+            wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
+                .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.FAILED));
+    logger.info("marked {} tasks failed for {}", updateResults.getUpdatedCount(), stateExecutionId);
+  }
+
+  @Override
+  public boolean isStateValid(String appId, String stateExecutionId) {
+    if (stateExecutionId.contains(CV_24x7_STATE_EXECUTION)) {
+      return true;
+    }
+    return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId)).getResource();
+  }
   /**
    *
    * @param stateExecutionId

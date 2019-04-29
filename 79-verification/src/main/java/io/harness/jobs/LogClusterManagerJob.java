@@ -103,7 +103,7 @@ public class LogClusterManagerJob implements Job {
            * Work flow is invalid
            * exit immediately
            */
-          if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             logger.info("Log Cluster : State no longer valid. skipping." + context.getStateExecutionId());
             break;
           }
@@ -156,7 +156,7 @@ public class LogClusterManagerJob implements Job {
       } finally {
         // Delete cron.
         try {
-          if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
           }
         } catch (SchedulerException e) {
@@ -186,7 +186,7 @@ public class LogClusterManagerJob implements Job {
       } catch (Exception ex) {
         try {
           logger.error("Verification L0 => L1 cluster failed", ex);
-          if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          if (learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             final VerificationStateAnalysisExecutionData executionData =
                 VerificationStateAnalysisExecutionData.builder().build();
             executionData.setStatus(ExecutionStatus.ERROR);

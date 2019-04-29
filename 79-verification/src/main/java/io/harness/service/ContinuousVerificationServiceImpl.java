@@ -49,6 +49,7 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
+import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -250,6 +251,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String testInputUrl = getDataFetchUrl(cvConfiguration, startMin - PREDECTIVE_HISTORY_MINUTES, endMin, tag);
     String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(cvConfiguration, endMin, learningTaskId, tag);
     String historicalAnalysisUrl = getHistoricalAnalysisUrl(cvConfiguration, endMin, tag);
+    String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+        + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
 
     String metricTemplateUrl = getMetricTemplateUrl(accountId, cvConfiguration.getAppId(),
         cvConfiguration.getStateType(), cvConfiguration.getServiceId(), cvConfiguration.getUuid());
@@ -284,6 +287,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .control_input_url("")
             .analysis_save_url(metricAnalysisSaveUrl)
             .metric_template_url(metricTemplateUrl)
+            .analysis_failure_url(failureUrl)
             .previous_anomalies_url(getPreviousAnomaliesUrl(cvConfiguration, tag))
             .cumulative_sums_url(getCumulativeSumsUrl(cvConfiguration, (int) endMin, tag))
             .control_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
@@ -565,6 +569,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + LogAnalysisResource.ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
                 + "?cvConfigId=" + cvConfiguration.getUuid() + "&appId=" + cvConfiguration.getAppId()
                 + "&clusterLevel=" + ClusterLevel.L1 + "&logCollectionMinute=" + logRecordMinute;
+            String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+                + VerificationConstants.NOTIFY_LEARNING_FAILURE
+                + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
 
             String stateExecutionIdForLETask = "LOGS_CLUSTER_L1_" + cvConfiguration.getUuid() + "_" + logRecordMinute;
             learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) logRecordMinute);
@@ -575,6 +582,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   LearningEngineAnalysisTask.builder()
                       .control_input_url(inputLogsUrl)
                       .analysis_save_url(clusteredLogSaveUrl)
+                      .analysis_failure_url(failureUrl)
                       .state_execution_id(stateExecutionIdForLETask)
                       .service_id(cvConfiguration.getServiceId())
                       .control_nodes(hosts)
@@ -702,6 +710,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + "?cvConfigId=" + cvConfiguration.getUuid() + "&appId=" + cvConfiguration.getAppId()
                 + "&clusterLevel=" + ClusterLevel.L2 + "&logCollectionMinute=" + maxLogRecordL1Minute;
 
+            String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+                + VerificationConstants.NOTIFY_LEARNING_FAILURE
+                + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
             String stateExecutionIdForLETask =
                 "LOGS_CLUSTER_L2_" + cvConfiguration.getUuid() + "_" + maxLogRecordL1Minute;
             learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) maxLogRecordL1Minute);
@@ -712,6 +723,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   LearningEngineAnalysisTask.builder()
                       .control_input_url(inputLogsUrl)
                       .analysis_save_url(clusteredLogSaveUrl)
+                      .analysis_failure_url(failureUrl)
                       .state_execution_id(stateExecutionIdForLETask)
                       .service_id(cvConfiguration.getServiceId())
                       .control_nodes(Collections.emptySet())
@@ -877,6 +889,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL
                 + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()
                 + "&analysisMinute=" + ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute();
+            String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+                + VerificationConstants.NOTIFY_LEARNING_FAILURE
+                + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
 
             String stateExecutionIdForLETask =
                 "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin;
@@ -893,6 +908,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .analysis_minute(analysisEndMin)
                       .analysis_save_url(logAnalysisSaveUrl)
                       .log_analysis_get_url(logAnalysisGetUrl)
+                      .analysis_failure_url(failureUrl)
                       .service_guard_backoff_count(nextBackoffCount)
                       .ml_analysis_type(MLAnalysisType.LOG_ML)
                       .test_input_url(testInputUrl)
@@ -1006,7 +1022,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {
-    if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+    if (learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
       final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
 
       VerificationStateAnalysisExecutionData logAnalysisExecutionData =

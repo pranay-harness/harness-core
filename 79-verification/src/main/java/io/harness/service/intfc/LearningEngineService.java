@@ -1,6 +1,7 @@
 package io.harness.service.intfc;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.service.LearningEngineError;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -44,6 +45,11 @@ public interface LearningEngineService {
 
   void markJobScheduled(AnalysisContext verificationAnalysisTask);
   void checkAndUpdateFailedLETask(String stateExecutionId, int analysisMinute);
+
+  boolean isStateValid(String appId, String stateExecutionId);
+
+  boolean notifyFailure(
+      boolean is24x7, String stateExecutionId, String cvConfigId, LearningEngineError learningEngineError);
   int getNextServiceGuardBackoffCount(
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType);
 }

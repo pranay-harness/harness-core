@@ -133,7 +133,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
             .dependencyPath("tier1")
             .build());
 
-    when(timeSeriesAnalysisService.isStateValid(appId, stateExecutionId)).thenReturn(true);
+    when(learningEngineService.isStateValid(appId, stateExecutionId)).thenReturn(true);
     when(timeSeriesAnalysisService.getMetricGroups(appId, stateExecutionId)).thenReturn(metricGroups);
 
     for (String groupName : timeSeriesAnalysisService.getMetricGroups(appId, stateExecutionId).keySet()) {

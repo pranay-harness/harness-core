@@ -54,8 +54,6 @@ public interface TimeSeriesAnalysisService {
   List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       String appId, String stateExecutionId, String workflowExecutionId);
 
-  boolean isStateValid(String appId, String stateExecutionId);
-
   NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String metricGroup);
 

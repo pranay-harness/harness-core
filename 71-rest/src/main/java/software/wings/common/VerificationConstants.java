@@ -21,6 +21,7 @@ public class VerificationConstants {
 
   public static final long VERIFICATION_TASK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   public static final String LAST_SUCCESSFUL_WORKFLOW_IDS = "/last-successful-workflow-ids";
+  public static final String NOTIFY_LEARNING_FAILURE = "/notify-learning-failure";
   public static final String NOTIFY_METRIC_STATE = "/notify-metric-state";
   public static final String NOTIFY_VERIFICATION_STATE = "/notify-verification-state";
   public static final String NOTIFY_WORKFLOW_VERIFICATION_STATE = "/notify-workflow-verification-state";

@@ -23,6 +23,7 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
+import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
@@ -253,6 +254,9 @@ public class MetricAnalysisJob implements Job {
           + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
           + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
           + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName;
+      String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+          + VerificationConstants.NOTIFY_LEARNING_FAILURE
+          + "?is24x7=false&stateExecutionId=" + context.getStateExecutionId();
       metricTemplateUrl = metricTemplateUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()
@@ -271,6 +275,7 @@ public class MetricAnalysisJob implements Job {
               .control_input_url(controlInputUrl)
               .analysis_save_url(metricAnalysisSaveUrl)
               .metric_template_url(metricTemplateUrl)
+              .analysis_failure_url(failureUrl)
               .control_nodes(getNodesForGroup(groupName, controlNodes))
               .test_nodes(mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
                       ? Sets.newHashSet(groupName)
@@ -315,7 +320,7 @@ public class MetricAnalysisJob implements Job {
       int analysisMinute = -1;
       try {
         // Check whether workflow state is valid or not.
-        if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+        if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           completeCron = true;
           return;
         }
@@ -451,7 +456,7 @@ public class MetricAnalysisJob implements Job {
         logger.warn("analysis failed", ex);
       } finally {
         try {
-          if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          if (completeCron || !learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
               logger.info(
                   "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errMsg);
@@ -560,7 +565,7 @@ public class MetricAnalysisJob implements Job {
     }
 
     private void sendStateNotification(AnalysisContext context, boolean error, String errMsg, int analysisMinute) {
-      if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+      if (learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
         final VerificationStateAnalysisExecutionData executionData =
             VerificationStateAnalysisExecutionData.builder()
