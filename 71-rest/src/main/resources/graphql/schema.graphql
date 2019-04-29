@@ -61,7 +61,7 @@ type Query {
     @dataFetcher(name: "instancesByEnvironment")
 
   #Adding accountId as input temporarily since there is no auth support as of now
-  instancesByEnvironmentType(accountId: String!, envType: EnvironmentType, limit: Int, offset: Int): InstanceConnection
+  instancesByEnvironmentType(accountId: String!, envType: EnvironmentType, limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: "instancesByEnvType")
 
   # Get details about a service

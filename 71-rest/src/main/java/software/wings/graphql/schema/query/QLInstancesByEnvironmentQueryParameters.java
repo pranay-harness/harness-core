@@ -10,6 +10,6 @@ import lombok.experimental.FieldDefaults;
 public class QLInstancesByEnvironmentQueryParameters implements QLPageQueryParameters {
   int limit;
   int offset;
-  String envId;
+  String environmentId;
   DataFetchingFieldSelectionSet selectionSet;
 }

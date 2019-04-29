@@ -27,7 +27,7 @@ public class InstancesByEnvironmentDataFetcher extends AbstractConnectionDataFet
         fetchParameters(QLInstancesByEnvironmentQueryParameters.class, dataFetchingEnvironment);
 
     final Query<Instance> query = persistence.createQuery(Instance.class)
-                                      .filter(InstanceKeys.envId, qlQuery.getEnvId())
+                                      .filter(InstanceKeys.envId, qlQuery.getEnvironmentId())
                                       .filter(InstanceKeys.isDeleted, false)
                                       .order(Sort.descending(InstanceKeys.lastDeployedAt));
 
