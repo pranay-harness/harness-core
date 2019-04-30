@@ -186,9 +186,11 @@ public class AuthenticationManager {
     } else {
       if (user.isTwoFactorAuthenticationEnabled()) {
         user = generate2faJWTToken(user);
-      } else {
-        user = authService.generateBearerTokenForUser(user);
       }
+      // With identity service manage bearer tokens, no need for manager to generate bearer tokens.
+      //      else {
+      //        user = authService.generateBearerTokenForUser(user);
+      //      }
     }
     return user;
   }

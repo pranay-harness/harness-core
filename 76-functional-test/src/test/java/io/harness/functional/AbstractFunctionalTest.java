@@ -36,6 +36,8 @@ import javax.ws.rs.core.GenericType;
 
 @Slf4j
 public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin {
+  protected static final String ADMIN_USER = "admin@harness.io";
+
   protected static String bearerToken;
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
@@ -63,7 +65,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   public void testSetup() throws IOException {
     account = accountSetupService.ensureAccount();
     delegateExecutor.ensureDelegate(account, AbstractFunctionalTest.class);
-    bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
+    bearerToken = Setup.getAuthToken(ADMIN_USER, "admin");
     logger.info("Basic setup completed");
   }
 
