@@ -8,8 +8,8 @@ schema {
 type Query {
   # Get count of instances in your application
   # Taking accountId as input temporarily since there is no auth support as of now.
-  #  instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
-  #    @dataFetcher(name: "instanceCount")
+  instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
+    @dataFetcher(name: "instanceCount")
 
   instancesByService(serviceId: String, limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: "instancesByService")

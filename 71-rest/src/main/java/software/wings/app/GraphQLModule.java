@@ -17,6 +17,7 @@ import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataF
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
+import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByEnvTypeDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByEnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByServiceDataFetcher;
@@ -69,6 +70,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForService");
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForWorkflow");
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstancesByEnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByEnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByEnvTypeDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByServiceDataFetcher.class);
