@@ -1,13 +1,11 @@
 package io.harness.notifications;
 
 import static org.apache.commons.collections4.CollectionUtils.intersection;
-import static software.wings.service.impl.AlertServiceImpl.ALERT_TYPES_TO_NOTIFY_ON;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertNotificationRule;
@@ -21,19 +19,14 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 @Singleton
+@Slf4j
 public class AlertVisibilityCheckerImpl implements AlertVisibilityChecker {
-  private static final Logger log = LoggerFactory.getLogger(AlertVisibilityCheckerImpl.class);
-
   @Inject private AlertNotificationRuleService ruleService;
   @Inject private AlertNotificationRuleChecker ruleChecker;
   @Inject private UserGroupService userGroupService;
 
   @Override
   public boolean shouldAlertBeShownToUser(String accountId, @Nonnull Alert alert, @Nonnull User user) {
-    if (!ALERT_TYPES_TO_NOTIFY_ON.contains(alert.getType())) {
-      return true;
-    }
-
     List<AlertNotificationRule> allRules = ruleService.getAll(accountId);
 
     boolean showAlertToUser = false;

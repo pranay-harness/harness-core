@@ -2,8 +2,10 @@ package software.wings.service.impl;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
+import static software.wings.alerts.AlertStatus.Pending;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
@@ -21,13 +23,13 @@ import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
 import static software.wings.utils.Misc.getDurationString;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
@@ -36,6 +38,8 @@ import io.harness.event.publisher.EventPublisher;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.alerts.AlertStatus;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertData;
@@ -62,10 +66,11 @@ import java.util.concurrent.Future;
 @Slf4j
 public class AlertServiceImpl implements AlertService {
   // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
-  public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(Arrays.asList(
+  private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(Arrays.asList(
       NoActiveDelegates, /* TODO(brett): Disabled for now - DelegatesDown, NoEligibleDelegates, */ DelegateProfileError,
       DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED,
       RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError, InvalidKMS, CONTINUOUS_VERIFICATION_ALERT));
+  private static final Iterable<AlertStatus> STATUS_ACTIVE = ImmutableSet.of(Open, Pending);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -75,8 +80,14 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
-    pageRequest.addFilter(AlertKeys.type, Operator.NOT_EQ, AlertType.CONTINUOUS_VERIFICATION_ALERT);
     return wingsPersistence.query(Alert.class, pageRequest);
+  }
+
+  @Override
+  public List<AlertType> listCategoriesAndTypes(String accountId) {
+    return Arrays.stream(software.wings.beans.alert.AlertType.values())
+        .filter(AlertServiceImpl.ALERT_TYPES_TO_NOTIFY_ON::contains)
+        .collect(toList());
   }
 
   @Override
@@ -105,42 +116,53 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
-      return;
+    Alert alert = findExistingAlert(accountId, appId, alertType, alertData).orElse(null);
+    if (alert == null) {
+      injector.injectMembers(alertData);
+      alert = Alert.builder()
+                  .appId(appId)
+                  .accountId(accountId)
+                  .type(alertType)
+                  .status(Pending)
+                  .alertData(alertData)
+                  .title(alertData.buildTitle())
+                  .category(alertType.getCategory())
+                  .severity(alertType.getSeverity())
+                  .triggerCount(0)
+                  .build();
+      wingsPersistence.save(alert);
+      logger.info("Alert created: {}", alert);
     }
-    injector.injectMembers(alertData);
-    Alert alert = Alert.builder()
-                      .appId(appId)
-                      .accountId(accountId)
-                      .type(alertType)
-                      .status(Open)
-                      .alertData(alertData)
-                      .title(alertData.buildTitle())
-                      .category(alertType.getCategory())
-                      .severity(alertType.getSeverity())
-                      .build();
-    wingsPersistence.save(alert);
+    AlertStatus status = alert.getTriggerCount() >= alertType.getPendingCount() ? Open : Pending;
+    boolean alertOpened = false;
+    UpdateOperations<Alert> updateOperations =
+        wingsPersistence.createUpdateOperations(Alert.class).inc(AlertKeys.triggerCount);
+    if (status == Open && alert.getStatus() == Pending) {
+      updateOperations.set(AlertKeys.status, Open);
+      alertOpened = true;
+    }
+    wingsPersistence.update(alert, updateOperations);
 
-    publishEvent(alert);
-    logger.info("Alert opened: {}", alert);
+    alert.setTriggerCount(alert.getTriggerCount() + 1);
+    alert.setStatus(status);
+    if (alertOpened) {
+      logger.info("Alert opened: {}", alert);
+      publishEvent(alert);
+    } else {
+      logger.info("Alert pending: {}", alert);
+    }
   }
 
-  private void publishEvent(Alert persistedAlert) {
-    if (null == persistedAlert) {
-      return;
-    }
-
-    AlertType alertType = persistedAlert.getType();
-
+  private void publishEvent(Alert alert) {
     try {
-      if (ALERT_TYPES_TO_NOTIFY_ON.contains(persistedAlert.getType())) {
-        Event event = Event.builder().eventData(alertEventData(persistedAlert)).eventType(EventType.OPEN_ALERT).build();
-        eventPublisher.publishEvent(event);
+      if (ALERT_TYPES_TO_NOTIFY_ON.contains(alert.getType())) {
+        eventPublisher.publishEvent(
+            Event.builder().eventData(alertEventData(alert)).eventType(EventType.OPEN_ALERT).build());
       } else {
-        logger.info("No alert 'event' will be published in event queue. Type: {}", alertType);
+        logger.info("No alert event will be published in event queue. Type: {}", alert.getType());
       }
     } catch (Exception e) {
-      logger.error("Could not publish alert event. Alert: {}", persistedAlert);
+      logger.error("Could not publish alert event. Alert: {}", alert);
     }
   }
 
@@ -155,7 +177,8 @@ public class AlertServiceImpl implements AlertService {
     wingsPersistence.createQuery(Alert.class)
         .filter(AlertKeys.accountId, accountId)
         .filter(AlertKeys.type, NoEligibleDelegates)
-        .filter(AlertKeys.status, Open)
+        .field(AlertKeys.status)
+        .in(STATUS_ACTIVE)
         .asList()
         .stream()
         .filter(alert -> {
@@ -171,7 +194,8 @@ public class AlertServiceImpl implements AlertService {
         .filter(AlertKeys.appId, appId)
         .field(AlertKeys.type)
         .in(asList(ApprovalNeeded, ManualInterventionNeeded))
-        .filter(AlertKeys.status, Open)
+        .field(AlertKeys.status)
+        .in(STATUS_ACTIVE)
         .asList()
         .stream()
         .filter(alert
@@ -181,18 +205,22 @@ public class AlertServiceImpl implements AlertService {
         .forEach(this ::close);
   }
 
-  public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+  private Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     if (!alertType.getAlertDataClass().isAssignableFrom(alertData.getClass())) {
       String errorMsg = format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
           alertType.getAlertDataClass().getName(), alertData.getClass().getName());
       logger.error(errorMsg);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }
+    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
+                             .filter(AlertKeys.type, alertType)
+                             .filter(AlertKeys.accountId, accountId)
+                             .field(AlertKeys.status)
+                             .in(STATUS_ACTIVE);
+    if (appId != null) {
+      query.filter(AlertKeys.appId, appId);
+    }
     injector.injectMembers(alertData);
-    Query<Alert> query =
-        wingsPersistence.createQuery(Alert.class).filter(AlertKeys.type, alertType).filter(AlertKeys.status, Open);
-    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(AlertKeys.accountId, accountId)
-                                                         : query.filter(AlertKeys.appId, appId);
     return query.asList()
         .stream()
         .filter(alert -> {
@@ -203,10 +231,14 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private List<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
-    Query<Alert> query =
-        wingsPersistence.createQuery(Alert.class).filter(AlertKeys.type, alertType).filter(AlertKeys.status, Open);
-    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(AlertKeys.accountId, accountId)
-                                                         : query.filter(AlertKeys.appId, appId);
+    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
+                             .filter(AlertKeys.type, alertType)
+                             .filter(AlertKeys.accountId, accountId)
+                             .field(AlertKeys.status)
+                             .in(STATUS_ACTIVE);
+    if (appId != null) {
+      query.filter(AlertKeys.appId, appId);
+    }
     return query.asList();
   }
 

@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -24,6 +25,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.exception.InvalidRequestException;
@@ -59,7 +61,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /***
  * Service responsible to glue all artifact
@@ -159,11 +160,9 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
       if (isNotEmpty(tags)) {
         // To remove if any empty tags in case saved for custom artifact stream
-        tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
-        delegateTaskBuilder.tags(tags);
+        tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
       }
 
-      delegateTaskBuilder.accountId(accountId);
       delegateTaskBuilder.tags(tags);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(timeout);
     } else {
@@ -189,11 +188,11 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       accountId = settingAttribute.getAccountId();
       buildSourceRequest = artifactCollectionUtil.getBuildSourceParameters(appId, artifactStream, settingAttribute);
 
-      delegateTaskBuilder.accountId(accountId);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
 
+    delegateTaskBuilder.accountId(accountId);
     delegateTaskBuilder.data(dataBuilder.build());
 
     waitNotifyEngine.waitForAll(

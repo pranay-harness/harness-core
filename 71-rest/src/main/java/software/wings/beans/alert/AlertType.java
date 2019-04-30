@@ -15,10 +15,10 @@ import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
   ManualInterventionNeeded(ManualIntervention, Warning, ManualInterventionNeededAlert.class),
-  NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class),
-  DelegatesDown(Setup, Error, DelegatesDownAlert.class),
+  NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class, 1),
+  DelegatesDown(Setup, Error, DelegatesDownAlert.class, 1),
   DelegateProfileError(Setup, Error, DelegateProfileErrorAlert.class),
-  NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),
+  NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class, 1),
   InvalidKMS(Setup, Error, KmsSetupAlert.class),
   GitSyncError(Setup, Error, GitSyncErrorAlert.class),
   GitConnectionError(Setup, Error, GitConnectionErrorAlert.class),
@@ -37,11 +37,18 @@ public enum AlertType {
   private AlertCategory category;
   private AlertSeverity severity;
   private Class<? extends AlertData> alertDataClass;
+  private int pendingCount;
 
   AlertType(AlertCategory category, AlertSeverity severity, Class<? extends AlertData> alertDataClass) {
+    this(category, severity, alertDataClass, 0);
+  }
+
+  AlertType(
+      AlertCategory category, AlertSeverity severity, Class<? extends AlertData> alertDataClass, int pendingCount) {
     this.category = category;
     this.severity = severity;
     this.alertDataClass = alertDataClass;
+    this.pendingCount = pendingCount;
   }
 
   public AlertCategory getCategory() {
@@ -54,5 +61,9 @@ public enum AlertType {
 
   public Class<? extends AlertData> getAlertDataClass() {
     return alertDataClass;
+  }
+
+  public int getPendingCount() {
+    return pendingCount;
   }
 }
