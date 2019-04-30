@@ -315,6 +315,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                                                           .build());
   }
 
+  private void updateGlobalContextWithServiceDeletionEvent(Service savedService) {
+    auditServiceHelper.addEntityOperationIdentifierDataToAuditContext(EntityOperationIdentifier.builder()
+                                                                          .entityId(savedService.getUuid())
+                                                                          .entityType(EntityType.SERVICE.name())
+                                                                          .entityName(savedService.getName())
+                                                                          .operation(entityOperation.DELETE)
+                                                                          .build());
+  }
+
   private void sendNotificationAsync(Service savedService, NotificationMessageType entityCreateNotification) {
     notificationService.sendNotificationAsync(anInformationNotification()
                                                   .withAppId(savedService.getAppId())
@@ -352,6 +361,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       setKeyWords(clonedService);
       Service savedCloneService =
           duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
+
+      // Push this service to Git
+      yamlPushService.pushYamlChangeSet(
+          accountId, null, savedCloneService, Type.CREATE, service.isSyncFromGit(), false);
+      updateGlobalContextWithServiceCreationEvent(savedCloneService);
+      updateGlobalContextWithServiceCreationEvent(savedCloneService);
 
       boolean shouldPushToYaml = !hasInternalCommands(originalService);
       originalService.getServiceCommands().forEach(serviceCommand -> {
@@ -698,12 +713,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         ensureServiceSafeToDelete(service);
       }
 
-      yamlPushService.pushYamlChangeSet(accountId, service, null, Type.DELETE, syncFromGit, false);
-
-      pruneQueue.send(new PruneEvent(Service.class, service.getAppId(), service.getUuid()));
-
       // safe to delete
       if (wingsPersistence.delete(Service.class, service.getUuid())) {
+        yamlPushService.pushYamlChangeSet(accountId, service, null, Type.DELETE, syncFromGit, false);
+        pruneQueue.send(new PruneEvent(Service.class, service.getAppId(), service.getUuid()));
+        updateGlobalContextWithServiceDeletionEvent(service);
+
         getServiceCommands(appId, serviceId, false)
             .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, syncFromGit));
         sendNotificationAsync(service, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
@@ -990,7 +1005,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void deleteContainerTask(String appId, String containerTaskId) {
-    wingsPersistence.delete(ContainerTask.class, appId, containerTaskId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    ContainerTask containerTask = wingsPersistence.get(ContainerTask.class, containerTaskId);
+
+    if (containerTask == null) {
+      return;
+    }
+
+    Service service = get(appId, containerTask.getServiceId());
+    if (wingsPersistence.delete(ContainerTask.class, appId, containerTaskId)) {
+      yamlPushService.pushYamlChangeSet(accountId, service, containerTask, Type.DELETE, containerTask.isSyncFromGit());
+    }
   }
 
   @Override
@@ -1035,7 +1060,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void deleteEcsServiceSpecification(String appId, String ecsServiceSpecificationId) {
-    wingsPersistence.delete(EcsServiceSpecification.class, appId, ecsServiceSpecificationId);
+    EcsServiceSpecification ecsServiceSpecification =
+        wingsPersistence.get(EcsServiceSpecification.class, ecsServiceSpecificationId);
+    if (ecsServiceSpecification == null) {
+      return;
+    }
+
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, ecsServiceSpecification.getServiceId());
+
+    if (wingsPersistence.delete(EcsServiceSpecification.class, appId, ecsServiceSpecificationId)) {
+      yamlPushService.pushYamlChangeSet(
+          accountId, service, ecsServiceSpecification, Type.DELETE, ecsServiceSpecification.isSyncFromGit());
+    }
   }
 
   @Override
@@ -1190,7 +1227,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void deletePCFServiceSpecification(String appId, String pCFServiceSpecificationId) {
-    wingsPersistence.delete(PcfServiceSpecification.class, appId, pCFServiceSpecificationId);
+    PcfServiceSpecification pcfServiceSpecification =
+        wingsPersistence.get(PcfServiceSpecification.class, pCFServiceSpecificationId);
+    if (pcfServiceSpecification == null) {
+      return;
+    }
+
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, pcfServiceSpecification.getServiceId());
+
+    if (wingsPersistence.delete(PcfServiceSpecification.class, appId, pCFServiceSpecificationId)) {
+      yamlPushService.pushYamlChangeSet(
+          accountId, service, pcfServiceSpecification, Type.DELETE, pcfServiceSpecification.isSyncFromGit());
+    }
   }
 
   @Override
