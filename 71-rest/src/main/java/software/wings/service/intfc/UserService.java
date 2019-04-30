@@ -296,7 +296,7 @@ public interface UserService extends OwnedByAccount {
    * @param user        user
    * @param account     account
    */
-  void sendAddedGroupEmail(User user, Account account);
+  void sendAddedGroupEmail(User user, Account account, List<UserGroup> userGroups);
 
   /**
    * List invites page response.
