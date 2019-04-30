@@ -1018,7 +1018,9 @@ public class SecretManagerImpl implements SecretManager {
       }
       savedData.setUsageRestrictions(usageRestrictions);
       wingsPersistence.save(savedData);
-      auditServiceHelper.reportForAuditingUsingAccountId(savedData.getAccountId(), oldEntity, savedData, Type.UPDATE);
+      if (eligibleForCrudAudit(savedData)) {
+        auditServiceHelper.reportForAuditingUsingAccountId(savedData.getAccountId(), oldEntity, savedData, Type.UPDATE);
+      }
     }
 
     if (UserThreadLocal.get() != null) {
@@ -1035,6 +1037,11 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return encryptedDataId;
+  }
+
+  private boolean eligibleForCrudAudit(EncryptedData savedData) {
+    return SettingVariableTypes.CONFIG_FILE.equals(savedData.getType())
+        || SettingVariableTypes.SECRET_TEXT.equals(savedData.getType());
   }
 
   @Override
@@ -1380,7 +1387,9 @@ public class SecretManagerImpl implements SecretManager {
   private void generateAuditForEncryptedRecord(String accountId, EncryptedData oldEntityData, String newRecordId) {
     Type type = oldEntityData == null ? Type.CREATE : Type.UPDATE;
     EncryptedData newRecordData = wingsPersistence.get(EncryptedData.class, newRecordId);
-    auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldEntityData, newRecordData, type);
+    if (eligibleForCrudAudit(newRecordData)) {
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldEntityData, newRecordData, type);
+    }
   }
 
   @Override
@@ -1900,7 +1909,7 @@ public class SecretManagerImpl implements SecretManager {
 
   private boolean deleteAndReportForAuditRecord(String accountId, EncryptedData encryptedData) {
     boolean deleted = wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
-    if (deleted) {
+    if (deleted && eligibleForCrudAudit(encryptedData)) {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
     }
 
