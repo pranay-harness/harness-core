@@ -13,7 +13,7 @@ import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
 
-public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetcher<T> {
+public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFetcher<T, P> {
   @Inject protected HPersistence persistence;
 
   public AbstractConnectionDataFetcher(AuthHandler authHandler) {

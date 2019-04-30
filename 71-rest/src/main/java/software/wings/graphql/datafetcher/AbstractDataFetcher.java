@@ -31,6 +31,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,18 +41,21 @@ import javax.validation.constraints.NotNull;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public abstract class AbstractDataFetcher<T> implements DataFetcher {
+public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
 
   @NotNull final AuthHandler authHandler;
   @Setter Map<String, String> contextFieldArgsMap;
   @Getter @Setter String batchedDataLoaderName;
 
-  protected abstract T fetch(DataFetchingEnvironment dataFetchingEnvironment);
+  protected abstract T fetch(P parameters);
 
   @Override
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
-    return fetch(dataFetchingEnvironment);
+    Class<P> parametersClass =
+        (Class<P>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
+    final P parameters = fetchParameters(parametersClass, dataFetchingEnvironment);
+    return fetch(parameters);
   }
 
   protected boolean isAuthorizedToView(String appId, PermissionAttribute permissionAttribute, String entityId) {
@@ -95,7 +99,7 @@ public abstract class AbstractDataFetcher<T> implements DataFetcher {
 
   private static final Objenesis objenesis = new ObjenesisStd(true);
 
-  protected <P> P fetchParameters(Class<P> clazz, DataFetchingEnvironment dataFetchingEnvironment) {
+  protected P fetchParameters(Class<P> clazz, DataFetchingEnvironment dataFetchingEnvironment) {
     ModelMapper modelMapper = new ModelMapper();
     modelMapper.getConfiguration()
         .setMatchingStrategy(MatchingStrategies.STANDARD)

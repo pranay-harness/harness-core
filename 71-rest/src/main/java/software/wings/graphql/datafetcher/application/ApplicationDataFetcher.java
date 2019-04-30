@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.application;
 
 import com.google.inject.Inject;
 
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -15,7 +14,7 @@ import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
-public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication> {
+public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication, QLApplicationQueryParameters> {
   @Inject HPersistence persistence;
 
   @Inject
@@ -24,9 +23,7 @@ public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication> {
   }
 
   @Override
-  public QLApplication fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    QLApplicationQueryParameters qlQuery = fetchParameters(QLApplicationQueryParameters.class, dataFetchingEnvironment);
-
+  public QLApplication fetch(QLApplicationQueryParameters qlQuery) {
     Application application = persistence.get(Application.class, qlQuery.getApplicationId());
     if (application == null) {
       throw new InvalidRequestException("Application does not exist", WingsException.USER);

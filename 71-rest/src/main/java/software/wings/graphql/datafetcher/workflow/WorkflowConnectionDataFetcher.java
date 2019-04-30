@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.workflow;
 
 import com.google.inject.Inject;
 
-import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -17,16 +16,15 @@ import software.wings.graphql.schema.type.QLWorkflowConnection.QLWorkflowConnect
 import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
-public class WorkflowConnectionDataFetcher extends AbstractConnectionDataFetcher<QLWorkflowConnection> {
+public class WorkflowConnectionDataFetcher
+    extends AbstractConnectionDataFetcher<QLWorkflowConnection, QLWorkflowsQueryParameters> {
   @Inject
   public WorkflowConnectionDataFetcher(AuthHandler authHandler) {
     super(authHandler);
   }
 
   @Override
-  public QLWorkflowConnection fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    QLWorkflowsQueryParameters qlQuery = fetchParameters(QLWorkflowsQueryParameters.class, dataFetchingEnvironment);
-
+  public QLWorkflowConnection fetch(QLWorkflowsQueryParameters qlQuery) {
     final Query<Workflow> query = persistence.createQuery(Workflow.class)
                                       .filter(WorkflowKeys.appId, qlQuery.getApplicationId())
                                       .order(Sort.descending(WorkflowKeys.createdAt));
