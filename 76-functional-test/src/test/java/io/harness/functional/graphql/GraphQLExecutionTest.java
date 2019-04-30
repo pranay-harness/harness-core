@@ -1,4 +1,4 @@
-package io.harness.testframework.graphql;
+package io.harness.functional.graphql;
 
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -23,6 +23,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.PipelineGenerator;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.WorkflowGenerator;
+import io.harness.testframework.graphql.QLTestObject;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
