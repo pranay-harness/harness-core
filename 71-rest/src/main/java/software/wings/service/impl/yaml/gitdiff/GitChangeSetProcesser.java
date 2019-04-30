@@ -49,6 +49,7 @@ public class GitChangeSetProcesser {
     AuditHeader auditHeader = gitChangeAuditRecordHandler.processGitChangesForAudit(accountId, gitDiffResult);
 
     Map<String, ChangeWithErrorMsg> changeWithErrorMsgs = null;
+
     try (GlobalContextGuard guard = GlobalContextManager.globalContextGuard(
              AuditGlobalContextData.builder().auditId(auditHeader.getUuid()).build())) {
       // changeWithErrorMsgs is a map of <YamlPath, ErrorMessage> for failed yaml changes

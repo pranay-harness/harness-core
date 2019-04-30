@@ -10,6 +10,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,6 +45,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -60,6 +62,7 @@ public class SecretManagerTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService envService;
   @Mock private VaultService vaultService;
+  @Mock private AuditServiceHelper auditServiceHelper;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Before
@@ -239,6 +242,7 @@ public class SecretManagerTest {
     when(fieldEnd.equal(anyObject())).thenReturn(query);
     when(query.get()).thenReturn(null);
 
+    doNothing().when(auditServiceHelper).reportForAuditingUsingAccountId(anyString(), any(), any(), any());
     EncryptedData encryptedDataFromYaml = secretManager.getEncryptedDataFromYamlRef(yamlRef, accountId);
     assertNotNull(encryptedDataFromYaml);
     verify(wingsPersistence, times(1)).save(any(EncryptedData.class));
