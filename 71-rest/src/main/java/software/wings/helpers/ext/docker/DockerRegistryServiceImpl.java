@@ -2,6 +2,7 @@ package software.wings.helpers.ext.docker;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
@@ -91,6 +92,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     if (response.code() == 401) { // unauthorized
       token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
       response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
+      if (response.code() == 401) {
+        throw new WingsException(INVALID_CREDENTIAL, WingsException.USER);
+      }
     }
     checkValidImage(imageName, response);
     DockerImageTagResponse dockerImageTagResponse = response.body();
