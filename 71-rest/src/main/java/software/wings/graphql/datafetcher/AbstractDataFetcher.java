@@ -2,8 +2,6 @@ package software.wings.graphql.datafetcher;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static software.wings.graphql.utils.GraphQLConstants.MAX_PAGE_SIZE;
-import static software.wings.graphql.utils.GraphQLConstants.USER_NOT_AUTHORIZED_TO_VIEW_ENTITY;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -25,7 +23,6 @@ import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
-import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -61,27 +58,6 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
   protected boolean isAuthorizedToView(String appId, PermissionAttribute permissionAttribute, String entityId) {
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
     return authHandler.authorize(permissionAttributeList, asList(appId), entityId);
-  }
-
-  protected int getPageLimit(@NotNull DataFetchingEnvironment environment) {
-    Integer limit = environment.getArgument(GraphQLConstants.PAGE_LIMIT_ARG);
-    if (limit == null || limit > MAX_PAGE_SIZE) {
-      limit = GraphQLConstants.MAX_PAGE_SIZE;
-    }
-    return limit;
-  }
-
-  protected int getPageOffset(@NotNull DataFetchingEnvironment environment) {
-    Integer offset = environment.getArgument(GraphQLConstants.PAGE_OFFSET_ARG);
-    if (offset == null) {
-      offset = GraphQLConstants.ZERO_OFFSET;
-    }
-    return offset;
-  }
-
-  protected WingsException notAuthorizedException(String entityName, String id, String appId) {
-    String errorMsg = format(USER_NOT_AUTHORIZED_TO_VIEW_ENTITY, entityName, id, appId);
-    throw new WingsException(errorMsg, WingsException.USER);
   }
 
   protected WingsException batchFetchException(Throwable cause) {
@@ -135,23 +111,11 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     return parameters;
   }
 
-  protected Object getArgumentValue(DataFetchingEnvironment dataFetchingEnvironment, String argumentName) {
-    Object argumentValue = dataFetchingEnvironment.getArgument(argumentName);
-    if (argumentValue == null && contextFieldArgsMap != null) {
-      String parentFieldName = contextFieldArgsMap.get(argumentName);
-      argumentValue = getFieldValue(dataFetchingEnvironment.getSource(), parentFieldName);
-    }
-    return argumentValue;
-  }
-
   private Object getFieldValue(Object obj, String fieldName) {
-    Object fieldValue = null;
     try {
-      fieldValue = PropertyUtils.getProperty(obj, fieldName);
+      return PropertyUtils.getProperty(obj, fieldName);
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
-      logger.warn(format("NoSuchFieldException occurred while fetching value for field %s", fieldName), exception);
+      throw new InvalidRequestException(format("Failed to obtain the value for field %s", fieldName), exception);
     }
-
-    return fieldValue;
   }
 }

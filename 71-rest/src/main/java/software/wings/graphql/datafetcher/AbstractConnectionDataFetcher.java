@@ -2,8 +2,6 @@ package software.wings.graphql.datafetcher;
 
 import com.google.inject.Inject;
 
-import graphql.schema.DataFetchingEnvironment;
-import graphql.schema.DataFetchingFieldSelectionSet;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.FindOptions;
@@ -18,16 +16,6 @@ public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFe
 
   public AbstractConnectionDataFetcher(AuthHandler authHandler) {
     super(authHandler);
-  }
-
-  protected static boolean isPageInfoTotalSelected(DataFetchingEnvironment dataFetchingEnvironment) {
-    final DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
-    return selectionSet.contains("pageInfo/total");
-  }
-
-  protected static boolean isPageInfoHasMoreSelected(DataFetchingEnvironment dataFetchingEnvironment) {
-    final DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
-    return selectionSet.contains("pageInfo/hasMore");
   }
 
   public interface Controller<T> { void populate(T entity); }

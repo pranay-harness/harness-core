@@ -6,10 +6,8 @@ import lombok.Value;
 @Value
 @Builder
 public class QLEnvironment implements QLObject {
-  String id;
-  String name;
-  String description;
-
-  // TODO: define type object
-  String type;
+  private String id;
+  private String name;
+  private String description;
+  private QLEnvironmentType type;
 }

@@ -2,25 +2,24 @@ extend type Query {
   # Get details about an application
   application(applicationId: String!): Application @dataFetcher(name: "application")
 
-  #Asking accountID temporarily because there is no auth support as of now.
-  #Will remove it once authentication is available
+  # Asking accountId temporarily because there is no auth support as of now.
+  # Will remove it once authentication is available
   applications(accountId: String!, limit: Int!, offset: Int): ApplicationConnection
     @dataFetcher(name: "applicationConnection")
 
   # Get details about an environment
   environment(environmentId: String!): Environment @dataFetcher(name: "environment")
 
-  # Get page data of environments
   environments(applicationId: String!, limit: Int!, offset: Int): EnvironmentConnection
     @dataFetcher(name: "environmentConnection")
 
-  # Get a pipeline object by id
+  # Get a pipeline object by ID
   pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
 
   pipelines(applicationId: String!, limit: Int!, offset: Int): PipelineConnection
     @dataFetcher(name: "pipelineConnection")
 
-  # Get workflow object by id
+  # Get workflow object by ID
   workflow(workflowId: String!): Workflow @dataFetcher(name: "workflow")
 
   # Get list of workflows for an applicationId. It will return paginated data
@@ -51,7 +50,6 @@ type ApplicationConnection {
 enum EnvironmentType {
   PROD
   NON_PROD
-  ALL
 }
 
 type Environment {
@@ -90,7 +88,7 @@ type PipelineConnection {
 
 # Type workflow
 type Workflow {
-  # Workflow Id
+  # Workflow ID
   id: String
 
   # Name of the workflow
@@ -110,7 +108,7 @@ type WorkflowConnection {
 
 # Service Type
 type Service {
-  # Service Id
+  # Service ID
   id: String
   # Name of the service
   name: String

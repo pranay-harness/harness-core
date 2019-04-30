@@ -13,9 +13,6 @@ import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
 import software.wings.graphql.schema.type.QLEnvironmentConnection.QLEnvironmentConnectionBuilder;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
@@ -25,9 +22,6 @@ public class EnvironmentConnectionDataFetcher
   public EnvironmentConnectionDataFetcher(AuthHandler authHandler) {
     super(authHandler);
   }
-
-  private static final PermissionAttribute permissionAttribute =
-      new PermissionAttribute(PermissionType.PIPELINE, Action.READ);
 
   @Override
   public QLEnvironmentConnection fetch(QLEnvironmentsQueryParameters qlQuery) {

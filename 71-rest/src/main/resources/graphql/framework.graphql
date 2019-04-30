@@ -1,6 +1,5 @@
-# DateTime which will return date based on PST zone
+# DateTime
 scalar DateTime
-scalar Object
 
 type PageInfo {
   hasMore: Boolean

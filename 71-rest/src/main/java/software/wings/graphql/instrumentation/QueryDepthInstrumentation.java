@@ -14,7 +14,7 @@ import java.util.Set;
 
 @Slf4j
 public class QueryDepthInstrumentation extends MaxQueryDepthInstrumentation {
-  public static final int MAX_QUERY_DEPTH = 5;
+  public static final int MAX_QUERY_DEPTH = 15;
 
   private static Set<String> INTROSPECTION_QUERY_TOKENS =
       Sets.newHashSet("", "query", "IntrospectionQuery", "schema", "queryType", "name", "mutationType",

@@ -13,9 +13,6 @@ import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
 import software.wings.graphql.schema.type.QLApplicationConnection;
 import software.wings.graphql.schema.type.QLApplicationConnection.QLApplicationConnectionBuilder;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
@@ -25,9 +22,6 @@ public class ApplicationConnectionDataFetcher
   public ApplicationConnectionDataFetcher(AuthHandler authHandler) {
     super(authHandler);
   }
-
-  private static final PermissionAttribute permissionAttribute =
-      new PermissionAttribute(PermissionType.PIPELINE, Action.READ);
 
   @Override
   public QLApplicationConnection fetch(QLApplicationsQueryParameters qlQuery) {
