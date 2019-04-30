@@ -29,6 +29,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
@@ -73,6 +74,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class UserGroupServiceImpl implements UserGroupService {
   private static final Logger log = LoggerFactory.getLogger(UserGroupServiceImpl.class);
 
@@ -88,6 +90,17 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup save(UserGroup userGroup) {
     Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
+    if (accountService.isCommunityAccount(userGroup.getAccountId())) {
+      int numberOfUserGroupsOfAccount =
+          list(userGroup.getAccountId(), aPageRequest().build(), false).getResponse().size();
+      if (numberOfUserGroupsOfAccount == 1) {
+        throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
+            "Creation of new user group is not supported in Harness Community Edition.", WingsException.USER);
+      } else if (numberOfUserGroupsOfAccount > 1) {
+        logger.error("Community account {} has {} user groups. The acccount should have exactly 1 user group.",
+            userGroup.getAccountId(), numberOfUserGroupsOfAccount);
+      }
+    }
     UserGroup savedUserGroup = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
     Account account = accountService.get(userGroup.getAccountId());
