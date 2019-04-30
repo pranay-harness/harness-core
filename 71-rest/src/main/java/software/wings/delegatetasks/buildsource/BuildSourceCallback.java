@@ -44,6 +44,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,6 +85,7 @@ public class BuildSourceCallback implements NotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    logger.info("In notify for artifact stream id: [{}]", artifactStreamId);
     if (notifyResponseData instanceof BuildSourceExecutionResponse) {
       if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
         updatePermit(artifactStream, false);
@@ -183,8 +185,9 @@ public class BuildSourceCallback implements NotifyCallback {
       // Jenkins or Bamboo case
       if (!appId.equals(GLOBAL_APP_ID)) {
         collectLatestArtifact(appId, artifactStream, newArtifacts);
+      } else {
+        collectSuccessfulArtifacts(artifactStream, newArtifacts);
       }
-      collectSuccessfulArtifacts(artifactStream, newArtifacts);
     }
     return newArtifacts;
   }
@@ -271,23 +274,26 @@ public class BuildSourceCallback implements NotifyCallback {
    * Gets all  existing artifacts for the given artifact stream, and compares with artifact source data
    */
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
-    Map<String, BuildDetails> buildNoDetails;
-    if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
-      // AMI: AMI Name is not unique. So, treating AMI Id as unique which is stored in revision
-      buildNoDetails =
-          builds.parallelStream().collect(Collectors.toMap(BuildDetails::getRevision, Function.identity()));
-      try (HIterator<Artifact> iterator =
-               new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
-        while (iterator.hasNext()) {
-          buildNoDetails.remove(iterator.next().getRevision());
+    Map<String, BuildDetails> buildNoDetails = new HashMap<>();
+    if (!isEmpty(builds)) {
+      if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
+        // AMI: AMI Name is not unique. So, treating AMI Id as unique which is stored in revision
+        buildNoDetails =
+            builds.parallelStream().collect(Collectors.toMap(BuildDetails::getRevision, Function.identity()));
+        try (HIterator<Artifact> iterator =
+                 new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+          while (iterator.hasNext()) {
+            buildNoDetails.remove(iterator.next().getRevision());
+          }
         }
-      }
-    } else {
-      buildNoDetails = builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
-      try (HIterator<Artifact> iterator =
-               new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
-        while (iterator.hasNext()) {
-          buildNoDetails.remove(iterator.next().getBuildNo());
+      } else {
+        buildNoDetails =
+            builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
+        try (HIterator<Artifact> iterator =
+                 new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+          while (iterator.hasNext()) {
+            buildNoDetails.remove(iterator.next().getBuildNo());
+          }
         }
       }
     }

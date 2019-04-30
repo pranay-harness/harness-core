@@ -305,7 +305,7 @@ public class JenkinsImpl implements Jenkins {
   public List<BuildDetails> getBuildsForJob(String jobname, int lastN, boolean allStatuses) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
-      return null;
+      return Lists.newArrayList();
     }
     List<BuildDetails> buildDetails = Lists.newArrayList(
         jobWithDetails.getBuilds()
