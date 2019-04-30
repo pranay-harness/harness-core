@@ -75,8 +75,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     }
 
     if (featureFlag == null) {
-      // we don't want to throw an exception - we just want to log the error
-      logger.error("FeatureFlag {} not found.", featureName);
+      // this is common in test scenarios, lets not do anything here and just return false
       return false;
     }
 
