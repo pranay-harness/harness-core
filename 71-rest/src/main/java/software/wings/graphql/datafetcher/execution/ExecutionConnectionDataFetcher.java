@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
-import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -18,16 +17,15 @@ import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConne
 import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
-public class ExecutionConnectionDataFetcher extends AbstractConnectionDataFetcher<QLExecutionConnection> {
+public class ExecutionConnectionDataFetcher
+    extends AbstractConnectionDataFetcher<QLExecutionConnection, QLExecutionsParameters> {
   @Inject
   public ExecutionConnectionDataFetcher(AuthHandler authHandler) {
     super(authHandler);
   }
 
   @Override
-  public QLExecutionConnection fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    QLExecutionsParameters qlQuery = fetchParameters(QLExecutionsParameters.class, dataFetchingEnvironment);
-
+  public QLExecutionConnection fetch(QLExecutionsParameters qlQuery) {
     final Query<WorkflowExecution> query =
         persistence.createQuery(WorkflowExecution.class).order(Sort.descending(WorkflowExecutionKeys.createdAt));
 

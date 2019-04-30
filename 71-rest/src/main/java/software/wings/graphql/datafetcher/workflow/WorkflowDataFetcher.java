@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.workflow;
 
 import com.google.inject.Inject;
 
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -18,7 +17,7 @@ import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow> {
+public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkflowQueryParameters> {
   @Inject HPersistence persistence;
 
   @Inject
@@ -27,8 +26,7 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow> {
   }
 
   @Override
-  public QLWorkflow fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    QLWorkflowQueryParameters qlQuery = fetchParameters(QLWorkflowQueryParameters.class, dataFetchingEnvironment);
+  public QLWorkflow fetch(QLWorkflowQueryParameters qlQuery) {
     Workflow workflow = persistence.get(Workflow.class, qlQuery.getWorkflowId());
     if (workflow == null) {
       throw new InvalidRequestException("Workflow does not exist", WingsException.USER);

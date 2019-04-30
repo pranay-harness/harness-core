@@ -13,12 +13,10 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
-import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
-import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByEnvTypeDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByEnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstancesByServiceDataFetcher;
@@ -64,7 +62,6 @@ public class GraphQLModule extends AbstractModule {
   private void bindDataFetchers() {
     bindDataFetcherWithAnnotation(ApplicationConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
-    bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class);
@@ -72,7 +69,6 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForService");
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForWorkflow");
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
-    bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByEnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByEnvTypeDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByServiceDataFetcher.class);

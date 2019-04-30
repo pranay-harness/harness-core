@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.pipeline;
 
 import com.google.inject.Inject;
 
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -15,7 +14,7 @@ import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
-public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline> {
+public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipelineQueryParameters> {
   @Inject HPersistence persistence;
 
   @Inject
@@ -24,9 +23,7 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline> {
   }
 
   @Override
-  public QLPipeline fetch(DataFetchingEnvironment dataFetchingEnvironment) {
-    QLPipelineQueryParameters qlQuery = fetchParameters(QLPipelineQueryParameters.class, dataFetchingEnvironment);
-
+  public QLPipeline fetch(QLPipelineQueryParameters qlQuery) {
     Pipeline pipeline = persistence.get(Pipeline.class, qlQuery.getPipelineId());
     if (pipeline == null) {
       throw new InvalidRequestException("Pipeline does not exist", WingsException.USER);
