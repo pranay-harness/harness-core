@@ -52,7 +52,11 @@ public class VaultConfig extends Base implements EncryptionConfig, ExecutionCapa
 
   @Attributes(title = "Vault Url", required = true) private String vaultUrl;
 
-  @Attributes(title = "Auth token", required = true) private String authToken;
+  @Attributes(title = "Auth token") private String authToken;
+
+  @Attributes(title = "AppRole Id") private String appRoleId;
+
+  @Attributes(title = "Secret Id") private String secretId;
 
   @Attributes(title = "Base Path") private String basePath;
 

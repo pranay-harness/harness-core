@@ -843,6 +843,7 @@ public class SecretManagerImpl implements SecretManager {
           vaildateKmsConfigs(account.getUuid());
           validateVaultConfigs(account.getUuid());
           vaultService.renewTokens(account.getUuid());
+          vaultService.appRoleLogin(account.getUuid());
         } catch (Exception e) {
           logger.info(
               "Failed to validate secret manager for {} account id {}", account.getAccountName(), account.getUuid(), e);
