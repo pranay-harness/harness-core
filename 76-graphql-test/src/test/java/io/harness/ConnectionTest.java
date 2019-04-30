@@ -108,6 +108,17 @@ public class ConnectionTest extends GraphQLTest {
     }
     {
       String query = "{ pipelines(applicationId: \"" + application.getUuid()
+          + "\", limit: 2, offset: 0) { nodes { id } pageInfo { limit offset total } } }";
+
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
+
+      assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(2);
+      assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(0);
+      assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
+    }
+    {
+      String query = "{ pipelines(applicationId: \"" + application.getUuid()
           + "\", limit: 5, offset: 0) { nodes { id } pageInfo { limit offset total } } }";
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
