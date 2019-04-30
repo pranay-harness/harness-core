@@ -180,7 +180,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       query.filter(LearningEngineAnalysisTaskKeys.is24x7Task, is24x7Task.get());
     }
 
-    if (taskTypes.isPresent()) {
+    if (taskTypes.isPresent() && isNotEmpty(taskTypes.get())) {
       query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
     }
 

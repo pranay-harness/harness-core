@@ -221,6 +221,15 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
             .count());
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of(true), Optional.of(Lists.newArrayList()));
+    assertNotNull(task);
+    assertEquals(MLAnalysisType.LOG_CLUSTER, task.getMl_analysis_type());
+    assertEquals(numOfTasks - 3,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+            .count());
   }
 
   @Test
