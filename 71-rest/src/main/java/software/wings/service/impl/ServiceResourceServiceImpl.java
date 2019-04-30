@@ -1456,8 +1456,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     DiffNode commandUnitDiff =
         ObjectDifferBuilder.buildDefault().compare(newcommand.getCommandUnits(), oldCommand.getCommandUnits());
 
-    boolean variablesChanged = templateHelper.updateVariables(
-        newcommand.getTemplateVariables(), oldCommand.getTemplateVariables(), fromTemplate);
+    boolean variablesChanged =
+        templateHelper.variablesChanged(newcommand.getTemplateVariables(), oldCommand.getTemplateVariables());
+    if (variablesChanged) {
+      newcommand.setTemplateVariables(templateHelper.overrideVariables(
+          newcommand.getTemplateVariables(), oldCommand.getTemplateVariables(), fromTemplate));
+    }
+
     if (commandUnitDiff.hasChanges()
         || isCommandUnitsOrderChanged(newcommand.getCommandUnits(), oldCommand.getCommandUnits()) || variablesChanged
         || fromTemplate) {

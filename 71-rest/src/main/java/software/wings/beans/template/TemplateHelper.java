@@ -121,6 +121,11 @@ public class TemplateHelper {
   }
 
   public List<Variable> overrideVariables(List<Variable> templateVariables, List<Variable> existingVariables) {
+    return overrideVariables(templateVariables, existingVariables, true);
+  }
+
+  public List<Variable> overrideVariables(
+      List<Variable> templateVariables, List<Variable> existingVariables, boolean doNotOverride) {
     List<Variable> updatedVariables = new ArrayList<>();
     if (isNotEmpty(templateVariables)) {
       for (Variable variable : templateVariables) {
@@ -133,14 +138,14 @@ public class TemplateHelper {
       if (oldVariablesMap.containsKey(variable.getName())) {
         // Do not override the value if it is from template
         Variable oldVariable = oldVariablesMap.get(variable.getName());
-
-        if (isNotEmpty(oldVariable.getValue())) {
-          variable.setValue(oldVariable.getValue());
+        if (doNotOverride) {
+          if (isNotEmpty(oldVariable.getValue())) {
+            variable.setValue(oldVariable.getValue());
+          }
+          if (isNotEmpty(oldVariable.getDescription())) {
+            variable.setDescription(oldVariable.getDescription());
+          }
         }
-        if (isNotEmpty(oldVariable.getDescription())) {
-          variable.setDescription(oldVariable.getDescription());
-        }
-
         oldVariablesMap.remove(variable.getName());
       }
     }
@@ -177,41 +182,6 @@ public class TemplateHelper {
         break;
       }
     }
-    return variablesChanged || oldVariablesMap.size() != 0;
-  }
-
-  public boolean updateVariables(List<Variable> variables, List<Variable> oldVariables, boolean donotOverride) {
-    if (isEmpty(variables) && isEmpty(oldVariables)) {
-      return false;
-    } else if (isEmpty(variables) || isEmpty(oldVariables)) {
-      return true;
-    }
-    Map<String, Variable> oldVariablesMap = obtainVariableMap(oldVariables);
-    boolean variablesChanged = false;
-    for (Variable variable : variables) {
-      if (oldVariablesMap.containsKey(variable.getName())) {
-        // Do not override the value if it is from template
-        Variable oldVariable = oldVariablesMap.get(variable.getName());
-        if (donotOverride) {
-          if (isNotEmpty(oldVariable.getValue())) {
-            variable.setValue(oldVariable.getValue());
-          }
-          if (isNotEmpty(oldVariable.getDescription())) {
-            variable.setDescription(oldVariable.getDescription());
-          }
-        }
-        if (variable.getValue() != null) {
-          if (!variable.getValue().equals(oldVariable.getValue())) {
-            variablesChanged = true;
-          }
-        }
-        oldVariablesMap.remove(variable.getName());
-      } else {
-        // New variable added check if any default value present
-        variablesChanged = true;
-      }
-    }
-    // Variable removed
     return variablesChanged || oldVariablesMap.size() != 0;
   }
 

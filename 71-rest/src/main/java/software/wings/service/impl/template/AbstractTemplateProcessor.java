@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -12,12 +13,20 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
+import software.wings.beans.GraphNode;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
+import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 
 import java.io.IOException;
@@ -28,6 +37,8 @@ import java.util.List;
 public abstract class AbstractTemplateProcessor {
   @Inject protected TemplateService templateService;
   @Inject protected WingsPersistence wingsPersistence;
+  @Inject private WorkflowService workflowService;
+  @Inject private TemplateHelper templateHelper;
 
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -114,4 +125,67 @@ public abstract class AbstractTemplateProcessor {
   public abstract List<String> fetchTemplateProperties();
 
   public abstract boolean checkTemplateDetailsChanged(BaseTemplate oldTemplate, BaseTemplate newTemplate);
+
+  public void updateLinkedEntitiesInWorkflow(Template template) {
+    try (HIterator<Workflow> workflowIterator =
+             new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
+                                 .field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)
+                                 .contains(template.getUuid())
+                                 .fetch())) {
+      while (workflowIterator.hasNext()) {
+        Workflow workflow = workflowIterator.next();
+        try {
+          workflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
+          CanaryOrchestrationWorkflow orchestrationWorkflow =
+              (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+          if (orchestrationWorkflow != null) {
+            boolean updateNeeded = false;
+            // Verify in pre-deployment steps
+            updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPreDeploymentSteps());
+            // Verify in post deployment steps
+            updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPostDeploymentSteps());
+            // Verify in phases
+            List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
+            if (isNotEmpty(workflowPhases)) {
+              for (WorkflowPhase workflowPhase : workflowPhases) {
+                for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+                  updateNeeded = updateStep(template, updateNeeded, phaseStep);
+                }
+              }
+            }
+            // Update Rollback Phase Steps
+            if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
+              for (WorkflowPhase workflowPhase : orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
+                if (isNotEmpty(workflowPhase.getPhaseSteps())) {
+                  for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+                    updateNeeded = updateStep(template, updateNeeded, phaseStep);
+                  }
+                }
+              }
+            }
+            if (updateNeeded) {
+              workflowService.updateWorkflow(workflow);
+            }
+          }
+        } catch (Exception e) {
+          logger.warn(format("Error occurred while updating linked workflow %s", workflow.getUuid()), e);
+        }
+      }
+    }
+  }
+
+  private boolean updateStep(Template template, boolean updateNeeded, PhaseStep phaseStep) {
+    if (phaseStep != null && phaseStep.getSteps() != null) {
+      for (GraphNode step : phaseStep.getSteps()) {
+        if (template.getUuid().equals(step.getTemplateUuid())
+            && (step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))) {
+          GraphNode templateStep = (GraphNode) constructEntityFromTemplate(template, EntityType.WORKFLOW);
+          step.setTemplateVariables(
+              templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));
+          updateNeeded = true;
+        }
+      }
+    }
+    return updateNeeded;
+  }
 }

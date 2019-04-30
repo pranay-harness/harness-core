@@ -1,37 +1,19 @@
 package software.wings.service.impl.template;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
-
-import com.google.inject.Inject;
-
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
-import software.wings.beans.PhaseStep;
-import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
-import software.wings.beans.template.TemplateHelper;
-import software.wings.common.TemplateConstants;
-import software.wings.service.intfc.WorkflowService;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
 public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
-  @Inject private WorkflowService workflowService;
-  @Inject private TemplateHelper templateHelper;
-
   @Override
   public void updateLinkedEntities(Template template) {
     // Read steps that references the given template
@@ -40,66 +22,7 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
       logger.info("Template {} was deleted. Not updating linked entities", template.getUuid());
       return;
     }
-    try (HIterator<Workflow> workflowIterator =
-             new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
-                                 .field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)
-                                 .contains(template.getUuid())
-                                 .fetch())) {
-      while (workflowIterator.hasNext()) {
-        Workflow workflow = workflowIterator.next();
-        try {
-          workflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
-          CanaryOrchestrationWorkflow orchestrationWorkflow =
-              (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-          if (orchestrationWorkflow != null) {
-            boolean updateNeeded = false;
-            // Verify in pre-deployment steps
-            updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPreDeploymentSteps());
-            // Verify in post deployment steps
-            updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPostDeploymentSteps());
-            // Verify in phases
-            List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
-            if (isNotEmpty(workflowPhases)) {
-              for (WorkflowPhase workflowPhase : workflowPhases) {
-                for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-                  updateNeeded = updateStep(template, updateNeeded, phaseStep);
-                }
-              }
-            }
-            // Update Rollback Phase Steps
-            if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
-              for (WorkflowPhase workflowPhase : orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
-                if (isNotEmpty(workflowPhase.getPhaseSteps())) {
-                  for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-                    updateNeeded = updateStep(template, updateNeeded, phaseStep);
-                  }
-                }
-              }
-            }
-            if (updateNeeded) {
-              workflowService.updateWorkflow(workflow);
-            }
-          }
-        } catch (Exception e) {
-          logger.warn(format("Error occurred while updating linked workflow %s", workflow.getUuid()), e);
-        }
-      }
-    }
-  }
-
-  private boolean updateStep(Template template, boolean updateNeeded, PhaseStep phaseStep) {
-    if (phaseStep != null && phaseStep.getSteps() != null) {
-      for (GraphNode step : phaseStep.getSteps()) {
-        if (template.getUuid().equals(step.getTemplateUuid())
-            && (step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))) {
-          GraphNode templateStep = constructEntityFromTemplate(template, EntityType.WORKFLOW);
-          step.setTemplateVariables(
-              templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));
-          updateNeeded = true;
-        }
-      }
-    }
-    return updateNeeded;
+    updateLinkedEntitiesInWorkflow(template);
   }
 
   @Override

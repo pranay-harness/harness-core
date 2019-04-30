@@ -214,7 +214,12 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
 
   @Override
   public void updateLinkedEntities(Template template) {
-    // Read all the service commands that references the given
+    Template savedTemplate = templateService.get(template.getUuid());
+    if (savedTemplate == null) {
+      logger.info("Template {} was deleted. Not updating linked entities", template.getUuid());
+      return;
+    }
+    // Read all the service commands that references the given command template
     try (HIterator<ServiceCommand> iterator =
              new HIterator<>(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)
                                  .filter(ServiceCommand.TEMPLATE_UUID_KEY, template.getUuid())
@@ -237,6 +242,9 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
         }
       }
     }
+
+    // Read all the workflows that reference the given command template
+    updateLinkedEntitiesInWorkflow(template);
   }
 
   @Override

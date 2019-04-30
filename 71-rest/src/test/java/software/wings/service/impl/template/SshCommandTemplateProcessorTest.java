@@ -40,6 +40,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Variable;
+import software.wings.beans.Workflow;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
@@ -64,9 +65,11 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   @Mock private MorphiaIterator<ServiceCommand, ServiceCommand> serviceCommandIterator;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Query<ServiceCommand> query;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private Query<Workflow> workflowQuery;
+  @Mock private MorphiaIterator<Workflow, Workflow> workflowIterator;
   @Mock private FieldEnd end;
   @Mock private DBCursor dbCursor;
-  @Mock private ServiceResourceService serviceResourceService;
 
   @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
 
@@ -195,6 +198,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     on(sshCommandTemplateProcessor).set("serviceResourceService", serviceResourceService);
 
     when(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)).thenReturn(query);
+    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(workflowQuery);
 
     Command command =
         aCommand()
@@ -220,6 +224,12 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     when(serviceCommandIterator.getCursor()).thenReturn(dbCursor);
     when(serviceCommandIterator.hasNext()).thenReturn(true).thenReturn(false);
     when(serviceCommandIterator.next()).thenReturn(serviceCommand);
+
+    when(workflowQuery.field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
+    when(end.contains(savedTemplate.getUuid())).thenReturn(workflowQuery);
+    when(workflowQuery.fetch()).thenReturn(workflowIterator);
+    when(workflowIterator.getCursor()).thenReturn(dbCursor);
+    when(workflowIterator.hasNext()).thenReturn(false);
 
     templateService.updateLinkedEntities(savedTemplate);
 
