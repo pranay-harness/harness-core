@@ -432,7 +432,7 @@ public class EntityHelper {
       affectedResourceOperation = type.name();
     } else if (entity instanceof EncryptedData) {
       EncryptedData encryptedData = (EncryptedData) entity;
-      entityType = EntityType.ENCRYPTED_RECORDS.name();
+      entityType = encryptedData.getType().name();
       entityName = encryptedData.getName();
       affectedResourceId = encryptedData.getUuid();
       affectedResourceName = encryptedData.getName();
