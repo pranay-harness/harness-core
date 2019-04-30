@@ -37,8 +37,7 @@ public abstract class AbstractConnectionDataFetcher<T> extends AbstractDataFetch
 
     // A full count of all items that match particular filter could be expensive. This is why using has more feature is
     // recommended over obtaining total. To determine if we have more, we fetch 1 more than the requested.
-    final FindOptions options =
-        new FindOptions().limit(page.getLimit() + (page.isHasMoreRequested() ? 1 : 0)).skip(page.getOffset());
+    final FindOptions options = new FindOptions().limit(page.getLimit() + 1).skip(page.getOffset());
 
     try (HIterator<T> iterator = new HIterator<T>(query.fetch(options))) {
       int count = 0;
