@@ -141,6 +141,11 @@ public class Http {
 
   public static synchronized OkHttpClient getUnsafeOkHttpClient(
       String url, long connectTimeOutSeconds, long readTimeOutSeconds) {
+    return getUnsafeOkHttpClientBuilder(url, connectTimeOutSeconds, readTimeOutSeconds).build();
+  }
+
+  public static synchronized OkHttpClient.Builder getUnsafeOkHttpClientBuilder(
+      String url, long connectTimeOutSeconds, long readTimeOutSeconds) {
     try {
       OkHttpClient.Builder builder =
           getOkHttpClientBuilder()
@@ -154,7 +159,7 @@ public class Http {
         builder.proxy(proxy);
       }
 
-      return builder.build();
+      return builder;
 
     } catch (Exception e) {
       throw new RuntimeException(e);

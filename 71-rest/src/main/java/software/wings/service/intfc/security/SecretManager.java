@@ -29,6 +29,7 @@ public interface SecretManager extends OwnedByAccount {
   String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
   String ENCRYPTED_FIELD_MASK = "*******";
   String ACCOUNT_ID_KEY = "accountId";
+  String SECRET_NAME_KEY = "name";
 
   List<EncryptionConfig> listEncryptionConfig(String accountId);
 

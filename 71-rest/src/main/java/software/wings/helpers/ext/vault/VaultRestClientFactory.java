@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -36,15 +38,15 @@ public class VaultRestClientFactory {
 
   // This Jackson object mapper always ignore unknown properties while deserialize JSON documents.
   private static ObjectMapper objectMapper = new ObjectMapper();
+  private static HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
   static {
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    loggingInterceptor.setLevel(Level.NONE);
   }
 
   public static VaultRestClient create(final VaultConfig vaultConfig) {
-    OkHttpClient httpClient = Http.getUnsafeOkHttpClient(vaultConfig.getVaultUrl(), 10, 10);
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    OkHttpClient httpClient =
+        Http.getUnsafeOkHttpClientBuilder(vaultConfig.getVaultUrl(), 10, 10).addInterceptor(loggingInterceptor).build();
 
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(vaultConfig.getVaultUrl())
