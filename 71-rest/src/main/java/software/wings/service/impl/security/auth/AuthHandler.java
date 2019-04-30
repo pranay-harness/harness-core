@@ -1457,10 +1457,14 @@ public class AuthHandler {
     UserGroup defaultAdminUserGroup = buildDefaultAdminUserGroup(account.getUuid(), null);
     userGroupService.save(defaultAdminUserGroup);
 
-    // By default, we don't associate any users to the support groups
-    UserGroup prodSupportUserGroup = buildProdSupportUserGroup(account.getUuid());
-    userGroupService.save(prodSupportUserGroup);
-    UserGroup nonProdSupportUserGroup = buildNonProdSupportUserGroup(account.getUuid());
-    userGroupService.save(nonProdSupportUserGroup);
+    // We don't create prodSupportUserGroup and nonProdSupportUserGroup for
+    // Community account
+    if (!account.isCommunity()) {
+      // By default, we don't associate any users to the support groups
+      UserGroup prodSupportUserGroup = buildProdSupportUserGroup(account.getUuid());
+      userGroupService.save(prodSupportUserGroup);
+      UserGroup nonProdSupportUserGroup = buildNonProdSupportUserGroup(account.getUuid());
+      userGroupService.save(nonProdSupportUserGroup);
+    }
   }
 }
