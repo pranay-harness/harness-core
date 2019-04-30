@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.UnexpectedException;
@@ -12,6 +15,7 @@ import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutio
 import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -52,6 +56,42 @@ public class ExecutionController {
         return QLExecutionStatus.REJECTED;
       case EXPIRED:
         return QLExecutionStatus.EXPIRED;
+      default:
+        Switch.unhandled(status);
+    }
+    return null;
+  }
+
+  public static List<ExecutionStatus> convertStatus(List<QLExecutionStatus> statuses) {
+    return statuses.stream().map(status -> convertStatus(status)).flatMap(list -> list.stream()).collect(toList());
+  }
+
+  public static List<ExecutionStatus> convertStatus(QLExecutionStatus status) {
+    switch (status) {
+      case ABORTED:
+        return asList(ExecutionStatus.ABORTED, ExecutionStatus.ABORTING);
+      case RUNNING:
+        return asList(ExecutionStatus.RUNNING, ExecutionStatus.DISCONTINUING);
+      case ERROR:
+        return asList(ExecutionStatus.ERROR);
+      case FAILED:
+        return asList(ExecutionStatus.FAILED);
+      case PAUSED:
+        return asList(ExecutionStatus.PAUSED, ExecutionStatus.PAUSING);
+      case QUEUED:
+        return asList(ExecutionStatus.QUEUED, ExecutionStatus.STARTING, ExecutionStatus.SCHEDULED, ExecutionStatus.NEW);
+      case RESUMED:
+        return asList(ExecutionStatus.RESUMED);
+      case SUCCESS:
+        return asList(ExecutionStatus.SUCCESS);
+      case WAITING:
+        return asList(ExecutionStatus.WAITING);
+      case SKIPPED:
+        return asList(ExecutionStatus.SKIPPED);
+      case REJECTED:
+        return asList(ExecutionStatus.REJECTED);
+      case EXPIRED:
+        return asList(ExecutionStatus.EXPIRED);
       default:
         Switch.unhandled(status);
     }

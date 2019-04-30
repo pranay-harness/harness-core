@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
@@ -37,6 +39,12 @@ public class ExecutionConnectionDataFetcher extends AbstractConnectionDataFetche
     }
     if (qlQuery.getPipelineId() != null) {
       query.filter(WorkflowExecutionKeys.workflowId, qlQuery.getPipelineId());
+    }
+    if (qlQuery.getServiceId() != null) {
+      query.filter(WorkflowExecutionKeys.serviceIds, qlQuery.getServiceId());
+    }
+    if (isNotEmpty(qlQuery.getStatuses())) {
+      query.field(WorkflowExecutionKeys.status).in(ExecutionController.convertStatus(qlQuery.getStatuses()));
     }
 
     QLExecutionConnectionBuilder connectionBuilder = QLExecutionConnection.builder();

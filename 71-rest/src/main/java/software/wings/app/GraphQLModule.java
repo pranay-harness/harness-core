@@ -68,6 +68,9 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EnvironmentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForPipeline");
+    bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForService");
+    bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForWorkflow");
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByEnvironmentDataFetcher.class);
@@ -82,22 +85,27 @@ public class GraphQLModule extends AbstractModule {
   }
 
   @NotNull
-  private String calculateAnnotationName(Class clazz, String suffix) {
+  private String calculateAnnotationName(Class clazz, String suffixToRemove, String suffixToAdd) {
     String className = clazz.getName();
-    char c[] =
-        className.substring(className.lastIndexOf('.') + 1, clazz.getName().length() - suffix.length()).toCharArray();
+    char c[] = (className.substring(className.lastIndexOf('.') + 1, clazz.getName().length() - suffixToRemove.length())
+        + suffixToAdd)
+                   .toCharArray();
 
     c[0] = Character.toLowerCase(c[0]);
     return new String(c);
   }
 
+  private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz, String suffix) {
+    String annotationName = calculateAnnotationName(clazz, "DataFetcher", suffix);
+    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
+  }
+
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {
-    String annotationName = calculateAnnotationName(clazz, "DataFetcher");
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz).asEagerSingleton();
+    bindDataFetcherWithAnnotation(clazz, "");
   }
 
   private void bindBatchedDataLoaderWithAnnotation(Class<? extends MappedBatchLoader> clazz) {
-    String annotationName = calculateAnnotationName(clazz, "BatchDataLoader");
+    String annotationName = calculateAnnotationName(clazz, "BatchDataLoader", "");
 
     BATCH_DATA_LOADER_NAMES.add(annotationName);
     bind(MappedBatchLoader.class).annotatedWith(Names.named(annotationName)).to(clazz).in(Scopes.SINGLETON);
