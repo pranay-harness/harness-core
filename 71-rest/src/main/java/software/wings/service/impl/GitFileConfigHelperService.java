@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -73,16 +71,16 @@ public class GitFileConfigHelperService {
       return gitFileConfig;
     }
 
-    if (isNotBlank(gitFileConfig.getCommitId())) {
-      gitFileConfig.setCommitId(context.renderExpression(gitFileConfig.getCommitId()));
+    if (gitFileConfig.getCommitId() != null) {
+      gitFileConfig.setCommitId(context.renderExpression(gitFileConfig.getCommitId()).trim());
     }
 
-    if (isNotBlank(gitFileConfig.getBranch())) {
-      gitFileConfig.setBranch(context.renderExpression(gitFileConfig.getBranch()));
+    if (gitFileConfig.getBranch() != null) {
+      gitFileConfig.setBranch(context.renderExpression(gitFileConfig.getBranch()).trim());
     }
 
-    if (isNotBlank(gitFileConfig.getFilePath())) {
-      gitFileConfig.setFilePath(context.renderExpression(gitFileConfig.getFilePath()));
+    if (gitFileConfig.getFilePath() != null) {
+      gitFileConfig.setFilePath(context.renderExpression(gitFileConfig.getFilePath()).trim());
     }
 
     return gitFileConfig;
