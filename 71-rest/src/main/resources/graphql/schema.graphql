@@ -6,45 +6,6 @@ schema {
 
 # Harness GraphQL SDL details
 type Query {
-  # Get details about an application
-  application(applicationId: String!): Application @dataFetcher(name: "application")
-
-  #Asking accountID temporarily because there is no auth support as of now.
-  #Will remove it once authentication is available
-  applications(accountId: String!, limit: Int!, offset: Int): ApplicationConnection
-    @dataFetcher(name: "applicationConnection")
-
-  # Get details about an environment
-  environment(environmentId: String!): Environment @dataFetcher(name: "environment")
-
-  # Get page data of environments
-  environments(applicationId: String!, limit: Int!, offset: Int): EnvironmentConnection
-    @dataFetcher(name: "environmentConnection")
-
-  # Get a pipeline object by id
-  pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
-
-  pipelines(applicationId: String!, limit: Int!, offset: Int): PipelineConnection
-    @dataFetcher(name: "pipelineConnection")
-
-  # Get workflow object by id
-  workflow(workflowId: String!): Workflow @dataFetcher(name: "workflow")
-
-  # Get list of workflows for an applicationId. It will return paginated data
-  workflows(applicationId: String!, limit: Int!, offset: Int): WorkflowConnection
-    @dataFetcher(name: "workflowConnection")
-
-  # Get the execution status of a workflow
-  execution(executionId: String!): Execution @dataFetcher(name: "execution")
-
-  # Get the list of executions.
-  executionsByApplication(applicationId: String!, limit: Int!, offset: Int): ExecutionConnection
-    @dataFetcher(name: "executionConnection")
-  executionsByWorkflow(workflowId: String!, limit: Int!, offset: Int): ExecutionConnection
-    @dataFetcher(name: "executionConnection")
-  executionsByPipeline(pipelineId: String!, limit: Int!, offset: Int): ExecutionConnection
-    @dataFetcher(name: "executionConnection")
-
   # Get list of successfully deployed articacts.
   deployedArtifacts(applicationId: String!, environmentId: String!, serviceId: String!): [Artifact]
     @dataFetcher(name: "artifact")
@@ -61,8 +22,12 @@ type Query {
     @dataFetcher(name: "instancesByEnvironment")
 
   #Adding accountId as input temporarily since there is no auth support as of now
-  instancesByEnvironmentType(accountId: String!, envType: EnvironmentType, limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByEnvType")
+  instancesByEnvironmentType(
+    accountId: String!
+    envType: EnvironmentType
+    limit: Int!
+    offset: Int
+  ): InstanceConnection @dataFetcher(name: "instancesByEnvType")
 
   # Get details about a service
   service(serviceId: String!): Service @dataFetcher(name: "service")

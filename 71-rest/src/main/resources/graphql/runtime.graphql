@@ -1,3 +1,22 @@
+extend type Query {
+  # Get the execution status of a workflow
+  execution(executionId: String!): Execution @dataFetcher(name: "execution")
+
+  # Get the list of executions.
+  executionsByApplication(
+    applicationId: String!
+    limit: Int!
+    offset: Int
+    statuses: [ExecutionStatus]
+  ): ExecutionConnection @dataFetcher(name: "executionConnection")
+  executionsByWorkflow(workflowId: String!, limit: Int!, offset: Int, statuses: [ExecutionStatus]): ExecutionConnection
+    @dataFetcher(name: "executionConnection")
+  executionsByPipeline(pipelineId: String!, limit: Int!, offset: Int, statuses: [ExecutionStatus]): ExecutionConnection
+    @dataFetcher(name: "executionConnection")
+  executionsByService(serviceId: String!, limit: Int!, offset: Int, statuses: [ExecutionStatus]): ExecutionConnection
+    @dataFetcher(name: "executionConnection")
+}
+
 enum ExecutionStatus {
   ABORTED
   ERROR

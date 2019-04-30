@@ -68,7 +68,7 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
       try {
         contextFieldArgsMap = new ObjectMapper().readValue(contextFieldArgsValue, typeRef);
       } catch (IOException e) {
-        logger.warn("IOException occured while creating fieldValue contextFieldArgsMap");
+        logger.warn("IOException occurred while creating fieldValue contextFieldArgsMap");
       }
     }
     return contextFieldArgsMap;

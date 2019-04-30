@@ -1,3 +1,33 @@
+extend type Query {
+  # Get details about an application
+  application(applicationId: String!): Application @dataFetcher(name: "application")
+
+  #Asking accountID temporarily because there is no auth support as of now.
+  #Will remove it once authentication is available
+  applications(accountId: String!, limit: Int!, offset: Int): ApplicationConnection
+    @dataFetcher(name: "applicationConnection")
+
+  # Get details about an environment
+  environment(environmentId: String!): Environment @dataFetcher(name: "environment")
+
+  # Get page data of environments
+  environments(applicationId: String!, limit: Int!, offset: Int): EnvironmentConnection
+    @dataFetcher(name: "environmentConnection")
+
+  # Get a pipeline object by id
+  pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
+
+  pipelines(applicationId: String!, limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: "pipelineConnection")
+
+  # Get workflow object by id
+  workflow(workflowId: String!): Workflow @dataFetcher(name: "workflow")
+
+  # Get list of workflows for an applicationId. It will return paginated data
+  workflows(applicationId: String!, limit: Int!, offset: Int): WorkflowConnection
+    @dataFetcher(name: "workflowConnection")
+}
+
 type Application {
   id: String
   name: String
@@ -50,7 +80,7 @@ type Pipeline {
   description: String
 
   executions(limit: Int!, offset: Int): ExecutionConnection
-    @dataFetcher(name: "executionConnection", contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
+    @dataFetcher(name: "executionConnectionForPipeline", contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
 }
 
 type PipelineConnection {
@@ -70,7 +100,7 @@ type Workflow {
   description: String
 
   executions(limit: Int!, offset: Int): ExecutionConnection
-    @dataFetcher(name: "executionConnection", contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
+    @dataFetcher(name: "executionConnectionForWorkflow", contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
 }
 
 type WorkflowConnection {
@@ -90,6 +120,9 @@ type Service {
   artifactType: String
   # Deployment Type SSH, Helm, Kubernetes
   deploymentType: String
+
+  executions(limit: Int!, offset: Int, statuses: [ExecutionStatus]): ExecutionConnection
+    @dataFetcher(name: "executionConnectionForService", contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
 
   instances(limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: "instancesByService", contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
