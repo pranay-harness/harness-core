@@ -6,7 +6,7 @@ import lombok.Value;
 @Value
 @Builder
 public class EntityOperationIdentifier {
-  public enum entityOperation { CREATE, UPDATE }
+  public enum entityOperation { CREATE, UPDATE, DELETE }
   ;
   private String entityType;
   private String entityName;

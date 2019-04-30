@@ -78,11 +78,11 @@ public class YamlPushServiceImpl implements YamlPushService {
     try {
       auditService.registerAuditActions(accountId, oldEntity, newEntity, type);
     } catch (Exception e) {
-      getErrorMsgForAudit(oldEntity, newEntity, type, e);
+      logErrorMsgForAudit(oldEntity, newEntity, type, e);
     }
   }
 
-  private <T> void getErrorMsgForAudit(T oldEntity, T newEntity, Type type, Exception e) {
+  private <T> void logErrorMsgForAudit(T oldEntity, T newEntity, Type type, Exception e) {
     logger.error(new StringBuilder(128)
                      .append("Failed while trying to perform audit for Entity: ")
                      .append(oldEntity != null ? oldEntity.getClass() : newEntity.getClass())
@@ -97,6 +97,8 @@ public class YamlPushServiceImpl implements YamlPushService {
 
   @Override
   public <R, T> void pushYamlChangeSet(String accountId, R helperEntity, T entity, Type type, boolean syncFromGit) {
+    performAuditForEntityChange(accountId, entity, entity, type);
+
     if (syncFromGit) {
       return;
     }
