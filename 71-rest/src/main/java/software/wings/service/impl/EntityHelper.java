@@ -92,6 +92,7 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -428,6 +429,14 @@ public class EntityHelper {
       affectedResourceId = templateFolder.getUuid();
       affectedResourceName = templateFolder.getName();
       affectedResourceType = EntityType.TEMPLATE_FOLDER.name();
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof EncryptedData) {
+      EncryptedData encryptedData = (EncryptedData) entity;
+      entityType = EntityType.ENCRYPTED_RECORDS.name();
+      entityName = encryptedData.getName();
+      affectedResourceId = encryptedData.getUuid();
+      affectedResourceName = encryptedData.getName();
+      affectedResourceType = EntityType.ENCRYPTED_RECORDS.name();
       affectedResourceOperation = type.name();
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));

@@ -16,6 +16,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -65,6 +66,7 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Event.Type;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -86,6 +88,7 @@ import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.SimpleEncryption;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -145,6 +148,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private ConfigService configService;
   @Inject private AppService appService;
   @Inject private EnvironmentService envService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -253,7 +257,9 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData =
         encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
             null, null, UUID.randomUUID().toString(), usageRestrictions);
-    return wingsPersistence.save(encryptedData);
+    String recordId = wingsPersistence.save(encryptedData);
+    generateAuditForEncryptedRecord(accountId, null, recordId);
+    return recordId;
   }
 
   public Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId) {
@@ -615,6 +621,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     String encryptedDataId = wingsPersistence.save(encryptedData);
+    generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
     encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
 
     char[] decryptedValue = null;
@@ -630,7 +637,10 @@ public class SecretManagerImpl implements SecretManager {
           vaultSecretRef.fullPath);
     } else {
       // If invalid reference, delete the encrypted data instance.
-      wingsPersistence.delete(accountId, EncryptedData.class, encryptedDataId);
+      EncryptedData record = wingsPersistence.get(EncryptedData.class, encryptedDataId);
+      if (record != null) {
+        deleteAndReportForAuditRecord(accountId, record);
+      }
       throw new WingsException("Vault path '" + vaultSecretRef.fullPath + "' is invalid", USER);
     }
     return encryptedData;
@@ -721,6 +731,8 @@ public class SecretManagerImpl implements SecretManager {
   public void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType,
       String fromKmsId, EncryptionType toEncryptionType, String toKmsId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
+    // This is needed as encryptedData will be updated in the process of
+    EncryptedData existingEncryptedData = wingsPersistence.get(EncryptedData.class, entityId);
     Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
     Preconditions.checkState(encryptedData.getEncryptionType() == fromEncryptionType,
         "mismatch between saved encrypted type and from encryption type");
@@ -780,12 +792,16 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptionKey(encrypted.getEncryptionKey());
     encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
 
-    wingsPersistence.save(encryptedData);
+    String recordId = wingsPersistence.save(encryptedData);
+    generateAuditForEncryptedRecord(accountId, existingEncryptedData, recordId);
   }
 
   private void changeFileSecretManager(String accountId, EncryptedData encryptedData, EncryptionType fromEncryptionType,
       EncryptionType toEncryptionType, EncryptionConfig toConfig) {
     byte[] decryptedFileContent = getFileContents(accountId, encryptedData.getUuid());
+    EncryptedData existingEncryptedRecord =
+        isBlank(encryptedData.getUuid()) ? null : wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
+
     EncryptedData encryptedFileData;
     switch (toEncryptionType) {
       case KMS:
@@ -813,7 +829,8 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptionType(toEncryptionType);
     encryptedData.setKmsId(toConfig.getUuid());
     encryptedData.setBase64Encoded(true);
-    wingsPersistence.save(encryptedData);
+    String recordId = wingsPersistence.save(encryptedData);
+    generateAuditForEncryptedRecord(accountId, existingEncryptedRecord, recordId);
   }
 
   @Override
@@ -930,6 +947,7 @@ public class SecretManagerImpl implements SecretManager {
       encryptedData.addSearchTag(name);
       try {
         encryptedDataId = wingsPersistence.save(encryptedData);
+        generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
       } catch (DuplicateKeyException e) {
         String reason = "Variable " + name + " already exists";
         throw new KmsOperationException(reason);
@@ -939,6 +957,9 @@ public class SecretManagerImpl implements SecretManager {
     } else {
       // UPDATE use case
       EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuid);
+
+      // savedData will be updated and saved again as a part of update, so need this oldEntity
+      EncryptedData oldEntity = wingsPersistence.get(EncryptedData.class, uuid);
       if (savedData == null) {
         // UPDATE use case. Return directly when record doesn't exist.
         return null;
@@ -996,6 +1017,7 @@ public class SecretManagerImpl implements SecretManager {
       }
       savedData.setUsageRestrictions(usageRestrictions);
       wingsPersistence.save(savedData);
+      auditServiceHelper.reportForAuditingUsingAccountId(savedData.getAccountId(), oldEntity, savedData, Type.UPDATE);
     }
 
     if (UserThreadLocal.get() != null) {
@@ -1075,14 +1097,14 @@ public class SecretManagerImpl implements SecretManager {
       vaultService.deleteSecret(accountId, keyName, vaultConfig);
     }
 
-    return wingsPersistence.delete(EncryptedData.class, uuId);
+    return deleteAndReportForAuditRecord(accountId, encryptedData);
   }
 
   @Override
   public boolean deleteSecretUsingUuid(String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
     Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
-    return wingsPersistence.delete(EncryptedData.class, uuId);
+    return deleteAndReportForAuditRecord(encryptedData.getAccountId(), encryptedData);
   }
 
   @Override
@@ -1181,6 +1203,7 @@ public class SecretManagerImpl implements SecretManager {
     String oldName = null;
     String savedFileId = null;
     EncryptedData encryptedData = null;
+    EncryptedData oldEntityData = null;
     final EncryptionType encryptionType;
 
     if (containsIllegalCharacters(name)) {
@@ -1193,6 +1216,9 @@ public class SecretManagerImpl implements SecretManager {
         // Pure UPDATE case, need to throw exception is the record doesn't exist.
         throw new WingsException(DEFAULT_ERROR_CODE, "could not find file with id " + uuid);
       }
+
+      // This is needed for auditing as encryptedData will be changed in the process of update
+      oldEntityData = wingsPersistence.get(EncryptedData.class, uuid);
     }
 
     if (encryptedData == null) {
@@ -1300,6 +1326,7 @@ public class SecretManagerImpl implements SecretManager {
     String recordId;
     try {
       recordId = wingsPersistence.save(encryptedData);
+      generateAuditForEncryptedRecord(accountId, oldEntityData, recordId);
     } catch (DuplicateKeyException e) {
       throw new KmsOperationException("File " + name + " already exists");
     }
@@ -1349,6 +1376,12 @@ public class SecretManagerImpl implements SecretManager {
     return recordId;
   }
 
+  private void generateAuditForEncryptedRecord(String accountId, EncryptedData oldEntityData, String newRecordId) {
+    Type type = oldEntityData == null ? Type.CREATE : Type.UPDATE;
+    EncryptedData newRecordData = wingsPersistence.get(EncryptedData.class, newRecordId);
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldEntityData, newRecordData, type);
+  }
+
   @Override
   public boolean deleteFile(String accountId, String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
@@ -1382,7 +1415,7 @@ public class SecretManagerImpl implements SecretManager {
       default:
         throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
     }
-    return wingsPersistence.delete(EncryptedData.class, uuId);
+    return deleteAndReportForAuditRecord(accountId, encryptedData);
   }
 
   @Override
@@ -1862,6 +1895,15 @@ public class SecretManagerImpl implements SecretManager {
 
     usageRestrictionsService.validateSetupUsagesOnUsageRestrictionsUpdate(
         encryptedData.getAccountId(), setupAppEnvMap, usageRestrictions);
+  }
+
+  private boolean deleteAndReportForAuditRecord(String accountId, EncryptedData encryptedData) {
+    boolean deleted = wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
+    if (deleted) {
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
+    }
+
+    return deleted;
   }
 
   @Builder

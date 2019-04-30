@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
+import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -52,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
-public class EncryptedData extends Base implements EncryptedRecord {
+public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
   public static final String NAME_KEY = "name";
 
   @NotEmpty @Indexed private String name;

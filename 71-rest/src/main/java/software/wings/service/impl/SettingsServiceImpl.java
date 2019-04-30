@@ -120,6 +120,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheHelper cacheHelper;
   @Inject private EnvironmentService envService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -279,6 +280,9 @@ public class SettingsServiceImpl implements SettingsService {
     if (shouldBeSynced(newSettingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), null, newSettingAttribute, Type.CREATE,
           settingAttribute.isSyncFromGit(), false);
+    } else {
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          settingAttribute.getAccountId(), null, newSettingAttribute, Type.CREATE);
     }
 
     return newSettingAttribute;
@@ -402,6 +406,10 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
 
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    if (!shouldBeSynced(settingAttribute, true)) {
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          settingAttribute.getAccountId(), existingSetting, updatedSettingAttribute, Type.UPDATE);
+    }
 
     // Need to mask the privatey key field value before the value is returned.
     // This will avoid confusing the user that the key field is empty when it's not.
@@ -466,6 +474,8 @@ public class SettingsServiceImpl implements SettingsService {
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(accountId, settingAttribute, null, Type.DELETE, syncFromGit, false);
       cacheHelper.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
+    } else {
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settingAttribute);
     }
   }
 
