@@ -13,8 +13,6 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLScalars;
@@ -22,24 +20,20 @@ import software.wings.graphql.schema.TypeResolverManager;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import javax.validation.constraints.NotNull;
 
 @Singleton
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private static final String FRAMEWORK_FILE_PATH = "graphql/framework.graphql";
   private static final String MODEL_FILE_PATH = "graphql/model.graphql";
   private static final String RUNTIME_FILE_PATH = "graphql/runtime.graphql";
   private static final String SCHEMA_FILE_PATH = "graphql/schema.graphql";
 
-  GraphQL graphQL;
-
-  TypeResolverManager typeResolverHelper;
-
-  Injector injector;
-
-  DataFetcherDirective dataFetcherDirective;
+  private GraphQL graphQL;
+  private TypeResolverManager typeResolverHelper;
+  private Injector injector;
+  private DataFetcherDirective dataFetcherDirective;
 
   @Inject
   public GraphQLProvider(
@@ -83,22 +77,18 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     this.typeResolverHelper.getTypeResolverMap().forEach(
         (k, v) -> builder.type(k, typeWiring -> typeWiring.typeResolver(v)));
 
-    builder.scalar(GraphQLScalars.DATE_TIME)
-        .scalar(GraphQLScalars.OBJECT)
-        .directive("dataFetcher", dataFetcherDirective);
+    builder.scalar(GraphQLScalars.DATE_TIME).directive("dataFetcher", dataFetcherDirective);
 
     return builder.build();
   }
 
   private String loadSchemaFile(String resource) {
-    String resouceAsString;
     URL url = GraphQLProvider.class.getClassLoader().getResource(resource);
     try {
-      resouceAsString = Resources.toString(url, Charset.defaultCharset());
+      return Resources.toString(url, StandardCharsets.UTF_8);
     } catch (IOException e) {
-      throw new RuntimeException("Failed to read graphql/schema.graphql file", e);
+      throw new RuntimeException(String.format("Failed to read %s file", resource), e);
     }
-    return resouceAsString;
   }
 
   @Override
