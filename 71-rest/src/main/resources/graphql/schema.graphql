@@ -6,10 +6,6 @@ schema {
 
 # Harness GraphQL SDL details
 type Query {
-  # Get list of successfully deployed articacts.
-  deployedArtifacts(applicationId: String!, environmentId: String!, serviceId: String!): [Artifact]
-    @dataFetcher(name: "artifact")
-
   # Get count of instances in your application
   # Taking accountId as input temporarily since there is no auth support as of now.
   instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
@@ -34,33 +30,6 @@ type Query {
 
   # Get list of services for applicationId. It will return paginated data
   services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: "serviceConnection")
-}
-
-# Aritifact type
-type Artifact {
-  # Artifact Id
-  id: String
-  # Source of the artifact Docker Jenkins
-  sourceName: String
-  # Display name of the artifact
-  displayName: String
-  # Build number of the artifiact
-  buildNo: String
-  # Workflow that successfully deployed it last
-  workflowExecutionName: String
-  # Pipeline that successfully deployed it last
-  pipelineflowExecutionName: String
-  # DateTime when artifact was last successfully last
-  lastDeployedAt: DateTime
-  # Last User who deployed successfully this artifact
-  lastDeployedBy: String
-  # Application of the artifact
-  application: Application
-    @dataFetcher(
-      name: "application"
-      contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}"
-      batchLoader: "application"
-    )
 }
 
 enum InstanceType {
