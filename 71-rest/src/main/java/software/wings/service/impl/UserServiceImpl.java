@@ -818,7 +818,7 @@ public class UserServiceImpl implements UserService {
 
     // Sending email only if user was added to some new group
     if (sendNotification && isNotEmpty(newUserGroups)) {
-      sendAddedGroupEmail(user, accountService.get(accountId));
+      sendAddedGroupEmail(user, accountService.get(accountId), userGroups);
     }
   }
 
@@ -986,7 +986,10 @@ public class UserServiceImpl implements UserService {
     emailNotificationService.send(emailData);
   }
 
-  private Map<String, Object> getAddedRoleTemplateModel(User user, Account account) throws URISyntaxException {
+  private Map<String, Object> getAddedRoleTemplateModel(User user, Account account, List<UserGroup> userGroups)
+      throws URISyntaxException {
+    List<String> userGroupNamesList = new ArrayList<>();
+    userGroups.forEach(userGroup -> { userGroupNamesList.add(userGroup.getName()); });
     String loginUrl = buildAbsoluteUrl(format(
         "/login?company=%s&account=%s&email=%s", account.getCompanyName(), account.getAccountName(), user.getEmail()));
     Map<String, Object> model = new HashMap<>();
@@ -995,6 +998,7 @@ public class UserServiceImpl implements UserService {
     model.put("company", account.getCompanyName());
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
+    model.put("addedToUserGroups", String.join(",", userGroupNamesList));
 
     // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
     if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
@@ -1022,9 +1026,9 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void sendAddedGroupEmail(User user, Account account) {
+  public void sendAddedGroupEmail(User user, Account account, List<UserGroup> userGroups) {
     try {
-      Map<String, Object> templateModel = getAddedRoleTemplateModel(user, account);
+      Map<String, Object> templateModel = getAddedRoleTemplateModel(user, account, userGroups);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()

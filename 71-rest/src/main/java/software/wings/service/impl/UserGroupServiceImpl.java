@@ -57,6 +57,7 @@ import software.wings.utils.Validator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -330,7 +331,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       Account account = accountService.get(updatedUserGroup.getAccountId());
       updatedUserGroup.getMembers().forEach(member -> {
         if (newlyAddedMemberIds.contains(member.getUuid())) {
-          userService.sendAddedGroupEmail(member, account);
+          userService.sendAddedGroupEmail(member, account, Arrays.asList(userGroup));
         }
       });
     }
