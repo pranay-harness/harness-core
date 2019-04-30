@@ -11,16 +11,20 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.HarnessApiKey.ClientType;
+import software.wings.beans.User;
+import software.wings.security.AuthenticationFilter;
 
 import javax.ws.rs.core.GenericType;
 
 /**
  * @author rktummala on 03/07/19
  */
+@Slf4j
 public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   Owners owners;
@@ -46,9 +50,34 @@ public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
     assertThat(createdKey).isEqualTo(keyFromGet);
 
     deleteHarnessClientApiKey(ClientType.PROMETHEUS);
+    deleteHarnessClientApiKey(ClientType.SALESFORCE);
 
     keyFromGet = getHarnessClientApiKey(ClientType.PROMETHEUS);
     assertThat(keyFromGet).isNull();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testIdentityServiceClientWithInternalApiKey() {
+    deleteHarnessClientApiKey(ClientType.INTERNAL);
+
+    String internalKey = generateHarnessClientApiKey(ClientType.INTERNAL);
+    logger.info("INTERNAL Api Key: {}", internalKey);
+    User user = loginUserForIdentityService(internalKey);
+    assertThat(user).isNotNull();
+    assertThat(user.getEmail()).isEqualTo(ADMIN_USER);
+
+    deleteHarnessClientApiKey(ClientType.INTERNAL);
+  }
+
+  private User loginUserForIdentityService(String internalApiKey) {
+    GenericType<RestResponse<User>> returnType = new GenericType<RestResponse<User>>() {};
+    RestResponse<User> response = Setup.portal()
+                                      .header(AuthenticationFilter.HARNESS_API_KEY_HEADER, internalApiKey)
+                                      .contentType(ContentType.JSON)
+                                      .get("identity/user/login?email=" + ADMIN_USER)
+                                      .as(returnType.getType());
+    return response.getResource();
   }
 
   private String generateHarnessClientApiKey(ClientType clientType) {
