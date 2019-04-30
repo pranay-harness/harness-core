@@ -9,8 +9,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLInstanceCount {
-  public enum InstanceCountType { TOTAL, NINETY_FIVE_PERCENTILE }
-
   int count;
-  InstanceCountType instanceCountType;
+  QLInstanceCountType instanceCountType;
 }

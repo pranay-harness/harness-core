@@ -4,9 +4,7 @@ import software.wings.beans.FeatureName;
 
 public class GraphQLConstants {
   public static final String APP_ID_ARG = "appId";
-  public static final String ACCOUNT_ID_ARG = "accountId";
   public static final String SERVICE_ID_ARG = "serviceId";
-  public static final String INSTANCE_COUNT_TYPE_ARG = "instanceCountType";
   public static final String ENV_ID_ARG = "envId";
   public static final String PAGE_LIMIT_ARG = "limit";
   public static final String PAGE_OFFSET_ARG = "offset";
