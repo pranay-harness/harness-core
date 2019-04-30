@@ -70,13 +70,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
           new ResourceUsageApproachingLimitAlert(limit, accountId, action.getActionType(), percentToWarnOn);
 
       if (checker.hasCrossedPercentLimit(percentToWarnOn)) {
-        if (alertService
-                .findExistingAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData)
-                .isPresent()) {
-          log.info("Resource Usage Alert already exists. Skipping Creation. Data: {}", alertData);
-        } else {
-          alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
-        }
+        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
       } else {
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
       }

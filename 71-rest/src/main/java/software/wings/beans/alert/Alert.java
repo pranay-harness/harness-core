@@ -43,6 +43,7 @@ public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, Updat
   private AlertSeverity severity;
   private AlertData alertData;
   private long closedAt;
+  private int triggerCount;
 
   @JsonIgnore
   @SchemaIgnore

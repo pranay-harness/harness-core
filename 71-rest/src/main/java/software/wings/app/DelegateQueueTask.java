@@ -159,7 +159,7 @@ public class DelegateQueueTask implements Runnable {
           try {
             String waitId = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                 .filter(ID_KEY, taskId)
-                                .project("waitId", true)
+                                .project(DelegateTaskKeys.waitId, true)
                                 .get()
                                 .getWaitId();
             if (isNotEmpty(waitId)) {

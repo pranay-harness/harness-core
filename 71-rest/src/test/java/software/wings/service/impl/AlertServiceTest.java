@@ -1,11 +1,15 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.alerts.AlertStatus.Closed;
+import static software.wings.alerts.AlertStatus.Open;
+import static software.wings.alerts.AlertStatus.Pending;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
@@ -17,8 +21,8 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
@@ -34,12 +38,12 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
@@ -53,8 +57,6 @@ public class AlertServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private AlertService alertService;
 
   @Mock private EventPublisher eventPublisher;
-
-  @Inject private WingsPersistence wingsPersistence;
 
   private static Answer executeRunnable(ArgumentCaptor<Runnable> runnableCaptor) {
     return invocation -> {
@@ -92,7 +94,8 @@ public class AlertServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldListAlerts() {
     alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
-    PageResponse<Alert> alerts = alertService.list(new PageRequest<>());
+    PageResponse<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getType()).isEqualTo(ApprovalNeeded);
@@ -102,9 +105,31 @@ public class AlertServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldOpenAlert() {
+    alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
+
+    List<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(1);
+    Alert alert = alerts.get(0);
+    assertThat(alert.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(alert.getAppId()).isEqualTo(APP_ID);
+    assertThat(alert.getType()).isEqualTo(ApprovalNeeded);
+    assertThat(alert.getCategory()).isEqualTo(ApprovalNeeded.getCategory());
+    assertThat(alert.getSeverity()).isEqualTo(ApprovalNeeded.getSeverity());
+    assertThat(alert.getTitle()).isEqualTo("name needs approval");
+    assertThat(alert.getTriggerCount()).isEqualTo(1);
+    assertThat(alert.getStatus()).isEqualTo(Open);
+
+    verify(eventPublisher, times(0)).publishEvent(Mockito.any(Event.class));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldOpenPendingAlert() {
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
 
-    List<Alert> alerts = alertService.list(new PageRequest<>());
+    List<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -113,20 +138,35 @@ public class AlertServiceTest extends WingsBaseTest {
     assertThat(alert.getCategory()).isEqualTo(NoActiveDelegates.getCategory());
     assertThat(alert.getSeverity()).isEqualTo(NoActiveDelegates.getSeverity());
     assertThat(alert.getTitle()).isEqualTo("No delegates are available");
+    assertThat(alert.getTriggerCount()).isEqualTo(1);
+    assertThat(alert.getStatus()).isEqualTo(Pending);
 
-    verify(eventPublisher).publishEvent(Mockito.any(Event.class));
+    verify(eventPublisher, times(0)).publishEvent(Mockito.any(Event.class));
+
+    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
+
+    alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(1);
+    alert = alerts.get(0);
+    assertThat(alert.getTriggerCount()).isEqualTo(2);
+    assertThat(alert.getStatus()).isEqualTo(Open);
+
+    verify(eventPublisher, times(1)).publishEvent(Mockito.any(Event.class));
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldNotOpenMatchingAlert() {
-    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
-    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
-    PageResponse<Alert> alerts = alertService.list(new PageRequest<>());
+    alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
+    alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
+    PageResponse<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
-    assertThat(alert.getType()).isEqualTo(NoEligibleDelegates);
-    assertThat(alert.getAlertData().matches(noEligibleDelegatesAlert)).isTrue();
+    assertThat(alert.getType()).isEqualTo(ApprovalNeeded);
+    assertThat(alert.getAlertData().matches(approvalNeededAlert)).isTrue();
+    assertThat(alert.getTriggerCount()).isEqualTo(2);
+    assertThat(alert.getStatus()).isEqualTo(Open);
   }
 
   @Test
@@ -134,7 +174,8 @@ public class AlertServiceTest extends WingsBaseTest {
   public void shouldCloseAlert() {
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
     alertService.closeAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
-    PageResponse<Alert> alerts = alertService.list(new PageRequest<>());
+    PageResponse<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getStatus()).isEqualTo(Closed);
@@ -144,7 +185,8 @@ public class AlertServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotCloseAlertNoneFound() {
     alertService.closeAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
-    assertThat(alertService.list(new PageRequest<>())).hasSize(0);
+    assertThat(alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build()))
+        .hasSize(0);
   }
 
   @Test
@@ -156,7 +198,8 @@ public class AlertServiceTest extends WingsBaseTest {
 
     alertService.activeDelegateUpdated(ACCOUNT_ID, DELEGATE_ID);
 
-    PageResponse<Alert> alerts = alertService.list(new PageRequest<>());
+    PageResponse<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(2);
     for (Alert alert : alerts) {
       assertThat(alert.getStatus()).isEqualTo(Closed);
@@ -170,7 +213,8 @@ public class AlertServiceTest extends WingsBaseTest {
     alertService.openAlert(ACCOUNT_ID, APP_ID, ManualInterventionNeeded, manualInterventionNeededAlert);
     alertService.deploymentCompleted(APP_ID, "executionId");
 
-    PageResponse<Alert> alerts = alertService.list(new PageRequest<>());
+    PageResponse<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(2);
     for (Alert alert : alerts) {
       assertThat(alert.getStatus()).isEqualTo(Closed);
@@ -188,7 +232,8 @@ public class AlertServiceTest extends WingsBaseTest {
 
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, alertData);
 
-    List<Alert> alerts = alertService.list(new PageRequest<>());
+    List<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getTitle()).isEqualTo("No delegates can execute Container (LIST_CLUSTERS) tasks ");

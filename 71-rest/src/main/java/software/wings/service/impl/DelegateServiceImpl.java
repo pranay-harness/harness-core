@@ -1488,6 +1488,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .infraMappingId(task.getInfrastructureMappingId())
               .taskGroup(TaskType.valueOf(task.getData().getTaskType()).getTaskGroup())
               .taskType(TaskType.valueOf(task.getData().getTaskType()))
+              .tags(task.getTags())
               .build());
     }
 
