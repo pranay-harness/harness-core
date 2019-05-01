@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.Arrays.asList;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBuilder.aServiceArtifactElement;
@@ -24,6 +25,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EnvStateExecutionData;
@@ -184,8 +187,10 @@ public class EnvState extends State {
                                                     .build();
         executionService.triggerExecutionInterrupt(executionInterrupt);
       }
-    } catch (Exception e) {
-      logger.error("Could not abort workflows.", e);
+    } catch (WingsException exception) {
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+    } catch (RuntimeException exception) {
+      logger.error("Could not abort workflows.", exception);
     }
   }
 
