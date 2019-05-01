@@ -226,6 +226,7 @@ public class BambooServiceImpl implements BambooService {
                 buildDetailsList.add(aBuildDetails()
                                          .withNumber(jsonNode.get("buildNumber").asText())
                                          .withRevision(jsonNode.get("vcsRevisionKey").asText())
+                                         .withBuildUrl(jsonNode.get("link").get("href").asText())
                                          .withUiDisplayName("Build# " + jsonNode.get("buildNumber").asText())
                                          .build());
               });
