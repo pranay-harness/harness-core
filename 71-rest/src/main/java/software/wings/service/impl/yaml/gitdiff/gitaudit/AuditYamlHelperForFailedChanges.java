@@ -34,6 +34,7 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -224,7 +225,7 @@ public class AuditYamlHelperForFailedChanges {
   }
 
   private EntityAuditRecord generateAuditRecordIfAccountLevelEntityChange(GitAuditDataWrapper auditRequestData) {
-    String type = getSettingAttributeType(auditRequestData.getYamlFilePath());
+    YamlType type = getSettingAttributeType(auditRequestData.getYamlFilePath());
     if (type != null) {
       return handleSettingAttributeEntityUpdate(auditRequestData, type).build();
     }
@@ -566,23 +567,40 @@ public class AuditYamlHelperForFailedChanges {
   }
 
   private EntityAuditRecordBuilder handleSettingAttributeEntityUpdate(
-      GitAuditDataWrapper auditRequestData, String type) {
+      GitAuditDataWrapper auditRequestData, YamlType type) {
     String yamlFilePath = auditRequestData.getYamlFilePath();
     SettingAttribute settingAttribute;
     try {
       settingAttribute = getSettingAttribute(auditRequestData.getAccountId(), type, yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), type));
+      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), type.name()));
       settingAttribute = null;
     }
 
     if (settingAttribute == null) {
       String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
-      settingAttribute = aSettingAttribute().withAppId(auditRequestData.getAppId()).withName(name).build();
+      settingAttribute = aSettingAttribute()
+                             .withAppId(auditRequestData.getAppId())
+                             .withName(name)
+                             .withCategory(getCategory(type))
+                             .build();
     }
 
     entityHelper.loadMetaDataForEntity(settingAttribute, auditRequestData.getBuilder(), auditRequestData.getType());
     return auditRequestData.getBuilder();
+  }
+
+  private SettingCategory getCategory(YamlType type) {
+    if (YamlType.CLOUD_PROVIDER.equals(type)) {
+      return SettingCategory.CLOUD_PROVIDER;
+    }
+
+    if (YamlType.VERIFICATION_PROVIDER.equals(type) || YamlType.ARTIFACT_SERVER.equals(type)
+        || YamlType.COLLABORATION_PROVIDER.equals(type) || YamlType.LOADBALANCER_PROVIDER.equals(type)) {
+      return SettingCategory.CONNECTOR;
+    }
+
+    return null;
   }
 
   private Application getApplicationDetails(String accountId, String yamlFilePath) {
@@ -601,48 +619,48 @@ public class AuditYamlHelperForFailedChanges {
     return anApplication().accountId(accountId).appId(appId).uuid(appId).name(appName).build();
   }
 
-  private String getSettingAttributeType(String yamlFilePath) {
+  private YamlType getSettingAttributeType(String yamlFilePath) {
     if (matchWithRegex(YamlType.VERIFICATION_PROVIDER.getPathExpression(), yamlFilePath)) {
-      return YamlType.VERIFICATION_PROVIDER.name();
+      return YamlType.VERIFICATION_PROVIDER;
     }
 
     if (matchWithRegex(YamlType.CLOUD_PROVIDER.getPathExpression(), yamlFilePath)) {
-      return YamlType.CLOUD_PROVIDER.name();
+      return YamlType.CLOUD_PROVIDER;
     }
 
     if (matchWithRegex(YamlType.LOADBALANCER_PROVIDER.getPathExpression(), yamlFilePath)) {
-      return YamlType.LOADBALANCER_PROVIDER.name();
+      return YamlType.LOADBALANCER_PROVIDER;
     }
 
     if (matchWithRegex(YamlType.COLLABORATION_PROVIDER.getPathExpression(), yamlFilePath)) {
-      return YamlType.COLLABORATION_PROVIDER.name();
+      return YamlType.COLLABORATION_PROVIDER;
     }
 
     if (matchWithRegex(YamlType.ARTIFACT_SERVER.getPathExpression(), yamlFilePath)) {
-      return YamlType.ARTIFACT_SERVER.name();
+      return YamlType.ARTIFACT_SERVER;
     }
 
     return null;
   }
 
-  private SettingAttribute getSettingAttribute(String accountId, String type, String yamlFilePath) {
-    if (YamlType.COLLABORATION_PROVIDER.name().equals(type)) {
+  private SettingAttribute getSettingAttribute(String accountId, YamlType type, String yamlFilePath) {
+    if (YamlType.COLLABORATION_PROVIDER.equals(type)) {
       return yamlHelper.getCollaborationProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.CLOUD_PROVIDER.name().equals(type)) {
+    if (YamlType.CLOUD_PROVIDER.equals(type)) {
       return yamlHelper.getCloudProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.VERIFICATION_PROVIDER.name().equals(type)) {
+    if (YamlType.VERIFICATION_PROVIDER.equals(type)) {
       return yamlHelper.getVerificationProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.LOADBALANCER_PROVIDER.name().equals(type)) {
+    if (YamlType.LOADBALANCER_PROVIDER.equals(type)) {
       return yamlHelper.getLoadBalancerProvider(accountId, yamlFilePath);
     }
 
-    if (YamlType.ARTIFACT_SERVER.name().equals(type)) {
+    if (YamlType.ARTIFACT_SERVER.equals(type)) {
       return yamlHelper.getArtifactServer(accountId, yamlFilePath);
     }
 
