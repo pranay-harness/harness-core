@@ -413,7 +413,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
     assertEquals(0, learningEngineAnalysisTasks.size());
 
-    int numOfMinutes = 5;
+    int numOfMinutes = 10;
     int numOfHosts = 3;
 
     LogDataRecord logDataRecord = new LogDataRecord();
@@ -426,8 +426,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       for (int j = 0; j < numOfHosts; j++) {
         logDataRecord.setUuid(null);
         logDataRecord.setHost("host-" + j);
+        logDataRecord.setClusterLevel(ClusterLevel.H0);
         logDataRecord.setLogCollectionMinute(100 + i);
         wingsPersistence.save(logDataRecord);
+
+        if (i % 2 == 0) {
+          logDataRecord.setUuid(null);
+          logDataRecord.setClusterLevel(ClusterLevel.L0);
+          wingsPersistence.save(logDataRecord);
+        }
       }
     }
 
@@ -439,21 +446,22 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     for (int i = 0; i < numOfHosts; i++) {
       hosts.add("host-" + i);
     }
-    assertEquals(numOfMinutes, learningEngineAnalysisTasks.size());
-    for (int i = 0; i < numOfMinutes; i++) {
+    assertEquals(numOfMinutes / 2, learningEngineAnalysisTasks.size());
+    for (int i = 0; i < numOfMinutes / 2; i++) {
       LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(i);
       assertNull(learningEngineAnalysisTask.getWorkflow_id());
       assertNull(learningEngineAnalysisTask.getWorkflow_execution_id());
       assertEquals(
-          "LOGS_CLUSTER_L1_" + cvConfigId + "_" + (100 + i), learningEngineAnalysisTask.getState_execution_id());
+          "LOGS_CLUSTER_L1_" + cvConfigId + "_" + (100 + i * 2), learningEngineAnalysisTask.getState_execution_id());
       assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
-      assertEquals(100 + i, learningEngineAnalysisTask.getAnalysis_minute());
-      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL
-              + "?cvConfigId=" + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (100 + i),
+      assertEquals(100 + i * 2, learningEngineAnalysisTask.getAnalysis_minute());
+      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
+              + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (100 + i * 2),
           learningEngineAnalysisTask.getControl_input_url());
       assertNull(learningEngineAnalysisTask.getTest_input_url());
       assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
-              + "?cvConfigId=" + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&logCollectionMinute=" + (100 + i),
+              + "?cvConfigId=" + cvConfigId + "&appId=" + appId
+              + "&clusterLevel=L1&logCollectionMinute=" + (100 + i * 2),
           learningEngineAnalysisTask.getAnalysis_save_url());
       assertEquals(hosts, learningEngineAnalysisTask.getControl_nodes());
       assertNull(learningEngineAnalysisTask.getTest_nodes());

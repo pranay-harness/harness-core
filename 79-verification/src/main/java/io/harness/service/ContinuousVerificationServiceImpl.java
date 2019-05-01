@@ -560,6 +560,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             if (isEmpty(hosts)) {
               logger.info("For {} minute {} did not find hosts for level {} continuing...", cvConfiguration.getUuid(),
                   logRecordMinute, ClusterLevel.L0);
+              logAnalysisService.saveClusteredLogData(cvConfiguration.getAppId(), cvConfiguration.getUuid(),
+                  ClusterLevel.L1, (int) logRecordMinute, null, Lists.newArrayList());
               continue;
             }
             String inputLogsUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
@@ -681,8 +683,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             for (long logRecordMinute = minLogRecordL1Minute; logRecordMinute < maxLogRecordL1Minute;
                  logRecordMinute++) {
-              Set<String> hosts = logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(),
-                  LogDataRecordKeys.cvConfigId, cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L0);
+              Set<String> hosts =
+                  logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(), LogDataRecordKeys.cvConfigId,
+                      cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L0, ClusterLevel.H0);
               if (isNotEmpty(hosts)) {
                 logger.info(
                     "For CV config {} there is still node data clustering is pending for {} for minute {}. Skipping L2 clustering",
@@ -691,7 +694,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               }
 
               hosts = logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(), LogDataRecordKeys.cvConfigId,
-                  cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L1);
+                  cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L1, ClusterLevel.H1);
               if (isEmpty(hosts)) {
                 logger.info(
                     "For CV config {} there is no clustering data present for minute {}. Skipping L2 clustering",
@@ -847,7 +850,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             for (long l2Min = analysisStartMin, i = 0; l2Min <= analysisEndMin; l2Min++, i++) {
               Set<String> hosts = logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(),
-                  LogDataRecordKeys.cvConfigId, cvConfiguration.getUuid(), l2Min, ClusterLevel.L1);
+                  LogDataRecordKeys.cvConfigId, cvConfiguration.getUuid(), l2Min, ClusterLevel.L1, ClusterLevel.H1);
               if (isNotEmpty(hosts)) {
                 logger.info(
                     "For CV config {} there is still L2 clustering pending for {} for minute {}. Skipping L2 Analysis",
