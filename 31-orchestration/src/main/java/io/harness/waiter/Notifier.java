@@ -118,7 +118,7 @@ public class Notifier implements Runnable {
                                          .collect(toList());
 
       if (isNotEmpty(deleteResponses)) {
-        logger.warn("Deleting zombie responses {}", correlationIds.toString());
+        logger.warn("Deleting zombie responses {}", deleteResponses.toString());
         persistence.delete(persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                .field(NotifyResponseKeys.uuid)
                                .in(deleteResponses));
