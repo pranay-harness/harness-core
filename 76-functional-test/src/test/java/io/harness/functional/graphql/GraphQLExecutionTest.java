@@ -2,7 +2,9 @@ package io.harness.functional.graphql;
 
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -24,7 +26,7 @@ import io.harness.generator.PipelineGenerator;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.testframework.graphql.QLTestObject;
-import org.assertj.core.api.Assertions;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -49,12 +51,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   @Inject private PipelineGenerator pipelineGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
 
-  @Test
-  @Category({FunctionalTests.class, GraphQLTests.class})
-  public void fetchWorkflowExecution() throws Exception {
-    final Seed seed = new Seed(0);
-    Owners owners = ownerManager.create();
-
+  public Workflow buildWorkflow(Seed seed, Owners owners) {
     // Test  creating a workflow
     Workflow workflow = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
@@ -67,21 +64,62 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
             .build());
 
     resetCache();
+    return workflow;
+  }
 
-    // Test running the workflow
-
+  @NotNull
+  public WorkflowExecution executeWorkflow(Workflow workflow, Application application, Environment environment) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(workflow.getWorkflowType());
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(workflow.getUuid());
 
+    WorkflowExecution workflowExecution =
+        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    assertThat(workflowExecution).isNotNull();
+    return workflowExecution;
+  }
+
+  @Test
+  @Category({FunctionalTests.class, GraphQLTests.class})
+  public void fetchExecutionsInRange() throws Exception {
+    final Seed seed = new Seed(0);
+    Owners owners = ownerManager.create();
+    Workflow workflow = buildWorkflow(seed, owners);
+
     final Application application = owners.obtainApplication();
     final Environment environment = owners.obtainEnvironment();
 
-    WorkflowExecution workflowExecution =
-        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
-    Assertions.assertThat(workflowExecution).isNotNull();
+    // Test running the workflow
+
+    WorkflowExecution workflowExecution1 = executeWorkflow(workflow, application, environment);
+    WorkflowExecution workflowExecution2 = executeWorkflow(workflow, application, environment);
+
+    {
+      String query = format("{ executionsByWorkflow(workflowId: \"%s\", limit: 5, from: %s, to: %s) "
+              + "{ pageInfo { total } nodes { id } } }",
+          workflow.getUuid(), workflowExecution1.getCreatedAt(), workflowExecution2.getCreatedAt());
+
+      final QLTestObject qlTestObject = qlExecute(query);
+
+      assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
+    }
+  }
+
+  @Test
+  @Category({FunctionalTests.class, GraphQLTests.class})
+  public void fetchWorkflowExecution() throws Exception {
+    final Seed seed = new Seed(0);
+    Owners owners = ownerManager.create();
+    Workflow workflow = buildWorkflow(seed, owners);
+
+    final Application application = owners.obtainApplication();
+    final Environment environment = owners.obtainEnvironment();
+
+    // Test running the workflow
+
+    WorkflowExecution workflowExecution = executeWorkflow(workflow, application, environment);
 
     {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
@@ -89,11 +127,11 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
       final QLTestObject qlTestObject = qlExecute(query);
 
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
     }
 
     {
@@ -101,19 +139,17 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
-      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
-          .isEqualTo(1);
+      assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
     }
 
-    runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    executeWorkflow(workflow, application, environment);
 
     {
       String query = "{ executionsByWorkflow(workflowId: \"" + workflow.getUuid()
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
-      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
-          .isEqualTo(2);
+      assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
     }
 
     {
@@ -122,7 +158,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
       final QLTestObject qlTestObject = qlExecute(query);
 
-      Assertions.assertThat(((ArrayList) qlTestObject.sub("executions").get("nodes")).size()).isEqualTo(2);
+      assertThat(((ArrayList) qlTestObject.sub("executions").get("nodes")).size()).isEqualTo(2);
     }
   }
 
@@ -170,18 +206,18 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
     WorkflowExecution workflowExecution =
         runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
-    Assertions.assertThat(workflowExecution).isNotNull();
+    assertThat(workflowExecution).isNotNull();
 
     {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
           + "\") { id queuedTime startTime endTime status } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
-      Assertions.assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
     }
 
     {
@@ -189,8 +225,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
-      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
-          .isEqualTo(1);
+      assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
     }
 
     runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
@@ -200,8 +235,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
           + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
-      Assertions.assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total))
-          .isEqualTo(2);
+      assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
     }
 
     {
@@ -210,7 +244,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
       final QLTestObject qlTestObject = qlExecute(query);
 
-      Assertions.assertThat(((ArrayList) qlTestObject.sub("executions").get("nodes")).size()).isEqualTo(2);
+      assertThat(((ArrayList) qlTestObject.sub("executions").get("nodes")).size()).isEqualTo(2);
     }
   }
 
