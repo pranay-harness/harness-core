@@ -93,6 +93,7 @@ import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
@@ -2136,7 +2137,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       Query<Service> query = wingsPersistence.createQuery(Service.class)
                                  .filter(Service.APP_ID_KEY, applicationManifest.getAppId())
-                                 .filter(Service.ID_KEY, applicationManifest.getServiceId());
+                                 .filter(Service.ID_KEY, applicationManifest.getServiceId())
+                                 .filter(ServiceKeys.deploymentType, DeploymentType.KUBERNETES.name());
 
       wingsPersistence.update(query, updateOperations);
     }
