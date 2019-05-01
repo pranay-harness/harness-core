@@ -948,10 +948,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (appManifest.getStoreType() == StoreType.Local) {
       List<ManifestFile> manifestFiles =
           applicationManifestService.getManifestFilesByAppManifestId(service.getAppId(), appManifest.getUuid());
-      ManifestFile valuesFile = manifestFiles.get(0);
-      valuesFolder.addChild(new ServiceLevelYamlNode(accountId, valuesFile.getUuid(), service.getAppId(),
-          service.getUuid(), valuesFile.getFileName(), ManifestFile.class,
-          valuesFolderPath.clone().add(valuesFile.getFileName()), yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+      if (isNotEmpty(manifestFiles)) {
+        ManifestFile valuesFile = manifestFiles.get(0);
+        valuesFolder.addChild(
+            new ServiceLevelYamlNode(accountId, valuesFile.getUuid(), service.getAppId(), service.getUuid(),
+                valuesFile.getFileName(), ManifestFile.class, valuesFolderPath.clone().add(valuesFile.getFileName()),
+                yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+      }
     }
     return valuesFolder;
   }
