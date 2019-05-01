@@ -6,6 +6,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
+import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
@@ -23,6 +30,20 @@ import java.util.List;
 @Entity(value = "audits", noClassnameStored = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
+@Indexes({
+  @Index(fields =
+      { @Field(AuditHeaderKeys.appIdEntityRecord)
+        , @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC) },
+      options = @IndexOptions(name = "entityRecordAppIndex"))
+  ,
+      @Index(fields = {
+        @Field(AuditHeaderKeys.appIdEntityRecord)
+        , @Field(AuditHeaderKeys.affectedResourceOp), @Field(AuditHeaderKeys.affectedResourceType),
+            @Field(AuditHeaderKeys.affectedResourceId),
+            @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
+      }, options = @IndexOptions(name = "entityRecordAffectedResourceIndex"))
+})
+
 public class AuditHeader extends Base {
   /**
    * The Remote user.
@@ -60,7 +81,7 @@ public class AuditHeader extends Base {
   private String failureStatusMsg;
 
   // For Audit Headers created by Git user actions
-  @Getter @Setter private String accountId;
+  @Getter @Setter @Indexed private String accountId;
   @Getter @Setter private GitAuditDetails gitAuditDetails;
   @Getter @Setter private List<EntityAuditRecord> entityAuditRecords;
 
@@ -448,6 +469,16 @@ public class AuditHeader extends Base {
 
   public void setFailureStatusMsg(String failureStatusMsg) {
     this.failureStatusMsg = failureStatusMsg;
+  }
+
+  public static final class AuditHeaderKeys {
+    // Temporary
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+    public static final String appIdEntityRecord = "entityAuditRecords.appId";
+    public static final String affectedResourceId = "entityAuditRecords.affectedResourceId";
+    public static final String affectedResourceType = "entityAuditRecords.affectedResourceType";
+    public static final String affectedResourceOp = "entityAuditRecords.affectedResourceOperation";
   }
   /**
    * The Enum RequestType.
