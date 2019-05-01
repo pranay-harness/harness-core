@@ -94,12 +94,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (accountService.isCommunityAccount(userGroup.getAccountId())) {
       int numberOfUserGroupsOfAccount =
           list(userGroup.getAccountId(), aPageRequest().build(), false).getResponse().size();
-      if (numberOfUserGroupsOfAccount == 1) {
+      if (numberOfUserGroupsOfAccount >= 1) {
+        logger.warn("Community account {} has {} user groups. The acccount should have exactly 1 user group.",
+            userGroup.getAccountId(), numberOfUserGroupsOfAccount);
         throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
             "Creation of new user group is not supported in Harness Community Edition.", WingsException.USER);
-      } else if (numberOfUserGroupsOfAccount > 1) {
-        logger.error("Community account {} has {} user groups. The acccount should have exactly 1 user group.",
-            userGroup.getAccountId(), numberOfUserGroupsOfAccount);
       }
     }
     UserGroup savedUserGroup = Validator.duplicateCheck(
