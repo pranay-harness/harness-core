@@ -1,5 +1,6 @@
 package software.wings.audit;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
@@ -19,6 +20,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.Service;
 import software.wings.beans.User;
+import software.wings.jersey.JsonViews;
 
 import java.util.List;
 
@@ -52,33 +54,33 @@ public class AuditHeader extends Base {
   /**
    * The Application.
    */
-  protected Application application;
+  @JsonView(JsonViews.Internal.class) protected Application application;
   /**
    * The Component.
    */
-  protected Service component;
+  @JsonView(JsonViews.Internal.class) protected Service component;
   /**
    * The Environment.
    */
-  protected Environment environment;
+  @JsonView(JsonViews.Internal.class) protected Environment environment;
   private String url;
   private String resourcePath;
-  private String queryParams;
+  @JsonView(JsonViews.Internal.class) private String queryParams;
   private HttpMethod requestMethod;
-  private String headerString;
-  private ResponseType responseType;
-  private Integer responseStatusCode;
-  private String errorCode;
-  private String remoteHostName;
-  private Integer remoteHostPort;
+  @JsonView(JsonViews.Internal.class) private String headerString;
+  @JsonView(JsonViews.Internal.class) private ResponseType responseType;
+  @JsonView(JsonViews.Internal.class) private Integer responseStatusCode;
+  @JsonView(JsonViews.Internal.class) private String errorCode;
+  @JsonView(JsonViews.Internal.class) private String remoteHostName;
+  @JsonView(JsonViews.Internal.class) private Integer remoteHostPort;
   private String remoteIpAddress;
-  private String localHostName;
-  private String localIpAddress;
-  private String requestPayloadUuid;
-  private String responsePayloadUuid;
+  @JsonView(JsonViews.Internal.class) private String localHostName;
+  @JsonView(JsonViews.Internal.class) private String localIpAddress;
+  @JsonView(JsonViews.Internal.class) private String requestPayloadUuid;
+  @JsonView(JsonViews.Internal.class) private String responsePayloadUuid;
   private Long requestTime;
-  private Long responseTime;
-  private String failureStatusMsg;
+  @JsonView(JsonViews.Internal.class) private Long responseTime;
+  @JsonView(JsonViews.Internal.class) private String failureStatusMsg;
 
   // For Audit Headers created by Git user actions
   @Getter @Setter @Indexed private String accountId;
