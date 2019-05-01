@@ -148,7 +148,7 @@ public class AlertServiceImpl implements AlertService {
     if (alertOpened) {
       logger.info("Alert opened: {}", alert);
       publishEvent(alert);
-    } else {
+    } else if (status == Pending) {
       logger.info("Alert pending: {}", alert);
     }
   }
