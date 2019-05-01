@@ -611,44 +611,54 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void createDefaultApplicationSettings(String appId, String accountId, boolean syncFromGit) {
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(appId)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName(WINDOWS_RUNTIME_PATH)
-                              .withValue(aStringValue().withValue(DEFAULT_WINDOWS_RUNTIME_PATH).build())
-                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                              .build());
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(appId)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName(RUNTIME_PATH)
-                              .withValue(aStringValue().withValue(DEFAULT_RUNTIME_PATH).build())
-                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                              .build());
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(appId)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName(STAGING_PATH)
-                              .withValue(aStringValue().withValue(DEFAULT_STAGING_PATH).build())
-                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                              .build());
+    SettingAttribute settingAttribute1 = aSettingAttribute()
+                                             .withAppId(appId)
+                                             .withAccountId(accountId)
+                                             .withEnvId(GLOBAL_ENV_ID)
+                                             .withName(WINDOWS_RUNTIME_PATH)
+                                             .withValue(aStringValue().withValue(DEFAULT_WINDOWS_RUNTIME_PATH).build())
+                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                             .build();
+    wingsPersistence.save(settingAttribute1);
 
-    SettingAttribute settingAttribute = aSettingAttribute()
-                                            .withAppId(appId)
-                                            .withAccountId(accountId)
-                                            .withEnvId(GLOBAL_ENV_ID)
-                                            .withName(BACKUP_PATH)
-                                            .withValue(aStringValue().withValue(DEFAULT_BACKUP_PATH).build())
-                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                                            .build();
-    wingsPersistence.save(settingAttribute);
+    SettingAttribute settingAttribute2 = aSettingAttribute()
+                                             .withAppId(appId)
+                                             .withAccountId(accountId)
+                                             .withEnvId(GLOBAL_ENV_ID)
+                                             .withName(RUNTIME_PATH)
+                                             .withValue(aStringValue().withValue(DEFAULT_RUNTIME_PATH).build())
+                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                             .build();
+    wingsPersistence.save(settingAttribute2);
 
-    // We only need to queue one of them since it will fetch all the setting attributes and pushes them
+    SettingAttribute settingAttribute3 = aSettingAttribute()
+                                             .withAppId(appId)
+                                             .withAccountId(accountId)
+                                             .withEnvId(GLOBAL_ENV_ID)
+                                             .withName(STAGING_PATH)
+                                             .withValue(aStringValue().withValue(DEFAULT_STAGING_PATH).build())
+                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                             .build();
+    wingsPersistence.save(settingAttribute3);
+
+    SettingAttribute settingAttribute4 = aSettingAttribute()
+                                             .withAppId(appId)
+                                             .withAccountId(accountId)
+                                             .withEnvId(GLOBAL_ENV_ID)
+                                             .withName(BACKUP_PATH)
+                                             .withValue(aStringValue().withValue(DEFAULT_BACKUP_PATH).build())
+                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                             .build();
+    wingsPersistence.save(settingAttribute4);
+
     yamlPushService.pushYamlChangeSet(
-        settingAttribute.getAccountId(), null, settingAttribute, Type.CREATE, syncFromGit, false);
+        settingAttribute1.getAccountId(), null, settingAttribute1, Type.CREATE, syncFromGit, false);
+    yamlPushService.pushYamlChangeSet(
+        settingAttribute2.getAccountId(), null, settingAttribute2, Type.CREATE, syncFromGit, false);
+    yamlPushService.pushYamlChangeSet(
+        settingAttribute3.getAccountId(), null, settingAttribute3, Type.CREATE, syncFromGit, false);
+    yamlPushService.pushYamlChangeSet(
+        settingAttribute4.getAccountId(), null, settingAttribute4, Type.CREATE, syncFromGit, false);
   }
 
   /* (non-Javadoc)
