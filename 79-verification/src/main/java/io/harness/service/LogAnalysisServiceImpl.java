@@ -153,8 +153,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     wingsPersistence.delete(query);
   }
 
-  private void deleteClusterLevel(String appId, String cvConfigId, String host, int logCollectionMinute,
-      ClusterLevel fromLevel, ClusterLevel toLevel) {
+  private void deleteClusterLevel(
+      String cvConfigId, String host, int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel) {
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                      .filter("cvConfigId", cvConfigId)
                                      .filter("clusterLevel", fromLevel);
@@ -188,7 +188,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       UpdateResults updatedResults = wingsPersistence.update(query,
           wingsPersistence.createUpdateOperations(LogDataRecord.class)
               .set("clusterLevel", ClusterLevel.getHeartBeatLevel(toLevel)));
-      if (updatedResults.getUpdatedCount() == 0 && host.equals(DUMMY_HOST_NAME)) {
+      if (updatedResults.getUpdatedCount() == 0 && DUMMY_HOST_NAME.equals(host)) {
         logger.error("did not update heartbeat from {} to {}  for min {} host {}", fromLevel, toLevel,
             logCollectionMinute, host);
       }
@@ -350,8 +350,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       case L0:
         break;
       case L1:
-        deleteClusterLevel(appId, cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
-        if (isEmpty(getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, L0))) {
+        deleteClusterLevel(cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
+        if (isEmpty(getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, L0, H0))) {
           try {
             learningEngineService.markCompleted(null, "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute,
                 logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
@@ -362,7 +362,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         }
         break;
       case L2:
-        deleteClusterLevel(appId, cvConfigId, null, logCollectionMinute, ClusterLevel.L1, ClusterLevel.L2);
+        deleteClusterLevel(cvConfigId, null, logCollectionMinute, ClusterLevel.L1, ClusterLevel.L2);
         learningEngineService.markCompleted(null, "LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute,
             logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L2);
         break;
@@ -1090,11 +1090,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public Set<String> getHostsForMinute(String appId, String fieldNameForQuery, String fieldValueForQuery,
       long logRecordMinute, ClusterLevel... clusterLevels) {
     Set<String> hosts = new HashSet<>();
-    Set<ClusterLevel> finalClusterLevels = new HashSet<>();
-    for (int i = 0; i < clusterLevels.length; i++) {
-      finalClusterLevels.add(clusterLevels[i]);
-      finalClusterLevels.add(ClusterLevel.getHeartBeatLevel(clusterLevels[i]));
-    }
+    Set<ClusterLevel> finalClusterLevels = Sets.newHashSet(clusterLevels);
 
     Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                                   .filter(LogDataRecordKeys.logCollectionMinute, logRecordMinute)
