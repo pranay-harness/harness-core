@@ -45,6 +45,8 @@ public class ExecutionConnectionDataFetcher
       query.field(WorkflowExecutionKeys.status).in(ExecutionController.convertStatus(qlQuery.getStatuses()));
     }
 
+    filterDatetimeRange(query, WorkflowExecutionKeys.createdAt, qlQuery.getFrom(), qlQuery.getTo());
+
     QLExecutionConnectionBuilder connectionBuilder = QLExecutionConnection.builder();
     connectionBuilder.pageInfo(populate(qlQuery, query, execution -> {
       final QLExecution qlExecution = ExecutionController.populateExecution(execution);

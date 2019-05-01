@@ -8,13 +8,33 @@ extend type Query {
     limit: Int!
     offset: Int
     statuses: [ExecutionStatus]
+    from: DateTime
+    to: DateTime
   ): ExecutionConnection @dataFetcher(name: "executionConnection")
-  executionsByWorkflow(workflowId: String!, limit: Int!, offset: Int, statuses: [ExecutionStatus]): ExecutionConnection
-    @dataFetcher(name: "executionConnection")
-  executionsByPipeline(pipelineId: String!, limit: Int!, offset: Int, statuses: [ExecutionStatus]): ExecutionConnection
-    @dataFetcher(name: "executionConnection")
-  executionsByService(serviceId: String!, limit: Int!, offset: Int, statuses: [ExecutionStatus]): ExecutionConnection
-    @dataFetcher(name: "executionConnection")
+  executionsByWorkflow(
+    workflowId: String!
+    limit: Int!
+    offset: Int
+    statuses: [ExecutionStatus]
+    from: DateTime
+    to: DateTime
+  ): ExecutionConnection @dataFetcher(name: "executionConnection")
+  executionsByPipeline(
+    pipelineId: String!
+    limit: Int!
+    offset: Int
+    statuses: [ExecutionStatus]
+    from: DateTime
+    to: DateTime
+  ): ExecutionConnection @dataFetcher(name: "executionConnection")
+  executionsByService(
+    serviceId: String!
+    limit: Int!
+    offset: Int
+    statuses: [ExecutionStatus]
+    from: DateTime
+    to: DateTime
+  ): ExecutionConnection @dataFetcher(name: "executionConnection")
 }
 
 enum ExecutionStatus {

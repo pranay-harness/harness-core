@@ -11,6 +11,8 @@ import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
 
+import java.time.ZonedDateTime;
+
 public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFetcher<T, P> {
   @Inject protected HPersistence persistence;
 
@@ -20,14 +22,14 @@ public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFe
 
   public interface Controller<T> { void populate(T entity); }
 
-  protected <T> QLPageInfo populate(QLPageQueryParameters page, Query<T> query, Controller<T> controller) {
+  protected <M> QLPageInfo populate(QLPageQueryParameters page, Query<M> query, Controller<M> controller) {
     QLPageInfoBuilder builder = QLPageInfo.builder().limit(page.getLimit()).offset(page.getOffset());
 
     // A full count of all items that match particular filter could be expensive. This is why using has more feature is
     // recommended over obtaining total. To determine if we have more, we fetch 1 more than the requested.
     final FindOptions options = new FindOptions().limit(page.getLimit() + 1).skip(page.getOffset());
 
-    try (HIterator<T> iterator = new HIterator<T>(query.fetch(options))) {
+    try (HIterator<M> iterator = new HIterator<M>(query.fetch(options))) {
       int count = 0;
       for (; count < page.getLimit() && iterator.hasNext(); count++) {
         controller.populate(iterator.next());
@@ -51,5 +53,15 @@ public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFe
       }
     }
     return builder.build();
+  }
+
+  // Adds closed open range filter to the query
+  protected <M> void filterDatetimeRange(Query<M> query, String fieldName, ZonedDateTime from, ZonedDateTime to) {
+    if (from != null) {
+      query.field(fieldName).greaterThanOrEq(from.toOffsetDateTime().toInstant().toEpochMilli());
+    }
+    if (to != null) {
+      query.field(fieldName).lessThan(to.toOffsetDateTime().toInstant().toEpochMilli());
+    }
   }
 }
