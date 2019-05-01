@@ -57,10 +57,10 @@ import java.util.List;
 })
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "LogDataRecordKeys")
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
-@FieldNameConstants(innerTypeName = "LogDataRecordKeys")
 public class LogDataRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty private StateType stateType;
 

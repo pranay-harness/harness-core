@@ -38,6 +38,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
+import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -135,9 +136,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId))
+        .thenReturn(managerCall);
     setInternalState(analysisService, "managerClient", verificationManagerClient);
     setInternalState(learningEngineService, "managerClient", verificationManagerClient);
     setInternalState(analysisService, "learningEngineService", learningEngineService);
+
     FieldUtils.writeField(analysisService, "managerClient", verificationManagerClient, true);
 
     dataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);

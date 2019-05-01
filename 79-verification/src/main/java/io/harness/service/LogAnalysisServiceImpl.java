@@ -47,6 +47,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -58,6 +59,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -95,6 +97,8 @@ import java.util.Set;
 public class LogAnalysisServiceImpl implements LogAnalysisService {
   private static final double HIGH_RISK_THRESHOLD = 50;
   private static final double MEDIUM_RISK_THRESHOLD = 25;
+  // Add to this list whenever we add more states to this type of collection
+  private static final List<StateType> PER_MINUTE_CV_STATES = Arrays.asList(StateType.SUMO);
 
   private final Random random = new Random();
 
@@ -238,7 +242,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           LogDataRecord.generateDataRecords(stateType, appId, cvConfigId, stateExecutionId, workflowId,
               workflowExecutionId, serviceId, clusterLevel, ClusterLevel.getHeartBeatLevel(clusterLevel), logData);
 
-      if (!validate24X7LogData(appId, cvConfigId, logDataRecords)) {
+      if (!validate24X7LogData(appId, cvConfigId, logDataRecords, stateExecutionId, accountId)) {
         return false;
       }
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
@@ -280,16 +284,34 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     }
   }
 
-  private boolean validate24X7LogData(String appId, String cvConfigId, List<LogDataRecord> logDataRecords) {
-    if (isEmpty(cvConfigId)) {
+  private boolean isPerMinuteWorkflowCV(String accountId, StateType stateType) {
+    if (managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId))
+            .getResource()) {
+      if (PER_MINUTE_CV_STATES.contains(stateType)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  private boolean validate24X7LogData(
+      String appId, String cvConfigId, List<LogDataRecord> logDataRecords, String stateExecutionId, String accountId) {
+    if (isEmpty(logDataRecords)) {
       return true;
     }
+    if (isEmpty(cvConfigId) && !isPerMinuteWorkflowCV(accountId, logDataRecords.get(0).getStateType())) {
+      return true;
+    }
+    final String fieldNameForQuery =
+        isEmpty(cvConfigId) ? LogDataRecordKeys.stateExecutionId : LogDataRecordKeys.cvConfigId;
+    final String fieldValueForQuery = isEmpty(cvConfigId) ? stateExecutionId : cvConfigId;
+
     Set<Long> clusteredMinutes = new HashSet<>();
     logDataRecords.stream()
         .filter(logDataRecord -> logDataRecord.getClusterLevel().equals(H0))
         .forEach(logDataRecord -> {
-          if (isNotEmpty(
-                  getHostsForMinute(appId, cvConfigId, logDataRecord.getLogCollectionMinute(), H0, H1, H2, HF))) {
+          if (isNotEmpty(getHostsForMinute(appId, fieldNameForQuery, fieldValueForQuery,
+                  logDataRecord.getLogCollectionMinute(), H0, H1, H2, HF))) {
             clusteredMinutes.add(logDataRecord.getLogCollectionMinute());
           }
         });
@@ -329,7 +351,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         break;
       case L1:
         deleteClusterLevel(appId, cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
-        if (isEmpty(getHostsForMinute(appId, cvConfigId, logCollectionMinute, L0))) {
+        if (isEmpty(getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, L0))) {
           try {
             learningEngineService.markCompleted(null, "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute,
                 logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
@@ -1065,8 +1087,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public Set<String> getHostsForMinute(
-      String appId, String cvConfigId, long logRecordMinute, ClusterLevel... clusterLevels) {
+  public Set<String> getHostsForMinute(String appId, String fieldNameForQuery, String fieldValueForQuery,
+      long logRecordMinute, ClusterLevel... clusterLevels) {
     Set<String> hosts = new HashSet<>();
     Set<ClusterLevel> finalClusterLevels = new HashSet<>();
     for (int i = 0; i < clusterLevels.length; i++) {
@@ -1074,12 +1096,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       finalClusterLevels.add(ClusterLevel.getHeartBeatLevel(clusterLevels[i]));
     }
 
-    try (HIterator<LogDataRecord> logRecordIterator =
-             new HIterator<>(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                                 .filter("cvConfigId", cvConfigId)
-                                 .filter("logCollectionMinute", logRecordMinute)
-                                 .project("logMessage", false)
-                                 .fetch())) {
+    Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                                                  .filter(LogDataRecordKeys.logCollectionMinute, logRecordMinute)
+                                                  .project(LogDataRecordKeys.logMessage, false);
+
+    logDataRecordQuery = logDataRecordQuery.filter(fieldNameForQuery, fieldValueForQuery);
+
+    try (HIterator<LogDataRecord> logRecordIterator = new HIterator<>(logDataRecordQuery.fetch())) {
       while (logRecordIterator.hasNext()) {
         final LogDataRecord logDataRecord = logRecordIterator.next();
         if (finalClusterLevels.contains(logDataRecord.getClusterLevel())) {

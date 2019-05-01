@@ -93,7 +93,8 @@ public interface LogAnalysisService {
 
   long getLogRecordMinute(String appId, String cvConfigId, ClusterLevel clusterLevel, OrderType orderType);
 
-  Set<String> getHostsForMinute(String appId, String cvConfigId, long logRecordMinute, ClusterLevel... clusterLevels);
+  Set<String> getHostsForMinute(String appId, String fieldNameForQuery, String fieldValueForQuery, long logRecordMinute,
+      ClusterLevel... clusterLevels);
 
   long getLastCVAnalysisMinute(String appId, String cvConfigId);
 
