@@ -69,7 +69,7 @@ public class AuditHeader extends Base {
   private HttpMethod requestMethod;
   @JsonView(JsonViews.Internal.class) private String headerString;
   @JsonView(JsonViews.Internal.class) private ResponseType responseType;
-  @JsonView(JsonViews.Internal.class) private Integer responseStatusCode;
+  private Integer responseStatusCode;
   @JsonView(JsonViews.Internal.class) private String errorCode;
   @JsonView(JsonViews.Internal.class) private String remoteHostName;
   @JsonView(JsonViews.Internal.class) private Integer remoteHostPort;
@@ -80,7 +80,7 @@ public class AuditHeader extends Base {
   @JsonView(JsonViews.Internal.class) private String responsePayloadUuid;
   private Long requestTime;
   @JsonView(JsonViews.Internal.class) private Long responseTime;
-  @JsonView(JsonViews.Internal.class) private String failureStatusMsg;
+  private String failureStatusMsg;
 
   // For Audit Headers created by Git user actions
   @Getter @Setter @Indexed private String accountId;
