@@ -196,7 +196,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
           String.valueOf(endTime), ExceptionUtils.getStackTrace(e), requestTimeStamp,
           OffsetDateTime.now().toInstant().toEpochMilli(), HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
-      throw new WingsException(SUMO_CONFIGURATION_ERROR, e).addParam("reason", e.getMessage());
+      throw new WingsException(SUMO_CONFIGURATION_ERROR, e)
+          .addParam("reason", e.getMessage() == null ? e.toString() : e.getMessage());
     }
   }
 

@@ -1024,7 +1024,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
         final InstanceElement instanceElement = instanceStatusSummary.getInstanceElement();
         final HostElement hostElement = instanceElement.getHost();
-        if (hostElement != null && hostElement.getEc2Instance() == null) {
+        if (hostElement != null && hostElement.getUuid() != null && hostElement.getEc2Instance() == null) {
           final Host host = hostService.get(appId, workflowExecution.getEnvId(), hostElement.getUuid());
           if (host != null && host.getEc2Instance() != null) {
             hostElement.setEc2Instance(host.getEc2Instance());
