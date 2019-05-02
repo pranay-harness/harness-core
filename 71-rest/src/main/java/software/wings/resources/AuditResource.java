@@ -60,7 +60,6 @@ public class AuditResource {
   @GET
   @Timed
   @ExceptionMetered
-  @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
   public RestResponse<PageResponse<AuditHeader>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
