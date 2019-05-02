@@ -57,6 +57,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
@@ -225,6 +226,8 @@ public abstract class AbstractAnalysisState extends State {
       WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
           executionContext.getAppId(), executionContext.getWorkflowExecutionId());
 
+      final Artifact artifactForService =
+          ((ExecutionContextImpl) executionContext).getArtifactForService(getPhaseServiceId(executionContext));
       ContinuousVerificationExecutionMetaDataBuilder cvExecutionMetaDataBuilder =
           ContinuousVerificationExecutionMetaData.builder()
               .accountId(accountId)
@@ -236,9 +239,7 @@ public abstract class AbstractAnalysisState extends State {
               .envName(((ExecutionContextImpl) executionContext).getEnv().getName())
               .workflowName(executionContext.getWorkflowExecutionName())
               .appName(((ExecutionContextImpl) executionContext).getApp().getName())
-              .artifactName(((ExecutionContextImpl) executionContext)
-                                .getArtifactForService(getPhaseServiceId(executionContext))
-                                .getDisplayName())
+              .artifactName(artifactForService == null ? null : artifactForService.getDisplayName())
               .serviceName(getPhaseServiceName(executionContext))
               .workflowStartTs(workflowExecution.getStartTs())
               .stateType(StateType.valueOf(getStateType()))
