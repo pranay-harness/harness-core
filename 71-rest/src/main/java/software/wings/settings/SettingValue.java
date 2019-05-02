@@ -283,7 +283,9 @@ public abstract class SettingValue {
 
     HTTP_HELM_REPO("HTTP Helm Repository"),
 
-    AMAZON_S3_HELM_REPO("Amazon S3 Helm Repository");
+    AMAZON_S3_HELM_REPO("Amazon S3 Helm Repository"),
+
+    GCS_HELM_REPO("GCS Helm Repository");
 
     @Getter private String displayName;
 

@@ -736,6 +736,7 @@ public class HelmDeployState extends State {
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
+    fetchFilesTaskParams.setFinalState(true);
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
     String waitId = generateUuid();

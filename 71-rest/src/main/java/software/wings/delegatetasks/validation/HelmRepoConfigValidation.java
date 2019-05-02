@@ -13,6 +13,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
@@ -53,6 +54,10 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
       return singletonList("AMAZON_S3_HELM_REPO: " + amazonS3HelmRepoConfig.getBucketName() + ":"
           + amazonS3HelmRepoConfig.getFolderPath() + ":" + amazonS3HelmRepoConfig.getRegion());
+    } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
+      GCSHelmRepoConfig gcsHelmRepoConfig = (GCSHelmRepoConfig) helmRepoConfig;
+      return singletonList(gcsHelmRepoConfig.getType() + ":" + gcsHelmRepoConfig.getBucketName() + ":"
+          + gcsHelmRepoConfig.getFolderPath());
     }
 
     throw new WingsException(UNHANDLED_CONFIG_MSG + helmRepoConfig.getSettingType());
@@ -63,9 +68,26 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       return validateHttpHelmRepoConfig(helmRepoConfig);
     } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
       return validateAmazonS3HelmRepoConfig();
+    } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
+      return validateGcsHelmRepoConfig();
     }
 
     throw new WingsException(UNHANDLED_CONFIG_MSG + helmRepoConfig.getSettingType());
+  }
+
+  private boolean validateGcsHelmRepoConfig() {
+    String helmPath = k8sGlobalConfigService.getHelmPath();
+    if (isBlank(helmPath)) {
+      logger.info(format("Helm not installed in delegate for task %s", delegateTaskId));
+      return false;
+    }
+
+    String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
+    if (isBlank(chartMuseumPath)) {
+      logger.info(format("chartmuseum not installed in delegate for task %s", delegateTaskId));
+      return false;
+    }
+    return true;
   }
 
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {

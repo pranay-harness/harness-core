@@ -22,6 +22,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCR;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HTTP_HELM_REPO;
@@ -111,7 +112,7 @@ public class SettingAttribute extends Base implements NameAccess {
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING)),
 
-    HELM_REPO(Lists.newArrayList(HTTP_HELM_REPO, AMAZON_S3_HELM_REPO));
+    HELM_REPO(Lists.newArrayList(HTTP_HELM_REPO, AMAZON_S3_HELM_REPO, GCS_HELM_REPO));
 
     private List<SettingVariableTypes> settingVariableTypes;
 

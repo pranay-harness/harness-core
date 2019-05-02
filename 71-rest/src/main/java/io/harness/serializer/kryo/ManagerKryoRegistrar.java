@@ -255,6 +255,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
@@ -1235,5 +1236,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(RepositoryType.class, 7171);
     kryo.register(BuildDetails.BuildStatus.class, 7174);
     kryo.register(MLAnalysisType.class, 7175);
+    kryo.register(GCSHelmRepoConfig.class, 7176);
   }
 }

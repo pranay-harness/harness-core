@@ -55,6 +55,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.FeatureFlagService;
@@ -375,6 +376,15 @@ public class PluginServiceImpl implements PluginService {
                        .withType(SettingVariableTypes.AMAZON_S3_HELM_REPO.name())
                        .withPluginCategories(asList(HelmRepo))
                        .withUiSchema(readUiSchema(SettingVariableTypes.AMAZON_S3_HELM_REPO.name()))
+                       .build());
+    pluginList.add(anAccountPlugin()
+                       .withSettingClass(GCSHelmRepoConfig.class)
+                       .withAccountId(accountId)
+                       .withIsEnabled(true)
+                       .withDisplayName(SettingVariableTypes.GCS_HELM_REPO.getDisplayName())
+                       .withType(SettingVariableTypes.GCS_HELM_REPO.name())
+                       .withPluginCategories(asList(HelmRepo))
+                       .withUiSchema(readUiSchema(SettingVariableTypes.GCS_HELM_REPO.name()))
                        .build());
     boolean serviceNowEnabled = featureFlagService.isEnabled(FeatureName.SERVICENOW, accountId);
     if (serviceNowEnabled) {

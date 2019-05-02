@@ -5,7 +5,7 @@ public class ChartMuseumConstants {
   public static final int PORTS_START_POINT = 35000; // ToDo anshul decide on the value
   public static final int PORTS_BOUND = 5000; // ToDo anshul decide on the value
 
-  public static final String CHART_MUSEUM_SERVER_URL = "http://localhost:${PORT}";
+  public static final String CHART_MUSEUM_SERVER_URL = "http://127.0.0.1:${PORT}";
 
   public static final String NO_SUCH_BBUCKET_ERROR_CODE = "NoSuchBucket";
   public static final String NO_SUCH_BBUCKET_ERROR = "NoSuchBucket: The specified bucket does not exist";
@@ -25,4 +25,9 @@ public class ChartMuseumConstants {
 
   public static final String AMAZON_S3_COMMAND_TEMPLATE =
       " --debug --port=${PORT} --storage=amazon --storage-amazon-bucket=${BUCKET_NAME} --storage-amazon-prefix=${FOLDER_PATH} --storage-amazon-region=${REGION}";
+
+  public static final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
+
+  public static final String GCS_COMMAND_TEMPLATE =
+      " --debug --port=${PORT} --storage=google --storage-google-bucket=${BUCKET_NAME} --storage-google-prefix=${FOLDER_PATH}";
 }
