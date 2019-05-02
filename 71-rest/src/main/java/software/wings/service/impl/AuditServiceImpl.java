@@ -54,6 +54,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
@@ -84,6 +85,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;
   @Inject private YamlResourceService yamlResourceService;
+  @Inject private YamlHelper yamlHelper;
 
   private WingsPersistence wingsPersistence;
 
@@ -414,7 +416,7 @@ public class AuditServiceImpl implements AuditService {
         resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
       }
       yamlContent = resource.getYaml();
-      String yamlPath = resource.getPath();
+      String yamlPath = yamlHelper.getYamlPathForEntity(entity);
       if (isNotEmpty(yamlPath)) {
         record.setYamlPath(yamlPath);
       }
