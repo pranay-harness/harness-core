@@ -217,8 +217,13 @@ public abstract class CloudFormationState extends State {
 
     if (CommandExecutionStatus.SUCCESS.equals(commandResponse.getCommandExecutionStatus())) {
       Map<String, Object> outputs = createStackResponse.getCloudFormationOutputMap();
-      infrastructureProvisionerService.regenerateInfrastructureMappings(
-          provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.of(region));
+      if (isNotEmpty(outputs)) {
+        infrastructureProvisionerService.regenerateInfrastructureMappings(
+            provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.of(region));
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "There are not outputs in the CF Stack. No infra mappings would be updated.");
+      }
     }
   }
 
