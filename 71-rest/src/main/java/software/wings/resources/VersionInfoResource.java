@@ -9,6 +9,7 @@ import io.harness.version.RuntimeInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionPackage;
 import io.swagger.annotations.Api;
+import software.wings.app.DeployMode;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.security.annotations.PublicApi;
 
@@ -29,11 +30,14 @@ public class VersionInfoResource {
   @Timed
   @ExceptionMetered
   public RestResponse<VersionPackage> get() {
+    final String deployMode = System.getenv().getOrDefault(DeployMode.DEPLOY_MODE, "KUBERNETES");
+    DeployMode deployMode1 = DeployMode.valueOf(deployMode);
     return new RestResponse<>(VersionPackage.builder()
                                   .versionInfo(versionInfoManager.getVersionInfo())
                                   .runtimeInfo(RuntimeInfo.builder()
                                                    .primary(configurationController.isPrimary())
                                                    .primaryVersion(configurationController.getPrimaryVersion())
+                                                   .deployMode(deployMode1.getDeployedAs())
                                                    .build())
                                   .build());
   }

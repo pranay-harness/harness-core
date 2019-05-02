@@ -8,4 +8,5 @@ import lombok.Value;
 public class RuntimeInfo {
   private boolean primary;
   private String primaryVersion;
+  private String deployMode;
 }
