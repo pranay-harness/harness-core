@@ -9,6 +9,8 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.AWS_AC
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.AWS_SECRET_ACCESS_KEY;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.BUCKET_REGION_ERROR_CODE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_START_RETRIES;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.GCS_COMMAND_TEMPLATE;
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.GOOGLE_APPLICATION_CREDENTIALS;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.INVALID_ACCESS_KEY_ID_ERROR;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.INVALID_ACCESS_KEY_ID_ERROR_CODE;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.NO_SUCH_BBUCKET_ERROR;
@@ -21,11 +23,14 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNAT
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.core.ssh.executors.ScriptProcessExecutor.StringBufferOutputStream;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
@@ -33,6 +38,7 @@ import software.wings.settings.SettingValue;
 
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -43,15 +49,39 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
-  public ChartMuseumServer startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)
-      throws Exception {
+  public ChartMuseumServer startChartMuseumServer(
+      HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String resourceDirectory) throws Exception {
     logger.info("Starting chart museum server");
 
     if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
       return startAmazonS3ChartMuseumServer(helmRepoConfig, connectorConfig);
+    } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
+      return startGCSChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory);
     }
 
     throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
+  }
+
+  private ChartMuseumServer startGCSChartMuseumServer(
+      HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String resourceDirectory) throws Exception {
+    GCSHelmRepoConfig gcsHelmRepoConfig = (GCSHelmRepoConfig) helmRepoConfig;
+    GcpConfig config = (GcpConfig) connectorConfig;
+
+    String credentialFilePath = Paths.get(resourceDirectory, "credentials.json").toString();
+    FileIo.writeUtf8StringToFile(credentialFilePath, String.valueOf(config.getServiceAccountKeyFileContent()));
+
+    Map<String, String> environment = new HashMap<>();
+    environment.put(GOOGLE_APPLICATION_CREDENTIALS, credentialFilePath);
+
+    String evaluatedTemplate = GCS_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", gcsHelmRepoConfig.getBucketName())
+                                   .replace("${FOLDER_PATH}", gcsHelmRepoConfig.getFolderPath());
+
+    StringBuilder builder = new StringBuilder(128);
+    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
+        .append(' ')
+        .append(evaluatedTemplate);
+
+    return startServer(builder.toString(), environment);
   }
 
   private ChartMuseumServer startAmazonS3ChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig)

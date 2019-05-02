@@ -26,6 +26,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HelmTaskHelper {
   private static final String WORKING_DIR_BASE = "./repository/helm-values/";
+  private static final String RESOURCE_DIR_BASE = "./repository/helm/resources/";
 
   private static final String HELM_REPO_ADD_COMMAND_FOR_CHART_MUSEUM = "${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL}";
   private static final String HELM_REPO_ADD_COMMAND_FOR_HTTP =
@@ -75,9 +77,9 @@ public class HelmTaskHelper {
 
     String workingDirectory = null;
     try {
-      workingDirectory = createWorkingDirectory();
+      workingDirectory = createDirectory(WORKING_DIR_BASE);
 
-      if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
+      if (helmRepoConfig instanceof AmazonS3HelmRepoConfig || helmRepoConfig instanceof GCSHelmRepoConfig) {
         fetchChartUsingChartMuseumServer(helmChartConfigParams, connectorConfig, workingDirectory);
       } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
         fetchChartFromHttpServer(helmChartConfigParams, workingDirectory);
@@ -97,10 +99,12 @@ public class HelmTaskHelper {
   private void fetchChartUsingChartMuseumServer(HelmChartConfigParams helmChartConfigParams,
       SettingValue connectorConfig, String chartDirectory) throws Exception {
     ChartMuseumServer chartMuseumServer = null;
+    String resourceDirectory = null;
 
     try {
-      chartMuseumServer =
-          chartMuseumClient.startChartMuseumServer(helmChartConfigParams.getHelmRepoConfig(), connectorConfig);
+      resourceDirectory = createDirectory(RESOURCE_DIR_BASE);
+      chartMuseumServer = chartMuseumClient.startChartMuseumServer(
+          helmChartConfigParams.getHelmRepoConfig(), connectorConfig, resourceDirectory);
 
       addChartMuseumRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
           chartMuseumServer.getPort(), chartDirectory);
@@ -110,6 +114,7 @@ public class HelmTaskHelper {
         chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
       }
       removeRepo(helmChartConfigParams.getRepoName());
+      cleanup(resourceDirectory);
     }
   }
 
@@ -164,8 +169,8 @@ public class HelmTaskHelper {
     return processExecutor.execute();
   }
 
-  public String createWorkingDirectory() throws Exception {
-    String workingDirectory = Paths.get(WORKING_DIR_BASE, convertBase64UuidToCanonicalForm(generateUuid()))
+  public String createDirectory(String directoryBase) throws Exception {
+    String workingDirectory = Paths.get(directoryBase, convertBase64UuidToCanonicalForm(generateUuid()))
                                   .normalize()
                                   .toAbsolutePath()
                                   .toString();
@@ -296,18 +301,20 @@ public class HelmTaskHelper {
     logger.info("helm repo add command for repository " + repoDisplayName);
   }
 
-  public void addAmazonS3HelmRepo(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String repoName,
+  public void addHelmRepo(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String repoName,
       String repoDisplayName) throws Exception {
     ChartMuseumServer chartMuseumServer = null;
-
+    String resourceDirectory = null;
     try {
-      chartMuseumServer = chartMuseumClient.startChartMuseumServer(helmRepoConfig, connectorConfig);
+      resourceDirectory = createDirectory(RESOURCE_DIR_BASE);
+      chartMuseumServer = chartMuseumClient.startChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory);
 
       addChartMuseumRepo(repoName, repoDisplayName, chartMuseumServer.getPort(), null);
     } finally {
       if (chartMuseumServer != null) {
         chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
       }
+      cleanup(resourceDirectory);
     }
   }
 

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
@@ -69,23 +70,33 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(helmRepoConfig, encryptedDataDetails);
 
     String repoName = convertBase64UuidToCanonicalForm(generateUuid());
-    try {
-      switch (helmRepoConfig.getSettingType()) {
-        case HTTP_HELM_REPO:
-          tryAddingHttpHelmRepo(helmRepoConfig, repoName, taskParams.getRepoDisplayName());
-          break;
+    switch (helmRepoConfig.getSettingType()) {
+      case HTTP_HELM_REPO:
+        tryAddingHttpHelmRepo(helmRepoConfig, repoName, taskParams.getRepoDisplayName());
+        break;
 
-        case AMAZON_S3_HELM_REPO:
-          tryAddingAmazonS3HelmRepo(helmRepoConfig, repoName, taskParams);
-          break;
+      case AMAZON_S3_HELM_REPO:
+        tryAddingAmazonS3HelmRepo(helmRepoConfig, repoName, taskParams);
+        break;
 
-        default:
-          unhandled(helmRepoConfig.getSettingType());
-          throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
-      }
-    } finally {
-      removeRepo(repoName);
+      case GCS_HELM_REPO:
+        tryAddingGCSHelmRepo(helmRepoConfig, repoName, taskParams);
+        break;
+
+      default:
+        unhandled(helmRepoConfig.getSettingType());
+        throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
     }
+    removeRepo(repoName);
+  }
+
+  private void tryAddingGCSHelmRepo(
+      HelmRepoConfig helmRepoConfig, String repoName, HelmRepoConfigValidationTaskParams taskParams) throws Exception {
+    GcpConfig gcpConfig = (GcpConfig) taskParams.getConnectorConfig();
+    List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
+    encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails);
+
+    helmTaskHelper.addHelmRepo(helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName());
   }
 
   private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName)
@@ -99,7 +110,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
-    helmTaskHelper.addAmazonS3HelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName());
+    helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName());
   }
 
   private void removeRepo(String repoName) {
