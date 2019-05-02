@@ -107,6 +107,8 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
         .executionScope(Util.getStringFromEnum(notificationRule.getExecutionScope()))
         .notificationGroups(notificationGroupList)
         .notificationGroupAsExpression(notificationRule.isNotificationGroupAsExpression())
+        .userGroupIds(notificationRule.getUserGroupIds())
+        .userGroupAsExpression(notificationRule.isUserGroupAsExpression())
         .build();
   }
 
