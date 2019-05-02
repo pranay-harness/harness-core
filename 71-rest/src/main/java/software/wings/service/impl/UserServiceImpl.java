@@ -1760,7 +1760,7 @@ public class UserServiceImpl implements UserService {
   public User get(String userId) {
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
 
     loadSupportAccounts(user);
