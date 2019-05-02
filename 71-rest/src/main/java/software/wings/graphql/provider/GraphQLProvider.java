@@ -15,7 +15,7 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
-import software.wings.graphql.scalar.GraphQLScalars;
+import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.TypeResolverManager;
 
 import java.io.IOException;
@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 
 @Singleton
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
+  private static final String ADMINISTRATION_FILE_PATH = "graphql/administration.graphql";
   private static final String FRAMEWORK_FILE_PATH = "graphql/framework.graphql";
   private static final String MODEL_FILE_PATH = "graphql/model.graphql";
   private static final String RUNTIME_FILE_PATH = "graphql/runtime.graphql";
@@ -45,30 +46,33 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
   @Inject
   public void init() {
-    if (graphQL == null) {
-      SchemaParser schemaParser = new SchemaParser();
-      TypeDefinitionRegistry typeDefinitionRegistry = new TypeDefinitionRegistry();
-      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(FRAMEWORK_FILE_PATH)));
-      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(MODEL_FILE_PATH)));
-      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(RUNTIME_FILE_PATH)));
-      typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(SCHEMA_FILE_PATH)));
-
-      RuntimeWiring runtimeWiring = buildRuntimeWiring();
-
-      SchemaGenerator schemaGenerator = new SchemaGenerator();
-
-      GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
-
-      DataLoaderDispatcherInstrumentationOptions options =
-          DataLoaderDispatcherInstrumentationOptions.newOptions().includeStatistics(false);
-
-      DataLoaderDispatcherInstrumentation dispatcherInstrumentation = new DataLoaderDispatcherInstrumentation(options);
-
-      graphQL = GraphQL.newGraphQL(graphQLSchema)
-                    .instrumentation(dispatcherInstrumentation)
-                    .instrumentation(new QueryDepthInstrumentation(QueryDepthInstrumentation.MAX_QUERY_DEPTH))
-                    .build();
+    if (graphQL != null) {
+      return;
     }
+
+    SchemaParser schemaParser = new SchemaParser();
+    TypeDefinitionRegistry typeDefinitionRegistry = new TypeDefinitionRegistry();
+    typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(ADMINISTRATION_FILE_PATH)));
+    typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(FRAMEWORK_FILE_PATH)));
+    typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(MODEL_FILE_PATH)));
+    typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(RUNTIME_FILE_PATH)));
+    typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(SCHEMA_FILE_PATH)));
+
+    RuntimeWiring runtimeWiring = buildRuntimeWiring();
+
+    SchemaGenerator schemaGenerator = new SchemaGenerator();
+
+    GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+
+    DataLoaderDispatcherInstrumentationOptions options =
+        DataLoaderDispatcherInstrumentationOptions.newOptions().includeStatistics(false);
+
+    DataLoaderDispatcherInstrumentation dispatcherInstrumentation = new DataLoaderDispatcherInstrumentation(options);
+
+    graphQL = GraphQL.newGraphQL(graphQLSchema)
+                  .instrumentation(dispatcherInstrumentation)
+                  .instrumentation(new QueryDepthInstrumentation(QueryDepthInstrumentation.MAX_QUERY_DEPTH))
+                  .build();
   }
 
   private RuntimeWiring buildRuntimeWiring() {
@@ -77,7 +81,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     this.typeResolverHelper.getTypeResolverMap().forEach(
         (k, v) -> builder.type(k, typeWiring -> typeWiring.typeResolver(v)));
 
-    builder.scalar(GraphQLScalars.DATE_TIME).directive("dataFetcher", dataFetcherDirective);
+    builder.scalar(GraphQLDateTimeScalar.type).directive("dataFetcher", dataFetcherDirective);
 
     return builder.build();
   }

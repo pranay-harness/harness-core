@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EmbeddedUser;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -45,6 +46,14 @@ public class OwnerManager {
 
     public void clear(Class clz) {
       objects = objects.stream().filter(obj -> obj.getClass().equals(clz)).collect(toList());
+    }
+
+    public EmbeddedUser obtainUser() {
+      return objects.stream()
+          .filter(obj -> obj instanceof EmbeddedUser)
+          .findFirst()
+          .map(obj -> (EmbeddedUser) obj)
+          .orElse(null);
     }
 
     public Account obtainAccount() {

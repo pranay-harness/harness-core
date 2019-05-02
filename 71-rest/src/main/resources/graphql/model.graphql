@@ -31,6 +31,8 @@ type Application {
   id: String
   name: String
   description: String
+  createdAt: DateTime
+  createdBy: User
 
   services(limit: Int!, offset: Int): ServiceConnection
     @dataFetcher(name: "serviceConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
