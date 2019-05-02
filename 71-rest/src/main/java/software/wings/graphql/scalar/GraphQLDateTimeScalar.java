@@ -19,9 +19,9 @@ import java.time.format.DateTimeFormatter;
  * Created this GraphQLScalar for DateTime scalar.
  * At present adding support for String/Long/Int conversion to date.
  */
-public final class GraphQLScalars {
+public final class GraphQLDateTimeScalar {
   // TODO: this does not seem right. We should revisit this implementation to default to UTC
-  public static final GraphQLScalarType DATE_TIME =
+  public static final GraphQLScalarType type =
       GraphQLScalarType.newScalar()
           .name("DateTime")
           .description("DateTime Scalar")
@@ -56,4 +56,15 @@ public final class GraphQLScalars {
             }
           })
           .build();
+
+  // TODO: Create the necessary testing that the exported value meets the scalar back
+  public static ZonedDateTime convert(long timestamp) {
+    return ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"));
+  }
+
+  // TODO: Create the necessary testing that the exported value meets the scalar back
+  public static String convertToString(long timestamp) {
+    return ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"))
+        .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+  }
 }

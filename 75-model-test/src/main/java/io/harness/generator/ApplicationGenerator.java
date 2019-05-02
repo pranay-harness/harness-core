@@ -92,12 +92,10 @@ public class ApplicationGenerator {
       return existing;
     }
 
-    final Application newApplication = builder.build();
-
-    final Application preexisting =
-        applicationService.getAppByName(newApplication.getAccountId(), newApplication.getName());
-    if (preexisting != null) {
-      return preexisting;
+    if (application != null && application.getCreatedBy() != null) {
+      builder.createdBy(application.getCreatedBy());
+    } else {
+      builder.createdBy(owners.obtainUser());
     }
 
     final Application finalApplication = builder.build();
