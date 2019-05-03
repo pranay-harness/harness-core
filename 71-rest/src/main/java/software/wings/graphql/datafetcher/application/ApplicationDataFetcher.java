@@ -11,16 +11,10 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLApplicationQueryParameters;
 import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication, QLApplicationQueryParameters> {
   @Inject HPersistence persistence;
-
-  @Inject
-  public ApplicationDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
 
   @Override
   public QLApplication fetch(QLApplicationQueryParameters qlQuery) {

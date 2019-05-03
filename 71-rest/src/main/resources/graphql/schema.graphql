@@ -1,4 +1,4 @@
-directive @dataFetcher(name: String!, contextFieldArgsMap: String, batchLoader: String) on FIELD_DEFINITION
+directive @dataFetcher(name: DataFetcherEnum!, contextFieldArgsMap: String) on FIELD_DEFINITION
 
 schema {
   query: Query
@@ -9,13 +9,13 @@ type Query {
   # Get count of instances in your application
   # Taking accountId as input temporarily since there is no auth support as of now.
   instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
-    @dataFetcher(name: "instanceCount")
+    @dataFetcher(name: instanceCount)
 
   instancesByService(serviceId: String, limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByService")
+    @dataFetcher(name: instancesByService)
 
   instancesByEnvironment(environmentId: String, limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByEnvironment")
+    @dataFetcher(name: instancesByEnvironment)
 
   #Adding accountId as input temporarily since there is no auth support as of now
   instancesByEnvironmentType(
@@ -23,13 +23,13 @@ type Query {
     envType: EnvironmentType
     limit: Int!
     offset: Int
-  ): InstanceConnection @dataFetcher(name: "instancesByEnvType")
+  ): InstanceConnection @dataFetcher(name: instancesByEnvType)
 
   # Get details about a service
-  service(serviceId: String!): Service @dataFetcher(name: "service")
+  service(serviceId: String!): Service @dataFetcher(name: service)
 
   # Get list of services for applicationId. It will return paginated data
-  services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: "serviceConnection")
+  services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: serviceConnection)
 }
 
 enum InstanceType {

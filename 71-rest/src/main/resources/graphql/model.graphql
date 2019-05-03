@@ -1,30 +1,30 @@
 extend type Query {
   # Get details about an application
-  application(applicationId: String!): Application @dataFetcher(name: "application")
+  application(applicationId: String!): Application @dataFetcher(name: application)
 
   # Asking accountId temporarily because there is no auth support as of now.
   # Will remove it once authentication is available
   applications(accountId: String!, limit: Int!, offset: Int): ApplicationConnection
-    @dataFetcher(name: "applicationConnection")
+    @dataFetcher(name: applicationConnection)
 
   # Get details about an environment
-  environment(environmentId: String!): Environment @dataFetcher(name: "environment")
+  environment(environmentId: String!): Environment @dataFetcher(name: environment)
 
   environments(applicationId: String!, limit: Int!, offset: Int): EnvironmentConnection
-    @dataFetcher(name: "environmentConnection")
+    @dataFetcher(name: environmentConnection)
 
   # Get a pipeline object by ID
-  pipeline(pipelineId: String!): Pipeline @dataFetcher(name: "pipeline")
+  pipeline(pipelineId: String!): Pipeline @dataFetcher(name: pipeline)
 
   pipelines(applicationId: String!, limit: Int!, offset: Int): PipelineConnection
-    @dataFetcher(name: "pipelineConnection")
+    @dataFetcher(name: pipelineConnection)
 
   # Get workflow object by ID
-  workflow(workflowId: String!): Workflow @dataFetcher(name: "workflow")
+  workflow(workflowId: String!): Workflow @dataFetcher(name: workflow)
 
   # Get list of workflows for an applicationId. It will return paginated data
   workflows(applicationId: String!, limit: Int!, offset: Int): WorkflowConnection
-    @dataFetcher(name: "workflowConnection")
+    @dataFetcher(name: workflowConnection)
 }
 
 type Application {
@@ -35,13 +35,13 @@ type Application {
   createdBy: User
 
   services(limit: Int!, offset: Int): ServiceConnection
-    @dataFetcher(name: "serviceConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+    @dataFetcher(name: serviceConnection, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
 
   workflows(limit: Int!, offset: Int): WorkflowConnection
-    @dataFetcher(name: "workflowConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+    @dataFetcher(name: workflowConnection, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
 
   pipelines(limit: Int!, offset: Int): PipelineConnection
-    @dataFetcher(name: "pipelineConnection", contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+    @dataFetcher(name: pipelineConnection, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
 }
 
 type ApplicationConnection {
@@ -60,7 +60,7 @@ type Environment {
   description: String
   type: EnvironmentType
   instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByEnvironment", contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
+    @dataFetcher(name: instancesByEnvironment, contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
 }
 
 type EnvironmentConnection {
@@ -80,7 +80,7 @@ type Pipeline {
   description: String
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: "executionConnectionForPipeline", contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
+    @dataFetcher(name: executionConnectionForPipeline, contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
 }
 
 type PipelineConnection {
@@ -100,7 +100,7 @@ type Workflow {
   description: String
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: "executionConnectionForWorkflow", contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
+    @dataFetcher(name: executionConnectionForWorkflow, contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
 }
 
 type WorkflowConnection {
@@ -122,10 +122,10 @@ type Service {
   deploymentType: String
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: "executionConnectionForService", contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+    @dataFetcher(name: executionConnectionForService, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
 
   instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: "instancesByService", contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+    @dataFetcher(name: instancesByService, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
 }
 
 type ServiceConnection {

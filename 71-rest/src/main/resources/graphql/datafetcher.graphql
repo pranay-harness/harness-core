@@ -1,0 +1,21 @@
+enum DataFetcherEnum {
+    instanceCount
+    instancesByService
+    instancesByEnvironment
+    instancesByEnvType
+    service
+    serviceConnection
+    execution
+    executionConnection
+    application
+    environment
+    pipeline
+    workflow
+    applicationConnection
+    environmentConnection
+    pipelineConnection
+    workflowConnection
+    executionConnectionForPipeline
+    executionConnectionForWorkflow
+    executionConnectionForService
+}

@@ -2,7 +2,6 @@ package software.wings.graphql.provider;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import graphql.GraphQL;
@@ -30,17 +29,15 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private static final String MODEL_FILE_PATH = "graphql/model.graphql";
   private static final String RUNTIME_FILE_PATH = "graphql/runtime.graphql";
   private static final String SCHEMA_FILE_PATH = "graphql/schema.graphql";
+  private static final String DATAFETCHER_FILE_PATH = "graphql/datafetcher.graphql";
 
   private GraphQL graphQL;
   private TypeResolverManager typeResolverHelper;
-  private Injector injector;
   private DataFetcherDirective dataFetcherDirective;
 
   @Inject
-  public GraphQLProvider(
-      @NotNull TypeResolverManager typeResolverHelper, Injector injector, DataFetcherDirective dataFetcherDirective) {
+  public GraphQLProvider(@NotNull TypeResolverManager typeResolverHelper, DataFetcherDirective dataFetcherDirective) {
     this.typeResolverHelper = typeResolverHelper;
-    this.injector = injector;
     this.dataFetcherDirective = dataFetcherDirective;
   }
 
@@ -57,6 +54,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(MODEL_FILE_PATH)));
     typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(RUNTIME_FILE_PATH)));
     typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(SCHEMA_FILE_PATH)));
+    typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(DATAFETCHER_FILE_PATH)));
 
     RuntimeWiring runtimeWiring = buildRuntimeWiring();
 

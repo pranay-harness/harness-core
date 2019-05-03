@@ -13,16 +13,10 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLPipelineQueryParameters;
 import software.wings.graphql.schema.type.QLPipeline;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipelineQueryParameters> {
   @Inject HPersistence persistence;
-
-  @Inject
-  public PipelineDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
 
   @Override
   public QLPipeline fetch(QLPipelineQueryParameters qlQuery) {

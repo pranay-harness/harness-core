@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -32,6 +33,7 @@ import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -46,6 +48,19 @@ public class GraphQLModule extends AbstractModule {
 
   public static Set<String> getBatchDataLoaderNames() {
     return Collections.unmodifiableSet(BATCH_DATA_LOADER_NAMES);
+  }
+
+  private Set<String> dataFetcherClassNames;
+
+  private static final Map<String, Class<? extends AbstractDataFetcher>> ANNOTATION_TO_DATA_FETCHER_MAP =
+      Maps.newHashMap();
+
+  public GraphQLModule() {
+    dataFetcherClassNames = Sets.newHashSet();
+  }
+
+  public static Class<? extends AbstractDataFetcher> getAbstractDataFetcher(String annotationName) {
+    return ANNOTATION_TO_DATA_FETCHER_MAP.get(annotationName);
   }
 
   @Override
@@ -95,8 +110,13 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz, String suffix) {
+    String canonicalName = clazz.getCanonicalName();
+    if (!dataFetcherClassNames.contains(canonicalName)) {
+      bind(clazz).in(Scopes.SINGLETON);
+      dataFetcherClassNames.add(canonicalName);
+    }
     String annotationName = calculateAnnotationName(clazz, "DataFetcher", suffix);
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
+    ANNOTATION_TO_DATA_FETCHER_MAP.putIfAbsent(annotationName, clazz);
   }
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {
