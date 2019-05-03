@@ -151,7 +151,7 @@ public class AccountServiceImpl implements AccountService {
   private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
   private static final int MAX_ACCOUNT_NAME_LENGTH = 50;
   private static final String GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING =
-      "curl -X POST -H 'content-type: application/json' "
+      "curl -s -X POST -H 'content-type: application/json' "
       + "--url https://app.harness.io/gateway/gratis/api/webhooks/cmnhGRyXyBP5RJzz8Ae9QP7mqUATVotr7v2knjOf "
       + "-d '{\"application\":\"4qPkwP5dQI2JduECqGZpcg\","
       + "\"parameters\":{\"Environment\":\"%s\",\"delegate\":\"delegate\","
