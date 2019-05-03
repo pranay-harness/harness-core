@@ -5,8 +5,8 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.ExceptionUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
@@ -30,6 +30,10 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
   @Override
   public void dispatch(List<Notification> notifications, UserGroup userGroup) {
+    // added to logs for some debugging purpose,
+    // remove this and it's usages if it's been more than a month since this was added
+    String randLogId = RandomStringUtils.randomAlphabetic(6);
+
     if (isEmpty(notifications)) {
       return;
     }
@@ -56,20 +60,23 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
     boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
     if (isCommunityAccount) {
-      log.info("Slack Configuration will be ignored since it's a community account. accountId={}", accountId);
+      log.info("{} - Slack Configuration will be ignored since it's a community account. accountId={}", randLogId,
+          accountId);
     } else if (null != userGroup.getSlackConfig()) {
       try {
+        log.info("{} - Trying to send slack message. slack configuration: {}", randLogId, userGroup.getSlackConfig());
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
-        log.error(ExceptionUtils.getMessage(e));
+        log.error("{} - Error sending slack message. Slack Config: {}", randLogId, userGroup.getSlackConfig(), e);
       }
     }
 
     if (CollectionUtils.isNotEmpty(userGroup.getEmailAddresses())) {
       try {
+        log.info("{} - Trying to send email. emails: {}", randLogId, userGroup.getEmailAddresses());
         emailDispatcher.dispatch(notifications, userGroup.getEmailAddresses());
       } catch (Exception e) {
-        log.error(ExceptionUtils.getMessage(e));
+        log.error("{} - Error sending email. Email Addresses: {}", randLogId, userGroup.getEmailAddresses(), e);
       }
     }
   }

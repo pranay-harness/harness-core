@@ -5,12 +5,15 @@ import com.google.inject.Inject;
 
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.springframework.web.bind.annotation.RequestBody;
 import software.wings.beans.alert.AlertNotificationRule;
+import software.wings.beans.alert.NotificationRulesStatus;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AlertNotificationRuleService;
+import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +36,20 @@ import javax.ws.rs.core.MediaType;
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
 public class AlertNotificationRuleResource {
   @Inject private AlertNotificationRuleService alertNotificationRuleService;
+  @Inject private NotificationRulesStatusService rulesStatusService;
+
+  @GET
+  @Path("/status")
+  public RestResponse<NotificationRulesStatus> getStatus(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(rulesStatusService.get(accountId));
+  }
+
+  @PUT
+  @Path("/status")
+  public RestResponse<NotificationRulesStatus> updateStatus(
+      @QueryParam("accountId") String accountId, @RequestBody NotificationRulesStatus status) {
+    return new RestResponse<>(rulesStatusService.update(accountId, status.isEnabled()));
+  }
 
   @POST
   public RestResponse<AlertNotificationRule> createAlertNotificationRule(

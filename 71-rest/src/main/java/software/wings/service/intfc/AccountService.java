@@ -107,4 +107,6 @@ public interface AccountService {
   boolean completeAccountMigration(String accountId, String newClusterUrl);
 
   boolean isCommunityAccount(String accountId);
+
+  boolean isTrialAccount(String accountId);
 }

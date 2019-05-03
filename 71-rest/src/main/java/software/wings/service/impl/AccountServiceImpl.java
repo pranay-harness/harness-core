@@ -603,6 +603,11 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public boolean isTrialAccount(String accountId) {
+    return getAccountType(accountId).map(AccountType::isTrial).orElse(false);
+  }
+
+  @Override
   public String generateSampleDelegate(String accountId) {
     assertTrialAccount(accountId);
 

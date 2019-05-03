@@ -45,4 +45,17 @@ public interface AccountType {
 
     return StringUtils.equalsIgnoreCase(COMMUNITY, type);
   }
+
+  static boolean isTrial(String type) {
+    if (isEmpty(type)) {
+      return false;
+    }
+
+    if (!isValid(type)) {
+      log.warn("[INVALID_ACCOUNT_TYPE] type={}", type);
+      return false;
+    }
+
+    return StringUtils.equalsIgnoreCase(TRIAL, type);
+  }
 }

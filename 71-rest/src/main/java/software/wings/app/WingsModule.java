@@ -184,6 +184,7 @@ import software.wings.service.impl.WebHookServiceImpl;
 import software.wings.service.impl.WhitelistServiceImpl;
 import software.wings.service.impl.WorkflowExecutionBaselineServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.impl.alert.NotificationRulesStatusServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
@@ -353,6 +354,7 @@ import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.alert.NotificationRulesStatusService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogLabelingService;
 import software.wings.service.intfc.analysis.LogVerificationService;
@@ -605,6 +607,8 @@ public class WingsModule extends DependencyModule {
     bind(InstanceUsageLimitChecker.class).to(InstanceUsageLimitCheckerImpl.class);
     bind(InstanceUsageLimitExcessHandler.class).to(InstanceUsageLimitExcessHandlerImpl.class);
     bind(InstanceLimitProvider.class).to(InstanceLimitProviderImpl.class);
+
+    bind(NotificationRulesStatusService.class).to(NotificationRulesStatusServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
