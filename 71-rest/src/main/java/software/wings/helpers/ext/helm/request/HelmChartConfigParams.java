@@ -21,4 +21,5 @@ public class HelmChartConfigParams {
 
   private String chartName;
   private String chartVersion;
+  private String chartUrl;
 }

@@ -419,6 +419,35 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
           "gitFileConfig cannot be used with HelmChartRepo. Use helmChartConfig instead.", USER);
     }
 
+    Service service =
+        serviceResourceService.get(applicationManifest.getAppId(), applicationManifest.getServiceId(), false);
+
+    if (service.isK8sV2()) {
+      validateHelmChartRepoAppManifestForK8sv2Service(applicationManifest);
+      return;
+    }
+
+    validateHelmChartRepoAppManifestForHelmService(applicationManifest);
+  }
+
+  private void validateHelmChartRepoAppManifestForHelmService(ApplicationManifest applicationManifest) {
+    HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
+    if (helmChartConfig == null) {
+      return;
+    }
+
+    if (isNotBlank(helmChartConfig.getConnectorId())) {
+      if (isBlank(helmChartConfig.getChartName())) {
+        throw new InvalidRequestException("Chart name cannot be empty when helm repository is selected", USER);
+      }
+
+      if (isNotBlank(helmChartConfig.getChartUrl())) {
+        throw new InvalidRequestException("Chart url cannot be used when helm repository is selected", USER);
+      }
+    }
+  }
+
+  private void validateHelmChartRepoAppManifestForK8sv2Service(ApplicationManifest applicationManifest) {
     HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
 
     notNullCheck("helmChartConfig has to be specified for HelmChartRepo.", helmChartConfig, USER);
@@ -429,6 +458,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     if (isBlank(helmChartConfig.getChartName())) {
       throw new InvalidRequestException("Chart name cannot be empty.", USER);
+    }
+
+    if (isNotBlank(helmChartConfig.getChartUrl())) {
+      throw new InvalidRequestException("Chart url cannot be used.", USER);
     }
   }
 
@@ -500,13 +533,25 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       case HelmChartRepo:
         HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
 
-        if (isNotBlank(helmChartConfig.getChartName())) {
+        if (helmChartConfig == null) {
+          return;
+        }
+
+        if (helmChartConfig.getConnectorId() != null) {
+          helmChartConfig.setConnectorId(helmChartConfig.getConnectorId().trim());
+        }
+
+        if (helmChartConfig.getChartName() != null) {
           helmChartConfig.setChartName(helmChartConfig.getChartName().trim());
         }
 
-        String chartVersion =
-            isNotBlank(helmChartConfig.getChartVersion()) ? helmChartConfig.getChartVersion().trim() : null;
-        helmChartConfig.setChartVersion(chartVersion);
+        if (helmChartConfig.getChartVersion() != null) {
+          helmChartConfig.setChartVersion(helmChartConfig.getChartVersion().trim());
+        }
+
+        if (helmChartConfig.getChartUrl() != null) {
+          helmChartConfig.setChartUrl(helmChartConfig.getChartUrl().trim());
+        }
 
         break;
 

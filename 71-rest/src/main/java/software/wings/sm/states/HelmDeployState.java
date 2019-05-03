@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
@@ -626,6 +627,7 @@ public class HelmDeployState extends State {
     K8sDelegateManifestConfig repoConfig = null;
     ApplicationManifest appManifest = applicationManifestService.getAppManifest(
         app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
+
     if (appManifest != null) {
       switch (appManifest.getStoreType()) {
         case HelmSourceRepo:
@@ -641,13 +643,25 @@ public class HelmDeployState extends State {
 
           break;
         case HelmChartRepo:
-          HelmChartConfigParams helmChartConfigTaskParams =
-              helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest);
-          repoConfig = K8sDelegateManifestConfig.builder()
-                           .helmChartConfigParams(helmChartConfigTaskParams)
-                           .manifestStoreTypes(StoreType.HelmChartRepo)
-                           .build();
+          if (appManifest.getHelmChartConfig() == null) {
+            helmChartSpecification = null;
+          } else if (isBlank(appManifest.getHelmChartConfig().getConnectorId())) {
+            if (helmChartSpecification == null) {
+              helmChartSpecification = HelmChartSpecification.builder().build();
+            }
+            helmChartSpecification.setChartVersion(appManifest.getHelmChartConfig().getChartVersion());
+            helmChartSpecification.setChartUrl(appManifest.getHelmChartConfig().getChartUrl());
+            helmChartSpecification.setChartName(appManifest.getHelmChartConfig().getChartName());
+          } else {
+            HelmChartConfigParams helmChartConfigTaskParams =
+                helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest);
+            repoConfig = K8sDelegateManifestConfig.builder()
+                             .helmChartConfigParams(helmChartConfigTaskParams)
+                             .manifestStoreTypes(HelmChartRepo)
+                             .build();
+          }
           break;
+
         default:
           throw new WingsException("Unsupported store type: " + appManifest.getStoreType());
       }
@@ -948,7 +962,7 @@ public class HelmDeployState extends State {
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
-    if (applicationManifest == null || !StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())) {
+    if (applicationManifest == null || !HelmChartRepo.equals(applicationManifest.getStoreType())) {
       return null;
     }
 
