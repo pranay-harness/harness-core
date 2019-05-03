@@ -306,6 +306,8 @@ public class ApplicationManifestUtils {
 
   public boolean isValuesInHelmChartRepo(ExecutionContext context) {
     ApplicationManifest applicationManifest = getApplicationManifestForService(context);
-    return applicationManifest != null && StoreType.HelmChartRepo.equals(applicationManifest.getStoreType());
+    return applicationManifest != null && StoreType.HelmChartRepo.equals(applicationManifest.getStoreType())
+        && applicationManifest.getHelmChartConfig() != null
+        && isNotBlank(applicationManifest.getHelmChartConfig().getChartName());
   }
 }

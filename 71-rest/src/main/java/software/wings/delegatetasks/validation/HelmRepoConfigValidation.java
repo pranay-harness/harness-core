@@ -5,6 +5,7 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -17,6 +18,7 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
@@ -48,7 +50,9 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   public List<String> getCriteria() {
     HelmRepoConfig helmRepoConfig = getHelmRepoConfig();
 
-    if (helmRepoConfig instanceof HttpHelmRepoConfig) {
+    if (helmRepoConfig == null) {
+      return singletonList(getCriteriaForEmptyHelmRepoConfigInValuesFetch());
+    } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
       return singletonList("HTTP_HELM_REPO: " + ((HttpHelmRepoConfig) helmRepoConfig).getChartRepoUrl());
     } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
       AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
@@ -64,7 +68,9 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateHelmRepoConfig(HelmRepoConfig helmRepoConfig) {
-    if (helmRepoConfig instanceof HttpHelmRepoConfig) {
+    if (helmRepoConfig == null) {
+      return isHelmInstalled();
+    } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
       return validateHttpHelmRepoConfig(helmRepoConfig);
     } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
       return validateAmazonS3HelmRepoConfig();
@@ -104,9 +110,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       return false;
     }
 
-    String helmPath = k8sGlobalConfigService.getHelmPath();
-    if (isBlank(helmPath)) {
-      logger.info(format("Helm not installed in delegate for task %s", delegateTaskId));
+    if (!isHelmInstalled()) {
       return false;
     }
 
@@ -114,9 +118,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateAmazonS3HelmRepoConfig() {
-    String helmPath = k8sGlobalConfigService.getHelmPath();
-    if (isBlank(helmPath)) {
-      logger.info(format("Helm not installed in delegate for task %s", delegateTaskId));
+    if (!isHelmInstalled()) {
       return false;
     }
 
@@ -132,6 +134,36 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
     }
 
     return true;
+  }
+
+  private boolean isHelmInstalled() {
+    String helmPath = k8sGlobalConfigService.getHelmPath();
+    if (isBlank(helmPath)) {
+      logger.info(format("Helm not installed in delegate for task %s", delegateTaskId));
+      return false;
+    }
+
+    return true;
+  }
+
+  private String getCriteriaForEmptyHelmRepoConfigInValuesFetch() {
+    HelmValuesFetchTaskParameters valuesTaskParams = (HelmValuesFetchTaskParameters) getParameters()[0];
+    HelmChartConfigParams helmChartConfigTaskParams = valuesTaskParams.getHelmChartConfigTaskParams();
+
+    StringBuilder builder = new StringBuilder(64).append("DIRECT_HELM_REPO: ");
+    if (isNotBlank(helmChartConfigTaskParams.getChartName())) {
+      builder.append(helmChartConfigTaskParams.getChartName());
+    }
+
+    if (isNotBlank(helmChartConfigTaskParams.getChartUrl())) {
+      builder.append(':').append(helmChartConfigTaskParams.getChartUrl());
+    }
+
+    if (isNotBlank(helmChartConfigTaskParams.getChartVersion())) {
+      builder.append(':').append(helmChartConfigTaskParams.getChartVersion());
+    }
+
+    return builder.toString();
   }
 
   private HelmRepoConfig getHelmRepoConfig() {

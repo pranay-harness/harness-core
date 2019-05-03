@@ -21,6 +21,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
+import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -101,7 +102,10 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
 
   private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName)
       throws Exception {
-    helmTaskHelper.addHttpRepo(helmRepoConfig, repoName, repoDisplayName, null);
+    HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
+
+    helmTaskHelper.addRepo(repoName, repoDisplayName, httpHelmRepoConfig.getChartRepoUrl(),
+        httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(), null);
   }
 
   private void tryAddingAmazonS3HelmRepo(

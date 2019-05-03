@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -37,15 +38,17 @@ public class HelmChartConfigHelperService {
 
     HelmChartConfig newHelmChartConfig = createHelmChartConfig(helmChartConfig);
 
-    SettingAttribute settingAttribute =
-        settingsService.getByName(accountId, appId, newHelmChartConfig.getConnectorName());
-    if (settingAttribute == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "Helm repository does not exist with name " + newHelmChartConfig.getConnectorName());
-    }
+    if (isNotBlank(newHelmChartConfig.getConnectorName())) {
+      SettingAttribute settingAttribute =
+          settingsService.getByName(accountId, appId, newHelmChartConfig.getConnectorName());
+      if (settingAttribute == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Helm repository does not exist with name " + newHelmChartConfig.getConnectorName());
+      }
 
-    newHelmChartConfig.setConnectorId(settingAttribute.getUuid());
-    newHelmChartConfig.setConnectorName(null);
+      newHelmChartConfig.setConnectorId(settingAttribute.getUuid());
+      newHelmChartConfig.setConnectorName(null);
+    }
 
     return newHelmChartConfig;
   }
@@ -57,14 +60,16 @@ public class HelmChartConfigHelperService {
 
     HelmChartConfig newHelmChartConfig = createHelmChartConfig(helmChartConfig);
 
-    SettingAttribute settingAttribute = settingsService.get(newHelmChartConfig.getConnectorId());
-    if (settingAttribute == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "Helm repository does not exist with id " + newHelmChartConfig.getConnectorId());
-    }
+    if (isNotBlank(newHelmChartConfig.getConnectorId())) {
+      SettingAttribute settingAttribute = settingsService.get(newHelmChartConfig.getConnectorId());
+      if (settingAttribute == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Helm repository does not exist with id " + newHelmChartConfig.getConnectorId());
+      }
 
-    newHelmChartConfig.setConnectorId(null);
-    newHelmChartConfig.setConnectorName(settingAttribute.getName());
+      newHelmChartConfig.setConnectorId(null);
+      newHelmChartConfig.setConnectorName(settingAttribute.getName());
+    }
 
     return newHelmChartConfig;
   }
@@ -75,6 +80,7 @@ public class HelmChartConfigHelperService {
         .chartName(helmChartConfig.getChartName())
         .chartVersion(helmChartConfig.getChartVersion())
         .connectorName(helmChartConfig.getConnectorName())
+        .chartUrl(helmChartConfig.getChartUrl())
         .build();
   }
 
@@ -85,7 +91,31 @@ public class HelmChartConfigHelperService {
       return null;
     }
 
+    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder =
+        HelmChartConfigParams.builder().chartVersion(helmChartConfig.getChartVersion());
+
+    if (isNotBlank(helmChartConfig.getChartName())) {
+      String chartName = helmChartConfig.getChartName();
+      int lastIndex = chartName.lastIndexOf('/');
+
+      if (lastIndex != -1) {
+        helmChartConfigParamsBuilder.chartName(chartName.substring(lastIndex + 1))
+            .repoName(chartName.substring(0, lastIndex));
+      } else {
+        helmChartConfigParamsBuilder.chartName(chartName);
+      }
+    }
+
+    if (isNotBlank(helmChartConfig.getChartUrl())) {
+      helmChartConfigParamsBuilder.chartUrl(helmChartConfig.getChartUrl())
+          .repoName(convertBase64UuidToCanonicalForm(context.getWorkflowExecutionId()));
+    }
+
     String connectorId = helmChartConfig.getConnectorId();
+    if (isBlank(connectorId)) {
+      return helmChartConfigParamsBuilder.build();
+    }
+
     SettingAttribute settingAttribute = settingsService.get(connectorId);
     notNullCheck("Helm repo config not found with id " + connectorId, settingAttribute);
 
@@ -95,13 +125,10 @@ public class HelmChartConfigHelperService {
 
     String repoName = generateRepoName(helmRepoConfig, settingAttribute.getUuid(), context.getWorkflowExecutionId());
 
-    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = HelmChartConfigParams.builder()
-                                                                    .chartName(helmChartConfig.getChartName())
-                                                                    .chartVersion(helmChartConfig.getChartVersion())
-                                                                    .helmRepoConfig(helmRepoConfig)
-                                                                    .encryptedDataDetails(encryptionDataDetails)
-                                                                    .repoDisplayName(settingAttribute.getName())
-                                                                    .repoName(repoName);
+    helmChartConfigParamsBuilder.helmRepoConfig(helmRepoConfig)
+        .encryptedDataDetails(encryptionDataDetails)
+        .repoDisplayName(settingAttribute.getName())
+        .repoName(repoName);
 
     if (isNotBlank(helmRepoConfig.getConnectorId())) {
       SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());
