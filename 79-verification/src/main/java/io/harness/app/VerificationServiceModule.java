@@ -13,6 +13,7 @@ import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
 import io.harness.service.NoOpCvValidationServiceImpl;
+import io.harness.service.NoOpYamlPushService;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
 import io.harness.service.VerificationMigrationServiceImpl;
 import io.harness.service.intfc.ContinuousVerificationService;
@@ -32,6 +33,7 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -74,6 +76,7 @@ public class VerificationServiceModule extends AbstractModule {
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
     bind(CvValidationService.class).to(NoOpCvValidationServiceImpl.class);
+    bind(YamlPushService.class).to(NoOpYamlPushService.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationServiceExecutor"))

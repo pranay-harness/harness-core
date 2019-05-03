@@ -61,7 +61,7 @@ public class DatadogCvConfigurationYamlHandler
       bean.setUuid(previous.getUuid());
       cvConfigurationService.updateConfiguration(bean, appId);
     } else {
-      cvConfigurationService.saveCofiguration(bean);
+      cvConfigurationService.saveToDatabase(bean, true);
     }
 
     return bean;

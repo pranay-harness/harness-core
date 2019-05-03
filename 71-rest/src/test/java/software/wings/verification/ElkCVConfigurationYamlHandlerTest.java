@@ -25,6 +25,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
@@ -38,6 +39,7 @@ public class ElkCVConfigurationYamlHandlerTest {
   @Mock ServiceResourceService serviceResourceService;
   @Mock AppService appService;
   @Mock SettingsService settingsService;
+  @Mock YamlPushService yamlPushService;
 
   private String envId;
   private String serviceId;
@@ -67,6 +69,7 @@ public class ElkCVConfigurationYamlHandlerTest {
     FieldUtils.writeField(yamlHandler, "environmentService", environmentService, true);
     FieldUtils.writeField(yamlHandler, "serviceResourceService", serviceResourceService, true);
     FieldUtils.writeField(yamlHandler, "settingsService", settingsService, true);
+    // FieldUtils.writeField(cvConfigurationService, "yamlPushService", yamlPushService, true);
 
     Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
     when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);

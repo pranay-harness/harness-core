@@ -233,6 +233,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getInfraMapping(accountId, appId, entityId).getResource().getYaml();
             break;
+          case "CVConfiguration":
+            appId = ((EnvLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getCVConfiguration(appId, entityId).getResource().getYaml();
+            break;
           case "ServiceCommand":
             appId = ((ServiceLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getServiceCommand(appId, entityId).getResource().getYaml();
@@ -1756,6 +1760,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
+  public String getRootPathByCVConfiguration(CVConfiguration cvConfiguration) {
+    Environment environment = environmentService.get(cvConfiguration.getAppId(), cvConfiguration.getEnvId(), false);
+    Validator.notNullCheck("Environment is null", environment);
+    return getRootPathByEnvironment(environment) + PATH_DELIMITER + CV_CONFIG_FOLDER;
+  }
+
+  @Override
   public String getRootPathByPipeline(Pipeline pipeline) {
     Application app = appService.get(pipeline.getAppId());
     return getRootPathByApp(app) + PATH_DELIMITER + PIPELINES_FOLDER;
@@ -1918,6 +1929,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByApplicationManifest((ApplicationManifest) entity);
     } else if (entity instanceof ManifestFile) {
       return getRootPathByManifestFile((ManifestFile) entity, (ApplicationManifest) helperEntity);
+    } else if (entity instanceof CVConfiguration) {
+      return getRootPathByCVConfiguration((CVConfiguration) entity);
     }
 
     throw new InvalidRequestException(

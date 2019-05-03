@@ -1,5 +1,8 @@
 package software.wings.verification;
 
+import static io.harness.exception.WingsException.USER;
+import static software.wings.utils.Validator.notNullCheck;
+
 import io.harness.exception.WingsException;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -31,7 +34,21 @@ public class ElkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandle
   @Override
   public LogsCVConfiguration upsertFromYaml(
       ChangeContext<LogsCVConfigurationYaml> changeContext, List<ChangeContext> changeSetContext) {
-    final ElkCVConfiguration bean = (ElkCVConfiguration) super.upsertFromYaml(changeContext, changeSetContext);
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+
+    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);
+
+    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
+
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
+
+    CVConfiguration previous = cvConfigurationService.getConfiguration(name, appId, envId);
+
+    final ElkCVConfiguration bean = ElkCVConfiguration.builder().build();
+
+    super.toBean(bean, changeContext, appId);
 
     ElkCVConfigurationYaml yaml = (ElkCVConfigurationYaml) changeContext.getYaml();
     bean.setQueryType(ElkQueryType.valueOf(yaml.getQueryType()));
@@ -40,6 +57,9 @@ public class ElkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandle
     bean.setMessageField(yaml.getMessageField());
     bean.setTimestampField(yaml.getTimestampField());
     bean.setTimestampFormat(yaml.getTimestampFormat());
+
+    saveToDatabase(bean, previous, appId);
+
     return bean;
   }
 

@@ -24,6 +24,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
@@ -35,6 +36,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.DatadogState;
@@ -68,9 +70,16 @@ import java.util.Set;
 public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject WingsPersistence wingsPersistence;
   @Inject CvValidationService cvValidationService;
+  @Inject private YamlPushService yamlPushService;
 
   @Override
   public String saveConfiguration(String accountId, String appId, StateType stateType, Object params) {
+    return saveConfiguration(accountId, appId, stateType, params, false);
+  }
+
+  @Override
+  public String saveConfiguration(
+      String accountId, String appId, StateType stateType, Object params, boolean createdFromYaml) {
     CVConfiguration cvConfiguration;
     switch (stateType) {
       case NEW_RELIC:
@@ -119,15 +128,24 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfiguration.setAppId(appId);
     cvConfiguration.setStateType(stateType);
     cvConfiguration.setUuid(generateUuid());
+    return saveToDatabase(cvConfiguration, createdFromYaml).getUuid();
+  }
+
+  public CVConfiguration saveToDatabase(CVConfiguration cvConfiguration, boolean createdFromYaml) {
     try {
-      saveMetricTemplate(appId, accountId, cvConfiguration, stateType);
-      wingsPersistence.save(cvConfiguration);
+      saveMetricTemplate(
+          cvConfiguration.getAppId(), cvConfiguration.getAccountId(), cvConfiguration, cvConfiguration.getStateType());
+
+      CVConfiguration configuration = wingsPersistence.saveAndGet(CVConfiguration.class, cvConfiguration);
+      if (!createdFromYaml) {
+        yamlPushService.pushYamlChangeSet(
+            cvConfiguration.getAccountId(), null, cvConfiguration, Type.CREATE, cvConfiguration.isSyncFromGit(), false);
+      }
+      return configuration;
     } catch (DuplicateKeyException ex) {
       throw new WingsException("A Service Verification with the name " + cvConfiguration.getName()
           + " already exists. Please choose a unique name.");
     }
-
-    return cvConfiguration.getUuid();
   }
 
   @Override
@@ -168,11 +186,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           + " already exists. Please choose a unique name.");
     }
     return savedConfiguration.getUuid();
-  }
-
-  public String saveCofiguration(CVConfiguration cvConfiguration) {
-    CVConfiguration config = wingsPersistence.saveAndGet(CVConfiguration.class, cvConfiguration);
-    return config.getUuid();
   }
 
   @Override
@@ -282,11 +295,20 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           + " already exists. Please choose a unique name.");
     }
     // TODO update metric template if it makes sense
+    CVConfiguration newConfiguration = wingsPersistence.get(CVConfiguration.class, savedConfiguration.getUuid());
+    yamlPushService.pushYamlChangeSet(accountId, savedConfiguration, newConfiguration, Type.UPDATE, false,
+        !savedConfiguration.getName().equals(newConfiguration.getName()));
     return savedConfiguration.getUuid();
   }
 
   @Override
   public boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId) {
+    return deleteConfiguration(accountId, appId, serviceConfigurationId, false);
+  }
+
+  @Override
+  public boolean deleteConfiguration(
+      String accountId, String appId, String serviceConfigurationId, boolean isSyncFromGit) {
     Object savedConfig;
     savedConfig = wingsPersistence.get(CVConfiguration.class, serviceConfigurationId);
     if (savedConfig == null) {
@@ -294,6 +316,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
     wingsPersistence.delete(CVConfiguration.class, serviceConfigurationId);
     deleteTemplate(accountId, serviceConfigurationId, ((CVConfiguration) savedConfig).getStateType());
+
+    yamlPushService.pushYamlChangeSet(accountId, savedConfig, null, Type.DELETE, isSyncFromGit, false);
     return true;
   }
 

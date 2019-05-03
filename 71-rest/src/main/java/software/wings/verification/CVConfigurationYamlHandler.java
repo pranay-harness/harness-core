@@ -28,9 +28,6 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
   @Inject EnvironmentService environmentService;
   @Inject ServiceResourceService serviceResourceService;
 
-  @Override
-  public void delete(ChangeContext<Y> changeContext) {}
-
   public void toYaml(CVConfigurationYaml yaml, CVConfiguration bean) {
     yaml.setAccountId(bean.getAccountId());
     yaml.setAnalysisTolerance(bean.getAnalysisTolerance());
@@ -53,6 +50,18 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     if (bean.getSnoozeEndTime() > 0) {
       yaml.setSnoozeEndTime(new Date(bean.getSnoozeEndTime()));
     }
+  }
+
+  @Override
+  public void delete(ChangeContext<Y> changeContext) {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(yamlFilePath, appId, envId);
+
+    cvConfigurationService.deleteConfiguration(
+        accountId, appId, cvConfiguration.getUuid(), changeContext.getChange().isSyncFromGit());
   }
 
   public void toBean(ChangeContext<Y> changeContext, B bean, String appId, String yamlPath) {
@@ -80,6 +89,7 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     bean.setAnalysisTolerance(yaml.getAnalysisTolerance());
     bean.setServiceId(service.getUuid());
     bean.setAlertThreshold(yaml.getAlertThreshold());
+    bean.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     if (yaml.getSnoozeStartTime() != null) {
       bean.setSnoozeStartTime(yaml.getSnoozeStartTime().getTime());
     }
