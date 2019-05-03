@@ -31,6 +31,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BarrierInstance;
+import software.wings.beans.BarrierInstance.BarrierInstanceKeys;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -273,10 +274,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
     try (HKeyIterator<BarrierInstance> keys =
              new HKeyIterator(wingsPersistence.createQuery(BarrierInstance.class)
-                                  .filter(BarrierInstance.APP_ID_KEY, appId)
-                                  .filter(BarrierInstance.NAME_KEY, identifier)
-                                  .filter(BarrierInstance.PIPELINE_EXECUTION_ID_KEY, pipelineExecutionId)
-                                  .filter(BarrierInstance.PIPELINE_WORKFLOWS_PIPELINE_STATE_ID_KEY, pipelineStateId)
+                                  .filter(BarrierInstanceKeys.appId, appId)
+                                  .filter(BarrierInstanceKeys.name, identifier)
+                                  .filter(BarrierInstanceKeys.pipeline_executionId, pipelineExecutionId)
+                                  .filter(BarrierInstanceKeys.pipeline_workflows_pipelineStateId, pipelineStateId)
                                   .fetchKeys())) {
       if (!keys.hasNext()) {
         // We would not be able to find a barrier for if it is noop
@@ -398,7 +399,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   public void updateAllActiveBarriers() {
     try (HIterator<BarrierInstance> barrierInstances =
              new HIterator<>(wingsPersistence.createQuery(BarrierInstance.class, excludeAuthority)
-                                 .filter(BarrierInstance.STATE_KEY, STANDING.name())
+                                 .filter(BarrierInstanceKeys.state, STANDING.name())
                                  .fetch())) {
       while (barrierInstances.hasNext()) {
         BarrierInstance barrierInstance = barrierInstances.next();
@@ -411,8 +412,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   public void updateAllActiveBarriers(String appId) {
     try (HIterator<BarrierInstance> barrierInstances =
              new HIterator<>(wingsPersistence.createQuery(BarrierInstance.class)
-                                 .filter(BarrierInstance.APP_ID_KEY, appId)
-                                 .filter(BarrierInstance.STATE_KEY, STANDING.name())
+                                 .filter(BarrierInstanceKeys.appId, appId)
+                                 .filter(BarrierInstanceKeys.state, STANDING.name())
                                  .fetch())) {
       while (barrierInstances.hasNext()) {
         BarrierInstance barrierInstance = barrierInstances.next();
