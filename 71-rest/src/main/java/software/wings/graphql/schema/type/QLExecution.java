@@ -1,8 +1,10 @@
 package software.wings.graphql.schema.type;
 
+import java.time.ZonedDateTime;
+
 public interface QLExecution extends QLObject {
-  Long getQueuedTime();
-  Long getStartTime();
-  Long getEndTime();
+  ZonedDateTime getTriggeredAt();
+  ZonedDateTime getStartedAt();
+  ZonedDateTime getEndedAt();
   QLExecutionStatus getStatus();
 }

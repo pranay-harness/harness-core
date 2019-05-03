@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
 import software.wings.beans.WorkflowExecution;
+import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutionBuilder;
 
 import javax.validation.constraints.NotNull;
@@ -14,9 +15,9 @@ public class PipelineExecutionController {
   public static void populatePipelineExecution(
       @NotNull WorkflowExecution workflowExecution, QLPipelineExecutionBuilder builder) {
     builder.id(workflowExecution.getUuid())
-        .queuedTime(workflowExecution.getCreatedAt())
-        .startTime(workflowExecution.getStartTs())
-        .endTime(workflowExecution.getEndTs())
+        .triggeredAt(GraphQLDateTimeScalar.convert(workflowExecution.getCreatedAt()))
+        .startedAt(GraphQLDateTimeScalar.convert(workflowExecution.getStartTs()))
+        .endedAt(GraphQLDateTimeScalar.convert(workflowExecution.getEndTs()))
         .status(ExecutionController.convertStatus(workflowExecution.getStatus()));
   }
 }
