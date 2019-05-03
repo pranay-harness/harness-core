@@ -37,11 +37,12 @@ public class HarnessApiKey implements PersistentEntity, UuidAware {
     return uuid;
   }
 
-  public enum AuthType { API_KEY_HEADER, AUTH_HEADER }
+  public enum AuthType { API_KEY_HEADER, AUTH_HEADER, AUTH_TOKEN_HEADER }
 
   public enum ClientType {
     SALESFORCE(AuthType.API_KEY_HEADER),
     PROMETHEUS(AuthType.AUTH_HEADER),
+    IDENTITY_SERVICE(AuthType.AUTH_TOKEN_HEADER),
     INTERNAL(AuthType.API_KEY_HEADER);
 
     private final AuthType authType;
@@ -59,7 +60,7 @@ public class HarnessApiKey implements PersistentEntity, UuidAware {
         return false;
       }
       if (SALESFORCE.name().equalsIgnoreCase(clientType) || PROMETHEUS.name().equalsIgnoreCase(clientType)
-          || INTERNAL.name().equalsIgnoreCase(clientType)) {
+          || INTERNAL.name().equalsIgnoreCase(clientType) || IDENTITY_SERVICE.name().equalsIgnoreCase(clientType)) {
         return true;
       }
       return false;

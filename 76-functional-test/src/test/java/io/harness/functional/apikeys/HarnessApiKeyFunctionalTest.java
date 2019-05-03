@@ -17,15 +17,21 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.beans.User;
-import software.wings.security.AuthenticationFilter;
+import software.wings.security.SecretManager;
+import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.service.intfc.HarnessApiKeyService;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * @author rktummala on 03/07/19
  */
 @Slf4j
 public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
+  @Inject private SecretManager secretManager;
   @Inject private OwnerManager ownerManager;
   Owners owners;
 
@@ -37,20 +43,21 @@ public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   public void testCRUD() {
-    deleteHarnessClientApiKey(ClientType.PROMETHEUS);
-    deleteHarnessClientApiKey(ClientType.SALESFORCE);
-
     String createdKey = generateHarnessClientApiKey(ClientType.PROMETHEUS);
     assertThat(createdKey).isNotEmpty();
 
     String salesForceKey = generateHarnessClientApiKey(ClientType.SALESFORCE);
     assertThat(salesForceKey).isNotEqualTo(createdKey);
 
+    String internalKey = generateHarnessClientApiKey(ClientType.INTERNAL);
+    assertThat(internalKey).isNotEqualTo(createdKey);
+
     String keyFromGet = getHarnessClientApiKey(ClientType.PROMETHEUS);
     assertThat(createdKey).isEqualTo(keyFromGet);
 
     deleteHarnessClientApiKey(ClientType.PROMETHEUS);
     deleteHarnessClientApiKey(ClientType.SALESFORCE);
+    deleteHarnessClientApiKey(ClientType.INTERNAL);
 
     keyFromGet = getHarnessClientApiKey(ClientType.PROMETHEUS);
     assertThat(keyFromGet).isNull();
@@ -58,25 +65,31 @@ public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  public void testIdentityServiceClientWithInternalApiKey() {
-    deleteHarnessClientApiKey(ClientType.INTERNAL);
-
-    String internalKey = generateHarnessClientApiKey(ClientType.INTERNAL);
-    logger.info("INTERNAL Api Key: {}", internalKey);
-    User user = loginUserForIdentityService(internalKey);
-    assertThat(user).isNotNull();
-    assertThat(user.getEmail()).isEqualTo(ADMIN_USER);
-
-    deleteHarnessClientApiKey(ClientType.INTERNAL);
+  public void testIdentityServiceClientWithApiKey() {
+    try {
+      String identityServiceApiKey = generateHarnessClientApiKey(ClientType.IDENTITY_SERVICE);
+      logger.info("IDENTITY_SERVICE Api Key: {}", identityServiceApiKey);
+      Map<String, String> claims = new HashMap<>();
+      claims.put("env", "gateway");
+      String apiKeyToken = secretManager.generateJWTToken(claims, identityServiceApiKey, JWT_CATEGORY.API_KEY);
+      logger.info("IDENTITY_SERVICE Api Key Token: {}", apiKeyToken);
+      User user = loginUserForIdentityService(apiKeyToken);
+      assertThat(user).isNotNull();
+      assertThat(user.getEmail()).isEqualTo(ADMIN_USER);
+      assertThat(user.getToken()).isNullOrEmpty();
+    } finally {
+      deleteHarnessClientApiKey(ClientType.IDENTITY_SERVICE);
+    }
   }
 
-  private User loginUserForIdentityService(String internalApiKey) {
+  private User loginUserForIdentityService(String apiKeyToken) {
     GenericType<RestResponse<User>> returnType = new GenericType<RestResponse<User>>() {};
-    RestResponse<User> response = Setup.portal()
-                                      .header(AuthenticationFilter.HARNESS_API_KEY_HEADER, internalApiKey)
-                                      .contentType(ContentType.JSON)
-                                      .get("identity/user/login?email=" + ADMIN_USER)
-                                      .as(returnType.getType());
+    RestResponse<User> response =
+        Setup.portal()
+            .header(HttpHeaders.AUTHORIZATION, HarnessApiKeyService.PREFIX_API_KEY_TOKEN + " " + apiKeyToken)
+            .contentType(ContentType.JSON)
+            .get("identity/user/login?email=" + ADMIN_USER)
+            .as(returnType.getType());
     return response.getResource();
   }
 

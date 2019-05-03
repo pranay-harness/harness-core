@@ -30,6 +30,8 @@ import java.util.Map;
 @Slf4j
 @Singleton
 public class SecretManager {
+  private static final String ISSUER = "Harness Inc";
+
   @Inject private MainConfiguration configuration;
 
   public enum JWT_CATEGORY {
@@ -42,7 +44,8 @@ public class SecretManager {
     IDENTITY_SERVICE_SECRET(60 * 60 * 1000), // 1hr
     AUTH_SECRET(24 * 60 * 60 * 1000), // 24 hr
     JIRA_SERVICE_SECRET(7 * 24 * 60 * 60 * 1000), // 7 days
-    MARKETPLACE_SIGNUP(24 * 60 * 60 * 1000); // 1 day
+    MARKETPLACE_SIGNUP(24 * 60 * 60 * 1000), // 1 day
+    API_KEY(10 * 60 * 1000); // 10 mins; API_KEY secret is not configured in config.yml!
 
     private int validityDuration;
 
@@ -85,9 +88,13 @@ public class SecretManager {
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException("Could not find secret for " + category);
     }
+    return verifyJWTToken(jwtToken, jwtPasswordSecret, category);
+  }
+
+  public Map<String, Claim> verifyJWTToken(String jwtToken, String secret, JWT_CATEGORY category) {
     try {
-      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
-      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      Algorithm algorithm = Algorithm.HMAC256(secret);
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer(ISSUER).build();
       verifier.verify(jwtToken);
       return JWT.decode(jwtToken).getClaims();
     } catch (UnsupportedEncodingException | JWTDecodeException | SignatureVerificationException e) {
@@ -105,11 +112,14 @@ public class SecretManager {
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException("Could not find secret for " + category);
     }
+    return generateJWTToken(claims, jwtPasswordSecret, category);
+  }
 
+  public String generateJWTToken(Map<String, String> claims, String secret, JWT_CATEGORY category) {
     try {
-      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      Algorithm algorithm = Algorithm.HMAC256(secret);
       Builder jwtBuilder = JWT.create()
-                               .withIssuer("Harness Inc")
+                               .withIssuer(ISSUER)
                                .withIssuedAt(new Date())
                                .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()));
       if (!isEmpty(claims)) {

@@ -30,7 +30,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/identity")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@HarnessApiKeyAuth(clientTypes = ClientType.INTERNAL)
+@HarnessApiKeyAuth(clientTypes = ClientType.IDENTITY_SERVICE)
 @Slf4j
 public class IdentityServiceResource {
   private AuthenticationManager authenticationManager;

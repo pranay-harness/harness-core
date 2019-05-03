@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
@@ -16,15 +15,19 @@ import software.wings.beans.HarnessApiKey.AuthType;
 import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AuthenticationFilter;
+import software.wings.security.SecretManager;
+import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.HarnessApiKeyService;
+import software.wings.utils.CacheHelper;
 import software.wings.utils.CryptoUtil;
 import software.wings.utils.Validator;
 
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
@@ -34,6 +37,8 @@ import javax.ws.rs.core.HttpHeaders;
 @ValidateOnExecution
 public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private SecretManager secretManager;
+  @Inject private CacheHelper cacheHelper;
 
   @Override
   public String generate(String clientType) {
@@ -52,6 +57,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
                                 .encryptedKey(EncryptionUtils.encrypt(apiKey.getBytes(Charset.forName("UTF-8")), null))
                                 .clientType(clientTypeObject)
                                 .build());
+      cacheHelper.getHarnessApiKeyCache().put(clientType, apiKey);
     }
     return apiKey;
   }
@@ -75,10 +81,16 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
       throw new WingsException("Invalid client type : " + clientType);
     }
 
-    HarnessApiKey globalApiKey =
-        wingsPersistence.createQuery(HarnessApiKey.class).filter("clientType", clientType).get();
-    Validator.notNullCheck("global api key null for client type " + clientType, globalApiKey, USER);
-    return getDecryptedKey(globalApiKey.getEncryptedKey());
+    Cache<String, String> harnessApiKeyCache = cacheHelper.getHarnessApiKeyCache();
+    String apiKey = harnessApiKeyCache.get(clientType);
+    if (apiKey == null) {
+      HarnessApiKey globalApiKey =
+          wingsPersistence.createQuery(HarnessApiKey.class).filter("clientType", clientType).get();
+      Validator.notNullCheck("global api key null for client type " + clientType, globalApiKey, USER);
+      apiKey = getDecryptedKey(globalApiKey.getEncryptedKey());
+      harnessApiKeyCache.put(clientType, apiKey);
+    }
+    return apiKey;
   }
 
   private String getDecryptedKey(byte[] encryptedKey) {
@@ -98,6 +110,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
     HarnessApiKey apiKeyObject = getApiKeyObject(ClientType.valueOf(clientType));
     if (apiKeyObject != null) {
       wingsPersistence.delete(HarnessApiKey.class, apiKeyObject.getUuid());
+      cacheHelper.getHarnessApiKeyCache().remove(clientType);
       return true;
     }
 
@@ -116,26 +129,23 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
 
         AuthType authType = clientType.getAuthType();
         String apiKeyFromHeader = null;
+        String apiKeyToken = null;
 
         if (AuthType.API_KEY_HEADER.equals(authType)) {
           apiKeyFromHeader = requestContext.getHeaderString(AuthenticationFilter.HARNESS_API_KEY_HEADER);
+        } else if (AuthType.AUTH_TOKEN_HEADER.equals(authType)) {
+          apiKeyToken = extractToken(requestContext, PREFIX_API_KEY_TOKEN);
         } else if (AuthType.AUTH_HEADER.equals(authType)) {
-          apiKeyFromHeader = extractToken(requestContext, "Bearer");
-        }
-
-        if (apiKeyFromHeader == null) {
-          return false;
+          apiKeyFromHeader = extractToken(requestContext, PREFIX_BEARER);
         }
 
         String apiKeyFromDB = get(clientType.name());
-        if (isEmpty(apiKeyFromDB)) {
-          return false;
+        if (apiKeyFromHeader != null) {
+          return isNotEmpty(apiKeyFromDB) && apiKeyFromDB.equals(apiKeyFromHeader);
+        } else if (apiKeyToken != null) {
+          return isNotEmpty(secretManager.verifyJWTToken(apiKeyToken, apiKeyFromDB, JWT_CATEGORY.API_KEY));
         } else {
-          if (apiKeyFromDB.equals(apiKeyFromHeader)) {
-            return true;
-          } else {
-            return false;
-          }
+          return false;
         }
       });
 
@@ -149,24 +159,12 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
 
   @Override
   public boolean validateHarnessClientApiRequest(ClientType clientType, String apiKey) {
-    if (clientType == null) {
-      return false;
-    }
-
-    if (apiKey == null) {
+    if (clientType == null || apiKey == null) {
       return false;
     }
 
     String apiKeyFromDB = get(clientType.name());
-    if (isEmpty(apiKeyFromDB)) {
-      return false;
-    } else {
-      if (apiKeyFromDB.equals(apiKey)) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+    return isNotEmpty(apiKeyFromDB) && apiKeyFromDB.equals(apiKey);
   }
 
   @Override

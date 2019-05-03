@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.Constants.USER_CACHE;
+import static software.wings.utils.CacheHelper.USER_CACHE;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
