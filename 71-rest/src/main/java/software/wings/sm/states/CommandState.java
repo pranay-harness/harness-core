@@ -563,6 +563,10 @@ public class CommandState extends State {
       infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
       if (infrastructureMapping != null) {
         service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
+        if (instanceElement == null) {
+          String serviceTemplateId = infrastructureMapping.getServiceTemplateId();
+          serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
+        }
       }
     }
 
