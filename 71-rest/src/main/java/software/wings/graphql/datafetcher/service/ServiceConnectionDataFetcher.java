@@ -1,7 +1,5 @@
 package software.wings.graphql.datafetcher.service;
 
-import com.google.inject.Inject;
-
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -13,16 +11,10 @@ import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLService.QLServiceBuilder;
 import software.wings.graphql.schema.type.QLServiceConnection;
 import software.wings.graphql.schema.type.QLServiceConnection.QLServiceConnectionBuilder;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 public class ServiceConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLServiceConnection, QLServicesQueryParameters> {
-  @Inject
-  public ServiceConnectionDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
-
   @Override
   protected QLServiceConnection fetch(QLServicesQueryParameters qlQuery) {
     final Query<Service> query = persistence.createQuery(Service.class)

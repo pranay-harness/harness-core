@@ -12,17 +12,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLExecutionParameters;
 import software.wings.graphql.schema.type.QLExecution;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class ExecutionDataFetcher extends AbstractDataFetcher<QLExecution, QLExecutionParameters> {
   @Inject protected HPersistence persistence;
-
-  @Inject
-  public ExecutionDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
 
   @Override
   public QLExecution fetch(QLExecutionParameters qlQuery) {

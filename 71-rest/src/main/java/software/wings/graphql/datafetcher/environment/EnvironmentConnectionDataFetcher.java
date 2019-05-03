@@ -1,7 +1,5 @@
 package software.wings.graphql.datafetcher.environment;
 
-import com.google.inject.Inject;
-
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -13,16 +11,10 @@ import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
 import software.wings.graphql.schema.type.QLEnvironmentConnection.QLEnvironmentConnectionBuilder;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 public class EnvironmentConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLEnvironmentConnection, QLEnvironmentsQueryParameters> {
-  @Inject
-  public EnvironmentConnectionDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
-
   @Override
   public QLEnvironmentConnection fetch(QLEnvironmentsQueryParameters qlQuery) {
     final Query<Environment> query = persistence.createQuery(Environment.class)

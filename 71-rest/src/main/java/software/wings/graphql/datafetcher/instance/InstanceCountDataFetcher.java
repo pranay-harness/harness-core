@@ -9,7 +9,6 @@ import software.wings.beans.instance.dashboard.InstanceStatsUtil;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLInstancesCountQueryParameters;
 import software.wings.graphql.schema.type.QLInstanceCount;
-import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
@@ -21,11 +20,6 @@ public class InstanceCountDataFetcher extends AbstractDataFetcher<QLInstanceCoun
   @Inject DashboardStatisticsService dashboardService;
   @Inject InstanceStatService instanceStatService;
   @Inject AppService appService;
-
-  @Inject
-  public InstanceCountDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
 
   @Override
   public QLInstanceCount fetch(QLInstancesCountQueryParameters qlQuery) {

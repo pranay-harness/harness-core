@@ -9,16 +9,11 @@ import org.mongodb.morphia.query.Query;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 import java.time.ZonedDateTime;
 
 public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFetcher<T, P> {
   @Inject protected HPersistence persistence;
-
-  public AbstractConnectionDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
 
   public interface Controller<T> { void populate(T entity); }
 

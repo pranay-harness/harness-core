@@ -15,17 +15,11 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLWorkflowQueryParameters;
 import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkflowQueryParameters> {
   @Inject HPersistence persistence;
-
-  @Inject
-  public WorkflowDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
 
   @Override
   public QLWorkflow fetch(QLWorkflowQueryParameters qlQuery) {

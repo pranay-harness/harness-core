@@ -11,16 +11,10 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLEnvironmentQueryParameters;
 import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @Slf4j
 public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment, QLEnvironmentQueryParameters> {
   @Inject HPersistence persistence;
-
-  @Inject
-  public EnvironmentDataFetcher(AuthHandler authHandler) {
-    super(authHandler);
-  }
 
   @Override
   public QLEnvironment fetch(QLEnvironmentQueryParameters qlQuery) {

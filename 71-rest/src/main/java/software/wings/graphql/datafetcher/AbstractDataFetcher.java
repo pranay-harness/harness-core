@@ -1,16 +1,14 @@
 package software.wings.graphql.datafetcher;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
+
+import com.google.common.collect.Maps;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -23,27 +21,27 @@ import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
 
-@Getter
-@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
 
-  @NotNull final AuthHandler authHandler;
-  @Setter Map<String, String> contextFieldArgsMap;
-  @Getter @Setter String batchedDataLoaderName;
+  final Map<String, Map<String, String>> parentToContextFieldArgsMap;
+
+  public AbstractDataFetcher() {
+    parentToContextFieldArgsMap = Maps.newHashMap();
+  }
+
+  public void addParentContextFieldArgMapFor(String parentTypeName, Map<String, String> contextFieldArgsMap) {
+    parentToContextFieldArgsMap.putIfAbsent(parentTypeName, contextFieldArgsMap);
+  }
 
   protected abstract T fetch(P parameters);
 
@@ -53,11 +51,6 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
         (Class<P>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
     final P parameters = fetchParameters(parametersClass, dataFetchingEnvironment);
     return fetch(parameters);
-  }
-
-  protected boolean isAuthorizedToView(String appId, PermissionAttribute permissionAttribute, String entityId) {
-    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
-    return authHandler.authorize(permissionAttributeList, asList(appId), entityId);
   }
 
   protected WingsException batchFetchException(Throwable cause) {
@@ -84,7 +77,8 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
 
     P parameters = objenesis.newInstance(clazz);
     Map<String, Object> map = new HashMap<>(dataFetchingEnvironment.getArguments());
-
+    Map<String, String> contextFieldArgsMap =
+        parentToContextFieldArgsMap.get(dataFetchingEnvironment.getParentType().getName());
     if (contextFieldArgsMap != null) {
       contextFieldArgsMap.forEach(
           (key, value) -> map.put(key, getFieldValue(dataFetchingEnvironment.getSource(), value)));
