@@ -87,7 +87,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
-import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.StateMachineIssueException;
@@ -132,6 +131,8 @@ import javax.validation.constraints.NotNull;
 @Singleton
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
+  private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
   @Inject private AlertService alertService;
@@ -173,7 +174,6 @@ public class StateMachineExecutor implements StateInspectionListener {
    * Execute.
    *
    * @param appId         the app id
-   * @param smId          the sm id
    * @param executionUuid the execution uuid
    * @param executionName the execution name
    * @param contextParams the context params
@@ -296,7 +296,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     Integer timeout = state.getTimeoutMillis();
     if (timeout == null) {
-      timeout = Constants.DEFAULT_STATE_TIMEOUT_MILLIS;
+      timeout = DEFAULT_STATE_TIMEOUT_MILLIS;
     }
     if (state.getWaitInterval() != null) {
       timeout += state.getWaitInterval() * 1000;

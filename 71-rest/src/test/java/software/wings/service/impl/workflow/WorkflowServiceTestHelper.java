@@ -40,6 +40,7 @@ import static software.wings.common.Constants.DEPLOY_CONTAINERS;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.UPGRADE_CONTAINERS;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.RUNTIME;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
@@ -489,7 +490,7 @@ public class WorkflowServiceTestHelper {
         .withDeploymentType(DeploymentType.KUBERNETES.name())
         .withInfraMappingType(GCP_KUBERNETES.name())
         .withComputeProviderType(GCP.name())
-        .withClusterName(Constants.RUNTIME)
+        .withClusterName(RUNTIME)
         .build();
   }
 
@@ -530,7 +531,7 @@ public class WorkflowServiceTestHelper {
         .withDeploymentType(DeploymentType.ECS.name())
         .withInfraMappingType(AWS_ECS.name())
         .withComputeProviderType(GCP.name())
-        .withClusterName(Constants.RUNTIME)
+        .withClusterName(RUNTIME)
         .build();
   }
 
