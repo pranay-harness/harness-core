@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -57,20 +58,23 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
   @Override
   public CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     List<ConfigFile> configFiles;
+    String hostName = context.getHost() == null ? null : context.getHost().getPublicDns();
     try {
-      configFiles = delegateConfigService.getConfigFiles(context.getAppId(), context.getEnvId(),
-          context.getServiceTemplateId(), context.getHost().getUuid(), context.getAccountId());
+      configFiles =
+          delegateConfigService.getConfigFiles(context.getAppId(), context.getEnvId(), context.getServiceTemplateId(),
+              context.getHost() == null ? null : context.getHost().getUuid(), context.getAccountId());
     } catch (IOException e) {
-      delegateLogService.save(context.getAccountId(),
-          aLog()
-              .withAppId(context.getAppId())
-              .withActivityId(context.getActivityId())
-              .withHostName(context.getHost().getPublicDns())
-              .withLogLevel(ERROR)
-              .withCommandUnitName(getName())
-              .withLogLine("Unable to fetch config file information")
-              .withExecutionResult(FAILURE)
-              .build());
+      Log.Builder logBuilder = aLog()
+                                   .withAppId(context.getAppId())
+                                   .withActivityId(context.getActivityId())
+                                   .withLogLevel(ERROR)
+                                   .withCommandUnitName(getName())
+                                   .withLogLine("Unable to fetch config file information")
+                                   .withExecutionResult(FAILURE);
+      if (hostName != null) {
+        logBuilder.withHostName(hostName);
+      }
+      delegateLogService.save(context.getAccountId(), logBuilder.build());
       logger.error("Unable to fetch log file information", e);
       return FAILURE;
     }
@@ -87,16 +91,17 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
           String message = "Unable to get config file for entityId: " + configFile.getUuid()
               + ", version: " + configFile.getVersionForEnv(context.getEnvId());
           logger.error(message, e);
-          delegateLogService.save(context.getAccountId(),
-              aLog()
-                  .withAppId(context.getAppId())
-                  .withActivityId(context.getActivityId())
-                  .withHostName(context.getHost().getPublicDns())
-                  .withLogLevel(ERROR)
-                  .withCommandUnitName(getName())
-                  .withLogLine(message)
-                  .withExecutionResult(FAILURE)
-                  .build());
+          Log.Builder logBuilder = aLog()
+                                       .withAppId(context.getAppId())
+                                       .withActivityId(context.getActivityId())
+                                       .withLogLevel(ERROR)
+                                       .withCommandUnitName(getName())
+                                       .withLogLine(message)
+                                       .withExecutionResult(FAILURE);
+          if (hostName != null) {
+            logBuilder.withHostName(hostName);
+          }
+          delegateLogService.save(context.getAccountId(), logBuilder.build());
           result = FAILURE;
           break;
         }
