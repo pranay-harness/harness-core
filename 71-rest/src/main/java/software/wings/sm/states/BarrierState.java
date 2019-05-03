@@ -90,7 +90,7 @@ public class BarrierState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     updateBarrier(context);
-    final Builder executionResponseBuilder = executionResponseBuilder();
+    final Builder executionResponseBuilder = executionResponseBuilder(context);
 
     ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof BarrierStatusData && ((BarrierStatusData) notifyResponseData).isFailed()) {
@@ -103,7 +103,7 @@ public class BarrierState extends State {
   private ExecutionResponse executeInternal(ExecutionContext context) {
     BarrierInstance barrierInstance = updateBarrier(context);
 
-    final Builder executionResponseBuilder = executionResponseBuilder();
+    final Builder executionResponseBuilder = executionResponseBuilder(context);
 
     if (barrierInstance == null) {
       return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();
@@ -122,9 +122,11 @@ public class BarrierState extends State {
     return executionResponseBuilder.withAsync(true).withCorrelationIds(asList(barrierInstance.getUuid())).build();
   }
 
-  private Builder executionResponseBuilder() {
+  private Builder executionResponseBuilder(ExecutionContext context) {
+    final String renderedIdentifier = context.renderExpression(identifier);
+
     BarrierExecutionData stateExecutionData = new BarrierExecutionData();
-    stateExecutionData.setIdentifier(identifier);
+    stateExecutionData.setIdentifier(renderedIdentifier);
     return anExecutionResponse().withStateExecutionData(stateExecutionData);
   }
 

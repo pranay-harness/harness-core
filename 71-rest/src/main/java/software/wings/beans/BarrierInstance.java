@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -15,6 +16,8 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.BarrierInstance.Pipeline.PipelineKeys;
+import software.wings.beans.BarrierInstance.Workflow.WorkflowKeys;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -30,13 +33,8 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "BarrierInstanceKeys")
 public class BarrierInstance implements PersistentEntity, UuidAware {
-  public static final String APP_ID_KEY = "appId";
-  public static final String NAME_KEY = "name";
-  public static final String STATE_KEY = "state";
-  public static final String PIPELINE_EXECUTION_ID_KEY = "pipeline.executionId";
-  public static final String PIPELINE_WORKFLOWS_PIPELINE_STATE_ID_KEY = "pipeline.workflows.pipelineStateId";
-
   @Id private String uuid;
   @Indexed @NotNull protected String appId;
 
@@ -45,6 +43,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware {
 
   @Data
   @Builder
+  @FieldNameConstants(innerTypeName = "WorkflowKeys")
   public static class Workflow {
     private String uuid;
 
@@ -62,6 +61,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware {
 
   @Value
   @Builder
+  @FieldNameConstants(innerTypeName = "PipelineKeys")
   public static class Pipeline {
     private String executionId;
     List<Workflow> workflows;
@@ -74,4 +74,10 @@ public class BarrierInstance implements PersistentEntity, UuidAware {
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+
+  public static final class BarrierInstanceKeys {
+    public static final String pipeline_executionId = pipeline + "." + PipelineKeys.executionId;
+    public static final String pipeline_workflows_pipelineStateId =
+        pipeline + "." + PipelineKeys.workflows + "." + WorkflowKeys.pipelineStateId;
+  }
 }
