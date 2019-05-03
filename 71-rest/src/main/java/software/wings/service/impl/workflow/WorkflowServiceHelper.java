@@ -164,8 +164,8 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class WorkflowServiceHelper {
+  static final String RUNTIME = "RUNTIME";
   private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
-
   private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
   private static final String MAX_REPLICAS = "\\$\\{MAX_REPLICAS}";
   private static final String UTILIZATION = "\\$\\{UTILIZATION}";
@@ -898,7 +898,7 @@ public class WorkflowServiceHelper {
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
-          && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
+          && RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
         phaseSteps.add(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
                            .addStep(GraphNode.builder()
                                         .id(generateUuid())

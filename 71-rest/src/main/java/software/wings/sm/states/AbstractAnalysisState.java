@@ -124,8 +124,8 @@ public abstract class AbstractAnalysisState extends State {
   protected String tolerance;
   protected String predictiveHistoryMinutes;
 
+  private static final int DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS = 3 * 60 * 60 * 1000; // 3 hours
   private static final int TIMEOUT_BUFFER = 150; // 150 Minutes.
-
   private static final int MAX_WORKFLOW_TIMEOUT = 4 * 60; // 4 hours
 
   @Transient @Inject protected WorkflowExecutionService workflowExecutionService;
@@ -693,7 +693,7 @@ public abstract class AbstractAnalysisState extends State {
     if (!isEmpty(timeDuration)) {
       return 60 * 1000 * (Integer.parseInt(timeDuration) + TIMEOUT_BUFFER);
     }
-    return Constants.DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS;
+    return DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS;
   }
 
   @Override

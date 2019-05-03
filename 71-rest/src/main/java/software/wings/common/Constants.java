@@ -314,26 +314,6 @@ public interface Constants {
   String PIPELINE_ENV_STATE_VALIDATION_MESSAGE = "Some workflows %s are found to be invalid/incomplete.";
 
   /**
-   * The constant WAIT_RESUME_GROUP.
-   */
-  String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
-
-  /**
-   * The constant ONE_TIME_REMINDER.
-   */
-  String ONE_TIME_REMINDER = "ONE_TIME_REMINDER";
-
-  /**
-   * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
-   */
-  Integer DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
-
-  /**
-   * The constant DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS.
-   */
-  Integer DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS = 3 * 60 * 60 * 1000; // 3 hours
-
-  /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
    */
   long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5 * 60 * 1000; // 5 minutes
@@ -349,10 +329,6 @@ public interface Constants {
    */
   Integer ENV_STATE_TIMEOUT_MILLIS = 12 * 60 * 60 * 1000; // 12 hours
 
-  /**
-   * The constant RUNTIME.
-   */
-  String RUNTIME = "RUNTIME";
   /**
    * The constant NOT_REGISTERED.
    */
