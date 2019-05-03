@@ -97,7 +97,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution2 = executeWorkflow(workflow, application, environment);
 
     {
-      String query = format("{ executionsByWorkflow(workflowId: \"%s\", limit: 5, from: %s, to: %s) "
+      String query = format("{ executions(workflowId: \"%s\", limit: 5, from: %s, to: %s) "
               + "{ pageInfo { total } nodes { id } } }",
           workflow.getUuid(), workflowExecution1.getCreatedAt(), workflowExecution2.getCreatedAt());
 
@@ -123,20 +123,20 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
     {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
-          + "\") { id queuedTime startTime endTime status } }";
+          + "\") { id triggeredAt startedAt endedAt status } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
 
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.triggeredAt)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startedAt)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endedAt)).isNotNull();
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
     }
 
     {
-      String query = "{ executionsByWorkflow(workflowId: \"" + workflow.getUuid()
-          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query =
+          "{ executions(workflowId: \"" + workflow.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
@@ -145,8 +145,8 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     executeWorkflow(workflow, application, environment);
 
     {
-      String query = "{ executionsByWorkflow(workflowId: \"" + workflow.getUuid()
-          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query =
+          "{ executions(workflowId: \"" + workflow.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
@@ -210,19 +210,19 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
     {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
-          + "\") { id queuedTime startTime endTime status } }";
+          + "\") { id triggeredAt startedAt endedAt status } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
-      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.queuedTime)).isNotNull();
-      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startTime)).isNotNull();
-      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endTime)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.triggeredAt)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startedAt)).isNotNull();
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endedAt)).isNotNull();
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo("SUCCESS");
     }
 
     {
-      String query = "{ executionsByPipeline(pipelineId: \"" + pipeline.getUuid()
-          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query =
+          "{ executions(pipelineId: \"" + pipeline.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
@@ -231,8 +231,8 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
 
     {
-      String query = "{ executionsByPipeline(pipelineId: \"" + pipeline.getUuid()
-          + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query =
+          "{ executions(pipelineId: \"" + pipeline.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);

@@ -3,32 +3,11 @@ extend type Query {
   execution(executionId: String!): Execution @dataFetcher(name: "execution")
 
   # Get the list of executions.
-  executionsByApplication(
-    applicationId: String!
-    limit: Int!
-    offset: Int
-    statuses: [ExecutionStatus]
-    from: DateTime
-    to: DateTime
-  ): ExecutionConnection @dataFetcher(name: "executionConnection")
-  executionsByWorkflow(
-    workflowId: String!
-    limit: Int!
-    offset: Int
-    statuses: [ExecutionStatus]
-    from: DateTime
-    to: DateTime
-  ): ExecutionConnection @dataFetcher(name: "executionConnection")
-  executionsByPipeline(
-    pipelineId: String!
-    limit: Int!
-    offset: Int
-    statuses: [ExecutionStatus]
-    from: DateTime
-    to: DateTime
-  ): ExecutionConnection @dataFetcher(name: "executionConnection")
-  executionsByService(
-    serviceId: String!
+  executions(
+    applicationId: String
+    workflowId: String
+    pipelineId: String
+    serviceId: String
     limit: Int!
     offset: Int
     statuses: [ExecutionStatus]
@@ -54,9 +33,9 @@ enum ExecutionStatus {
 
 interface Execution {
   id: String
-  queuedTime: DateTime
-  startTime: DateTime
-  endTime: DateTime
+  triggeredAt: DateTime
+  startedAt: DateTime
+  endedAt: DateTime
   status: ExecutionStatus
 }
 
@@ -71,13 +50,13 @@ type WorkflowExecution implements Execution {
   id: String
 
   # DateTime when execution started
-  queuedTime: DateTime
+  triggeredAt: DateTime
 
   # DateTime when execution started
-  startTime: DateTime
+  startedAt: DateTime
 
   # DateTime when execution ended
-  endTime: DateTime
+  endedAt: DateTime
 
   # Status of the workflow
   status: ExecutionStatus
@@ -89,13 +68,13 @@ type PipelineExecution implements Execution {
   id: String
 
   # DateTime when execution started
-  queuedTime: DateTime
+  triggeredAt: DateTime
 
   # DateTime when execution started
-  startTime: DateTime
+  startedAt: DateTime
 
   # DateTime when execution ended
-  endTime: DateTime
+  endedAt: DateTime
 
   # Status of the workflow
   status: ExecutionStatus
