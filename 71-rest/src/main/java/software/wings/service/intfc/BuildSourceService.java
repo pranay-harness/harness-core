@@ -329,4 +329,25 @@ public interface BuildSourceService {
   default Map<String, String> getBuckets(String projectId, String settingId) {
     throw new UnsupportedOperationException();
   }
+
+  /**
+   * Get SMB paths.
+   *
+   * @param settingId the setting id
+   * @return the paths (now SMB only)
+   */
+  default List<String> getSmbPaths(String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Get Artifact paths by stream id.
+   *
+   * @param settingId the setting id
+   * @param streamType artifact stream type
+   * @return the paths
+   */
+  default List<String> getArtifactPathsByStreamType(String settingId, String streamType) {
+    throw new UnsupportedOperationException();
+  }
 }

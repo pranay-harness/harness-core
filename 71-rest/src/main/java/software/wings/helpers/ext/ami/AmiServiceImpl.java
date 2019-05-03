@@ -48,7 +48,11 @@ public class AmiServiceImpl implements AmiService {
         .stream()
         .filter(image -> image != null && isNotBlank(image.getName()))
         .forEach(image
-            -> buildDetails.add(aBuildDetails().withNumber(image.getName()).withRevision(image.getImageId()).build()));
+            -> buildDetails.add(aBuildDetails()
+                                    .withNumber(image.getName())
+                                    .withRevision(image.getImageId())
+                                    .withUiDisplayName("Image: " + image.getName())
+                                    .build()));
     if (buildDetails.isEmpty()) {
       logger.info("No images found matching with the given Region {}, and filters {}", region, filters);
     } else {

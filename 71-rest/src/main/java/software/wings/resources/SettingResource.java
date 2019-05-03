@@ -552,6 +552,35 @@ public class SettingResource {
   }
 
   /**
+   * Get SMB artifact paths.
+   *
+   * @param settingId the setting id
+   * @return the artifact paths
+   */
+  @GET
+  @Path("build-sources/smb-paths")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getSmbPaths(@QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getSmbPaths(settingId));
+  }
+
+  /**
+   * Get SFTP artifact paths.
+   *
+   * @param settingId the setting id
+   * @return the artifact paths
+   */
+  @GET
+  @Path("build-sources/artifact-paths")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getSftpPaths(
+      @QueryParam("settingId") String settingId, @QueryParam("streamType") String streamType) {
+    return new RestResponse<>(buildSourceService.getArtifactPathsByStreamType(settingId, streamType));
+  }
+
+  /**
    * Save rest response.
    *
    * @param artifactStream the artifact stream
@@ -642,5 +671,14 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", EQ, GLOBAL_APP_ID);
     return new RestResponse<>(artifactService.listSortByBuildNo(pageRequest));
+  }
+
+  @GET
+  @Path("tags")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> listTags(@QueryParam("region") String region,
+      @QueryParam("computeProviderId") String settingId, @QueryParam("resourceType") String resourceType) {
+    return new RestResponse<>(awsHelperResourceService.listTags(settingId, region, resourceType));
   }
 }

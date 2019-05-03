@@ -213,6 +213,7 @@ public class SftpHelperService {
                                                     .withArtifactPath(artifactPath)
                                                     .withBuildUrl(sftpConfig.getSftpUrl())
                                                     .withBuildParameters(map)
+                                                    .withUiDisplayName("Build# " + resourceInfo.getName())
                                                     .build());
           }
           buildDetailsList.addAll(buildDetailsListForArtifactPath);
