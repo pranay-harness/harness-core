@@ -421,41 +421,6 @@ public interface Constants {
   String ARTIFACT_FILE_SIZE = "artifactFileSize";
 
   /**
-   * The constant DELEGATE_SYNC_CACHE.
-   */
-  String DELEGATE_SYNC_CACHE = "delegateSyncCache";
-
-  /**
-   * A cache to track the trial registration email for rate limiting purpose.
-   */
-  String TRIAL_EMAIL_CACHE = "trialEmailCache";
-
-  /**
-   * The constant USER_CACHE.
-   */
-  String USER_CACHE = "userCache";
-
-  /**
-   * The constant NEW_RELIC_APPLICATION_CACHE.
-   */
-  String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
-
-  /**
-   * The constant USER_PERMISSION_CACHE.
-   */
-  String USER_PERMISSION_CACHE = "userPermissionCache";
-
-  /**
-   * The constant USER_RESTRICTION_CACHE.
-   */
-  String USER_RESTRICTION_CACHE = "userRestrictionCache";
-
-  /**
-   * The constant
-   */
-  String WHITELIST_CACHE = "whitelistCache";
-
-  /**
    * The constant GIT_USER.
    */
   String GIT_USER = "git";

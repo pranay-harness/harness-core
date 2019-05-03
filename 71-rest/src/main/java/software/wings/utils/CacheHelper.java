@@ -1,12 +1,5 @@
 package software.wings.utils;
 
-import static software.wings.common.Constants.NEW_RELIC_APPLICATION_CACHE;
-import static software.wings.common.Constants.TRIAL_EMAIL_CACHE;
-import static software.wings.common.Constants.USER_CACHE;
-import static software.wings.common.Constants.USER_PERMISSION_CACHE;
-import static software.wings.common.Constants.USER_RESTRICTION_CACHE;
-import static software.wings.common.Constants.WHITELIST_CACHE;
-
 import com.google.inject.Singleton;
 
 import software.wings.beans.User;
@@ -31,6 +24,41 @@ import javax.cache.expiry.ExpiryPolicy;
  */
 @Singleton
 public class CacheHelper {
+  /**
+   * A cache to map api key client type to api key value;
+   */
+  private static final String HARNESS_API_KEY_CACHE = "harnessApiKeyCache";
+
+  /**
+   * The constant NEW_RELIC_APPLICATION_CACHE.
+   */
+  private static final String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
+
+  /**
+   * A cache to track the trial registration email for rate limiting purpose.
+   */
+  private static final String TRIAL_EMAIL_CACHE = "trialEmailCache";
+
+  /**
+   * The constant USER_CACHE.
+   */
+  public static final String USER_CACHE = "userCache";
+
+  /**
+   * The constant USER_PERMISSION_CACHE.
+   */
+  private static final String USER_PERMISSION_CACHE = "userPermissionCache";
+
+  /**
+   * The constant USER_RESTRICTION_CACHE.
+   */
+  private static final String USER_RESTRICTION_CACHE = "userRestrictionCache";
+
+  /**
+   * The constant
+   */
+  private static final String WHITELIST_CACHE = "whitelistCache";
+
   public <K, V> Cache<K, V> getCache(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
     MutableConfiguration<K, V> configuration = new MutableConfiguration<>();
@@ -51,6 +79,11 @@ public class CacheHelper {
 
   public <K, V> Cache<K, V> getCache(String cacheName, Class<K> keyType, Class<V> valueType) {
     return getCache(cacheName, keyType, valueType, EternalExpiryPolicy.factoryOf());
+  }
+
+  public Cache<String, String> getHarnessApiKeyCache() {
+    return getCache(
+        HARNESS_API_KEY_CACHE, String.class, String.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
   }
 
   public Cache<String, Integer> getTrialRegistrationEmailCache() {

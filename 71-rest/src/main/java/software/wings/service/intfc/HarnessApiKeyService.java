@@ -6,6 +6,9 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 
 public interface HarnessApiKeyService {
+  String PREFIX_BEARER = "Bearer";
+  String PREFIX_API_KEY_TOKEN = "ApiKeyToken";
+
   String generate(String clientType);
 
   String get(String clientType);
