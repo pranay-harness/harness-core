@@ -849,7 +849,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   private void verifySecretTextExists(String secretName) {
-    EncryptedData encryptedData = secretManager.getSecretByName(accountId, secretName, false);
+    EncryptedData encryptedData = secretManager.getSecretMappedToAccountByName(accountId, secretName);
     assertNotNull(encryptedData);
     assertNull(encryptedData.getPath());
     assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());

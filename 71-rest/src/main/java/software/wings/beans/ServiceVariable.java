@@ -62,6 +62,7 @@ public class ServiceVariable extends Base implements EncryptableSetting {
    * The constant DEFAULT_TEMPLATE_ID.
    */
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
+  public static final String ENCRYPTED_VALUE_KEY = "encryptedValue";
 
   private String templateId = DEFAULT_TEMPLATE_ID;
 

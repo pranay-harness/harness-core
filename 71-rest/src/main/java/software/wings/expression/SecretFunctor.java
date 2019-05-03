@@ -1,6 +1,7 @@
 package software.wings.expression;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import io.harness.exception.InvalidRequestException;
@@ -19,11 +20,15 @@ public class SecretFunctor extends LateBindingMap {
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
   private String accountId;
+  private String appId;
+  private String envId;
 
   public Object getValue(String secretName) {
-    EncryptedData encryptedData = secretManager.getSecretByName(accountId, secretName, true);
+    EncryptedData encryptedData = appId == null || GLOBAL_APP_ID.equals(appId)
+        ? secretManager.getSecretMappedToAccountByName(accountId, secretName)
+        : secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
     if (encryptedData == null) {
-      throw new InvalidRequestException("No encrypted record found with secretName + [" + secretName + "]", USER);
+      throw new InvalidRequestException("No secret found with name + [" + secretName + "]", USER);
     }
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .accountId(accountId)

@@ -39,6 +39,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
                                .secretManager(secretManager)
                                .accountId(accountId)
                                .appId(appId)
+                               .envId(envId)
                                .workflowExecutionId(workflowExecutionId)
                                .expressionFunctorToken(expressionFunctorToken)
                                .build();

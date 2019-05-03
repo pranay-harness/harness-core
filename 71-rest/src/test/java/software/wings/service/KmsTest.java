@@ -22,10 +22,15 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -68,6 +73,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
@@ -90,12 +96,17 @@ import software.wings.resources.ServiceVariableResource;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
+import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ConfigService;
@@ -178,7 +189,8 @@ public class KmsTest extends WingsBaseTest {
     appId =
         wingsPersistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
     workflowName = generateUuid();
-    envId = generateUuid();
+    envId = wingsPersistence.save(
+        anEnvironment().environmentType(EnvironmentType.PROD).appId(appId).accountId(accountId).build());
     workflowExecutionId = wingsPersistence.save(WorkflowExecution.builder().name(workflowName).envId(envId).build());
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyObject())).then(invocation -> {
       Object[] args = invocation.getArguments();
@@ -1437,41 +1449,70 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void getSecret() throws IOException {
+  public void getSecretMappedToAccount() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
+    secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
-    EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName, true);
+    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
+        ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
+
+    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    user.setUserRequestContext(
+        UserRequestContext.builder().appIds(ImmutableSet.of(appId)).userPermissionInfo(userPermissionInfo).build());
+    UserThreadLocal.set(user);
+
+    EncryptedData secretByName = secretManager.getSecretMappedToAccountByName(accountId, secretName);
     assertThat(secretByName).isNotNull();
     assertThat(secretByName.getName()).isEqualTo(secretName);
 
-    secretByName = secretManager.getSecretByName(accountId, secretName, false);
-    assertThat(secretByName).isNotNull();
-    assertThat(secretByName.getName()).isEqualTo(secretName);
+    secretByName = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
+    assertThat(secretByName).isNull();
+  }
 
-    String secretName1 = UUID.randomUUID().toString();
-    String secretValue1 = UUID.randomUUID().toString();
+  @Test
+  @Category(UnitTests.class)
+  public void getSecretMappedToApp() {
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
 
     AppEnvRestrictionBuilder appEnvRestrictionBuilder =
         AppEnvRestriction.builder()
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-            .envFilter(EnvFilter.builder().filterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD)).build());
-    Set<AppEnvRestriction> appEnvRestrictions = new HashSet<>();
-    appEnvRestrictions.add(appEnvRestrictionBuilder.build());
-    secretManager.saveSecret(accountId, secretName1, secretValue1, null,
-        UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build());
+            .envFilter(EnvFilter.builder().filterTypes(ImmutableSet.of(EnvFilter.FilterType.PROD)).build());
+    secretManager.saveSecret(accountId, secretName, secretValue, null,
+        UsageRestrictions.builder().appEnvRestrictions(ImmutableSet.of(appEnvRestrictionBuilder.build())).build());
 
-    secretByName = secretManager.getSecretByName(accountId, secretName1, true);
+    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
+        ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE, Action.CREATE, Action.READ));
+
+    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    UsageRestrictions restrictionsFromUserPermissionsForRead =
+        UsageRestrictions.builder().appEnvRestrictions(ImmutableSet.of(appEnvRestrictionBuilder.build())).build();
+
+    Map<String, Set<String>> appEnvMapForRead = ImmutableMap.of(appId, ImmutableSet.of(envId));
+
+    user.setUserRequestContext(
+        UserRequestContext.builder()
+            .appIds(ImmutableSet.of(appId))
+            .userPermissionInfo(userPermissionInfo)
+            .userRestrictionInfo(UserRestrictionInfo.builder()
+                                     .appEnvMapForReadAction(appEnvMapForRead)
+                                     .usageRestrictionsForReadAction(restrictionsFromUserPermissionsForRead)
+                                     .build())
+            .build());
+    UserThreadLocal.set(user);
+
+    EncryptedData secretByName = secretManager.getSecretMappedToAccountByName(accountId, secretName);
     assertThat(secretByName).isNull();
 
-    secretByName = secretManager.getSecretByName(accountId, secretName1, false);
+    secretByName = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
     assertThat(secretByName).isNotNull();
-    assertThat(secretByName.getName()).isEqualTo(secretName1);
+    assertThat(secretByName.getName()).isEqualTo(secretName);
   }
 
   @Test

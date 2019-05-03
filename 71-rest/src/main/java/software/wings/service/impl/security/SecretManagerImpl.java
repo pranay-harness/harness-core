@@ -17,18 +17,27 @@ import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Base.CREATED_AT_KEY;
+import static software.wings.beans.ConfigFile.ENCRYPTED_FILE_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.encryption.EncryptedData.KMS_ID_KEY;
+import static software.wings.security.encryption.EncryptedData.NAME_KEY;
+import static software.wings.security.encryption.EncryptedData.TYPE_KEY;
+import static software.wings.security.encryption.EncryptedData.USAGE_RESTRICTIONS_KEY;
+import static software.wings.security.encryption.SecretChangeLog.ENCRYPTED_DATA_ID_KEY;
+import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.VaultService.DEFAULT_BASE_PATH;
 import static software.wings.service.intfc.security.VaultService.DEFAULT_KEY_NAME;
 import static software.wings.service.intfc.security.VaultService.KEY_SPEARATOR;
 import static software.wings.service.intfc.security.VaultService.PATH_SEPARATOR;
-import static software.wings.service.intfc.security.VaultService.VAULT_VAILDATION_URL;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -387,7 +396,7 @@ public class SecretManagerImpl implements SecretManager {
     final List<String> secretIds = getSecretIds(entityId, variableType);
 
     pageRequest.addFilter("encryptedDataId", Operator.IN, secretIds.toArray());
-    pageRequest.addFilter(SecretUsageLog.ACCOUNT_ID_KEY, Operator.EQ, accountId);
+    pageRequest.addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId);
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, pageRequest);
     response.getResponse().forEach(secretUsageLog -> {
       if (isNotEmpty(secretUsageLog.getWorkflowExecutionId())) {
@@ -425,10 +434,10 @@ public class SecretManagerImpl implements SecretManager {
       SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
     List<SecretChangeLog> secretChangeLogs = wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
-                                                 .filter(SecretUsageLog.ACCOUNT_ID_KEY, accountId)
-                                                 .field("encryptedDataId")
+                                                 .filter(ACCOUNT_ID_KEY, accountId)
+                                                 .field(ENCRYPTED_DATA_ID_KEY)
                                                  .hasAnyOf(secretIds)
-                                                 .order("-createdAt")
+                                                 .order("-" + CREATED_AT_KEY)
                                                  .asList();
 
     // HAR-7150: Retrieve version history/changelog from Vault if secret text is a path reference.
@@ -453,8 +462,8 @@ public class SecretManagerImpl implements SecretManager {
     Set<Parent> parents = new HashSet<>();
     try (HIterator<EncryptedData> query = new HIterator<>(
              wingsPersistence.createQuery(EncryptedData.class)
-                 .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-                 .field("type")
+                 .filter(ACCOUNT_ID_KEY, accountId)
+                 .field(TYPE_KEY)
                  .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
                  .fetch())) {
       while (query.hasNext()) {
@@ -704,11 +713,11 @@ public class SecretManagerImpl implements SecretManager {
     Preconditions.checkState(isNotEmpty(toSecretId), "toVaultId can't be blank");
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-                                     .filter("kmsId", fromSecretId);
+                                     .filter(ACCOUNT_ID_KEY, accountId)
+                                     .filter(KMS_ID_KEY, fromSecretId);
 
     if (toEncryptionType == EncryptionType.VAULT) {
-      query = query.field("type").notEqual(SettingVariableTypes.VAULT);
+      query = query.field(TYPE_KEY).notEqual(SettingVariableTypes.VAULT);
     }
 
     try (HIterator<EncryptedData> iterator = new HIterator<>(query.fetch())) {
@@ -853,21 +862,32 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData getSecretByName(String accountId, String name, boolean mappedToAccount) {
+  public EncryptedData getSecretMappedToAccountByName(String accountId, String name) {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-                                     .filter(EncryptedData.NAME_KEY, name);
-    if (mappedToAccount) {
-      query.field("usageRestrictions").doesNotExist();
-    }
-
+                                     .filter(ACCOUNT_ID_KEY, accountId)
+                                     .filter(NAME_KEY, name)
+                                     .field(USAGE_RESTRICTIONS_KEY)
+                                     .doesNotExist();
     return query.get();
+  }
+
+  @Override
+  public EncryptedData getSecretMappedToAppByName(String accountId, String appId, String envId, String name) {
+    PageRequest<EncryptedData> pageRequest =
+        aPageRequest().addFilter(NAME_KEY, Operator.EQ, name).addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId).build();
+    try {
+      PageResponse<EncryptedData> response = listSecrets(accountId, pageRequest, appId, envId, false);
+      List<EncryptedData> secrets = response.getResponse();
+      return isNotEmpty(secrets) ? secrets.get(0) : null;
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Failed to list secrets");
+    }
   }
 
   @Override
   public EncryptedData getSecretById(String accountId, String id) {
     return wingsPersistence.createQuery(EncryptedData.class)
-        .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
+        .filter(ACCOUNT_ID_KEY, accountId)
         .filter(EncryptedData.ID_KEY, id)
         .get();
   }
@@ -1082,8 +1102,8 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean deleteSecret(String accountId, String uuId) {
     List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
-                                                 .filter(ServiceVariable.ACCOUNT_ID_KEY, accountId)
-                                                 .filter("encryptedValue", uuId)
+                                                 .filter(ACCOUNT_ID_KEY, accountId)
+                                                 .filter(ENCRYPTED_VALUE_KEY, uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
       String reason = "Can't delete this secret because it is still being used in the Harness component(s): "
@@ -1401,8 +1421,8 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                       .filter(ConfigFile.ACCOUNT_ID_KEY, accountId)
-                                       .filter("encryptedFileId", uuId)
+                                       .filter(ACCOUNT_ID_KEY, accountId)
+                                       .filter(ENCRYPTED_FILE_ID_KEY, uuId)
                                        .asList();
     if (!configFiles.isEmpty()) {
       StringBuilder errorMessage = new StringBuilder("Being used by ");
@@ -1541,7 +1561,7 @@ public class SecretManagerImpl implements SecretManager {
       return aPageResponse().withResponse(Collections.emptyList()).build();
     }
 
-    pageRequest.addFilter("usageRestrictions", Operator.NOT_EXISTS);
+    pageRequest.addFilter(USAGE_RESTRICTIONS_KEY, Operator.NOT_EXISTS);
 
     PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
 
@@ -1563,7 +1583,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     pageResponse.setResponse(encryptedDataList);
-    pageResponse.setTotal(Long.valueOf(encryptedDataList.size()));
+    pageResponse.setTotal((long) encryptedDataList.size());
     return pageResponse;
   }
 
@@ -1613,7 +1633,7 @@ public class SecretManagerImpl implements SecretManager {
     switch (variableType) {
       case SERVICE_VARIABLE:
         ServiceVariable serviceVariable =
-            wingsPersistence.createQuery(ServiceVariable.class).filter("_id", entityId).get();
+            wingsPersistence.createQuery(ServiceVariable.class).filter(ID_KEY, entityId).get();
 
         if (serviceVariable != null) {
           List<Field> encryptedFields = getEncryptedFields(serviceVariable.getClass());
@@ -1633,7 +1653,7 @@ public class SecretManagerImpl implements SecretManager {
 
       default:
         SettingAttribute settingAttribute =
-            wingsPersistence.createQuery(SettingAttribute.class).filter("_id", entityId).get();
+            wingsPersistence.createQuery(SettingAttribute.class).filter(ID_KEY, entityId).get();
 
         if (settingAttribute != null) {
           List<Field> encryptedFields = getEncryptedFields(settingAttribute.getValue().getClass());
@@ -1665,13 +1685,12 @@ public class SecretManagerImpl implements SecretManager {
           rv.add(kmsService.getSecretConfig(accountId));
           break;
         case SERVICE_VARIABLE:
-          List<ServiceVariable> serviceVariables =
-              serviceVariableService
-                  .list(aPageRequest()
-                            .addFilter("_id", Operator.IN, parentIds.toArray())
-                            .addFilter(ServiceVariable.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                            .build())
-                  .getResponse();
+          List<ServiceVariable> serviceVariables = serviceVariableService
+                                                       .list(aPageRequest()
+                                                                 .addFilter(ID_KEY, Operator.IN, parentIds.toArray())
+                                                                 .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                                                 .build())
+                                                       .getResponse();
           serviceVariables.forEach(serviceVariable -> {
             serviceVariable.setValue(SECRET_MASK.toCharArray());
             if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
@@ -1689,8 +1708,8 @@ public class SecretManagerImpl implements SecretManager {
         case CONFIG_FILE:
           List<ConfigFile> configFiles = configService
                                              .list(aPageRequest()
-                                                       .addFilter("_id", Operator.IN, parentIds.toArray())
-                                                       .addFilter(ConfigFile.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                                       .addFilter(ID_KEY, Operator.IN, parentIds.toArray())
+                                                       .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
                                                        .build())
                                              .getResponse();
 
@@ -1708,9 +1727,9 @@ public class SecretManagerImpl implements SecretManager {
 
         case VAULT:
           List<VaultConfig> vaultConfigs = wingsPersistence.createQuery(VaultConfig.class)
-                                               .field("_id")
+                                               .field(ID_KEY)
                                                .in(parentIds)
-                                               .field(VaultConfig.ACCOUNT_ID_KEY)
+                                               .field(ACCOUNT_ID_KEY)
                                                .equal(accountId)
                                                .asList();
           vaultConfigs.forEach(vaultConfig -> {
@@ -1721,14 +1740,13 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         default:
-          List<SettingAttribute> settingAttributes =
-              settingsService
-                  .list(aPageRequest()
-                            .addFilter("_id", Operator.IN, parentIds.toArray())
-                            .addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                            .build(),
-                      null, null)
-                  .getResponse();
+          List<SettingAttribute> settingAttributes = settingsService
+                                                         .list(aPageRequest()
+                                                                   .addFilter(ID_KEY, Operator.IN, parentIds.toArray())
+                                                                   .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                                                   .build(),
+                                                             null, null)
+                                                         .getResponse();
           settingAttributes.forEach(settingAttribute -> {
             settingAttribute.setEncryptionType(cell.getColumnKey().getEncryptionType());
             settingAttribute.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
@@ -1818,7 +1836,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public void deleteByAccountId(String accountId) {
     List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedData.ACCOUNT_ID_KEY, accountId).asList();
+        wingsPersistence.createQuery(EncryptedData.class).filter(ACCOUNT_ID_KEY, accountId).asList();
     for (EncryptedData encryptedData : encryptedDataList) {
       deleteSecret(accountId, encryptedData.getUuid());
     }
@@ -1877,11 +1895,7 @@ public class SecretManagerImpl implements SecretManager {
       }
 
       if (isNotEmpty(appId) && !GLOBAL_APP_ID.equals(appId)) {
-        Set<String> envIds = referredAppEnvMap.get(appId);
-        if (envIds == null) {
-          envIds = new HashSet<>();
-          referredAppEnvMap.put(appId, envIds);
-        }
+        Set<String> envIds = referredAppEnvMap.computeIfAbsent(appId, k -> new HashSet<>());
         if (isNotEmpty(envId) && !GLOBAL_ENV_ID.equals(envId)) {
           envIds.add(envId);
         }

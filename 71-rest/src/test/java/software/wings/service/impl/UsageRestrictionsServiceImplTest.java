@@ -1033,7 +1033,8 @@ public class UsageRestrictionsServiceImplTest {
     UserThreadLocal.set(user);
   }
 
-  private UserPermissionInfo getUserPermissionInfo(List<String> appIds, List<String> envIds, Set<Action> actions) {
+  public static UserPermissionInfo getUserPermissionInfo(
+      List<String> appIds, List<String> envIds, Set<Action> actions) {
     Map<Action, Set<EnvInfo>> envPermissionsInternal = Maps.newHashMap();
 
     Set<EnvInfo> envInfoSet = envIds.stream()
