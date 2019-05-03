@@ -212,10 +212,11 @@ public class DelegateResource {
   }
 
   @DELETE
+  @Path("delete-all-except")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  public RestResponse<Void> delete(
+  public RestResponse<Void> deleteAllExcept(
       @QueryParam("accountId") @NotEmpty String accountId, List<String> delegatesToRetain) {
     delegateService.retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
     return new RestResponse<>();
