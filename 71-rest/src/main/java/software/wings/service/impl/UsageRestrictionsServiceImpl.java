@@ -334,11 +334,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       appSet.forEach(appId -> {
         Set<String> envIdsByFilter = getEnvIdsByFilter(envFilter, appId, appIdEnvMap);
         // Multimap is deliberately not used since we want to be able to insert the key with null values.
-        Set<String> valueSet = appEnvMap.get(appId);
-        if (valueSet == null) {
-          valueSet = new HashSet<>();
-          appEnvMap.put(appId, valueSet);
-        }
+        Set<String> valueSet = appEnvMap.computeIfAbsent(appId, k -> new HashSet<>());
 
         if (!isEmpty(envIdsByFilter)) {
           valueSet.addAll(envIdsByFilter);
@@ -417,10 +413,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   private boolean hasUserContext() {
     User user = UserThreadLocal.get();
-    if (user == null || user.getUserRequestContext() == null) {
-      return false;
-    }
-    return true;
+    return user != null && user.getUserRequestContext() != null;
   }
 
   @Override

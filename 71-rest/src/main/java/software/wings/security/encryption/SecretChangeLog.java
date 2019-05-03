@@ -23,6 +23,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
 public class SecretChangeLog extends Base {
+  public static final String ENCRYPTED_DATA_ID_KEY = "encryptedDataId";
+
   @NotEmpty private String accountId;
 
   @NotEmpty @Indexed private String encryptedDataId;

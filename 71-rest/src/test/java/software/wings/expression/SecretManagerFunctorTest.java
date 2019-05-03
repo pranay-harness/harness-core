@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.algorithm.HashGenerator;
@@ -49,7 +50,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
     final EncryptedData encryptedData = EncryptedData.builder().accountId(ACCOUNT_ID).build();
     encryptedData.setUuid(UUIDGenerator.generateUuid());
 
-    when(secretManager.getSecretByName(ACCOUNT_ID, secretName, false)).thenReturn(encryptedData);
+    when(secretManager.getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName)).thenReturn(encryptedData);
 
     ServiceVariable serviceVariable = buildServiceVariable(secretName, encryptedData);
 
@@ -71,12 +72,12 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
 
     Object decryptedValue = secretManagerFunctor.obtain(secretName, token);
     assertDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
-    verify(secretManager).getSecretByName(ACCOUNT_ID, secretName, false);
+    verify(secretManager).getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName);
 
     // Call Second time, it should get it from cache
     decryptedValue = secretManagerFunctor.obtain(secretName, token);
     assertDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
-    verify(secretManager, times(1)).getSecretByName(ACCOUNT_ID, secretName, false);
+    verify(secretManager, times(1)).getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName);
     verify(managerDecryptionService, times(1)).decrypt(any(ServiceVariable.class), anyList());
   }
 
@@ -102,6 +103,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
         .managerDecryptionService(managerDecryptionService)
         .accountId(ACCOUNT_ID)
         .appId(APP_ID)
+        .envId(ENV_ID)
         .workflowExecutionId(WORKFLOW_EXECUTION_ID)
         .expressionFunctorToken(token)
         .build();
@@ -119,7 +121,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
     final EncryptedData encryptedData = EncryptedData.builder().accountId(ACCOUNT_ID).build();
     encryptedData.setUuid(UUIDGenerator.generateUuid());
 
-    when(secretManager.getSecretByName(ACCOUNT_ID, secretName, false)).thenReturn(encryptedData);
+    when(secretManager.getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName)).thenReturn(encryptedData);
 
     ServiceVariable serviceVariable = buildServiceVariable(secretName, encryptedData);
     final KmsConfig kmsConfig = KmsConfig.builder().build();
@@ -137,11 +139,11 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
 
     assertDelegateDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
 
-    verify(secretManager).getSecretByName(ACCOUNT_ID, secretName, false);
+    verify(secretManager).getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName);
 
     decryptedValue = (String) secretManagerFunctor.obtain(secretName, token);
     assertDelegateDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
-    verify(secretManager, times(1)).getSecretByName(ACCOUNT_ID, secretName, false);
+    verify(secretManager, times(1)).getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName);
   }
 
   @Test(expected = FunctorException.class)
@@ -161,7 +163,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
     assertThat(decryptedValue).isNotNull().startsWith("${secretDelegate.obtain(");
     assertThat(decryptedValue).isNotNull().contains(String.valueOf(secretManagerFunctor.getExpressionFunctorToken()));
     assertThat(secretManagerFunctor.getEvaluatedDelegateSecrets()).isNotEmpty().containsKey(secretName);
-    assertThat(secretManagerFunctor.getEvaluatedDelegateSecrets().get(secretName));
+    assertThat(secretManagerFunctor.getEvaluatedDelegateSecrets().get(secretName)).isNotEmpty();
     assertThat(secretManagerFunctor.getEncryptionConfigs()).isNotEmpty();
   }
 

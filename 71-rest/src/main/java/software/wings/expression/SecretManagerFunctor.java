@@ -32,6 +32,7 @@ public class SecretManagerFunctor implements ExpressionFunctor {
   private SecretManager secretManager;
   private String accountId;
   private String appId;
+  private String envId;
   private String workflowExecutionId;
   private int expressionFunctorToken;
 
@@ -59,9 +60,9 @@ public class SecretManagerFunctor implements ExpressionFunctor {
       return evaluatedDelegateSecrets.get(secretName);
     }
 
-    EncryptedData encryptedData = secretManager.getSecretByName(accountId, secretName, false);
+    EncryptedData encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
     if (encryptedData == null) {
-      throw new InvalidRequestException("No encrypted record found with secretName + [" + secretName + "]", USER);
+      throw new InvalidRequestException("No secret found with name + [" + secretName + "]", USER);
     }
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .accountId(accountId)
