@@ -52,6 +52,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -77,6 +78,7 @@ public class AlertServiceImpl implements AlertService {
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private Injector injector;
   @Inject private EventPublisher eventPublisher;
+  @Inject private NotificationRulesStatusService notificationStatusService;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
@@ -147,7 +149,12 @@ public class AlertServiceImpl implements AlertService {
     alert.setStatus(status);
     if (alertOpened) {
       logger.info("Alert opened: {}", alert);
-      publishEvent(alert);
+
+      if (notificationStatusService.get(accountId).isEnabled()) {
+        publishEvent(alert);
+      } else {
+        logger.info("No alert event will be published. accountId={}", accountId);
+      }
     } else if (status == Pending) {
       logger.info("Alert pending: {}", alert);
     }

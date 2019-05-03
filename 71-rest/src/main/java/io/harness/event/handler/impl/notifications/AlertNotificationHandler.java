@@ -119,7 +119,7 @@ public class AlertNotificationHandler implements EventHandler {
       notificationDispatcher.dispatch(notification, Collections.singletonList(rule));
       return true;
     } catch (Exception e) {
-      log.error("Error dispatching notification. accountId={} Alert: {} Rule: {}", accountId, alert, rule);
+      log.error("Error dispatching notification. accountId={} Alert: {} Rule: {}", accountId, alert, rule, e);
       return false;
     }
   }
