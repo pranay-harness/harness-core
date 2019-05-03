@@ -1,10 +1,16 @@
 package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
+import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -20,7 +26,9 @@ import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS
 import static software.wings.service.intfc.analysis.LogAnalysisResource.LOG_ANALYSIS;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.DelegateTask;
@@ -34,24 +42,36 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
+import software.wings.alerts.AlertCategory;
+import software.wings.alerts.AlertSeverity;
+import software.wings.alerts.AlertStatus;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AlertServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -60,22 +80,35 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ContinuousVerificationServiceTest extends VerificationBaseTest {
-  private String accountId, appId, envId, serviceId, connectorId, query, cvConfigId, workflowId, workflowExecutionId,
-      stateExecutionId;
+  private String accountId;
+  private String appId;
+  private String envId;
+  private String serviceId;
+  private String connectorId;
+  private String query;
+  private String cvConfigId;
+  private String workflowId;
+  private String workflowExecutionId;
+  private String stateExecutionId;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private Injector injector;
   @Mock private CVConfigurationService cvConfigurationService;
   @Mock private HarnessMetricRegistry metricRegistry;
   @Mock private VerificationManagerClient verificationManagerClient;
@@ -83,6 +116,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
+  @Mock private AppService appService;
   private SumoConfig sumoConfig;
 
   @Before
@@ -119,20 +153,32 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     cvConfigId = wingsPersistence.save(logsCVConfiguration);
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
-    FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
-    FieldUtils.writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
+    writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
+    writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
 
     when(delegateService.queueTask(anyObject()))
         .then(invocation -> wingsPersistence.save((DelegateTask) invocation.getArguments()[0]));
     when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(sumoConfig).build());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    MainConfiguration mainConfiguration = new MainConfiguration();
+    mainConfiguration.setPortal(new PortalConfig());
     software.wings.service.impl.analysis.ContinuousVerificationService managerVerificationService =
         new ContinuousVerificationServiceImpl();
-    FieldUtils.writeField(managerVerificationService, "delegateService", delegateService, true);
-    FieldUtils.writeField(managerVerificationService, "waitNotifyEngine", waitNotifyEngine, true);
-    FieldUtils.writeField(managerVerificationService, "wingsPersistence", wingsPersistence, true);
-    FieldUtils.writeField(managerVerificationService, "settingsService", settingsService, true);
-    FieldUtils.writeField(managerVerificationService, "secretManager", secretManager, true);
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(accountId);
+    writeField(managerVerificationService, "delegateService", delegateService, true);
+    writeField(managerVerificationService, "waitNotifyEngine", waitNotifyEngine, true);
+    writeField(managerVerificationService, "wingsPersistence", wingsPersistence, true);
+    writeField(managerVerificationService, "settingsService", settingsService, true);
+    writeField(managerVerificationService, "secretManager", secretManager, true);
+    writeField(managerVerificationService, "mainConfiguration", mainConfiguration, true);
+    writeField(managerVerificationService, "appService", appService, true);
+    writeField(managerVerificationService, "cvConfigurationService", cvConfigurationService, true);
+
+    AlertService alertService = new AlertServiceImpl();
+    writeField(alertService, "wingsPersistence", wingsPersistence, true);
+    writeField(alertService, "executorService", Executors.newSingleThreadScheduledExecutor(), true);
+    writeField(alertService, "injector", injector, true);
+    writeField(managerVerificationService, "alertService", alertService, true);
 
     when(verificationManagerClient.triggerCVDataCollection(anyString(), anyObject(), anyLong(), anyLong()))
         .then(invocation -> {
@@ -151,7 +197,17 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       when(restCall.execute()).thenReturn(Response.success(true));
       return restCall;
     });
-    FieldUtils.writeField(continuousVerificationService, "verificationManagerClient", verificationManagerClient, true);
+
+    writeField(continuousVerificationService, "verificationManagerClient", verificationManagerClient, true);
+
+    when(verificationManagerClient.triggerCVAlert(anyString(), any(ContinuousVerificationAlertData.class)))
+        .then(invocation -> {
+          Object[] args = invocation.getArguments();
+          managerVerificationService.openAlert((String) args[0], (ContinuousVerificationAlertData) args[1]);
+          Call<RestResponse<Boolean>> restCall = mock(Call.class);
+          when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+          return restCall;
+        });
   }
 
   @Test
@@ -641,5 +697,152 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       task.setLastUpdatedAt(Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(12));
     }
     wingsPersistence.save(task);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testTriggerTimeSeriesAlertIfNecessary() {
+    final NewRelicCVServiceConfiguration cvConfiguration = new NewRelicCVServiceConfiguration();
+    cvConfiguration.setAppId(appId);
+    cvConfiguration.setEnvId(envId);
+    cvConfiguration.setServiceId(serviceId);
+    cvConfiguration.setAlertEnabled(false);
+    cvConfiguration.setAlertThreshold(0.5);
+    cvConfiguration.setName(generateUuid());
+    cvConfiguration.setAccountId(accountId);
+    final String configId = wingsPersistence.save(cvConfiguration);
+
+    when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
+
+    // disabled alert should not throw alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
+    assertEquals(0, wingsPersistence.createQuery(Alert.class, excludeAuthority).asList().size());
+
+    cvConfiguration.setAlertEnabled(true);
+    wingsPersistence.save(cvConfiguration);
+    // lower than threshold, no alert should be thrown
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.4, 10);
+    assertEquals(0, wingsPersistence.createQuery(Alert.class, excludeAuthority).asList().size());
+
+    // throw alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
+    List<Alert> alerts;
+    int tryCount = 0;
+    do {
+      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+      tryCount++;
+      sleep(ofMillis(500));
+    } while (alerts.isEmpty() && tryCount < 1000);
+
+    assertEquals(1, alerts.size());
+    final Alert alert = alerts.get(0);
+    assertEquals(appId, alert.getAppId());
+    assertEquals(accountId, alert.getAccountId());
+    assertEquals(AlertType.CONTINUOUS_VERIFICATION_ALERT, alert.getType());
+    assertEquals(AlertStatus.Open, alert.getStatus());
+    assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
+    assertEquals(AlertSeverity.Error, alert.getSeverity());
+
+    final ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
+    assertEquals(MLAnalysisType.TIME_SERIES, alertData.getMlAnalysisType());
+    assertEquals(0.6, alertData.getRiskScore(), 0.0);
+    assertEquals(configId, alertData.getCvConfiguration().getUuid());
+    assertNull(alertData.getLogAnomaly());
+
+    // same minute should not throw another alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
+    sleep(ofMillis(2000));
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertEquals(1, alerts.size());
+
+    // diff minute should throw another alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 20);
+    do {
+      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+      tryCount++;
+      sleep(ofMillis(500));
+    } while (alerts.size() < 2 && tryCount < 10);
+
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertEquals(2, alerts.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testTriggerLogAnalysisAlertIfNecessary() {
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setAlertEnabled(false);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
+
+    final String configId = cvConfiguration.getUuid();
+
+    SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setText("msg1");
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
+    unknownClusters.put("1", new HashMap<>());
+    unknownClusters.get("1").put("1", splunkAnalysisCluster);
+    unknownClusters.put("2", new HashMap<>());
+    splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setText("msg2");
+    unknownClusters.get("2").put("1", splunkAnalysisCluster);
+    splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setText("msg3");
+    unknownClusters.get("2").put("2", splunkAnalysisCluster);
+    unknownClusters.get("2").put("3", splunkAnalysisCluster);
+
+    LogMLAnalysisRecord logMLAnalysisRecord = new LogMLAnalysisRecord();
+    logMLAnalysisRecord.setUnknown_clusters(unknownClusters);
+    // disabled alert should not throw alert
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
+    assertEquals(0, wingsPersistence.createQuery(Alert.class, excludeAuthority).asList().size());
+
+    cvConfiguration.setAlertEnabled(true);
+    wingsPersistence.save(cvConfiguration);
+
+    // throw alert
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
+    List<Alert> alerts;
+    int tryCount = 0;
+    do {
+      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+      tryCount++;
+      sleep(ofMillis(500));
+    } while (alerts.size() < 3 && tryCount < 10);
+
+    assertEquals(3, alerts.size());
+    Set<String> alertAnomalies = new HashSet<>();
+    alerts.forEach(alert -> {
+      assertEquals(appId, alert.getAppId());
+      assertEquals(accountId, alert.getAccountId());
+      assertEquals(AlertType.CONTINUOUS_VERIFICATION_ALERT, alert.getType());
+      assertEquals(AlertStatus.Open, alert.getStatus());
+      assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
+      assertEquals(AlertSeverity.Error, alert.getSeverity());
+
+      final ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
+      assertEquals(MLAnalysisType.LOG_ML, alertData.getMlAnalysisType());
+      assertEquals(configId, alertData.getCvConfiguration().getUuid());
+      assertNotNull(alertData.getLogAnomaly());
+      alertAnomalies.add(alertData.getLogAnomaly());
+    });
+
+    assertEquals(Sets.newHashSet("msg1", "msg2", "msg3"), alertAnomalies);
+    // same minute should not throw another alert
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
+    sleep(ofMillis(2000));
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertEquals(3, alerts.size());
+
+    // diff minute should throw another alert
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 30);
+    do {
+      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+      tryCount++;
+      sleep(ofMillis(500));
+    } while (alerts.size() < 6 && tryCount < 1000);
+
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertEquals(6, alerts.size());
   }
 }

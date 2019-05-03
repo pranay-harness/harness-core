@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.alert.AlertData;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.verification.CVConfiguration;
 
 import java.math.BigDecimal;
@@ -21,6 +22,8 @@ public class ContinuousVerificationAlertData implements AlertData {
   public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
 
   private CVConfiguration cvConfiguration;
+  private MLAnalysisType mlAnalysisType;
+  private String logAnomaly;
   private String portalUrl;
   private String accountId;
 
@@ -33,8 +36,8 @@ public class ContinuousVerificationAlertData implements AlertData {
     ContinuousVerificationAlertData other = (ContinuousVerificationAlertData) alertData;
 
     return StringUtils.equals(cvConfiguration.getUuid(), other.getCvConfiguration().getUuid())
-        && StringUtils.equals(portalUrl, other.getPortalUrl()) && StringUtils.equals(accountId, other.getAccountId())
-        && analysisStartTime == other.getAnalysisStartTime() && analysisEndTime == other.getAnalysisEndTime();
+        && StringUtils.equals(logAnomaly, other.logAnomaly) && analysisStartTime == other.getAnalysisStartTime()
+        && analysisEndTime == other.getAnalysisEndTime();
   }
 
   @Override
@@ -42,11 +45,41 @@ public class ContinuousVerificationAlertData implements AlertData {
     double alertThreshold =
         BigDecimal.valueOf(cvConfiguration.getAlertThreshold()).setScale(2, RoundingMode.HALF_UP).doubleValue();
     riskScore = BigDecimal.valueOf(riskScore).setScale(2, RoundingMode.HALF_UP).doubleValue();
-    return "24/7 Service Guard detected anomalies for " + cvConfiguration.getName()
-        + "(Application: " + cvConfiguration.getAppName() + ", Service: " + cvConfiguration.getServiceName()
-        + ", Environment: " + cvConfiguration.getEnvName()
-        + ") Time: " + new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime))
-        + "\nRisk Score: " + riskScore + ", Alert Threshold: " + alertThreshold + "\nCheck at: " + portalUrl
-        + "/#/account/" + accountId + "/24-7-service-guard/" + cvConfiguration.getServiceId() + "/details";
+    StringBuilder sb = new StringBuilder()
+                           .append("24/7 Service Guard detected anomalies for ")
+                           .append(cvConfiguration.getName())
+                           .append("(Application: ")
+                           .append(cvConfiguration.getAppName())
+                           .append(", Service: ")
+                           .append(cvConfiguration.getServiceName())
+                           .append(", Environment: ")
+                           .append(cvConfiguration.getEnvName())
+                           .append(") Time: ")
+                           .append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(analysisEndTime)));
+
+    switch (mlAnalysisType) {
+      case TIME_SERIES:
+        sb.append("\nRisk Score: ").append(riskScore).append(", Alert Threshold: ").append(alertThreshold);
+        break;
+      case LOG_ML:
+        sb.append("\nLog Message: ").append(logAnomaly);
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid type: " + mlAnalysisType);
+    }
+
+    sb.append("\nCheck at: ")
+        .append(portalUrl)
+        .append("/#/account/")
+        .append(accountId)
+        .append("/24-7-service-guard/")
+        .append(cvConfiguration.getServiceId())
+        .append("/details?cvConfigId")
+        .append(cvConfiguration.getUuid())
+        .append("&analysisStartTime=")
+        .append(analysisStartTime)
+        .append("&analysisEndTime=")
+        .append(analysisEndTime);
+    return sb.toString();
   }
 }

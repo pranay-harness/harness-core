@@ -1,6 +1,7 @@
 package io.harness.service.intfc;
 
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 
 /**
  * Created by rsingh on 10/9/18.
@@ -26,5 +27,8 @@ public interface ContinuousVerificationService {
 
   boolean triggerLogDataCollection(AnalysisContext context);
 
-  void triggerAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute);
+  void triggerTimeSeriesAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute);
+
+  void triggerLogAnalysisAlertIfNecessary(
+      String cvConfigId, LogMLAnalysisRecord mlAnalysisResponse, int analysisMinute);
 }

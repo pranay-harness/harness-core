@@ -601,11 +601,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       mlAnalysisResponse.setStateExecutionId(analysisContext.getStateExecutionId());
       mlAnalysisResponse.setStateType(analysisContext.getStateType());
     }
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = mlAnalysisResponse.getUnknown_clusters();
     mlAnalysisResponse.compressLogAnalysisRecord();
     mlAnalysisResponse.setCvConfigId(cvConfigId);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setLogCollectionMinute(analysisMinute);
     wingsPersistence.save(mlAnalysisResponse);
+    mlAnalysisResponse.setUnknown_clusters(unknownClusters);
 
     wingsPersistence.update(wingsPersistence.createQuery(LogDataRecord.class)
                                 .filter("cvConfigId", cvConfigId)
@@ -617,7 +619,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }
-    continuousVerificationService.triggerAlertIfNecessary(cvConfigId, mlAnalysisResponse.getScore(), analysisMinute);
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(cvConfigId, mlAnalysisResponse, analysisMinute);
     return true;
   }
 
