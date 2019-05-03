@@ -476,4 +476,21 @@ public class BuildSourceServiceImpl implements BuildSourceService {
         .getBuckets(
             getSettingValue(settingAttribute), projectId, getEncryptedDataDetails((EncryptableSetting) settingValue));
   }
+
+  @Override
+  public List<String> getSmbPaths(String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    return getBuildService(SMB.name(), settingAttribute)
+        .getSmbPaths(getSettingValue(settingAttribute), getEncryptedDataDetails((EncryptableSetting) settingValue));
+  }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(String settingId, String streamType) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    return getBuildService(streamType, settingAttribute)
+        .getArtifactPathsByStreamType(
+            getSettingValue(settingAttribute), getEncryptedDataDetails((EncryptableSetting) settingValue), streamType);
+  }
 }

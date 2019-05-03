@@ -90,6 +90,15 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, appId, resourceType);
   }
 
+  @Override
+  public Set<String> listTags(String computeProviderId, String region, String resourceTypeStr) {
+    ResourceType resourceType = resourceTypeStr == null ? ResourceType.Image : ResourceType.valueOf(resourceTypeStr);
+    SettingAttribute computeProviderSetting = settingService.get(computeProviderId);
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsEc2HelperServiceManager.listTags(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, resourceType);
+  }
+
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "No cloud provider exist or not of type Aws");

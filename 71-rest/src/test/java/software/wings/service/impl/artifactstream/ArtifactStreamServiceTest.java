@@ -1024,11 +1024,31 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
+    validateAmiArtifactStream(amiArtifactStream, APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAddAmiArtifactStreamAtCloudProviderLevel() {
+    AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
+    tag.setKey("name");
+    tag.setValue("jenkins");
+    AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
+                                              .appId(GLOBAL_APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .region("us-east-1")
+                                              .tags(asList(tag))
+                                              .autoPopulate(true)
+                                              .build();
+    validateAmiArtifactStream(amiArtifactStream, GLOBAL_APP_ID);
+  }
+
+  private void validateAmiArtifactStream(AmiArtifactStream amiArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(amiArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMI.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("us-east-1:name:jenkins");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("us-east-1:name:jenkins");
     assertThat(savedArtifactSteam).isInstanceOf(AmiArtifactStream.class);
@@ -1053,11 +1073,41 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
+    updateAmiArtifactStreamAndValidate(amiArtifactStream, APP_ID);
+
+    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateAmiArtifactStreamAtCloudProviderLevel() {
+    AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
+    tag.setKey("name");
+    tag.setValue("jenkins");
+
+    AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
+                                              .appId(GLOBAL_APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .region("us-east-1")
+                                              .tags(asList(tag))
+                                              .autoPopulate(true)
+                                              .build();
+    updateAmiArtifactStreamAndValidate(amiArtifactStream, GLOBAL_APP_ID);
+
+    verify(yamlPushService, times(1))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+  }
+
+  private void updateAmiArtifactStreamAndValidate(AmiArtifactStream amiArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(amiArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMI.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
     assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty().contains("us-east-1:name:jenkins");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("us-east-1:name:jenkins");
     assertThat(savedArtifactSteam).isInstanceOf(AmiArtifactStream.class);
@@ -1080,7 +1130,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedAmiArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedAmiArtifactStream.getName()).isNotEmpty();
     assertThat(updatedAmiArtifactStream.getArtifactStreamType()).isEqualTo(AMI.name());
-    assertThat(updatedAmiArtifactStream.getAppId()).isEqualTo(APP_ID);
+    assertThat(updatedAmiArtifactStream.getAppId()).isEqualTo(appId);
     assertThat(updatedAmiArtifactStream.fetchArtifactDisplayName("")).isNotEmpty().contains("us-west:name:jenkins");
     assertThat(updatedAmiArtifactStream.getSourceName()).isEqualTo("us-west:name:jenkins_name2:jenkins2");
     assertThat(updatedAmiArtifactStream).isInstanceOf(AmiArtifactStream.class);
@@ -1093,11 +1143,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     AmiArtifactStream updatedArtifactStream = (AmiArtifactStream) savedArtifactSteam;
     assertThat(updatedArtifactStream.getRegion()).isEqualTo("us-west");
-
-    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlPushService, times(2))
-        .pushYamlChangeSet(
-            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   @Test

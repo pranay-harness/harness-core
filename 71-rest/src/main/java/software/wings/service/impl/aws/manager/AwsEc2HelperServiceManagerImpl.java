@@ -124,6 +124,20 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
 
   @Override
   public Set<String> listTags(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, ResourceType resourceType) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsEc2ListTagsRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .resourceType(resourceType.toString())
+            .build(),
+        GLOBAL_APP_ID);
+    return ((AwsEc2ListTagsResponse) response).getTags();
+  }
+
+  @Override
+  public Set<String> listTags(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     return listTags(awsConfig, encryptionDetails, region, appId, ResourceType.Instance);
   }

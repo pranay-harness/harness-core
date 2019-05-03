@@ -179,6 +179,7 @@ public class SmbHelperService {
                                                         .withNumber(buildNos.get(entry.getKey()))
                                                         .withArtifactPath(entry.getKey())
                                                         .withBuildParameters(map)
+                                                        .withUiDisplayName("Build# " + buildNos.get(entry.getKey()))
                                                         .build());
               } else {
                 List<FileIdBothDirectoryInformation> fileList = share.list(entry.getKey(), searchPattern);
@@ -203,6 +204,7 @@ public class SmbHelperService {
                                                             .withArtifactPath(aPath)
                                                             .withBuildUrl(smbConfig.getSmbUrl())
                                                             .withBuildParameters(map)
+                                                            .withUiDisplayName("Build# " + f.getFileName())
                                                             .build());
                   }
                 }

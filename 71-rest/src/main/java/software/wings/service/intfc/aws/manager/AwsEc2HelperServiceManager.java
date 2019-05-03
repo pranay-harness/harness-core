@@ -20,6 +20,8 @@ public interface AwsEc2HelperServiceManager {
   Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId);
   Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId,
       ResourceType resourceType);
+  Set<String> listTags(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, ResourceType resourceType);
   List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<Filter> filters, String appId);
 }

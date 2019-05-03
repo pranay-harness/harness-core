@@ -30,5 +30,15 @@ public interface AwsHelperResourceService {
    */
   Set<String> listTags(String appId, String computeProviderId, String region, String resourceType);
 
+  /**
+   * List tags list.
+   *
+   * @param settingId the compute provider id
+   * @param region            the region
+   * @param resourceType
+   * @return the list
+   */
+  Set<String> listTags(String settingId, String region, String resourceType);
+
   List<String> listBuckets(String awsSettingId);
 }
