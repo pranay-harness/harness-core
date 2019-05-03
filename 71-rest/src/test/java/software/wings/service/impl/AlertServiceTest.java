@@ -149,6 +149,14 @@ public class AlertServiceTest extends WingsBaseTest {
     assertThat(alerts).hasSize(1);
     alert = alerts.get(0);
     assertThat(alert.getTriggerCount()).isEqualTo(2);
+    assertThat(alert.getStatus()).isEqualTo(Pending);
+
+    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
+
+    alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(1);
+    alert = alerts.get(0);
+    assertThat(alert.getTriggerCount()).isEqualTo(3);
     assertThat(alert.getStatus()).isEqualTo(Open);
 
     verify(eventPublisher, times(1)).publishEvent(Mockito.any(Event.class));

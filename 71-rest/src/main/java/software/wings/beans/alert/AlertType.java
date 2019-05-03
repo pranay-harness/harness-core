@@ -15,10 +15,10 @@ import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
   ManualInterventionNeeded(ManualIntervention, Warning, ManualInterventionNeededAlert.class),
-  NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class, 1),
-  DelegatesDown(Setup, Error, DelegatesDownAlert.class, 1),
+  NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class, 2),
+  DelegatesDown(Setup, Error, DelegatesDownAlert.class, 2),
   DelegateProfileError(Setup, Error, DelegateProfileErrorAlert.class),
-  NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class, 1),
+  NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),
   InvalidKMS(Setup, Error, KmsSetupAlert.class),
   GitSyncError(Setup, Error, GitSyncErrorAlert.class),
   GitConnectionError(Setup, Error, GitConnectionErrorAlert.class),
