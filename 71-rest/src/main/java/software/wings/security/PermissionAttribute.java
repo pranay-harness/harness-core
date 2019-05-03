@@ -325,6 +325,10 @@ public class PermissionAttribute {
     /**
      * Manage templates
      */
-    TEMPLATE_MANAGEMENT
+    TEMPLATE_MANAGEMENT,
+    /**
+     * User Permission Read.
+     */
+    USER_PERMISSION_READ
   }
 }
