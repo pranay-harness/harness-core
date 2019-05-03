@@ -60,6 +60,8 @@ type WorkflowExecution implements Execution {
 
   # Status of the workflow
   status: ExecutionStatus
+
+  workflow: Workflow @dataFetcher(name: "workflow", contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 }
 
 # Type for pipeline execution
@@ -78,4 +80,6 @@ type PipelineExecution implements Execution {
 
   # Status of the workflow
   status: ExecutionStatus
+
+  pipeline: Pipeline @dataFetcher(name: "pipeline", contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 }
