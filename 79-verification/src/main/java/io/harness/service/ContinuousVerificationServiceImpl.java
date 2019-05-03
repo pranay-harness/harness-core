@@ -54,6 +54,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -1058,29 +1059,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   @Override
-  public void triggerAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute) {
+  public void triggerTimeSeriesAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute) {
     if (isEmpty(cvConfigId)) {
       return;
     }
     final CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, cvConfigId);
     Preconditions.checkNotNull(cvConfiguration, "no config found with id " + cvConfigId);
 
-    if (!cvConfiguration.isAlertEnabled()) {
-      logger.info("for {} the alert is not enabled. Returning", cvConfigId);
+    if (!shouldThrowAlert(cvConfiguration)) {
       return;
     }
-
     if (riskScore <= cvConfiguration.getAlertThreshold()) {
       logger.info("for {} the risk {} is lower than the threshold {}. No alerts will be triggered.", cvConfigId,
           riskScore, cvConfiguration.getAlertThreshold());
-      return;
-    }
-
-    final long currentTime = System.currentTimeMillis();
-    if (cvConfiguration.getSnoozeStartTime() > 0 && cvConfiguration.getSnoozeEndTime() > 0
-        && currentTime >= cvConfiguration.getSnoozeStartTime() && currentTime <= cvConfiguration.getSnoozeEndTime()) {
-      logger.info("for {} the current time is in the range of snooze time {} to {}. No alerts will be triggered.",
-          cvConfigId, cvConfiguration.getSnoozeStartTime(), cvConfiguration.getSnoozeEndTime());
       return;
     }
 
@@ -1088,8 +1079,61 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
         ContinuousVerificationAlertData.builder()
             .riskScore(riskScore)
-            .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES))
+            .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+            .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES + 1))
             .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
             .build()));
+  }
+
+  @Override
+  public void triggerLogAnalysisAlertIfNecessary(
+      String cvConfigId, LogMLAnalysisRecord mlAnalysisResponse, int analysisMinute) {
+    if (isEmpty(cvConfigId)) {
+      return;
+    }
+    if (isEmpty(mlAnalysisResponse.getUnknown_clusters())) {
+      logger.info("No unknown clusters for {} for min {}. No alerts will be triggerer");
+      return;
+    }
+
+    final CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    Preconditions.checkNotNull(cvConfiguration, "no config found with id " + cvConfigId);
+
+    if (!shouldThrowAlert(cvConfiguration)) {
+      return;
+    }
+
+    logger.info("triggering alerts for {} with unknown clusters {}", cvConfigId,
+        mlAnalysisResponse.getUnknown_clusters().size());
+
+    mlAnalysisResponse.getUnknown_clusters().forEach(
+        (clusterLabel, analysisClusterMap)
+            -> analysisClusterMap.forEach((host, splunkAnalysisCluster)
+                                              -> verificationManagerClientHelper.callManagerWithRetry(
+                                                  verificationManagerClient.triggerCVAlert(cvConfigId,
+                                                      ContinuousVerificationAlertData.builder()
+                                                          .mlAnalysisType(MLAnalysisType.LOG_ML)
+                                                          .logAnomaly(splunkAnalysisCluster.getText())
+                                                          .analysisStartTime(TimeUnit.MINUTES.toMillis(
+                                                              analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES + 1))
+                                                          .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+                                                          .build()))));
+  }
+
+  private boolean shouldThrowAlert(CVConfiguration cvConfiguration) {
+    if (!cvConfiguration.isAlertEnabled()) {
+      logger.info("for {} the alert is not enabled. Returning", cvConfiguration.getUuid());
+      return false;
+    }
+
+    final long currentTime = System.currentTimeMillis();
+    if (cvConfiguration.getSnoozeStartTime() > 0 && cvConfiguration.getSnoozeEndTime() > 0
+        && currentTime >= cvConfiguration.getSnoozeStartTime() && currentTime <= cvConfiguration.getSnoozeEndTime()) {
+      logger.info("for {} the current time is in the range of snooze time {} to {}. No alerts will be triggered.",
+          cvConfiguration.getUuid(), cvConfiguration.getSnoozeStartTime(), cvConfiguration.getSnoozeEndTime());
+      return false;
+    }
+
+    return true;
   }
 }
