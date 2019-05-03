@@ -279,7 +279,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         provisionerYaml, provisionerYaml.getName() + YAML_EXTENSION);
   }
 
-  public RestResponse<YamlPayload> geCVConfiguration(String appId, String cvConfigId) {
+  public RestResponse<YamlPayload> getCVConfiguration(String appId, String cvConfigId) {
     String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("No account found for appId:" + appId, accountId);
 

@@ -72,6 +72,7 @@ import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfigurationYamlHandler;
 
 import java.util.HashSet;
@@ -309,6 +310,8 @@ public class YamlHandlerFactory {
       return YamlType.DEPLOYMENT_SPECIFICATION;
     } else if (entity instanceof EcsServiceSpecification) {
       return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof CVConfiguration) {
+      return YamlType.CV_CONFIGURATION;
     }
 
     throw new InvalidRequestException(
@@ -358,6 +361,8 @@ public class YamlHandlerFactory {
       return ((ManifestFile) entity).getFileName();
     } else if (entity instanceof ApplicationManifest) {
       return YamlConstants.INDEX;
+    } else if (entity instanceof CVConfiguration) {
+      return ((CVConfiguration) entity).getName();
     }
 
     throw new InvalidRequestException(
@@ -421,6 +426,8 @@ public class YamlHandlerFactory {
       return ECS_SERVICE_SPEC;
     } else if (entity instanceof KubernetesContainerTask) {
       return DeploymentType.KUBERNETES.name();
+    } else if (entity instanceof CVConfiguration) {
+      return ((CVConfiguration) entity).getStateType().name();
     }
 
     return null;
@@ -446,6 +453,8 @@ public class YamlHandlerFactory {
         "AmiArtifactStream", "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification",
         "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
-        "ManifestFile", "ApplicationManifest", "CustomArtifactStream");
+        "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
+        "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
+        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration");
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.service;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
@@ -442,8 +443,12 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     cvServiceConfiguration.setServiceId(generateUUID());
     cvServiceConfiguration.setEnabled24x7(true);
     cvServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
-    String cvConfigId =
-        cvConfigurationService.saveConfiguration(accountId, appId, StateType.NEW_RELIC, cvServiceConfiguration);
+    cvServiceConfiguration.setStateType(StateType.NEW_RELIC);
+    String cvConfigId = generateUuid();
+    cvServiceConfiguration.setUuid(cvConfigId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setAppId(appId);
+    wingsPersistence.save(cvServiceConfiguration);
 
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
 

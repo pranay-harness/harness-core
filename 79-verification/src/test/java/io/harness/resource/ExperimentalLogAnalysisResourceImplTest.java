@@ -19,6 +19,7 @@ import io.harness.service.intfc.LogAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.WorkflowExecution;
@@ -65,6 +66,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
     logAnalysisResource = new ExperimentalLogAnalysisResourceImpl(
         logAnalysisService, learningEngineService, verificationManagerClient, managerClientHelper);
     when(logAnalysisService.reQueueExperimentalTask(anyString(), anyString())).thenReturn(true);
+    MockitoAnnotations.initMocks(this);
   }
 
   @Test

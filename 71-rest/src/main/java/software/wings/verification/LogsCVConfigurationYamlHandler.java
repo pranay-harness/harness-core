@@ -6,7 +6,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.verification.log.BugsnagCVConfiguration.BugsnagCVConfigurationYaml;
-import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
@@ -46,7 +45,6 @@ public class LogsCVConfigurationYamlHandler
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-
     notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);
 
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
@@ -55,28 +53,19 @@ public class LogsCVConfigurationYamlHandler
 
     CVConfiguration previous = cvConfigurationService.getConfiguration(name, appId, envId);
 
-    LogsCVConfiguration bean;
-    switch (StateType.valueOf(changeContext.getYaml().getType())) {
-      case SUMO:
-        bean = new LogsCVConfiguration();
-        break;
-      case ELK:
-        bean = new ElkCVConfiguration();
-        break;
-      default:
-        throw new IllegalStateException("Invalid state " + changeContext.getYaml().getType());
-    }
-
+    LogsCVConfiguration bean = new LogsCVConfiguration();
     toBean(bean, changeContext, appId);
+    saveToDatabase(bean, previous, appId);
+    return bean;
+  }
 
+  protected void saveToDatabase(CVConfiguration bean, CVConfiguration previous, String appId) {
     if (previous != null) {
       bean.setUuid(previous.getUuid());
       cvConfigurationService.updateConfiguration(bean, appId);
     } else {
-      cvConfigurationService.saveCofiguration(bean);
+      cvConfigurationService.saveToDatabase(bean, true);
     }
-
-    return bean;
   }
 
   @Override
@@ -89,7 +78,7 @@ public class LogsCVConfigurationYamlHandler
     return (LogsCVConfiguration) yamlHelper.getCVConfiguration(accountId, yamlFilePath);
   }
 
-  private void toBean(LogsCVConfiguration bean, ChangeContext<LogsCVConfigurationYaml> changeContext, String appId) {
+  protected void toBean(LogsCVConfiguration bean, ChangeContext<LogsCVConfigurationYaml> changeContext, String appId) {
     LogsCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);

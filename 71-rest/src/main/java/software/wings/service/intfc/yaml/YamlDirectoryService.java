@@ -23,6 +23,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.UserPermissionInfo;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.verification.CVConfiguration;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
@@ -91,6 +92,7 @@ public interface YamlDirectoryService {
   String getRootPathByEnvironment(Environment environment, String appName);
 
   String getRootPathByInfraMapping(InfrastructureMapping infraMapping);
+  String getRootPathByCVConfiguration(CVConfiguration cvConfiguration);
 
   String getRootPathByPipeline(Pipeline pipeline);
 

@@ -4,6 +4,8 @@ import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,6 +13,9 @@ import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.stencils.DefaultValue;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class ElkCVConfiguration extends LogsCVConfiguration {
   @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private ElkQueryType queryType;

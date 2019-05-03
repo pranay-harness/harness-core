@@ -1015,7 +1015,7 @@ public class YamlResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.READ)
   public RestResponse<YamlPayload> getCVConfiguration(
       @QueryParam("appId") String appId, @PathParam("cvConfigId") String cvConfigId) {
-    return yamlResourceService.geCVConfiguration(appId, cvConfigId);
+    return yamlResourceService.getCVConfiguration(appId, cvConfigId);
   }
 
   @PUT

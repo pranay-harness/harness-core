@@ -14,6 +14,7 @@ import java.util.List;
  */
 public interface CVConfigurationService extends OwnedByAccount {
   String saveConfiguration(String accountId, String appId, StateType stateType, Object params);
+  String saveConfiguration(String accountId, String appId, StateType stateType, Object params, boolean createdFromYaml);
   <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId);
   <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId);
   <T extends CVConfiguration> List<T> listConfigurations(
@@ -22,8 +23,9 @@ public interface CVConfigurationService extends OwnedByAccount {
   String updateConfiguration(
       String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId);
   String updateConfiguration(CVConfiguration cvConfiguration, String appId);
-  String saveCofiguration(CVConfiguration cvConfiguration);
+  CVConfiguration saveToDatabase(CVConfiguration cvConfiguration, boolean createdFromYaml);
   boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId);
+  boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId, boolean isSyncFromGit);
   <T extends CVConfiguration> List<T> listConfigurations(String accountId);
 
   List<CVConfiguration> listConfigurations(String accountId, PageRequest<CVConfiguration> pageRequest);
