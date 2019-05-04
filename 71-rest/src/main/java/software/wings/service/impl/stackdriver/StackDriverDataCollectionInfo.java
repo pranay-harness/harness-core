@@ -7,11 +7,10 @@ import software.wings.beans.GcpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Pranjal on 11/27/2018
@@ -34,5 +33,5 @@ public class StackDriverDataCollectionInfo implements TaskParameters {
 
   @Builder.Default private Map<String, String> hosts = new HashMap<>();
   @Builder.Default private Map<String, List<StackDriverMetric>> loadBalancerMetrics = new HashMap<>();
-  @Builder.Default private Set<StackDriverMetric> vmInstanceMetrics = new HashSet<>();
+  @Builder.Default private List<StackDriverMetric> podMetrics = new ArrayList<>();
 }

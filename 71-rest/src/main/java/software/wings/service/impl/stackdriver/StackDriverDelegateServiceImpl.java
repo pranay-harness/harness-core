@@ -1,10 +1,10 @@
 package software.wings.service.impl.stackdriver;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
-import static software.wings.service.impl.stackdriver.StackDriverNameSpace.VMINSTANCE;
+import static software.wings.service.impl.stackdriver.StackDriverNameSpace.POD_NAME;
 
-import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.model.ForwardingRule;
 import com.google.api.services.compute.model.Region;
 import com.google.api.services.monitoring.v3.Monitoring;
@@ -15,11 +15,16 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
+import org.apache.http.HttpStatus;
 import software.wings.beans.GcpConfig;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.security.EncryptionService;
@@ -27,11 +32,13 @@ import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +52,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
 
   @Inject private EncryptionService encryptionService;
   @Inject private GcpHelperService gcpHelperService;
+  @Inject private DelegateLogService delegateLogService;
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(GcpConfig gcpConfig,
@@ -55,28 +63,35 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     Monitoring monitoring = gcpHelperService.getMonitoringService(gcpConfig, encryptionDetails, projectId);
     String projectResource = "projects/" + projectId;
     List<ListTimeSeriesResponse> responses = new ArrayList<>();
+    long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
+    long endTime = setupTestNodeData.getToTime() * TimeUnit.SECONDS.toMillis(1);
 
-    if (!isEmpty(setupTestNodeData.getVmInstanceMetrics())) {
-      setupTestNodeData.getVmInstanceMetrics().forEach(metric -> {
-        String vmFilter = createFilter(VMINSTANCE, metric.getMetricName(), hostName, null);
+    if (!isEmpty(setupTestNodeData.getPodMetrics())) {
+      setupTestNodeData.getPodMetrics().forEach(metric -> {
+        String podFilter = createFilter(POD_NAME, metric.getMetricName(), hostName);
         ListTimeSeriesResponse response = getTimeSeriesResponse(
-            monitoring, projectResource, vmFilter, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime());
-        responses.add(response);
+            monitoring, projectResource, gcpConfig, podFilter, startTime, endTime, apiCallLog.copy());
+        if (isNotEmpty(response)) {
+          responses.add(response);
+        }
       });
     }
 
     if (!isEmpty(setupTestNodeData.getLoadBalancerMetrics())) {
       setupTestNodeData.getLoadBalancerMetrics().forEach((ruleName, lbMetrics) -> lbMetrics.forEach(lbMetric -> {
-        String lbFilter = createFilter(LOADBALANCER, lbMetric.getMetricName(), hostName, ruleName);
+        String lbFilter = createFilter(LOADBALANCER, lbMetric.getMetricName(), ruleName);
         ListTimeSeriesResponse response = getTimeSeriesResponse(
-            monitoring, projectResource, lbFilter, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime());
-        responses.add(response);
+            monitoring, projectResource, gcpConfig, lbFilter, startTime, endTime, apiCallLog.copy());
+        if (isNotEmpty(response)) {
+          responses.add(response);
+        }
       }));
     }
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
-        .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(responses).build())
+        .loadResponse(
+            VerificationLoadResponse.builder().isLoadPresent(isNotEmpty(responses)).loadResponse(responses).build())
         .dataForNode(responses)
         .build();
   }
@@ -96,25 +111,25 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String region) throws IOException {
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
-    Compute gceService = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId);
-    gceService.forwardingRules().list(getProjectId(gcpConfig), region).execute();
-    List<ForwardingRule> forwardingRules = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
-                                               .forwardingRules()
-                                               .list(projectId, "us-central1")
-                                               .execute()
-                                               .getItems();
-    return forwardingRules.stream().collect(Collectors.toMap(ForwardingRule::getIPAddress, ForwardingRule::getName));
+    List<ForwardingRule> forwardingRulesByRegion =
+        gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
+            .forwardingRules()
+            .list(projectId, region)
+            .execute()
+            .getItems();
+    return forwardingRulesByRegion.stream().collect(
+        Collectors.toMap(ForwardingRule::getIPAddress, ForwardingRule::getName));
   }
 
-  public String createFilter(StackDriverNameSpace nameSpace, String metric, String hostName, String ruleName) {
+  public String createFilter(StackDriverNameSpace nameSpace, String metric, String dimensionValue) {
     String filter;
     switch (nameSpace) {
       case LOADBALANCER: {
-        filter = "metric.type=\"" + metric + "\" AND resource.label.forwarding_rule_name = \"" + ruleName + "\"";
+        filter = "metric.type=\"" + metric + "\" AND resource.label.forwarding_rule_name = \"" + dimensionValue + "\"";
         break;
       }
-      case VMINSTANCE: {
-        filter = "metric.type=\"" + metric + "\" AND metric.labels.instance_name = \"" + hostName + "\"";
+      case POD_NAME: {
+        filter = "metric.type=\"" + metric + "\" AND resource.labels.pod_name = \"" + dimensionValue + "\"";
         break;
       }
       default:
@@ -123,20 +138,45 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return filter;
   }
 
-  private ListTimeSeriesResponse getTimeSeriesResponse(
-      Monitoring monitoring, String projectResource, String filter, long startTime, long endTime) {
+  private ListTimeSeriesResponse getTimeSeriesResponse(Monitoring monitoring, String projectResource, GcpConfig config,
+      String filter, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog) {
+    apiCallLog.setTitle("Fetching metric data from project");
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name("body").value(JsonUtils.asJson(filter)).type(FieldType.JSON).build());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("Start Time")
+                                     .value(getDateFormatTime(startTime))
+                                     .type(FieldType.TIMESTAMP)
+                                     .build());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("End Time")
+                                     .value(getDateFormatTime(endTime))
+                                     .type(FieldType.TIMESTAMP)
+                                     .build());
+
+    ListTimeSeriesResponse response;
     try {
-      return monitoring.projects()
-          .timeSeries()
-          .list(projectResource)
-          .setFilter(filter)
-          .setIntervalStartTime(getDateFormatTime(startTime))
-          .setIntervalEndTime(getDateFormatTime(endTime))
-          .execute();
+      response = monitoring.projects()
+                     .timeSeries()
+                     .list(projectResource)
+                     .setFilter(filter)
+                     .setIntervalStartTime(getDateFormatTime(startTime))
+                     .setIntervalEndTime(getDateFormatTime(endTime))
+                     .execute();
     } catch (IOException e) {
-      logger.warn("Metric not found " + filter + e.getMessage());
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(config.getAccountId(), apiCallLog);
+      throw new WingsException(
+          "Unsuccessful response while fetching data from StackDriver. Error message: " + e.getMessage());
     }
-    return null;
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+    apiCallLog.addFieldToResponse(HttpStatus.SC_OK, response, FieldType.JSON);
+
+    delegateLogService.save(config.getAccountId(), apiCallLog);
+    return response;
   }
 
   public String getProjectId(GcpConfig gcpConfig) {

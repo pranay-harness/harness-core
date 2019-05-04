@@ -37,15 +37,12 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,9 +54,35 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
   @Attributes(required = true, title = "GCP account") private String analysisServerConfigId;
 
-  @SchemaIgnore private Map<String, List<StackDriverMetric>> loadBalancerMetrics = new HashMap<>();
+  @Attributes(title = "Region") @DefaultValue("us-east-1") private String region = "us-east-1";
 
-  @SchemaIgnore private Set<StackDriverMetric> vmInstanceMetrics = new HashSet<>();
+  private Map<String, List<StackDriverMetric>> loadBalancerMetrics;
+
+  private List<StackDriverMetric> podMetrics;
+
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
+  }
+
+  public Map<String, List<StackDriverMetric>> fetchLoadBalancerMetrics() {
+    return loadBalancerMetrics;
+  }
+
+  public void setLoadBalancerMetrics(Map<String, List<StackDriverMetric>> loadBalancerMetrics) {
+    this.loadBalancerMetrics = loadBalancerMetrics;
+  }
+
+  public List<StackDriverMetric> fetchPodMetrics() {
+    return podMetrics;
+  }
+
+  public void setPodMetrics(List<StackDriverMetric> podMetrics) {
+    this.podMetrics = podMetrics;
+  }
 
   /**
    * Instantiates a new state.
@@ -159,7 +182,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
                 secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
             .loadBalancerMetrics(loadBalancerMetrics)
-            .vmInstanceMetrics(vmInstanceMetrics)
+            .podMetrics(podMetrics)
             .build();
 
     String waitId = generateUuid();
@@ -193,9 +216,9 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
     for (Entry<String, List<StackDriverMetric>> entry : timeSeriesToCollect.entrySet()) {
       for (StackDriverMetric stackDriverMetric : entry.getValue()) {
-        rv.put(Misc.replaceDotWithUnicode(stackDriverMetric.getMetricName()),
+        rv.put(stackDriverMetric.getMetric(),
             TimeSeriesMetricDefinition.builder()
-                .metricName(Misc.replaceDotWithUnicode(stackDriverMetric.getMetricName()))
+                .metricName(stackDriverMetric.getMetric())
                 .metricType(MetricType.valueOf(stackDriverMetric.getKind()))
                 .build());
       }

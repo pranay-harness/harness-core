@@ -119,10 +119,9 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
         .appId(appId)
         .settingId(gcpConfigId)
         .loadBalancerMetrics(getMockLBMetrics())
-        .vmInstanceMetrics(getMockVMMetrics())
         .instanceName("testHost")
-        .toTime(System.currentTimeMillis())
-        .fromTime(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30))
+        .toTime(System.currentTimeMillis() / 1000)
+        .fromTime((System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)) / 1000)
         .instanceElement(
             anInstanceElement()
                 .withUuid("8cec1e1b0d16")
@@ -148,11 +147,12 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   private Set<StackDriverMetric> getMockVMMetrics() {
     Set<StackDriverMetric> metrics = new HashSet<>();
     StackDriverMetric vmInstanceMetric = new StackDriverMetric();
-    vmInstanceMetric.setMetricName("compute.googleapis.com/instance/cpu/utilization");
-    vmInstanceMetric.setDisplayName("CPU Utilization");
-    vmInstanceMetric.setUnit("ratio");
-    vmInstanceMetric.setKind("Gauge");
-    vmInstanceMetric.setValueType("Double");
+    vmInstanceMetric.setMetricName("kubernetes.io/container/memory/request_utilization");
+    vmInstanceMetric.setMetric("MemoryRequestUtilization");
+    vmInstanceMetric.setDisplayName("Memory Request Utilization");
+    vmInstanceMetric.setUnit("number");
+    vmInstanceMetric.setKind("VALUE");
+    vmInstanceMetric.setValueType("Int64");
     metrics.add(vmInstanceMetric);
     return metrics;
   }
