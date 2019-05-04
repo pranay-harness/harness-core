@@ -14,7 +14,6 @@ import static software.wings.sm.TransitionType.SUCCESS;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.data.structure.UUIDGenerator;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.common.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +28,9 @@ import java.util.Optional;
  * @author Rishi
  */
 public class Graph {
-  private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
+  private static final String DEFAULT_WORKFLOW_NAME = "MAIN";
+
+  private String graphName = DEFAULT_WORKFLOW_NAME;
   private List<GraphNode> nodes = new ArrayList<>();
   private List<GraphLink> links = new ArrayList<>();
   private Map<String, Graph> subworkflows = new HashMap<>();
@@ -251,7 +252,7 @@ public class Graph {
    * The Class Builder.
    */
   public static final class Builder {
-    private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
+    private String graphName = DEFAULT_WORKFLOW_NAME;
     private List<GraphNode> nodes = new ArrayList<>();
     private List<GraphLink> links = new ArrayList<>();
     private Map<String, Graph> subworkflows = new HashMap<>();

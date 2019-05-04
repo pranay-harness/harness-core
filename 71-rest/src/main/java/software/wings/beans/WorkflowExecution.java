@@ -35,7 +35,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateMachine;
 
@@ -153,7 +152,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
       dateSuffix = " - "
           + Instant.ofEpochMilli(getCreatedAt())
                 .atZone(ZoneId.of("America/Los_Angeles"))
-                .format(DateTimeFormatter.ofPattern(Constants.WORKFLOW_NAME_DATE_FORMAT));
+                .format(DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a"));
     }
     return name + dateSuffix;
   }
