@@ -65,14 +65,15 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
     final int total = timeDuration;
     putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
 
-    int elapsedMinutes = (int) Math.max(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-                                            .filter("appId", appId)
-                                            .filter("stateExecutionId", stateExecutionInstanceId)
-                                            .count(),
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionInstanceId)
-            .count());
+    int elapsedMinutes =
+        (int) Math.max(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+                           .filter("appId", appId)
+                           .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionInstanceId)
+                           .count(),
+            wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                .filter("appId", appId)
+                .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionInstanceId)
+                .count());
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {
       case ERROR:

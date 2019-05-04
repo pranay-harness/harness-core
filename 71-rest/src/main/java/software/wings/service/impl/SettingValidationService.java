@@ -187,12 +187,12 @@ public class SettingValidationService {
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
     if (wingsPersistence.createQuery(SettingAttribute.class)
-            .filter("accountId", settingAttribute.getAccountId())
+            .filter(SettingAttributeKeys.accountId, settingAttribute.getAccountId())
             .filter("appId", settingAttribute.getAppId())
-            .filter("envId", settingAttribute.getEnvId())
+            .filter(SettingAttributeKeys.envId, settingAttribute.getEnvId())
             .field(Mapper.ID_KEY)
             .notEqual(settingAttribute.getUuid())
-            .filter("name", settingAttribute.getName())
+            .filter(SettingAttributeKeys.name, settingAttribute.getName())
             .filter(SettingAttributeKeys.category, settingAttribute.getCategory())
             .get()
         != null) {

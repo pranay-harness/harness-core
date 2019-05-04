@@ -38,7 +38,7 @@ public class MLServiceUtil {
   public String getHostNameFromExpression(final SetupTestNodeData nodeData) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter("appId", nodeData.getAppId())
-                                              .filter("workflowId", nodeData.getWorkflowId())
+                                              .filter(WorkflowExecutionKeys.workflowId, nodeData.getWorkflowId())
                                               .filter(WorkflowExecutionKeys.status, SUCCESS)
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
@@ -49,11 +49,12 @@ public class MLServiceUtil {
     }
 
     try {
-      StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                          .filter("executionUuid", workflowExecution.getUuid())
-                                                          .filter(StateExecutionInstanceKeys.stateType, StateType.PHASE)
-                                                          .order(Sort.descending(StateExecutionInstanceKeys.createdAt))
-                                                          .get();
+      StateExecutionInstance stateExecutionInstance =
+          wingsPersistence.createQuery(StateExecutionInstance.class)
+              .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+              .filter(StateExecutionInstanceKeys.stateType, StateType.PHASE)
+              .order(Sort.descending(StateExecutionInstanceKeys.createdAt))
+              .get();
       ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
       String hostName = isEmpty(nodeData.getHostExpression())
           ? nodeData.getInstanceName()

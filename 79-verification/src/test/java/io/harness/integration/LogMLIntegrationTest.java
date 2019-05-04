@@ -1370,8 +1370,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         for (int i = 0; i < 10; i++) {
           Thread.sleep(TimeUnit.SECONDS.toMillis(5));
           record = wingsPersistence.createQuery(LogDataRecord.class)
-                       .filter("stateExecutionId", stateExecutionId)
-                       .filter("clusterLevel", "HF")
+                       .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
+                       .filter(LogDataRecordKeys.clusterLevel, "HF")
                        .filter(LogDataRecordKeys.logCollectionMinute, lastAnalysisMinute)
                        .get();
           if (record != null) {

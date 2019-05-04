@@ -165,7 +165,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId) {
     CVConfiguration cvConfiguration = wingsPersistence.createQuery(CVConfiguration.class)
-                                          .filter("name", name)
+                                          .filter(CVConfigurationKeys.name, name)
                                           .filter("appId", appId)
                                           .filter(CVConfigurationKeys.envId, envId)
                                           .get();

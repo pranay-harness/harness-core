@@ -272,10 +272,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
           if (cachedResult.isPresent()
               && cachedResult.get().getLastUpdatedAt() < clock.millis() - WHITELIST_REFRESH_INTERVAL) {
-            Query<DelegateConnectionResult> query = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                        .filter("accountId", task.getAccountId())
-                                                        .filter("delegateId", delegateId)
-                                                        .filter(DelegateConnectionResultKeys.criteria, criteria);
+            Query<DelegateConnectionResult> query =
+                wingsPersistence.createQuery(DelegateConnectionResult.class)
+                    .filter(DelegateConnectionResultKeys.accountId, task.getAccountId())
+                    .filter(DelegateConnectionResultKeys.delegateId, delegateId)
+                    .filter(DelegateConnectionResultKeys.criteria, criteria);
             UpdateOperations<DelegateConnectionResult> updateOperations =
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
                     .set(DelegateConnectionResultKeys.lastUpdatedAt, clock.millis());
@@ -302,8 +303,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     for (DelegateConnectionResult result : resultsToSave) {
       Key<DelegateConnectionResult> existingResultKey =
           wingsPersistence.createQuery(DelegateConnectionResult.class)
-              .filter("accountId", result.getAccountId())
-              .filter("delegateId", result.getDelegateId())
+              .filter(DelegateConnectionResultKeys.accountId, result.getAccountId())
+              .filter(DelegateConnectionResultKeys.delegateId, result.getDelegateId())
               .filter(DelegateConnectionResultKeys.criteria, result.getCriteria())
               .getKey();
       if (existingResultKey != null) {

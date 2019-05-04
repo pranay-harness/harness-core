@@ -377,7 +377,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
     final long count = wingsPersistence.createQuery(EncryptedData.class)
                            .filter(ACCOUNT_ID_KEY, accountId)
-                           .filter("kmsId", vaultConfigId)
+                           .filter(EncryptedDataKeys.kmsId, vaultConfigId)
                            .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
                            .count(new CountOptions().limit(1));
 

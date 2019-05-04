@@ -2609,8 +2609,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution fetchWorkflowExecution(
       String appId, List<String> serviceIds, List<String> envIds, String workflowId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
-        .filter("workflowType", ORCHESTRATION)
-        .filter("workflowId", workflowId)
+        .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
+        .filter(WorkflowExecutionKeys.workflowId, workflowId)
         .filter("appId", appId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .field("serviceIds")

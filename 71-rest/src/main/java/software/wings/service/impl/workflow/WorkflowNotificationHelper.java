@@ -346,8 +346,8 @@ public class WorkflowNotificationHelper {
     if (phaseSubWorkflow != null) {
       StateExecutionInstance stateExecutionInstance =
           wingsPersistence.createQuery(StateExecutionInstance.class)
-              .filter("executionUuid", workflowExecution.getUuid())
-              .filter("stateType", PHASE.name())
+              .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+              .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
               .filter(StateExecutionInstanceKeys.displayName, phaseSubWorkflow.getName())
               .get();
       if (stateExecutionInstance != null) {

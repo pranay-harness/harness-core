@@ -283,7 +283,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public int updateSearchTagsForSecrets(String accountId) {
     int updateRecords = 0;
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .filter("accountId", accountId)
+                                     .filter(EncryptedDataKeys.accountId, accountId)
                                      .filter(EncryptedDataKeys.type, SettingVariableTypes.SECRET_TEXT);
     try (HIterator<EncryptedData> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {

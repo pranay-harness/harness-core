@@ -702,8 +702,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public boolean isCommitAlreadyProcessed(String accountId, String headCommit) {
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                              .filter("accountId", accountId)
-                              .filter("commitId", headCommit)
+                              .filter(GitCommitKeys.accountId, accountId)
+                              .filter(GitCommitKeys.commitId, headCommit)
                               .filter(GitCommitKeys.status, Status.COMPLETED)
                               .get();
     if (gitCommit != null) {
@@ -717,7 +717,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   public GitSyncWebhook getWebhook(String entityId, String accountId) {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
-                             .filter("entityId", entityId)
+                             .filter(GitSyncWebhookKeys.entityId, entityId)
                              .filter(GitSyncWebhookKeys.accountId, accountId)
                              .get();
 

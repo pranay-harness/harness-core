@@ -348,7 +348,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter("name", settingAttributeName)
+        .filter(SettingAttributeKeys.name, settingAttributeName)
         .filter(SettingAttributeKeys.accountId, accountId)
         .get();
   }
@@ -586,7 +586,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute getByName(String accountId, String appId, String envId, String attributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter("accountId", accountId)
+        .filter(SettingAttributeKeys.accountId, accountId)
         .field("appId")
         .in(asList(appId, GLOBAL_APP_ID))
         .field("envId")
@@ -759,7 +759,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public void deleteSettingAttributesByType(String accountId, String appId, String envId, String type) {
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
-                                .filter("accountId", accountId)
+                                .filter(SettingAttributeKeys.accountId, accountId)
                                 .filter("appId", appId)
                                 .filter(SettingAttributeKeys.envId, envId)
                                 .filter("value.type", type));

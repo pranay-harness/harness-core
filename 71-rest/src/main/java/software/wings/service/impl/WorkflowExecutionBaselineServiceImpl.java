@@ -46,8 +46,8 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
       List<WorkflowExecutionBaseline> existingBaselines =
           wingsPersistence.createQuery(WorkflowExecutionBaseline.class)
               .filter(APP_ID_KEY, workflowExecutionBaseline.getAppId())
-              .filter("workflowId", workflowExecutionBaseline.getWorkflowId())
-              .filter("envId", workflowExecutionBaseline.getEnvId())
+              .filter(WorkflowExecutionBaselineKeys.workflowId, workflowExecutionBaseline.getWorkflowId())
+              .filter(WorkflowExecutionBaselineKeys.envId, workflowExecutionBaseline.getEnvId())
               .filter(WorkflowExecutionBaselineKeys.serviceId, workflowExecutionBaseline.getServiceId())
               .asList();
       if (!isEmpty(existingBaselines)) {

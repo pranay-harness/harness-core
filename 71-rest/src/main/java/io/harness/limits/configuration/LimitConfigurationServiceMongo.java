@@ -9,6 +9,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
+import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
@@ -57,7 +58,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   public ConfiguredLimit get(String accountId, ActionType actionType) {
     return dao.createQuery(ConfiguredLimit.class)
         .filter(ConfiguredLimit.ACCOUNT_ID_KEY, accountId)
-        .filter("key", actionType.toString())
+        .filter(ConfiguredLimitKeys.key, actionType.toString())
         .get();
   }
 

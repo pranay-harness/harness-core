@@ -106,7 +106,7 @@ public class HostServiceImpl implements HostService {
                                .filter("appId", appHost.getAppId())
                                .filter("envId", appHost.getEnvId())
                                .filter("infraMappingId", appHost.getInfraMappingId())
-                               .filter("properties", appHost.getProperties())
+                               .filter(HostKeys.properties, appHost.getProperties())
                                .get();
     return applicationHost != null ? applicationHost : wingsPersistence.saveAndGet(Host.class, appHost);
   }
@@ -147,7 +147,7 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public List<Host> getHostsByEnv(String appId, String envId) {
-    return wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("envId", envId).asList();
+    return wingsPersistence.createQuery(Host.class).filter("appId", appId).filter(HostKeys.envId, envId).asList();
   }
 
   @Override
@@ -192,7 +192,7 @@ public class HostServiceImpl implements HostService {
   public void deleteByDnsName(String appId, String infraMappingId, String dnsName) {
     wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
                                 .filter("appId", appId)
-                                .filter("infraMappingId", infraMappingId)
+                                .filter(HostKeys.infraMappingId, infraMappingId)
                                 .filter(HostKeys.publicDns, dnsName));
   }
 

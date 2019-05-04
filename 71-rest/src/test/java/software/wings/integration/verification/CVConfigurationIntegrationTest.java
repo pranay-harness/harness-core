@@ -50,11 +50,14 @@ import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.intfc.AppService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
@@ -1192,21 +1195,21 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     assertEquals(100,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter("cvConfigId", savedObjectUuid)
+            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, savedObjectUuid)
             .filter("appId", appId)
             .asList()
             .size());
 
     assertEquals(100,
         wingsPersistence.createQuery(LogDataRecord.class)
-            .filter("cvConfigId", savedObjectUuid)
+            .filter(LogDataRecordKeys.cvConfigId, savedObjectUuid)
             .filter("appId", appId)
             .asList()
             .size());
 
     assertEquals(100,
         wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .filter("cvConfigId", savedObjectUuid)
+            .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
             .filter("appId", appId)
             .asList()
             .size());
@@ -1228,26 +1231,26 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     assertEquals(0,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter("cvConfigId", savedObjectUuid)
+            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, savedObjectUuid)
             .filter("appId", appId)
             .asList()
             .size());
 
     assertEquals(0,
         wingsPersistence.createQuery(LogDataRecord.class)
-            .filter("cvConfigId", savedObjectUuid)
+            .filter(LogDataRecordKeys.cvConfigId, savedObjectUuid)
             .filter("appId", appId)
             .asList()
             .size());
 
     assertEquals(16,
         wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .filter("cvConfigId", savedObjectUuid)
+            .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
             .filter("appId", appId)
             .asList()
             .size());
     wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-        .filter("cvConfigId", savedObjectUuid)
+        .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
         .filter("appId", appId)
         .asList()
         .forEach(logMLAnalysisRecord -> assertTrue(logMLAnalysisRecord.isDeprecated()));

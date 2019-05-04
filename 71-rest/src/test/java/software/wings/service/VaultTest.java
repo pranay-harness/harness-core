@@ -341,7 +341,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(vaultConfig, savedConfig);
 
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
-                                                .filter("type", SettingVariableTypes.VAULT)
+                                                .filter(EncryptedDataKeys.type, SettingVariableTypes.VAULT)
                                                 .filter(EncryptedDataKeys.accountId, renameAccountId)
                                                 .asList();
     assertEquals(1, encryptedDataList.size());
@@ -355,7 +355,7 @@ public class VaultTest extends WingsBaseTest {
     savedConfig.setName(name);
     vaultService.saveVaultConfig(renameAccountId, savedConfig);
     encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
-                            .filter("accountId", renameAccountId)
+                            .filter(EncryptedDataKeys.accountId, renameAccountId)
                             .filter(EncryptedDataKeys.type, SettingVariableTypes.VAULT)
                             .asList();
     assertEquals(1, encryptedDataList.size());
@@ -1460,7 +1460,7 @@ public class VaultTest extends WingsBaseTest {
         secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
-                               .filter("type", CONFIG_FILE)
+                               .filter(EncryptedDataKeys.type, CONFIG_FILE)
                                .filter(EncryptedDataKeys.accountId, accountId)
                                .get()
                                .getUuid();
@@ -1505,7 +1505,7 @@ public class VaultTest extends WingsBaseTest {
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).count());
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
-                                                .filter("type", CONFIG_FILE)
+                                                .filter(EncryptedDataKeys.type, CONFIG_FILE)
                                                 .filter(EncryptedDataKeys.accountId, accountId)
                                                 .asList();
     assertEquals(1, encryptedFileData.size());
@@ -1523,7 +1523,7 @@ public class VaultTest extends WingsBaseTest {
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).count());
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
-                            .filter("accountId", accountId)
+                            .filter(EncryptedDataKeys.accountId, accountId)
                             .filter(EncryptedDataKeys.type, CONFIG_FILE)
                             .asList();
     assertEquals(1, encryptedFileData.size());
@@ -1605,7 +1605,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
 
     List<EncryptedData> encryptedDatas = wingsPersistence.createQuery(EncryptedData.class)
-                                             .filter("encryptionType", EncryptionType.VAULT)
+                                             .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
                                              .filter(EncryptedDataKeys.accountId, accountId)
                                              .asList();
     assertEquals(1, encryptedDatas.size());
@@ -1637,7 +1637,7 @@ public class VaultTest extends WingsBaseTest {
       wingsPersistence.delete(accountId, SettingAttribute.class, attributeId);
       remainingAttrs.remove(attributeId);
       encryptedDatas = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter("accountId", accountId)
+                           .filter(EncryptedDataKeys.accountId, accountId)
                            .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
                            .asList();
       if (i == numOfSettingAttributes - 1) {
