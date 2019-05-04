@@ -1,9 +1,12 @@
 package io.harness;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.graphql.schema.type.QLService.QLServiceKeys;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -20,8 +23,9 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceBuilder;
-import software.wings.graphql.schema.type.QLService;
+import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLServiceConnection;
+import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 
 @Slf4j
 public class ServiceTest extends GraphQLTest {
@@ -34,19 +38,23 @@ public class ServiceTest extends GraphQLTest {
   public void testQueryService() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
 
     final Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     assertThat(service).isNotNull();
 
-    String query =
-        "{ service(serviceId: \"" + service.getUuid() + "\") { id name description artifactType deploymentType } }";
+    String query = "{ service(serviceId: \"" + service.getUuid()
+        + "\") { id name description artifactType deploymentType createdAt createdBy { id }}}";
 
-    QLService qlService = qlExecute(QLService.class, query);
-    assertThat(qlService.getId()).isEqualTo(service.getUuid());
-    assertThat(qlService.getName()).isEqualTo(service.getName());
-    assertThat(qlService.getDescription()).isEqualTo(service.getDescription());
-    assertThat(qlService.getArtifactType()).isEqualTo(service.getArtifactType());
-    assertThat(qlService.getDeploymentType()).isEqualTo(service.getDeploymentType());
+    QLTestObject qlService = qlExecute(query);
+    assertThat(qlService.get(QLServiceKeys.id)).isEqualTo(service.getUuid());
+    assertThat(qlService.get(QLServiceKeys.name)).isEqualTo(service.getName());
+    assertThat(qlService.get(QLServiceKeys.description)).isEqualTo(service.getDescription());
+    assertThat(qlService.get(QLServiceKeys.artifactType)).isEqualTo(service.getArtifactType().name());
+    assertThat(qlService.get(QLServiceKeys.deploymentType)).isEqualTo(service.getDeploymentType().name());
+    assertThat(qlService.get(QLServiceKeys.createdAt))
+        .isEqualTo(GraphQLDateTimeScalar.convertToString(service.getCreatedAt()));
+    assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.id)).isEqualTo(service.getCreatedBy().getUuid());
   }
 
   @Test

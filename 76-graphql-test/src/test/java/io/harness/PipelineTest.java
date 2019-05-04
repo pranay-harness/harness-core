@@ -8,6 +8,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import com.google.inject.Inject;
 
 import graphql.ExecutionResult;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.ApplicationGenerator;
@@ -22,7 +23,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineBuilder;
-import software.wings.graphql.schema.type.QLPipeline;
+import software.wings.graphql.schema.type.QLPipeline.QLPipelineKeys;
 import software.wings.graphql.schema.type.QLPipelineConnection;
 
 @Slf4j
@@ -37,15 +38,17 @@ public class PipelineTest extends GraphQLTest {
   public void testQueryPipeline() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
 
     final Pipeline pipeline = pipelineGenerator.ensurePredefined(seed, owners, BARRIER);
 
-    String query = "{ pipeline(pipelineId: \"" + pipeline.getUuid() + "\") { id name description } }";
+    String query =
+        "{ pipeline(pipelineId: \"" + pipeline.getUuid() + "\") { id name description createdAt createdBy { id } } }";
 
-    QLPipeline qlPipeline = qlExecute(QLPipeline.class, query);
-    assertThat(qlPipeline.getId()).isEqualTo(pipeline.getUuid());
-    assertThat(qlPipeline.getName()).isEqualTo(pipeline.getName());
-    assertThat(qlPipeline.getDescription()).isEqualTo(pipeline.getDescription());
+    QLTestObject qlPipeline = qlExecute(query);
+    assertThat(qlPipeline.get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
+    assertThat(qlPipeline.get(QLPipelineKeys.name)).isEqualTo(pipeline.getName());
+    assertThat(qlPipeline.get(QLPipelineKeys.description)).isEqualTo(pipeline.getDescription());
   }
 
   @Test

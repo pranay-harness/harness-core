@@ -8,6 +8,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import com.google.inject.Inject;
 
 import graphql.ExecutionResult;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.ApplicationGenerator;
@@ -16,14 +17,17 @@ import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.graphql.schema.type.QLEnvironment;
+import software.wings.graphql.scalar.GraphQLDateTimeScalar;
+import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentKeys;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
+import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 
 @Slf4j
 public class EnvironmentTest extends GraphQLTest {
@@ -37,15 +41,21 @@ public class EnvironmentTest extends GraphQLTest {
   public void testQueryEnvironment() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
 
     final Environment environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
 
-    String query = "{ environment(environmentId: \"" + environment.getUuid() + "\") { id name description type } }";
+    String query = "{ environment(environmentId: \"" + environment.getUuid()
+        + "\") { id name description type createdAt createdBy { id }}}";
 
-    QLEnvironment qlEnvironment = qlExecute(QLEnvironment.class, query);
-    assertThat(qlEnvironment.getId()).isEqualTo(environment.getUuid());
-    assertThat(qlEnvironment.getName()).isEqualTo(environment.getName());
-    assertThat(qlEnvironment.getDescription()).isEqualTo(environment.getDescription());
+    QLTestObject qlEnvironment = qlExecute(query);
+    assertThat(qlEnvironment.get(QLEnvironmentKeys.id)).isEqualTo(environment.getUuid());
+    assertThat(qlEnvironment.get(QLEnvironmentKeys.name)).isEqualTo(environment.getName());
+    assertThat(qlEnvironment.get(QLEnvironmentKeys.description)).isEqualTo(environment.getDescription());
+    assertThat(qlEnvironment.get(QLEnvironmentKeys.createdAt))
+        .isEqualTo(GraphQLDateTimeScalar.convertToString(environment.getCreatedAt()));
+    assertThat(qlEnvironment.sub(QLEnvironmentKeys.createdBy).get(QLUserKeys.id))
+        .isEqualTo(environment.getCreatedBy().getUuid());
   }
 
   @Test

@@ -57,6 +57,8 @@ type Environment {
   name: String
   description: String
   type: EnvironmentType
+  createdAt: DateTime
+  createdBy: User
   instances(limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: instancesByEnvironment, contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
 }
@@ -77,6 +79,9 @@ type Pipeline {
   # Description of the pipeline
   description: String
 
+  createdAt: DateTime
+  createdBy: User
+
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
 }
@@ -96,6 +101,9 @@ type Workflow {
 
   # Description of the workflow
   description: String
+
+  createdAt: DateTime
+  createdBy: User
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
@@ -118,6 +126,9 @@ type Service {
   artifactType: String
   # Deployment Type SSH, Helm, Kubernetes
   deploymentType: String
+
+  createdAt: DateTime
+  createdBy: User
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
