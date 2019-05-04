@@ -128,7 +128,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName) {
     return wingsPersistence.createQuery(ArtifactStream.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(ArtifactStreamKeys.serviceId, serviceId)
         .filter(ArtifactStreamKeys.name, artifactStreamName)
         .get();
   }

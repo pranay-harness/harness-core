@@ -119,7 +119,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .filter("state_execution_id", analysisTask.getState_execution_id())
             .field("analysis_minute")
             .lessThanOrEq(analysisTask.getAnalysis_minute())
-            .filter("version", learningEngineApiVersion)
+            .filter(LearningEngineAnalysisTaskKeys.version, learningEngineApiVersion)
             .field("executionStatus")
             .in(Lists.newArrayList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS))
             .filter("cluster_level", analysisTask.getCluster_level())

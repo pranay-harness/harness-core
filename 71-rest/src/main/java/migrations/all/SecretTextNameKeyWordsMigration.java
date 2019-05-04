@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Misc;
 @Slf4j
@@ -15,9 +16,10 @@ public class SecretTextNameKeyWordsMigration implements Migration {
 
   @Override
   public void migrate() {
-    try (HIterator<EncryptedData> iterator = new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
-                                                                 .filter("type", SettingVariableTypes.SECRET_TEXT)
-                                                                 .fetch())) {
+    try (HIterator<EncryptedData> iterator =
+             new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
+                                 .filter(EncryptedDataKeys.type, SettingVariableTypes.SECRET_TEXT)
+                                 .fetch())) {
       while (iterator.hasNext()) {
         EncryptedData encryptedData = iterator.next();
         logger.info("updating {} id {}", encryptedData.getName(), encryptedData.getUuid());

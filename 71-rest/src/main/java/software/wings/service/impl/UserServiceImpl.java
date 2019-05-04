@@ -577,7 +577,7 @@ public class UserServiceImpl implements UserService {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {
       userInvite = wingsPersistence.createQuery(UserInvite.class)
-                       .filter("email", email)
+                       .filter(UserInviteKeys.email, email)
                        .filter(UserInviteKeys.accountId, accountId)
                        .get();
     }
@@ -1998,7 +1998,7 @@ public class UserServiceImpl implements UserService {
       updateOperations.addToSet("accounts", account);
     }
     wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                .filter("email", existingUser.getEmail())
+                                .filter(UserKeys.email, existingUser.getEmail())
                                 .filter("appId", existingUser.getAppId()),
         updateOperations);
   }
@@ -2007,8 +2007,9 @@ public class UserServiceImpl implements UserService {
     if (isNotEmpty(roles)) {
       UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(User.class);
       updateOperations.addToSet("roles", roles);
-      wingsPersistence.update(
-          wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
+      wingsPersistence.update(wingsPersistence.createQuery(User.class)
+                                  .filter(UserKeys.email, user.getEmail())
+                                  .filter("appId", user.getAppId()),
           updateOperations);
     }
   }

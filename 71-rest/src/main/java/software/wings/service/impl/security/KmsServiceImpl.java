@@ -110,7 +110,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public KmsConfig getSecretConfig(String accountId) {
     KmsConfig kmsConfig = wingsPersistence.createQuery(KmsConfig.class)
-                              .filter("accountId", accountId)
+                              .filter(KmsConfigKeys.accountId, accountId)
                               .filter(KmsConfigKeys.isDefault, true)
                               .get();
 
@@ -262,8 +262,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public boolean deleteKmsConfig(String accountId, String kmsConfigId) {
     final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter("accountId", accountId)
-                           .filter("kmsId", kmsConfigId)
+                           .filter(EncryptedDataKeys.accountId, accountId)
+                           .filter(EncryptedDataKeys.kmsId, kmsConfigId)
                            .filter(EncryptedDataKeys.encryptionType, EncryptionType.KMS)
                            .count(new CountOptions().limit(1));
 
@@ -293,7 +293,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       while (iterator.hasNext()) {
         KmsConfig kmsConfig = iterator.next();
         Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
-                                                      .filter("accountId", accountId)
+                                                      .filter(EncryptedDataKeys.accountId, accountId)
                                                       .filter(EncryptedDataKeys.kmsId, kmsConfig.getUuid());
         kmsConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
         if (kmsConfig.isDefault()) {

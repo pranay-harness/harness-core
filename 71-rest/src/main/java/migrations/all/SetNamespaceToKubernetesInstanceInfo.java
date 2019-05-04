@@ -72,9 +72,9 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
               try {
                 List<Instance> instances =
                     wingsPersistence.createQuery(Instance.class)
-                        .filter("infraMappingId", infraMappingId)
+                        .filter(InstanceKeys.infraMappingId, infraMappingId)
                         .filter("appId", appId)
-                        .filter("instanceType", InstanceType.KUBERNETES_CONTAINER_INSTANCE.name())
+                        .filter(InstanceKeys.instanceType, InstanceType.KUBERNETES_CONTAINER_INSTANCE.name())
                         .filter(InstanceKeys.isDeleted, false)
                         .asList();
 

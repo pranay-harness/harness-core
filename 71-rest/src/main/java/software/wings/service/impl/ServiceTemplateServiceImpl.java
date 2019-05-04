@@ -314,7 +314,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     Query<ServiceTemplate> query = wingsPersistence.createQuery(ServiceTemplate.class)
                                        .filter(ServiceTemplate.APP_ID_KEY, appId)
                                        .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
-                                       .filter("defaultServiceTemplate", true)
+                                       .filter(ServiceTemplateKeys.defaultServiceTemplate, true)
                                        .filter(ServiceTemplateKeys.name, oldServiceName);
     UpdateOperations<ServiceTemplate> updateOperations =
         wingsPersistence.createUpdateOperations(ServiceTemplate.class).set("name", newServiceName);

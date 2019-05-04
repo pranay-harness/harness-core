@@ -35,6 +35,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
+import software.wings.service.impl.analysis.TimeSeriesMLScores.TimeSeriesMLScoresKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -466,10 +469,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
 
     analysisRecords.forEach(analysisRecord -> {
-      AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
-                                            .filter("appId", analysisRecord.getAppId())
-                                            .filter("stateExecutionId", analysisRecord.getStateExecutionId())
-                                            .get();
+      AnalysisContext analysisContext =
+          wingsPersistence.createQuery(AnalysisContext.class)
+              .filter("appId", analysisRecord.getAppId())
+              .filter(AnalysisContextKeys.stateExecutionId, analysisRecord.getStateExecutionId())
+              .get();
       if (analysisContext == null) {
         return;
       }
@@ -574,12 +578,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
 
     // delete time series scores records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(TimeSeriesMLScores.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLScores.class)
+                                .filter(TimeSeriesMLScoresKeys.stateExecutionId, stateExecutionId));
 
     // delete cv dashboard execution data
-    wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-                                .filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+            .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId));
 
     // delete learning engine tasks
     wingsPersistence.delete(
@@ -590,7 +595,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         wingsPersistence.createQuery(TimeSeriesMetricGroup.class).filter("stateExecutionId", stateExecutionId));
 
     // delete verification service tasks
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(AnalysisContext.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
+                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId));
   }
 }

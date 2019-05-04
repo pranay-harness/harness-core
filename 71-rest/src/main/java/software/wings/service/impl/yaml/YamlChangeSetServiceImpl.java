@@ -83,7 +83,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public synchronized List<YamlChangeSet> getQueuedChangeSet(String accountId) {
     try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
       Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
-                                           .filter("accountId", accountId)
+                                           .filter(YamlChangeSetKeys.accountId, accountId)
                                            .filter(YamlChangeSetKeys.status, Status.QUEUED)
                                            .order(YamlChangeSet.CREATED_AT_KEY);
       UpdateOperations<YamlChangeSet> updateOperations =
@@ -209,7 +209,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     setUnset(ops, "status", newStatus);
 
     Query<YamlChangeSet> yamlChangeSetQuery = wingsPersistence.createQuery(YamlChangeSet.class)
-                                                  .filter("accountId", accountId)
+                                                  .filter(YamlChangeSetKeys.accountId, accountId)
                                                   .filter(YamlChangeSetKeys.status, currentStatus);
 
     UpdateResults status = wingsPersistence.update(yamlChangeSetQuery, ops);

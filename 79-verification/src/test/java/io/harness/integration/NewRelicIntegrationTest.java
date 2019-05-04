@@ -123,7 +123,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     hosts.add("ip-172-31-12-51");
 
     newRelicConfigId = wingsPersistence.createQuery(SettingAttribute.class)
-                           .filter("name", NEW_RELIC_CONNECTOR_NAME)
+                           .filter(SettingAttributeKeys.name, NEW_RELIC_CONNECTOR_NAME)
                            .filter(SettingAttributeKeys.accountId, accountId)
                            .get()
                            .getUuid();
@@ -366,8 +366,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
 
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
-                                .filter("accountId", accountId)
-                                .filter("name", "newrelic_prod"));
+                                .filter(SettingAttributeKeys.accountId, accountId)
+                                .filter(SettingAttributeKeys.name, "newrelic_prod"));
 
     String serverConfigId = wingsPersistence.save(
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("newrelic_prod").build());
@@ -428,7 +428,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
 
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
-                                .filter("accountId", accountId)
+                                .filter(SettingAttributeKeys.accountId, accountId)
                                 .filter(SettingAttributeKeys.name, "newrelic_dev"));
 
     String serverConfigId = wingsPersistence.save(

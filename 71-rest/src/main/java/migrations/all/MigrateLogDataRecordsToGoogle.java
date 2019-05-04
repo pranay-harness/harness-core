@@ -13,6 +13,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.intfc.DataStoreService;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class MigrateLogDataRecordsToGoogle implements Migration {
     List<LogDataRecord> recordsFromMongo = new ArrayList<>();
 
     Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                                  .filter("clusterLevel", "L2")
+                                                  .filter(LogDataRecordKeys.clusterLevel, "L2")
                                                   .field("createdAt")
                                                   .greaterThan(startTime);
 

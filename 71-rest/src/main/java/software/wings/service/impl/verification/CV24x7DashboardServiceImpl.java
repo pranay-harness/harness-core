@@ -244,7 +244,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
 
   private LogMLAnalysisRecord getLastAnalysisRecord(String appId, String cvConfigId) {
     return wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-        .filter("cvConfigId", cvConfigId)
+        .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
         .filter("appId", appId)
         .order("-logCollectionMinute")
         .get();

@@ -158,7 +158,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
         long remainingSecrets;
         do {
           remainingSecrets = wingsPersistence.createQuery(EncryptedData.class)
-                                 .filter("accountId", account.getUuid())
+                                 .filter(EncryptedDataKeys.accountId, account.getUuid())
                                  .filter(EncryptedDataKeys.kmsId, oldKmsConfig.getUuid())
                                  .count();
           if (remainingSecrets > 0) {

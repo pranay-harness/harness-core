@@ -390,7 +390,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(LogDataRecord.class)
               .filter("appId", appId)
-              .filter("workflowExecutionId", successfulExecution)
+              .filter(LogDataRecordKeys.workflowExecutionId, successfulExecution)
               .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
               .filter(LogDataRecordKeys.query, query)
               .count(new CountOptions().limit(1))
@@ -510,7 +510,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType) {
     LogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                             .filter("stateExecutionId", stateExecutionId)
+                                             .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
                                              .filter("appId", appId)
                                              .filter(LogMLAnalysisRecordKeys.stateType, stateType)
                                              .order("-logCollectionMinute")
@@ -975,7 +975,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {
     return wingsPersistence.createQuery(LogDataRecord.class)
                .filter("appId", workflowExecution.getAppId())
-               .filter("stateType", stateType)
+               .filter(LogDataRecordKeys.stateType, stateType)
                .filter(LogDataRecordKeys.workflowId, workflowExecution.getWorkflowId())
                .filter(LogDataRecordKeys.workflowExecutionId, workflowExecution.getUuid())
                .count(new CountOptions().limit(1))
@@ -1079,7 +1079,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       String stateExecutionId, String appId, StateType stateType, String expName) {
     ExperimentalLogMLAnalysisRecord analysisRecord =
         wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-            .filter("stateExecutionId", stateExecutionId)
+            .filter(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
             .filter("appId", appId)
             .filter(ExperimentalLogMLAnalysisRecordKeys.stateType, stateType)
             .filter("experiment_name", expName)

@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
+import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.LimitChecker;
 import io.harness.persistence.ReadPref;
@@ -57,7 +58,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
 
   @After
   public void cleanUp() throws Exception {
-    persistence.delete(persistence.createQuery(UsageBucket.class).filter("key", ACTION.key()));
+    persistence.delete(persistence.createQuery(UsageBucket.class).filter(UsageBucketKeys.key, ACTION.key()));
   }
 
   @Value

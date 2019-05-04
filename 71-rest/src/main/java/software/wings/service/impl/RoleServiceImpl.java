@@ -130,7 +130,7 @@ public class RoleServiceImpl implements RoleService {
   @Override
   public Role getAppAdminRole(String accountId, String appId) {
     return wingsPersistence.createQuery(Role.class)
-        .filter("roleType", RoleType.APPLICATION_ADMIN)
+        .filter(RoleKeys.roleType, RoleType.APPLICATION_ADMIN)
         .filter(Role.ACCOUNT_ID_KEY, accountId)
         .filter("appId", appId)
         .get();

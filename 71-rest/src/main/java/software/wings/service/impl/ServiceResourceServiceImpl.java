@@ -1663,7 +1663,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType) {
     return wingsPersistence.createQuery(ContainerTask.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(ContainerTaskKeys.serviceId, serviceId)
         .filter(ContainerTaskKeys.deploymentType, deploymentType)
         .get();
   }

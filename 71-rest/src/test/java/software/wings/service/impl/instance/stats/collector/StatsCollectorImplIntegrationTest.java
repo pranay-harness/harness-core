@@ -70,7 +70,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
   public void cleanUp() {
     Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
     ds.delete(ds.createQuery(Instance.class)
-                  .filter("accountId", WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
+                  .filter(InstanceKeys.accountId, WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                   .filter(InstanceKeys.appName, SOME_APP_NAME));
     ds.delete(ds.createQuery(InstanceStatsSnapshot.class)
                   .filter(InstanceStatsSnapshotKeys.accountId, WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID));

@@ -261,7 +261,7 @@ public class YamlHelper {
   public static GitSyncWebhook verifyWebhookToken(
       WingsPersistence wingsPersistence, String accountId, String webhookToken) {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
-                             .filter("webhookToken", webhookToken)
+                             .filter(GitSyncWebhookKeys.webhookToken, webhookToken)
                              .filter(GitSyncWebhookKeys.accountId, accountId)
                              .get();
 
