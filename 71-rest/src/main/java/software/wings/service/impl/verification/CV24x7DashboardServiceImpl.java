@@ -26,12 +26,14 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.dashboard.HeatMapUnit;
@@ -86,7 +88,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   private List<CVConfiguration> getCVConfigurations(String appId, String serviceId) {
     List<CVConfiguration> cvConfigurations = wingsPersistence.createQuery(CVConfiguration.class)
                                                  .filter("appId", appId)
-                                                 .filter("serviceId", serviceId)
+                                                 .filter(CVConfigurationKeys.serviceId, serviceId)
                                                  .asList();
     if (isEmpty(cvConfigurations)) {
       logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
@@ -382,7 +384,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     Map<String, Double> tagScoreMap = new HashMap<>();
     TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
                                              .filter("appId", appId)
-                                             .filter("cvConfigId", cvConfigId)
+                                             .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfigId)
                                              .get();
 
     if (template != null) {

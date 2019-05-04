@@ -6,7 +6,9 @@ import com.google.inject.Singleton;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.Command.CommandKeys;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;
@@ -25,7 +27,7 @@ public class CommandServiceImpl implements CommandService {
     return wingsPersistence.createQuery(Command.class)
         .filter("appId", appId)
         .filter("originEntityId", originEntityId)
-        .filter("version", version)
+        .filter(CommandKeys.version, version)
         .get();
   }
 
@@ -39,7 +41,7 @@ public class CommandServiceImpl implements CommandService {
     return wingsPersistence.createQuery(ServiceCommand.class)
         .filter("appId", appId)
         .filter("serviceId", serviceId)
-        .filter("name", serviceCommandName)
+        .filter(ServiceCommandKeys.name, serviceCommandName)
         .get();
   }
 

@@ -122,6 +122,7 @@ import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
@@ -130,6 +131,7 @@ import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateSequenceConfig;
+import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
@@ -552,7 +554,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                   .filter(DelegateTaskKeys.accountId, delegate.getAccountId())
                                                   .filter(DelegateTaskKeys.delegateId, delegate.getUuid())
-                                                  .filter("status", DelegateTask.Status.STARTED)
+                                                  .filter(DelegateTaskKeys.status, DelegateTask.Status.STARTED)
                                                   .field(DelegateTaskKeys.lastUpdatedAt)
                                                   .lessThan(System.currentTimeMillis())
                                                   .field(ID_KEY)
@@ -1128,7 +1130,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (existingDelegate != null && ECS.equals(existingDelegate.getDelegateType())
           && existingDelegate.getSequenceNum() != null) {
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateSequenceConfig.class)
-                                    .filter("accountId", accountId)
+                                    .filter(DelegateSequenceConfigKeys.accountId, accountId)
                                     .filter(HOST_NAME_KEY, existingDelegate.getHostName())
                                     .filter(SEQUENCE_NUM_KEY, Integer.parseInt(existingDelegate.getSequenceNum())));
       }
@@ -1152,7 +1154,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     } else {
       Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
                                           .filter(Delegate.ACCOUNT_ID_KEY, delegate.getAccountId())
-                                          .filter("hostName", delegate.getHostName());
+                                          .filter(DelegateKeys.hostName, delegate.getHostName());
       // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
       // We ignore IP address because that can change with every restart of the pod.
       if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
@@ -1538,7 +1540,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                           .addToSet("validationCompleteDelegateIds", delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                          .filter("status", QUEUED)
+                                          .filter(DelegateTaskKeys.status, QUEUED)
                                           .field(DelegateTaskKeys.delegateId)
                                           .doesNotExist()
                                           .filter(ID_KEY, delegateTask.getUuid());
@@ -1564,7 +1566,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                    .filter("status", QUEUED)
+                                    .filter(DelegateTaskKeys.status, QUEUED)
                                     .field(DelegateTaskKeys.delegateId)
                                     .doesNotExist()
                                     .filter(ID_KEY, delegateTask.getUuid());
@@ -1628,7 +1630,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createUpdateOperations(DelegateTask.class).addToSet("validatingDelegateIds", delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                          .filter("status", QUEUED)
+                                          .filter(DelegateTaskKeys.status, QUEUED)
                                           .field(DelegateTaskKeys.delegateId)
                                           .doesNotExist()
                                           .filter(ID_KEY, delegateTask.getUuid());
@@ -1660,7 +1662,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                           .unset("validationCompleteDelegateIds");
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                          .filter("status", QUEUED)
+                                          .filter(DelegateTaskKeys.status, QUEUED)
                                           .field(DelegateTaskKeys.delegateId)
                                           .doesNotExist()
                                           .filter(ID_KEY, delegateTask.getUuid());
@@ -1785,7 +1787,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         delegateTask.isAsync() ? "(async)" : "(sync)");
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                    .filter("status", QUEUED)
+                                    .filter(DelegateTaskKeys.status, QUEUED)
                                     .field(DelegateTaskKeys.delegateId)
                                     .doesNotExist()
                                     .filter(ID_KEY, taskId)
@@ -1804,7 +1806,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
                .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-               .filter("status", STARTED)
+               .filter(DelegateTaskKeys.status, STARTED)
                .filter(DelegateTaskKeys.delegateId, delegateId)
                .filter(ID_KEY, taskId)
                .project(DelegateTaskKeys.data_parameters, false)
@@ -1971,7 +1973,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                 .filter(DelegateTaskKeys.accountId, accountId)
                                                 .filter("status", QUEUED)
-                                                .filter("async", !sync)
+                                                .filter(DelegateTaskKeys.async, !sync)
                                                 .field(DelegateTaskKeys.delegateId)
                                                 .doesNotExist();
 
@@ -1993,7 +1995,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private List<DelegateTaskEvent> getAbortedEvents(String accountId, String delegateId) {
     Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
                                            .filter("status", ABORTED)
-                                           .filter("async", true)
+                                           .filter(DelegateTaskKeys.async, true)
                                            .filter(DelegateTaskKeys.accountId, accountId)
                                            .filter(DelegateTaskKeys.delegateId, delegateId);
 

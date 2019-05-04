@@ -53,6 +53,7 @@ import software.wings.beans.RoleType;
 import software.wings.beans.Service;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
@@ -307,7 +308,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertEquals(0, response.getResponseMessages().size());
-    wingsPersistence.update(wingsPersistence.createQuery(User.class).filter("email", email),
+    wingsPersistence.update(wingsPersistence.createQuery(User.class).filter(UserKeys.email, email),
         wingsPersistence.createUpdateOperations(User.class).set("emailVerified", true));
     Thread.sleep(2000);
     loginUser(email, pwd);

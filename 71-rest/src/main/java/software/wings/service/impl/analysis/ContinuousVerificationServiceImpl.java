@@ -86,6 +86,8 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
+import software.wings.service.impl.analysis.TimeSeriesRiskSummary.TimeSeriesRiskSummaryKeys;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
@@ -121,6 +123,7 @@ import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesOfMetric;
@@ -201,7 +204,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status) {
     Query<ContinuousVerificationExecutionMetaData> query =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-            .filter("stateExecutionId", stateExecutionId);
+            .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId);
 
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class)
@@ -583,7 +586,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     List<CVConfiguration> cvConfigurations = wingsPersistence.createQuery(CVConfiguration.class)
                                                  .filter("appId", appId)
-                                                 .filter("serviceId", serviceId)
+                                                 .filter(CVConfigurationKeys.serviceId, serviceId)
                                                  .asList();
 
     if (isEmpty(cvConfigurations)) {
@@ -919,7 +922,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       Query<TimeSeriesRiskSummary> timeSeriesRiskSummaryQuery =
           wingsPersistence.createQuery(TimeSeriesRiskSummary.class)
               .filter("appId", cvConfiguration.getAppId())
-              .filter("cvConfigId", cvConfiguration.getUuid())
+              .filter(TimeSeriesRiskSummaryKeys.cvConfigId, cvConfiguration.getUuid())
               .field("analysisMinute")
               .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
               .field("analysisMinute")

@@ -57,6 +57,7 @@ import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
@@ -229,7 +230,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Set<String> tags = new HashSet<>();
     TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
                                              .filter("appId", appId)
-                                             .filter("cvConfigId", cvConfigId)
+                                             .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfigId)
                                              .get();
 
     if (template != null) {

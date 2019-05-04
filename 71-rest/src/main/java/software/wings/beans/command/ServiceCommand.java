@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -26,6 +27,7 @@ import java.util.Optional;
  */
 @Entity(value = "serviceCommands", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "ServiceCommandKeys")
 public class ServiceCommand extends Base {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
 

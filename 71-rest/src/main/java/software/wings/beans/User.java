@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -37,6 +38,7 @@ import javax.security.auth.Subject;
 @JsonInclude(NON_EMPTY)
 @Entity(value = "users", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "UserKeys")
 public class User extends Base implements Principal {
   public static final String EMAIL_KEY = "email";
   public static final String ROLES_KEY = "roles";

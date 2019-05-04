@@ -32,6 +32,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import org.apache.http.HttpStatus;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -54,6 +55,7 @@ import java.util.List;
 @ToString(exclude = {"validUntil"})
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants(innerTypeName = "ThirdPartyApiCallLogKeys")
 public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;

@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
+import lombok.experimental.FieldNameConstants;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -25,6 +26,7 @@ import java.util.Objects;
                                                                              , @Field("name") }))
 @Entity(value = "appContainers", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "AppContainerKeys")
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;
   @FormDataParam("description") private String description;

@@ -21,7 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateScope;
+import software.wings.beans.DelegateScope.DelegateScopeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
@@ -67,14 +69,15 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     setUnset(updateOperations, "serviceInfrastructures", delegateScope.getServiceInfrastructures());
 
     Query<DelegateScope> query = wingsPersistence.createQuery(DelegateScope.class)
-                                     .filter("accountId", delegateScope.getAccountId())
+                                     .filter(DelegateScopeKeys.accountId, delegateScope.getAccountId())
                                      .filter(ID_KEY, delegateScope.getUuid());
     wingsPersistence.update(query, updateOperations);
     DelegateScope updatedDelegateScope = get(delegateScope.getAccountId(), delegateScope.getUuid());
     logger.info("Updated delegate scope: {}", updatedDelegateScope.getUuid());
 
-    List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).filter("accountId", updatedDelegateScope.getAccountId()).asList();
+    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
+                                   .filter(DelegateKeys.accountId, updatedDelegateScope.getAccountId())
+                                   .asList();
     for (Delegate delegate : delegates) {
       boolean includeUpdated = replaceUpdatedScope(updatedDelegateScope, delegate.getIncludeScopes());
       boolean excludeUpdated = replaceUpdatedScope(updatedDelegateScope, delegate.getExcludeScopes());
@@ -121,7 +124,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   @Override
   public void delete(String accountId, String delegateScopeId) {
     DelegateScope delegateScope = wingsPersistence.createQuery(DelegateScope.class)
-                                      .filter("accountId", accountId)
+                                      .filter(DelegateScopeKeys.accountId, accountId)
                                       .filter(ID_KEY, delegateScopeId)
                                       .get();
     if (delegateScope != null) {
@@ -133,7 +136,8 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
 
   private void ensureScopeSafeToDelete(String accountId, DelegateScope delegateScope) {
     String delegateScopeId = delegateScope.getUuid();
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).filter("accountId", accountId).asList();
+    List<Delegate> delegates =
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate
                                          -> (isNotEmpty(delegate.getIncludeScopes())

@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -23,6 +24,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Indexes({ @Index(fields = { @Field("accountId") }, options = @IndexOptions(name = "delegateAccountIdIdx")) })
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "DelegateKeys")
 public class Delegate extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String DELEGATE_NAME_KEY = "delegateName";

@@ -15,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.stencils.StencilCategory;
 
@@ -37,7 +38,7 @@ public class CommandHelper {
     List<ServiceCommand> serviceCommands = wingsPersistence.createQuery(ServiceCommand.class)
                                                .project("name", true)
                                                .filter("appId", appId)
-                                               .filter("serviceId", serviceId)
+                                               .filter(ServiceCommandKeys.serviceId, serviceId)
                                                .asList();
 
     List<CommandUnit> commands =

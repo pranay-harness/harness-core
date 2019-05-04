@@ -27,6 +27,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -333,10 +334,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public void handleAbortEvent(ExecutionContext executionContext) {
     continuousVerificationService.setMetaDataExecutionStatus(
         executionContext.getStateExecutionInstanceId(), ExecutionStatus.ABORTED);
-    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
-                                          .filter("appId", executionContext.getAppId())
-                                          .filter("stateExecutionId", executionContext.getStateExecutionInstanceId())
-                                          .get();
+    AnalysisContext analysisContext =
+        wingsPersistence.createQuery(AnalysisContext.class)
+            .filter("appId", executionContext.getAppId())
+            .filter(AnalysisContextKeys.stateExecutionId, executionContext.getStateExecutionInstanceId())
+            .get();
 
     if (analysisContext == null) {
       analysisContext = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());

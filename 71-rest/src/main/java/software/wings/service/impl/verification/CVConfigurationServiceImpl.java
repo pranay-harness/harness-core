@@ -31,9 +31,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -163,7 +167,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     CVConfiguration cvConfiguration = wingsPersistence.createQuery(CVConfiguration.class)
                                           .filter("name", name)
                                           .filter("appId", appId)
-                                          .filter("envId", envId)
+                                          .filter(CVConfigurationKeys.envId, envId)
                                           .get();
 
     if (cvConfiguration == null) {
@@ -340,22 +344,23 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               "Invalid baseline start and end time provided. They both should be positive and the difference should at least be "
                   + (CRON_POLL_INTERVAL_IN_MINUTES - 1) + " provided config: " + logsCVConfiguration);
     }
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LogDataRecord.class).filter("appId", appId).filter("cvConfigId", cvConfigId));
+    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class)
+                                .filter("appId", appId)
+                                .filter(LogDataRecordKeys.cvConfigId, cvConfigId));
     wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                 .filter("appId", appId)
-                                .filter("cvConfigId", cvConfigId)
+                                .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
                                 .field("logCollectionMinute")
                                 .greaterThanOrEq(logsCVConfiguration.getBaselineStartMinute()));
     wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                 .filter("appId", appId)
-                                .filter("cvConfigId", cvConfigId)
+                                .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
                                 .field("logCollectionMinute")
                                 .lessThanOrEq(logsCVConfiguration.getBaselineStartMinute()),
         wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class).set("deprecated", true));
     wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                 .filter("appId", appId)
-                                .filter("cvConfigId", cvConfigId));
+                                .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId));
     cvConfiguration.setBaselineStartMinute(logsCVConfiguration.getBaselineStartMinute());
     cvConfiguration.setBaselineEndMinute(logsCVConfiguration.getBaselineEndMinute());
     wingsPersistence.save(cvConfiguration);
@@ -366,7 +371,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (!stateType.equals(StateType.APP_DYNAMICS) && !stateType.equals(StateType.NEW_RELIC)) {
       TimeSeriesMetricTemplates timeSeriesMetricTemplates =
           wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
-              .filter("cvConfigId", serviceConfigurationId)
+              .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, serviceConfigurationId)
               .filter(TimeSeriesMetricTemplates.ACCOUNT_ID_KEY, accountId)
               .get();
       if (timeSeriesMetricTemplates != null) {
