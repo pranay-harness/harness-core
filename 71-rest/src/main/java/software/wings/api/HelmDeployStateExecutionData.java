@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import com.google.common.collect.Maps;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.ResponseData;
 import lombok.AllArgsConstructor;
@@ -48,44 +48,45 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
-    return getInternalExecutionDetails();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    setExecutionData(executionDetails);
+    return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
-    return getInternalExecutionDetails();
+    Map<String, ExecutionDataValue> executionSummary = super.getExecutionSummary();
+    setExecutionData(executionSummary);
+    return executionSummary;
   }
 
-  private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
-
-    if (getDelegateMetaInfo() != null) {
-      putNotNull(executionDetails, "delegateName",
-          ExecutionDataValue.builder().displayName("Delegate").value(this.getDelegateMetaInfo().getHostName()).build());
+  private void setExecutionData(Map<String, ExecutionDataValue> executionData) {
+    String errorMsg = getErrorMsg();
+    if (isNotBlank(errorMsg) && errorMsg.length() > 256) {
+      putNotNull(executionData, "errorMsg",
+          ExecutionDataValue.builder().displayName("Message").value(errorMsg.substring(0, 256)).build());
     }
 
-    putNotNull(executionDetails, "activityId",
-        ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
-    putNotNull(executionDetails, "chartRepositoryUrl",
+    putNotNull(
+        executionData, "activityId", ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
+    putNotNull(executionData, "chartRepositoryUrl",
         ExecutionDataValue.builder().value(chartRepositoryUrl).displayName("Chart Repository").build());
     putNotNull(
-        executionDetails, "chartName", ExecutionDataValue.builder().value(chartName).displayName("Chart Name").build());
-    putNotNull(executionDetails, "chartVersion",
+        executionData, "chartName", ExecutionDataValue.builder().value(chartName).displayName("Chart Name").build());
+    putNotNull(executionData, "chartVersion",
         ExecutionDataValue.builder().value(chartVersion).displayName("Chart Version").build());
-    putNotNull(executionDetails, "releaseName",
+    putNotNull(executionData, "releaseName",
         ExecutionDataValue.builder().value(releaseName).displayName("Release Name").build());
-    putNotNull(executionDetails, "releaseOldVersion",
+    putNotNull(executionData, "releaseOldVersion",
         ExecutionDataValue.builder().value(releaseOldVersion).displayName("Release Old Version").build());
-    putNotNull(executionDetails, "releaseNewVersion",
+    putNotNull(executionData, "releaseNewVersion",
         ExecutionDataValue.builder().value(releaseNewVersion).displayName("Release New Version").build());
     putNotNull(
-        executionDetails, "namespace", ExecutionDataValue.builder().value(namespace).displayName("Namespace").build());
-    putNotNull(executionDetails, "rollbackVersion",
+        executionData, "namespace", ExecutionDataValue.builder().value(namespace).displayName("Namespace").build());
+    putNotNull(executionData, "rollbackVersion",
         ExecutionDataValue.builder().value(rollbackVersion).displayName("Release rollback Version").build());
-    putNotNull(executionDetails, "commandFlags",
+    putNotNull(executionData, "commandFlags",
         ExecutionDataValue.builder().value(commandFlags).displayName("Command flags").build());
-
-    return executionDetails;
   }
 
   @Override
