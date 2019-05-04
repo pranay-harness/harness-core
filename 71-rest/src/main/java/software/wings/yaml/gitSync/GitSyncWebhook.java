@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 
@@ -19,6 +20,7 @@ import software.wings.beans.Base;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "gitSyncWebhook", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "GitSyncWebhookKeys")
 public class GitSyncWebhook extends Base {
   private String accountId;
   private String webhookToken;

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -31,6 +32,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "GcsFileMetadataKeys")
 public class GcsFileMetadata extends Base {
   @NotEmpty private String accountId;
   @NotEmpty @Indexed private String fileId; // Mongo GridFs fileId.

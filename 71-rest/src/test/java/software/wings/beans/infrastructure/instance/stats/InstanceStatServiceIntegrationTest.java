@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.IntegrationTestUtil;
@@ -69,7 +70,8 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   private Query<InstanceStatsSnapshot> fetchQuery() {
-    return persistence.createQuery(InstanceStatsSnapshot.class).filter("accountId", SOME_ACCOUNT_ID);
+    return persistence.createQuery(InstanceStatsSnapshot.class)
+        .filter(InstanceStatsSnapshotKeys.accountId, SOME_ACCOUNT_ID);
   }
 
   @Test

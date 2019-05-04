@@ -60,6 +60,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseSubWorkflow;
 
@@ -343,11 +344,12 @@ public class WorkflowNotificationHelper {
     long endTs = Optional.ofNullable(workflowExecution.getEndTs()).orElse(startTs);
 
     if (phaseSubWorkflow != null) {
-      StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                          .filter("executionUuid", workflowExecution.getUuid())
-                                                          .filter("stateType", PHASE.name())
-                                                          .filter("displayName", phaseSubWorkflow.getName())
-                                                          .get();
+      StateExecutionInstance stateExecutionInstance =
+          wingsPersistence.createQuery(StateExecutionInstance.class)
+              .filter("executionUuid", workflowExecution.getUuid())
+              .filter("stateType", PHASE.name())
+              .filter(StateExecutionInstanceKeys.displayName, phaseSubWorkflow.getName())
+              .get();
       if (stateExecutionInstance != null) {
         startTs =
             Optional.ofNullable(stateExecutionInstance.getStartTs()).orElse(stateExecutionInstance.getCreatedAt());

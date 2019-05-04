@@ -11,8 +11,10 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
+import software.wings.beans.Role.RoleKeys;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.RoleService;
@@ -101,7 +103,7 @@ public class RoleServiceImpl implements RoleService {
     if (delete) {
       executorService.submit(() -> {
         List<User> users =
-            wingsPersistence.createQuery(User.class).disableValidation().filter("roles", roleId).asList();
+            wingsPersistence.createQuery(User.class).disableValidation().filter(UserKeys.roles, roleId).asList();
         for (User user : users) {
           userService.revokeRole(user.getUuid(), roleId);
         }
@@ -115,7 +117,7 @@ public class RoleServiceImpl implements RoleService {
   @Override
   public Role getAccountAdminRole(String accountId) {
     return wingsPersistence.createQuery(Role.class)
-        .filter("roleType", RoleType.ACCOUNT_ADMIN)
+        .filter(RoleKeys.roleType, RoleType.ACCOUNT_ADMIN)
         .filter(Role.ACCOUNT_ID_KEY, accountId)
         .get();
   }

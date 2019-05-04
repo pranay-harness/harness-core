@@ -42,6 +42,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import software.wings.beans.Application;
 import software.wings.beans.ServiceSecretKey;
+import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -147,7 +148,7 @@ public abstract class VerificationBaseIntegrationTest
   public String getLearningToken() {
     try {
       String learningServiceSecret = wingsPersistence.createQuery(ServiceSecretKey.class)
-                                         .filter("serviceType", ServiceType.LEARNING_ENGINE)
+                                         .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
                                          .get()
                                          .getServiceSecret();
 

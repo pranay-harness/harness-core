@@ -7,6 +7,7 @@ import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -15,6 +16,7 @@ import org.mongodb.morphia.annotations.Indexed;
 @Data
 @NoArgsConstructor
 @Entity(value = "harnessApiKeys", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "HarnessApiKeyKeys")
 public class HarnessApiKey implements PersistentEntity, UuidAware {
   @Id private String uuid;
   @NotEmpty private byte[] encryptedKey;

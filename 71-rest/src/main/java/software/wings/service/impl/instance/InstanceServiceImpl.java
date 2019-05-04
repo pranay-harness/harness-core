@@ -25,6 +25,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
@@ -251,7 +252,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public boolean purgeDeletedUpTo(Instant timestamp) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class)
-                                .filter("isDeleted", true)
+                                .filter(InstanceKeys.isDeleted, true)
                                 .field("deletedAt")
                                 .lessThan(timestamp.toEpochMilli());
 

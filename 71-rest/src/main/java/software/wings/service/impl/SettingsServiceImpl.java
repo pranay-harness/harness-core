@@ -62,6 +62,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
@@ -321,7 +322,7 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute get(String appId, String envId, String varId) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter("appId", appId)
-        .filter("envId", envId)
+        .filter(SettingAttributeKeys.envId, envId)
         .filter(ID_KEY, varId)
         .get();
   }
@@ -348,7 +349,7 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter("name", settingAttributeName)
-        .filter("accountId", accountId)
+        .filter(SettingAttributeKeys.accountId, accountId)
         .get();
   }
 
@@ -590,7 +591,7 @@ public class SettingsServiceImpl implements SettingsService {
         .in(asList(appId, GLOBAL_APP_ID))
         .field("envId")
         .in(asList(envId, GLOBAL_ENV_ID))
-        .filter("name", attributeName)
+        .filter(SettingAttributeKeys.name, attributeName)
         .get();
   }
 
@@ -751,7 +752,8 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("accountId", accountId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.accountId, accountId));
   }
 
   @Override
@@ -759,7 +761,7 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
                                 .filter("accountId", accountId)
                                 .filter("appId", appId)
-                                .filter("envId", envId)
+                                .filter(SettingAttributeKeys.envId, envId)
                                 .filter("value.type", type));
   }
 

@@ -589,8 +589,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow readWorkflowByName(String appId, String workflowName) {
-    Workflow workflow =
-        wingsPersistence.createQuery(Workflow.class).filter("appId", appId).filter("name", workflowName).get();
+    Workflow workflow = wingsPersistence.createQuery(Workflow.class)
+                            .filter("appId", appId)
+                            .filter(WorkflowKeys.name, workflowName)
+                            .get();
     if (workflow != null) {
       loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
     }
@@ -1155,7 +1157,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
-                                .filter("appId", workflow.getAppId())
+                                .filter(WorkflowKeys.appId, workflow.getAppId())
                                 .filter(ID_KEY, workflow.getUuid()),
         ops);
 
@@ -1329,7 +1331,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Map<String, String> getData(String appId, Map<String, String> params) {
-    List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class).filter("appId", appId).asList();
+    List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class).filter(WorkflowKeys.appId, appId).asList();
     return workflows.stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }
 

@@ -35,6 +35,7 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.GcsFileMetadata;
+import software.wings.beans.GcsFileMetadata.GcsFileMetadataKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
@@ -404,7 +405,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     logger.info("Updating GCS file '{}' with parent entity '{}' and version '{}' with {} other metadata entries.",
         gcsFileId, entityId, version, others == null ? 0 : others.size());
     GcsFileMetadata gcsFileMetadata =
-        wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
+        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.gcsFileId, gcsFileId).get();
     if (gcsFileMetadata == null) {
       logger.warn(
           "Can't update GCS file metadata since no corresponding entry is found for file with id '{}'", gcsFileId);
@@ -463,7 +464,8 @@ public class GoogleCloudFileServiceImpl implements FileService {
   }
 
   private void deleteGcsFileMetadataByGcsFileId(String gcsFileId) {
-    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
+    GcsFileMetadata mapping =
+        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.gcsFileId, gcsFileId).get();
     if (mapping != null) {
       wingsPersistence.delete(mapping);
     }

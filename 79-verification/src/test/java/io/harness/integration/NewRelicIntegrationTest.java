@@ -59,6 +59,7 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -123,7 +124,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     newRelicConfigId = wingsPersistence.createQuery(SettingAttribute.class)
                            .filter("name", NEW_RELIC_CONNECTOR_NAME)
-                           .filter("accountId", accountId)
+                           .filter(SettingAttributeKeys.accountId, accountId)
                            .get()
                            .getUuid();
   }
@@ -428,7 +429,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
                                 .filter("accountId", accountId)
-                                .filter("name", "newrelic_dev"));
+                                .filter(SettingAttributeKeys.name, "newrelic_dev"));
 
     String serverConfigId = wingsPersistence.save(
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("newrelic_dev").build());

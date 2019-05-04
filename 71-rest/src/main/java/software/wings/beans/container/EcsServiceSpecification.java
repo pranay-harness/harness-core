@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.DeploymentSpecification;
 import software.wings.common.Constants;
@@ -16,6 +17,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "EcsServiceSpecificationKeys")
 public class EcsServiceSpecification extends DeploymentSpecification {
   @NotNull private String serviceId;
   private String serviceSpecJson;

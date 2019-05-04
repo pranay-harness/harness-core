@@ -9,6 +9,7 @@ import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -23,6 +24,7 @@ import javax.validation.Valid;
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
 @Entity(value = "infrastructureProvisioner")
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")
 public abstract class InfrastructureProvisioner extends Base implements NameAccess {
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";

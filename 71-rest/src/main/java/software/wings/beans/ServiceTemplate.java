@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -31,6 +32,7 @@ import java.util.Objects;
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "ServiceTemplateKeys")
 public class ServiceTemplate extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENVIRONMENT_ID_KEY = "envId";

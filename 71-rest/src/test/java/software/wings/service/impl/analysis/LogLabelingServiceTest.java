@@ -18,6 +18,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
+import software.wings.service.impl.analysis.LogMLFeedbackRecord.LogMLFeedbackRecordKeys;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
@@ -135,8 +136,9 @@ public class LogLabelingServiceTest extends WingsBaseTest {
     labelingService.saveLabeledIgnoreFeedback(accountId, record, "labelA");
 
     // verify
-    LogMLFeedbackRecord recordFromDB =
-        wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("serviceId", serviceId).get();
+    LogMLFeedbackRecord recordFromDB = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
+                                           .filter(LogMLFeedbackRecordKeys.serviceId, serviceId)
+                                           .get();
     assertEquals("labelA", recordFromDB.getSupervisedLabel());
   }
 }

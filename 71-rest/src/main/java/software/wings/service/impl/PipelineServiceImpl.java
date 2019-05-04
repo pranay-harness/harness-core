@@ -455,7 +455,10 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Pipeline getPipelineByName(String appId, String pipelineName) {
-    return wingsPersistence.createQuery(Pipeline.class).filter("appId", appId).filter("name", pipelineName).get();
+    return wingsPersistence.createQuery(Pipeline.class)
+        .filter("appId", appId)
+        .filter(PipelineKeys.name, pipelineName)
+        .get();
   }
 
   private void setPipelineDetails(List<Pipeline> pipelines) {

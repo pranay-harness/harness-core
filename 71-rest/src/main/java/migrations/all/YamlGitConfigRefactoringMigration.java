@@ -13,9 +13,11 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Account;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -54,7 +56,7 @@ public class YamlGitConfigRefactoringMigration implements Migration {
         EncryptedData encryptedData = null;
         if (yamlGitConfig.getEncryptedPassword() != null) {
           encryptedData = wingsPersistence.createQuery(EncryptedData.class)
-                              .filter("accountId", yamlGitConfig.getAccountId())
+                              .filter(EncryptedDataKeys.accountId, yamlGitConfig.getAccountId())
                               .filter("_id", yamlGitConfig.getEncryptedPassword())
                               .get();
         }
@@ -65,7 +67,7 @@ public class YamlGitConfigRefactoringMigration implements Migration {
         SettingAttribute savedSettingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
                                                      .filter(ACCOUNT_ID_KEY, yamlGitConfig.getAccountId())
                                                      .filter(NAME_KEY, settingAttributeForGitName)
-                                                     .filter("category", SettingCategory.CONNECTOR)
+                                                     .filter(SettingAttributeKeys.category, SettingCategory.CONNECTOR)
                                                      .get();
 
         if (savedSettingAttribute == null) {

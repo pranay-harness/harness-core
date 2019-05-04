@@ -30,6 +30,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.gitSync.GitSyncWebhook;
+import software.wings.yaml.gitSync.GitSyncWebhook.GitSyncWebhookKeys;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -261,7 +262,7 @@ public class YamlHelper {
       WingsPersistence wingsPersistence, String accountId, String webhookToken) {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
                              .filter("webhookToken", webhookToken)
-                             .filter("accountId", accountId)
+                             .filter(GitSyncWebhookKeys.accountId, accountId)
                              .get();
 
     if (gsw != null) {

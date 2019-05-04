@@ -3,6 +3,7 @@ package software.wings.yaml.errorhandling;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -19,6 +20,7 @@ import software.wings.beans.Base;
     options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "GitSyncErrorKeys")
 public class GitSyncError extends Base {
   private String accountId;
   private String yamlFilePath;

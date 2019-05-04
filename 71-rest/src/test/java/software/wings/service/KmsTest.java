@@ -82,6 +82,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
@@ -102,6 +103,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.ContainerServiceParams;
@@ -303,7 +305,8 @@ public class KmsTest extends WingsBaseTest {
     savedConfig.setKmsArn(kmsConfig.getKmsArn());
     savedConfig.setName(name);
     kmsResource.saveKmsConfig(accountId, savedConfig);
-    encryptedDataList = wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).asList();
+    encryptedDataList =
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
     assertEquals(numOfEncryptedValsForKms, encryptedDataList.size());
     for (EncryptedData encryptedData : encryptedDataList) {
       assertTrue(encryptedData.getName().equals(name + "_accessKey")
@@ -1314,8 +1317,8 @@ public class KmsTest extends WingsBaseTest {
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
 
     encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
-                            .filter("accountId", accountId)
-                            .filter("type", SettingVariableTypes.APP_DYNAMICS)
+                            .filter(EncryptedDataKeys.accountId, accountId)
+                            .filter(EncryptedDataKeys.type, SettingVariableTypes.APP_DYNAMICS)
                             .asList();
     assertEquals(1, encryptedDataList.size());
     encryptedData = encryptedDataList.get(0);
@@ -1849,7 +1852,7 @@ public class KmsTest extends WingsBaseTest {
     Query<SettingAttribute> query = wingsPersistence.createQuery(SettingAttribute.class)
                                         .field(Mapper.ID_KEY)
                                         .hasAnyOf(idsToDelete)
-                                        .filter("accountId", accountId);
+                                        .filter(SettingAttributeKeys.accountId, accountId);
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(query);
       assertEquals(
@@ -2424,8 +2427,8 @@ public class KmsTest extends WingsBaseTest {
       String secretFileId = secretManager.saveFile(
           randomAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
       String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
-                                 .filter("accountId", randomAccountId)
-                                 .filter("type", CONFIG_FILE)
+                                 .filter(EncryptedDataKeys.accountId, randomAccountId)
+                                 .filter(EncryptedDataKeys.type, CONFIG_FILE)
                                  .get()
                                  .getUuid();
 
@@ -2560,11 +2563,13 @@ public class KmsTest extends WingsBaseTest {
     File download = configService.download(renameAppId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).count());
+    assertEquals(
+        0, wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).count());
     ConfigFile savedConfigFile = configService.get(renameAppId, configFileId);
     assertFalse(savedConfigFile.isEncrypted());
     assertTrue(isEmpty(savedConfigFile.getEncryptedFileId()));
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).count())
+        .isEqualTo(0);
 
     // now make the same file encrypted
     String secretName = UUID.randomUUID().toString();
@@ -2581,9 +2586,10 @@ public class KmsTest extends WingsBaseTest {
     assertTrue(savedConfigFile.isEncrypted());
     assertFalse(isEmpty(savedConfigFile.getEncryptedFileId()));
 
-    assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).filter("accountId", renameAccountId).count());
+    assertEquals(1,
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
     EncryptedData encryptedData =
-        wingsPersistence.createQuery(EncryptedData.class).filter("accountId", renameAccountId).get();
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).get();
     assertEquals(renameAccountId, encryptedData.getAccountId());
     assertEquals(1, encryptedData.getParentIds().size());
     assertTrue(encryptedData.getParentIds().contains(configFileId));
@@ -2604,7 +2610,8 @@ public class KmsTest extends WingsBaseTest {
     assertFalse(savedConfigFile.isEncrypted());
     assertTrue(isEmpty(savedConfigFile.getEncryptedFileId()));
 
-    assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).filter("accountId", renameAccountId).count());
+    assertEquals(1,
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(renameAccountId, secretFileId, SettingVariableTypes.CONFIG_FILE);
     assertEquals(1, changeLogs.size());
@@ -2693,8 +2700,8 @@ public class KmsTest extends WingsBaseTest {
     String secretFileId = secretManager.saveFile(
         randomAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
-                               .filter("type", CONFIG_FILE)
-                               .filter("accountId", randomAccountId)
+                               .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                               .filter(EncryptedDataKeys.accountId, randomAccountId)
                                .get()
                                .getUuid();
 
@@ -2728,7 +2735,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter("accountId", randomAccountId).count());
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, randomAccountId).count());
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                                 .filter("type", SettingVariableTypes.CONFIG_FILE)
@@ -2748,7 +2755,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter("accountId", randomAccountId).count());
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, randomAccountId).count());
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                             .filter("type", SettingVariableTypes.CONFIG_FILE)
@@ -2825,8 +2832,8 @@ public class KmsTest extends WingsBaseTest {
     String secretFileId = secretManager.saveFile(
         renameAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
-                               .filter("accountId", renameAccountId)
-                               .filter("type", CONFIG_FILE)
+                               .filter(EncryptedDataKeys.accountId, renameAccountId)
+                               .filter(EncryptedDataKeys.type, CONFIG_FILE)
                                .get()
                                .getUuid();
 
@@ -2861,7 +2868,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter("accountId", renameAccountId).count());
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                                 .filter("type", SettingVariableTypes.CONFIG_FILE)
@@ -2879,11 +2886,11 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter("accountId", renameAccountId).count());
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
-                            .filter("accountId", renameAccountId)
-                            .filter("type", SettingVariableTypes.CONFIG_FILE)
+                            .filter(EncryptedDataKeys.accountId, renameAccountId)
+                            .filter(EncryptedDataKeys.type, SettingVariableTypes.CONFIG_FILE)
                             .asList();
     assertEquals(1, encryptedFileData.size());
     assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
@@ -2998,7 +3005,8 @@ public class KmsTest extends WingsBaseTest {
     for (String attributeId : attributeIds) {
       wingsPersistence.delete(accountId, SettingAttribute.class, attributeId);
       remainingAttrs.remove(attributeId);
-      encryptedDatas = wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).asList();
+      encryptedDatas =
+          wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
       if (i == numOfSettingAttributes - 1) {
         assertTrue(encryptedDatas.isEmpty());
       } else {

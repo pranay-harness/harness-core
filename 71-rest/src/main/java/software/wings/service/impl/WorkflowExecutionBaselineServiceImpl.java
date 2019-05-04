@@ -14,6 +14,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.baseline.WorkflowExecutionBaseline.WorkflowExecutionBaselineKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -47,7 +48,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
               .filter(APP_ID_KEY, workflowExecutionBaseline.getAppId())
               .filter("workflowId", workflowExecutionBaseline.getWorkflowId())
               .filter("envId", workflowExecutionBaseline.getEnvId())
-              .filter("serviceId", workflowExecutionBaseline.getServiceId())
+              .filter(WorkflowExecutionBaselineKeys.serviceId, workflowExecutionBaseline.getServiceId())
               .asList();
       if (!isEmpty(existingBaselines)) {
         Preconditions.checkState(

@@ -3,6 +3,7 @@ package software.wings.beans.baseline;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -24,6 +25,7 @@ import software.wings.beans.Base;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"workflowExecutionId"})
+@FieldNameConstants(innerTypeName = "WorkflowExecutionBaselineKeys")
 public class WorkflowExecutionBaseline extends Base {
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String ENV_ID_KEY = "envId";

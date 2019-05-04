@@ -13,6 +13,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.GcsArtifactStream;
 import software.wings.dl.WingsPersistence;
@@ -37,8 +38,8 @@ public class GcsArtifactProjectIdMigration implements Migration {
 
   @Override
   public void migrate() {
-    Query<ArtifactStream> query =
-        wingsPersistence.createQuery(ArtifactStream.class).filter("artifactStreamType", ArtifactStreamType.GCS.name());
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.GCS.name());
     try (HIterator<ArtifactStream> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
         GcsArtifactStream artifactStream = (GcsArtifactStream) records.next();

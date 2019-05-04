@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.DeploymentSpecification;
 
@@ -17,6 +18,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "PcfServiceSpecificationKeys")
 public class PcfServiceSpecification extends DeploymentSpecification {
   @NotNull private String serviceId;
   @NotNull private String manifestYaml;

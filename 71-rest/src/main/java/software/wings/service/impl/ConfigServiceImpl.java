@@ -229,7 +229,7 @@ public class ConfigServiceImpl implements ConfigService {
   public List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String serviceTemplateId) {
     return wingsPersistence.createQuery(ConfigFile.class)
         .filter("appId", appId)
-        .filter("envId", envId)
+        .filter(ConfigFileKeys.envId, envId)
         .filter(ConfigFileKeys.templateId, serviceTemplateId)
         .asList();
   }

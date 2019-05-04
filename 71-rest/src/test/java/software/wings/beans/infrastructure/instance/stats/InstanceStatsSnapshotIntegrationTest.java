@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 
@@ -40,7 +41,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   @After
   public void clearCollection() {
     val ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
-    ds.delete(ds.createQuery(InstanceStatsSnapshot.class).filter("accountId", SOME_ACCOUNT_ID));
+    ds.delete(ds.createQuery(InstanceStatsSnapshot.class).filter(InstanceStatsSnapshotKeys.accountId, SOME_ACCOUNT_ID));
   }
 
   @Test

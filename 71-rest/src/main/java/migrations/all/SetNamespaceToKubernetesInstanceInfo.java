@@ -21,6 +21,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
@@ -74,7 +75,7 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
                         .filter("infraMappingId", infraMappingId)
                         .filter("appId", appId)
                         .filter("instanceType", InstanceType.KUBERNETES_CONTAINER_INSTANCE.name())
-                        .filter("isDeleted", false)
+                        .filter(InstanceKeys.isDeleted, false)
                         .asList();
 
                 instances.forEach(instance -> {

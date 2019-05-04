@@ -5,6 +5,7 @@
 package software.wings.sm;
 
 import io.harness.beans.EmbeddedUser;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -19,6 +20,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "executionInterrupts", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "ExecutionInterruptKeys")
 public class ExecutionInterrupt extends Base {
   @NotNull private ExecutionInterruptType executionInterruptType;
 

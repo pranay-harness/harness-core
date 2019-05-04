@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -40,6 +41,7 @@ import java.util.List;
 @Indexes(@Index(options = @IndexOptions(name = "duplicateKey", unique = true),
     fields = { @Field("accountId")
                , @Field("name"), @Field("pathId"), @Field("appId") }))
+@FieldNameConstants(innerTypeName = "TemplateFolderKeys")
 public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   public static final String GALLERY_ID_KEY = "galleryId";
   public static final String KEYWORDS_KEY = "keywords";

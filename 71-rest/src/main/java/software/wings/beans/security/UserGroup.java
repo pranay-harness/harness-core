@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -50,6 +51,7 @@ import javax.annotation.Nullable;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("memberIds") },
     options = @IndexOptions(name = "accountAndMemberIds", background = true)))
+@FieldNameConstants(innerTypeName = "UserGroupKeys")
 public class UserGroup extends Base implements NotificationReceiverInfo {
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";

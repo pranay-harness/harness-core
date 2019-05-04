@@ -1400,11 +1400,12 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     ops.set(StateExecutionInstanceKeys.status, NEW);
 
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .filter("appId", stateExecutionInstance.getAppId())
-                                              .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                              .field(StateExecutionInstanceKeys.status)
-                                              .in(asList(WAITING, FAILED, ERROR));
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.appId, stateExecutionInstance.getAppId())
+            .filter(ID_KEY, stateExecutionInstance.getUuid())
+            .field(StateExecutionInstanceKeys.status)
+            .in(asList(WAITING, FAILED, ERROR));
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {

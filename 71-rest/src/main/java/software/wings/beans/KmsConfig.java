@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -42,6 +43,7 @@ import java.util.List;
 })
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "KmsConfigKeys")
 public class KmsConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 

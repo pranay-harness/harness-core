@@ -11,6 +11,7 @@ import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
@@ -26,7 +27,7 @@ public class FixCVDashboardStatusMigration implements Migration {
     try {
       List<ContinuousVerificationExecutionMetaData> cvMetadataList =
           wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-              .filter("executionStatus", "RUNNING")
+              .filter(ContinuousVerificationExecutionMetaDataKeys.executionStatus, "RUNNING")
               .field(ContinuousVerificationExecutionMetaData.CREATED_AT_KEY)
               .greaterThanOrEq(Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
               .asList();
@@ -44,7 +45,7 @@ public class FixCVDashboardStatusMigration implements Migration {
             wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class);
         setUnset(op, "executionStatus", realStatus);
         wingsPersistence.update(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-                                    .filter("stateExecutionId", stateExecId),
+                                    .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecId),
             op);
         logger.info("Updating CVMetadata for {} to {}", stateExecId, realStatus);
       }

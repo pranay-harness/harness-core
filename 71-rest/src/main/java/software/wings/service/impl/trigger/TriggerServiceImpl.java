@@ -81,6 +81,7 @@ import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.WebHookTriggerCondition;
@@ -281,7 +282,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger getTriggerByWebhookToken(String token) {
-    return wingsPersistence.createQuery(Trigger.class).filter("webHookToken", token).get();
+    return wingsPersistence.createQuery(Trigger.class).filter(TriggerKeys.webHookToken, token).get();
   }
 
   @Override

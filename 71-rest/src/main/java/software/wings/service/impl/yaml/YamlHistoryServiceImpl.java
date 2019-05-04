@@ -13,6 +13,7 @@ import software.wings.utils.Validator;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
+import software.wings.yaml.YamlVersion.YamlVersionKeys;
 
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
@@ -86,7 +87,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   public List<YamlVersion> getList(String entityId, Type type) {
     return wingsPersistence.createQuery(YamlVersion.class)
         .filter("entityId", entityId)
-        .filter("type", type)
+        .filter(YamlVersionKeys.type, type)
         .order("-version")
         .asList();
   }
@@ -95,7 +96,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   public YamlVersion getHighestVersion(String entityId, Type type) {
     List<YamlVersion> versions = wingsPersistence.createQuery(YamlVersion.class)
                                      .filter("entityId", entityId)
-                                     .filter("type", type)
+                                     .filter(YamlVersionKeys.type, type)
                                      .order("-version")
                                      .asList();
 

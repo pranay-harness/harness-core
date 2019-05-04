@@ -46,6 +46,7 @@ import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -283,7 +284,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     int updateRecords = 0;
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter("accountId", accountId)
-                                     .filter("type", SettingVariableTypes.SECRET_TEXT);
+                                     .filter(EncryptedDataKeys.type, SettingVariableTypes.SECRET_TEXT);
     try (HIterator<EncryptedData> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
         EncryptedData savedData = records.next();

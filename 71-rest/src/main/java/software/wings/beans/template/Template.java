@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -38,6 +39,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "TemplateKeys")
 public class Template extends Base implements KeywordsAware, NameAccess {
   public static final String FOLDER_ID_KEY = "folderId";
   public static final String FOLDER_PATH_ID_KEY = "folderPathId";

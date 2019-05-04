@@ -391,7 +391,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       if (wingsPersistence.createQuery(LogDataRecord.class)
               .filter("appId", appId)
               .filter("workflowExecutionId", successfulExecution)
-              .filter("clusterLevel", ClusterLevel.L2)
+              .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
               .filter(LogDataRecordKeys.query, query)
               .count(new CountOptions().limit(1))
           > 0) {
@@ -664,7 +664,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     LogDataRecord logDataRecord =
         wingsPersistence.createQuery(LogDataRecord.class)
             .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionId)
+            .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
             .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
             .order(orderType == OrderType.DESC ? "-logCollectionMinute" : "logCollectionMinute")
             .get();
@@ -976,7 +976,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return wingsPersistence.createQuery(LogDataRecord.class)
                .filter("appId", workflowExecution.getAppId())
                .filter("stateType", stateType)
-               .filter("workflowId", workflowExecution.getWorkflowId())
+               .filter(LogDataRecordKeys.workflowId, workflowExecution.getWorkflowId())
                .filter(LogDataRecordKeys.workflowExecutionId, workflowExecution.getUuid())
                .count(new CountOptions().limit(1))
         > 0;
@@ -1009,7 +1009,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter("appId", appId)
-                                              .filter("workflowId", workflowId)
+                                              .filter(WorkflowExecutionKeys.workflowId, workflowId)
                                               .filter(WorkflowExecutionKeys.status, SUCCESS)
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();

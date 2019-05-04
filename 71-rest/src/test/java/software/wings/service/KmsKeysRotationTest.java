@@ -38,6 +38,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -142,8 +143,9 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     Thread listenerThread = startTransitionListener();
     Query<Account> query = wingsPersistence.createQuery(Account.class);
 
-    long secretsToMigrate =
-        wingsPersistence.createQuery(EncryptedData.class).filter("kmsId", oldKmsConfig.getUuid()).count();
+    long secretsToMigrate = wingsPersistence.createQuery(EncryptedData.class)
+                                .filter(EncryptedDataKeys.kmsId, oldKmsConfig.getUuid())
+                                .count();
     logger.info("total of {} will be migrated", secretsToMigrate);
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
@@ -157,7 +159,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
         do {
           remainingSecrets = wingsPersistence.createQuery(EncryptedData.class)
                                  .filter("accountId", account.getUuid())
-                                 .filter("kmsId", oldKmsConfig.getUuid())
+                                 .filter(EncryptedDataKeys.kmsId, oldKmsConfig.getUuid())
                                  .count();
           if (remainingSecrets > 0) {
             logger.info("for {} with id {} still {} non migrated secrets are present. Will wait.",
@@ -168,11 +170,14 @@ public class KmsKeysRotationTest extends WingsBaseTest {
         logger.info("rotation of kms for {} id {} is done", account.getAccountName(), account.getUuid());
       }
       logger.info("All secrets migrated to new kms");
-      List<Key<EncryptedData>> oldSecrets =
-          wingsPersistence.createQuery(EncryptedData.class).filter("kmsId", oldKmsConfig.getUuid()).asKeyList();
+      List<Key<EncryptedData>> oldSecrets = wingsPersistence.createQuery(EncryptedData.class)
+                                                .filter(EncryptedDataKeys.kmsId, oldKmsConfig.getUuid())
+                                                .asKeyList();
       assertEquals("remaining non migrated secrets " + oldSecrets, 0, oldSecrets.size());
       logger.info("total migrated secrets are {}",
-          wingsPersistence.createQuery(EncryptedData.class).filter("kmsId", newKmsConfigId).asKeyList());
+          wingsPersistence.createQuery(EncryptedData.class)
+              .filter(EncryptedDataKeys.kmsId, newKmsConfigId)
+              .asKeyList());
       kmsService.deleteKmsConfig(GLOBAL_ACCOUNT_ID, oldKmsConfig.getUuid());
       wingsPersistence.updateField(KmsConfig.class, newKmsConfigId, "name", kmsName);
       wingsPersistence.updateField(KmsConfig.class, newKmsConfigId, "isDefault", false);

@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.EmbeddedUser;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -18,6 +19,7 @@ import java.util.Objects;
  */
 @Entity(value = "hosts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants(innerTypeName = "HostKeys")
 public class Host extends Base {
   @NotEmpty private String envId;
   @Indexed private String serviceTemplateId;

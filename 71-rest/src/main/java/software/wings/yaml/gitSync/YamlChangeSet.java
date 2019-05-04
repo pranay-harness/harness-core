@@ -3,6 +3,7 @@ package software.wings.yaml.gitSync;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -25,7 +26,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Indexes({ @Index(fields = { @Field("accountId")
                              , @Field("status") }, options = @IndexOptions(name = "searchIdx")) })
-
+@FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
 public class YamlChangeSet extends Base {
   @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();

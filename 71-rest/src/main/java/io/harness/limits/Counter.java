@@ -2,6 +2,7 @@ package io.harness.limits;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -13,6 +14,7 @@ import software.wings.beans.Base;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "limitCounters", noClassnameStored = true)
 @Indexes(@Index(fields = @Field("key"), options = @IndexOptions(name = "key_idx", unique = true)))
+@FieldNameConstants(innerTypeName = "CounterKeys")
 public class Counter extends Base {
   private final String key;
   private final Long value;

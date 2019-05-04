@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.annotations.Entity;
@@ -29,6 +30,7 @@ import java.util.List;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("timestamp") },
     options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx", background = true)))
+@FieldNameConstants(innerTypeName = "InstanceStatsSnapshotKeys")
 public class InstanceStatsSnapshot extends Base {
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);
 

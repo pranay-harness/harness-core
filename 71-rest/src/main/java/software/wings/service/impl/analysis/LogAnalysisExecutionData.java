@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -59,7 +60,7 @@ public class LogAnalysisExecutionData extends StateExecutionData {
 
     int elapsedMinutes = (int) wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                              .filter("appId", appId)
-                             .filter("stateExecutionId", stateExecutionInstanceId)
+                             .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionInstanceId)
                              .count();
     if (elapsedMinutes < DELAY_MINUTES + 1) {
       elapsedMinutes = 0;

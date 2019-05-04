@@ -19,6 +19,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.infrastructure.Host.HostKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
@@ -66,7 +67,7 @@ public class HostServiceImpl implements HostService {
   public Host get(String appId, String envId, String hostId) {
     Host host = wingsPersistence.createQuery(Host.class)
                     .filter(ID_KEY, hostId)
-                    .filter("envId", envId)
+                    .filter(HostKeys.envId, envId)
                     .filter("appId", appId)
                     .get();
     notNullCheck("Host is null for hostId: " + hostId + " appId: " + appId + " envId: " + envId, host);
@@ -138,7 +139,7 @@ public class HostServiceImpl implements HostService {
   public List<Host> getHostsByHostIds(String appId, String envId, List<String> hostUuids) {
     return wingsPersistence.createQuery(Host.class)
         .filter("appId", appId)
-        .filter("envId", envId)
+        .filter(HostKeys.envId, envId)
         .field(ID_KEY)
         .hasAnyOf(hostUuids)
         .asList();
@@ -153,7 +154,7 @@ public class HostServiceImpl implements HostService {
   public Host getHostByEnv(String appId, String envId, String hostId) {
     return wingsPersistence.createQuery(Host.class)
         .filter("appId", appId)
-        .filter("envId", envId)
+        .filter(HostKeys.envId, envId)
         .filter(ID_KEY, hostId)
         .get();
   }
@@ -182,7 +183,7 @@ public class HostServiceImpl implements HostService {
   public void deleteByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Host.class)
         .filter("appId", appId)
-        .filter("envId", envId)
+        .filter(HostKeys.envId, envId)
         .asList()
         .forEach(this ::delete);
   }
@@ -192,7 +193,7 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
                                 .filter("appId", appId)
                                 .filter("infraMappingId", infraMappingId)
-                                .filter("publicDns", dnsName));
+                                .filter(HostKeys.publicDns, dnsName));
   }
 
   @Override
@@ -204,7 +205,7 @@ public class HostServiceImpl implements HostService {
         serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
 
     Query<Host> query =
-        wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("infraMappingId", infraMappingId);
+        wingsPersistence.createQuery(Host.class).filter("appId", appId).filter(HostKeys.infraMappingId, infraMappingId);
 
     UpdateOperations<Host> operations = DeploymentType.SSH.equals(deploymentType)
         ? wingsPersistence.createUpdateOperations(Host.class).set("hostConnAttr", hostConnectionAttrs)
@@ -214,13 +215,15 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("infraMappingId", infraMappingId));
+    wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
+                                .filter("appId", appId)
+                                .filter(HostKeys.infraMappingId, infraMappingId));
   }
 
   @Override
   public void deleteByService(String appId, String envId, String serviceTemplateId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("serviceTemplateId", serviceTemplateId));
+    wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
+                                .filter("appId", appId)
+                                .filter(HostKeys.serviceTemplateId, serviceTemplateId));
   }
 }
