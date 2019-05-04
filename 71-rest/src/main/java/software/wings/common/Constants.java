@@ -11,11 +11,6 @@ import java.util.regex.Pattern;
 @Deprecated
 public interface Constants {
   /**
-   * The constant DEFAULT_WORKFLOW_NAME.
-   */
-  String DEFAULT_WORKFLOW_NAME = "MAIN";
-
-  /**
    * The constant PHASE_PARAM.
    */
   String PHASE_PARAM = "PHASE_PARAM";
@@ -587,7 +582,6 @@ public interface Constants {
    */
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 
-  String WORKFLOW_NAME_DATE_FORMAT = "MM/dd/yyyy hh:mm a";
   String INFRA_ROUTE = "infra.route";
   String INFRA_TEMP_ROUTE = "infra.tempRoute";
   String INFRA_ROUTE_PCF = "infra.pcf.route";
@@ -604,13 +598,6 @@ public interface Constants {
   String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
   String VERIFY_STAGE_SERVICE = "Verify Stage Service";
   String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
-
-  // Expression Builder Constants
-  String ARTIFACT_SOURCE_USER_NAME_KEY = "username";
-  String ARTIFACT_SOURCE_REGISTRY_URL_KEY = "registryUrl";
-  String ARTIFACT_SOURCE_REPOSITORY_NAME_KEY = "repositoryName";
-  String ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY = "dockerconfig";
-  String ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER = "${dockerconfig}";
 
   int YAML_MAX_PARALLEL_COUNT = 20;
   /**
@@ -681,8 +668,6 @@ public interface Constants {
   String BG_VERSION = "BG_VERSION";
   String BG_GREEN = "GREEN";
   String BG_BLUE = "BLUE";
-  String ECS_BG_TYPE_DNS = "DNS";
-  String ECS_BG_TYPE_ELB = "ELB";
 
   /**
    * Quartz job detail key names
