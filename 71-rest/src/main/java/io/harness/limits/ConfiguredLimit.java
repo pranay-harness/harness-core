@@ -6,6 +6,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.experimental.FieldNameConstants;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -22,6 +23,7 @@ import javax.validation.constraints.NotNull;
 @Indexes(
     @Index(fields = { @Field("key")
                       , @Field("accountId") }, options = @IndexOptions(name = "key_idx", unique = true)))
+@FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
 public class ConfiguredLimit<T extends Limit> implements PersistentEntity {
   public static final String ACCOUNT_ID_KEY = "accountId";
 

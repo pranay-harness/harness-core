@@ -99,14 +99,17 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
+import software.wings.beans.EmailVerificationToken.EmailVerificationTokenKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
+import software.wings.beans.UserInvite.UserInviteKeys;
 import software.wings.beans.UserInviteSource;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
@@ -539,7 +542,7 @@ public class UserServiceImpl implements UserService {
   public User getUserByEmail(String email) {
     User user = null;
     if (isNotEmpty(email)) {
-      user = wingsPersistence.createQuery(User.class).filter("email", email.trim().toLowerCase()).get();
+      user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase()).get();
       loadSupportAccounts(user);
     }
 
@@ -551,7 +554,7 @@ public class UserServiceImpl implements UserService {
     User user = null;
     if (isNotEmpty(email)) {
       user = wingsPersistence.createQuery(User.class)
-                 .filter("email", email.trim().toLowerCase())
+                 .filter(UserKeys.email, email.trim().toLowerCase())
                  .field("accountId")
                  .hasThisOne(accountId)
                  .get();
@@ -565,7 +568,7 @@ public class UserServiceImpl implements UserService {
   public UserInvite getUserInviteByEmail(String email) {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {
-      userInvite = wingsPersistence.createQuery(UserInvite.class).filter("email", email).get();
+      userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
     }
     return userInvite;
   }
@@ -573,8 +576,10 @@ public class UserServiceImpl implements UserService {
   private UserInvite getUserInviteByEmailAndAccount(String email, String accountId) {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {
-      userInvite =
-          wingsPersistence.createQuery(UserInvite.class).filter("email", email).filter("accountId", accountId).get();
+      userInvite = wingsPersistence.createQuery(UserInvite.class)
+                       .filter("email", email)
+                       .filter(UserInviteKeys.accountId, accountId)
+                       .get();
     }
     return userInvite;
   }
@@ -699,7 +704,7 @@ public class UserServiceImpl implements UserService {
   public boolean verifyToken(String emailToken) {
     EmailVerificationToken verificationToken = wingsPersistence.createQuery(EmailVerificationToken.class)
                                                    .filter("appId", GLOBAL_APP_ID)
-                                                   .filter("token", emailToken)
+                                                   .filter(EmailVerificationTokenKeys.token, emailToken)
                                                    .get();
 
     if (verificationToken == null) {
@@ -853,7 +858,7 @@ public class UserServiceImpl implements UserService {
 
   private void removeRelatedUserInvite(String accountId, String email) {
     UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class)
-                                .filter("email", email)
+                                .filter(UserInviteKeys.email, email)
                                 .filter(UserInvite.ACCOUNT_ID_KEY, accountId)
                                 .get();
     if (userInvite != null) {
@@ -1393,7 +1398,7 @@ public class UserServiceImpl implements UserService {
   public boolean deleteInvites(String accountId, String email) {
     Query userInvitesQuery = wingsPersistence.createQuery(UserInvite.class)
                                  .filter(UserInvite.ACCOUNT_ID_KEY, accountId)
-                                 .filter("email", email);
+                                 .filter(UserInviteKeys.email, email);
     return wingsPersistence.delete(userInvitesQuery);
   }
 

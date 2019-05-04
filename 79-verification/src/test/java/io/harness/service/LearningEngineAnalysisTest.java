@@ -46,6 +46,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
+import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptionUtils;
@@ -378,9 +379,10 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   public void testInitializeServiceSecretKeys() {
     assertTrue(wingsPersistence.createQuery(ServiceSecretKey.class).asList().isEmpty());
     learningEngineService.initializeServiceSecretKeys();
-    List<ServiceSecretKey> serviceSecretKeys = wingsPersistence.createQuery(ServiceSecretKey.class)
-                                                   .filter("serviceType", ServiceType.LEARNING_ENGINE)
-                                                   .asList();
+    List<ServiceSecretKey> serviceSecretKeys =
+        wingsPersistence.createQuery(ServiceSecretKey.class)
+            .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
+            .asList();
     assertEquals(1, serviceSecretKeys.size());
 
     String secretKey = serviceSecretKeys.get(0).getServiceSecret();
@@ -391,7 +393,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     }
 
     serviceSecretKeys = wingsPersistence.createQuery(ServiceSecretKey.class)
-                            .filter("serviceType", ServiceType.LEARNING_ENGINE)
+                            .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
                             .asList();
     assertEquals(1, serviceSecretKeys.size());
 

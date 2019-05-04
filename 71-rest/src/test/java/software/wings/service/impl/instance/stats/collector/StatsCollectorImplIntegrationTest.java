@@ -19,7 +19,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.resources.stats.model.InstanceTimeline;
@@ -69,9 +71,9 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
     ds.delete(ds.createQuery(Instance.class)
                   .filter("accountId", WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
-                  .filter("appName", SOME_APP_NAME));
+                  .filter(InstanceKeys.appName, SOME_APP_NAME));
     ds.delete(ds.createQuery(InstanceStatsSnapshot.class)
-                  .filter("accountId", WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
+                  .filter(InstanceStatsSnapshotKeys.accountId, WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
   }
 
   @Test
@@ -87,10 +89,12 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     instances.forEach(instance -> wingsPersistence.save(instance));
 
     // call createStats
-    long count = ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter("accountId", accountId));
+    long count =
+        ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter(InstanceStatsSnapshotKeys.accountId, accountId));
     Instant instant = Instant.now();
     boolean success = statsCollector.createStats(accountId, instant);
-    long finalCount = ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter("accountId", accountId));
+    long finalCount =
+        ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter(InstanceStatsSnapshotKeys.accountId, accountId));
     Instant lastTs = statService.getLastSnapshotTime(accountId);
     assertEquals(instant, lastTs);
     assertEquals("new stat entry should be created in database", count + 1, finalCount);
@@ -105,7 +109,8 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     assertTrue(success);
     lastTs = statService.getLastSnapshotTime(accountId);
     assertEquals(instant, lastTs);
-    long countAfter = ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter("accountId", accountId));
+    long countAfter =
+        ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter(InstanceStatsSnapshotKeys.accountId, accountId));
     assertEquals("verify new stat entry created in database", finalCount + 1, countAfter);
 
     Instant end = Instant.now();

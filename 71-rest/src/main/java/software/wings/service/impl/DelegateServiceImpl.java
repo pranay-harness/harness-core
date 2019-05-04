@@ -1972,7 +1972,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private List<DelegateTaskEvent> getQueuedEvents(String accountId, boolean sync) {
     Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                 .filter(DelegateTaskKeys.accountId, accountId)
-                                                .filter("status", QUEUED)
+                                                .filter(DelegateTaskKeys.status, QUEUED)
                                                 .filter(DelegateTaskKeys.async, !sync)
                                                 .field(DelegateTaskKeys.delegateId)
                                                 .doesNotExist();
@@ -1994,7 +1994,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private List<DelegateTaskEvent> getAbortedEvents(String accountId, String delegateId) {
     Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                           .filter("status", ABORTED)
+                                           .filter(DelegateTaskKeys.status, ABORTED)
                                            .filter(DelegateTaskKeys.async, true)
                                            .filter(DelegateTaskKeys.accountId, accountId)
                                            .filter(DelegateTaskKeys.delegateId, delegateId);

@@ -9,6 +9,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.SecretUsageLog.SecretUsageLogKeys;
 
 import java.time.OffsetDateTime;
 
@@ -26,7 +27,7 @@ public class DeleteStaleSecretUsageLogs implements Migration {
         Account account = records.next();
         logger.info("Deleting stale secret usage log for {} id {}", account.getAccountName(), account.getUuid());
         wingsPersistence.delete(wingsPersistence.createQuery(SecretUsageLog.class)
-                                    .filter("accountId", account.getUuid())
+                                    .filter(SecretUsageLogKeys.accountId, account.getUuid())
                                     .field(SecretUsageLog.CREATED_AT_KEY)
                                     .lessThan(toBeDeleted));
       }

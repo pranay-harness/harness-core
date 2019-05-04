@@ -13,6 +13,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
@@ -69,7 +70,7 @@ public class YamlGitConfigAppMigration implements Migration {
 
     if (yamlGitConfig.getEncryptedPassword() != null) {
       EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
-                                        .filter("accountId", yamlGitConfig.getAccountId())
+                                        .filter(EncryptedDataKeys.accountId, yamlGitConfig.getAccountId())
                                         .filter("_id", yamlGitConfig.getEncryptedPassword())
                                         .get();
 

@@ -25,6 +25,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -42,6 +43,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "commandLogs", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
+@FieldNameConstants(innerTypeName = "LogKeys")
 public class Log extends Base implements GoogleDataStoreAware {
   @NotEmpty @Indexed private String activityId;
   private String hostName;

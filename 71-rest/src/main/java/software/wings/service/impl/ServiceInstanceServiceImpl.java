@@ -17,6 +17,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstance.ServiceInstanceKeys;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
@@ -54,7 +55,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   public ServiceInstance get(String appId, String envId, String instanceId) {
     return wingsPersistence.createQuery(ServiceInstance.class)
         .filter("appId", appId)
-        .filter("envId", envId)
+        .filter(ServiceInstanceKeys.envId, envId)
         .filter(ID_KEY, instanceId)
         .get();
   }
@@ -73,7 +74,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                                 .filter("infraMappingId", infraMapping.getUuid())
                                                 .filter("hostId", host.getUuid())
                                                 .filter("hostName", host.getHostName())
-                                                .filter("publicDns", host.getPublicDns())
+                                                .filter(ServiceInstanceKeys.publicDns, host.getPublicDns())
                                                 .get();
           return serviceInstance != null ? serviceInstance
                                          : wingsPersistence.saveAndGet(ServiceInstance.class,
@@ -97,7 +98,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   public void delete(String appId, String envId, String instanceId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
                                 .filter("appId", appId)
-                                .filter("envId", envId)
+                                .filter(ServiceInstanceKeys.envId, envId)
                                 .filter(ID_KEY, instanceId));
   }
 
@@ -105,7 +106,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   public void deleteByEnv(String appId, String envId) {
     wingsPersistence.createQuery(ServiceInstance.class)
         .filter(ServiceInstance.APP_ID_KEY, appId)
-        .filter("envId", envId)
+        .filter(ServiceInstanceKeys.envId, envId)
         .asList()
         .forEach(serviceInstance -> delete(appId, envId, serviceInstance.getUuid()));
   }
@@ -152,13 +153,14 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
                                 .filter("appId", appId)
-                                .filter("infraMappingId", infraMappingId));
+                                .filter(ServiceInstanceKeys.infraMappingId, infraMappingId));
   }
 
   @Override
   public void pruneByHost(String appId, String hostId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(ServiceInstance.class).filter("appId", appId).filter("hostId", hostId));
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
+                                .filter("appId", appId)
+                                .filter(ServiceInstanceKeys.hostId, hostId));
   }
 
   @Override

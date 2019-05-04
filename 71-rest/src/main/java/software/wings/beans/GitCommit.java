@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -29,6 +30,7 @@ import java.util.List;
                            , @Field("commitId") },
     options = @IndexOptions(name = "gitCommitIdx", unique = true, dropDups = true)))
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit extends Base {
   public static final String YAML_GIT_CONFIG_ID_KEY = "yamlGitConfigId";
   public static final String YAML_GIT_CONFIG_IDS_KEY = "yamlGitConfigIds";

@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.ConfiguredLimit;
+import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.persistence.ReadPref;
@@ -44,7 +45,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   @After
   public void clearCollection() {
     Datastore ds = dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL);
-    ds.delete(ds.createQuery(ConfiguredLimit.class).filter("accountId", SOME_ACCOUNT_ID));
+    ds.delete(ds.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, SOME_ACCOUNT_ID));
   }
 
   @Test

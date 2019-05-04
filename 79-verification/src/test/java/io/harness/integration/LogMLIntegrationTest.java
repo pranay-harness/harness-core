@@ -49,6 +49,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
@@ -58,6 +59,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -372,7 +374,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
 
-    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("name", serverName));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.name, serverName));
   }
 
   @Test
@@ -1369,7 +1372,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           record = wingsPersistence.createQuery(LogDataRecord.class)
                        .filter("stateExecutionId", stateExecutionId)
                        .filter("clusterLevel", "HF")
-                       .filter("logCollectionMinute", lastAnalysisMinute)
+                       .filter(LogDataRecordKeys.logCollectionMinute, lastAnalysisMinute)
                        .get();
           if (record != null) {
             return lastAnalysisMinute;

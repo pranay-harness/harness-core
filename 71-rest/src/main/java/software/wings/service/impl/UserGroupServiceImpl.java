@@ -41,6 +41,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
@@ -401,7 +402,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Nullable
   public UserGroup getDefaultUserGroup(String accountId) {
     return wingsPersistence.createQuery(UserGroup.class)
-        .filter("accountId", accountId)
+        .filter(UserGroupKeys.accountId, accountId)
         .field("name")
         .equal(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
         .field("description")

@@ -51,6 +51,7 @@ import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginRequest;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResponse;
@@ -377,7 +378,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     final long count = wingsPersistence.createQuery(EncryptedData.class)
                            .filter(ACCOUNT_ID_KEY, accountId)
                            .filter("kmsId", vaultConfigId)
-                           .filter("encryptionType", EncryptionType.VAULT)
+                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
                            .count(new CountOptions().limit(1));
 
     if (count > 0) {
@@ -412,7 +413,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       while (query.hasNext()) {
         VaultConfig vaultConfig = query.next();
         Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
-                                                      .filter("kmsId", vaultConfig.getUuid())
+                                                      .filter(EncryptedDataKeys.kmsId, vaultConfig.getUuid())
                                                       .filter(ACCOUNT_ID_KEY, accountId);
         vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
         if (maskSecret) {

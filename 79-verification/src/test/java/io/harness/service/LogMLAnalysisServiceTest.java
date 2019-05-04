@@ -53,8 +53,10 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
@@ -600,7 +602,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                                   .filter("appId", appId)
-                                                  .filter("stateExecutionId", stateExecutionId)
+                                                  .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
                                                   .get();
     assertNotNull(logMLAnalysisRecord);
     assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getUnknown_events());
@@ -715,7 +717,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                                   .filter("appId", appId)
-                                                  .filter("stateExecutionId", stateExecutionId)
+                                                  .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
                                                   .get();
     assertNotNull(logMLAnalysisRecord);
     assertNull(logMLAnalysisRecord.getUnknown_events());
@@ -920,11 +922,15 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     wingsPersistence.save(logDataRecords);
     assertEquals(numOfHosts,
-        wingsPersistence.createQuery(LogDataRecord.class).filter("stateExecutionId", stateExecutionId).count());
+        wingsPersistence.createQuery(LogDataRecord.class)
+            .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
+            .count());
     analysisService.deleteClusterLevel(
         StateType.SPLUNKV2, stateExecutionId, appId, query, hosts, logCollectionMinute, ClusterLevel.H0);
-    assertEquals(
-        0, wingsPersistence.createQuery(LogDataRecord.class).filter("stateExecutionId", stateExecutionId).count());
+    assertEquals(0,
+        wingsPersistence.createQuery(LogDataRecord.class)
+            .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
+            .count());
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {

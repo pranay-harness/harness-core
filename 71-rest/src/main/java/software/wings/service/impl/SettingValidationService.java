@@ -47,6 +47,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
@@ -192,7 +193,7 @@ public class SettingValidationService {
             .field(Mapper.ID_KEY)
             .notEqual(settingAttribute.getUuid())
             .filter("name", settingAttribute.getName())
-            .filter("category", settingAttribute.getCategory())
+            .filter(SettingAttributeKeys.category, settingAttribute.getCategory())
             .get()
         != null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)

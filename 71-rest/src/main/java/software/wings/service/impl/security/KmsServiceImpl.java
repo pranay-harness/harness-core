@@ -33,10 +33,13 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
+import software.wings.beans.VaultConfig.VaultConfigKeys;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
@@ -106,11 +109,14 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public KmsConfig getSecretConfig(String accountId) {
-    KmsConfig kmsConfig =
-        wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId).filter("isDefault", true).get();
+    KmsConfig kmsConfig = wingsPersistence.createQuery(KmsConfig.class)
+                              .filter("accountId", accountId)
+                              .filter(KmsConfigKeys.isDefault, true)
+                              .get();
 
     if (kmsConfig == null) {
-      kmsConfig = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", GLOBAL_ACCOUNT_ID).get();
+      kmsConfig =
+          wingsPersistence.createQuery(KmsConfig.class).filter(KmsConfigKeys.accountId, GLOBAL_ACCOUNT_ID).get();
     }
 
     if (kmsConfig != null) {
@@ -170,7 +176,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     kmsConfig.setAccountId(accountId);
 
     Query<VaultConfig> vaultConfigQuery =
-        wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
+        wingsPersistence.createQuery(VaultConfig.class).filter(VaultConfigKeys.accountId, accountId);
     List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
 
     EncryptedData accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
@@ -229,7 +235,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     arnKeyData.addParent(parentId);
     wingsPersistence.save(arnKeyData);
 
-    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
+    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).filter(KmsConfigKeys.accountId, accountId);
     Collection<KmsConfig> savedConfigs = query.asList();
     if (kmsConfig.isDefault() && (!savedConfigs.isEmpty() || !vaultConfigs.isEmpty())) {
       for (KmsConfig savedConfig : savedConfigs) {
@@ -258,7 +264,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     final long count = wingsPersistence.createQuery(EncryptedData.class)
                            .filter("accountId", accountId)
                            .filter("kmsId", kmsConfigId)
-                           .filter("encryptionType", EncryptionType.KMS)
+                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.KMS)
                            .count(new CountOptions().limit(1));
 
     if (count > 0) {
@@ -288,7 +294,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         KmsConfig kmsConfig = iterator.next();
         Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                                       .filter("accountId", accountId)
-                                                      .filter("kmsId", kmsConfig.getUuid());
+                                                      .filter(EncryptedDataKeys.kmsId, kmsConfig.getUuid());
         kmsConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
         if (kmsConfig.isDefault()) {
           defaultSet = true;

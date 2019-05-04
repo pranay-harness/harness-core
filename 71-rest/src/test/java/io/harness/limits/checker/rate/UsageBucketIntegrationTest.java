@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.persistence.ReadPref;
 import org.junit.After;
 import org.junit.Before;
@@ -35,7 +36,7 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
   @After
   public void cleanUp() throws Exception {
     persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL)
-        .delete(persistence.createQuery(UsageBucket.class).filter("key", KEY));
+        .delete(persistence.createQuery(UsageBucket.class).filter(UsageBucketKeys.key, KEY));
   }
 
   @Test

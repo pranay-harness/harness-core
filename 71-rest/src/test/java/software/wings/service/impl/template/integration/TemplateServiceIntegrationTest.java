@@ -30,7 +30,9 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
@@ -118,7 +120,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
     List<Account> accounts = accountService.list(aPageRequest().addFilter(APP_ID_KEY, EQ, GLOBAL_APP_ID).build());
     accounts.forEach(account -> {
       wingsPersistence.delete(
-          wingsPersistence.createQuery(TemplateFolder.class).filter("accountId", account.getUuid()));
+          wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolderKeys.accountId, account.getUuid()));
       templateFolderService.copyHarnessTemplateFolders(
           templateGallery.getUuid(), account.getUuid(), account.getAccountName());
     });
@@ -148,7 +150,8 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   public void shouldLoadDefaultCommandTemplatesForAccount() {
     List<Account> accounts = accountService.list(aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build());
     accounts.forEach(account -> {
-      wingsPersistence.delete(wingsPersistence.createQuery(Template.class).filter("accountId", account.getUuid()));
+      wingsPersistence.delete(
+          wingsPersistence.createQuery(Template.class).filter(TemplateKeys.accountId, account.getUuid()));
       templateService.loadDefaultTemplates(SSH, account.getUuid(), account.getAccountName());
     });
   }

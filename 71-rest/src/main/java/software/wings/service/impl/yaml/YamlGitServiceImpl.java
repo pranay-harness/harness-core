@@ -64,6 +64,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
+import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
@@ -104,7 +105,9 @@ import software.wings.utils.Util;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.gitSync.GitSyncWebhook;
+import software.wings.yaml.gitSync.GitSyncWebhook.GitSyncWebhookKeys;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -701,7 +704,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
                               .filter("accountId", accountId)
                               .filter("commitId", headCommit)
-                              .filter("status", Status.COMPLETED)
+                              .filter(GitCommitKeys.status, Status.COMPLETED)
                               .get();
     if (gitCommit != null) {
       logger.info(GIT_YAML_LOG_PREFIX + "Commit [id:{}] already processed [status:{}] on [date:{}] mode:[{}]",
@@ -715,7 +718,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public GitSyncWebhook getWebhook(String entityId, String accountId) {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
                              .filter("entityId", entityId)
-                             .filter("accountId", accountId)
+                             .filter(GitSyncWebhookKeys.accountId, accountId)
                              .get();
 
     if (gsw != null) {
@@ -779,7 +782,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath) {
     Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
                                           .filter(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
-                                          .filter("yamlFilePath", failedChange.getFilePath())
+                                          .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath())
                                           .project(GitSyncError.ID_KEY, true);
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";

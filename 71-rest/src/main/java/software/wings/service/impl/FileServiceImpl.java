@@ -13,6 +13,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.GcsFileMetadata;
+import software.wings.beans.GcsFileMetadata.GcsFileMetadataKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
@@ -235,17 +236,20 @@ public class FileServiceImpl implements FileService {
   }
 
   private String getGcsFileIdByMongoFileId(String mongoFileId) {
-    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("fileId", mongoFileId).get();
+    GcsFileMetadata mapping =
+        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.fileId, mongoFileId).get();
     return mapping == null ? null : mapping.getGcsFileId();
   }
 
   private String getMongoFileIdByGcsFileId(String gcsFileId) {
-    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
+    GcsFileMetadata mapping =
+        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.gcsFileId, gcsFileId).get();
     return mapping == null ? null : mapping.getFileId();
   }
 
   private void deleteGcsFileMetadataByMongoFileId(String mongoFileId) {
-    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("fileId", mongoFileId).get();
+    GcsFileMetadata mapping =
+        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.fileId, mongoFileId).get();
     if (mapping != null) {
       wingsPersistence.delete(mapping);
     }

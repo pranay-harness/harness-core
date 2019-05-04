@@ -275,7 +275,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
             Query<DelegateConnectionResult> query = wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                         .filter("accountId", task.getAccountId())
                                                         .filter("delegateId", delegateId)
-                                                        .filter("criteria", criteria);
+                                                        .filter(DelegateConnectionResultKeys.criteria, criteria);
             UpdateOperations<DelegateConnectionResult> updateOperations =
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
                     .set(DelegateConnectionResultKeys.lastUpdatedAt, clock.millis());
@@ -300,11 +300,12 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(toList());
 
     for (DelegateConnectionResult result : resultsToSave) {
-      Key<DelegateConnectionResult> existingResultKey = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                            .filter("accountId", result.getAccountId())
-                                                            .filter("delegateId", result.getDelegateId())
-                                                            .filter("criteria", result.getCriteria())
-                                                            .getKey();
+      Key<DelegateConnectionResult> existingResultKey =
+          wingsPersistence.createQuery(DelegateConnectionResult.class)
+              .filter("accountId", result.getAccountId())
+              .filter("delegateId", result.getDelegateId())
+              .filter(DelegateConnectionResultKeys.criteria, result.getCriteria())
+              .getKey();
       if (existingResultKey != null) {
         wingsPersistence.updateField(
             DelegateConnectionResult.class, existingResultKey.getId().toString(), "validated", result.isValidated());
@@ -327,7 +328,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public void clearConnectionResults(String accountId, String delegateId) {
     wingsPersistence.delete(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                .filter("accountId", accountId)
+                                .filter(DelegateConnectionResultKeys.accountId, accountId)
                                 .filter(DelegateConnectionResultKeys.delegateId, delegateId));
   }
 

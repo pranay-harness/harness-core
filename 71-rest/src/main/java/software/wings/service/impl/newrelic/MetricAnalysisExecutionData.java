@@ -16,6 +16,7 @@ import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisRecordKeys;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -70,7 +71,7 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
                                             .count(),
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
             .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionInstanceId)
+            .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionInstanceId)
             .count());
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {

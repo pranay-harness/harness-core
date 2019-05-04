@@ -6,12 +6,14 @@ import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 @Entity(value = "emailVerificationTokens")
 @HarnessExportableEntity
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "EmailVerificationTokenKeys")
 public class EmailVerificationToken extends Base {
   @NotEmpty private String token;
   @NotEmpty private String userId;

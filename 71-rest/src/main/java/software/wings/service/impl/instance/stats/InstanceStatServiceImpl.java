@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.rbac.TimelineRbacFilters;
@@ -106,7 +107,7 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     Preconditions.checkArgument(to.isAfter(from), "'to' timestamp should be after 'from'");
 
     Query<InstanceStatsSnapshot> query = persistence.createQuery(InstanceStatsSnapshot.class)
-                                             .filter("accountId", accountId)
+                                             .filter(InstanceStatsSnapshotKeys.accountId, accountId)
                                              .field("timestamp")
                                              .greaterThanOrEq(from)
                                              .field("timestamp")
@@ -135,7 +136,7 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     options.limit(1);
 
     List<InstanceStatsSnapshot> snapshots = persistence.createQuery(InstanceStatsSnapshot.class)
-                                                .filter("accountId", accountId)
+                                                .filter(InstanceStatsSnapshotKeys.accountId, accountId)
                                                 .order(Sort.descending("timestamp"))
                                                 .asList(options);
 
@@ -153,7 +154,7 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     options.limit(1);
 
     List<InstanceStatsSnapshot> snapshots = persistence.createQuery(InstanceStatsSnapshot.class)
-                                                .filter("accountId", accountId)
+                                                .filter(InstanceStatsSnapshotKeys.accountId, accountId)
                                                 .order(Sort.ascending("timestamp"))
                                                 .asList(options);
 

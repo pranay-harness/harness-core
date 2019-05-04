@@ -28,6 +28,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.User;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
@@ -50,6 +51,7 @@ import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -1195,7 +1197,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   private HIterator<SettingAttribute> getSettingAttributesWithUsageRestrictionsIterator(String accountId) {
     return new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
-                               .filter("accountId", accountId)
+                               .filter(SettingAttributeKeys.accountId, accountId)
                                .field("usageRestrictions")
                                .exists()
                                .fetch());
@@ -1203,7 +1205,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   private HIterator<EncryptedData> getEncryptedDataWithUsageRestrictionsIterator(String accountId) {
     return new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
-                               .filter("accountId", accountId)
+                               .filter(EncryptedDataKeys.accountId, accountId)
                                .field("usageRestrictions")
                                .exists()
                                .fetch());

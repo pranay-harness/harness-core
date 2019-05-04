@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
@@ -21,7 +22,7 @@ public class TerraformProvisionerBranchMigration implements Migration {
   public void migrate() {
     try (HIterator<InfrastructureProvisioner> iterator =
              new HIterator<>(wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                 .filter("infrastructureProvisionerType", "TERRAFORM")
+                                 .filter(InfrastructureProvisionerKeys.infrastructureProvisionerType, "TERRAFORM")
                                  .fetch())) {
       while (iterator.hasNext()) {
         TerraformInfrastructureProvisioner provisioner = (TerraformInfrastructureProvisioner) iterator.next();

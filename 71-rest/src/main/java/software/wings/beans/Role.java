@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 
 import io.harness.beans.EmbeddedUser;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.PostLoad;
@@ -16,6 +17,7 @@ import java.util.List;
  * Created by anubhaw on 3/16/16.
  */
 @Entity(value = "roles", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "RoleKeys")
 public class Role extends Base {
   @NotEmpty private String name;
   private String description;

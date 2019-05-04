@@ -580,7 +580,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
     assertEquals(0, learningEngineAnalysisTasks.size());
 
-    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class).filter("clusterLevel", ClusterLevel.L0));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(LogDataRecord.class).filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L0));
 
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =

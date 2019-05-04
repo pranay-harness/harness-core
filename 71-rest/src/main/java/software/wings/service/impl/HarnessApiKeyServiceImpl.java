@@ -13,6 +13,7 @@ import io.harness.exception.WingsException;
 import software.wings.beans.HarnessApiKey;
 import software.wings.beans.HarnessApiKey.AuthType;
 import software.wings.beans.HarnessApiKey.ClientType;
+import software.wings.beans.HarnessApiKey.HarnessApiKeyKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.SecretManager;
@@ -85,7 +86,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
     String apiKey = harnessApiKeyCache.get(clientType);
     if (apiKey == null) {
       HarnessApiKey globalApiKey =
-          wingsPersistence.createQuery(HarnessApiKey.class).filter("clientType", clientType).get();
+          wingsPersistence.createQuery(HarnessApiKey.class).filter(HarnessApiKeyKeys.clientType, clientType).get();
       Validator.notNullCheck("global api key null for client type " + clientType, globalApiKey, USER);
       apiKey = getDecryptedKey(globalApiKey.getEncryptedKey());
       harnessApiKeyCache.put(clientType, apiKey);
@@ -98,7 +99,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   }
 
   private HarnessApiKey getApiKeyObject(ClientType clientType) {
-    return wingsPersistence.createQuery(HarnessApiKey.class).filter("clientType", clientType).get();
+    return wingsPersistence.createQuery(HarnessApiKey.class).filter(HarnessApiKeyKeys.clientType, clientType).get();
   }
 
   @Override

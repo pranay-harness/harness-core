@@ -90,6 +90,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
+import software.wings.beans.LambdaSpecification.LambdaSpecificationKeys;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
@@ -110,16 +111,22 @@ import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.Command.CommandKeys;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.ContainerTask.ContainerTaskKeys;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.beans.container.EcsServiceSpecification;
+import software.wings.beans.container.EcsServiceSpecification.EcsServiceSpecificationKeys;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.HelmChartSpecification.HelmChartSpecificationKeys;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.beans.container.PcfServiceSpecification.PcfServiceSpecificationKeys;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.container.UserDataSpecification.UserDataSpecificationKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.command.SshCommandTemplate;
@@ -656,7 +663,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service getServiceByName(String appId, String serviceName, boolean withDetails) {
     Service service =
-        wingsPersistence.createQuery(Service.class).filter("appId", appId).filter("name", serviceName).get();
+        wingsPersistence.createQuery(Service.class).filter("appId", appId).filter(ServiceKeys.name, serviceName).get();
     if (service != null) {
       if (withDetails) {
         setServiceDetails(service, appId);
@@ -869,7 +876,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       List<Service> services = wingsPersistence.createQuery(Service.class)
                                    .project(Service.NAME_KEY, true)
                                    .project(Service.APP_ID_KEY, true)
-                                   .filter("appId", appId)
+                                   .filter(ServiceKeys.appId, appId)
                                    .field("uuid")
                                    .in(serviceUuids)
                                    .asList();
@@ -901,7 +908,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (serviceCommandDeleted) {
       boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
                                                     .filter("appId", service.getAppId())
-                                                    .filter("originEntityId", serviceCommand.getUuid()));
+                                                    .filter(CommandKeys.originEntityId, serviceCommand.getUuid()));
       if (deleted) {
         String accountId = appService.getAccountIdByAppId(service.getAppId());
         yamlPushService.pushYamlChangeSet(accountId, service, serviceCommand, Type.DELETE, syncFromGit);
@@ -1029,7 +1036,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       String appId, String serviceId, String taskId, KubernetesPayload kubernetesPayload, boolean reset) {
     ContainerTask containerTask = wingsPersistence.createQuery(ContainerTask.class)
                                       .filter("appId", appId)
-                                      .filter("serviceId", serviceId)
+                                      .filter(ContainerTaskKeys.serviceId, serviceId)
                                       .filter(ID_KEY, taskId)
                                       .get();
     if (reset) {
@@ -1050,7 +1057,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public EcsServiceSpecification getEcsServiceSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(EcsServiceSpecification.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(EcsServiceSpecificationKeys.serviceId, serviceId)
         .get();
   }
 
@@ -1602,7 +1609,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public UserDataSpecification getUserDataSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(UserDataSpecification.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(UserDataSpecificationKeys.serviceId, serviceId)
         .get();
   }
 
@@ -1657,7 +1664,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return wingsPersistence.createQuery(ContainerTask.class)
         .filter("appId", appId)
         .filter("serviceId", serviceId)
-        .filter("deploymentType", deploymentType)
+        .filter(ContainerTaskKeys.deploymentType, deploymentType)
         .get();
   }
 
@@ -1670,7 +1677,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public HelmChartSpecification getHelmChartSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(HelmChartSpecification.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(HelmChartSpecificationKeys.serviceId, serviceId)
         .get();
   }
 
@@ -1678,7 +1685,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public PcfServiceSpecification getPcfServiceSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(PcfServiceSpecification.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(PcfServiceSpecificationKeys.serviceId, serviceId)
         .get();
   }
 
@@ -1788,7 +1795,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public LambdaSpecification getLambdaSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(LambdaSpecification.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(LambdaSpecificationKeys.serviceId, serviceId)
         .get();
   }
 
@@ -1886,7 +1893,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isNotEmpty(serviceUuids)) {
       List<Service> services = wingsPersistence.createQuery(Service.class)
                                    .project("appContainer", false)
-                                   .filter("appId", appId)
+                                   .filter(ServiceKeys.appId, appId)
                                    .field("uuid")
                                    .in(serviceUuids)
                                    .asList();

@@ -2,6 +2,7 @@ package io.harness.limits.checker.rate;
 
 import io.harness.persistence.PersistentEntity;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -12,6 +13,7 @@ import java.util.List;
  */
 @Value
 @Entity(value = "usageBuckets", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "UsageBucketKeys")
 public class UsageBucket implements PersistentEntity {
   // key which uniquely identifies this bucket
   @Id private String key;

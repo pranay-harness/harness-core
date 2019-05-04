@@ -22,6 +22,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
+import io.harness.entities.TimeSeriesAnomaliesRecord.TimeSeriesAnomaliesRecordKeys;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
@@ -46,6 +47,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricScores;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMLScores.TimeSeriesMLScoresKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
@@ -248,7 +250,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (isNotEmpty(mlAnalysisResponse.getAnomalies())) {
       TimeSeriesAnomaliesRecord anomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
                                                       .filter("appId", appId)
-                                                      .filter("cvConfigId", cvConfigId)
+                                                      .filter(TimeSeriesAnomaliesRecordKeys.cvConfigId, cvConfigId)
                                                       .get();
 
       if (anomaliesRecord == null) {
@@ -316,7 +318,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return wingsPersistence.createQuery(TimeSeriesMLScores.class)
         .filter("workflowId", workflowId)
         .filter("appId", appId)
-        .filter("analysisMinute", analysisMinute)
+        .filter(TimeSeriesMLScoresKeys.analysisMinute, analysisMinute)
         .field("workflowExecutionIds")
         .in(workflowExecutionIds)
         .order("-createdAt")

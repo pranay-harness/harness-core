@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
@@ -16,6 +17,7 @@ import java.util.Objects;
  * The Class ServiceInstance.
  */
 @Entity(value = "serviceInstance", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "ServiceInstanceKeys")
 public class ServiceInstance extends Base {
   private String envId;
 

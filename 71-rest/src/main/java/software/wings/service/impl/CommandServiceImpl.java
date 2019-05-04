@@ -26,7 +26,7 @@ public class CommandServiceImpl implements CommandService {
   public Command getCommand(String appId, String originEntityId, int version) {
     return wingsPersistence.createQuery(Command.class)
         .filter("appId", appId)
-        .filter("originEntityId", originEntityId)
+        .filter(CommandKeys.originEntityId, originEntityId)
         .filter(CommandKeys.version, version)
         .get();
   }
@@ -40,7 +40,7 @@ public class CommandServiceImpl implements CommandService {
   public ServiceCommand getServiceCommandByName(String appId, String serviceId, String serviceCommandName) {
     return wingsPersistence.createQuery(ServiceCommand.class)
         .filter("appId", appId)
-        .filter("serviceId", serviceId)
+        .filter(ServiceCommandKeys.serviceId, serviceId)
         .filter(ServiceCommandKeys.name, serviceCommandName)
         .get();
   }

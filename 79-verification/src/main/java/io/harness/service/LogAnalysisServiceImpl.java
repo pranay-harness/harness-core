@@ -56,10 +56,12 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
+import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord.ExperimentalLogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
@@ -117,7 +119,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                      .filter("appId", appId)
                                      .filter("query", searchQuery)
                                      .filter("logCollectionMinute", logCollectionMinute)
-                                     .filter("clusterLevel", fromLevel);
+                                     .filter(LogDataRecordKeys.clusterLevel, fromLevel);
 
     if (isNotEmpty(host)) {
       query = query.field("host").in(host);
@@ -141,7 +143,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                      .filter("stateExecutionId", stateExecutionId)
                                      .filter("appId", appId)
                                      .filter("query", searchQuery)
-                                     .filter("logCollectionMinute", logCollectionMinute)
+                                     .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
                                      .field("clusterLevel")
                                      .in(asList(clusterLevels));
     if (isNotEmpty(host)) {
@@ -383,7 +385,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                         .filter("query", logRequest.getQuery())
                         .filter("serviceId", logRequest.getServiceId())
                         .filter("clusterLevel", clusterLevel)
-                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
+                        .filter(LogDataRecordKeys.logCollectionMinute, logRequest.getLogCollectionMinute())
                         .field("host")
                         .hasAnyOf(logRequest.getNodes());
 
@@ -398,7 +400,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                           .filter("appId", logRequest.getApplicationId())
                                           .filter("query", logRequest.getQuery())
                                           .filter("serviceId", logRequest.getServiceId())
-                                          .filter("clusterLevel", clusterLevel)
+                                          .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
                                           .order(Sort.ascending("logCollectionMinute"))
                                           .get();
 
@@ -413,7 +415,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                             .filter("appId", logRequest.getApplicationId())
                             .filter("query", logRequest.getQuery())
                             .filter("serviceId", logRequest.getServiceId())
-                            .filter("clusterLevel", clusterLevel)
+                            .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
                             .order(Sort.ascending("logCollectionMinute"))
                             .get();
 
@@ -429,7 +431,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                         .filter("query", logRequest.getQuery())
                         .filter("serviceId", logRequest.getServiceId())
                         .filter("clusterLevel", clusterLevel)
-                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
+                        .filter(LogDataRecordKeys.logCollectionMinute, logRequest.getLogCollectionMinute());
     }
 
     Set<LogDataRecord> rv = new HashSet<>();
@@ -529,12 +531,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public boolean isLogDataCollected(
       String appId, String stateExecutionId, String query, long logCollectionMinute, StateType stateType) {
-    Query<LogDataRecord> splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                                        .filter("stateType", stateType)
-                                                        .filter("stateExecutionId", stateExecutionId)
-                                                        .filter("appId", appId)
-                                                        .filter("query", query)
-                                                        .filter("logCollectionMinute", logCollectionMinute);
+    Query<LogDataRecord> splunkLogDataRecordQuery =
+        wingsPersistence.createQuery(LogDataRecord.class)
+            .filter("stateType", stateType)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("appId", appId)
+            .filter("query", query)
+            .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
     return !splunkLogDataRecordQuery.asList().isEmpty();
   }
 
@@ -557,7 +560,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               .filter("appId", appId)
               .filter("workflowExecutionId", successfulExecution)
               .filter("clusterLevel", ClusterLevel.L2)
-              .filter("query", query)
+              .filter(LogDataRecordKeys.query, query)
               .count(new CountOptions().limit(1))
           > 0) {
         return successfulExecution;
@@ -612,7 +615,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     wingsPersistence.update(wingsPersistence.createQuery(LogDataRecord.class)
                                 .filter("cvConfigId", cvConfigId)
                                 .filter("appId", appId)
-                                .filter("clusterLevel", H2)
+                                .filter(LogDataRecordKeys.clusterLevel, H2)
                                 .field("logCollectionMinute")
                                 .lessThanOrEq(analysisMinute),
         wingsPersistence.createUpdateOperations(LogDataRecord.class).set("clusterLevel", ClusterLevel.getFinal()));
@@ -653,7 +656,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
                                   .filter("appId", mlAnalysisResponse.getAppId())
                                   .filter("stateExecutionId", mlAnalysisResponse.getStateExecutionId())
-                                  .filter("logCollectionMinute", mlAnalysisResponse.getLogCollectionMinute()));
+                                  .filter(ExperimentalLogMLAnalysisRecordKeys.logCollectionMinute,
+                                      mlAnalysisResponse.getLogCollectionMinute()));
 
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
@@ -690,7 +694,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                   .filter("stateExecutionId", stateExecutionId)
                                                   .filter("appId", appId)
                                                   .filter("query", query)
-                                                  .filter("stateType", stateType)
+                                                  .filter(LogMLAnalysisRecordKeys.stateType, stateType)
                                                   .field("logCollectionMinute")
                                                   .lessThanOrEq(logCollectionMinute)
                                                   .order("-logCollectionMinute")
@@ -708,7 +712,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                   .filter("appId", appId)
                                                   .field("logCollectionMinute")
                                                   .lessThanOrEq(analysisMinute)
-                                                  .filter("deprecated", false)
+                                                  .filter(LogMLAnalysisRecordKeys.deprecated, false)
                                                   .order("-logCollectionMinute")
                                                   .get();
     if (logMLAnalysisRecord != null) {
@@ -865,7 +869,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                    .filter("stateExecutionId", stateExecutionId)
                                    .filter("stateType", type)
                                    .filter("clusterLevel", heartBeat)
-                                   .filter("query", query)
+                                   .filter(LogDataRecordKeys.query, query)
                                    .field("host")
                                    .in(nodes)
                                    .order("logCollectionMinute")
@@ -923,7 +927,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                .filter("stateType", type)
                .filter("clusterLevel", level)
                .filter("logCollectionMinute", logCollectionMinute)
-               .filter("query", query)
+               .filter(LogDataRecordKeys.query, query)
                .field("host")
                .in(nodes)
                .count(new CountOptions().limit(1))
@@ -936,12 +940,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     /**
      * Find heartbeat for L0 records. L0 heartbeat is H0.
      */
-    Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .filter("appId", appId)
-                                     .filter("stateExecutionId", stateExecutionId)
-                                     .filter("stateType", type)
-                                     .filter("clusterLevel", ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
-                                     .order("logCollectionMinute");
+    Query<LogDataRecord> query =
+        wingsPersistence.createQuery(LogDataRecord.class)
+            .filter("appId", appId)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("stateType", type)
+            .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
+            .order("logCollectionMinute");
 
     if (isNotEmpty(host)) {
       query = query.filter("host", host);
@@ -959,7 +964,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                        .filter("stateExecutionId", stateExecutionId)
                                        .filter("stateType", type)
                                        .filter("clusterLevel", ClusterLevel.getFinal())
-                                       .filter("query", query)
+                                       .filter(LogDataRecordKeys.query, query)
                                        .order("-logCollectionMinute")
                                        .get();
     return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
@@ -980,7 +985,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter("appId", appId)
                                               .filter("workflowId", workflowId)
-                                              .filter("status", SUCCESS)
+                                              .filter(WorkflowExecutionKeys.status, SUCCESS)
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
 
@@ -1079,7 +1084,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                        .filter("appId", appId)
                                        .filter("stateExecutionId", stateExecutionId)
                                        .filter("stateType", type)
-                                       .filter("query", query)
+                                       .filter(LogDataRecordKeys.query, query)
                                        .order("-logCollectionMinute")
                                        .get();
     return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();

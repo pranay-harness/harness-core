@@ -33,6 +33,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
+import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -62,7 +63,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public YamlChangeSet get(String accountId, String changeSetId) {
     return wingsPersistence.createQuery(YamlChangeSet.class)
-        .filter("accountId", accountId)
+        .filter(YamlChangeSetKeys.accountId, accountId)
         .filter(Mapper.ID_KEY, changeSetId)
         .get();
   }
@@ -83,7 +84,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
       Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
                                            .filter("accountId", accountId)
-                                           .filter("status", Status.QUEUED)
+                                           .filter(YamlChangeSetKeys.status, Status.QUEUED)
                                            .order(YamlChangeSet.CREATED_AT_KEY);
       UpdateOperations<YamlChangeSet> updateOperations =
           wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", Status.RUNNING);
@@ -209,7 +210,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
     Query<YamlChangeSet> yamlChangeSetQuery = wingsPersistence.createQuery(YamlChangeSet.class)
                                                   .filter("accountId", accountId)
-                                                  .filter("status", currentStatus);
+                                                  .filter(YamlChangeSetKeys.status, currentStatus);
 
     UpdateResults status = wingsPersistence.update(yamlChangeSetQuery, ops);
 
@@ -228,7 +229,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       setUnset(ops, "status", newStatus);
 
       Query<YamlChangeSet> yamlChangeSetQuery = wingsPersistence.createQuery(YamlChangeSet.class)
-                                                    .filter("accountId", accountId)
+                                                    .filter(YamlChangeSetKeys.accountId, accountId)
                                                     .field("status")
                                                     .in(currentStatuses)
                                                     .field("_id")
@@ -249,7 +250,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public boolean deleteChangeSet(String accountId, String changeSetId) {
     return wingsPersistence.delete(wingsPersistence.createQuery(YamlChangeSet.class)
-                                       .filter("accountId", accountId)
+                                       .filter(YamlChangeSetKeys.accountId, accountId)
                                        .filter(Mapper.ID_KEY, changeSetId));
   }
 

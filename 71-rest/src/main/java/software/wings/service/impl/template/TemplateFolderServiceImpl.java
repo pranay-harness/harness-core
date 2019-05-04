@@ -41,6 +41,7 @@ import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.WingsPersistence;
@@ -431,7 +432,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     return wingsPersistence.createQuery(TemplateFolder.class)
         .filter(ACCOUNT_ID_KEY, accountId)
         .filter(APP_ID_KEY, appId)
-        .filter("name", folderName)
+        .filter(TemplateFolderKeys.name, folderName)
         .asList();
   }
 

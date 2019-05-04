@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.dl.WingsPersistence;
@@ -22,7 +23,7 @@ public class DeleteCVAlertsMigration implements Migration {
   @Override
   public void migrate() {
     List<Account> harnessAccounts =
-        wingsPersistence.createQuery(Account.class).filter("accountName", "Harness.io").asList();
+        wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, "Harness.io").asList();
     if (isEmpty(harnessAccounts)) {
       logger.info("There are no harness accounts in DeleteCVAlertsMigration. Returning");
       return;

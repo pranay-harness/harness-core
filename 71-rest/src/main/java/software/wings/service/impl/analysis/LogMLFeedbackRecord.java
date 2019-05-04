@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -36,6 +37,7 @@ import software.wings.sm.StateType;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "LogMLFeedbackRecordKeys")
 public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty @Indexed private String serviceId;
 

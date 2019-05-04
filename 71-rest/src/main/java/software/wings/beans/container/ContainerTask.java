@@ -9,6 +9,7 @@ import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
     fields = { @Field("serviceId")
                , @Field("deploymentType") }))
 @Entity("containerTasks")
+@FieldNameConstants(innerTypeName = "ContainerTaskKeys")
 public abstract class ContainerTask extends DeploymentSpecification {
   static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
   static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";

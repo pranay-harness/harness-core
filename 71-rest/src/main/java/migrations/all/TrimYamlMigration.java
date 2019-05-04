@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.ContainerTask.ContainerTaskKeys;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.dl.WingsPersistence;
 
@@ -17,7 +18,7 @@ public class TrimYamlMigration implements Migration {
   @Override
   public void migrate() {
     List<ContainerTask> containerTasks = wingsPersistence.createQuery(ContainerTask.class)
-                                             .filter("deploymentType", "KUBERNETES")
+                                             .filter(ContainerTaskKeys.deploymentType, "KUBERNETES")
                                              .field("advancedConfig")
                                              .exists()
                                              .asList();

@@ -45,6 +45,7 @@ import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
@@ -150,7 +151,7 @@ public class TriggerServiceHelper {
   public List<Trigger> getTriggersByWorkflow(String appId, String pipelineId) {
     return wingsPersistence.createQuery(Trigger.class)
         .filter(Trigger.APP_ID_KEY, appId)
-        .filter("workflowId", pipelineId)
+        .filter(TriggerKeys.workflowId, pipelineId)
         .asList();
   }
 

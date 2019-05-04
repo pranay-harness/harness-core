@@ -8,6 +8,8 @@ import static org.junit.Assert.assertTrue;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
+import io.harness.limits.Counter.CounterKeys;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
@@ -52,10 +54,11 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @After
   public void cleanUp() {
     Datastore clds = dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL);
-    clds.delete(clds.createQuery(ConfiguredLimit.class).filter("accountId", CREATE_APP_ACTION.getAccountId()));
+    clds.delete(clds.createQuery(ConfiguredLimit.class)
+                    .filter(ConfiguredLimitKeys.accountId, CREATE_APP_ACTION.getAccountId()));
 
     Datastore cds = dao.getDatastore(Counter.class, ReadPref.NORMAL);
-    cds.delete(cds.createQuery(Counter.class).filter("key", CREATE_APP_ACTION.key()));
+    cds.delete(cds.createQuery(Counter.class).filter(CounterKeys.key, CREATE_APP_ACTION.key()));
   }
 
   @Test

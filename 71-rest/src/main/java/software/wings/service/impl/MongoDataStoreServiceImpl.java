@@ -15,6 +15,7 @@ import io.harness.persistence.GoogleDataStoreAware;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Log;
+import software.wings.beans.Log.LogKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DataStoreService;
 
@@ -40,7 +41,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
       Log log = (Log) records.get(0);
       long count = wingsPersistence.createQuery(Log.class)
                        .filter("appId", log.getAppId())
-                       .filter("activityId", log.getActivityId())
+                       .filter(LogKeys.activityId, log.getActivityId())
                        .count();
       if (count >= MAX_LOG_ROWS_PER_ACTIVITY) {
         logger.warn(
@@ -84,7 +85,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   @Override
   public void purgeByActivity(String appId, String activityId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(Log.class).filter("appId", appId).filter("activityId", activityId));
+        wingsPersistence.createQuery(Log.class).filter("appId", appId).filter(LogKeys.activityId, activityId));
   }
 
   @Override

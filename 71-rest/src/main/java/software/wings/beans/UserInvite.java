@@ -9,6 +9,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.validation.Update;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
@@ -26,6 +27,7 @@ import java.util.List;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 //@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
 // handle update with insert and then uncomment
+@FieldNameConstants(innerTypeName = "UserInviteKeys")
 public class UserInvite extends Base {
   public static final String UUID_KEY = "uuid";
 

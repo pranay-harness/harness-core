@@ -37,6 +37,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -314,7 +315,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                        .filter(ServiceTemplate.APP_ID_KEY, appId)
                                        .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
                                        .filter("defaultServiceTemplate", true)
-                                       .filter("name", oldServiceName);
+                                       .filter(ServiceTemplateKeys.name, oldServiceName);
     UpdateOperations<ServiceTemplate> updateOperations =
         wingsPersistence.createUpdateOperations(ServiceTemplate.class).set("name", newServiceName);
     wingsPersistence.update(query, updateOperations);
@@ -432,7 +433,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
                                           .filter(ServiceTemplate.APP_ID_KEY, appId)
-                                          .filter("envId", envId)
+                                          .filter(ServiceTemplateKeys.envId, envId)
                                           .asKeyList();
     for (Key<ServiceTemplate> key : keys) {
       delete(appId, (String) key.getId());

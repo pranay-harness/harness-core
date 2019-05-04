@@ -36,13 +36,16 @@ import org.junit.experimental.categories.Category;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
+import software.wings.beans.UserInvite.UserInviteKeys;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.common.Constants;
@@ -273,7 +276,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, response.getResponseMessages().size());
     assertTrue(response.getResource());
 
-    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class).filter("email", email).get();
+    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
     assertNotNull(userInvite);
     assertFalse(userInvite.isCompleted());
     String inviteId = userInvite.getUuid();
@@ -299,7 +302,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertNotNull(account);
 
     // Verify the trial user is created, assigned to proper account and with the account admin roles.
-    User savedUser = wingsPersistence.createQuery(User.class).filter("email", email).get();
+    User savedUser = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email).get();
     assertNotNull(savedUser);
     assertTrue(savedUser.isEmailVerified());
     assertEquals(1, savedUser.getAccounts().size());
@@ -318,7 +321,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     // Verify user is deleted
     assertNull(userService.getUserByEmail(email));
     // Verify user invite is deleted
-    assertNull(wingsPersistence.createQuery(UserInvite.class).filter("email", email).get());
+    assertNull(wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get());
   }
 
   @Test
@@ -355,7 +358,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     // Verify user is deleted
     assertNull(userService.getUserByEmail(email));
     // Verify user invite is deleted
-    assertNull(wingsPersistence.createQuery(UserInvite.class).filter("email", email).get());
+    assertNull(wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get());
   }
 
   @Test
@@ -551,7 +554,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testAccountCreationWithKms() {
     loginAdminUser();
-    User user = wingsPersistence.createQuery(User.class).filter("email", "admin@harness.io").get();
+    User user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, "admin@harness.io").get();
 
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .applyToAllAccounts(true)
@@ -586,7 +589,8 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testResendInvitationAndCompleteInvitation() {
-    Account adminAccount = wingsPersistence.createQuery(Account.class).filter("accountName", defaultAccountName).get();
+    Account adminAccount =
+        wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, defaultAccountName).get();
     String accountId = adminAccount.getUuid();
 
     ResendInvitationEmailRequest request = new ResendInvitationEmailRequest();

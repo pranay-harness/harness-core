@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -26,6 +27,7 @@ import java.util.Date;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretUsageLogs", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "SecretUsageLogKeys")
 public class SecretUsageLog extends Base {
   public static final String ENCRYPTED_DATA_ID_KEY = "encryptedDataId";
 
