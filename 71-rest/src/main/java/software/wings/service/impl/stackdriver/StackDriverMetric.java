@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StackDriverMetric {
   private String metricName;
+  private String metric;
   private String displayName;
   private String unit;
   private String kind;

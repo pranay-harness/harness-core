@@ -30,7 +30,7 @@ public interface StackDriverDelegateService {
   Map<String, String> listForwardingRules(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String region) throws IOException;
 
-  String createFilter(StackDriverNameSpace nameSpace, String metric, String hostName, String ruleName);
+  String createFilter(StackDriverNameSpace nameSpace, String metric, String dimensionValue);
 
   String getProjectId(GcpConfig gcpConfig);
 

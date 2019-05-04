@@ -25,15 +25,15 @@ import java.util.Set;
 public class StackDriverSetupTestNodeData extends SetupTestNodeData {
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics = new HashMap<>();
 
-  private Set<StackDriverMetric> vmInstanceMetrics = new HashSet<>();
+  private Set<StackDriverMetric> podMetrics = new HashSet<>();
 
   @Builder
   public StackDriverSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      Map<String, List<StackDriverMetric>> loadBalancerMetrics, Set<StackDriverMetric> vmInstanceMetrics, String guid) {
+      Map<String, List<StackDriverMetric>> loadBalancerMetrics, Set<StackDriverMetric> podMetrics, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.STACK_DRIVER, fromTime, toTime);
     this.loadBalancerMetrics = loadBalancerMetrics;
-    this.vmInstanceMetrics = vmInstanceMetrics;
+    this.podMetrics = podMetrics;
   }
 }

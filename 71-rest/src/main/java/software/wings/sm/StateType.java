@@ -329,7 +329,7 @@ public enum StateType implements StateTypeDescriptor {
    * StackDriver state type.
    */
   STACK_DRIVER(
-      StackDriverState.class, VERIFICATIONS, 18, "StackDriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+      StackDriverState.class, VERIFICATIONS, 18, "Stackdriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

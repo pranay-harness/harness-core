@@ -1,73 +1,50 @@
 LOADBALANCER:
     - metricName: loadbalancing.googleapis.com/https/backend_latencies
+      metric: HTTPSBackendLatencies
       displayName: Backend Latencies
       unit: ms
       kind: ERROR
       valueType: Distribution
 
     - metricName: loadbalancing.googleapis.com/https/request_count
+      metric: HTTPSRequestCount
       displayName: Request Count
       unit: number
       kind: THROUGHPUT
       valueType: Int64
 
-VMINSTANCE:
-    - metricName: compute.googleapis.com/instance/cpu/utilization
-      displayName: CPU Utilization
-      unit: ratio
-      kind: VALUE
-      valueType: Double
-
-    - metricName: compute.googleapis.com/instance/disk/write_ops_count
-      displayName: Disk Read Ops
+PODNAME:
+    - metricName: kubernetes.io/container/memory/request_utilization
+      metric: MemoryRequestUtilization
+      displayName: Memory Request Utilization
       unit: number
       kind: VALUE
       valueType: Int64
 
-      metricName: compute.googleapis.com/instance/disk/read_bytes_count
-      displayName: Delta count of bytes read from disk.
-      unit: By
-      kind: VALUE
-      valueType: Int64
-
-      metricName: compute.googleapis.com/instance/disk/read_ops_count
-      displayName: Delta count of disk read IO operations.
+    - metricName: kubernetes.io/container/cpu/core_usage_time
+      metric: CPUUsageTime
+      displayName: CPU Usage Time
       unit: number
       kind: VALUE
       valueType: Int64
 
-      metricName: compute.googleapis.com/instance/disk/write_bytes_count
-      displayName: Delta count of bytes written to disk.
-      unit: By
-      kind: VALUE
-      valueType: Int64
-
-      metricName: compute.googleapis.com/instance/disk/write_ops_count
-      displayName: Delta count of disk write IO operations.
+    - metricName: kubernetes.io/container/memory/request_bytes
+      metric: MemoryRequest
+      displayName: Memory Request
       unit: number
       kind: VALUE
       valueType: Int64
 
-      metricName: compute.googleapis.com/instance/network/received_bytes_count
-      displayName: Delta count of bytes received from the network.
-      unit: By
-      kind: VALUE
-      valueType: Int64
-
-      metricName: compute.googleapis.com/instance/network/received_packets_count
-      displayName: Delta count of packets received from the network.
+    - metricName: kubernetes.io/container/cpu/limit_utilization
+      metric: CPULimitUtilization
+      displayName: CPU Limit Utilization
       unit: number
       kind: VALUE
       valueType: Int64
 
-      metricName: compute.googleapis.com/instance/network/sent_bytes_count
-      displayName: Delta count of bytes sent over the network.
-      unit: By
-      kind: VALUE
-      valueType: Int64
-
-      metricName: compute.googleapis.com/instance/network/sent_packets_count
-      displayName: Delta count of packets sent over the network.
+    - metricName: kubernetes.io/container/cpu/request_utilization
+      metric: CPURequestUtilization
+      displayName: CPU Request Utilization
       unit: number
       kind: VALUE
       valueType: Int64
