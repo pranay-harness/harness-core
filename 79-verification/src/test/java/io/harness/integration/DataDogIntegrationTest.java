@@ -37,6 +37,7 @@ import software.wings.APMFetchConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -90,8 +91,9 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
                         .build());
     config.setOptionsList(optionsList);
 
-    SettingAttribute settingAttribute =
-        wingsPersistence.createQuery(SettingAttribute.class).filter("name", "datadog_connector").get();
+    SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttributeKeys.name, "datadog_connector")
+                                            .get();
 
     String serverConfigId;
     if (settingAttribute == null) {

@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 
 import java.io.File;
 import java.io.IOException;
@@ -113,7 +114,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
         .getLines()
         .forEach(logger::info);
 
-    assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
+    assertThat(wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.connected, true).asList())
         .hasSize(0); // no delegate registered
 
     int commandStatus = new ProcessExecutor()
@@ -134,7 +135,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
         .getLines()
         .forEach(logger::info);
     waitForDelegateToDeregisterWithTimeout();
-    assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
+    assertThat(wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.connected, true).asList())
         .hasSize(0); // no delegate registered
 
     /* Delegate upgrade.
@@ -173,7 +174,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
         .getLines()
         .forEach(logger::info);
     waitForDelegateToDeregisterWithTimeout();
-    assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
+    assertThat(wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.connected, true).asList())
         .hasSize(0); // no delegate registered
   }
 

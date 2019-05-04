@@ -32,6 +32,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFile.ConfigFileKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -229,7 +230,7 @@ public class ConfigServiceImpl implements ConfigService {
     return wingsPersistence.createQuery(ConfigFile.class)
         .filter("appId", appId)
         .filter("envId", envId)
-        .filter("templateId", serviceTemplateId)
+        .filter(ConfigFileKeys.templateId, serviceTemplateId)
         .asList();
   }
 
@@ -407,7 +408,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class)
                                   .filter("appId", existingConfigFile.getAppId())
-                                  .filter("relativeFilePath", existingConfigFile.getRelativeFilePath());
+                                  .filter(ConfigFileKeys.relativeFilePath, existingConfigFile.getRelativeFilePath());
     query.or(query.criteria("entityId").equal(existingConfigFile.getEntityId()),
         query.criteria("templateId").in(templateIds));
 
@@ -442,7 +443,7 @@ public class ConfigServiceImpl implements ConfigService {
 
       List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
                                          .filter(ConfigFile.APP_ID_KEY, appId)
-                                         .filter("parentConfigFileId", configId)
+                                         .filter(ConfigFileKeys.parentConfigFileId, configId)
                                          .asList();
       if (!configFiles.isEmpty()) {
         configFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
@@ -466,7 +467,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (deleted) {
       List<ConfigFile> childConfigFiles = wingsPersistence.createQuery(ConfigFile.class)
                                               .filter("appId", appId)
-                                              .filter("parentConfigFileId", configFile.getUuid())
+                                              .filter(ConfigFileKeys.parentConfigFileId, configFile.getUuid())
                                               .asList();
       childConfigFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
 
@@ -549,7 +550,7 @@ public class ConfigServiceImpl implements ConfigService {
   public void deleteByTemplateId(String appId, String serviceTemplateId) {
     wingsPersistence.createQuery(ConfigFile.class)
         .filter("appId", appId)
-        .filter("templateId", serviceTemplateId)
+        .filter(ConfigFileKeys.templateId, serviceTemplateId)
         .asList()
         .forEach(configFile -> delete(appId, configFile.getUuid()));
   }
@@ -558,7 +559,7 @@ public class ConfigServiceImpl implements ConfigService {
   public void deleteByEntityId(String appId, String entityId) {
     wingsPersistence.createQuery(ConfigFile.class)
         .filter("appId", appId)
-        .filter("entityId", entityId)
+        .filter(ConfigFileKeys.entityId, entityId)
         .asList()
         .forEach(configFile -> delete(appId, configFile.getUuid()));
   }

@@ -57,6 +57,7 @@ import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -84,6 +85,7 @@ import javax.validation.Valid;
 @HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "SettingAttributeKeys")
 public class SettingAttribute extends Base implements NameAccess {
   public static final String CATEGORY_KEY = "category";
   public static final String ENV_ID_KEY = "envId";

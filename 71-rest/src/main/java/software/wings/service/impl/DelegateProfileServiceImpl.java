@@ -19,7 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateProfile;
+import software.wings.beans.DelegateProfile.DelegateProfileKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 
@@ -56,7 +58,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
     setUnset(updateOperations, "startupScript", delegateProfile.getStartupScript());
 
     Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
-                                       .filter("accountId", delegateProfile.getAccountId())
+                                       .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
                                        .filter(ID_KEY, delegateProfile.getUuid());
     wingsPersistence.update(query, updateOperations);
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
@@ -76,7 +78,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
   @Override
   public void delete(String accountId, String delegateProfileId) {
     DelegateProfile delegateProfile = wingsPersistence.createQuery(DelegateProfile.class)
-                                          .filter("accountId", accountId)
+                                          .filter(DelegateProfileKeys.accountId, accountId)
                                           .filter(ID_KEY, delegateProfileId)
                                           .get();
     if (delegateProfile != null) {
@@ -88,7 +90,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
 
   private void ensureProfileSafeToDelete(String accountId, DelegateProfile delegateProfile) {
     String delegateProfileId = delegateProfile.getUuid();
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).filter("accountId", accountId).asList();
+    List<Delegate> delegates =
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate -> delegate.getDelegateProfileId() == delegateProfileId)
                                      .map(Delegate::getHostName)

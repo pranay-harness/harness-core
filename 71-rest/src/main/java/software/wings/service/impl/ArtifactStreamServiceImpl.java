@@ -54,6 +54,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.config.ArtifactSourceable;
@@ -128,7 +129,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return wingsPersistence.createQuery(ArtifactStream.class)
         .filter("appId", appId)
         .filter("serviceId", serviceId)
-        .filter("name", artifactStreamName)
+        .filter(ArtifactStreamKeys.name, artifactStreamName)
         .get();
   }
 
@@ -531,7 +532,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ArtifactStream.class)
         .filter(ArtifactStream.APP_ID_KEY, appId)
-        .filter("serviceId", serviceId)
+        .filter(ArtifactStreamKeys.serviceId, serviceId)
         .asList()
         .forEach(artifactSource -> {
           pruneArtifactStream((String) appId, (String) artifactSource.getUuid());

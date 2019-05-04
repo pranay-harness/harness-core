@@ -11,6 +11,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallLogKeys;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
@@ -29,7 +30,7 @@ public class CleanUpDatadogCallLogMigration implements Migration {
     try {
       List<StateExecutionInstance> stateExecutionInstances =
           wingsPersistence.createQuery(StateExecutionInstance.class)
-              .filter("stateType", "DATA_DOG")
+              .filter(StateExecutionInstanceKeys.stateType, "DATA_DOG")
               .field(StateExecutionInstanceKeys.createdAt)
               .greaterThanOrEq(Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
               .asList();
@@ -55,7 +56,7 @@ public class CleanUpDatadogCallLogMigration implements Migration {
           setUnset(op, "request", log.getRequest());
           setUnset(op, "title", log.getTitle());
           wingsPersistence.update(wingsPersistence.createQuery(ThirdPartyApiCallLog.class)
-                                      .filter("stateExecutionId", log.getStateExecutionId()),
+                                      .filter(ThirdPartyApiCallLogKeys.stateExecutionId, log.getStateExecutionId()),
               op);
         }
       }

@@ -5,6 +5,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -23,6 +24,7 @@ import org.mongodb.morphia.annotations.Indexes;
       options = @IndexOptions(unique = true, name = "uniqueDelegateSequenceIdx"))
 })
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 public class DelegateSequenceConfig extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String HOST_NAME_KEY = "hostName";

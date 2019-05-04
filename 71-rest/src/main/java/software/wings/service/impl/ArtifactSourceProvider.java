@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.stencils.DataProvider;
@@ -26,7 +27,7 @@ public class ArtifactSourceProvider implements DataProvider {
     List<Service> services = new ArrayList<>();
     if (appId != null) {
       artifactStreams = wingsPersistence.createQuery(ArtifactStream.class).filter("appId", appId).asList();
-      services = wingsPersistence.createQuery(Service.class).filter("appId", appId).asList();
+      services = wingsPersistence.createQuery(Service.class).filter(ServiceKeys.appId, appId).asList();
     }
     Map<String, String> serviceIdToName = services.stream().collect(toMap(Service::getUuid, Service::getName));
     return artifactStreams.stream().collect(

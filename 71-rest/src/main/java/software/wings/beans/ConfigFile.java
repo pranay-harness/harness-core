@@ -15,6 +15,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -59,6 +60,7 @@ import javax.ws.rs.DefaultValue;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ConfigFileKeys")
 public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
   public static final String ENTITY_TYPE_KEY = "entityType";

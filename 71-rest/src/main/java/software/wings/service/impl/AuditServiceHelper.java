@@ -9,7 +9,6 @@ import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.manage.GlobalContextManager;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Event.Type;
-
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 

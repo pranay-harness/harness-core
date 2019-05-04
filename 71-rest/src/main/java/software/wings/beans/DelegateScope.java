@@ -7,6 +7,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Environment.EnvironmentType;
@@ -22,6 +23,7 @@ import java.util.List;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "DelegateScopeKeys")
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
   private String name;

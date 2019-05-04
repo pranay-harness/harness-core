@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -23,6 +24,7 @@ import java.util.Date;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
+@FieldNameConstants(innerTypeName = "ContinuousVerificationExecutionMetaDataKeys")
 public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
   @NotEmpty private long pipelineStartTs;

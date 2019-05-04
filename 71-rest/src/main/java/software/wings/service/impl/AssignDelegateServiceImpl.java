@@ -27,6 +27,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.FeatureName;
 import software.wings.beans.TaskGroup;
@@ -71,7 +72,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
               .build(new CacheLoader<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>() {
                 public Optional<DelegateConnectionResult> load(ImmutablePair<String, String> key) {
                   return Optional.ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                 .filter("delegateId", key.getLeft())
+                                                 .filter(DelegateConnectionResultKeys.delegateId, key.getLeft())
                                                  .filter(DelegateConnectionResultKeys.criteria, key.getRight())
                                                  .get());
                 }
@@ -84,7 +85,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           .build(new CacheLoader<String, List<String>>() {
             public List<String> load(String accountId) {
               return wingsPersistence.createQuery(Delegate.class)
-                  .filter("accountId", accountId)
+                  .filter(DelegateKeys.accountId, accountId)
                   .field("lastHeartBeat")
                   .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                   .asKeyList()
@@ -327,7 +328,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public void clearConnectionResults(String accountId, String delegateId) {
     wingsPersistence.delete(wingsPersistence.createQuery(DelegateConnectionResult.class)
                                 .filter("accountId", accountId)
-                                .filter("delegateId", delegateId));
+                                .filter(DelegateConnectionResultKeys.delegateId, delegateId));
   }
 
   @Override

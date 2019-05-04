@@ -61,6 +61,8 @@ import software.wings.resources.AccountResource;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
+import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord.ExperimentalLogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
@@ -145,8 +147,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                                 .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete cv dashboard execution data
-    wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-                                .filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+            .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId));
 
     // delete learning engine tasks
     wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -158,7 +161,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     // delete experimental log analysis records
     wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-                                .filter("stateExecutionId", stateExecutionId));
+                                .filter(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete verification service tasks
     wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
@@ -389,7 +392,7 @@ public class AnalysisServiceImpl implements AnalysisService {
               .filter("appId", appId)
               .filter("workflowExecutionId", successfulExecution)
               .filter("clusterLevel", ClusterLevel.L2)
-              .filter("query", query)
+              .filter(LogDataRecordKeys.query, query)
               .count(new CountOptions().limit(1))
           > 0) {
         logger.info("Found an execution for auto baseline. WorkflowExecutionId {}, stateExecutionId {}",
@@ -509,7 +512,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     LogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                              .filter("stateExecutionId", stateExecutionId)
                                              .filter("appId", appId)
-                                             .filter("stateType", stateType)
+                                             .filter(LogMLAnalysisRecordKeys.stateType, stateType)
                                              .order("-logCollectionMinute")
                                              .get();
 
@@ -542,7 +545,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
                                                 .filter("appId", appId)
-                                                .filter("stateExecutionId", stateExecutionId)
+                                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
                                                 .get();
 
     if (analysisContext != null) {
@@ -662,7 +665,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         wingsPersistence.createQuery(LogDataRecord.class)
             .filter("appId", appId)
             .filter("stateExecutionId", stateExecutionId)
-            .filter("clusterLevel", clusterLevel)
+            .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
             .order(orderType == OrderType.DESC ? "-logCollectionMinute" : "logCollectionMinute")
             .get();
 
@@ -974,7 +977,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                .filter("appId", workflowExecution.getAppId())
                .filter("stateType", stateType)
                .filter("workflowId", workflowExecution.getWorkflowId())
-               .filter("workflowExecutionId", workflowExecution.getUuid())
+               .filter(LogDataRecordKeys.workflowExecutionId, workflowExecution.getUuid())
                .count(new CountOptions().limit(1))
         > 0;
   }
@@ -1007,7 +1010,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter("appId", appId)
                                               .filter("workflowId", workflowId)
-                                              .filter("status", SUCCESS)
+                                              .filter(WorkflowExecutionKeys.status, SUCCESS)
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
 
@@ -1074,13 +1077,14 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public LogMLAnalysisSummary getExperimentalAnalysisSummary(
       String stateExecutionId, String appId, StateType stateType, String expName) {
-    ExperimentalLogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-                                                         .filter("stateExecutionId", stateExecutionId)
-                                                         .filter("appId", appId)
-                                                         .filter("stateType", stateType)
-                                                         .filter("experiment_name", expName)
-                                                         .order("-logCollectionMinute")
-                                                         .get();
+    ExperimentalLogMLAnalysisRecord analysisRecord =
+        wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("appId", appId)
+            .filter(ExperimentalLogMLAnalysisRecordKeys.stateType, stateType)
+            .filter("experiment_name", expName)
+            .order("-logCollectionMinute")
+            .get();
     if (analysisRecord == null) {
       return null;
     }
