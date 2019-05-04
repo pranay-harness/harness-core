@@ -102,6 +102,12 @@ public class EnvironmentGenerator {
       builder.environmentType(random.nextObject(EnvironmentType.class));
     }
 
+    if (environment != null && environment.getCreatedBy() != null) {
+      builder.createdBy(environment.getCreatedBy());
+    } else {
+      builder.createdBy(owners.obtainUser());
+    }
+
     final Environment finalEnvironment = builder.build();
 
     return GeneratorUtils.suppressDuplicateException(

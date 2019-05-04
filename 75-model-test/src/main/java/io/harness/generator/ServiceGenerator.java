@@ -81,7 +81,8 @@ public class ServiceGenerator {
 
   public Service ensureGenericTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
+    owners.add(ensureService(
+        seed, owners, builder().name(name).artifactType(ArtifactType.WAR).deploymentType(DeploymentType.SSH).build()));
     artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
     return owners.obtainService();
   }
@@ -144,6 +145,12 @@ public class ServiceGenerator {
     if (service != null) {
       builder.deploymentType(service.getDeploymentType());
       builder.isK8sV2(service.isK8sV2());
+    }
+
+    if (service != null && service.getCreatedBy() != null) {
+      builder.createdBy(service.getCreatedBy());
+    } else {
+      builder.createdBy(owners.obtainUser());
     }
 
     final Service finalService = builder.build();

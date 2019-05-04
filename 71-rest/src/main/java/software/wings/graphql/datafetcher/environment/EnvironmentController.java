@@ -6,6 +6,8 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.graphql.datafetcher.user.UserController;
+import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentType;
 
@@ -27,6 +29,8 @@ public class EnvironmentController {
     builder.id(environment.getUuid())
         .name(environment.getName())
         .description(environment.getDescription())
-        .type(convertEnvironmentType(environment.getEnvironmentType()));
+        .type(convertEnvironmentType(environment.getEnvironmentType()))
+        .createdAt(GraphQLDateTimeScalar.convert(environment.getCreatedAt()))
+        .createdBy(UserController.populateUser(environment.getCreatedBy()));
   }
 }

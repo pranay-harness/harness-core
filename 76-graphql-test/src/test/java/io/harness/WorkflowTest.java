@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.WorkflowGenerator.Workflows.BASIC_SIMPLE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import com.google.inject.Inject;
 
 import graphql.ExecutionResult;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -30,7 +32,9 @@ import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
-import software.wings.graphql.schema.type.QLWorkflow;
+import software.wings.graphql.scalar.GraphQLDateTimeScalar;
+import software.wings.graphql.schema.type.QLUser.QLUserKeys;
+import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowKeys;
 import software.wings.graphql.schema.type.QLWorkflowConnection;
 
 @Slf4j
@@ -46,15 +50,21 @@ public class WorkflowTest extends GraphQLTest {
   public void testQueryWorkflow() {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
 
     final Workflow workflow = workflowGenerator.ensurePredefined(seed, owners, BASIC_SIMPLE);
 
-    String query = "{ workflow(workflowId: \"" + workflow.getUuid() + "\") { id name description } }";
+    String query =
+        "{ workflow(workflowId: \"" + workflow.getUuid() + "\") { id name description createdAt createdBy { id } } }";
 
-    QLWorkflow qlWorkflow = qlExecute(QLWorkflow.class, query);
-    assertThat(qlWorkflow.getId()).isEqualTo(workflow.getUuid());
-    assertThat(qlWorkflow.getName()).isEqualTo(workflow.getName());
-    assertThat(qlWorkflow.getDescription()).isEqualTo(workflow.getDescription());
+    QLTestObject qlWorkflow = qlExecute(query);
+    assertThat(qlWorkflow.get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
+    assertThat(qlWorkflow.get(QLWorkflowKeys.name)).isEqualTo(workflow.getName());
+    assertThat(qlWorkflow.get(QLWorkflowKeys.description)).isEqualTo(workflow.getDescription());
+    assertThat(qlWorkflow.get(QLWorkflowKeys.createdAt))
+        .isEqualTo(GraphQLDateTimeScalar.convertToString(workflow.getCreatedAt()));
+    assertThat(qlWorkflow.sub(QLWorkflowKeys.createdBy).get(QLUserKeys.id))
+        .isEqualTo(workflow.getCreatedBy().getUuid());
   }
 
   @Test

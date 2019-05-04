@@ -475,6 +475,12 @@ public class WorkflowGenerator {
     if (workflow.getInfraMappingId() != null) {
       builder.infraMappingId(workflow.getInfraMappingId());
     }
+    if (workflow.getCreatedBy() != null) {
+      builder.createdBy(workflow.getCreatedBy());
+    } else {
+      builder.createdBy(owners.obtainUser());
+    }
+
     final Workflow finalWorkflow = builder.build();
 
     return GeneratorUtils.suppressDuplicateException(
