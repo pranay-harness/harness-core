@@ -95,11 +95,17 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
         commandResponse.getCommandExecutionStatus());
     logger.info(commandResponse.getOutput());
 
-    return HelmCommandExecutionResponse.builder()
-        .commandExecutionStatus(commandResponse.getCommandExecutionStatus())
-        .helmCommandResponse(commandResponse)
-        .errorMessage(commandResponse.getOutput())
-        .build();
+    HelmCommandExecutionResponse helmCommandExecutionResponse =
+        HelmCommandExecutionResponse.builder()
+            .commandExecutionStatus(commandResponse.getCommandExecutionStatus())
+            .helmCommandResponse(commandResponse)
+            .build();
+
+    if (!CommandExecutionStatus.SUCCESS.equals(commandResponse.getCommandExecutionStatus())) {
+      helmCommandExecutionResponse.setErrorMessage(commandResponse.getOutput());
+    }
+
+    return helmCommandExecutionResponse;
   }
 
   private void init(HelmCommandRequest helmCommandRequest, LogCallback executionLogCallback) throws Exception {
