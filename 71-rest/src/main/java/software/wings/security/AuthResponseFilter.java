@@ -1,23 +1,6 @@
 package software.wings.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.Constants.RESOURCE_URI_CLONE_APP;
-import static software.wings.common.Constants.RESOURCE_URI_CLONE_ENVIRONMENT;
-import static software.wings.common.Constants.RESOURCE_URI_CLONE_PIPELINE;
-import static software.wings.common.Constants.RESOURCE_URI_CLONE_PROVISIONER;
-import static software.wings.common.Constants.RESOURCE_URI_CLONE_SERVICE;
-import static software.wings.common.Constants.RESOURCE_URI_CLONE_WORKFLOW;
-import static software.wings.common.Constants.RESOURCE_URI_CREATE_APP;
-import static software.wings.common.Constants.RESOURCE_URI_CREATE_ENVIRONMENT;
-import static software.wings.common.Constants.RESOURCE_URI_CREATE_PIPELINE;
-import static software.wings.common.Constants.RESOURCE_URI_CREATE_PROVISIONER;
-import static software.wings.common.Constants.RESOURCE_URI_CREATE_SERVICE;
-import static software.wings.common.Constants.RESOURCE_URI_CREATE_WORKFLOW;
-import static software.wings.common.Constants.RESOURCE_URI_DELETE_APP;
-import static software.wings.common.Constants.RESOURCE_URI_DELETE_ENVIRONMENT;
-import static software.wings.common.Constants.RESOURCE_URI_UPDATE_ENVIRONMENT;
-import static software.wings.common.Constants.RESOURCE_URI_UPDATE_PIPELINE;
-import static software.wings.common.Constants.RESOURCE_URI_UPDATE_WORKFLOW;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -42,6 +25,27 @@ import javax.ws.rs.core.MultivaluedMap;
 @Singleton
 @Slf4j
 public class AuthResponseFilter implements ContainerResponseFilter {
+  private static final String RESOURCE_URI_CREATE_APP = "/api/apps";
+  private static final String RESOURCE_URI_CREATE_SERVICE = "/api/services";
+  private static final String RESOURCE_URI_CREATE_PROVISIONER = "/api/infrastructure-provisioners";
+  private static final String RESOURCE_URI_CREATE_ENVIRONMENT = "/api/environments";
+  private static final String RESOURCE_URI_CREATE_WORKFLOW = "/api/workflows";
+  private static final String RESOURCE_URI_CREATE_PIPELINE = "/api/pipelines";
+
+  private static final String RESOURCE_URI_CLONE_APP = "/api/apps/[^/]+/clone";
+  private static final String RESOURCE_URI_CLONE_SERVICE = "/api/services/[^/]+/clone";
+  private static final String RESOURCE_URI_CLONE_PROVISIONER = "/api/infrastructure-provisioners/[^/]+/clone";
+  private static final String RESOURCE_URI_CLONE_ENVIRONMENT = "/api/environments/[^/]+/clone";
+  private static final String RESOURCE_URI_CLONE_WORKFLOW = "/api/workflows/[^/]+/clone";
+  private static final String RESOURCE_URI_CLONE_PIPELINE = "/api/pipelines/[^/]+/clone";
+
+  private static final String RESOURCE_URI_UPDATE_ENVIRONMENT = "/api/environments/[^/]+";
+  private static final String RESOURCE_URI_UPDATE_WORKFLOW = "/api/workflows/[^/]+/basic";
+  private static final String RESOURCE_URI_UPDATE_PIPELINE = "/api/pipelines/[^/]+";
+
+  private static final String RESOURCE_URI_DELETE_APP = "/api/apps/[^/]+";
+  private static final String RESOURCE_URI_DELETE_ENVIRONMENT = "/api/environments/[^/]+";
+
   private static final Set<String> restResourcesCreateURIs =
       Sets.newHashSet(RESOURCE_URI_CREATE_APP, RESOURCE_URI_CREATE_SERVICE, RESOURCE_URI_CREATE_PROVISIONER,
           RESOURCE_URI_CREATE_ENVIRONMENT, RESOURCE_URI_CREATE_WORKFLOW, RESOURCE_URI_CREATE_PIPELINE);
