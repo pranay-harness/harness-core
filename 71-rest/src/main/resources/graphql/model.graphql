@@ -16,15 +16,13 @@ extend type Query {
   # Get a pipeline object by ID
   pipeline(pipelineId: String!): Pipeline @dataFetcher(name: pipeline)
 
-  pipelines(applicationId: String!, limit: Int!, offset: Int): PipelineConnection
-    @dataFetcher(name: pipelineConnection)
+  pipelines(applicationId: String!, limit: Int!, offset: Int): PipelineConnection @dataFetcher(name: pipelineConnection)
 
   # Get workflow object by ID
   workflow(workflowId: String!): Workflow @dataFetcher(name: workflow)
 
   # Get list of workflows for an applicationId. It will return paginated data
-  workflows(applicationId: String!, limit: Int!, offset: Int): WorkflowConnection
-    @dataFetcher(name: workflowConnection)
+  workflows(applicationId: String!, limit: Int!, offset: Int): WorkflowConnection @dataFetcher(name: workflowConnection)
 }
 
 type Application {
@@ -80,7 +78,7 @@ type Pipeline {
   description: String
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: executionConnectionForPipeline, contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
+    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
 }
 
 type PipelineConnection {
@@ -100,7 +98,7 @@ type Workflow {
   description: String
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: executionConnectionForWorkflow, contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
+    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
 }
 
 type WorkflowConnection {
@@ -122,7 +120,7 @@ type Service {
   deploymentType: String
 
   executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: executionConnectionForService, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
 
   instances(limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: instancesByService, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")

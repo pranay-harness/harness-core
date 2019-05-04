@@ -1,6 +1,5 @@
 package software.wings.app;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -33,7 +32,6 @@ import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -50,28 +48,12 @@ public class GraphQLModule extends AbstractModule {
     return Collections.unmodifiableSet(BATCH_DATA_LOADER_NAMES);
   }
 
-  private Set<String> dataFetcherClassNames;
-
-  private static final Map<String, Class<? extends AbstractDataFetcher>> ANNOTATION_TO_DATA_FETCHER_MAP =
-      Maps.newHashMap();
-
-  public GraphQLModule() {
-    dataFetcherClassNames = Sets.newHashSet();
-  }
-
-  public static Class<? extends AbstractDataFetcher> getAbstractDataFetcher(String annotationName) {
-    return ANNOTATION_TO_DATA_FETCHER_MAP.get(annotationName);
-  }
-
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}).to(GraphQLProvider.class).in(Scopes.SINGLETON);
+    bind(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}).to(GraphQLProvider.class).asEagerSingleton();
+    bind(DataFetcherDirective.class).asEagerSingleton();
+    bind(DataLoaderRegistryHelper.class).asEagerSingleton();
 
-    bind(DataFetcherDirective.class).in(Scopes.SINGLETON);
-
-    bind(DataLoaderRegistryHelper.class).in(Scopes.SINGLETON);
-
-    // DATA FETCHERS ARE NOT SINGLETON AS THEY CAN HAVE DIFFERENT CONTEXT MAP
     bindDataFetchers();
   }
 
@@ -81,9 +63,6 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EnvironmentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class);
-    bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForPipeline");
-    bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForService");
-    bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class, "ForWorkflow");
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstancesByEnvironmentDataFetcher.class);
@@ -99,10 +78,9 @@ public class GraphQLModule extends AbstractModule {
   }
 
   @NotNull
-  private String calculateAnnotationName(Class clazz, String suffixToRemove, String suffixToAdd) {
+  private String calculateAnnotationName(Class clazz, String suffixToRemove) {
     String className = clazz.getName();
-    char c[] = (className.substring(className.lastIndexOf('.') + 1, clazz.getName().length() - suffixToRemove.length())
-        + suffixToAdd)
+    char c[] = className.substring(className.lastIndexOf('.') + 1, clazz.getName().length() - suffixToRemove.length())
                    .toCharArray();
 
     c[0] = Character.toLowerCase(c[0]);
@@ -110,13 +88,8 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz, String suffix) {
-    String canonicalName = clazz.getCanonicalName();
-    if (!dataFetcherClassNames.contains(canonicalName)) {
-      bind(clazz).in(Scopes.SINGLETON);
-      dataFetcherClassNames.add(canonicalName);
-    }
-    String annotationName = calculateAnnotationName(clazz, "DataFetcher", suffix);
-    ANNOTATION_TO_DATA_FETCHER_MAP.putIfAbsent(annotationName, clazz);
+    String annotationName = calculateAnnotationName(clazz, "DataFetcher");
+    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
   }
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {
@@ -124,7 +97,7 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindBatchedDataLoaderWithAnnotation(Class<? extends MappedBatchLoader> clazz) {
-    String annotationName = calculateAnnotationName(clazz, "BatchDataLoader", "");
+    String annotationName = calculateAnnotationName(clazz, "BatchDataLoader");
 
     BATCH_DATA_LOADER_NAMES.add(annotationName);
     bind(MappedBatchLoader.class).annotatedWith(Names.named(annotationName)).to(clazz).in(Scopes.SINGLETON);
