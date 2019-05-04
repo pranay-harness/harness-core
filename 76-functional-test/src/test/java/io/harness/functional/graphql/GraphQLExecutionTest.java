@@ -39,6 +39,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.graphql.schema.type.QLApplication.QLApplicationKeys;
 import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionKeys;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoKeys;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineKeys;
@@ -126,11 +127,12 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
     {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
-          + "\") { id triggeredAt startedAt endedAt status ... on WorkflowExecution { workflow { id } } } }";
+          + "\") { id application { id } triggeredAt startedAt endedAt status ... on WorkflowExecution { workflow { id } } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
 
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      assertThat(qlTestObject.sub("application").get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.triggeredAt)).isNotNull();
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startedAt)).isNotNull();
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endedAt)).isNotNull();
@@ -214,10 +216,11 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
     {
       String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
-          + "\") { id triggeredAt startedAt endedAt status ... on PipelineExecution { pipeline { id } } } }";
+          + "\") { id application { id } triggeredAt startedAt endedAt status ... on PipelineExecution { pipeline { id } } } }";
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
+      assertThat(qlTestObject.sub("application").get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.triggeredAt)).isNotNull();
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.startedAt)).isNotNull();
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.endedAt)).isNotNull();

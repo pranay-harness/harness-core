@@ -1,62 +1,65 @@
 extend type Query {
-    # Get the execution status of a workflow
-    execution(executionId: String!): Execution @dataFetcher(name: execution)
+  # Get the execution status of a workflow
+  execution(executionId: String!): Execution @dataFetcher(name: execution)
 
-    # Get the list of executions.
-    executions(
-        applicationId: String
-        workflowId: String
-        pipelineId: String
-        serviceId: String
-        limit: Int!
-        offset: Int
-        statuses: [ExecutionStatus]
-        from: DateTime
-        to: DateTime
-    ): ExecutionConnection @dataFetcher(name: executionConnection)
+  # Get the list of executions.
+  executions(
+    applicationId: String
+    workflowId: String
+    pipelineId: String
+    serviceId: String
+    limit: Int!
+    offset: Int
+    statuses: [ExecutionStatus]
+    from: DateTime
+    to: DateTime
+  ): ExecutionConnection @dataFetcher(name: executionConnection)
 }
 
 enum ExecutionStatus {
-    ABORTED
-    ERROR
-    FAILED
-    PAUSED
-    QUEUED
-    RESUMED
-    RUNNING
-    SUCCESS
-    WAITING
-    SKIPPED
-    REJECTED
-    EXPIRED
+  ABORTED
+  ERROR
+  FAILED
+  PAUSED
+  QUEUED
+  RESUMED
+  RUNNING
+  SUCCESS
+  WAITING
+  SKIPPED
+  REJECTED
+  EXPIRED
 }
 
 interface Execution {
-    id: String
-    triggeredAt: DateTime
-    startedAt: DateTime
-    endedAt: DateTime
-    status: ExecutionStatus
+  id: String
+  application: Application
+  triggeredAt: DateTime
+  startedAt: DateTime
+  endedAt: DateTime
+  status: ExecutionStatus
 }
 
 type ExecutionConnection {
-    pageInfo: PageInfo
-    nodes: [Execution]
+  pageInfo: PageInfo
+  nodes: [Execution]
 }
 
 # Type for workflow execution
 type WorkflowExecution implements Execution {
-    # Workflow Execution Id
-    id: String
+  # Workflow Execution Id
+  id: String
 
-    # DateTime when execution started
-    triggeredAt: DateTime
+  application: Application @dataFetcher(name: application, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
-    # DateTime when execution started
-    startedAt: DateTime
+  # DateTime when execution started
+  triggeredAt: DateTime
 
-    # DateTime when execution ended
-    endedAt: DateTime
+  # DateTime when execution started
+  startedAt: DateTime
+
+  # DateTime when execution ended
+  endedAt: DateTime
 
   # Status of the workflow
   status: ExecutionStatus
@@ -66,17 +69,19 @@ type WorkflowExecution implements Execution {
 
 # Type for pipeline execution
 type PipelineExecution implements Execution {
-    # Workflow Execution Id
-    id: String
+  # Workflow Execution Id
+  id: String
 
-    # DateTime when execution started
-    triggeredAt: DateTime
+  application: Application @dataFetcher(name: application, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
-    # DateTime when execution started
-    startedAt: DateTime
+  # DateTime when execution started
+  triggeredAt: DateTime
 
-    # DateTime when execution ended
-    endedAt: DateTime
+  # DateTime when execution started
+  startedAt: DateTime
+
+  # DateTime when execution ended
+  endedAt: DateTime
 
   # Status of the workflow
   status: ExecutionStatus
