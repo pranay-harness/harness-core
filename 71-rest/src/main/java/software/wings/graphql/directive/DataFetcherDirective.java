@@ -1,10 +1,10 @@
 package software.wings.graphql.directive;
 
-import static io.harness.eraro.ErrorCode.UNEXPECTED;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,10 +13,8 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.idl.SchemaDirectiveWiring;
 import graphql.schema.idl.SchemaDirectiveWiringEnvironment;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.app.GraphQLModule;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 
 import java.io.IOException;
@@ -46,20 +44,15 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
     String dataFetcherName = (String) getArgumentValue(DATA_FETCHER_NAME, environment);
     Map<String, String> contextFieldArgsMap = getContextFieldArgsMap(environment);
 
-    Class<? extends AbstractDataFetcher> dataFetcherClass = GraphQLModule.getAbstractDataFetcher(dataFetcherName);
+    AbstractDataFetcher dataFetcher =
+        injector.getInstance(Key.get(AbstractDataFetcher.class, Names.named(dataFetcherName)));
+
     GraphQLFieldDefinition field = environment.getElement();
+    dataFetcher.addParentContextFieldArgMapFor(
+        environment.getElementParentTree().getParentInfo().get().getElement().getName(), contextFieldArgsMap);
 
-    if (dataFetcherClass != null) {
-      AbstractDataFetcher dataFetcher = injector.getInstance(dataFetcherClass);
-      dataFetcher.addParentContextFieldArgMapFor(
-          environment.getElementParentTree().getParentInfo().get().getElement().getName(), contextFieldArgsMap);
-
-      GraphQLFieldsContainer parentType = environment.getFieldsContainer();
-      environment.getCodeRegistry().dataFetcher(parentType, field, dataFetcher);
-    } else {
-      String errorMessage = "No data fetcher class mapping found for field " + field.getName();
-      throw new WingsException(UNEXPECTED, errorMessage);
-    }
+    GraphQLFieldsContainer parentType = environment.getFieldsContainer();
+    environment.getCodeRegistry().dataFetcher(parentType, field, dataFetcher);
 
     return field;
   }
