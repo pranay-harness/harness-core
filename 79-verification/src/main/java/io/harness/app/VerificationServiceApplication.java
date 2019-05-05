@@ -39,6 +39,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.entities.VerificationMorphiaClasses;
 import io.harness.event.model.EventsMorphiaClasses;
+import io.harness.health.HealthService;
 import io.harness.jobs.VerificationJob;
 import io.harness.jobs.VerificationMetricJob;
 import io.harness.limits.LimitsMorphiaClasses;
@@ -197,14 +198,16 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     initializeServiceTaskPoll(injector);
 
+    logger.info("Leaving startup maintenance mode");
+    MaintenanceController.resetForceMaintenance();
+
     logger.info("Starting app done");
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {
-    // TODO: provide executor and initialize this
-    //    final HealthService healthService = injector.getInstance(HealthService.class);
-    //    environment.healthChecks().register("Verification Service", healthService);
-    //    healthService.registerMonitor(injector.getInstance(HPersistence.class));
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("Verification Service", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private void initMetrics() {
@@ -239,6 +242,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
     environment.lifecycle().manage(new ManageDistributedLockSvc(injector.getInstance(DistributedLockSvc.class)));
+    environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
   }
 
   private void registerJerseyProviders(Environment environment) {

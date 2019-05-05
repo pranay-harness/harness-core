@@ -20,6 +20,7 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
 import software.wings.DataStorageMode;
@@ -38,8 +39,10 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Guice Module for initializing all beans.
@@ -77,6 +80,13 @@ public class VerificationServiceModule extends AbstractModule {
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
     bind(CvValidationService.class).to(NoOpCvValidationServiceImpl.class);
     bind(YamlPushService.class).to(NoOpYamlPushService.class);
+
+    bind(ExecutorService.class)
+        .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Default-Verification-Executor-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationServiceExecutor"))
