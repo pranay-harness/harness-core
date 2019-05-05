@@ -6,9 +6,7 @@ import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
-import static software.wings.common.Constants.URL;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.Validator.notNullCheck;
@@ -25,6 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.ArtifactSourceProvider;
 import software.wings.service.impl.DelayEventHelper;
@@ -178,10 +177,10 @@ public class ArtifactCollectionState extends State {
     if (isNotEmpty(artifactCollectionExecutionData.getMetadata())) {
       metadata.putAll(artifactCollectionExecutionData.getMetadata());
     }
-    String buildUrl = metadata.get(URL);
+    String buildUrl = metadata.get(ArtifactMetadataKeys.URL);
     // Rove the the following as no need to store in build execution summary
-    metadata.remove(BUILD_NO);
-    metadata.remove(URL);
+    metadata.remove(ArtifactMetadataKeys.BUILD_NO);
+    metadata.remove(ArtifactMetadataKeys.URL);
     BuildExecutionSummary buildExecutionSummary =
         BuildExecutionSummary.builder()
             .artifactSource(artifactCollectionExecutionData.getArtifactSource())

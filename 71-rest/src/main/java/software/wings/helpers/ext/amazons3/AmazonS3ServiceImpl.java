@@ -6,12 +6,6 @@ import static io.harness.exception.WingsException.EVERYBODY;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
-import static software.wings.common.Constants.ARTIFACT_PATH;
-import static software.wings.common.Constants.BUCKET_NAME;
-import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.common.Constants.KEY;
-import static software.wings.common.Constants.URL;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -31,6 +25,7 @@ import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -249,12 +244,12 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       versionId = key;
     }
     Map<String, String> map = new HashMap<>();
-    map.put(URL, "https://s3.amazonaws.com/" + bucketName + "/" + key);
-    map.put(BUILD_NO, versionId);
-    map.put(BUCKET_NAME, bucketName);
-    map.put(ARTIFACT_PATH, key);
-    map.put(KEY, key);
-    map.put(ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
+    map.put(ArtifactMetadataKeys.URL, "https://s3.amazonaws.com/" + bucketName + "/" + key);
+    map.put(ArtifactMetadataKeys.BUILD_NO, versionId);
+    map.put(ArtifactMetadataKeys.BUCKET_NAME, bucketName);
+    map.put(ArtifactMetadataKeys.ARTIFACT_PATH, key);
+    map.put(ArtifactMetadataKeys.KEY, key);
+    map.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
 
     return aBuildDetails()
         .withNumber(versionId)

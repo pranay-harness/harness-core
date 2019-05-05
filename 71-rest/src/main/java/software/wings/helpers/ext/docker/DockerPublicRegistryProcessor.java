@@ -1,8 +1,6 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.exception.WingsException.USER;
-import static software.wings.common.Constants.IMAGE;
-import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -17,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import retrofit2.Response;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -111,8 +110,8 @@ public class DockerPublicRegistryProcessor {
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap();
-            metadata.put(IMAGE, domainName + "/" + imageName + ":" + tag.getName());
-            metadata.put(TAG, tag.getName());
+            metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag.getName());
+            metadata.put(ArtifactMetadataKeys.TAG, tag.getName());
             return aBuildDetails()
                 .withNumber(tag.getName())
                 .withBuildUrl(tagUrl + tag.getName())

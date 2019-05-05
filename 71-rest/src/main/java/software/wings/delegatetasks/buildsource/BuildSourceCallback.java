@@ -11,7 +11,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
-import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams;
 
 import com.google.inject.Inject;
@@ -29,6 +28,7 @@ import software.wings.beans.Service;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -214,8 +214,9 @@ public class BuildSourceCallback implements NotifyCallback {
     }
     BuildDetails lastSuccessfulBuild = builds.get(0);
     Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(artifactStream);
-    int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
-        ? parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
+    int buildNo = (lastCollectedArtifact != null
+                      && lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.BUILD_NO) != null)
+        ? parseInt(lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.BUILD_NO))
         : 0;
     if (lastSuccessfulBuild != null && parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
       logger.info("Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",

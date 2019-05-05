@@ -15,19 +15,11 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.CREATED_AT_KEY;
-import static software.wings.beans.artifact.Artifact.ARTIFACT_FILES_KEY;
-import static software.wings.beans.artifact.Artifact.ARTIFACT_SOURCE_NAME_KEY;
-import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
-import static software.wings.beans.artifact.Artifact.CONTENT_STATUS_KEY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.NOT_DOWNLOADED;
-import static software.wings.beans.artifact.Artifact.ERROR_MSG_KEY;
-import static software.wings.beans.artifact.Artifact.METADATA_KEY;
-import static software.wings.beans.artifact.Artifact.REVISION_KEY;
-import static software.wings.beans.artifact.Artifact.STATUS_KEY;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
@@ -68,6 +60,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
@@ -163,7 +156,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (serviceId != null) {
       List<String> artifactStreamIds = artifactStreamService.fetchArtifactStreamIdsForService(appId, serviceId);
       if (isNotEmpty(artifactStreamIds)) {
-        pageRequest.addFilter(ARTIFACT_STREAM_ID_KEY, IN, artifactStreamIds.toArray());
+        pageRequest.addFilter(ArtifactKeys.artifactStreamId, IN, artifactStreamIds.toArray());
       } else {
         return aPageResponse().withResponse(artifacts).build();
       }
@@ -288,8 +281,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter(APP_ID_KEY, appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
-    setUnset(ops, STATUS_KEY, status);
-    setUnset(ops, ERROR_MSG_KEY, errorMessage);
+    setUnset(ops, ArtifactKeys.status, status);
+    setUnset(ops, ArtifactKeys.errorMessage, errorMessage);
     wingsPersistence.update(query, ops);
   }
 
@@ -298,8 +291,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter(APP_ID_KEY, appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
-    setUnset(ops, STATUS_KEY, status);
-    setUnset(ops, CONTENT_STATUS_KEY, contentStatus);
+    setUnset(ops, ArtifactKeys.status, status);
+    setUnset(ops, ArtifactKeys.contentStatus, contentStatus);
     wingsPersistence.update(query, ops);
   }
 
@@ -309,9 +302,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter(APP_ID_KEY, appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
-    setUnset(ops, STATUS_KEY, status);
-    setUnset(ops, CONTENT_STATUS_KEY, contentStatus);
-    setUnset(ops, ERROR_MSG_KEY, errorMessage);
+    setUnset(ops, ArtifactKeys.status, status);
+    setUnset(ops, ArtifactKeys.contentStatus, contentStatus);
+    setUnset(ops, ArtifactKeys.errorMessage, errorMessage);
     wingsPersistence.update(query, ops);
   }
 
@@ -432,9 +425,9 @@ public class ArtifactServiceImpl implements ArtifactService {
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     deleteArtifactsByQuery(wingsPersistence.createQuery(Artifact.class)
                                .project(APP_ID_KEY, true)
-                               .project(ARTIFACT_FILES_KEY, true)
+                               .project(ArtifactKeys.artifactFiles, true)
                                .filter(APP_ID_KEY, appId)
-                               .filter(ARTIFACT_STREAM_ID_KEY, artifactStreamId));
+                               .filter(ArtifactKeys.artifactStreamId, artifactStreamId));
   }
 
   private void deleteArtifactsByQuery(Query<Artifact> artifactQuery) {
@@ -480,14 +473,14 @@ public class ArtifactServiceImpl implements ArtifactService {
   private Artifact getArtifact(ArtifactStream artifactStream, List<Status> statuses) {
     Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
                                         .filter(APP_ID_KEY, artifactStream.getAppId())
-                                        .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid());
+                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid());
     // For the custom artifact stream name as set artifact source name. Name can be changed so, it can not be unique
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
-      return artifactQuery.order("-createdAt").field(STATUS_KEY).hasAnyOf(statuses).get();
+      return artifactQuery.order("-createdAt").field(ArtifactKeys.status).hasAnyOf(statuses).get();
     }
     // For the custom artifact stream name as set artifact source name. Name can be changed so, it can not be unique
-    artifactQuery.filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName());
-    return artifactQuery.order("-createdAt").field(STATUS_KEY).hasAnyOf(statuses).get();
+    artifactQuery.filter(ArtifactKeys.artifactSourceName, artifactStream.getSourceName());
+    return artifactQuery.order("-createdAt").field(ArtifactKeys.status).hasAnyOf(statuses).get();
   }
 
   @Override
@@ -504,14 +497,14 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact getArtifactByBuildNumber(ArtifactStream artifactStream, String buildNumber, boolean regex) {
     Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
                                         .filter(APP_ID_KEY, artifactStream.getAppId())
-                                        .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid());
+                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid());
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       return artifactQuery.filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
           .order("-createdAt")
           .disableValidation()
           .get();
     }
-    artifactQuery.filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName());
+    artifactQuery.filter(ArtifactKeys.artifactSourceName, artifactStream.getSourceName());
     return artifactQuery.filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
         .order("-createdAt")
         .disableValidation()
@@ -600,8 +593,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class)
                                               .project("artifactFiles", true)
                                               .filter(APP_ID_KEY, artifactStream.getAppId())
-                                              .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid())
-                                              .field(CONTENT_STATUS_KEY)
+                                              .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
+                                              .field(ArtifactKeys.contentStatus)
                                               .hasAnyOf(asList(DOWNLOADED))
                                               .order(Sort.descending(CREATED_AT_KEY))
                                               .asList(new FindOptions().skip(retentionSize));
@@ -656,17 +649,17 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   public Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream) {
     Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
-                                        .project(METADATA_KEY, true)
-                                        .project(REVISION_KEY, true)
+                                        .project(ArtifactKeys.metadata, true)
+                                        .project(ArtifactKeys.revision, true)
                                         .filter(APP_ID_KEY, artifactStream.getAppId())
-                                        .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid())
-                                        .field(STATUS_KEY)
+                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
+                                        .field(ArtifactKeys.status)
                                         .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
                                         .disableValidation();
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       return artifactQuery;
     }
-    artifactQuery.filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName());
+    artifactQuery.filter(ArtifactKeys.artifactSourceName, artifactStream.getSourceName());
     return artifactQuery;
   }
 
@@ -674,9 +667,9 @@ public class ArtifactServiceImpl implements ArtifactService {
   public void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream) {
     deleteArtifactsByQuery(wingsPersistence.createQuery(Artifact.class)
                                .project(APP_ID_KEY, true)
-                               .project(ARTIFACT_FILES_KEY, true)
+                               .project(ArtifactKeys.artifactFiles, true)
                                .filter(APP_ID_KEY, artifactStream.getAppId())
-                               .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid())
-                               .filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName()));
+                               .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
+                               .filter(ArtifactKeys.artifactSourceName, artifactStream.getSourceName()));
   }
 }

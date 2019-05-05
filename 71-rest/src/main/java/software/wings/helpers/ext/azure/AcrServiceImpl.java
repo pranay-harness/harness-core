@@ -4,8 +4,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.Constants.IMAGE;
-import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -15,6 +13,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -58,8 +57,8 @@ public class AcrServiceImpl implements AcrService {
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap();
-            metadata.put(IMAGE, repository + ":" + tag);
-            metadata.put(TAG, tag);
+            metadata.put(ArtifactMetadataKeys.IMAGE, repository + ":" + tag);
+            metadata.put(ArtifactMetadataKeys.TAG, tag);
             return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
           })
           .collect(toList());

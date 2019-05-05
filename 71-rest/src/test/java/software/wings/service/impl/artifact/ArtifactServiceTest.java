@@ -10,7 +10,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
@@ -56,6 +55,7 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
@@ -328,8 +328,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
         artifactService.listSortByBuildNo(aPageRequest()
                                               .addFilter(Artifact.APP_ID_KEY, EQ, GLOBAL_APP_ID)
                                               .addFilter(Artifact.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID)
-                                              .addFilter(ARTIFACT_STREAM_ID_KEY, EQ, ARTIFACT_STREAM_ID)
-                                              .addFilter(Artifact.SETTING_ID_KEY, EQ, SETTING_ID)
+                                              .addFilter(ArtifactKeys.artifactStreamId, EQ, ARTIFACT_STREAM_ID)
+                                              .addFilter(ArtifactKeys.settingId, EQ, SETTING_ID)
                                               .build());
 
     assertThat(artifacts)

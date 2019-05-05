@@ -356,27 +356,6 @@ public interface Constants {
   int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   /**
-   * The constant reserved for BuildNO
-   */
-  String BUILD_NO = "buildNo";
-
-  String TAG = "tag";
-
-  String IMAGE = "image";
-
-  String BUILD_FULL_DISPLAY_NAME = "buildFullDisplayName";
-
-  /**
-   * The constant BUCKET_NAME.
-   */
-  String BUCKET_NAME = "bucketName";
-
-  /**
-   * The constant KEY.
-   */
-  String KEY = "key";
-
-  /**
    * The constant URL.
    */
   String URL = "url";
@@ -389,10 +368,6 @@ public interface Constants {
    */
   String BUILD_PARAMS = "buildParameters";
   /**
-   * The constant ARTIFACT_PATH.
-   */
-  String ARTIFACT_PATH = "artifactPath";
-  /**
    * The constant LAST_UPDATED_AT.
    */
   String LAST_UPDATED_AT = "lastUpdatedAt";
@@ -404,16 +379,6 @@ public interface Constants {
    * The constant PARENT.
    */
   String PARENT = "parent";
-  /**
-   * The constant ARTIFACT_FILE_NAME.
-   */
-  String ARTIFACT_FILE_NAME = "artifactFileName";
-  /**
-   * Constant to hold the ARTIFACT_FILE_NAME in the context
-   */
-  String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
-
-  String ARTIFACT_FILE_SIZE = "artifactFileSize";
 
   /**
    * The constant GIT_USER.

@@ -15,7 +15,6 @@ import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aN
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -61,6 +60,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
@@ -105,17 +105,17 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
-                                         .withMetadata(ImmutableMap.of(BUILD_NO, "build-1"))
+                                         .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-1"))
                                          .withServiceIds(ImmutableList.of("service-1"))
                                          .build(),
             anArtifact()
                 .withArtifactSourceName("artifact-2")
-                .withMetadata(ImmutableMap.of(BUILD_NO, "build-2"))
+                .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-2"))
                 .withServiceIds(ImmutableList.of("service-2"))
                 .build(),
             anArtifact()
                 .withArtifactSourceName("artifact-3")
-                .withMetadata(ImmutableMap.of(BUILD_NO, "build-3"))
+                .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-3"))
                 .withServiceIds(ImmutableList.of("service-3"))
                 .build()));
     when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
@@ -317,7 +317,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
-                                         .withMetadata(ImmutableMap.of(BUILD_NO, "build-1"))
+                                         .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-1"))
                                          .withServiceIds(ImmutableList.of("service-1"))
                                          .build()));
     NotificationRule notificationRule =

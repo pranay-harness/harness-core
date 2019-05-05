@@ -25,11 +25,11 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.common.Constants;
 import software.wings.core.BaseScriptExecutor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants;
@@ -168,19 +168,19 @@ public class ScpCommandUnitTest extends WingsBaseTest {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
       case AMAZON_S3:
-        map.put(Constants.BUCKET_NAME, BUCKET_NAME);
-        map.put(Constants.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
-        map.put(Constants.ARTIFACT_PATH, ARTIFACT_PATH);
-        map.put(Constants.BUILD_NO, BUILD_NO);
-        map.put(Constants.ARTIFACT_FILE_SIZE, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
-        map.put(Constants.KEY, ACCESS_KEY);
-        map.put(Constants.URL, S3_URL);
+        map.put(ArtifactMetadataKeys.BUCKET_NAME, BUCKET_NAME);
+        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.ARTIFACT_PATH, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.BUILD_NO, BUILD_NO);
+        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        map.put(ArtifactMetadataKeys.KEY, ACCESS_KEY);
+        map.put(ArtifactMetadataKeys.URL, S3_URL);
         break;
       case ARTIFACTORY:
-        map.put(Constants.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
-        map.put(Constants.ARTIFACT_PATH, ARTIFACT_PATH);
-        map.put(Constants.BUILD_NO, BUILD_NO);
-        map.put(Constants.ARTIFACT_FILE_SIZE, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.ARTIFACT_PATH, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.BUILD_NO, BUILD_NO);
+        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
         break;
       default:
         break;

@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.ARTIFACT;
@@ -76,6 +75,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 @Slf4j
 public class ExecutionContextImpl implements DeploymentExecutionContext {
+  private static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
+  public static final String PHASE_PARAM = "PHASE_PARAM";
+
   private static final Pattern wildCharPattern = Pattern.compile("[+*/\\\\ &$\"'.|]");
   private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
 
@@ -91,8 +93,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient VariableProcessor variableProcessor;
   @Inject private transient FeatureFlagService featureFlagService;
-
-  public static final String PHASE_PARAM = "PHASE_PARAM";
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;

@@ -1,13 +1,5 @@
 package software.wings.beans.artifact;
 
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
-import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
-import static software.wings.common.Constants.ARTIFACT_PATH;
-import static software.wings.common.Constants.BUCKET_NAME;
-import static software.wings.common.Constants.BUILD_FULL_DISPLAY_NAME;
-import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.common.Constants.KEY;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -16,6 +8,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -37,21 +30,25 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @Indexes(@Index(options = @IndexOptions(name = "owners"), fields = { @Field("artifactStreamId")
                                                                      , @Field("appId") }))
+@FieldNameConstants(innerTypeName = "ArtifactKeys")
 public class Artifact extends Base {
-  public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
-  public static final String CONTENT_STATUS_KEY = "contentStatus";
-  public static final String STATUS_KEY = "status";
-  public static final String ERROR_MSG_KEY = "errorMessage";
-  public static final String DISPLAY_NAME_KEY = "displayName";
-  public static final String SERVICE_ID_KEY = "serviceIds";
-  public static final String ARTIFACT_SOURCE_NAME_KEY = "artifactSourceName";
-  public static final String ARTIFACT_FILES_KEY = "artifactFiles";
-  public static final String METADATA_KEY = "metadata";
-  public static final String REVISION_KEY = "revision";
-  public static final String SETTING_ID_KEY = "settingId";
-  public static final String URL_KEY = "url";
-  public static final String METADATA_IMAGE_KEY = "metadata.image";
-  public static final String METADATA_TAG_KEY = "metadata.tag";
+  public static final class ArtifactMetadataKeys {
+    public static final String ARTIFACT_FILE_NAME = "artifactFileName";
+    public static final String ARTIFACT_FILE_SIZE = "artifactFileSize";
+    public static final String ARTIFACT_PATH = "artifactPath";
+    public static final String BUCKET_NAME = "bucketName";
+    public static final String BUILD_FULL_DISPLAY_NAME = "buildFullDisplayName";
+    public static final String BUILD_NO = "buildNo";
+    public static final String KEY = "key";
+    public static final String URL = "url";
+    public static final String IMAGE = "image";
+    public static final String TAG = "tag";
+  }
+
+  public static final class ArtifactKeys {
+    public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.IMAGE;
+    public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.TAG;
+  }
 
   private String artifactStreamId;
   private String artifactSourceName;
@@ -78,7 +75,7 @@ public class Artifact extends Base {
    */
   public String getBuildNo() {
     if (getMetadata() != null) {
-      return getMetadata().get(BUILD_NO);
+      return getMetadata().get(ArtifactMetadataKeys.BUILD_NO);
     }
     return null;
   }
@@ -90,7 +87,7 @@ public class Artifact extends Base {
    */
   public String getArtifactPath() {
     if (getMetadata() != null) {
-      return getMetadata().get(ARTIFACT_PATH);
+      return getMetadata().get(ArtifactMetadataKeys.ARTIFACT_PATH);
     }
     return null;
   }
@@ -102,7 +99,7 @@ public class Artifact extends Base {
    */
   public String getBucketName() {
     if (getMetadata() != null) {
-      return getMetadata().get(BUCKET_NAME);
+      return getMetadata().get(ArtifactMetadataKeys.BUCKET_NAME);
     }
     return null;
   }
@@ -114,7 +111,7 @@ public class Artifact extends Base {
    */
   public String getKey() {
     if (getMetadata() != null) {
-      return getMetadata().get(KEY);
+      return getMetadata().get(ArtifactMetadataKeys.KEY);
     }
     return null;
   }
@@ -126,7 +123,7 @@ public class Artifact extends Base {
    */
   public String getUrl() {
     if (getMetadata() != null) {
-      return getMetadata().get(URL_KEY);
+      return getMetadata().get(ArtifactMetadataKeys.URL);
     }
     return null;
   }
@@ -137,7 +134,7 @@ public class Artifact extends Base {
    */
   public String getFileName() {
     if (getMetadata() != null) {
-      return getMetadata().get(ARTIFACT_FILE_NAME);
+      return getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
     }
     return null;
   }
@@ -148,7 +145,7 @@ public class Artifact extends Base {
    */
   public String getBuildFullDisplayName() {
     if (getMetadata() != null) {
-      return getMetadata().get(BUILD_FULL_DISPLAY_NAME);
+      return getMetadata().get(ArtifactMetadataKeys.BUILD_FULL_DISPLAY_NAME);
     }
     return null;
   }
@@ -159,8 +156,8 @@ public class Artifact extends Base {
    * @return
    */
   public Long getArtifactFileSize() {
-    if (getMetadata() != null && getMetadata().get(ARTIFACT_FILE_SIZE) != null) {
-      return Long.valueOf(getMetadata().get(ARTIFACT_FILE_SIZE));
+    if (getMetadata() != null && getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE) != null) {
+      return Long.valueOf(getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE));
     }
     return null;
   }

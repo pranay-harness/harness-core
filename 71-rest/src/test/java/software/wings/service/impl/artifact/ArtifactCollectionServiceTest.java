@@ -33,6 +33,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -147,10 +148,10 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   private BuildDetails getS3BuildDetails() {
     Map<String, String> map = new HashMap<>();
     map.put(Constants.URL, "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15.tar.gz");
-    map.put(Constants.BUILD_NO, "appstack/apache-tomcat-8.5.15.tar.gz");
-    map.put(Constants.BUCKET_NAME, "harness-catalogs");
-    map.put(Constants.ARTIFACT_PATH, "appstack/apache-tomcat-8.5.15.tar.gz");
-    map.put(Constants.KEY, "appstack/apache-tomcat-8.5.15.tar.gz");
+    map.put(ArtifactMetadataKeys.BUILD_NO, "appstack/apache-tomcat-8.5.15.tar.gz");
+    map.put(ArtifactMetadataKeys.BUCKET_NAME, "harness-catalogs");
+    map.put(ArtifactMetadataKeys.ARTIFACT_PATH, "appstack/apache-tomcat-8.5.15.tar.gz");
+    map.put(ArtifactMetadataKeys.KEY, "appstack/apache-tomcat-8.5.15.tar.gz");
 
     return aBuildDetails().withNumber("appstack/apache-tomcat-8.5.15.tar.gz").withBuildParameters(map).build();
   }

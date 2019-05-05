@@ -15,7 +15,7 @@ import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 
 import java.util.List;
 
@@ -32,11 +32,19 @@ public class ArtifactComparatorTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSortArtifactDescendingOrder() {
-    List<Artifact> artifacts = asList(
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build(),
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build(),
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build(),
-        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
+    List<Artifact> artifacts =
+        asList(artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-1.x86_64.rpm"))
+                   .but()
+                   .build(),
+            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-10.x86_64.rpm"))
+                .but()
+                .build(),
+            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-5.x86_64.rpm"))
+                .but()
+                .build(),
+            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-15.x86_64.rpm"))
+                .but()
+                .build());
     assertThat(artifacts.stream().sorted(new ArtifactComparator()).collect(toList()))
         .hasSize(4)
         .extracting(Artifact::getBuildNo)

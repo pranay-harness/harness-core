@@ -5,12 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.Constants.ARTIFACT_PATH;
-import static software.wings.common.Constants.BUCKET_NAME;
-import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.LAST_UPDATED_AT;
-import static software.wings.common.Constants.URL;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.api.services.storage.Storage;
@@ -28,6 +23,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -220,11 +216,11 @@ public class GcsServiceImpl implements GcsService {
       }
 
       Map<String, String> map = new HashMap<>();
-      map.put(URL, "https://storage.cloud.google.com/" + bucketName + "/" + objName);
-      map.put(BUILD_NO, versionId);
-      map.put(BUCKET_NAME, bucketName);
-      map.put(ARTIFACT_PATH, objName);
-      map.put(KEY, objName);
+      map.put(ArtifactMetadataKeys.URL, "https://storage.cloud.google.com/" + bucketName + "/" + objName);
+      map.put(ArtifactMetadataKeys.BUILD_NO, versionId);
+      map.put(ArtifactMetadataKeys.BUCKET_NAME, bucketName);
+      map.put(ArtifactMetadataKeys.ARTIFACT_PATH, objName);
+      map.put(ArtifactMetadataKeys.KEY, objName);
       map.put(LAST_UPDATED_AT, lastUpdatedAt);
 
       return aBuildDetails()

@@ -3,11 +3,8 @@ package software.wings.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
-import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.PARENT;
 import static software.wings.common.Constants.PATH;
-import static software.wings.common.Constants.URL;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.instance.InstanceHelperTest.ACCOUNT_ID;
 
@@ -25,6 +22,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SftpConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;
@@ -61,7 +59,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetSftpPaths() throws IOException {
     List<String> artifactPaths = new ArrayList<>();
-    artifactPaths.add(ARTIFACT_PATH);
+    artifactPaths.add(ArtifactMetadataKeys.ARTIFACT_PATH);
 
     // Create SFTP client
     doReturn(sftpClient).when(sshClient).newSFTPClient();
@@ -109,15 +107,15 @@ public class SftpHelperServiceTest extends WingsBaseTest {
 
     List<BuildDetails> buildDetailsListForArtifactPath = Lists.newArrayList();
     Map<String, String> map = new HashMap<>();
-    map.put(ARTIFACT_PATH, ARTIFACT_PATH);
-    map.put(URL, SFTP_WIN_URL);
-    map.put(ARTIFACT_FILE_NAME, remoteResourceInfoList.get(0).getName());
+    map.put(ArtifactMetadataKeys.ARTIFACT_PATH, ArtifactMetadataKeys.ARTIFACT_PATH);
+    map.put(ArtifactMetadataKeys.URL, SFTP_WIN_URL);
+    map.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME, remoteResourceInfoList.get(0).getName());
     map.put(PATH, remoteResourceInfoList.get(0).getPath());
     map.put(PARENT, remoteResourceInfoList.get(0).getParent());
 
     buildDetailsListForArtifactPath.add(aBuildDetails()
                                             .withNumber(remoteResourceInfoList.get(0).getName())
-                                            .withArtifactPath(ARTIFACT_PATH)
+                                            .withArtifactPath(ArtifactMetadataKeys.ARTIFACT_PATH)
                                             .withBuildUrl(SFTP_WIN_URL)
                                             .withBuildParameters(map)
                                             .build());

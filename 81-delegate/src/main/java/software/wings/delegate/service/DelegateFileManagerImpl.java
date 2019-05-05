@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import retrofit2.Response;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.common.Constants;
 import software.wings.delegate.app.DelegateConfiguration;
@@ -113,11 +114,11 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   public InputStream downloadArtifactAtRuntime(ArtifactStreamAttributes artifactStreamAttributes, String accountId,
       String appId, String activityId, String commandUnitName, String hostName) throws IOException, ExecutionException {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
-    String artifactFileSize = metadata.get(Constants.ARTIFACT_FILE_SIZE);
+    String artifactFileSize = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE);
     if (Long.parseLong(artifactFileSize) > Constants.ARTIFACT_FILE_SIZE_LIMIT) {
       throw new InvalidRequestException("Artifact file size exceeds 4GB. Not downloading file.");
     }
-    String buildNo = metadata.get(Constants.BUILD_NO);
+    String buildNo = metadata.get(ArtifactMetadataKeys.BUILD_NO);
     String key = "_" + artifactStreamAttributes.getArtifactStreamId() + "-" + buildNo;
     synchronized (fileIdLocks.get(key)) {
       File file = new File(ARTIFACT_REPO_BASE_DIR, key);

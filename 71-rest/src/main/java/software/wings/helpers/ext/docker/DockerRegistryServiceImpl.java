@@ -6,8 +6,6 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.Constants.IMAGE;
-import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -27,6 +25,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -155,8 +154,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         .stream()
         .map(tag -> {
           Map<String, String> metadata = new HashMap();
-          metadata.put(IMAGE, domainName + "/" + imageName + ":" + tag);
-          metadata.put(TAG, tag);
+          metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag);
+          metadata.put(ArtifactMetadataKeys.TAG, tag);
           return aBuildDetails()
               .withNumber(tag)
               .withBuildUrl(tagUrl + tag)

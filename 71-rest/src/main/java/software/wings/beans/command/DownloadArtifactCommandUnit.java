@@ -28,9 +28,9 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -165,9 +165,9 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private String constructCommandStringForAmazonS3(ShellCommandExecutionContext context) {
     Map<String, String> metadata = context.getMetadata();
     String date = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.RFC_1123_DATE_TIME);
-    String bucketName = metadata.get(Constants.BUCKET_NAME);
-    String artifactPath = metadata.get(Constants.ARTIFACT_PATH);
-    String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
+    String bucketName = metadata.get(ArtifactMetadataKeys.BUCKET_NAME);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH);
+    String artifactFileName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
     int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
     if (lastIndexOfSlash > 0) {
       artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
@@ -209,8 +209,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String AWSAccessKeyId = awsConfig.getAccessKey();
     String AWSSecretAccessKey = String.valueOf(awsConfig.getSecretKey());
 
-    String canonicalizedResource =
-        "/" + metadata.get(Constants.BUCKET_NAME) + "/" + metadata.get(Constants.ARTIFACT_FILE_NAME);
+    String canonicalizedResource = "/" + metadata.get(ArtifactMetadataKeys.BUCKET_NAME) + "/"
+        + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
     String stringToSign = "GET\n\n\n" + date + "\n" + canonicalizedResource;
     String signature = Base64.getEncoder().encodeToString(hmacSHA1(stringToSign, AWSSecretAccessKey));
     return "AWS"
@@ -271,8 +271,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
   private String constructCommandStringForSMB(ShellCommandExecutionContext context) {
     Map<String, String> metadata = context.getMetadata();
-    String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
-    String artifactPath = metadata.get(Constants.ARTIFACT_PATH);
+    String artifactFileName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH);
     SmbConfig smbConfig = (SmbConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
     List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
     encryptionService.decrypt(smbConfig, encryptionDetails);
@@ -304,7 +304,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
   private String constructCommandStringForSFTP(ShellCommandExecutionContext context) {
     Map<String, String> metadata = context.getMetadata();
-    String artifactPath = metadata.get(Constants.ARTIFACT_PATH);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH);
     SftpConfig sftpConfig = (SftpConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
     List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
     encryptionService.decrypt(sftpConfig, encryptionDetails);
@@ -367,7 +367,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
   private String constructCommandStringForArtifactory(ShellCommandExecutionContext context) {
     Map<String, String> metadata = context.getMetadata();
-    String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
+    String artifactFileName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
     int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
     if (lastIndexOfSlash > 0) {
       artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
@@ -387,11 +387,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       case BASH:
         if (!artifactoryConfig.hasCredentials()) {
           command = "curl --progress-bar -X GET \""
-              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -o \""
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         } else {
           command = "curl --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \""
-              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -o \""
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         }
         break;
@@ -399,14 +399,14 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         if (!artifactoryConfig.hasCredentials()) {
           command =
               "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n Invoke-WebRequest -Uri \""
-              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -OutFile \""
-              + getCommandPath() + "\\" + artifactFileName + "\"";
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH))
+              + "\" -OutFile \"" + getCommandPath() + "\\" + artifactFileName + "\"";
         } else {
           command = "$Headers = @{\n"
               + "    Authorization = \"" + authHeader + "\"\n"
               + "}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
               + "\n Invoke-WebRequest -Uri \""
-              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH))
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH))
               + "\" -Headers $Headers -OutFile \"" + getCommandPath() + "\\" + artifactFileName + "\"";
         }
         break;

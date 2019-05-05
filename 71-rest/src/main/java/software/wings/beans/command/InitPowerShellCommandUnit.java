@@ -9,7 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.common.Constants;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.utils.Validator;
 
 import java.util.Map;
@@ -55,7 +55,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
         envVariables.put("ARTIFACT_FILE_NAME", name);
       }
     } else if (context.getMetadata() != null) {
-      String value = context.getMetadata().get(Constants.ARTIFACT_FILE_NAME);
+      String value = context.getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
       if (isNotEmpty(value)) {
         envVariables.put("ARTIFACT_FILE_NAME", value);
       }

@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.collect.artifacts;
 
-import static software.wings.common.Constants.BUILD_NO;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -13,6 +11,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -53,7 +52,7 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask {
     try {
       for (String artifactPath : artifactPaths) {
         Pair<String, InputStream> fileInfo = bambooService.downloadArtifact(
-            bambooConfig, encryptionDetails, planKey, arguments.get(BUILD_NO), artifactPath);
+            bambooConfig, encryptionDetails, planKey, arguments.get(ArtifactMetadataKeys.BUILD_NO), artifactPath);
         artifactCollectionTaskHelper.addDataToResponse(
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }
