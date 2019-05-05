@@ -1,18 +1,18 @@
 enum DataFetcherEnum {
-  instanceCount
-  instancesByService
-  instancesByEnvironment
-  instancesByEnvType
-  service
-  serviceConnection
+  application
+  applicationConnection
+  environment
+  environmentConnection
   execution
   executionConnection
-  application
-  environment
+  instanceCount
+  instancesByEnvironment
+  instancesByEnvType
+  instancesByService
   pipeline
-  workflow
-  applicationConnection
-  environmentConnection
   pipelineConnection
+  service
+  serviceConnection
+  workflow
   workflowConnection
 }
