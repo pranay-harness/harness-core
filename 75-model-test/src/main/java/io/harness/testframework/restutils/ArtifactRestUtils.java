@@ -1,7 +1,5 @@
 package io.harness.testframework.restutils;
 
-import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
-
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Retry;
@@ -9,6 +7,7 @@ import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.matchers.ArtifactMatcher;
 import io.restassured.http.ContentType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactKeys;
 
 import java.util.List;
 import javax.ws.rs.core.GenericType;
@@ -24,7 +23,7 @@ public class ArtifactRestUtils {
             .auth()
             .oauth2(bearerToken)
             .queryParam("appId", appId)
-            .queryParam("search[0][field]", ARTIFACT_STREAM_ID_KEY)
+            .queryParam("search[0][field]", ArtifactKeys.artifactStreamId)
             .queryParam("search[0][op]", "EQ")
             .queryParam("search[0][value]", artifactStreamId)
             .queryParam("search[1][field]", "status")

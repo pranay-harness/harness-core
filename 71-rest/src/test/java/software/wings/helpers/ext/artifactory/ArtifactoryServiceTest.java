@@ -1,8 +1,6 @@
 package software.wings.helpers.ext.artifactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
-import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
 
@@ -21,10 +19,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 
@@ -172,8 +170,8 @@ public class ArtifactoryServiceTest {
   public void shouldDownloadRpmArtifacts() {
     ListNotifyResponseData listNotifyResponseData =
         artifactoryService.downloadArtifacts(artifactoryConfig, null, "harness-rpm",
-            ImmutableMap.of(ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm", ARTIFACT_FILE_NAME,
-                "todolist-1.0-2.x86_64.rpm"),
+            ImmutableMap.of(ArtifactMetadataKeys.ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm",
+                ArtifactMetadataKeys.ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"),
             "delegateId", "taskId", "ACCOUNT_ID");
     assertThat(listNotifyResponseData).isNotNull();
   }
@@ -218,8 +216,8 @@ public class ArtifactoryServiceTest {
   @Category(UnitTests.class)
   public void shouldDownloadRpmArtifact() {
     Pair<String, InputStream> pair = artifactoryService.downloadArtifact(artifactoryConfig, null, "harness-rpm",
-        ImmutableMap.of(
-            ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm", ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"));
+        ImmutableMap.of(ArtifactMetadataKeys.ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm",
+            ArtifactMetadataKeys.ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"));
     assertThat(pair).isNotNull();
   }
 
@@ -227,7 +225,7 @@ public class ArtifactoryServiceTest {
   @Category(UnitTests.class)
   public void shouldGetFileSize() {
     Map<String, String> metadata = new HashMap<>();
-    metadata.put(Constants.ARTIFACT_PATH, "harness-maven/io/harness/todolist/todolist/1.1/todolist-1.1.war");
+    metadata.put(ArtifactMetadataKeys.ARTIFACT_PATH, "harness-maven/io/harness/todolist/todolist/1.1/todolist-1.1.war");
     Long size = artifactoryService.getFileSize(artifactoryConfig, null, metadata);
     assertThat(size).isEqualTo(1776799L);
   }

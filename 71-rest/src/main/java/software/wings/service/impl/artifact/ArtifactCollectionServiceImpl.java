@@ -18,7 +18,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
-import static software.wings.common.Constants.BUILD_NO;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -32,6 +31,7 @@ import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -170,8 +170,9 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
         artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
     BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(appId, artifactStream, artifactStream.getUuid());
     Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(artifactStream);
-    int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
-        ? parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
+    int buildNo = (lastCollectedArtifact != null
+                      && lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.BUILD_NO) != null)
+        ? parseInt(lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.BUILD_NO))
         : 0;
     if (lastSuccessfulBuild != null && parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
       logger.info("Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",

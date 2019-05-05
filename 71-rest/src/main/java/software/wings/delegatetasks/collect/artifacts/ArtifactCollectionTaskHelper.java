@@ -16,11 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -80,42 +80,47 @@ public class ArtifactCollectionTaskHelper {
     Pair<String, InputStream> pair;
     switch (ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType())) {
       case AMAZON_S3:
-        logger.info("Downloading artifact [{}] from bucket :[{}]", metadata.get(Constants.ARTIFACT_FILE_NAME),
-            metadata.get(Constants.BUCKET_NAME));
+        logger.info("Downloading artifact [{}] from bucket :[{}]",
+            metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME), metadata.get(ArtifactMetadataKeys.BUCKET_NAME));
         saveExecutionLog("Metadata only option set for AMAZON_S3. Starting download of artifact: "
-                + metadata.get(Constants.ARTIFACT_FILE_NAME) + " from bucket: " + metadata.get(Constants.BUCKET_NAME)
-                + " with key: " + metadata.get(Constants.KEY),
+                + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
+                + " from bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
+                + " with key: " + metadata.get(ArtifactMetadataKeys.KEY),
             RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         pair = amazonS3Service.downloadArtifact((AwsConfig) artifactStreamAttributes.getServerSetting().getValue(),
-            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), metadata.get(Constants.BUCKET_NAME),
-            metadata.get(Constants.KEY));
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+            metadata.get(ArtifactMetadataKeys.BUCKET_NAME), metadata.get(ArtifactMetadataKeys.KEY));
         if (pair != null) {
-          saveExecutionLog("AMAZON_S3: Download complete for artifact: " + metadata.get(Constants.ARTIFACT_FILE_NAME)
-                  + " from bucket: " + metadata.get(Constants.BUCKET_NAME)
-                  + " with key: " + metadata.get(Constants.KEY),
+          saveExecutionLog(
+              "AMAZON_S3: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
+                  + " from bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
+                  + " with key: " + metadata.get(ArtifactMetadataKeys.KEY),
               RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         } else {
-          saveExecutionLog("AMAZON_S3: Download failed for artifact: " + metadata.get(Constants.ARTIFACT_FILE_NAME)
-                  + " from bucket: " + metadata.get(Constants.BUCKET_NAME)
-                  + " with key: " + metadata.get(Constants.KEY),
+          saveExecutionLog(
+              "AMAZON_S3: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
+                  + " from bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
+                  + " with key: " + metadata.get(ArtifactMetadataKeys.KEY),
               FAILURE, accountId, appId, activityId, commandUnitName, hostName);
         }
         return pair;
       case ARTIFACTORY:
         logger.info("Downloading artifact [{}] from artifactory at path :[{}]",
-            metadata.get(Constants.ARTIFACT_FILE_NAME), metadata.get(Constants.ARTIFACT_PATH));
+            metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME), metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH));
         saveExecutionLog("Metadata only option set for ARTIFACTORY. Starting download of artifact: "
-                + metadata.get(Constants.ARTIFACT_PATH),
+                + metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH),
             RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         pair = artifactoryService.downloadArtifact(
             (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getJobName(),
             metadata);
         if (pair != null) {
-          saveExecutionLog("ARTIFACTORY: Download complete for artifact: " + metadata.get(Constants.ARTIFACT_FILE_NAME),
+          saveExecutionLog(
+              "ARTIFACTORY: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME),
               RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         } else {
-          saveExecutionLog("ARTIFACTORY: Download failed for artifact: " + metadata.get(Constants.ARTIFACT_FILE_NAME),
+          saveExecutionLog(
+              "ARTIFACTORY: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME),
               FAILURE, accountId, appId, activityId, commandUnitName, hostName);
         }
         return pair;
@@ -127,13 +132,14 @@ public class ArtifactCollectionTaskHelper {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
     switch (ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType())) {
       case AMAZON_S3:
-        logger.info("Getting artifact file size for artifact " + metadata.get(Constants.ARTIFACT_FILE_NAME)
-            + " in bucket: " + metadata.get(Constants.BUCKET_NAME) + " with key: " + metadata.get(Constants.KEY));
+        logger.info("Getting artifact file size for artifact " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
+            + " in bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
+            + " with key: " + metadata.get(ArtifactMetadataKeys.KEY));
         return amazonS3Service.getFileSize((AwsConfig) artifactStreamAttributes.getServerSetting().getValue(),
-            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), metadata.get(Constants.BUCKET_NAME),
-            metadata.get(Constants.KEY));
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+            metadata.get(ArtifactMetadataKeys.BUCKET_NAME), metadata.get(ArtifactMetadataKeys.KEY));
       case ARTIFACTORY:
-        logger.info("Getting artifact file size for artifact: " + metadata.get(Constants.ARTIFACT_PATH));
+        logger.info("Getting artifact file size for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH));
         return artifactoryService.getFileSize(
             (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getMetadata());

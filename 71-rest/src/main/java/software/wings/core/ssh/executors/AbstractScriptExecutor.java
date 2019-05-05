@@ -8,8 +8,6 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
-import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
 
 import com.google.inject.Inject;
 
@@ -20,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateFile;
@@ -194,11 +193,11 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
     return scpOneFile(destinationDirectoryPath, new FileProvider() {
       @Override
       public Pair<String, Long> getInfo() {
-        if (!metadata.containsKey(ARTIFACT_FILE_SIZE)) {
+        if (!metadata.containsKey(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE)) {
           Long artifactFileSize = delegateFileManager.getArtifactFileSize(artifactStreamAttributes);
-          metadata.put(ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
+          metadata.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
         }
-        String fileName = metadata.get(ARTIFACT_FILE_NAME);
+        String fileName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
         int lastIndexOfSlash = fileName.lastIndexOf('/');
         if (lastIndexOfSlash > 0) {
           saveExecutionLogWarn("Filename contains slashes. Stripping off the portion before last slash.");
@@ -208,7 +207,7 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
           logger.warn("Got filename: " + fileName);
         }
 
-        return ImmutablePair.of(fileName, Long.parseLong(metadata.get(ARTIFACT_FILE_SIZE)));
+        return ImmutablePair.of(fileName, Long.parseLong(metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE)));
       }
 
       @Override

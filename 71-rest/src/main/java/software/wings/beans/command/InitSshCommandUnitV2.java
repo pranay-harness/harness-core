@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.common.Constants;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
@@ -105,7 +105,7 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
         envVariables.put("ARTIFACT_FILE_NAME", name);
       }
     } else if (context.getMetadata() != null) {
-      String value = context.getMetadata().get(Constants.ARTIFACT_FILE_NAME);
+      String value = context.getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
       if (isNotEmpty(value)) {
         envVariables.put("ARTIFACT_FILE_NAME", value);
       }

@@ -4,8 +4,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.Constants.IMAGE;
-import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
@@ -20,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -149,8 +148,8 @@ public class NexusThreeServiceImpl {
             .stream()
             .map(tag -> {
               Map<String, String> metadata = new HashMap();
-              metadata.put(IMAGE, repoName + ":" + tag);
-              metadata.put(TAG, tag);
+              metadata.put(ArtifactMetadataKeys.IMAGE, repoName + ":" + tag);
+              metadata.put(ArtifactMetadataKeys.TAG, tag);
               return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
             })
             .collect(toList());

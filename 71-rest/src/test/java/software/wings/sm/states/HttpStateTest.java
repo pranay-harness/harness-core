@@ -19,7 +19,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.states.HttpState.Builder.aHttpState;
@@ -59,6 +58,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.TaskType;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
@@ -205,8 +205,8 @@ public class HttpStateTest extends WingsBaseTest {
                     .withBody(
                         "{\"status\":{\"code\":\"SUCCESS\"},\"data\":{\"title\":\"Some server\",\"version\":\"2.31.0-MASTER-SNAPSHOT\",\"buildTimestamp\":1506086747259}}")));
 
-    Map<String, Object> map = ImmutableMap.of(
-        ARTIFACT, anArtifact().withMetadata(ImmutableMap.of(BUILD_NO, "2.31.0-MASTER-SNAPSHOT")).build());
+    Map<String, Object> map = ImmutableMap.of(ARTIFACT,
+        anArtifact().withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "2.31.0-MASTER-SNAPSHOT")).build());
     when(workflowStandardParams.paramMap(context)).thenReturn(map);
 
     HttpState.Builder jsonHttpStateBuilder =
@@ -253,8 +253,8 @@ public class HttpStateTest extends WingsBaseTest {
                     .withBody(
                         "{\"status\":{\"code\":\"SUCCESS\"},\"data\":{\"title\":\"Some server\",\"version\":\"2.31.0-MASTER-SNAPSHOT\",\"buildTimestamp\":1506086747259}}")));
 
-    Map<String, Object> map = ImmutableMap.of(
-        ARTIFACT, anArtifact().withMetadata(ImmutableMap.of(BUILD_NO, "2.31.0-MASTER-SNAPSHOT")).build());
+    Map<String, Object> map = ImmutableMap.of(ARTIFACT,
+        anArtifact().withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "2.31.0-MASTER-SNAPSHOT")).build());
     when(workflowStandardParams.paramMap(context)).thenReturn(map);
 
     HttpState.Builder jsonHttpStateBuilder =

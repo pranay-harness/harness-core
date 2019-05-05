@@ -2,7 +2,6 @@ package software.wings.helpers.ext.sftp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -17,6 +16,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SftpConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.SftpHelperService;
 
@@ -60,13 +60,13 @@ public class SftpServiceTest extends WingsBaseTest {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt"));
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     Map<String, String> buildParams = new HashMap<>();
-    buildParams.put(ARTIFACT_PATH, "a.txt");
+    buildParams.put(ArtifactMetadataKeys.ARTIFACT_PATH, "a.txt");
     buildParams.put("fileName", "a.txt");
     buildParams.put("allocationSize", "100");
 
     buildDetailsList.add(aBuildDetails()
                              .withNumber(buildParams.get("filename"))
-                             .withArtifactPath(buildParams.get(ARTIFACT_PATH))
+                             .withArtifactPath(buildParams.get(ArtifactMetadataKeys.ARTIFACT_PATH))
                              .withBuildParameters(buildParams)
                              .build());
 

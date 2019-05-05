@@ -21,7 +21,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.URL;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -75,6 +74,7 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
@@ -151,7 +151,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
   private Artifact artifact = anArtifact()
                                   .withArtifactSourceName("source")
-                                  .withMetadata(ImmutableMap.of(BUILD_NO, "bn"))
+                                  .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "bn"))
                                   .withServiceIds(singletonList(SERVICE_ID))
                                   .build();
   private ArtifactStream artifactStream =
