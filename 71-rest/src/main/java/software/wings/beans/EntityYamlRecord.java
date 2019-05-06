@@ -18,6 +18,7 @@ public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAt
   private long createdAt;
   private String entityId;
   private String entityType;
+  private String yamlPath;
   private String yamlSha;
   private String yamlContent;
 }

@@ -9,9 +9,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
@@ -26,10 +28,14 @@ import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.service.YamlHelper;
 
 public class EntityHelperTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
+  @Mock private YamlHelper mockYamlHelper;
   @Inject @InjectMocks private EntityHelper entityHelper;
 
   @Test
@@ -47,5 +53,26 @@ public class EntityHelperTest extends WingsBaseTest {
     assertThat(record).isNotNull();
     assertThat(record.getEntityName()).isEqualTo(ENV_NAME);
     assertThat(record.getAppId()).isEqualTo(APP_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetYamlPathForDeploymentSpecification() {
+    EntityAuditRecord record = EntityAuditRecord.builder().appName(APP_NAME).affectedResourceName(SERVICE_NAME).build();
+    KubernetesContainerTask task = new KubernetesContainerTask();
+    String yamlPath = entityHelper.getYamlPathForDeploymentSpecification(task, record);
+    assertThat(yamlPath).isEqualTo(
+        "Setup/Application/APP_NAME/Services/SERVICE_NAME/Deloyment Specifications/Kubernetes.yaml");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetFullYamlPathForEntity() {
+    doReturn("Setup/Application/APP_NAME/Services/SERVICE_NAME/Manifests")
+        .when(mockYamlHelper)
+        .getYamlPathForEntity(any());
+    String yamlPath = entityHelper.getFullYamlPathForEntity(
+        ApplicationManifest.builder().storeType(Local).build(), EntityAuditRecord.builder().build());
+    assertThat(yamlPath).isEqualTo("Setup/Application/APP_NAME/Services/SERVICE_NAME/Manifests/Index.yaml");
   }
 }

@@ -9,5 +9,7 @@ public class AuditHeaderYamlResponse {
   private String auditHeaderId;
   private String entityId;
   private String oldYaml;
+  private String oldYamlPath;
   private String newYaml;
+  private String newYamlPath;
 }
