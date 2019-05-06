@@ -51,13 +51,16 @@ import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.YamlPayload;
@@ -85,12 +88,14 @@ public class AuditServiceImpl implements AuditService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;
   @Inject private YamlResourceService yamlResourceService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities = newHashSet(EntityType.SERVICE_VARIABLE.name(), EntityType.TRIGGER.name(),
-      EntityType.ROLE.name(), EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
-      EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name());
+  private static Set<String> nonYamlEntities =
+      newHashSet(EntityType.TRIGGER.name(), EntityType.ROLE.name(), EntityType.TEMPLATE.name(),
+          EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name());
 
   /**
    * Instantiates a new audit service impl.
@@ -410,7 +415,18 @@ public class AuditServiceImpl implements AuditService {
     String yamlContent;
     String yamlPath;
     try {
-      if (entity instanceof ManifestFile) {
+      if (entity instanceof ServiceVariable) {
+        if (EntityType.SERVICE.name().equals(record.getAffectedResourceType())) {
+          entity = serviceResourceService.get(record.getAppId(), record.getAffectedResourceId());
+        } else if (EntityType.ENVIRONMENT.name().equals(record.getAffectedResourceType())) {
+          entity = environmentService.get(record.getAppId(), record.getAffectedResourceId(), false);
+        } else {
+          // Should ideally never happen
+          return EMPTY;
+        }
+        YamlPayload resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
+        yamlContent = resource.getYaml();
+      } else if (entity instanceof ManifestFile) {
         yamlContent = ((ManifestFile) entity).getFileContent();
       } else if (entity instanceof SettingAttribute
           && SettingVariableTypes.STRING.name().equals(((SettingAttribute) entity).getValue().getType())) {
