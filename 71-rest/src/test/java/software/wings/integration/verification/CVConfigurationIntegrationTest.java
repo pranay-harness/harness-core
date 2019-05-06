@@ -6,6 +6,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -59,6 +60,7 @@ import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.intfc.AppService;
+import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
@@ -1139,7 +1141,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     try {
       getRequestBuilderWithAuthHeader(target).post(
-          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
       fail("Did not fail for null payload");
     } catch (Exception e) {
       // exepected
@@ -1149,7 +1151,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     try {
       getRequestBuilderWithAuthHeader(target).post(
-          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
       fail("Did not fail for zero baseline");
     } catch (Exception e) {
       // exepected
@@ -1159,7 +1161,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     try {
       getRequestBuilderWithAuthHeader(target).post(
-          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
       fail("Did not fail for  zero baseline end minute");
     } catch (Exception e) {
       // exepected
@@ -1169,7 +1171,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     try {
       getRequestBuilderWithAuthHeader(target).post(
-          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+          entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
       fail("Did not fail for invalid baseline");
     } catch (Exception e) {
       // exepected
@@ -1216,9 +1218,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     updateBaseline.setBaselineEndMinute(38);
     target = client.target(url);
-    final RestResponse<Boolean> updateResponse = getRequestBuilderWithAuthHeader(target).post(
-        entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertTrue(updateResponse.getResource());
+    final RestResponse<String> updateResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    assertNotEquals(savedObjectUuid, updateResponse.getResource());
+    savedObjectUuid = updateResponse.getResource();
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
         + "&serviceConfigurationId=" + savedObjectUuid;
@@ -1254,6 +1257,33 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         .filter("appId", appId)
         .asList()
         .forEach(logMLAnalysisRecord -> assertTrue(logMLAnalysisRecord.isDeprecated()));
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    LogsCVConfiguration fetchedObject = getRequestResponse.getResource();
+
+    logsCVConfiguration.setAccountId(accountId);
+    logsCVConfiguration.setStateType(StateType.SUMO);
+
+    assertEquals(logsCVConfiguration.getName(), fetchedObject.getName());
+    assertEquals(logsCVConfiguration.getAccountId(), fetchedObject.getAccountId());
+    assertEquals(logsCVConfiguration.getConnectorId(), fetchedObject.getConnectorId());
+    assertEquals(logsCVConfiguration.getEnvId(), fetchedObject.getEnvId());
+    assertEquals(logsCVConfiguration.getServiceId(), fetchedObject.getServiceId());
+    assertEquals(logsCVConfiguration.getStateType(), fetchedObject.getStateType());
+    assertEquals(logsCVConfiguration.getAnalysisTolerance(), fetchedObject.getAnalysisTolerance());
+    assertEquals(logsCVConfiguration.isEnabled24x7(), fetchedObject.isEnabled24x7());
+    assertEquals(logsCVConfiguration.getComparisonStrategy(), fetchedObject.getComparisonStrategy());
+    assertEquals(logsCVConfiguration.getContextId(), fetchedObject.getContextId());
+    assertEquals(logsCVConfiguration.isWorkflowConfig(), fetchedObject.isWorkflowConfig());
+    assertEquals(logsCVConfiguration.isAlertEnabled(), fetchedObject.isAlertEnabled());
+    assertEquals(logsCVConfiguration.getAlertThreshold(), fetchedObject.getAlertThreshold(), 0.0);
+    assertEquals(logsCVConfiguration.getSnoozeStartTime(), fetchedObject.getSnoozeStartTime());
+    assertEquals(logsCVConfiguration.getSnoozeEndTime(), fetchedObject.getSnoozeEndTime());
+    assertEquals(logsCVConfiguration.getQuery(), fetchedObject.getQuery());
   }
 
   @Test

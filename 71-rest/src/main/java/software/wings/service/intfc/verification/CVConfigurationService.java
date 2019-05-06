@@ -32,7 +32,7 @@ public interface CVConfigurationService extends OwnedByAccount {
 
   void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration);
   void deleteStaleConfigs();
-  boolean resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration);
+  String resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration);
   boolean updateAlertSettings(String cvConfigId, CVConfiguration cvConfiguration);
   boolean updateSnooze(String cvConfigId, CVConfiguration cvConfiguration);
 }

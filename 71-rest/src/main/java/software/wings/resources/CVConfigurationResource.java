@@ -102,7 +102,7 @@ public class CVConfigurationResource {
   @Path("/reset-baseline")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> resetBaseline(@QueryParam("accountId") @Valid final String accountId,
+  public RestResponse<String> resetBaseline(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("appId") @Valid final String appId, final @Valid @QueryParam("cvConfigId") String cvConfigId,
       @Body LogsCVConfiguration logsCVConfiguration) {
     return new RestResponse<>(cvConfigurationService.resetBaseline(appId, cvConfigId, logsCVConfiguration));
