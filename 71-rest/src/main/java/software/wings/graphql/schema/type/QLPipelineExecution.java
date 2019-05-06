@@ -9,10 +9,11 @@ import java.time.ZonedDateTime;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLPipelineExecutionKeys")
-public class QLPipelineExecution implements QLExecution {
+public class QLPipelineExecution implements QLExecution, QLCause {
   private String id;
-  private ZonedDateTime triggeredAt;
+  private ZonedDateTime createdAt;
   private ZonedDateTime startedAt;
   private ZonedDateTime endedAt;
   private QLExecutionStatus status;
+  private QLCause cause;
 }

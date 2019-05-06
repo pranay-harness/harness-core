@@ -20,7 +20,6 @@ import software.wings.graphql.schema.TypeResolverManager;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import javax.validation.constraints.NotNull;
 
 @Singleton
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
@@ -32,14 +31,8 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private static final String DATAFETCHER_FILE_PATH = "graphql/datafetcher.graphql";
 
   private GraphQL graphQL;
-  private TypeResolverManager typeResolverHelper;
-  private DataFetcherDirective dataFetcherDirective;
-
-  @Inject
-  public GraphQLProvider(@NotNull TypeResolverManager typeResolverHelper, DataFetcherDirective dataFetcherDirective) {
-    this.typeResolverHelper = typeResolverHelper;
-    this.dataFetcherDirective = dataFetcherDirective;
-  }
+  @Inject private TypeResolverManager typeResolverManager;
+  @Inject private DataFetcherDirective dataFetcherDirective;
 
   @Inject
   public void init() {
@@ -76,7 +69,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private RuntimeWiring buildRuntimeWiring() {
     RuntimeWiring.Builder builder = RuntimeWiring.newRuntimeWiring();
 
-    this.typeResolverHelper.getTypeResolverMap().forEach(
+    typeResolverManager.getTypeResolverMap().forEach(
         (k, v) -> builder.type(k, typeWiring -> typeWiring.typeResolver(v)));
 
     builder.scalar(GraphQLDateTimeScalar.type).directive("dataFetcher", dataFetcherDirective);
