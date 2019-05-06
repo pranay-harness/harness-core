@@ -37,6 +37,6 @@ public class UserGroupUtils {
     List<String> emailAddresses = new ArrayList<>();
     emailAddresses.add(emailId);
     SlackNotificationSetting slackNotificationSetting = new SlackNotificationSetting("dummyChannelName", slackWebhook);
-    return new NotificationSettings(useIndividualEmailId, emailAddresses, slackNotificationSetting);
+    return new NotificationSettings(useIndividualEmailId, true, emailAddresses, slackNotificationSetting);
   }
 }

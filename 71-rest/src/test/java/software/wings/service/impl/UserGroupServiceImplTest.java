@@ -276,12 +276,26 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       AppPermission appPermission =
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
-      UserGroup userGroup1 =
-          builder().accountId(ACCOUNT_ID).name("USER_GROUP1").appPermissions(Sets.newHashSet(appPermission)).build();
-      UserGroup userGroup2 =
-          builder().accountId(ACCOUNT_ID).name("USER_GROUP2").appPermissions(Sets.newHashSet(appPermission)).build();
-      UserGroup userGroup3 =
-          builder().accountId(ACCOUNT_ID).name("USER_GROUP3").appPermissions(Sets.newHashSet(appPermission)).build();
+
+      NotificationSettings notificationSettings = new NotificationSettings(false, true, Collections.emptyList(), null);
+      UserGroup userGroup1 = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .name("USER_GROUP1")
+                                 .appPermissions(Sets.newHashSet(appPermission))
+                                 .notificationSettings(notificationSettings)
+                                 .build();
+      UserGroup userGroup2 = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .name("USER_GROUP2")
+                                 .appPermissions(Sets.newHashSet(appPermission))
+                                 .notificationSettings(notificationSettings)
+                                 .build();
+      UserGroup userGroup3 = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .name("USER_GROUP3")
+                                 .appPermissions(Sets.newHashSet(appPermission))
+                                 .notificationSettings(notificationSettings)
+                                 .build();
 
       userGroup1 = userGroupService.save(userGroup1);
       userGroup2 = userGroupService.save(userGroup2);
@@ -347,7 +361,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertNull(fetchedGroup.getNotificationSettings());
 
     NotificationSettings settings =
-        new NotificationSettings(true, Collections.emptyList(), SlackNotificationSetting.emptyConfig());
+        new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig());
     userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), settings);
     fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
     assertNotNull(fetchedGroup.getNotificationSettings());
