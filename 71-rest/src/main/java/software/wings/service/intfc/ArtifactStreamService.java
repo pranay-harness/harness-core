@@ -7,6 +7,7 @@ import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.service.intfc.ownership.OwnedByService;
 
 import java.util.List;
@@ -131,4 +132,6 @@ public interface ArtifactStreamService extends OwnedByService {
   boolean updateFailedCronAttempts(String artifactStreamId, int counter);
 
   List<ArtifactStream> listBySettingId(String settingId);
+
+  List<ArtifactStreamSummary> listArtifactStreamSummary(String appId);
 }

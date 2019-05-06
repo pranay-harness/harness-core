@@ -147,4 +147,10 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
       this.templateVariables = templateVariables;
     }
   }
+
+  public static final class ArtifactStreamKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String uuid = "uuid";
+  }
 }

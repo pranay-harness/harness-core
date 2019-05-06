@@ -10,6 +10,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -51,10 +52,12 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.config.ArtifactSourceable;
@@ -573,5 +576,29 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
         .filter(SETTING_ID_KEY, settingId)
         .asList(new FindOptions().limit(REFERENCED_ENTITIES_TO_SHOW));
+  }
+
+  // TODO: ASR: update method after refactoring
+  @Override
+  public List<ArtifactStreamSummary> listArtifactStreamSummary(String appId) {
+    List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
+                                               .filter(ArtifactStreamKeys.appId, appId)
+                                               .project(ArtifactStreamKeys.uuid, true)
+                                               .project(ArtifactStreamKeys.name, true)
+                                               .project(ArtifactStreamKeys.serviceId, true)
+                                               .asList();
+    List<Service> services = wingsPersistence.createQuery(Service.class)
+                                 .filter(ServiceKeys.appId, appId)
+                                 .project(ServiceKeys.uuid, true)
+                                 .project(ServiceKeys.name, true)
+                                 .asList();
+    Map<String, String> serviceIdToName = services.stream().collect(toMap(Service::getUuid, Service::getName));
+    return artifactStreams.stream()
+        .map(o
+            -> ArtifactStreamSummary.builder()
+                   .artifactStreamId(o.getUuid())
+                   .displayName(o.getName() + " (" + serviceIdToName.get(o.getServiceId()) + ")")
+                   .build())
+        .collect(toList());
   }
 }
