@@ -13,11 +13,13 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -54,8 +56,8 @@ public class ArtifactStreamResource {
    */
   @Inject
   public ArtifactStreamResource(ArtifactStreamService artifactStreamService, AppService appService) {
-    this.appService = appService;
     this.artifactStreamService = artifactStreamService;
+    this.appService = appService;
   }
 
   /**
@@ -174,5 +176,23 @@ public class ArtifactStreamResource {
   public RestResponse<Map<String, String>> getBuildSourceTypes(
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(artifactStreamService.getSupportedBuildSourceTypes(appId, serviceId));
+  }
+
+  /**
+   * List summary.
+   *
+   * @param appId the app id
+   * @return the rest response
+   */
+  @GET
+  @Path("summary")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<ArtifactStreamSummary>> listArtifactStreamSummary(@QueryParam("appId") String appId) {
+    if (!appService.exist(appId)) {
+      throw new NotFoundException("application with id " + appId + " not found.");
+    }
+
+    return new RestResponse<>(artifactStreamService.listArtifactStreamSummary(appId));
   }
 }
