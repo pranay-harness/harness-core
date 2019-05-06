@@ -326,7 +326,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   @Override
-  public boolean resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration) {
+  public String resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration) {
     final LogsCVConfiguration cvConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
     if (cvConfiguration == null) {
       throw new WingsException(GENERAL_ERROR, USER).addParam("message", "No configuration found with id " + cvConfigId);
@@ -363,8 +363,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                 .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId));
     cvConfiguration.setBaselineStartMinute(logsCVConfiguration.getBaselineStartMinute());
     cvConfiguration.setBaselineEndMinute(logsCVConfiguration.getBaselineEndMinute());
-    wingsPersistence.save(cvConfiguration);
-    return true;
+    cvConfiguration.setUuid(null);
+    deleteConfiguration(logsCVConfiguration.getAccountId(), logsCVConfiguration.getAppId(), cvConfigId);
+    final String newCvConfigId = saveConfiguration(
+        cvConfiguration.getAccountId(), cvConfiguration.getAppId(), cvConfiguration.getStateType(), cvConfiguration);
+    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                .filter(LogMLAnalysisRecord.APP_ID_KEY, appId)
+                                .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId),
+        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
+            .set(LogMLAnalysisRecordKeys.cvConfigId, newCvConfigId));
+    return newCvConfigId;
   }
 
   private void deleteTemplate(String accountId, String serviceConfigurationId, StateType stateType) {
