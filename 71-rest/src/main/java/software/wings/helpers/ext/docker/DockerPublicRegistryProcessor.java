@@ -116,6 +116,7 @@ public class DockerPublicRegistryProcessor {
                 .withNumber(tag.getName())
                 .withBuildUrl(tagUrl + tag.getName())
                 .withMetadata(metadata)
+                .withUiDisplayName("Tag# " + tag.getName())
                 .build();
           })
           .collect(Collectors.toList());
