@@ -20,6 +20,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -71,7 +72,6 @@ import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfigurationYamlHandler;
 
@@ -79,6 +79,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/19/17
@@ -144,8 +145,11 @@ public class YamlHandlerFactory {
         yamlHandler = cloudProviderYamlHelperMap.get(subType);
         break;
       case ARTIFACT_SERVER:
-        if (SettingVariableTypes.HTTP_HELM_REPO.name().equals(subType)
-            || SettingVariableTypes.AMAZON_S3_HELM_REPO.name().equals(subType)) {
+        if (SettingCategory.HELM_REPO.getSettingVariableTypes()
+                .stream()
+                .map(settingVariableTypes -> settingVariableTypes.name())
+                .collect(Collectors.toList())
+                .contains(subType)) {
           yamlHandler = helmRepoYamlHelperMap.get(subType);
         } else {
           yamlHandler = artifactServerYamlHelperMap.get(subType);

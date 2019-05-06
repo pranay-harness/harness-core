@@ -56,6 +56,7 @@ import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -116,7 +117,7 @@ public class SettingAttribute extends Base implements NameAccess {
 
     HELM_REPO(Lists.newArrayList(HTTP_HELM_REPO, AMAZON_S3_HELM_REPO, GCS_HELM_REPO));
 
-    private List<SettingVariableTypes> settingVariableTypes;
+    @Getter private List<SettingVariableTypes> settingVariableTypes;
 
     SettingCategory(List<SettingVariableTypes> settingVariableTypes) {
       this.settingVariableTypes = settingVariableTypes;
