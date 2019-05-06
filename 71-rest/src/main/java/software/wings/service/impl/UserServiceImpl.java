@@ -2190,4 +2190,21 @@ public class UserServiceImpl implements UserService {
 
     return true;
   }
+
+  @Override
+  public boolean enableUser(String accountId, String userId, boolean enabled) {
+    User user = wingsPersistence.get(User.class, userId);
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST, USER);
+    } else if (!isUserAssignedToAccount(user, accountId)) {
+      throw new InvalidRequestException("User is not assigned to account", USER);
+    }
+    if (user.isDisabled() == enabled) {
+      user.setDisabled(!enabled);
+      wingsPersistence.save(user);
+      evictUserFromCache(user.getUuid());
+      logger.info("User {} is enabled: {}", user.getEmail(), enabled);
+    }
+    return true;
+  }
 }

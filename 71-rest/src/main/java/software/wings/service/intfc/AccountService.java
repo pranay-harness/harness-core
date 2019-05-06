@@ -104,7 +104,7 @@ public interface AccountService {
    * Once the account migration completed. All existing delegates belonging to this account will be redirected to the
    * new cluster that the account has been migrated into.
    */
-  boolean completeAccountMigration(String accountId, String newClusterUrl);
+  boolean completeAccountMigration(String accountId);
 
   boolean isCommunityAccount(String accountId);
 

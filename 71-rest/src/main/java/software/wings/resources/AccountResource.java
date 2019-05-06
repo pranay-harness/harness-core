@@ -95,11 +95,11 @@ public class AccountResource {
   @Path("{accountId}/complete-migration")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> completeMigration(@PathParam("accountId") String accountId, String newClusterUrl) {
+  public RestResponse<Boolean> completeMigration(@PathParam("accountId") String accountId) {
     RestResponse<Boolean> response =
         accountPermissionUtils.checkIfHarnessUser("User not allowed to complete account migration");
     if (response == null) {
-      response = new RestResponse<>(accountService.completeAccountMigration(accountId, newClusterUrl));
+      response = new RestResponse<>(accountService.completeAccountMigration(accountId));
     }
     return response;
   }

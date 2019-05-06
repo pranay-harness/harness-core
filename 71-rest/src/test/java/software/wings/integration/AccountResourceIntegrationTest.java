@@ -18,11 +18,12 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 
+import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -40,7 +41,6 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   public void tearDown() {
     // Recover the original account state.
     Account account = accountService.get(accountId);
-    account.setNewClusterUrl(null);
     account.getLicenseInfo().setAccountStatus(AccountStatus.ACTIVE);
     accountService.setAccountStatus(accountId, AccountStatus.ACTIVE);
     account = accountService.get(accountId);
@@ -118,11 +118,9 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   private void completeAccountMigration(String accountId) {
-    String newClusterUrl = "https://app.harness.io";
-
     WebTarget target = client.target(API_BASE + "/account/" + accountId + "/complete-migration");
-    RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
-        entity(newClusterUrl, MediaType.TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+    RestResponse<Boolean> restResponse =
+        getRequestBuilderWithAuthHeader(target).post(null, new GenericType<RestResponse<Boolean>>() {});
     assertEquals(0, restResponse.getResponseMessages().size());
     Boolean statusUpdated = restResponse.getResource();
     assertNotNull(statusUpdated);
@@ -130,6 +128,9 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
     Account account = wingsPersistence.get(Account.class, accountId);
     assertNotNull(account);
-    assertEquals(newClusterUrl, account.getNewClusterUrl());
+    List<User> users = userService.getUsersOfAccount(accountId);
+    for (User user : users) {
+      assertTrue(user.isDisabled());
+    }
   }
 }
