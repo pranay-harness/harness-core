@@ -66,6 +66,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.security.KmsService;
@@ -103,6 +104,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected AccountService accountService;
+  @Inject protected UserService userService;
   @Inject protected SettingsService settingsService;
   @Inject protected AppService appService;
   @Inject protected PipelineService pipelineService;

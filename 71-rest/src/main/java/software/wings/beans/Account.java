@@ -54,8 +54,6 @@ public class Account extends Base {
   @JsonIgnore private EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
 
-  private String newClusterUrl;
-
   // Set this flag when creating an empty account for data import.
   // It's a transient field and won't be persisted.
   @Transient private boolean forImport;
@@ -85,14 +83,6 @@ public class Account extends Base {
 
   public boolean isTwoFactorAdminEnforced() {
     return twoFactorAdminEnforced;
-  }
-
-  public String getNewClusterUrl() {
-    return newClusterUrl;
-  }
-
-  public void setNewClusterUrl(String newClusterUrl) {
-    this.newClusterUrl = newClusterUrl;
   }
 
   public boolean isForImport() {

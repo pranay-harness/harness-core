@@ -24,6 +24,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.swagger.annotations.Api;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -53,8 +54,10 @@ import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheHelper;
 
 import java.io.UnsupportedEncodingException;
@@ -99,6 +102,7 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.USER)
 @AuthRule(permissionType = PermissionType.LOGGED_IN)
+@Slf4j
 public class UserResource {
   private UserService userService;
   private AuthService authService;
@@ -108,6 +112,8 @@ public class UserResource {
   private CacheHelper cacheHelper;
   private HarnessUserGroupService harnessUserGroupService;
   private UserGroupService userGroupService;
+  private UsageRestrictionsService usageRestrictionsService;
+  private AccountPermissionUtils accountPermissionUtils;
 
   /**
    * Instantiates a new User resource.
@@ -121,11 +127,14 @@ public class UserResource {
    */
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
+      UsageRestrictionsService usageRestrictionsService, AccountPermissionUtils accountPermissionUtils,
       AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager,
       CacheHelper cacheHelper, HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
+    this.usageRestrictionsService = usageRestrictionsService;
+    this.accountPermissionUtils = accountPermissionUtils;
     this.authenticationManager = authenticationManager;
     this.twoFactorAuthenticationManager = twoFactorAuthenticationManager;
     this.cacheHelper = cacheHelper;
@@ -632,6 +641,40 @@ public class UserResource {
   @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<Boolean> disableTwoFactorAuth(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(twoFactorAuthenticationManager.disableTwoFactorAuthentication(accountId));
+  }
+
+  @PUT
+  @Path("disable/{userId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> disableUser(
+      @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
+    // Only if the user the account administrator or in the Harness user group can perform the export operation.
+    if (!usageRestrictionsService.isAccountAdmin(accountId)) {
+      String errorMessage = "User is not account administrator and can't perform the export operation.";
+      RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
+      if (restResponse != null) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      }
+    }
+    return new RestResponse<>(userService.enableUser(accountId, userId, false));
+  }
+
+  @PUT
+  @Path("enable/{userId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> enableUser(
+      @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
+    // Only if the user the account administrator or in the Harness user group can perform the export operation.
+    if (!usageRestrictionsService.isAccountAdmin(accountId)) {
+      String errorMessage = "User is not account administrator and can't perform the export operation.";
+      RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
+      if (restResponse != null) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      }
+    }
+    return new RestResponse<>(userService.enableUser(accountId, userId, true));
   }
 
   @GET

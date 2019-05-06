@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
+import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -78,6 +79,9 @@ public class AuthenticationManager {
   }
 
   private AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
+    if (user.isDisabled()) {
+      throw new WingsException(USER_DISABLED, USER);
+    }
     AuthenticationMechanism authenticationMechanism;
     if (isNotEmpty(accountId)) {
       // First check if the user is associated with the account.

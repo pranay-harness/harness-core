@@ -27,8 +27,10 @@ import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.ResourceTestRule;
 
@@ -49,6 +51,8 @@ public class UserResourceTest {
   public static final AuthenticationManager AUTHENTICATION_MANAGER = mock(AuthenticationManager.class);
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
+  static final UsageRestrictionsService USAGE_RESTRICTIONS_SERVICE = mock(UsageRestrictionsService.class);
+  static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
 
   /**
    * The constant RESOURCES.
@@ -56,8 +60,9 @@ public class UserResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, AUTHENTICATION_MANAGER,
-              TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER, HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE))
+          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, USAGE_RESTRICTIONS_SERVICE,
+              ACCOUNT_PERMISSION_UTILS, AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER,
+              HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)
           .build();

@@ -80,6 +80,8 @@ public class User extends Base implements Principal {
 
   private String lastAppId;
 
+  private boolean disabled;
+
   @JsonIgnore private long passwordChangedAt;
 
   @JsonIgnore @Transient private UserRequestInfo userRequestInfo;
@@ -441,6 +443,14 @@ public class User extends Base implements Principal {
 
   public void setUserGroups(List<UserGroup> userGroups) {
     this.userGroups = userGroups;
+  }
+
+  public boolean isDisabled() {
+    return disabled;
+  }
+
+  public void setDisabled(boolean disabled) {
+    this.disabled = disabled;
   }
 
   @JsonIgnore

@@ -110,6 +110,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -183,6 +184,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private UserService userService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -455,9 +457,6 @@ public class AccountServiceImpl implements AccountService {
     if (account.getAuthenticationMechanism() != null) {
       updateOperations.set("authenticationMechanism", account.getAuthenticationMechanism());
     }
-    if (isNotEmpty(account.getNewClusterUrl())) {
-      updateOperations.set("newClusterUrl", account.getNewClusterUrl());
-    }
     wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
@@ -589,12 +588,24 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean completeAccountMigration(String accountId, String newClusterUrl) {
-    Account account = get(accountId);
-    account.setNewClusterUrl(newClusterUrl);
-    update(account);
-
+  public boolean completeAccountMigration(String accountId) {
+    // Also need to prevent all existing users in the migration account from logging in after completion of migration.
+    disableAllUsersInAccount(accountId);
     return setAccountStatus(accountId, AccountStatus.MIGRATED);
+  }
+
+  private void disableAllUsersInAccount(String accountId) {
+    Query<User> query =
+        wingsPersistence.createQuery(User.class, excludeAuthority).field("accounts").contains(accountId);
+    try (HIterator<User> records = new HIterator<>(query.fetch())) {
+      while (records.hasNext()) {
+        User user = records.next();
+        user.setDisabled(true);
+        userService.evictUserFromCache(user.getUuid());
+        logger.info("User {} has been disabled.", user.getEmail());
+      }
+    }
+    logger.info("All users in account {} has been disabled.", accountId);
   }
 
   @Override
@@ -735,7 +746,7 @@ public class AccountServiceImpl implements AccountService {
     newLicenseInfo.setAccountStatus(accountStatus);
     licenseService.updateAccountLicense(accountId, newLicenseInfo);
 
-    if (AccountStatus.MIGRATING.equals(accountStatus)) {
+    if (AccountStatus.MIGRATING.equals(accountStatus) || AccountStatus.MIGRATED.equals(accountStatus)) {
       // 1. To freeze the deployments once the account is set to status MIGRATING
       freezeDeployments(accountId);
       // 2. Stop all quartz jobs associated with this account

@@ -471,4 +471,9 @@ public interface UserService extends OwnedByAccount {
   boolean updateLead(String email, String accountId);
 
   boolean deleteUsers(String accountId, List<String> usersToRetain);
+
+  /**
+   * Disable or Enable an user administratively. Once disabled, the user can no longer login.
+   */
+  boolean enableUser(String accountId, String userId, boolean enabled);
 }

@@ -12,6 +12,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static software.wings.beans.User.Builder.anUser;
 
 import com.google.common.collect.Sets;
@@ -57,8 +58,6 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.service.impl.UserServiceImpl;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,6 +66,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
@@ -77,14 +77,52 @@ import javax.ws.rs.core.HttpHeaders;
 @Slf4j
 public class UserServiceIntegrationTest extends BaseIntegrationTest {
   private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
-  @Inject private AccountService accountService;
-  @Inject private UserService userService;
   @Inject private SecretManager secretManager;
 
   @Before
   public void setUp() throws Exception {
     super.setUp();
     loginAdminUser();
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testDisableEnableUser() {
+    User user = userService.getUserByEmail(defaultEmail);
+    String userId = user.getUuid();
+    String userAccountId = user.getDefaultAccountId();
+
+    // 1. Disable user
+    WebTarget target = client.target(API_BASE + "/users/disable/" + userId + "?accountId=" + userAccountId);
+    RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).put(
+        entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertTrue(restResponse.getResource());
+
+    // 2. User should be disabled after disable operation above
+    user = userService.getUserByEmail(defaultEmail);
+    assertTrue(user.isDisabled());
+
+    // 3. Once the user is disabled, its logintype call will fail with 401 unauthorized error.
+    target = client.target(API_BASE + "/users/logintype?userName=" + defaultEmail + "&accountId=" + userAccountId);
+    try {
+      RestResponse<LoginTypeResponse> loginTypeResponse =
+          getRequestBuilder(target).get(new GenericType<RestResponse<LoginTypeResponse>>() {});
+      fail("NotAuthorizedException is expected");
+    } catch (NotAuthorizedException e) {
+      // Expected 'HTTP 401 Unauthorized' exception here.
+    }
+
+    // 4. Re-enable user
+    target = client.target(API_BASE + "/users/enable/" + userId + "?accountId=" + userAccountId);
+    restResponse = getRequestBuilderWithAuthHeader(target).put(
+        entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertTrue(restResponse.getResource());
+
+    // 5. User should not be disabled after enabled above
+    user = userService.getUserByEmail(defaultEmail);
+    assertFalse(user.isDisabled());
   }
 
   @Test
