@@ -2791,6 +2791,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     List<WorkflowCategoryStepsMeta> categories = new ArrayList<>();
 
+    // We do not want the recent category if it is empty
     if (isNotEmpty(recent)) {
       List<String> stepIds = new ArrayList<>();
       recent.descendingIterator().forEachRemaining(stepId -> stepIds.add(stepId));
@@ -2798,11 +2799,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           WorkflowCategoryStepsMeta.builder().id("RECENTLY_USED").name("Recently Used").stepIds(stepIds).build());
     }
 
-    if (isNotEmpty(favorites)) {
+    {
+      // We would like to add the favorite category even if it is empty. This inconsistency is for UI convenience
       List<String> stepIds = new ArrayList<>();
-      for (StateType step : stateTypes) {
-        if (favorites.contains(step.getType())) {
-          stepIds.add(step.getType());
+      if (isNotEmpty(favorites)) {
+        for (StateType step : stateTypes) {
+          if (favorites.contains(step.getType())) {
+            stepIds.add(step.getType());
+          }
         }
       }
       categories.add(

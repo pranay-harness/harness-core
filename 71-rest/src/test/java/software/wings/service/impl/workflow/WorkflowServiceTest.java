@@ -3422,15 +3422,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                          .stepIds(asList(HTTP.getType(), SHELL_SCRIPT.getType()))
                                                          .build();
 
-    final WorkflowCategoryStepsMeta categoryFavorites = WorkflowCategoryStepsMeta.builder()
-                                                            .id("MY_FAVORITES")
-                                                            .name("My Favorites")
-                                                            .stepIds(asList(HTTP.getType()))
-                                                            .build();
+    final WorkflowCategoryStepsMeta emptyCategoryFavorites =
+        WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(asList()).build();
+
+    final WorkflowCategoryStepsMeta categoryFavorites =
+        emptyCategoryFavorites.toBuilder().stepIds(asList(HTTP.getType())).build();
 
     WorkflowCategorySteps workflowCategorySteps =
         WorkflowServiceImpl.calculateCategorySteps(null, null, stateTypes, stencilCategory, workflow, null, null, 0);
-    assertThat(workflowCategorySteps.getCategories()).containsExactly(categoryOthers);
+    assertThat(workflowCategorySteps.getCategories()).containsExactly(emptyCategoryFavorites, categoryOthers);
 
     Set<String> favorite = ImmutableSet.of(HTTP.name());
     workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
@@ -3448,7 +3448,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflowCategorySteps =
         WorkflowServiceImpl.calculateCategorySteps(null, recent, stateTypes, stencilCategory, workflow, null, null, 0);
-    assertThat(workflowCategorySteps.getCategories()).containsExactly(categoryRecent, categoryOthers);
+    assertThat(workflowCategorySteps.getCategories())
+        .containsExactly(categoryRecent, emptyCategoryFavorites, categoryOthers);
 
     workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
         favorite, recent, stateTypes, stencilCategory, workflow, null, null, 0);
