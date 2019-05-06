@@ -601,6 +601,7 @@ public class AccountServiceImpl implements AccountService {
       while (records.hasNext()) {
         User user = records.next();
         user.setDisabled(true);
+        wingsPersistence.save(user);
         userService.evictUserFromCache(user.getUuid());
         logger.info("User {} has been disabled.", user.getEmail());
       }
