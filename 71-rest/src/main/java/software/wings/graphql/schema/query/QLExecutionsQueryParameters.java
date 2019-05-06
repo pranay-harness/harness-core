@@ -8,7 +8,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Value
-public class QLExecutionsParameters implements QLPageQueryParameters {
+public class QLExecutionsQueryParameters implements QLPageQueryParameters {
   private String applicationId;
   private String pipelineId;
   private String workflowId;

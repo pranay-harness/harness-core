@@ -3,6 +3,9 @@ package software.wings.graphql.datafetcher.execution;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.UnexpectedException;
@@ -23,7 +26,10 @@ import javax.validation.constraints.NotNull;
  * workflow and workflow execution.
  * Ideally, we should have two separate adapters.
  */
+@Singleton
 public class ExecutionController {
+  @Inject WorkflowExecutionController workflowExecutionController;
+
   public static QLExecutionStatus convertStatus(ExecutionStatus status) {
     switch (status) {
       case ABORTED:
@@ -98,10 +104,10 @@ public class ExecutionController {
     return null;
   }
 
-  public static QLExecution populateExecution(@NotNull WorkflowExecution execution) {
+  public QLExecution populateExecution(@NotNull WorkflowExecution execution) {
     if (execution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       final QLWorkflowExecutionBuilder builder = QLWorkflowExecution.builder();
-      WorkflowExecutionController.populateWorkflowExecution(execution, builder);
+      workflowExecutionController.populateWorkflowExecution(execution, builder);
       return builder.build();
     }
 

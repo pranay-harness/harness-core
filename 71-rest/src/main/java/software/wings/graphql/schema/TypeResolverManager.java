@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import graphql.schema.TypeResolver;
+import software.wings.graphql.schema.type.QLExecutedBy;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
 
@@ -14,16 +15,14 @@ import java.util.Set;
 @Singleton
 public class TypeResolverManager {
   // Uniface is a short for union or interface
-  public static final class TypeResolverManagerUnifaces { public static final String Execution = "Execution"; }
+  public static final class TypeResolverManagerUnifaces {
+    public static final String Cause = "Cause";
+    public static final String Execution = "Execution";
+  }
 
   public static final class TypeResolverManagerTypes {
-    public static final String Application = "Application";
-    public static final String Artifact = "Artifact";
-    public static final String Environment = "Environment";
-    public static final String Execution = "Execution";
-    public static final String Pipeline = "Pipeline";
+    public static final String ExecutedBy = "ExecutedBy";
     public static final String PipelineExecution = "PipelineExecution";
-    public static final String Workflow = "Workflow";
     public static final String WorkflowExecution = "WorkflowExecution";
   }
 
@@ -38,6 +37,11 @@ public class TypeResolverManager {
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
                                       .put(QLWorkflowExecution.class, TypeResolverManagerTypes.WorkflowExecution)
+                                      .build()))
+        .put(TypeResolverManagerUnifaces.Cause,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLExecutedBy.class, TypeResolverManagerTypes.ExecutedBy)
+                                      .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
                                       .build()))
         .build();
   }

@@ -2,22 +2,26 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.datafetcher.AbstractConnectionDataFetcher;
-import software.wings.graphql.schema.query.QLExecutionsParameters;
+import software.wings.graphql.schema.query.QLExecutionsQueryParameters;
 import software.wings.graphql.schema.type.QLExecution;
 import software.wings.graphql.schema.type.QLExecutionConnection;
 import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionBuilder;
 
 @Slf4j
 public class ExecutionConnectionDataFetcher
-    extends AbstractConnectionDataFetcher<QLExecutionConnection, QLExecutionsParameters> {
+    extends AbstractConnectionDataFetcher<QLExecutionConnection, QLExecutionsQueryParameters> {
+  @Inject private ExecutionController executionController;
+
   @Override
-  public QLExecutionConnection fetch(QLExecutionsParameters qlQuery) {
+  public QLExecutionConnection fetch(QLExecutionsQueryParameters qlQuery) {
     final Query<WorkflowExecution> query =
         persistence.createQuery(WorkflowExecution.class).order(Sort.descending(WorkflowExecutionKeys.createdAt));
 
@@ -41,7 +45,7 @@ public class ExecutionConnectionDataFetcher
 
     QLExecutionConnectionBuilder connectionBuilder = QLExecutionConnection.builder();
     connectionBuilder.pageInfo(populate(qlQuery, query, execution -> {
-      final QLExecution qlExecution = ExecutionController.populateExecution(execution);
+      final QLExecution qlExecution = executionController.populateExecution(execution);
       connectionBuilder.node(qlExecution);
     }));
     return connectionBuilder.build();

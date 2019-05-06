@@ -31,13 +31,25 @@ enum ExecutionStatus {
   EXPIRED
 }
 
+union Cause = ExecutedBy | PipelineExecution
+
+enum ExecuteOptions {
+  WEB_UI
+}
+
+type ExecutedBy {
+  user: User
+  using: ExecuteOptions
+}
+
 interface Execution {
   id: String
   application: Application
-  triggeredAt: DateTime
+  createdAt: DateTime
   startedAt: DateTime
   endedAt: DateTime
   status: ExecutionStatus
+  cause: Cause
 }
 
 type ExecutionConnection {
@@ -53,7 +65,7 @@ type WorkflowExecution implements Execution {
   application: Application @dataFetcher(name: application, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   # DateTime when execution started
-  triggeredAt: DateTime
+  createdAt: DateTime
 
   # DateTime when execution started
   startedAt: DateTime
@@ -65,6 +77,8 @@ type WorkflowExecution implements Execution {
   status: ExecutionStatus
 
   workflow: Workflow @dataFetcher(name: workflow, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
+
+  cause: Cause
 }
 
 # Type for pipeline execution
@@ -75,7 +89,7 @@ type PipelineExecution implements Execution {
   application: Application @dataFetcher(name: application, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   # DateTime when execution started
-  triggeredAt: DateTime
+  createdAt: DateTime
 
   # DateTime when execution started
   startedAt: DateTime
@@ -87,4 +101,6 @@ type PipelineExecution implements Execution {
   status: ExecutionStatus
 
   pipeline: Pipeline @dataFetcher(name: pipeline, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
+
+  cause: Cause
 }

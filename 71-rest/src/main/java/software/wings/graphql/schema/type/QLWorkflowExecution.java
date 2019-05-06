@@ -11,8 +11,9 @@ import java.time.ZonedDateTime;
 @FieldNameConstants(innerTypeName = "QLWorkflowExecutionKeys")
 public class QLWorkflowExecution implements QLExecution {
   private String id;
-  private ZonedDateTime triggeredAt;
+  private ZonedDateTime createdAt;
   private ZonedDateTime startedAt;
   private ZonedDateTime endedAt;
   private QLExecutionStatus status;
+  private QLCause cause;
 }
