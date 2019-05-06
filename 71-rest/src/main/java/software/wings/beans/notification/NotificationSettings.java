@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 @Value
 public class NotificationSettings {
   private boolean useIndividualEmails;
+  private boolean sendMailToNewMembers;
   @NotNull private List<String> emailAddresses;
   @NotNull private SlackNotificationSetting slackConfig;
 

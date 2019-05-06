@@ -114,6 +114,7 @@ import software.wings.beans.UserInviteSource;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.marketplace.MarketPlaceConstants;
+import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -817,7 +818,12 @@ public class UserServiceImpl implements UserService {
       if (!userGroupMembers.contains(user)) {
         userGroupMembers.add(user);
         userGroupService.updateMembers(userGroup, false);
-        newUserGroups.add(userGroup.getUuid());
+        NotificationSettings notificationSettings = userGroup.getNotificationSettings();
+        if (null == notificationSettings) {
+          logger.error("Notification settings not found for user group id: [{}]", userGroup.getUuid());
+        } else if (notificationSettings.isSendMailToNewMembers()) {
+          newUserGroups.add(userGroup.getUuid());
+        }
       }
     }
 

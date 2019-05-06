@@ -12,6 +12,7 @@ import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.DeleteOrphanNotificationGroups;
+import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SendInviteUrlForAllUserInvites;
@@ -55,6 +56,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(23, MigrateLogDataRecordsToGoogle.class))
         .add(Pair.of(24, SetEmailToIndividualMemberFlag.class))
         .add(Pair.of(25, SetEmailToIndividualMemberFlag.class))
+        .add(Pair.of(26, MarkSendMailFlagAsTrueInUserGroup.class))
         .build();
   }
 }

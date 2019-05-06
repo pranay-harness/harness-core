@@ -13,6 +13,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
@@ -54,6 +55,7 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.USER)
 @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+@Slf4j
 public class UserGroupResource {
   private UserGroupService userGroupService;
   private UserService userService;
@@ -206,7 +208,12 @@ public class UserGroupResource {
 
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
-    return getPublicUserGroup(userGroupService.updateMembers(userGroup, true));
+
+    boolean sendMailToNewMembers = true;
+    if (null != existingGroup.getNotificationSettings()) {
+      sendMailToNewMembers = existingGroup.getNotificationSettings().isSendMailToNewMembers();
+    }
+    return getPublicUserGroup(userGroupService.updateMembers(userGroup, sendMailToNewMembers));
   }
 
   /**
