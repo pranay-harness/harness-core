@@ -29,7 +29,6 @@ import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.YamlPayload;
@@ -39,7 +38,6 @@ public class AuditServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService mockFeatureFlagService;
   @Mock private YamlResourceService mockYamlResourceService;
   @Mock private WingsPersistence mockWingsPersistence;
-  @Mock private YamlHelper mockYamlHelper;
 
   @Inject @InjectMocks protected AuditServiceImpl auditServiceImpl;
 
@@ -52,7 +50,7 @@ public class AuditServiceImplTest extends WingsBaseTest {
     doReturn(mockResource).when(mockRestResponse).getResource();
     final String YAML_CONTENT = "YamlContent";
     doReturn(YAML_CONTENT).when(mockResource).getYaml();
-    doReturn("YamlPath").when(mockYamlHelper).getYamlPathForEntity(any());
+    doReturn("YamlPath").when(mockEntityHelper).getFullYamlPathForEntity(any(), any());
     auditServiceImpl.saveEntityYamlForAudit(anApplication().build(),
         EntityAuditRecord.builder().appId(APP_ID).entityId(APP_ID).entityType(EntityType.APPLICATION.name()).build(),
         ACCOUNT_ID);

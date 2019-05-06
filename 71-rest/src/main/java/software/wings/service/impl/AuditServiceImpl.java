@@ -53,8 +53,8 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
@@ -85,13 +85,12 @@ public class AuditServiceImpl implements AuditService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;
   @Inject private YamlResourceService yamlResourceService;
-  @Inject private YamlHelper yamlHelper;
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities =
-      newHashSet(EntityType.SERVICE_VARIABLE.name(), EntityType.TRIGGER.name(), EntityType.ROLE.name(),
-          EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(), EntityType.MANIFEST_FILE.name());
+  private static Set<String> nonYamlEntities = newHashSet(EntityType.SERVICE_VARIABLE.name(), EntityType.TRIGGER.name(),
+      EntityType.ROLE.name(), EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
+      EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name());
 
   /**
    * Instantiates a new audit service impl.
@@ -156,8 +155,10 @@ public class AuditServiceImpl implements AuditService {
         entityAuditYamls.forEach(yaml -> {
           if (yaml.getUuid().equals(recordForPath.get().getEntityOldYamlRecordId())) {
             builder.oldYaml(yaml.getYamlContent());
+            builder.oldYamlPath(yaml.getYamlPath());
           } else if (yaml.getUuid().equals(recordForPath.get().getEntityNewYamlRecordId())) {
             builder.newYaml(yaml.getYamlContent());
+            builder.newYamlPath(yaml.getYamlPath());
           }
         });
       }
@@ -407,23 +408,25 @@ public class AuditServiceImpl implements AuditService {
       return EMPTY;
     }
     String yamlContent;
+    String yamlPath;
     try {
-      YamlPayload resource;
-      if (entity instanceof SettingAttribute
+      if (entity instanceof ManifestFile) {
+        yamlContent = ((ManifestFile) entity).getFileContent();
+      } else if (entity instanceof SettingAttribute
           && SettingVariableTypes.STRING.name().equals(((SettingAttribute) entity).getValue().getType())) {
-        resource = yamlResourceService.getDefaultVariables(accountId, record.getAppId()).getResource();
+        YamlPayload resource = yamlResourceService.getDefaultVariables(accountId, record.getAppId()).getResource();
+        yamlContent = resource.getYaml();
       } else {
-        resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
+        YamlPayload resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
+        yamlContent = resource.getYaml();
       }
-      yamlContent = resource.getYaml();
-      String yamlPath = yamlHelper.getYamlPathForEntity(entity);
-      if (isNotEmpty(yamlPath)) {
-        record.setYamlPath(yamlPath);
-      }
+      yamlPath = entityHelper.getFullYamlPathForEntity(entity, record);
+      record.setYamlPath(yamlPath);
     } catch (Exception ex) {
       yamlContent =
           format("Exception: [%s] while generating Yamls for entityId: [%s], entityType: [%s], accountId: [%s]",
               ex.getMessage(), record.getEntityId(), record.getEntityType(), accountId);
+      yamlPath = EMPTY;
       logger.error(yamlContent, ex);
     }
     EntityYamlRecord yamlRecord = EntityYamlRecord.builder()
@@ -431,6 +434,7 @@ public class AuditServiceImpl implements AuditService {
                                       .createdAt(currentTimeMillis())
                                       .entityId(record.getEntityId())
                                       .entityType(record.getEntityType())
+                                      .yamlPath(yamlPath)
                                       .yamlSha(sha1Hex(yamlContent))
                                       .yamlContent(yamlContent)
                                       .build();

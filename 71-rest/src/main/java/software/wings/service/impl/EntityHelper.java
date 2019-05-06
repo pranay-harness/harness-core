@@ -3,19 +3,25 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.APP_ID_KEY;
+import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME;
+import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.PCF_MANIFEST_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME;
+import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.context.GlobalContextData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
@@ -23,7 +29,7 @@ import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.UuidAccess;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -93,6 +99,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -102,16 +109,20 @@ import java.util.List;
 @Singleton
 public class EntityHelper {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private YamlHelper yamlHelper;
+  private static final String DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT =
+      "Setup/Application/%s/Services/%s/Deloyment Specifications/%s.yaml";
+  private static final String COMMANDS_YAML_PATH_FORMAT = "Setup/Application/%s/Services/%s/Commands/%s.yaml";
 
   public <T extends UuidAccess> void loadMetaDataForEntity(T entity, EntityAuditRecordBuilder builder, Type type) {
     String entityId = entity.getUuid();
-    String entityType = StringUtils.EMPTY;
-    String entityName = StringUtils.EMPTY;
-    String appId = StringUtils.EMPTY;
-    String appName = StringUtils.EMPTY;
-    String affectedResourceId = StringUtils.EMPTY;
-    String affectedResourceName = StringUtils.EMPTY;
-    String affectedResourceType = StringUtils.EMPTY;
+    String entityType = EMPTY;
+    String entityName = EMPTY;
+    String appId = EMPTY;
+    String appName = EMPTY;
+    String affectedResourceId = EMPTY;
+    String affectedResourceName = EMPTY;
+    String affectedResourceType = EMPTY;
 
     String affectedResourceOperation = Type.UPDATE.name();
 
@@ -314,8 +325,7 @@ public class EntityHelper {
       }
       affectedResourceId = settingAttribute.getUuid();
       affectedResourceName = settingAttribute.getName();
-      affectedResourceType =
-          settingAttribute.getCategory() != null ? settingAttribute.getCategory().name() : StringUtils.EMPTY;
+      affectedResourceType = settingAttribute.getCategory() != null ? settingAttribute.getCategory().name() : EMPTY;
       affectedResourceOperation = type.name();
     } else if (entity instanceof ServiceCommand) {
       ServiceCommand serviceCommand = (ServiceCommand) entity;
@@ -611,6 +621,112 @@ public class EntityHelper {
       return "String Value";
     } else {
       return settingValue.getClass().getSimpleName();
+    }
+  }
+
+  @VisibleForTesting
+  String getYamlPathForDeploymentSpecification(Object entity, EntityAuditRecord record) {
+    if (entity instanceof HelmChartSpecification) {
+      // In the case of HelmChartSpecification, the actual entity is
+      // ApplicationManifest. Here we return empty
+      return EMPTY;
+    } else if (entity instanceof PcfServiceSpecification) {
+      return format(DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT, record.getAppName(), record.getAffectedResourceName(),
+          PCF_MANIFEST_YAML_FILE_NAME);
+    } else if (entity instanceof LambdaSpecification) {
+      return format(DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT, record.getAppName(), record.getAffectedResourceName(),
+          LAMBDA_SPEC_YAML_FILE_NAME);
+    } else if (entity instanceof UserDataSpecification) {
+      return format(DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT, record.getAppName(), record.getAffectedResourceName(),
+          USER_DATA_SPEC_YAML_FILE_NAME);
+    } else if (entity instanceof EcsServiceSpecification) {
+      return format(DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT, record.getAppName(), record.getAffectedResourceName(),
+          ECS_SERVICE_SPEC_YAML_FILE_NAME);
+    } else if (entity instanceof EcsContainerTask) {
+      return format(DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT, record.getAppName(), record.getAffectedResourceName(),
+          ECS_CONTAINER_TASK_YAML_FILE_NAME);
+    } else if (entity instanceof KubernetesContainerTask) {
+      return format(DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT, record.getAppName(), record.getAffectedResourceName(),
+          KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME);
+    } else if (entity instanceof ServiceCommand) {
+      return format(COMMANDS_YAML_PATH_FORMAT, record.getAppName(), record.getAffectedResourceName(),
+          ((ServiceCommand) entity).getName());
+    } else {
+      String errorMessage =
+          format("Unrecognized class name while getting Yaml path for class: [%s]", entity.getClass().getSimpleName());
+      logger.error(errorMessage, new Exception());
+      return EMPTY;
+    }
+  }
+
+  public String getFullYamlPathForEntity(Object entity, EntityAuditRecord record) {
+    try {
+      if (entity == null) {
+        return EMPTY;
+      }
+
+      // Deployment specs
+      if (entity instanceof HelmChartSpecification || entity instanceof PcfServiceSpecification
+          || entity instanceof LambdaSpecification || entity instanceof UserDataSpecification
+          || entity instanceof EcsContainerTask || entity instanceof EcsServiceSpecification
+          || entity instanceof KubernetesContainerTask || entity instanceof ServiceCommand) {
+        return getYamlPathForDeploymentSpecification(entity, record);
+      }
+
+      String yamlPrefix = yamlHelper.getYamlPathForEntity(entity);
+      if (isEmpty(yamlPrefix)) {
+        return EMPTY;
+      }
+      String finalYaml = EMPTY;
+      if (entity instanceof Environment) {
+        Environment environment = (Environment) entity;
+        finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+      } else if (entity instanceof Pipeline) {
+        Pipeline pipeline = (Pipeline) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, pipeline.getName(), YAML_EXTENSION);
+      } else if (entity instanceof Application) {
+        Application application = (Application) entity;
+        finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+      } else if (entity instanceof InfrastructureMapping) {
+        InfrastructureMapping mapping = (InfrastructureMapping) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, mapping.getName(), YAML_EXTENSION);
+      } else if (entity instanceof Workflow) {
+        Workflow workflow = (Workflow) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, workflow.getName(), YAML_EXTENSION);
+      } else if (entity instanceof InfrastructureProvisioner) {
+        InfrastructureProvisioner provisioner = (InfrastructureProvisioner) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, provisioner.getName(), YAML_EXTENSION);
+      } else if (entity instanceof ArtifactStream) {
+        ArtifactStream artifactStream = (ArtifactStream) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, artifactStream.getName(), YAML_EXTENSION);
+      } else if (entity instanceof Service) {
+        Service service = (Service) entity;
+        finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+      } else if (entity instanceof ConfigFile) {
+        ConfigFile configFile = (ConfigFile) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, configFile.getFileName(), YAML_EXTENSION);
+      } else if (entity instanceof SettingAttribute) {
+        SettingAttribute settingAttribute = (SettingAttribute) entity;
+        SettingValue settingValue = settingAttribute.getValue();
+        if (SettingVariableTypes.STRING.name().equals(settingValue.getType())) {
+          finalYaml = format("Setup/Applications/%s/%s", record.getAppName(), DEFAULTS_YAML);
+        } else {
+          finalYaml = format("%s/%s%s", yamlPrefix, settingAttribute.getName(), YAML_EXTENSION);
+        }
+      } else if (entity instanceof ApplicationManifest) {
+        ApplicationManifest applicationManifest = (ApplicationManifest) entity;
+        finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+      } else if (entity instanceof ManifestFile) {
+        ManifestFile manifestFile = (ManifestFile) entity;
+        finalYaml = format("%s/%s", yamlPrefix, manifestFile.getFileName());
+      } else {
+        finalYaml = yamlPrefix;
+      }
+      return finalYaml;
+    } catch (InvalidRequestException ex) {
+      logger.error(format("Exception while getting Yaml path for entity id: [%s] of class: [%s]",
+          ((UuidAccess) entity).getUuid(), entity.getClass().getSimpleName()));
+      return EMPTY;
     }
   }
 }
