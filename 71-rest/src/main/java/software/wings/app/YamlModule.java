@@ -129,6 +129,7 @@ import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactS
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.GcsHelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.GitConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HelmRepoYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HttpHelmRepoConfigYamlHandler;
@@ -272,6 +273,8 @@ public class YamlModule extends AbstractModule {
         .to(HttpHelmRepoConfigYamlHandler.class);
     helmRepoYamlHandlerMapBinder.addBinding(SettingVariableTypes.AMAZON_S3_HELM_REPO.name())
         .to(AmazonS3HelmRepoConfigYamlHandler.class);
+    helmRepoYamlHandlerMapBinder.addBinding(SettingVariableTypes.GCS_HELM_REPO.name())
+        .to(GcsHelmRepoConfigYamlHandler.class);
 
     MapBinder<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VerificationProviderYamlHandler.class);
