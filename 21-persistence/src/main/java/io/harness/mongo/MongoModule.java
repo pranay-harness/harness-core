@@ -5,7 +5,8 @@ import static io.harness.mongo.IndexManagement.ensureIndex;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
+import com.google.inject.Provides;
+import com.google.inject.name.Named;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
@@ -90,20 +91,26 @@ public class MongoModule extends AbstractModule {
     ensureIndex(primaryDatastore, morphia);
   }
 
-  /* (non-Javadoc)
-   * @see com.google.inject.AbstractModule#configure()
-   */
+  @Provides
+  @Named("primaryDatastore")
+  public AdvancedDatastore primaryDatastore() {
+    return primaryDatastore;
+  }
+
+  @Provides
+  @Named("secondaryDatastore")
+  public AdvancedDatastore secondaryDatastore() {
+    return secondaryDatastore;
+  }
+
+  @Provides
+  public DistributedLockSvc distributedLockSvc() {
+    return distributedLockSvc;
+  }
+
   @Override
   protected void configure() {
-    bind(AdvancedDatastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
-    bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
-    bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
-
     // Dummy kryo initialization trigger to make sure it is in good condition
     KryoUtils.asBytes(1);
-
-    // TODO: this should be enabled when all wingsPersistence functionality is promoted to MongoPersistence and the
-    //       class is removed. Till then we are binding the HPersistence to the wingsPersistence instance.
-    // bind(HPersistence.class).to(MongoPersistence.class);
   }
 }
