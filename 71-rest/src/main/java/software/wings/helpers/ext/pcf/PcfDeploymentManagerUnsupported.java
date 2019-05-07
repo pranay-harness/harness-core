@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
 
@@ -23,8 +24,8 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath)
-      throws PivotalClientApiException {
+  public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 

@@ -16,6 +16,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.Collections;
 import java.util.List;
@@ -51,10 +52,10 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
-  public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath)
-      throws PivotalClientApiException {
+  public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     try {
-      pcfClient.pushApplicationUsingManifest(pcfRequestConfig, manifestFilePath);
+      pcfClient.pushApplicationUsingManifest(pcfRequestConfig, manifestFilePath, executionLogCallback);
       return getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);

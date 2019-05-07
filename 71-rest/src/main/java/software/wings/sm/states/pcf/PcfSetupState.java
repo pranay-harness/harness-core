@@ -35,6 +35,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -57,6 +58,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -93,6 +95,7 @@ public class PcfSetupState extends State {
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private ServiceHelper serviceHelper;
   @Inject private transient ActivityHelperService activityHelperService;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   @Inject @Transient protected transient LogService logService;
   @DefaultValue("${app.name}__${service.name}__${env.name}")
@@ -278,6 +281,7 @@ public class PcfSetupState extends State {
       serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }
 
+    boolean useCliForSetup = featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, app.getAccountId());
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
             .activityId(activity.getUuid())
@@ -301,6 +305,7 @@ public class PcfSetupState extends State {
             .blueGreen(blueGreen)
             .olderActiveVersionCountToKeep(
                 olderActiveVersionCountToKeep == null ? Integer.valueOf(3) : olderActiveVersionCountToKeep)
+            .useCLIForPcfAppCreation(useCliForSetup)
             .build();
 
     PcfSetupStateExecutionData stateExecutionData =

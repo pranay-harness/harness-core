@@ -29,9 +29,10 @@ public class PcfCommandRollbackRequest extends PcfCommandRequest {
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       List<PcfServiceData> instanceData, ResizeStrategy resizeStrategy, List<String> routeMaps,
       List<String> tempRouteMaps, Integer timeoutIntervalInMin, List<PcfAppSetupTimeDetails> appsToBeDownSized,
-      PcfAppSetupTimeDetails newApplicationDetails, boolean isStandardBlueGreenWorkflow) {
+      PcfAppSetupTimeDetails newApplicationDetails, boolean isStandardBlueGreenWorkflow,
+      boolean useCLIForPcfAppCreation) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin);
+        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation);
     this.instanceData = instanceData;
     this.resizeStrategy = resizeStrategy;
     this.routeMaps = routeMaps;

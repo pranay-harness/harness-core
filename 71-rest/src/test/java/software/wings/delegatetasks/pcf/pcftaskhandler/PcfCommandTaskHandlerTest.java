@@ -172,11 +172,11 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                  .runningInstances(0)
                  .build())
         .when(pcfDeploymentManager)
-        .createApplication(any(), any());
+        .createApplication(any(), any(), any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfSetupCommandTaskHandler.executeTask(pcfCommandRequest, null);
-    verify(pcfDeploymentManager, times(1)).createApplication(any(), any());
+    verify(pcfDeploymentManager, times(1)).createApplication(any(), any(), any());
     verify(pcfDeploymentManager, times(3)).deleteApplication(any());
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
 
