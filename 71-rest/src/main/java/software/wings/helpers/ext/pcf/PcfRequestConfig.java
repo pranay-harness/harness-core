@@ -21,4 +21,5 @@ public class PcfRequestConfig {
   private Map<String, String> serviceVariables;
   Map<String, String> safeDisplayServiceVariables;
   private int timeOutIntervalInMins;
+  private boolean useCLIForAppCreate;
 }

@@ -14,9 +14,10 @@ public class PcfCommandRouteUpdateRequest extends PcfCommandRequest {
   @Builder
   public PcfCommandRouteUpdateRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
-      Integer timeoutIntervalInMin, PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData) {
+      Integer timeoutIntervalInMin, PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData,
+      boolean useCLIForPcfAppCreation) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin);
+        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation);
     this.pcfRouteUpdateConfigData = pcfRouteUpdateConfigData;
   }
 }

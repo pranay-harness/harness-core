@@ -36,7 +36,7 @@ import software.wings.utils.ServiceVersionConvention;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -70,6 +70,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                               .password(String.valueOf(pcfConfig.getPassword()))
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
+                                              .useCLIForAppCreate(pcfCommandSetupRequest.isUseCLIForPcfAppCreation())
                                               .build();
 
       executionLogCallback.saveExecutionLog("\n# Fetching all existing applications ");
@@ -125,8 +126,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       pcfRequestConfig.setServiceVariables(pcfCommandSetupRequest.getServiceVariables());
       pcfRequestConfig.setSafeDisplayServiceVariables(pcfCommandSetupRequest.getSafeDisplayServiceVariables());
 
-      ApplicationDetail newApplication =
-          pcfDeploymentManager.createApplication(pcfRequestConfig, manifestYamlFile.getAbsolutePath());
+      ApplicationDetail newApplication = pcfDeploymentManager.createApplication(
+          pcfRequestConfig, manifestYamlFile.getAbsolutePath(), executionLogCallback);
 
       executionLogCallback.saveExecutionLog("# Application created successfully");
       executionLogCallback.saveExecutionLog("# App Details: ");
@@ -150,8 +151,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .build();
 
       // Delete downloaded artifact and generated manifest.yaml file
-      executionLogCallback.saveExecutionLog("# Deleting any temporary files created");
-      pcfCommandTaskHelper.deleteCreatedFile(Arrays.asList(manifestYamlFile, artifactFile));
+      removeTempFilesCreated(
+          (PcfCommandSetupRequest) pcfCommandRequest, executionLogCallback, artifactFile, manifestYamlFile);
 
       executionLogCallback.saveExecutionLog("\n ----------  PCF Setup process completed successfully");
       return PcfCommandExecutionResponse.builder()
@@ -169,6 +170,23 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(e))
           .build();
+    }
+  }
+
+  private void removeTempFilesCreated(PcfCommandSetupRequest pcfCommandRequest,
+      ExecutionLogCallback executionLogCallback, File artifactFile, File manifestYamlFile) {
+    try {
+      executionLogCallback.saveExecutionLog("# Deleting any temporary files created");
+      List<File> filesToBeRemoved = new ArrayList<>();
+      filesToBeRemoved.add(manifestYamlFile);
+      filesToBeRemoved.add(artifactFile);
+      if (pcfCommandRequest.isUseCLIForPcfAppCreation()) {
+        filesToBeRemoved.add(
+            new File(pcfCommandTaskHelper.generateFinalManifestFilePath(manifestYamlFile.getAbsolutePath())));
+      }
+      pcfCommandTaskHelper.deleteCreatedFile(filesToBeRemoved);
+    } catch (Exception e) {
+      logger.warn("Failed to remove temp fiels created" + e);
     }
   }
 

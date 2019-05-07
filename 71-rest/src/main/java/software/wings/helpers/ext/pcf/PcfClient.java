@@ -5,6 +5,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
+import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,8 +25,8 @@ public interface PcfClient {
   ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfige)
       throws PivotalClientApiException, InterruptedException;
 
-  void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfigs, String filePath)
-      throws PivotalClientApiException, InterruptedException;
+  void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfigs, String filePath,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException, InterruptedException;
 
   void stopApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
 

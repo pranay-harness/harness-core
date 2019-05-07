@@ -44,7 +44,7 @@ import java.util.concurrent.ExecutionException;
  */
 @Singleton
 public class PcfCommandTaskHelper {
-  private static final String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
+  public static final String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
   private static final String REPOSITORY_DIR_PATH = "./repository";
   private static final String IMAGE_FILE_LOCATION_PLACEHOLDER = "\\$\\{FILE_LOCATION}";
   private static final String APPLICATION_NAME_PLACEHOLDER = "\\$\\{APPLICATION_NAME}";
@@ -334,6 +334,10 @@ public class PcfCommandTaskHelper {
 
   public void deleteCreatedFile(List<File> files) {
     files.forEach(File::delete);
+  }
+
+  public String generateFinalManifestFilePath(String path) {
+    return path.replace(".yml", "_1.yml");
   }
 
   public String getAppPrefix(String appName) {

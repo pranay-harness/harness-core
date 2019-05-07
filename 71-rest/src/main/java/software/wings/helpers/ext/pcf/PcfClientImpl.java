@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
+import com.google.common.base.Charsets;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -41,7 +42,12 @@ import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.TokenProvider;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
+import software.wings.beans.command.ExecutionLogCallback;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -252,8 +258,8 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  public void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfig, String filePath)
-      throws PivotalClientApiException, InterruptedException {
+  public void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfig, String filePath,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
                     .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
                     .append("Creating Application: ")
@@ -266,6 +272,11 @@ public class PcfClientImpl implements PcfClient {
     ApplicationManifest applicationManifest = applicationManifests.get(0);
     applicationManifest = InitializeApplicationManifest(applicationManifest, pcfRequestConfig);
 
+    if (pcfRequestConfig.isUseCLIForAppCreate()) {
+      logger.info("Using CLI to create application");
+      performCfPushUsingCli(pcfRequestConfig, filePath, applicationManifest, executionLogCallback);
+      return;
+    }
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
     CountDownLatch latch = new CountDownLatch(1);
@@ -291,6 +302,84 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
+  private void performCfPushUsingCli(PcfRequestConfig pcfRequestConfig, String filePath,
+      ApplicationManifest applicationManifest, ExecutionLogCallback executionLogCallback)
+      throws PivotalClientApiException {
+    // Create a new filePath.
+    String finalFilePath = filePath.replace(".yml", "_1.yml");
+    ApplicationManifestUtils.write(Paths.get(finalFilePath), applicationManifest);
+
+    logManifestFile(finalFilePath, executionLogCallback);
+
+    executionLogCallback.saveExecutionLog("# Performing \"cf push\"");
+    executionLogCallback.saveExecutionLog("# LOGS: ---");
+
+    ProcessExecutor processExecutor =
+        new ProcessExecutor()
+            .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
+            // echo $PASSWORD | cf login -a api.run.pivotal.io -o $ORG -s $SPACE --skip-ssl-validation -u $USER_NAME
+            .command("/bin/sh", "-c",
+                new StringBuilder(128)
+                    .append("echo ")
+                    .append(pcfRequestConfig.getPassword())
+                    .append(" | cf login -a ")
+                    .append(pcfRequestConfig.getEndpointUrl())
+                    .append(" -o ")
+                    .append(pcfRequestConfig.getOrgName())
+                    .append(" -s ")
+                    .append(pcfRequestConfig.getSpaceName())
+                    .append(" --skip-ssl-validation -u ")
+                    .append(pcfRequestConfig.getUserName())
+                    .toString())
+            .command("sh", "-c", "cf push -f " + finalFilePath)
+            .readOutput(true)
+            .redirectOutput(new LogOutputStream() {
+              @Override
+              protected void processLine(String line) {
+                executionLogCallback.saveExecutionLog(line);
+              }
+            });
+
+    int exitCode;
+    try {
+      ProcessResult processResult = processExecutor.execute();
+      exitCode = processResult.getExitValue();
+    } catch (Exception e) {
+      throw new PivotalClientApiException(new StringBuilder()
+                                              .append("Exception occurred while creating Application: ")
+                                              .append(pcfRequestConfig.getApplicationName())
+                                              .append(", Error: App creation process Failed :  ")
+                                              .append(e)
+                                              .toString());
+    }
+
+    if (exitCode != 0) {
+      throw new PivotalClientApiException(new StringBuilder()
+                                              .append("Exception occured while creating Application: ")
+                                              .append(pcfRequestConfig.getApplicationName())
+                                              .append(", Error: App creation process ExitCode:  ")
+                                              .append(exitCode)
+                                              .toString());
+    }
+  }
+
+  private void logManifestFile(String finalFilePath, ExecutionLogCallback executionLogCallback) {
+    String content;
+    try {
+      content = new String(Files.readAllBytes(Paths.get(finalFilePath)), Charsets.UTF_8);
+      executionLogCallback.saveExecutionLog(
+          new StringBuilder(128).append("# Manifest File Content: \n").append(content).append('\n').toString());
+      logger.info(new StringBuilder(128)
+                      .append("Manifest File at Path: ")
+                      .append(finalFilePath)
+                      .append(", contents are \n")
+                      .append(content)
+                      .toString());
+    } catch (Exception e) {
+      logger.warn("Failed to log manifest file contents at path : " + finalFilePath);
+    }
+  }
+
   private ApplicationManifest InitializeApplicationManifest(
       ApplicationManifest applicationManifest, PcfRequestConfig pcfRequestConfig) {
     ApplicationManifest.Builder builder = ApplicationManifest.builder();
@@ -306,10 +395,6 @@ public class PcfClientImpl implements PcfClient {
     if (applicationManifest.getServices() != null) {
       builder.addAllServices(applicationManifest.getServices());
     }
-
-    builder.healthCheckType(applicationManifest.getHealthCheckType());
-    builder.healthCheckHttpEndpoint(applicationManifest.getHealthCheckHttpEndpoint());
-
     // use Random route if provided no route-map is provided
     addRouteMapsToManifest(pcfRequestConfig, builder);
 
@@ -332,9 +417,13 @@ public class PcfClientImpl implements PcfClient {
         .instances(applicationManifest.getInstances())
         .memory(applicationManifest.getMemory())
         .name(pcfRequestConfig.getApplicationName())
-        .buildpack(applicationManifest.getBuildpack())
         .path(applicationManifest.getPath())
         .instances(0)
+        .healthCheckType(applicationManifest.getHealthCheckType())
+        .healthCheckHttpEndpoint(applicationManifest.getHealthCheckHttpEndpoint())
+        .stack(applicationManifest.getStack())
+        .timeout(applicationManifest.getTimeout())
+        .domains(applicationManifest.getDomains())
         .build();
   }
 

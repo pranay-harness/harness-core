@@ -18,6 +18,7 @@ public class PcfCommandRequest {
   private PcfConfig pcfConfig;
   private String workflowExecutionId;
   private Integer timeoutIntervalInMin;
+  private boolean useCLIForPcfAppCreation;
 
   public enum PcfCommandType { SETUP, RESIZE, ROLLBACK, UPDATE_ROUTE, DATAFETCH, VALIDATE, APP_DETAILS, CREATE_ROUTE }
 }
