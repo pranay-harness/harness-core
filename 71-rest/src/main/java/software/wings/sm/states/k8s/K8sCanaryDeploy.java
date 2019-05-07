@@ -41,6 +41,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +68,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
   @Getter @Setter @Attributes(title = "Instances") private String instances;
   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
+  @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
 
   @Override
   public String commandName() {
@@ -101,7 +103,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
             .k8sTaskType(K8sTaskType.CANARY_DEPLOY)
             .instances(Integer.valueOf(context.renderExpression(this.instances)))
             .instanceUnitType(this.instanceUnitType)
-            .timeoutIntervalInMin(10)
+            .timeoutIntervalInMin(stateTimeoutInMinutes)
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))

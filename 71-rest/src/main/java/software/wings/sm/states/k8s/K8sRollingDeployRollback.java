@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -16,6 +17,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
@@ -39,6 +42,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 
 import java.util.Map;
 
@@ -58,6 +62,8 @@ public class K8sRollingDeployRollback extends State {
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
+
+  @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
 
   public K8sRollingDeployRollback(String name) {
     super(name, K8S_DEPLOYMENT_ROLLING_ROLLBACK.name());
@@ -88,7 +94,7 @@ public class K8sRollingDeployRollback extends State {
                                                 .releaseNumber(k8sContextElement.getReleaseNumber())
                                                 .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
-                                                .timeoutIntervalInMin(10)
+                                                .timeoutIntervalInMin(stateTimeoutInMinutes)
                                                 .build();
 
       return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);

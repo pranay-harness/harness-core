@@ -44,6 +44,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 
 import java.util.Map;
 
@@ -72,6 +73,7 @@ public class K8sScale extends State {
   @Getter @Setter @Attributes(title = "Instances") private String instances;
   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
+  @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -96,7 +98,7 @@ public class K8sScale extends State {
                                                 .instanceUnitType(this.instanceUnitType)
                                                 .maxInstances(maxInstances)
                                                 .skipSteadyStateCheck(this.skipSteadyStateCheck)
-                                                .timeoutIntervalInMin(10)
+                                                .timeoutIntervalInMin(stateTimeoutInMinutes)
                                                 .build();
 
       return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);

@@ -365,6 +365,12 @@ public class K8sStateHelper {
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
 
+    long taskTimeout = DEFAULT_ASYNC_CALL_TIMEOUT;
+
+    if (k8sTaskParameters.getTimeoutIntervalInMin() != null) {
+      taskTimeout = k8sTaskParameters.getTimeoutIntervalInMin() * 60L * 1000L;
+    }
+
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -375,7 +381,7 @@ public class K8sStateHelper {
                                     .data(TaskData.builder()
                                               .taskType(TaskType.K8S_COMMAND_TASK.name())
                                               .parameters(new Object[] {k8sTaskParameters})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .timeout(taskTimeout)
                                               .build())
                                     .envId(env.getUuid())
                                     .infrastructureMappingId(infraMapping.getUuid())
