@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.DelegateRunnableTask;
@@ -16,6 +15,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.ErrorNotifyResponseData;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
@@ -37,7 +37,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   private String taskId;
   private String taskType;
   private boolean isAsync;
-  private Object[] parameters;
+  @Getter private Object[] parameters;
   private Consumer<DelegateTaskResponse> consumer;
   private Supplier<Boolean> preExecute;
 
@@ -142,11 +142,6 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   public String getAppId() {
     return appId;
-  }
-
-  @SuppressFBWarnings("EI_EXPOSE_REP")
-  public Object[] getParameters() {
-    return parameters;
   }
 
   public String getTaskType() {
