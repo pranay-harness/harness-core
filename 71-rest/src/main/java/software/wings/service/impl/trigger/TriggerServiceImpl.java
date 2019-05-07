@@ -62,6 +62,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -100,6 +101,7 @@ import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -138,6 +140,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Value
   @Builder
@@ -256,6 +259,80 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
+  public void triggerExecutionPostArtifactCollectionAsync(
+      String accountId, String appId, String artifactStreamId, List<Artifact> artifacts) {
+    executorService.execute(() -> {
+      if (featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, accountId)) {
+        triggerExecutionPostArtifactCollectionForAllArtifacts(appId, artifactStreamId, artifacts);
+      } else {
+        triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts);
+      }
+    });
+  }
+
+  private void triggerExecutionPostArtifactCollectionForAllArtifacts(
+      String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
+    if (isEmpty(collectedArtifacts)) {
+      return;
+    }
+    triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
+      logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
+          artifactStreamId);
+      ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+      List<Artifact> artifacts = new ArrayList<>();
+      if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
+        logger.info("No artifact filter set. Triggering with all artifacts");
+        artifacts.addAll(collectedArtifacts);
+      } else {
+        logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
+            artifactTriggerCondition.getArtifactFilter());
+        List<Artifact> matchedArtifacts =
+            collectedArtifacts.stream()
+                .filter(artifact
+                    -> triggerServiceHelper.checkArtifactMatchesArtifactFilter(trigger.getUuid(), artifact,
+                        artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
+                .collect(Collectors.toList());
+        if (isNotEmpty(matchedArtifacts)) {
+          logger.info("Matched artifacts size {}", matchedArtifacts.size());
+          artifacts.addAll(matchedArtifacts);
+        } else {
+          logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
+        }
+      }
+      if (isEmpty(artifacts)) {
+        logger.warn(
+            "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
+            artifactTriggerCondition);
+        return;
+      }
+      List<Artifact> artifactsFromSelections = new ArrayList<>();
+      if (isNotEmpty(trigger.getArtifactSelections())) {
+        logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
+        addArtifactsFromSelections(trigger.getAppId(), trigger, artifactsFromSelections);
+      }
+      if (isNotEmpty(artifacts)) {
+        logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+            artifacts.stream().map(Artifact::getUuid).collect(toList()));
+        for (Artifact artifact : artifacts) {
+          logger.info("Triggering deployment with artifact {}", artifact.getUuid());
+          try {
+            artifactsFromSelections.add(artifact);
+            triggerDeployment(artifactsFromSelections, trigger, null);
+          } catch (WingsException exception) {
+            exception.addContext(Application.class, trigger.getAppId());
+            exception.addContext(ArtifactStream.class, artifactStreamId);
+            exception.addContext(Trigger.class, trigger.getUuid());
+            ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+          }
+        }
+      } else {
+        logger.info("No Artifacts matched. Hence Skipping the deployment");
+        return;
+      }
+    });
+  }
+
+  @Override
   public void triggerExecutionPostPipelineCompletionAsync(String appId, String sourcePipelineId) {
     executorService.submit(() -> triggerExecutionPostPipelineCompletion(appId, sourcePipelineId));
   }
@@ -332,7 +409,6 @@ public class TriggerServiceImpl implements TriggerService {
           artifactStreamId);
       ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
       List<Artifact> artifacts = new ArrayList<>();
-
       if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
         logger.info("No artifact filter set. Triggering with the collected artifact {}",
             collectedArtifacts.get(collectedArtifacts.size() - 1).getUuid());

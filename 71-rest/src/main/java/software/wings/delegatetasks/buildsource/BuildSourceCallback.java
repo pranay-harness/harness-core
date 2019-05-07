@@ -102,7 +102,7 @@ public class BuildSourceCallback implements NotifyCallback {
           if (isNotEmpty(artifacts)) {
             logger.info("[{}] new artifacts collected for artifactStreamId {}",
                 artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
-            triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
+            triggerService.triggerExecutionPostArtifactCollectionAsync(accountId, appId, artifactStreamId, artifacts);
           }
         } catch (WingsException ex) {
           ex.addContext(Application.class, appId);

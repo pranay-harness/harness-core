@@ -84,6 +84,9 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
 
   void triggerExecutionPostArtifactCollectionAsync(String appId, String artifactStreamId, List<Artifact> artifacts);
 
+  void triggerExecutionPostArtifactCollectionAsync(
+      String accountId, String appId, String artifactStreamId, List<Artifact> artifacts);
+
   /**
    * Trigger post pipeline completion async
    *
