@@ -30,6 +30,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -92,7 +93,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     ApplicationManifest manifest = wingsPersistence.createQuery(ApplicationManifest.class)
                                        .filter(ApplicationManifest.APP_ID_KEY, APP_ID)
-                                       .filter(ApplicationManifest.SERVICE_ID_KEY, SERVICE_ID)
+                                       .filter(ApplicationManifestKeys.serviceId, SERVICE_ID)
                                        .get();
 
     assertThat(manifest).isEqualTo(savedManifest);
@@ -110,7 +111,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     ApplicationManifest manifest = wingsPersistence.createQuery(ApplicationManifest.class)
                                        .filter(ApplicationManifest.APP_ID_KEY, APP_ID)
-                                       .filter(ApplicationManifest.SERVICE_ID_KEY, SERVICE_ID)
+                                       .filter(ApplicationManifestKeys.serviceId, SERVICE_ID)
                                        .get();
 
     // assertThat(manifest.getManifestFiles()).isEqualTo(asList(manifestFile));

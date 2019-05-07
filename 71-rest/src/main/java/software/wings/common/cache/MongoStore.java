@@ -21,6 +21,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryFactory;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.CacheEntity;
+import software.wings.beans.CacheEntity.CacheEntityKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
@@ -57,10 +58,10 @@ public class MongoStore implements DistributedStore {
           factory
               .createQuery(
                   datastore, wingsPersistence.getCollection(CacheEntity.class, ReadPref.NORMAL), CacheEntity.class)
-              .filter(CacheEntity.CANONICAL_KEY_KEY, canonicalKey(algorithmId, structureHash, key));
+              .filter(CacheEntityKeys.canonicalKey, canonicalKey(algorithmId, structureHash, key));
 
       if (contextValue != null) {
-        entityQuery.filter(CacheEntity.CONTEXT_VALUE_KEY, contextValue);
+        entityQuery.filter(CacheEntityKeys.contextValue, contextValue);
       }
 
       final CacheEntity cacheEntity = entityQuery.get();
@@ -88,16 +89,16 @@ public class MongoStore implements DistributedStore {
     try {
       final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class, ReadPref.NORMAL);
       final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
-      updateOperations.set(CacheEntity.CONTEXT_VALUE_KEY, contextValue);
-      updateOperations.set(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
-      updateOperations.set(CacheEntity.ENTITY_KEY, KryoUtils.asDeflatedBytes(entity));
-      updateOperations.set(CacheEntity.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
+      updateOperations.set(CacheEntityKeys.contextValue, contextValue);
+      updateOperations.set(CacheEntityKeys.canonicalKey, canonicalKey);
+      updateOperations.set(CacheEntityKeys.entity, KryoUtils.asDeflatedBytes(entity));
+      updateOperations.set(CacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
 
       final Query<CacheEntity> query =
-          datastore.createQuery(CacheEntity.class).filter(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
+          datastore.createQuery(CacheEntity.class).filter(CacheEntityKeys.canonicalKey, canonicalKey);
       if (entity instanceof Ordinal) {
         // For ordinal data lets make sure we are not downgrading the cache
-        query.field(CacheEntity.CONTEXT_VALUE_KEY).lessThan(contextValue);
+        query.field(CacheEntityKeys.contextValue).lessThan(contextValue);
       }
 
       datastore.findAndModify(query, updateOperations, false, true);

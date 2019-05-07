@@ -37,7 +37,7 @@ import software.wings.common.Constants;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -78,7 +78,7 @@ public class EcsBlueGreenServiceSetup extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient SettingsService settingsService;
   @Inject private transient DelegateService delegateService;
-  @Inject private transient ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
 
@@ -99,7 +99,7 @@ public class EcsBlueGreenServiceSetup extends State {
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
     EcsSetUpDataBag dataBag = ecsStateHelper.prepareBagForEcsSetUp(context, serviceSteadyStateTimeout,
-        artifactCollectionUtil, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
+        artifactCollectionUtils, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
     Activity activity = ecsStateHelper.createActivity(context, ECS_SERVICE_SETUP_COMMAND_ELB, getStateType(),
         CommandUnitType.AWS_ECS_SERVICE_SETUP_ELB, activityService);
@@ -179,7 +179,7 @@ public class EcsBlueGreenServiceSetup extends State {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
 
-    ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
+    ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
         artifact, context.getAppId(), context.getWorkflowExecutionId());
     ContainerServiceElement containerServiceElement = ecsStateHelper.buildContainerServiceElement(context,
         setupExecutionData, executionStatus, imageDetails, getMaxInstances(), getFixedInstances(),

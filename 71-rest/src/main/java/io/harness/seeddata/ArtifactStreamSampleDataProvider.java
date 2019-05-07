@@ -11,7 +11,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 
@@ -38,36 +38,36 @@ public class ArtifactStreamSampleDataProvider {
 
       // Add one tag
       BuildDetails buildDetails =
-          ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "1");
+          ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "1");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
       // Add second tag
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "2");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "2");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "3");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "3");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "4");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "4");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "5");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "5");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "6");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "6");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "7");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "7");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "8");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "8");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
-      buildDetails = ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "9");
+      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "9");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
       buildDetails =
-          ArtifactCollectionUtil.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "latest");
+          ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "latest");
       buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
 
     } catch (Exception e) {

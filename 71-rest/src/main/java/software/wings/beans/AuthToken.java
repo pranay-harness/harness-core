@@ -6,6 +6,7 @@ import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 import io.harness.annotation.HarnessExportableEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -18,6 +19,7 @@ import java.util.Date;
 @Data
 @HarnessExportableEntity
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "AuthTokenKeys")
 public class AuthToken extends Base {
   @Transient private User user;
   private String accountId;

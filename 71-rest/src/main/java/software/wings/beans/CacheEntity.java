@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -22,12 +23,8 @@ import java.util.Date;
 })
 @Value
 @Builder
+@FieldNameConstants(innerTypeName = "CacheEntityKeys")
 public class CacheEntity {
-  public static final String CONTEXT_VALUE_KEY = "contextValue";
-  public static final String CANONICAL_KEY_KEY = "_id";
-  public static final String ENTITY_KEY = "entity";
-  public static final String VALID_UNTIL_KEY = "validUntil";
-
   private long contextValue;
   @Id private String canonicalKey;
 

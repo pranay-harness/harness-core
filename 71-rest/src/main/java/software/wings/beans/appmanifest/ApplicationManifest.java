@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -24,11 +25,8 @@ import software.wings.yaml.BaseEntityYaml;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ApplicationManifestKeys")
 public class ApplicationManifest extends Base {
-  public static final String SERVICE_ID_KEY = "serviceId";
-  public static final String ENV_ID_KEY = "envId";
-  public static final String KIND_KEY = "kind";
-
   private String serviceId;
   private String envId;
   private AppManifestKind kind;

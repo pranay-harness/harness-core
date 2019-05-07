@@ -50,12 +50,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ArtifactStreamKeys")
 public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable, NameAccess {
-  public static final String TEMPLATE_UUID_KEY = "templateUuid";
-
   protected static final String dateFormat = "HHMMSS";
 
-  public static final String NAME_KEY = "name";
-  public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
 
   private String artifactStreamType;

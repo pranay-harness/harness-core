@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.EntityType;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.template.BaseTemplate;
@@ -85,7 +86,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
     // Read all the service commands that references the given
     try (HIterator<ArtifactStream> iterator =
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
-                                 .filter(ArtifactStream.TEMPLATE_UUID_KEY, template.getUuid())
+                                 .filter(ArtifactStreamKeys.templateUuid, template.getUuid())
                                  .fetch())) {
       while (iterator.hasNext()) {
         ArtifactStream artifactStream = iterator.next();

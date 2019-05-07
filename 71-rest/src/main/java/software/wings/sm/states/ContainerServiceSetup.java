@@ -59,7 +59,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
@@ -109,7 +109,7 @@ public abstract class ContainerServiceSetup extends State {
   @Inject @Transient protected transient DelegateService delegateService;
   @Inject @Transient protected transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
-  @Inject @Transient private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject @Transient private ArtifactCollectionUtils artifactCollectionUtils;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);
@@ -130,7 +130,7 @@ public abstract class ContainerServiceSetup extends State {
                     + " Please ensure that artifact provided as part of execution either Manual or through Trigger");
       }
 
-      ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
+      ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
           artifact, context.getAppId(), context.getWorkflowExecutionId());
 
       Application app = workflowStandardParams.getApp();
@@ -281,7 +281,7 @@ public abstract class ContainerServiceSetup extends State {
     if (artifact == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
-    ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
+    ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
         artifact, context.getAppId(), context.getWorkflowExecutionId());
 
     ContainerServiceElement containerServiceElement =

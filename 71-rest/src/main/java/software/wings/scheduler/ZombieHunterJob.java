@@ -38,7 +38,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -131,7 +130,7 @@ public class ZombieHunterJob implements Job {
 
   protected static final ImmutableList<ZombieType> zombieTypes =
       ImmutableList.of(new ZombieType("applications", "accountId", asList("accounts"), null),
-          new ZombieType("artifactStream", ArtifactStream.SERVICE_ID_KEY, asList(SERVICES), null),
+          new ZombieType("artifactStream", ArtifactStreamKeys.serviceId, asList(SERVICES), null),
           new ZombieType("artifactStream", ArtifactStreamKeys.settingId, asList(SETTING_ATTRIBUTES), null),
           new ZombieType("infrastructureMapping", InfrastructureMapping.SERVICE_ID_KEY, asList(SERVICES), null),
           new ZombieType("infrastructureMapping", InfrastructureMapping.ENV_ID_KEY, asList(ENVIRONMENTS), null),

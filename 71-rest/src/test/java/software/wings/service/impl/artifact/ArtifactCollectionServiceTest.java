@@ -59,7 +59,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   @Inject @Spy private WingsPersistence wingsPersistence;
   @InjectMocks @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
-  @InjectMocks @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @InjectMocks @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Mock ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
@@ -92,7 +92,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsArtifactStream();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(jenkinsArtifactStream, jenkinsBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(jenkinsArtifactStream, jenkinsBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
 
     Artifact collectedArtifact =
@@ -113,7 +113,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                                       .settingId(SETTING_ID)
                                                       .build();
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(jenkinsArtifactStream, jenkinsBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(jenkinsArtifactStream, jenkinsBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
 
     Artifact collectedArtifact = artifactCollectionService.collectArtifact(ARTIFACT_STREAM_ID, jenkinsBuildDetails);
@@ -135,7 +135,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                                         .settingId(SETTING_ID)
                                                         .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(amazonS3ArtifactStream, s3BuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(amazonS3ArtifactStream, s3BuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
 
     Artifact collectedArtifact = artifactCollectionService.collectArtifact(APP_ID, ARTIFACT_STREAM_ID, s3BuildDetails);
@@ -170,7 +170,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(dockerArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(dockerArtifactStream, dockerBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(dockerArtifactStream, dockerBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
@@ -194,7 +194,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ecrArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(ecrArtifactStream, dockerBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(ecrArtifactStream, dockerBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
@@ -217,7 +217,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                               .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(gcrArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(gcrArtifactStream, dockerBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(gcrArtifactStream, dockerBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
@@ -240,7 +240,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                               .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(acrArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(acrArtifactStream, dockerBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(acrArtifactStream, dockerBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
@@ -264,7 +264,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                                     .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(dockerArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(dockerArtifactStream, amiBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(dockerArtifactStream, amiBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(amiBuildDetails));
 
@@ -287,7 +287,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                                   .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(nexusArtifactStream, dockerBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(nexusArtifactStream, dockerBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
@@ -311,7 +311,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                                   .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(nexusArtifactStream, dockerBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(nexusArtifactStream, dockerBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
@@ -332,7 +332,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, artifactoryArtifactStream.getServiceId(), false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(DOCKER).build());
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(artifactoryArtifactStream, dockerBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(artifactoryArtifactStream, dockerBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
@@ -354,7 +354,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, artifactoryArtifactStream.getServiceId(), false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(RPM).build());
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(artifactoryArtifactStream, artifactoryBuilds);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(artifactoryArtifactStream, artifactoryBuilds);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(artifactoryBuilds));
 
@@ -373,7 +373,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     AmazonS3ArtifactStream s3ArtifactStream = getS3ArtifactStream();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(s3ArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(s3ArtifactStream, s3BuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(s3ArtifactStream, s3BuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(s3BuildDetails));
 
@@ -390,7 +390,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsArtifactStream();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(jenkinsArtifactStream, jenkinsBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(jenkinsArtifactStream, jenkinsBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(jenkinsBuildDetails));
 
@@ -417,7 +417,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                                     .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(bambooArtifactStream);
 
-    Artifact newArtifact = artifactCollectionUtil.getArtifact(bambooArtifactStream, bambooBuildDetails);
+    Artifact newArtifact = artifactCollectionUtils.getArtifact(bambooArtifactStream, bambooBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(bambooBuildDetails));
 

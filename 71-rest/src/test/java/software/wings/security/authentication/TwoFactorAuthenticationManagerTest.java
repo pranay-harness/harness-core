@@ -48,7 +48,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock AuthService authService;
   @Inject @InjectMocks TOTPAuthHandler totpAuthHandler;
   @Inject @InjectMocks TwoFactorAuthenticationManager twoFactorAuthenticationManager;
-  @Mock AuthenticationUtil authenticationUtil;
+  @Mock AuthenticationUtils authenticationUtils;
   @Mock AccountService accountService;
 
   @Test
@@ -145,7 +145,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     User user = spy(new User());
     Account account = mock(Account.class);
     when(account.getCompanyName()).thenReturn("TestCompany");
-    when(authenticationUtil.getPrimaryAccount(user)).thenReturn(account);
+    when(authenticationUtils.getPrimaryAccount(user)).thenReturn(account);
 
     TwoFactorAuthenticationSettings settings =
         twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(user, TOTP);

@@ -6,7 +6,7 @@ import io.harness.exception.InvalidRequestException;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.OauthSettings;
-import software.wings.security.authentication.AuthenticationUtil;
+import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.saml.SSORequest;
 import software.wings.service.impl.SSOSettingServiceImpl;
 
@@ -17,7 +17,7 @@ public class OauthOptions {
   @Inject LinkedinClientImpl linkedinClient;
   @Inject GoogleClientImpl googleClient;
   @Inject AzureClientImpl azureClient;
-  @Inject AuthenticationUtil authenticationUtil;
+  @Inject AuthenticationUtils authenticationUtils;
   @Inject SSOSettingServiceImpl ssoSettingService;
   @Inject BitbucketClient bitbucketClient;
   @Inject GitlabClient gitlabClient;
@@ -48,7 +48,7 @@ public class OauthOptions {
   }
 
   public SSORequest oauthProviderRedirectionUrl(User user) throws URISyntaxException {
-    Account primaryAccount = authenticationUtil.getPrimaryAccount(user);
+    Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(primaryAccount.getUuid());
     String displayName = oauthSettings.getPublicSSOSettings().getDisplayName();
     OauthClient oauthProvider = getOauthProvider(SupportedOauthProviders.valueOf(displayName));

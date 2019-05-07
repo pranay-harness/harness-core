@@ -22,7 +22,7 @@ import java.util.EnumSet;
 import java.util.Map;
 
 @Singleton
-public class AuthenticationUtil {
+public class AuthenticationUtils {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private MainConfiguration configuration;

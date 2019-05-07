@@ -39,6 +39,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
+import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -122,9 +123,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ApplicationManifest getK8sManifestByServiceId(String appId, String serviceId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)
-                                           .filter(ApplicationManifest.ENV_ID_KEY, null)
-                                           .filter(ApplicationManifest.KIND_KEY, AppManifestKind.K8S_MANIFEST);
+                                           .filter(ApplicationManifestKeys.serviceId, serviceId)
+                                           .filter(ApplicationManifestKeys.envId, null)
+                                           .filter(ApplicationManifestKeys.kind, AppManifestKind.K8S_MANIFEST);
 
     return query.get();
   }
@@ -133,9 +134,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ApplicationManifest getByEnvId(String appId, String envId, AppManifestKind kind) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.ENV_ID_KEY, envId)
-                                           .filter(ApplicationManifest.KIND_KEY, kind)
-                                           .filter(ApplicationManifest.SERVICE_ID_KEY, null);
+                                           .filter(ApplicationManifestKeys.envId, envId)
+                                           .filter(ApplicationManifestKeys.kind, kind)
+                                           .filter(ApplicationManifestKeys.serviceId, null);
     return query.get();
   }
 
@@ -143,7 +144,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public List<ApplicationManifest> getAllByEnvId(String appId, String envId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.ENV_ID_KEY, envId);
+                                           .filter(ApplicationManifestKeys.envId, envId);
     return query.asList();
   }
 
@@ -151,8 +152,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public List<ApplicationManifest> getAllByEnvIdAndKind(String appId, String envId, AppManifestKind kind) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.ENV_ID_KEY, envId)
-                                           .filter(ApplicationManifest.KIND_KEY, kind);
+                                           .filter(ApplicationManifestKeys.envId, envId)
+                                           .filter(ApplicationManifestKeys.kind, kind);
     return query.asList();
   }
 
@@ -160,9 +161,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ApplicationManifest getByEnvAndServiceId(String appId, String envId, String serviceId, AppManifestKind kind) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.ENV_ID_KEY, envId)
-                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)
-                                           .filter(ApplicationManifest.KIND_KEY, kind);
+                                           .filter(ApplicationManifestKeys.envId, envId)
+                                           .filter(ApplicationManifestKeys.serviceId, serviceId)
+                                           .filter(ApplicationManifestKeys.kind, kind);
     return query.get();
   }
 
@@ -200,8 +201,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public List<ApplicationManifest> listAppManifests(String appId, String serviceId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)
-                                           .filter(ApplicationManifest.ENV_ID_KEY, null);
+                                           .filter(ApplicationManifestKeys.serviceId, serviceId)
+                                           .filter(ApplicationManifestKeys.envId, null);
     return query.asList();
   }
 
@@ -352,7 +353,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public void pruneByService(String appId, String serviceId) {
     ApplicationManifest applicationManifest = wingsPersistence.createQuery(ApplicationManifest.class)
                                                   .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                                  .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)
+                                                  .filter(ApplicationManifestKeys.serviceId, serviceId)
                                                   .get();
 
     if (applicationManifest != null) {
@@ -660,9 +661,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)
-                                           .filter(ApplicationManifest.ENV_ID_KEY, null)
-                                           .filter(ApplicationManifest.KIND_KEY, kind);
+                                           .filter(ApplicationManifestKeys.serviceId, serviceId)
+                                           .filter(ApplicationManifestKeys.envId, null)
+                                           .filter(ApplicationManifestKeys.kind, kind);
 
     return query.get();
   }

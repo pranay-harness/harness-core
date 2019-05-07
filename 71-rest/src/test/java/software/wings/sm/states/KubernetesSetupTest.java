@@ -101,7 +101,7 @@ import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -149,7 +149,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
-  @Mock private ArtifactCollectionUtil artifactCollectionUtil;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
@@ -290,7 +290,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
-    when(artifactCollectionUtil.fetchContainerImageDetails(artifact, app.getUuid(), context.getWorkflowExecutionId()))
+    when(artifactCollectionUtils.fetchContainerImageDetails(artifact, app.getUuid(), context.getWorkflowExecutionId()))
         .thenReturn(ImageDetails.builder().name(artifactStream.getSourceName()).tag(artifact.getBuildNo()).build());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 

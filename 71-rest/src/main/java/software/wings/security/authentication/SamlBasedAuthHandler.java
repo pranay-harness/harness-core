@@ -36,7 +36,7 @@ import java.util.Optional;
 @Slf4j
 public class SamlBasedAuthHandler implements AuthHandler {
   @Inject private SamlClientService samlClientService;
-  @Inject private AuthenticationUtil authenticationUtil;
+  @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SamlUserGroupSync samlUserGroupSync;
   @Inject private SSOSettingService ssoSettingService;
 
@@ -50,7 +50,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
       String samlResponseString = credentials[1];
 
       User user = decodeResponseAndReturnUser(idpUrl, samlResponseString);
-      Account account = authenticationUtil.getPrimaryAccount(user);
+      Account account = authenticationUtils.getPrimaryAccount(user);
       SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
       if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {
@@ -215,7 +215,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
     SamlResponse samlResponse = samlClient.decodeAndValidateSamlResponse(samlResponseString);
     String nameId = samlResponse.getNameID();
     try {
-      User user = authenticationUtil.getUser(nameId);
+      User user = authenticationUtils.getUser(nameId);
       validateUser(user, samlSettings.getAccountId());
       return user;
     } catch (WingsException e) {

@@ -49,7 +49,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Mock private WingsPersistence WINGS_PERSISTENCE;
   @Mock private AccountService ACCOUNT_SERVICE;
   @Mock private SSOSettingService SSO_SETTING_SERVICE;
-  @Mock private AuthenticationUtil AUTHENTICATION_UTL;
+  @Mock private AuthenticationUtils AUTHENTICATION_UTL;
   @Mock private AuthService AUTHSERVICE;
   @Mock private FeatureFlagService FEATURE_FLAG_SERVICE;
 

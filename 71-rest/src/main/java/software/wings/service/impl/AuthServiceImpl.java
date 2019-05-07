@@ -50,6 +50,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
+import software.wings.beans.AuthToken.AuthTokenKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Permission;
@@ -413,8 +414,9 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void invalidateAllTokensForUser(String userId) {
-    List<Key<AuthToken>> keyList =
-        wingsPersistence.createQuery(AuthToken.class, excludeAuthority).filter("userId", userId).asKeyList();
+    List<Key<AuthToken>> keyList = wingsPersistence.createQuery(AuthToken.class, excludeAuthority)
+                                       .filter(AuthTokenKeys.userId, userId)
+                                       .asKeyList();
     keyList.forEach(authToken -> invalidateToken(authToken.getId().toString()));
   }
 
