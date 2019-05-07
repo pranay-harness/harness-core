@@ -60,7 +60,7 @@ type Environment {
   createdAt: DateTime
   createdBy: User
   instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: instancesByEnvironment, contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
+    @dataFetcher(name: instanceConnection, contextFieldArgsMap: "{ \"environmentId\": \"id\"}")
 }
 
 type EnvironmentConnection {
@@ -134,7 +134,7 @@ type Service {
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
 
   instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: instancesByService, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+    @dataFetcher(name: instanceConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
 }
 
 type ServiceConnection {
