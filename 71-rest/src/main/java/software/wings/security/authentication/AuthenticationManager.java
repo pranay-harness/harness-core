@@ -53,7 +53,7 @@ public class AuthenticationManager {
   @Inject private PasswordBasedAuthHandler passwordBasedAuthHandler;
   @Inject private SamlBasedAuthHandler samlBasedAuthHandler;
   @Inject private LdapBasedAuthHandler ldapBasedAuthHandler;
-  @Inject private AuthenticationUtil authenticationUtil;
+  @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SamlClientService samlClientService;
   @Inject private MainConfiguration configuration;
   @Inject private UserService userService;
@@ -114,7 +114,7 @@ public class AuthenticationManager {
   }
 
   public AuthenticationMechanism getAuthenticationMechanism(String userName) {
-    return getAuthenticationMechanism(authenticationUtil.getUser(userName, USER), null);
+    return getAuthenticationMechanism(authenticationUtils.getUser(userName, USER), null);
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
@@ -131,7 +131,7 @@ public class AuthenticationManager {
      * information.
      */
     try {
-      User user = authenticationUtil.getUser(userName, USER);
+      User user = authenticationUtils.getUser(userName, USER);
       AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
 
       SSORequest SSORequest;
@@ -224,7 +224,7 @@ public class AuthenticationManager {
       String password = decryptedData[1];
 
       if (isNotEmpty(accountId)) {
-        User user = authenticationUtil.getUser(userName, USER);
+        User user = authenticationUtils.getUser(userName, USER);
         AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
         return defaultLoginInternal(userName, password, false, authenticationMechanism);
       } else {
@@ -308,7 +308,7 @@ public class AuthenticationManager {
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
       params.put("apiurl", encodedApiUrl);
-      URI redirectUrl = authenticationUtil.buildAbsoluteUrl("/saml.html", params);
+      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params);
       return Response.seeOther(redirectUrl).build();
     } catch (Exception e) {
       logger.warn("Failed to login via saml", e);
@@ -352,7 +352,7 @@ public class AuthenticationManager {
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
       params.put("apiurl", encodedApiUrl);
-      URI redirectUrl = authenticationUtil.buildAbsoluteUrl("/saml.html", params);
+      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params);
 
       return Response.seeOther(redirectUrl).build();
     } catch (Exception e) {

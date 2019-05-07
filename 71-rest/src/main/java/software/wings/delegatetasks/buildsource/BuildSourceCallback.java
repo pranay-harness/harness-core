@@ -33,7 +33,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.PermitServiceImpl;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -70,7 +70,7 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient TriggerService triggerService;
   @Inject private transient PermitService permitService;
   @Inject private transient AlertService alertService;
-  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   public BuildSourceCallback(String accountId, String appId, String artifactStreamId, String permitId,
       String settingId) { // todo: new constr with settingId
@@ -221,7 +221,8 @@ public class BuildSourceCallback implements NotifyCallback {
     if (lastSuccessfulBuild != null && parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
       logger.info("Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
           buildNo, lastSuccessfulBuild.getNumber(), artifactStream.getUuid());
-      newArtifacts.add(artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, lastSuccessfulBuild)));
+      newArtifacts.add(
+          artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, lastSuccessfulBuild)));
     }
   }
 
@@ -232,7 +233,7 @@ public class BuildSourceCallback implements NotifyCallback {
     Set<String> newBuildNumbers = getNewBuildNumbers(artifactStream, builds);
     builds.forEach(buildDetails -> {
       if (newBuildNumbers.contains(buildDetails.getNumber())) {
-        newArtifacts.add(artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails)));
+        newArtifacts.add(artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails)));
       }
     });
   }
@@ -253,7 +254,7 @@ public class BuildSourceCallback implements NotifyCallback {
           logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
                   + "Add entry in Artifact collection",
               buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
-          Artifact newArtifact = artifactCollectionUtil.getArtifact(artifactStream, buildDetails1);
+          Artifact newArtifact = artifactCollectionUtils.getArtifact(artifactStream, buildDetails1);
           newArtifacts.add(artifactService.create(newArtifact));
         }
       });
@@ -265,7 +266,7 @@ public class BuildSourceCallback implements NotifyCallback {
       Set<String> newArtifactPaths = getNewArtifactPaths(artifactStream, builds);
       builds.forEach(buildDetails -> {
         if (newArtifactPaths.contains(buildDetails.getArtifactPath())) {
-          newArtifacts.add(artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails)));
+          newArtifacts.add(artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails)));
         }
       });
     }

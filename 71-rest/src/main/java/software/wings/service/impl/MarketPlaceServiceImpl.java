@@ -29,7 +29,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
-import software.wings.security.authentication.AuthenticationUtil;
+import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.MarketPlaceService;
@@ -56,7 +56,7 @@ public class MarketPlaceServiceImpl implements MarketPlaceService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LicenseService licenseService;
   @Inject private SecretManager secretManager;
-  @Inject private AuthenticationUtil authenticationUtil;
+  @Inject private AuthenticationUtils authenticationUtils;
 
   private static final String INFO = "INFO";
   private static final String REDIRECT_ACTION_LOGIN = "LOGIN";
@@ -195,7 +195,7 @@ public class MarketPlaceServiceImpl implements MarketPlaceService {
 
       URI redirectUrl = null;
       try {
-        redirectUrl = new URI(authenticationUtil.getBaseUrl()
+        redirectUrl = new URI(authenticationUtils.getBaseUrl()
             + ("#/invite?inviteId=" + userInvite.getUuid() + "&marketPlaceToken=" + marketPlaceToken));
       } catch (URISyntaxException e) {
         throw new WingsException(e);
@@ -220,7 +220,7 @@ public class MarketPlaceServiceImpl implements MarketPlaceService {
   private Response generateMessageResponse(String message, String type, String action, String status) {
     URI redirectUrl = null;
     try {
-      redirectUrl = new URI(authenticationUtil.getBaseUrl()
+      redirectUrl = new URI(authenticationUtils.getBaseUrl()
           + "#/fallback?message=" + URLEncoder.encode(message, "UTF-8") + "&type=" + type
           + (action != null ? "&action=" + action : "") + (status != null ? "&status=" + status : ""));
     } catch (URISyntaxException | UnsupportedEncodingException e) {

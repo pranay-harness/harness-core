@@ -92,7 +92,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -140,7 +140,7 @@ public class HelmDeployState extends State {
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject private transient SettingsService settingsService;
   @Inject private transient SecretManager secretManager;
-  @Inject private transient ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private transient GitConfigHelperService gitConfigHelperService;
   @Inject private transient ApplicationManifestService applicationManifestService;
@@ -222,7 +222,8 @@ public class HelmDeployState extends State {
   }
 
   protected ImageDetails getImageDetails(ExecutionContext context, Application app, Artifact artifact) {
-    return artifactCollectionUtil.fetchContainerImageDetails(artifact, app.getUuid(), context.getWorkflowExecutionId());
+    return artifactCollectionUtils.fetchContainerImageDetails(
+        artifact, app.getUuid(), context.getWorkflowExecutionId());
   }
 
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,

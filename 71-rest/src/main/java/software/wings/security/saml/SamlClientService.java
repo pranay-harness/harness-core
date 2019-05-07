@@ -17,7 +17,7 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.AuthenticationUtil;
+import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.service.intfc.SSOSettingService;
 
 import java.io.ByteArrayInputStream;
@@ -34,7 +34,7 @@ import java.util.zip.DeflaterOutputStream;
 @Singleton
 public class SamlClientService {
   public static final String SAML_REQUEST_URI_KEY = "SAMLRequest";
-  @Inject AuthenticationUtil authenticationUtil;
+  @Inject AuthenticationUtils authenticationUtils;
   @Inject SSOSettingService ssoSettingService;
   private static final String GOOGLE_HOST = "accounts.google.com";
   private static final String AZURE_HOST = "login.microsoftonline.com";
@@ -72,7 +72,7 @@ public class SamlClientService {
   }
 
   public SSORequest generateSamlRequest(User user) {
-    Account primaryAccount = authenticationUtil.getPrimaryAccount(user);
+    Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
     if (primaryAccount.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
       SSORequest SSORequest = new SSORequest();
       try {

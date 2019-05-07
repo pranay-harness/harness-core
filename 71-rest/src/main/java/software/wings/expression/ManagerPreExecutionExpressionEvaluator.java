@@ -3,7 +3,7 @@ package software.wings.expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import lombok.Value;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -15,7 +15,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
 
   public ManagerPreExecutionExpressionEvaluator(ServiceTemplateService serviceTemplateService,
       ConfigService configService, String appId, String envId, String serviceTemplateId,
-      ArtifactCollectionUtil artifactCollectionUtil, String artifactStreamId,
+      ArtifactCollectionUtils artifactCollectionUtils, String artifactStreamId,
       ManagerDecryptionService managerDecryptionService, SecretManager secretManager, String accountId,
       String workflowExecutionId, int expressionFunctorToken) {
     addFunctor("configFile",
@@ -31,7 +31,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
         DockerConfigFunctor.builder()
             .appId(appId)
             .artifactStreamId(artifactStreamId)
-            .artifactCollectionUtil(artifactCollectionUtil)
+            .artifactCollectionUtils(artifactCollectionUtils)
             .build());
 
     secretManagerFunctor = SecretManagerFunctor.builder()

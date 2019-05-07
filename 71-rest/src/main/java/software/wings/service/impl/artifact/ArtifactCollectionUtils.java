@@ -90,7 +90,7 @@ import java.util.Map;
 
 @Singleton
 @Slf4j
-public class ArtifactCollectionUtil {
+public class ArtifactCollectionUtils {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ManagerDecryptionService managerDecryptionService;

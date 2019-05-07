@@ -83,7 +83,7 @@ import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -395,7 +395,7 @@ public class EcsStateHelper {
   }
 
   public EcsSetUpDataBag prepareBagForEcsSetUp(ExecutionContext context, int timeout,
-      ArtifactCollectionUtil artifactCollectionUtil, ServiceResourceService serviceResourceService,
+      ArtifactCollectionUtils artifactCollectionUtils, ServiceResourceService serviceResourceService,
       InfrastructureMappingService infrastructureMappingService, SettingsService settingsService,
       SecretManager secretManager) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -405,7 +405,7 @@ public class EcsStateHelper {
     if (artifact == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
-    ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
+    ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
         artifact, context.getAppId(), context.getWorkflowExecutionId());
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();

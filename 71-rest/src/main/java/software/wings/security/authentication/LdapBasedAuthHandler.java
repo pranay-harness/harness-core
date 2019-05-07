@@ -27,7 +27,7 @@ import software.wings.service.intfc.security.SecretManager;
 @Singleton
 public class LdapBasedAuthHandler implements AuthHandler {
   @Inject private SSOSettingService ssoSettingService;
-  @Inject private AuthenticationUtil authenticationUtil;
+  @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   private UserService userService;
@@ -51,7 +51,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
       throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
 
-    Account account = authenticationUtil.getPrimaryAccount(user);
+    Account account = authenticationUtils.getPrimaryAccount(user);
     LdapSettings settings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
     EncryptedDataDetail settingsEncryptedDataDetail = settings.getEncryptedDataDetails(secretManager);
     String encryptedPassword = secretManager.encrypt(settings.getAccountId(), password, null);

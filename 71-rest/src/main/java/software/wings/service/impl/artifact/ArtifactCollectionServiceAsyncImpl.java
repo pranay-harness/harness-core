@@ -74,7 +74,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private SettingsService settingsService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
-  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private PermitService permitService;
   @Inject private AppService appService;
@@ -92,7 +92,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream == null) {
       throw new WingsException("Artifact Stream was deleted", USER);
     }
-    final Artifact artifact = artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
+    final Artifact artifact = artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
@@ -112,7 +112,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream == null) {
       throw new WingsException("Artifact Stream was deleted", USER);
     }
-    final Artifact artifact = artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
+    final Artifact artifact = artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
@@ -138,7 +138,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (CUSTOM.name().equals(artifactStreamType)) {
       // Defaulting to the 60 secs
       ArtifactStreamAttributes artifactStreamAttributes =
-          artifactCollectionUtil.renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
+          artifactCollectionUtils.renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
 
       long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
           ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
@@ -154,7 +154,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
               .artifactStreamAttributes(artifactStreamAttributes)
               .artifactStreamType(artifactStreamType)
               .buildSourceRequestType(requestType)
-              .limit(ArtifactCollectionUtil.getLimit(artifactStream.getArtifactStreamType(), requestType))
+              .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
               .build();
 
       List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
@@ -186,7 +186,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       }
 
       accountId = settingAttribute.getAccountId();
-      buildSourceRequest = artifactCollectionUtil.getBuildSourceParameters(appId, artifactStream, settingAttribute);
+      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(appId, artifactStream, settingAttribute);
 
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));

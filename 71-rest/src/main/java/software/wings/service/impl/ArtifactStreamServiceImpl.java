@@ -130,7 +130,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName) {
     return wingsPersistence.createQuery(ArtifactStream.class)
-        .filter("appId", appId)
+        .filter(ArtifactStreamKeys.appId, appId)
         .filter(ArtifactStreamKeys.serviceId, serviceId)
         .filter(ArtifactStreamKeys.name, artifactStreamName)
         .get();
@@ -418,7 +418,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public boolean artifactStreamsExistForService(String appId, String serviceId) {
     return wingsPersistence.createQuery(ArtifactStream.class)
                .filter(ArtifactStream.APP_ID_KEY, appId)
-               .filter(ArtifactStream.SERVICE_ID_KEY, serviceId)
+               .filter(ArtifactStreamKeys.serviceId, serviceId)
                .getKey()
         != null;
   }
@@ -455,7 +455,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public List<ArtifactStream> fetchArtifactStreamsForService(String appId, String serviceId) {
     return wingsPersistence.createQuery(ArtifactStream.class)
         .filter(ArtifactStream.APP_ID_KEY, appId)
-        .filter(ArtifactStream.SERVICE_ID_KEY, serviceId)
+        .filter(ArtifactStreamKeys.serviceId, serviceId)
         .asList();
   }
 
@@ -463,7 +463,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public List<String> fetchArtifactStreamIdsForService(String appId, String serviceId) {
     return wingsPersistence.createQuery(ArtifactStream.class)
         .filter(ArtifactStream.APP_ID_KEY, appId)
-        .filter(ArtifactStream.SERVICE_ID_KEY, serviceId)
+        .filter(ArtifactStreamKeys.serviceId, serviceId)
         .asKeyList()
         .stream()
         .map(artifactStreamKey -> artifactStreamKey.getId().toString())

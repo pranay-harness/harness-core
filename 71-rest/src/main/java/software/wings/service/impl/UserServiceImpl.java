@@ -128,7 +128,7 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.AuthenticationUtil;
+import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.oauth.OauthClient;
@@ -212,7 +212,7 @@ public class UserServiceImpl implements UserService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AuthenticationManager authenticationManager;
-  @Inject private AuthenticationUtil authenticationUtil;
+  @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SSOService ssoService;
 
   private volatile Set<String> blacklistedDomains = new HashSet<>();
@@ -935,7 +935,7 @@ public class UserServiceImpl implements UserService {
     Map<String, String> model = new HashMap<>();
     model.put("name", email);
     // This uses the setPath. The method above uses setFragment() which adds a # to the url.
-    model.put("url", authenticationUtil.buildAbsoluteUrl(getBaseUrl(), url, params).toString());
+    model.put("url", authenticationUtils.buildAbsoluteUrl(getBaseUrl(), url, params).toString());
     return model;
   }
 

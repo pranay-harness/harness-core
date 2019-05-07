@@ -153,7 +153,7 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
-import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -237,7 +237,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private PersistentLocker persistentLocker;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
@@ -1695,7 +1695,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     try {
       final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
-              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
+              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtils,
               delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId(),
               delegateTask.getWorkflowExecutionId(), delegateTask.getData().getExpressionFunctorToken());
 

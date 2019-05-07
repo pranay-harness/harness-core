@@ -39,7 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SamlBasedAuthHandlerTest extends WingsBaseTest {
-  @Mock AuthenticationUtil authenticationUtil;
+  @Mock AuthenticationUtils authenticationUtils;
   @Mock SSOSettingService ssoSettingService;
   @Mock SamlUserGroupSync samlUserGroupSync;
   @Inject @InjectMocks @Spy SamlClientService samlClientService;
@@ -77,8 +77,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
       String samlResponse =
           IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
       account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
-      when(authenticationUtil.getUser(anyString())).thenReturn(user);
-      when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+      when(authenticationUtils.getUser(anyString())).thenReturn(user);
+      when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(account);
       assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
       authHandler.authenticate(oktaIdpUrl, samlResponse);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -98,8 +98,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
     account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
-    when(authenticationUtil.getUser(anyString())).thenReturn(user);
-    when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+    when(authenticationUtils.getUser(anyString())).thenReturn(user);
+    when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
     when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
     SamlClient samlClient = mock(SamlClient.class);
@@ -125,8 +125,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
     account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
-    when(authenticationUtil.getUser(anyString())).thenReturn(user);
-    when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+    when(authenticationUtils.getUser(anyString())).thenReturn(user);
+    when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
     when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
     SamlClient samlClient = mock(SamlClient.class);
@@ -173,8 +173,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
     account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
-    when(authenticationUtil.getUser(anyString())).thenReturn(user);
-    when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+    when(authenticationUtils.getUser(anyString())).thenReturn(user);
+    when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
     when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
     SamlClient samlClient = mock(SamlClient.class);
@@ -222,8 +222,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
     account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
-    when(authenticationUtil.getUser(anyString())).thenReturn(user);
-    when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+    when(authenticationUtils.getUser(anyString())).thenReturn(user);
+    when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
     when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
     SamlClient samlClient = mock(SamlClient.class);

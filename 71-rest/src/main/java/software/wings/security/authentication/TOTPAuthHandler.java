@@ -26,7 +26,7 @@ import java.util.Map;
 @Singleton
 public class TOTPAuthHandler implements TwoFactorAuthHandler {
   @Inject private UserService userService;
-  @Inject private AuthenticationUtil authenticationUtil;
+  @Inject private AuthenticationUtils authenticationUtils;
   @Inject private EmailNotificationService emailNotificationService;
 
   @Override
@@ -64,7 +64,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   public TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(User user) {
     String secretKey = generateTotpSecret();
     String otpUrl =
-        generateOtpUrl(authenticationUtil.getPrimaryAccount(user).getCompanyName(), user.getEmail(), secretKey);
+        generateOtpUrl(authenticationUtils.getPrimaryAccount(user).getCompanyName(), user.getEmail(), secretKey);
     return TwoFactorAuthenticationSettings.builder()
         .mechanism(getAuthenticationMechanism())
         .totpqrurl(otpUrl)
@@ -115,7 +115,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
                               .to(toList)
                               .templateName("reset_2fa")
                               .templateModel(templateModel)
-                              .accountId(authenticationUtil.getPrimaryAccount(user).getUuid())
+                              .accountId(authenticationUtils.getPrimaryAccount(user).getUuid())
                               .build();
     emailData.setCc(Collections.emptyList());
     emailData.setRetries(2);

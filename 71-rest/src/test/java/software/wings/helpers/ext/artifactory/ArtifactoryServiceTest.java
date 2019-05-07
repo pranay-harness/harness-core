@@ -193,7 +193,7 @@ public class ArtifactoryServiceTest {
 
   @Test(expected = WingsException.class)
   @Category(UnitTests.class)
-  public void shouldValidateArtifactPathPassWordEmpty() {
+  public void shouldValidateArtifactPathPasswordEmpty() {
     ArtifactoryConfig artifactoryConfigNoPassword =
         ArtifactoryConfig.builder().artifactoryUrl("some url").username("some username").build();
     artifactoryService.validateArtifactPath(artifactoryConfigNoPassword, null, "harness-rpm", "todolist*", "generic");

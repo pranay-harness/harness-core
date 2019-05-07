@@ -33,7 +33,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
   @Inject private SettingsService settingsService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
-  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private AwsCommandHelper awsCommandHelper;
 
   public static final Duration timeout = Duration.ofMinutes(10);
@@ -62,7 +62,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
         return;
       }
       accountId = settingAttribute.getAccountId();
-      buildSourceRequest = artifactCollectionUtil.getBuildSourceParameters(appId, artifactStream, settingAttribute);
+      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(appId, artifactStream, settingAttribute);
       delegateTaskBuilder.accountId(accountId);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));

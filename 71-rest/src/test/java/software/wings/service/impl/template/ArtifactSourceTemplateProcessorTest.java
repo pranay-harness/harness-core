@@ -27,6 +27,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -75,7 +76,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTest {
     artifactStream.setTemplateUuid(savedTemplate.getUuid());
     artifactStream.setTemplateVersion(LATEST_TAG);
     when(wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)).thenReturn(query);
-    when(query.filter(ArtifactStream.TEMPLATE_UUID_KEY, savedTemplate.getUuid())).thenReturn(query);
+    when(query.filter(ArtifactStreamKeys.templateUuid, savedTemplate.getUuid())).thenReturn(query);
     when(query.fetch()).thenReturn(artifactStreamIterator);
     when(artifactStreamIterator.getCursor()).thenReturn(dbCursor);
     when(artifactStreamIterator.hasNext()).thenReturn(true).thenReturn(false);

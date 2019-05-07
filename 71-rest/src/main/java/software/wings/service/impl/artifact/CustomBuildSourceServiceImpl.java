@@ -32,7 +32,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Override
   public List<BuildDetails> getBuilds(String artifactStreamId) {
@@ -55,7 +55,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
     // TODO: The rendering expression should be moved to delegate once the Framework is ready
     ArtifactStreamAttributes artifactStreamAttributes =
-        artifactCollectionUtil.renderCustomArtifactScriptString(customArtifactStream);
+        artifactCollectionUtils.renderCustomArtifactScriptString(customArtifactStream);
 
     // Defaulting to the 60 secs
     long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
@@ -91,7 +91,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
     // TODO: The rendering expression should be moved to delegate once the Framework is ready
     ArtifactStreamAttributes streamAttributes =
-        artifactCollectionUtil.renderCustomArtifactScriptString(customArtifactStream);
+        artifactCollectionUtils.renderCustomArtifactScriptString(customArtifactStream);
 
     // Defaulting to the 60 secs
     long timeout = streamAttributes.getCustomScriptTimeout() == null

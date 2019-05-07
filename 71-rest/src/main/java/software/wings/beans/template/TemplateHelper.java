@@ -30,6 +30,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.TemplateConstants;
@@ -113,7 +114,7 @@ public class TemplateHelper {
       case SHELL_SCRIPT:
         return Workflow.LINKED_TEMPLATE_UUIDS_KEY;
       case ARTIFACT_SOURCE:
-        return ArtifactStream.TEMPLATE_UUID_KEY;
+        return ArtifactStreamKeys.templateUuid;
       default:
         unhandled(templateType);
     }

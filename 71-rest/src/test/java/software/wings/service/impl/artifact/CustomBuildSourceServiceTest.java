@@ -38,7 +38,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;
   @Inject @InjectMocks private CustomBuildSourceService customBuildSourceService;
-  @Inject @InjectMocks private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject @InjectMocks private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ExpressionEvaluator evaluator;
   @Mock private CustomBuildService customBuildService;

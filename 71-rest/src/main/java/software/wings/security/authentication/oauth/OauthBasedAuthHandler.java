@@ -20,7 +20,7 @@ import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthHandler;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationResponse;
-import software.wings.security.authentication.AuthenticationUtil;
+import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.OauthAuthenticationResponse;
 import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
@@ -40,7 +40,7 @@ import java.util.concurrent.ExecutionException;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class OauthBasedAuthHandler implements AuthHandler {
-  @Inject AuthenticationUtil authenticationUtil;
+  @Inject AuthenticationUtils authenticationUtils;
   @Inject UserService userService;
   @Inject MainConfiguration mainConfiguration;
   @Inject SSOSettingServiceImpl ssoSettingService;
@@ -77,7 +77,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
 
     User user = null;
     try {
-      user = authenticationUtil.getUserOrReturnNullIfUserDoesNotExists(userInfo.getEmail());
+      user = authenticationUtils.getUserOrReturnNullIfUserDoesNotExists(userInfo.getEmail());
 
       // if the email doesn't exists in harness system, sign him up.
       if (null == user) {
@@ -124,7 +124,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
 
   private void matchOauthProviderAndApplyEmailFilter(final User user, final OauthClient oauthClient) {
     OauthSettings oauthSettings =
-        ssoSettingService.getOauthSettingsByAccountId(authenticationUtil.getPrimaryAccount(user).getUuid());
+        ssoSettingService.getOauthSettingsByAccountId(authenticationUtils.getPrimaryAccount(user).getUuid());
     if (oauthSettings == null) {
       return;
     }
