@@ -1,6 +1,6 @@
 Hi ${(name!"there")?capitalize},
 
-Welcome to ${company} account! Click below to accept invitation.
+Welcome to Harness! Click the link below to sign up.
 
 ${url!}
 

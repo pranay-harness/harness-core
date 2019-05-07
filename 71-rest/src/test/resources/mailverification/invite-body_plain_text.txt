@@ -1,6 +1,6 @@
 Hi Testname,
 
-Welcome to Testcompany account! Click below to accept invitation.
+Welcome to Harness! Click the link below to sign up.
 
 TestURL
 

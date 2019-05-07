@@ -46,7 +46,7 @@ public class UserTest extends AbstractFunctionalTest {
   final int MAX_RETRIES = 20;
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
-  final String EXPECTED_SUBJECT = "You are invited to join Harness at Harness platform";
+  final String EXPECTED_SUBJECT = "You have been invited to join the Harness account at Harness";
   final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
   final Seed seed = new Seed(0);
   Owners owners;
