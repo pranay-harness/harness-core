@@ -6,9 +6,12 @@ import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -35,6 +38,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +58,8 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
   public static final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deployment";
+
+  @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
 
   public K8sRollingDeploy(String name) {
     super(name, K8S_DEPLOYMENT_ROLLING.name());
@@ -95,7 +101,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
             .isInCanaryWorkflow(inCanaryFlow)
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)
-            .timeoutIntervalInMin(10)
+            .timeoutIntervalInMin(stateTimeoutInMinutes)
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))

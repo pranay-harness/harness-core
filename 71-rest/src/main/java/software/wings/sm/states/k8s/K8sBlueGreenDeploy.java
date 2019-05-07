@@ -6,9 +6,12 @@ import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -34,6 +37,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +57,8 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
   public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deployment";
+
+  @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
 
   public K8sBlueGreenDeploy(String name) {
     super(name, K8S_BLUE_GREEN_DEPLOY.name());
@@ -87,7 +93,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
             .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY)
-            .timeoutIntervalInMin(10)
+            .timeoutIntervalInMin(stateTimeoutInMinutes)
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
