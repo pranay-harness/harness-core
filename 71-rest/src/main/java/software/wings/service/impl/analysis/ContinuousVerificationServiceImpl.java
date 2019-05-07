@@ -1361,7 +1361,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           VerificationDataAnalysisResponse.builder().stateExecutionData(stateAnalysisExecutionData).build();
       analysisResponse.setExecutionStatus(status);
 
-      waitNotifyEngine.notify(analysisContext.getCorrelationId(), analysisResponse);
+      logger.info("for {} user triggered notification, data {}", stateExecutionId, analysisResponse);
+      final String notificationId = waitNotifyEngine.notify(analysisContext.getCorrelationId(), analysisResponse);
+      logger.info("for {} user triggered notification, notification id", stateExecutionId, notificationId);
       return true;
     } catch (Exception ex) {
       logger.error("Exception for {} while notifying correlationId {}", stateExecutionId,
