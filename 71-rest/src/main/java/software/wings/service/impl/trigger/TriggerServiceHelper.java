@@ -311,7 +311,7 @@ public class TriggerServiceHelper {
         pattern = compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
       }
     } catch (PatternSyntaxException pe) {
-      logger.error("Invalid Build/Tag Filter {} for triggerId {}", artifactFilter, triggerId, pe);
+      logger.warn("Invalid Build/Tag Filter {} for triggerId {}", artifactFilter, triggerId, pe);
       throw new WingsException("Invalid Build/Tag Filter", USER);
     }
 
