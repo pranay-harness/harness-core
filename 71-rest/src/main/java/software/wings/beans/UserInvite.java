@@ -9,6 +9,8 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.validation.Update;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -44,7 +46,7 @@ public class UserInvite extends Base {
 
   @Transient private String name;
 
-  @Transient private char[] password;
+  @Getter @Setter @Transient private char[] password;
   @JsonIgnore private String passwordHash;
 
   private String accountName;
@@ -150,16 +152,6 @@ public class UserInvite extends Base {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  @SuppressFBWarnings("EI_EXPOSE_REP")
-  public char[] getPassword() {
-    return password;
-  }
-
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public void setPassword(char[] password) {
-    this.password = password;
   }
 
   public UserInviteSource getSource() {

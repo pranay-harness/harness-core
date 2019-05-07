@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -66,7 +68,7 @@ public class User extends Base implements Principal {
 
   @Transient private boolean firstLogin;
 
-  @Transient private char[] password;
+  @Getter @Setter @Transient private char[] password;
   @Transient private String token;
   @Transient private String twoFactorJwtToken;
 
@@ -286,26 +288,6 @@ public class User extends Base implements Principal {
       roles = new ArrayList<>();
     }
     roles.add(role);
-  }
-
-  /**
-   * Gets password.
-   *
-   * @return the password
-   */
-  @SuppressFBWarnings("EI_EXPOSE_REP")
-  public char[] getPassword() {
-    return password;
-  }
-
-  /**
-   * Sets password.
-   *
-   * @param password the password
-   */
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public void setPassword(char[] password) {
-    this.password = password;
   }
 
   /**
