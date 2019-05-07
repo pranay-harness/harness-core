@@ -28,6 +28,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
+import java.util.Collections;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -134,6 +135,8 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> save(@QueryParam("accountId") String accountId, UserGroup userGroup) {
     userGroup.setAccountId(accountId);
+    NotificationSettings notificationSettings = new NotificationSettings(false, true, Collections.emptyList(), null);
+    userGroup.setNotificationSettings(notificationSettings);
     return getPublicUserGroup(userGroupService.save(userGroup));
   }
 
@@ -208,6 +211,7 @@ public class UserGroupResource {
 
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
+    userGroup.setName(existingGroup.getName());
 
     boolean sendMailToNewMembers = true;
     if (null != existingGroup.getNotificationSettings()) {
