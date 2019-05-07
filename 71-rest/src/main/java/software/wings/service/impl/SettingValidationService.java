@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.Validator.notNullCheck;
@@ -60,9 +62,11 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
+import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
@@ -407,8 +411,63 @@ public class SettingValidationService {
     return taskParams;
   }
 
+  private String getTrimmedValue(String value) {
+    return (value == null) ? null : value.trim();
+  }
+
+  private void validateAndSanitizeHelmRepoConfigValues(SettingAttribute settingAttribute) {
+    HelmRepoConfig helmRepoConfig = (HelmRepoConfig) settingAttribute.getValue();
+
+    switch (helmRepoConfig.getSettingType()) {
+      case HTTP_HELM_REPO:
+        HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
+        if (isBlank(httpHelmRepoConfig.getChartRepoUrl())) {
+          throw new WingsException("Helm repository URL cannot be empty", USER);
+        }
+
+        httpHelmRepoConfig.setChartRepoUrl(getTrimmedValue(httpHelmRepoConfig.getChartRepoUrl()));
+        httpHelmRepoConfig.setUsername(getTrimmedValue(httpHelmRepoConfig.getUsername()));
+
+        break;
+
+      case AMAZON_S3_HELM_REPO:
+        AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
+        if (isBlank(amazonS3HelmRepoConfig.getConnectorId())) {
+          throw new WingsException("Cloud provider cannot be empty", USER);
+        }
+
+        if (isBlank(amazonS3HelmRepoConfig.getBucketName())) {
+          throw new WingsException("S3 bucket cannot be empty", USER);
+        }
+
+        if (isBlank(amazonS3HelmRepoConfig.getFolderPath())) {
+          throw new WingsException("Base path cannot be empty", USER);
+        }
+
+        if (isBlank(amazonS3HelmRepoConfig.getRegion())) {
+          throw new WingsException("Region cannot be empty", USER);
+        }
+
+        amazonS3HelmRepoConfig.setConnectorId(getTrimmedValue(amazonS3HelmRepoConfig.getConnectorId()));
+        amazonS3HelmRepoConfig.setBucketName(getTrimmedValue(amazonS3HelmRepoConfig.getBucketName()));
+        amazonS3HelmRepoConfig.setRegion(getTrimmedValue(amazonS3HelmRepoConfig.getRegion()));
+        amazonS3HelmRepoConfig.setFolderPath(getTrimmedValue(amazonS3HelmRepoConfig.getFolderPath()));
+
+        break;
+
+      case GCS_HELM_REPO:
+        break;
+
+      default:
+        unhandled(helmRepoConfig.getSettingType());
+        throw new WingsException("Unhandled type of helm repository. Type : " + helmRepoConfig.getSettingType(), USER);
+    }
+  }
+
   private void validateHelmRepoConfig(
       SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
+    validateAndSanitizeHelmRepoConfigValues(settingAttribute);
+
     HelmRepoConfigValidationResponse repoConfigValidationResponse;
 
     try {
