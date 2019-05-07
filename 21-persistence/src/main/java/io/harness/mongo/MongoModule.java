@@ -25,6 +25,7 @@ import java.util.Set;
 
 @Slf4j
 public class MongoModule extends AbstractModule {
+  private Morphia morphia;
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
@@ -40,12 +41,8 @@ public class MongoModule extends AbstractModule {
           .connectionsPerHost(300)
           .build();
 
-  public static AdvancedDatastore createDatastore(String uri, Set<Class> collectionClasses, ReadPref readPref) {
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.map(collectionClasses);
-
+  public static AdvancedDatastore createDatastore(
+      Morphia morphia, String uri, Set<Class> collectionClasses, ReadPref readPref) {
     MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(clientUri);
 
@@ -58,7 +55,7 @@ public class MongoModule extends AbstractModule {
   public MongoModule(MongoConfig mongoConfig, Set<Class> collectionClasses) {
     registerLogger(MorphiaLoggerFactory.class);
 
-    Morphia morphia = new Morphia();
+    morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.map(collectionClasses);
@@ -89,6 +86,11 @@ public class MongoModule extends AbstractModule {
     }
 
     ensureIndex(primaryDatastore, morphia);
+  }
+
+  @Provides
+  public Morphia morphia() {
+    return morphia;
   }
 
   @Provides

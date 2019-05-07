@@ -58,6 +58,8 @@ public class MongoPersistence implements HPersistence {
     private Set<Class> classes;
   }
 
+  @Inject Morphia morphia;
+
   private Map<String, Info> storeInfo = new HashMap<>();
   private Map<Class, Store> classStores = new HashMap<>();
   private Map<String, AdvancedDatastore> datastoreMap;
@@ -110,7 +112,7 @@ public class MongoPersistence implements HPersistence {
       if (info == null || isEmpty(info.getUri())) {
         return getDatastore(DEFAULT_STORE, readPref);
       }
-      return MongoModule.createDatastore(info.getUri(), info.getClasses(), readPref);
+      return MongoModule.createDatastore(morphia, info.getUri(), info.getClasses(), readPref);
     });
   }
 

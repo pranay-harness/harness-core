@@ -28,9 +28,8 @@ import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRes
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoCommandException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.generator.AccountGenerator;
@@ -53,7 +52,6 @@ import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.IndexManagement;
 import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
@@ -61,13 +59,9 @@ import io.harness.scm.SecretName;
 import io.harness.seeddata.SampleDataProviderService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TemporaryFolder;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.mapping.MappedField;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
@@ -111,7 +105,6 @@ import software.wings.utils.ArtifactType;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -140,6 +133,10 @@ public class DataGenService {
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr;
+
+  @Inject private Morphia morphia;
+  @Inject @Named("primaryDatastore") private AdvancedDatastore primaryDatastore;
+
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private MainConfiguration configuration;
@@ -227,55 +224,7 @@ public class DataGenService {
 
   protected void dropDBAndEnsureIndexes() {
     wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getDB().dropDatabase();
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.mapPackage("software.wings");
-    morphia.mapPackage("io.harness");
-    ensureIndex(morphia, wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL));
-  }
-
-  protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
-    /*
-    Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
-    There is no way to override this behavior.
-    https://github.com/mongodb/morphia/issues/706
-     */
-
-    morphia.getMapper().getMappedClasses().forEach(mc -> {
-      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
-        // Read Entity level "Indexes" annotation
-        List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-        if (indexesAnnotations != null) {
-          indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-            IndexManagement.reportDeprecatedUnique(index);
-
-            BasicDBObject keys = new BasicDBObject();
-            for (Field field : index.fields()) {
-              keys.append(field.value(), 1);
-            }
-            primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(keys, index.options().name(), index.options().unique());
-          });
-        }
-
-        // Read field level "Indexed" annotation
-        for (final MappedField mf : mc.getPersistenceFields()) {
-          if (mf.hasAnnotation(Indexed.class)) {
-            final Indexed indexed = mf.getAnnotation(Indexed.class);
-            IndexManagement.reportDeprecatedUnique(indexed);
-
-            try {
-              primaryDatastore.getCollection(mc.getClazz())
-                  .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
-            } catch (MongoCommandException mex) {
-              logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
-              throw mex;
-            }
-          }
-        }
-      }
-    });
+    IndexManagement.ensureIndex(primaryDatastore, morphia);
   }
 
   private void createGlobalSettings(Account account) {
