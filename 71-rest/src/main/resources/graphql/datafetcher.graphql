@@ -6,9 +6,7 @@ enum DataFetcherEnum {
   execution
   executionConnection
   instanceCount
-  instancesByEnvironment
-  instancesByEnvType
-  instancesByService
+  instanceConnection
   pipeline
   pipelineConnection
   service
