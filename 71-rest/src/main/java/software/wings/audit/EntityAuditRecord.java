@@ -1,7 +1,9 @@
 package software.wings.audit;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.jersey.JsonViews;
 
 @Data
 @Builder
@@ -11,8 +13,8 @@ public class EntityAuditRecord {
   private String entityType;
   private String entityName;
   private String operationType;
-  private String entityOldYamlRecordId;
-  private String entityNewYamlRecordId;
+  @JsonView(JsonViews.Internal.class) private String entityOldYamlRecordId;
+  @JsonView(JsonViews.Internal.class) private String entityNewYamlRecordId;
   private String yamlPath;
   private String yamlError;
   private boolean failure;

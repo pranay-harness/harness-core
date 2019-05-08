@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -21,7 +20,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.WingsBaseTest;
@@ -65,16 +63,18 @@ public class AuditServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetLatestYamlRecordIdForEntity() {
-    String expected = generateUuid();
+    String yamlPath = "YAML_PATH";
+    String id = "ID";
     Query mockQuery = mock(Query.class);
     doReturn(mockQuery).when(mockWingsPersistence).createQuery(any());
     doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
     doReturn(mockQuery).when(mockQuery).project(anyString(), anyBoolean());
     doReturn(mockQuery).when(mockQuery).order(any(Sort.class));
-    Key mockKey = mock(Key.class);
-    doReturn(mockKey).when(mockQuery).getKey();
-    doReturn(expected).when(mockKey).getId();
-    String actual = auditServiceImpl.getLatestYamlRecordIdForEntity(EntityType.APPLICATION.name(), APP_ID);
-    assertThat(actual).isEqualTo(expected);
+    EntityYamlRecord entityYamlRecord = EntityYamlRecord.builder().yamlPath(yamlPath).uuid(id).build();
+    doReturn(entityYamlRecord).when(mockQuery).get();
+    EntityAuditRecord entityAuditRecord = EntityAuditRecord.builder().build();
+    auditServiceImpl.loadLatestYamlDetailsForEntity(entityAuditRecord);
+    assertThat(entityAuditRecord.getEntityOldYamlRecordId()).isEqualTo(id);
+    assertThat(entityAuditRecord.getYamlPath()).isEqualTo(yamlPath);
   }
 }
