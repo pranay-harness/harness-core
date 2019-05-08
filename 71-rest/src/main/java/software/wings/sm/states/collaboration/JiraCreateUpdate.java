@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -27,6 +28,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;
@@ -72,13 +74,13 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Getter @Setter private String status;
   @Getter @Setter private String comment;
   @Getter @Setter private String issueId;
-  private Map<String, Object> customFields;
+  private Map<String, JiraCustomFieldValue> customFields;
 
-  public Map<String, Object> fetchCustomFields() {
+  public Map<String, JiraCustomFieldValue> fetchCustomFields() {
     return customFields;
   }
 
-  public void setCustomFields(Map<String, Object> customFields) {
+  public void setCustomFields(Map<String, JiraCustomFieldValue> customFields) {
     this.customFields = customFields;
   }
 
@@ -156,6 +158,16 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     summary = context.renderExpression(summary);
     description = context.renderExpression(description);
     comment = context.renderExpression(comment);
+    if (EmptyPredicate.isNotEmpty(customFields)) {
+      Map<String, JiraCustomFieldValue> renderedCustomFields = new HashMap<>();
+      customFields.forEach((key, value) -> {
+        JiraCustomFieldValue rendered = new JiraCustomFieldValue();
+        rendered.setFieldType(value.getFieldType());
+        rendered.setFieldValue(context.renderExpression(value.getFieldValue()));
+        renderedCustomFields.put(key, rendered);
+      });
+      customFields = renderedCustomFields;
+    }
   }
 
   private JiraConfig getJiraConfig(String jiraConnectorId) {

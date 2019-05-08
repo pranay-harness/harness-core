@@ -24,7 +24,7 @@ public class JiraTaskParameters implements ExecutionCapabilityDemander {
   private String issueType;
   private String priority;
   private List<String> labels;
-  private Map<String, Object> customFields;
+  private Map<String, JiraCustomFieldValue> customFields;
 
   private String issueId;
   private String status;

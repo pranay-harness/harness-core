@@ -8,9 +8,11 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
+import net.rcarz.jiraclient.Field.ValueTuple;
 import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
 import net.rcarz.jiraclient.Issue.SearchResult;
@@ -21,6 +23,7 @@ import net.rcarz.jiraclient.RestException;
 import net.rcarz.jiraclient.Transition;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -28,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.api.JiraExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JiraConfig;
+import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
@@ -38,6 +42,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -263,8 +269,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       }
 
       if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
-        for (Entry<String, Object> customField : parameters.getCustomFields().entrySet()) {
-          update.field(customField.getKey(), customField.getValue());
+        for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
+          update.field(customField.getKey(), getCustomFieldValue(customField));
           fieldsUpdated = true;
         }
       }
@@ -298,6 +304,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .errorMessage(errorMessage)
           .jiraServerResponse(extractResponseMessage(e))
           .build();
+    } catch (WingsException we) {
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(we.getMessage()).build();
     }
   }
 
@@ -366,21 +374,21 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       Issue.FluentCreate fluentCreate = jira.createIssue(parameters.getProject(), parameters.getIssueType())
                                             .field(Field.SUMMARY, parameters.getSummary());
 
-      if (parameters.getPriority() != null) {
+      if (EmptyPredicate.isNotEmpty(parameters.getPriority())) {
         fluentCreate.field(Field.PRIORITY, parameters.getPriority());
       }
 
-      if (parameters.getDescription() != null) {
+      if (EmptyPredicate.isNotEmpty(parameters.getDescription())) {
         fluentCreate.field(Field.DESCRIPTION, parameters.getDescription());
       }
 
-      if (parameters.getLabels() != null) {
+      if (EmptyPredicate.isNotEmpty(parameters.getLabels())) {
         fluentCreate.field(Field.LABELS, parameters.getLabels());
       }
 
       if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
-        for (Entry<String, Object> customField : parameters.getCustomFields().entrySet()) {
-          fluentCreate.field(customField.getKey(), customField.getValue());
+        for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
+          fluentCreate.field(customField.getKey(), getCustomFieldValue(customField));
         }
       }
 
@@ -403,7 +411,49 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .errorMessage("Unable to create a new Jira ticket. ")
           .jiraServerResponse(extractResponseMessage(e))
           .build();
+    } catch (WingsException e) {
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(e.getMessage()).build();
     }
+  }
+
+  private Object getCustomFieldValue(Entry<String, JiraCustomFieldValue> customFieldValueEntry) {
+    String fieldName = customFieldValueEntry.getKey();
+    String type = customFieldValueEntry.getValue().getFieldType();
+    String fieldValue = customFieldValueEntry.getValue().getFieldValue();
+
+    switch (type) {
+      case "option": {
+        return new ValueTuple("id", fieldValue);
+      }
+      case "number":
+        return Double.parseDouble(fieldValue);
+      case "date":
+      case "string":
+      case "any":
+        return fieldValue;
+      case "multiselect":
+        List<ValueTuple> valueTuples = new ArrayList<>();
+        List<String> valueList = Arrays.asList(fieldValue.split(","));
+        for (String value : valueList) {
+          ValueTuple valueTuple = new ValueTuple("id", value);
+          valueTuples.add(valueTuple);
+        }
+        return valueTuples;
+      case "array":
+        return Arrays.asList(fieldValue.split(" "));
+
+      default:
+        throw new WingsException("FieldType " + type + "not supported in Harness for " + fieldName);
+    }
+  }
+
+  private boolean isJSONArrayString(String test) {
+    try {
+      JSONArray.fromObject(test);
+    } catch (JSONException ex) {
+      return false;
+    }
+    return true;
   }
 
   private ResponseData checkJiraApproval(JiraTaskParameters parameters) {

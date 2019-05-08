@@ -246,6 +246,7 @@ import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
+import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
@@ -1237,5 +1238,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildDetails.BuildStatus.class, 7174);
     kryo.register(MLAnalysisType.class, 7175);
     kryo.register(GCSHelmRepoConfig.class, 7176);
+    kryo.register(JiraCustomFieldValue.class, 7177);
   }
 }
