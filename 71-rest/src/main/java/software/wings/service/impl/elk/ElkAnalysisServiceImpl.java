@@ -114,12 +114,12 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
-    List<LogElement> logElements =
-        parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(), elkSetupTestNodeData.getTimeStampField(),
-            elkSetupTestNodeData.getTimeStampFieldFormat(), elkSetupTestNodeData.getHostNameField(),
-            elkSetupTestNodeData.isServiceLevel() ? null : elkSetupTestNodeData.getInstanceElement().getHostName(),
-            elkSetupTestNodeData.getMessageField(), 0, true, elkSetupTestNodeData.getFromTime(),
-            elkSetupTestNodeData.getToTime());
+    List<LogElement> logElements = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
+        elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(),
+        elkSetupTestNodeData.getHostNameField(),
+        elkSetupTestNodeData.isServiceLevel() ? null : elkSetupTestNodeData.getInstanceElement().getHostName(),
+        elkSetupTestNodeData.getMessageField(), 0, true, TimeUnit.SECONDS.toMillis(elkSetupTestNodeData.getFromTime()),
+        TimeUnit.SECONDS.toMillis(elkSetupTestNodeData.getToTime()));
 
     if (elkSetupTestNodeData.isServiceLevel()) {
       return VerificationNodeDataSetupResponse.builder()
@@ -166,15 +166,15 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Error while getting data for node", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
-    parseElkResponse(responseWithHost, elkSetupTestNodeData.getQuery(), elkSetupTestNodeData.getTimeStampField(),
-        elkSetupTestNodeData.getTimeStampFieldFormat(), hostName,
+    List<LogElement> logElementsWithHost = parseElkResponse(responseWithHost, elkSetupTestNodeData.getQuery(),
+        elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(), hostName,
         elkSetupTestNodeData.getInstanceElement().getHostName(), elkSetupTestNodeData.getMessageField(), 0, false, -1,
         -1);
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
         .loadResponse(VerificationLoadResponse.builder().loadResponse(responseWithoutHost).isLoadPresent(true).build())
-        .dataForNode(responseWithHost)
+        .dataForNode(logElementsWithHost.isEmpty() ? null : responseWithHost)
         .build();
   }
 
