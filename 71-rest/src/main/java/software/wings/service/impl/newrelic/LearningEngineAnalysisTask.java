@@ -32,11 +32,17 @@ import java.util.concurrent.TimeUnit;
  */
 @Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
 @Indexes({
-  @Index(fields = {
-    @Field("workflow_execution_id")
-    , @Field("state_execution_id"), @Field("executionStatus"), @Field("analysis_minute"), @Field("cluster_level"),
-        @Field("ml_analysis_type"), @Field("control_nodes"), @Field("group_name"), @Field("tag")
-  }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
+  @Index(fields =
+      {
+        @Field("workflow_execution_id")
+        , @Field("state_execution_id"), @Field("executionStatus"), @Field("analysis_minute"), @Field("cluster_level"),
+            @Field("ml_analysis_type"), @Field("control_nodes"), @Field("group_name"), @Field("tag")
+      },
+      options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
+  ,
+      @Index(fields = {
+        @Field("executionStatus"), @Field("version"), @Field("is24x7Task"), @Field("lastUpdatedAt"), @Field("retry")
+      }, options = @IndexOptions(name = "retryIdx"))
 })
 @Data
 @Builder
