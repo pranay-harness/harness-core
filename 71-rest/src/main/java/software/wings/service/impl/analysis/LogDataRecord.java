@@ -29,6 +29,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
@@ -53,7 +54,9 @@ import java.util.List;
   ,
       @Index(fields = {
         @Field("cvConfigId"), @Field("logCollectionMinute")
-      }, options = @IndexOptions(unique = false, name = "cvLogsIdx"))
+      }, options = @IndexOptions(name = "cvLogsIdx")), @Index(fields = {
+        @Field("clusterLevel"), @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "cvIdx"))
 })
 @Data
 @Builder
@@ -91,7 +94,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId, String cvConfigId,
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
