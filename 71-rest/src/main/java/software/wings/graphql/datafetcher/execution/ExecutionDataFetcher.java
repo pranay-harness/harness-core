@@ -20,13 +20,11 @@ import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.impl.security.auth.AuthHandler;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class ExecutionDataFetcher extends AbstractDataFetcher<QLExecution, QLExecutionQueryParameters> {
   @Inject protected WingsPersistence persistence;
-  @Inject protected AuthHandler authHandler;
   @Inject private WorkflowExecutionController workflowExecutionController;
 
   @Override

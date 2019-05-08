@@ -76,6 +76,8 @@ type WorkflowExecution implements Execution {
   # Status of the workflow
   status: ExecutionStatus
 
+  outcomes: OutcomeConnection @dataFetcher(name: outcomeConnection, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
+
   workflow: Workflow @dataFetcher(name: workflow, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   cause: Cause

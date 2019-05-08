@@ -1,0 +1,13 @@
+interface Outcome {
+  execution: Execution
+}
+
+type OutcomeConnection {
+  pageInfo: PageInfo
+  nodes: [Outcome]
+}
+
+type DeploymentOutcome implements Outcome {
+  execution: Execution
+  service: Service
+}

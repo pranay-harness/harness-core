@@ -5,8 +5,9 @@ enum DataFetcherEnum {
   environmentConnection
   execution
   executionConnection
-  instanceCount
   instanceConnection
+  instanceCount
+  outcomeConnection
   pipeline
   pipelineConnection
   service
