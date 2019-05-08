@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
@@ -149,8 +150,12 @@ public class APMValidation extends AbstractSecretManagerValidation {
         config.setOptions(new HashMap<>());
       }
       config.getHeaders().put("Accept", "application/json");
-      final Call<Object> request =
+      Call<Object> request =
           getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
+      if (isNotEmpty(config.getBody())) {
+        request = getAPMRestClient(config).validatePost(
+            config.getUrl(), config.getHeaders(), config.getOptions(), config.getBody());
+      }
       final Response<Object> response;
 
       response = request.execute();

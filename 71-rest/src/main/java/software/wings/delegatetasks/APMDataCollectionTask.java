@@ -22,6 +22,7 @@ import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -364,8 +365,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                              collect(getAPMRestClient(baseUrl).putCollect(
-                                          curUrl, headersBiMap, optionsBiMap, resolvedBody),
+                              collect(getAPMRestClient(baseUrl).postCollect(
+                                          curUrl, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap()),
                                   baseUrl + curUrl),
                               metricInfos)));
             } else {
