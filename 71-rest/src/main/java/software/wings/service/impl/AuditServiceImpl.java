@@ -36,7 +36,6 @@ import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -350,16 +349,16 @@ public class AuditServiceImpl implements AuditService {
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
       switch (type) {
         case CREATE: {
-          record.setEntityNewYamlRecordId(saveEntityYamlForAudit(newEntity, record, accountId));
+          saveEntityYamlForAudit(newEntity, record, accountId);
           break;
         }
         case UPDATE: {
-          record.setEntityOldYamlRecordId(getLatestYamlRecordIdForEntity(record.getEntityType(), record.getEntityId()));
-          record.setEntityNewYamlRecordId(saveEntityYamlForAudit(newEntity, record, accountId));
+          loadLatestYamlDetailsForEntity(record);
+          saveEntityYamlForAudit(newEntity, record, accountId);
           break;
         }
         case DELETE: {
-          record.setEntityOldYamlRecordId(getLatestYamlRecordIdForEntity(record.getEntityType(), record.getEntityId()));
+          loadLatestYamlDetailsForEntity(record);
           break;
         }
         default: {
@@ -398,19 +397,24 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @VisibleForTesting
-  String getLatestYamlRecordIdForEntity(String entityType, String entityId) {
-    Key<EntityYamlRecord> key = wingsPersistence.createQuery(EntityYamlRecord.class)
-                                    .filter(EntityYamlRecordKeys.entityId, entityId)
-                                    .filter(EntityYamlRecordKeys.entityType, entityType)
-                                    .order(descending(EntityYamlRecordKeys.createdAt))
-                                    .getKey();
-    return (key != null) ? key.getId().toString() : EMPTY;
+  void loadLatestYamlDetailsForEntity(EntityAuditRecord record) {
+    EntityYamlRecord entityYamlRecord = wingsPersistence.createQuery(EntityYamlRecord.class)
+                                            .filter(EntityYamlRecordKeys.entityId, record.getEntityId())
+                                            .filter(EntityYamlRecordKeys.entityType, record.getEntityType())
+                                            .project(EntityYamlRecordKeys.uuid, true)
+                                            .project(EntityYamlRecordKeys.yamlPath, true)
+                                            .order(descending(EntityYamlRecordKeys.createdAt))
+                                            .get();
+    if (entityYamlRecord != null) {
+      record.setYamlPath(entityYamlRecord.getYamlPath());
+      record.setEntityOldYamlRecordId(entityYamlRecord.getUuid());
+    }
   }
 
   @VisibleForTesting
-  String saveEntityYamlForAudit(Object entity, EntityAuditRecord record, String accountId) {
+  void saveEntityYamlForAudit(Object entity, EntityAuditRecord record, String accountId) {
     if (nonYamlEntities.contains(record.getEntityType()) || entity == null) {
-      return EMPTY;
+      return;
     }
     String yamlContent;
     String yamlPath;
@@ -422,7 +426,7 @@ public class AuditServiceImpl implements AuditService {
           entity = environmentService.get(record.getAppId(), record.getAffectedResourceId(), false);
         } else {
           // Should ideally never happen
-          return EMPTY;
+          return;
         }
         YamlPayload resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
         yamlContent = resource.getYaml();
@@ -454,6 +458,7 @@ public class AuditServiceImpl implements AuditService {
                                       .yamlSha(sha1Hex(yamlContent))
                                       .yamlContent(yamlContent)
                                       .build();
-    return wingsPersistence.save(yamlRecord);
+    String newYamlId = wingsPersistence.save(yamlRecord);
+    record.setEntityNewYamlRecordId(newYamlId);
   }
 }
