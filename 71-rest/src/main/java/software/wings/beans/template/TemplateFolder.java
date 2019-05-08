@@ -24,7 +24,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.KeywordsAware;
@@ -60,7 +59,7 @@ public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   private String pathId;
   private transient List<TemplateFolder> children = new ArrayList<>();
 
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore private List<String> keywords;
 
   public enum NodeType {
     FOLDER("folder"),

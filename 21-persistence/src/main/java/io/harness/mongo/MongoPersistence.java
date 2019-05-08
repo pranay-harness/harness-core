@@ -142,7 +142,7 @@ public class MongoPersistence implements HPersistence {
     classSet.add(cls);
     morphia.map(classSet);
 
-    IndexManagement.ensureIndex(datastore, morphia);
+    IndexManager.ensureIndex(datastore, morphia);
   }
 
   @Override

@@ -66,7 +66,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess {
   private transient List<EnvSummary> envSummaries = new ArrayList<>();
   private transient boolean hasBuildWorkflow;
   private transient List<String> infraMappingIds = new ArrayList<>();
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore private List<String> keywords;
   @Indexed private String accountId;
 
   @Builder

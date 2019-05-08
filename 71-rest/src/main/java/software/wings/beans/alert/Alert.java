@@ -37,7 +37,7 @@ public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, Updat
   @SchemaIgnore @NotNull private long lastUpdatedAt;
   @Indexed private String accountId;
   @Indexed private AlertType type;
-  @Indexed private AlertStatus status;
+  private AlertStatus status;
   private String title;
   private AlertCategory category;
   private AlertSeverity severity;

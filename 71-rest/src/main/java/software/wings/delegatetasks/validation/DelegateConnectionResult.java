@@ -36,7 +36,7 @@ public class DelegateConnectionResult implements PersistentEntity, UuidAware, Up
 
   @NotNull private long lastUpdatedAt;
 
-  @Indexed @NotEmpty private String accountId;
+  @NotEmpty private String accountId;
   @Indexed @NotEmpty private String delegateId;
   @Indexed @NotEmpty private String criteria;
   private boolean validated;

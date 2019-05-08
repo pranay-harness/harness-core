@@ -17,7 +17,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.KeywordsAware;
@@ -40,7 +39,7 @@ public class TemplateGallery extends Base implements KeywordsAware {
   private String description;
   private String referencedGalleryId;
   private boolean global;
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore private List<String> keywords;
 
   @Builder
   public TemplateGallery(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

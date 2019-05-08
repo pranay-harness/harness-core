@@ -60,7 +60,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess {
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore private List<String> keywords;
   @Indexed private String accountId;
 
   /**
