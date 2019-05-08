@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -12,6 +13,8 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
 import software.wings.beans.TaskType;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
@@ -23,12 +26,17 @@ import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Slf4j
 public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private static final String UNHANDLED_CONFIG_MSG = "Unhandled type of helm repo config. Type : ";
   private static final String AWS_URL = "https://aws.amazon.com/";
+
+  private static final String HELM_VERSION_COMMAND = "${HELM_PATH} version -c";
+
+  private static final String CHART_MUSEUM_VERSION_COMMAND = "${CHART_MUSEUM_PATH} -v";
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
@@ -82,18 +90,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateGcsHelmRepoConfig() {
-    String helmPath = k8sGlobalConfigService.getHelmPath();
-    if (isBlank(helmPath)) {
-      logger.info(format("Helm not installed in delegate for task %s", delegateTaskId));
-      return false;
-    }
-
-    String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
-    if (isBlank(chartMuseumPath)) {
-      logger.info(format("chartmuseum not installed in delegate for task %s", delegateTaskId));
-      return false;
-    }
-    return true;
+    return isHelmInstalled() && isChartMuseumInstalled();
   }
 
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {
@@ -104,36 +101,33 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private boolean validateHttpHelmRepoConfig(HelmRepoConfig helmRepoConfig) {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
 
-    String chartRepoUrl = httpHelmRepoConfig.getChartRepoUrl();
-    if (!connectableHttpUrl(chartRepoUrl)) {
-      logger.info(format("Unreachable URL %s for task %s from delegate", chartRepoUrl, delegateTaskId));
-      return false;
-    }
+    return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl());
+  }
 
-    if (!isHelmInstalled()) {
+  private boolean validateAmazonS3HelmRepoConfig() {
+    return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL);
+  }
+
+  private boolean isConnectableHttpUrl(String url) {
+    if (!connectableHttpUrl(url)) {
+      logger.info(format("Unreachable URL %s for task %s from delegate", url, delegateTaskId));
       return false;
     }
 
     return true;
   }
 
-  private boolean validateAmazonS3HelmRepoConfig() {
-    if (!isHelmInstalled()) {
-      return false;
-    }
-
+  private boolean isChartMuseumInstalled() {
     String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
     if (isBlank(chartMuseumPath)) {
       logger.info(format("chartmuseum not installed in delegate for task %s", delegateTaskId));
       return false;
     }
 
-    if (!connectableHttpUrl(AWS_URL)) {
-      logger.info(format("Unreachable URL %s for task %s from delegate", AWS_URL, delegateTaskId));
-      return false;
-    }
+    String chartMuseumVersionCommand =
+        CHART_MUSEUM_VERSION_COMMAND.replace("${CHART_MUSEUM_PATH}", encloseWithQuotesIfNeeded(chartMuseumPath));
 
-    return true;
+    return executeCommand(chartMuseumVersionCommand);
   }
 
   private boolean isHelmInstalled() {
@@ -143,7 +137,9 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       return false;
     }
 
-    return true;
+    String helmVersionCommand = HELM_VERSION_COMMAND.replace("${HELM_PATH}", encloseWithQuotesIfNeeded(helmPath));
+
+    return executeCommand(helmVersionCommand);
   }
 
   private String getCriteriaForEmptyHelmRepoConfigInValuesFetch() {
@@ -184,5 +180,26 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
     }
 
     return null;
+  }
+
+  private boolean executeCommand(String command) {
+    try {
+      logger.info("Executing command: " + command);
+
+      ProcessExecutor processExecutor =
+          new ProcessExecutor().timeout(2, TimeUnit.MINUTES).commandSplit(command).readOutput(true);
+
+      ProcessResult processResult = processExecutor.execute();
+
+      if (processResult.getExitValue() != 0) {
+        logger.info("Failed to execute command: " + command + ". Error: " + processResult.getOutput().getUTF8());
+        return false;
+      }
+
+      return true;
+    } catch (Exception ex) {
+      logger.error("Error executing command: " + command, ex);
+      return false;
+    }
   }
 }
