@@ -58,12 +58,18 @@ public final class GraphQLDateTimeScalar {
           .build();
 
   // TODO: Create the necessary testing that the exported value meets the scalar back
-  public static ZonedDateTime convert(long timestamp) {
+  public static ZonedDateTime convert(Long timestamp) {
+    if (timestamp == null) {
+      return null;
+    }
     return ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"));
   }
 
   // TODO: Create the necessary testing that the exported value meets the scalar back
-  public static String convertToString(long timestamp) {
+  public static String convertToString(Long timestamp) {
+    if (timestamp == null) {
+      return null;
+    }
     return ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"))
         .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
   }
