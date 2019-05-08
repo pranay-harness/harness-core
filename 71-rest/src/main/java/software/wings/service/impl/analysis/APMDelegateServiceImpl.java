@@ -9,6 +9,7 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -85,8 +86,8 @@ public class APMDelegateServiceImpl implements APMDelegateService {
 
     Call<Object> request;
     if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
-      request = getAPMRestClient(config).putCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
-          resolveDollarReferences(config.getOptions()), config.getBody());
+      request = getAPMRestClient(config).postCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
+          resolveDollarReferences(config.getOptions()), new JSONObject(config.getBody()).toMap());
     } else {
       request = getAPMRestClient(config).collect(
           config.getUrl(), resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));

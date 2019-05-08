@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
@@ -49,6 +50,7 @@ import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.NewRelicState.Metric;
 import software.wings.utils.CacheHelper;
@@ -110,6 +112,10 @@ public class NewRelicServiceImpl implements NewRelicService {
               .body(fetchConfig.getBody())
               .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
               .build();
+      if (isNotEmpty(fetchConfig.getBody())) {
+        apmValidateCollectorConfig.setCollectionMethod(Method.POST);
+      }
+
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(accountId)
                                             .appId(GLOBAL_APP_ID)
