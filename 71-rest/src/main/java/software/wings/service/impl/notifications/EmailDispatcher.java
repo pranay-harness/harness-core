@@ -45,6 +45,7 @@ public class EmailDispatcher {
     }
 
     if (isEmpty(validToAddresses)) {
+      log.info("No valid email addresses in: {}", toAddress);
       return;
     }
 
@@ -64,6 +65,7 @@ public class EmailDispatcher {
     });
 
     if (emailBodyList.isEmpty() || emailSubjectList.isEmpty()) {
+      log.info("Email body/subject is empty. destination-emails: {}", toAddress);
       return;
     }
 
@@ -73,6 +75,7 @@ public class EmailDispatcher {
     EmailData emailData = EmailData.builder().to(validToAddresses).subject(subject).body(body).system(true).build();
     emailData.setRetries(2);
     emailData.setCc(Collections.emptyList());
+    log.info("Trying to send email to: {}", validToAddresses);
     emailNotificationService.sendAsync(emailData);
   }
 
