@@ -72,7 +72,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
 
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore private List<String> keywords;
 
   private boolean isK8sV2;
   @Indexed private String accountId;

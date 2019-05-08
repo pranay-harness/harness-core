@@ -66,7 +66,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   private String referencedTemplateId;
   private Long referencedTemplateVersion;
   private transient String referencedTemplateUri;
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore private List<String> keywords;
 
   @Builder
   public Template(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

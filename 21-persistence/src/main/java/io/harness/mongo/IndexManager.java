@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-public class IndexManagement {
+public class IndexManager {
   private interface IndexCreator { void create(); }
 
   @Value
@@ -136,7 +136,7 @@ public class IndexManagement {
         // Alert for every index that left:
         .forEach(entry -> {
           Duration passed = Duration.between(entry.getValue().getSince().toInstant(), ZonedDateTime.now().toInstant());
-          logger.info(
+          logger.error(
               format("Index %s.%s is not used at for %d days", collection.getName(), entry.getKey(), passed.toDays()));
         });
   }

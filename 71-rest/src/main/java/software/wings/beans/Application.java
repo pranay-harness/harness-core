@@ -18,7 +18,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application.ApplicationKeys;
@@ -57,7 +56,7 @@ public class Application extends Base implements KeywordsAware, NameAccess {
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
-  @Getter @Setter @Indexed private List<String> keywords;
+  @Getter @Setter private List<String> keywords;
 
   @Getter @Setter private transient YamlGitConfig yamlGitConfig;
 

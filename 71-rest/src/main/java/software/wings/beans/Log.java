@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "LogKeys")
 public class Log extends Base implements GoogleDataStoreAware {
-  @NotEmpty @Indexed private String activityId;
+  @NotEmpty private String activityId;
   private String hostName;
   @NotEmpty private String commandUnitName;
   private String logLine;

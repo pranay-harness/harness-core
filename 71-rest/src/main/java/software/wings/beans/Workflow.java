@@ -59,7 +59,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess {
 
   private List<TemplateExpression> templateExpressions;
 
-  @Getter @Setter @Indexed private List<String> keywords;
+  @Getter @Setter private List<String> keywords;
 
   @Transient private String notes;
 
@@ -78,7 +78,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess {
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();
 
-  @Indexed private List<String> linkedTemplateUuids = new ArrayList<>();
+  private List<String> linkedTemplateUuids = new ArrayList<>();
 
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
   @Indexed private String accountId;

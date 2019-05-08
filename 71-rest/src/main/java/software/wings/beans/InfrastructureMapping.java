@@ -73,7 +73,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @Nullable @Indexed private String provisionerId;
+  @Nullable private String provisionerId;
 
   @Indexed private Long nextIteration;
 

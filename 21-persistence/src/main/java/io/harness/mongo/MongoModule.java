@@ -1,7 +1,7 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.mongo.IndexManagement.ensureIndex;
+import static io.harness.mongo.IndexManager.ensureIndex;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.inject.AbstractModule;

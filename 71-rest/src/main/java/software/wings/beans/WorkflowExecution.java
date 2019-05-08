@@ -82,7 +82,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
 
   private String stateMachineId;
   @JsonIgnore private StateMachine stateMachine;
-  @Indexed private String envId;
+  private String envId;
   private List<String> envIds;
   @Indexed private List<String> serviceIds;
   private List<String> infraMappingIds;
@@ -96,7 +96,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   @Transient private GraphNode executionNode; // used for workflow details.
   private PipelineExecution pipelineExecution; // used for pipeline details.
 
-  @Indexed private String pipelineExecutionId;
+  private String pipelineExecutionId;
   private ErrorStrategy errorStrategy;
 
   private String name;
