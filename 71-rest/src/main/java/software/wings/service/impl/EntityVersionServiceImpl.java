@@ -21,6 +21,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.EntityVersion.EntityVersionKeys;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EntityVersionService;
@@ -47,12 +48,12 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   public EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid) {
     final Query<EntityVersionCollection> query = wingsPersistence.createQuery(EntityVersionCollection.class)
                                                      .filter(EntityVersionCollection.APP_ID_KEY, appId)
-                                                     .filter(EntityVersionCollection.ENTITY_TYPE_KEY, entityType)
-                                                     .filter(EntityVersionCollection.ENTITY_UUID_KEY, entityUuid)
+                                                     .filter(EntityVersionKeys.entityType, entityType)
+                                                     .filter(EntityVersionKeys.entityUuid, entityUuid)
                                                      .order(Sort.descending(EntityVersionCollection.CREATED_AT_KEY));
 
     if (isNotBlank(parentUuid)) {
-      query.filter(EntityVersionCollection.ENTITY_PARENT_UUID_KEY, parentUuid);
+      query.filter(EntityVersionKeys.entityParentUuid, parentUuid);
     }
     return query.get();
   }

@@ -244,12 +244,12 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       versionId = key;
     }
     Map<String, String> map = new HashMap<>();
-    map.put(ArtifactMetadataKeys.URL, "https://s3.amazonaws.com/" + bucketName + "/" + key);
-    map.put(ArtifactMetadataKeys.BUILD_NO, versionId);
-    map.put(ArtifactMetadataKeys.BUCKET_NAME, bucketName);
-    map.put(ArtifactMetadataKeys.ARTIFACT_PATH, key);
-    map.put(ArtifactMetadataKeys.KEY, key);
-    map.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
+    map.put(ArtifactMetadataKeys.url, "https://s3.amazonaws.com/" + bucketName + "/" + key);
+    map.put(ArtifactMetadataKeys.buildNo, versionId);
+    map.put(ArtifactMetadataKeys.bucketName, bucketName);
+    map.put(ArtifactMetadataKeys.artifactPath, key);
+    map.put(ArtifactMetadataKeys.key, key);
+    map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(artifactFileSize));
 
     return aBuildDetails()
         .withNumber(versionId)

@@ -16,7 +16,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Delegate.ACCOUNT_ID_KEY;
-import static software.wings.beans.Delegate.DELEGATE_NAME_KEY;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
@@ -67,6 +66,7 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.FeatureFlag;
@@ -674,7 +674,7 @@ public class AccountServiceImpl implements AccountService {
 
     Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
                                     .filter(ACCOUNT_ID_KEY, accountId)
-                                    .filter(DELEGATE_NAME_KEY, SAMPLE_DELEGATE_NAME)
+                                    .filter(DelegateKeys.delegateName, SAMPLE_DELEGATE_NAME)
                                     .getKey();
 
     if (delegateKey == null) {

@@ -5,6 +5,7 @@ import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -20,6 +21,7 @@ import software.wings.yaml.BaseYaml;
                , @Field("entityUuid"), @Field("version") }))
 @Entity(value = "entityVersions", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "EntityVersionCollectionKeys")
 public class EntityVersionCollection extends EntityVersion {
   public static final class Builder {
     private EntityType entityType;

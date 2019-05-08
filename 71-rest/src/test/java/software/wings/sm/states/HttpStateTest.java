@@ -206,7 +206,7 @@ public class HttpStateTest extends WingsBaseTest {
                         "{\"status\":{\"code\":\"SUCCESS\"},\"data\":{\"title\":\"Some server\",\"version\":\"2.31.0-MASTER-SNAPSHOT\",\"buildTimestamp\":1506086747259}}")));
 
     Map<String, Object> map = ImmutableMap.of(ARTIFACT,
-        anArtifact().withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "2.31.0-MASTER-SNAPSHOT")).build());
+        anArtifact().withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "2.31.0-MASTER-SNAPSHOT")).build());
     when(workflowStandardParams.paramMap(context)).thenReturn(map);
 
     HttpState.Builder jsonHttpStateBuilder =
@@ -254,7 +254,7 @@ public class HttpStateTest extends WingsBaseTest {
                         "{\"status\":{\"code\":\"SUCCESS\"},\"data\":{\"title\":\"Some server\",\"version\":\"2.31.0-MASTER-SNAPSHOT\",\"buildTimestamp\":1506086747259}}")));
 
     Map<String, Object> map = ImmutableMap.of(ARTIFACT,
-        anArtifact().withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "2.31.0-MASTER-SNAPSHOT")).build());
+        anArtifact().withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "2.31.0-MASTER-SNAPSHOT")).build());
     when(workflowStandardParams.paramMap(context)).thenReturn(map);
 
     HttpState.Builder jsonHttpStateBuilder =

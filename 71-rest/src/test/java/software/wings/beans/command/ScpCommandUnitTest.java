@@ -168,19 +168,19 @@ public class ScpCommandUnitTest extends WingsBaseTest {
     Map<String, String> map = new HashMap<>();
     switch (artifactStreamType) {
       case AMAZON_S3:
-        map.put(ArtifactMetadataKeys.BUCKET_NAME, BUCKET_NAME);
-        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
-        map.put(ArtifactMetadataKeys.ARTIFACT_PATH, ARTIFACT_PATH);
-        map.put(ArtifactMetadataKeys.BUILD_NO, BUILD_NO);
-        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
-        map.put(ArtifactMetadataKeys.KEY, ACCESS_KEY);
-        map.put(ArtifactMetadataKeys.URL, S3_URL);
+        map.put(ArtifactMetadataKeys.bucketName, BUCKET_NAME);
+        map.put(ArtifactMetadataKeys.artifactFileName, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.artifactPath, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        map.put(ArtifactMetadataKeys.key, ACCESS_KEY);
+        map.put(ArtifactMetadataKeys.url, S3_URL);
         break;
       case ARTIFACTORY:
-        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
-        map.put(ArtifactMetadataKeys.ARTIFACT_PATH, ARTIFACT_PATH);
-        map.put(ArtifactMetadataKeys.BUILD_NO, BUILD_NO);
-        map.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        map.put(ArtifactMetadataKeys.artifactFileName, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.artifactPath, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
         break;
       default:
         break;

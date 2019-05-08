@@ -105,17 +105,17 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
-                                         .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-1"))
+                                         .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-1"))
                                          .withServiceIds(ImmutableList.of("service-1"))
                                          .build(),
             anArtifact()
                 .withArtifactSourceName("artifact-2")
-                .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-2"))
+                .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-2"))
                 .withServiceIds(ImmutableList.of("service-2"))
                 .build(),
             anArtifact()
                 .withArtifactSourceName("artifact-3")
-                .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-3"))
+                .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-3"))
                 .withServiceIds(ImmutableList.of("service-3"))
                 .build()));
     when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
@@ -317,7 +317,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
-                                         .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "build-1"))
+                                         .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-1"))
                                          .withServiceIds(ImmutableList.of("service-1"))
                                          .build()));
     NotificationRule notificationRule =

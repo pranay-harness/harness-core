@@ -80,35 +80,35 @@ public class ArtifactCollectionTaskHelper {
     Pair<String, InputStream> pair;
     switch (ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType())) {
       case AMAZON_S3:
-        logger.info("Downloading artifact [{}] from bucket :[{}]",
-            metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME), metadata.get(ArtifactMetadataKeys.BUCKET_NAME));
+        logger.info("Downloading artifact [{}] from bucket :[{}]", metadata.get(ArtifactMetadataKeys.artifactFileName),
+            metadata.get(ArtifactMetadataKeys.bucketName));
         saveExecutionLog("Metadata only option set for AMAZON_S3. Starting download of artifact: "
-                + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
-                + " from bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
-                + " with key: " + metadata.get(ArtifactMetadataKeys.KEY),
+                + metadata.get(ArtifactMetadataKeys.artifactFileName)
+                + " from bucket: " + metadata.get(ArtifactMetadataKeys.bucketName)
+                + " with key: " + metadata.get(ArtifactMetadataKeys.key),
             RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         pair = amazonS3Service.downloadArtifact((AwsConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
-            metadata.get(ArtifactMetadataKeys.BUCKET_NAME), metadata.get(ArtifactMetadataKeys.KEY));
+            metadata.get(ArtifactMetadataKeys.bucketName), metadata.get(ArtifactMetadataKeys.key));
         if (pair != null) {
           saveExecutionLog(
-              "AMAZON_S3: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
-                  + " from bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
-                  + " with key: " + metadata.get(ArtifactMetadataKeys.KEY),
+              "AMAZON_S3: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName)
+                  + " from bucket: " + metadata.get(ArtifactMetadataKeys.bucketName)
+                  + " with key: " + metadata.get(ArtifactMetadataKeys.key),
               RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         } else {
           saveExecutionLog(
-              "AMAZON_S3: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
-                  + " from bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
-                  + " with key: " + metadata.get(ArtifactMetadataKeys.KEY),
+              "AMAZON_S3: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName)
+                  + " from bucket: " + metadata.get(ArtifactMetadataKeys.bucketName)
+                  + " with key: " + metadata.get(ArtifactMetadataKeys.key),
               FAILURE, accountId, appId, activityId, commandUnitName, hostName);
         }
         return pair;
       case ARTIFACTORY:
         logger.info("Downloading artifact [{}] from artifactory at path :[{}]",
-            metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME), metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH));
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
         saveExecutionLog("Metadata only option set for ARTIFACTORY. Starting download of artifact: "
-                + metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH),
+                + metadata.get(ArtifactMetadataKeys.artifactPath),
             RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         pair = artifactoryService.downloadArtifact(
             (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
@@ -116,11 +116,11 @@ public class ArtifactCollectionTaskHelper {
             metadata);
         if (pair != null) {
           saveExecutionLog(
-              "ARTIFACTORY: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME),
+              "ARTIFACTORY: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName),
               RUNNING, accountId, appId, activityId, commandUnitName, hostName);
         } else {
           saveExecutionLog(
-              "ARTIFACTORY: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME),
+              "ARTIFACTORY: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName),
               FAILURE, accountId, appId, activityId, commandUnitName, hostName);
         }
         return pair;
@@ -132,14 +132,14 @@ public class ArtifactCollectionTaskHelper {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
     switch (ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType())) {
       case AMAZON_S3:
-        logger.info("Getting artifact file size for artifact " + metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME)
-            + " in bucket: " + metadata.get(ArtifactMetadataKeys.BUCKET_NAME)
-            + " with key: " + metadata.get(ArtifactMetadataKeys.KEY));
+        logger.info("Getting artifact file size for artifact " + metadata.get(ArtifactMetadataKeys.artifactFileName)
+            + " in bucket: " + metadata.get(ArtifactMetadataKeys.bucketName)
+            + " with key: " + metadata.get(ArtifactMetadataKeys.key));
         return amazonS3Service.getFileSize((AwsConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
-            metadata.get(ArtifactMetadataKeys.BUCKET_NAME), metadata.get(ArtifactMetadataKeys.KEY));
+            metadata.get(ArtifactMetadataKeys.bucketName), metadata.get(ArtifactMetadataKeys.key));
       case ARTIFACTORY:
-        logger.info("Getting artifact file size for artifact: " + metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH));
+        logger.info("Getting artifact file size for artifact: " + metadata.get(ArtifactMetadataKeys.artifactPath));
         return artifactoryService.getFileSize(
             (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getMetadata());

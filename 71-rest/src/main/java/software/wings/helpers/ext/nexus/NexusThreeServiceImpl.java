@@ -148,8 +148,8 @@ public class NexusThreeServiceImpl {
             .stream()
             .map(tag -> {
               Map<String, String> metadata = new HashMap();
-              metadata.put(ArtifactMetadataKeys.IMAGE, repoName + ":" + tag);
-              metadata.put(ArtifactMetadataKeys.TAG, tag);
+              metadata.put(ArtifactMetadataKeys.image, repoName + ":" + tag);
+              metadata.put(ArtifactMetadataKeys.tag, tag);
               return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
             })
             .collect(toList());

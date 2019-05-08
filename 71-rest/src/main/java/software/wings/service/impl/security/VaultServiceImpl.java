@@ -140,7 +140,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public VaultConfig getVaultConfigByName(String accountId, String name) {
     Query<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
                                    .filter(ACCOUNT_ID_KEY, accountId)
-                                   .filter(EncryptedData.NAME_KEY, name);
+                                   .filter(EncryptedDataKeys.name, name);
     return getVaultConfigInternal(query);
   }
 

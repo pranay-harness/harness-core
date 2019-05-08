@@ -2,16 +2,14 @@ package software.wings.beans;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * Created by rishi on 10/13/16.
  */
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@FieldNameConstants(innerTypeName = "EntityVersionKeys")
 public class EntityVersion extends Base {
-  public static final String ENTITY_TYPE_KEY = "entityType";
-  public static final String ENTITY_UUID_KEY = "entityUuid";
-  public static final String ENTITY_PARENT_UUID_KEY = "entityParentUuid";
-
   public static final Integer INITIAL_VERSION = 1;
 
   private EntityType entityType;

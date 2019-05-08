@@ -148,10 +148,10 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   private BuildDetails getS3BuildDetails() {
     Map<String, String> map = new HashMap<>();
     map.put(Constants.URL, "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15.tar.gz");
-    map.put(ArtifactMetadataKeys.BUILD_NO, "appstack/apache-tomcat-8.5.15.tar.gz");
-    map.put(ArtifactMetadataKeys.BUCKET_NAME, "harness-catalogs");
-    map.put(ArtifactMetadataKeys.ARTIFACT_PATH, "appstack/apache-tomcat-8.5.15.tar.gz");
-    map.put(ArtifactMetadataKeys.KEY, "appstack/apache-tomcat-8.5.15.tar.gz");
+    map.put(ArtifactMetadataKeys.buildNo, "appstack/apache-tomcat-8.5.15.tar.gz");
+    map.put(ArtifactMetadataKeys.bucketName, "harness-catalogs");
+    map.put(ArtifactMetadataKeys.artifactPath, "appstack/apache-tomcat-8.5.15.tar.gz");
+    map.put(ArtifactMetadataKeys.key, "appstack/apache-tomcat-8.5.15.tar.gz");
 
     return aBuildDetails().withNumber("appstack/apache-tomcat-8.5.15.tar.gz").withBuildParameters(map).build();
   }

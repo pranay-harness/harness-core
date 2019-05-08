@@ -52,8 +52,6 @@ import java.util.List;
 public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable, NameAccess {
   protected static final String dateFormat = "HHMMSS";
 
-  public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
-
   private String artifactStreamType;
   private String sourceName;
   private String settingId;

@@ -193,11 +193,11 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
     return scpOneFile(destinationDirectoryPath, new FileProvider() {
       @Override
       public Pair<String, Long> getInfo() {
-        if (!metadata.containsKey(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE)) {
+        if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileSize)) {
           Long artifactFileSize = delegateFileManager.getArtifactFileSize(artifactStreamAttributes);
-          metadata.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
+          metadata.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(artifactFileSize));
         }
-        String fileName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
+        String fileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
         int lastIndexOfSlash = fileName.lastIndexOf('/');
         if (lastIndexOfSlash > 0) {
           saveExecutionLogWarn("Filename contains slashes. Stripping off the portion before last slash.");
@@ -207,7 +207,7 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
           logger.warn("Got filename: " + fileName);
         }
 
-        return ImmutablePair.of(fileName, Long.parseLong(metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE)));
+        return ImmutablePair.of(fileName, Long.parseLong(metadata.get(ArtifactMetadataKeys.artifactFileSize)));
       }
 
       @Override

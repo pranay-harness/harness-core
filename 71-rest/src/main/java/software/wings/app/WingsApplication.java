@@ -530,7 +530,7 @@ public class WingsApplication extends Application<MainConfiguration> {
             .semaphore(artifactCollectionSemaphore)
             .handler(artifactCleanupHandler)
             .filterExpander(
-                query -> query.filter(ArtifactStream.ARTIFACT_STREAM_TYPE_KEY, ArtifactStreamType.DOCKER.name()))
+                query -> query.filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.DOCKER.name()))
             .redistribute(true)
             .build();
 

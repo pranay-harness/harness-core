@@ -177,10 +177,10 @@ public class ArtifactCollectionState extends State {
     if (isNotEmpty(artifactCollectionExecutionData.getMetadata())) {
       metadata.putAll(artifactCollectionExecutionData.getMetadata());
     }
-    String buildUrl = metadata.get(ArtifactMetadataKeys.URL);
+    String buildUrl = metadata.get(ArtifactMetadataKeys.url);
     // Rove the the following as no need to store in build execution summary
-    metadata.remove(ArtifactMetadataKeys.BUILD_NO);
-    metadata.remove(ArtifactMetadataKeys.URL);
+    metadata.remove(ArtifactMetadataKeys.buildNo);
+    metadata.remove(ArtifactMetadataKeys.url);
     BuildExecutionSummary buildExecutionSummary =
         BuildExecutionSummary.builder()
             .artifactSource(artifactCollectionExecutionData.getArtifactSource())

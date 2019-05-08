@@ -27,7 +27,6 @@ import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.REJECTED;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.Artifact.Status.WAITING;
-import static software.wings.beans.artifact.ArtifactStream.ARTIFACT_STREAM_TYPE_KEY;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
@@ -574,11 +573,12 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public void deleteArtifacts(int retentionSize) {
-    try (HIterator<ArtifactStream> artifactStreams = new HIterator(wingsPersistence.createQuery(ArtifactStream.class)
-                                                                       .project(ARTIFACT_STREAM_TYPE_KEY, true)
-                                                                       .project(APP_ID_KEY, true)
-                                                                       .project(ArtifactStreamKeys.metadataOnly, true)
-                                                                       .fetch())) {
+    try (HIterator<ArtifactStream> artifactStreams =
+             new HIterator(wingsPersistence.createQuery(ArtifactStream.class)
+                               .project(ArtifactStreamKeys.artifactStreamType, true)
+                               .project(APP_ID_KEY, true)
+                               .project(ArtifactStreamKeys.metadataOnly, true)
+                               .fetch())) {
       while (artifactStreams.hasNext()) {
         ArtifactStream artifactStream = artifactStreams.next();
         deleteArtifactsWithContents(retentionSize, artifactStream);

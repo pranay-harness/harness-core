@@ -27,10 +27,6 @@ import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
-import static software.wings.security.encryption.EncryptedData.KMS_ID_KEY;
-import static software.wings.security.encryption.EncryptedData.NAME_KEY;
-import static software.wings.security.encryption.EncryptedData.TYPE_KEY;
-import static software.wings.security.encryption.EncryptedData.USAGE_RESTRICTIONS_KEY;
 import static software.wings.security.encryption.SecretChangeLog.ENCRYPTED_DATA_ID_KEY;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -463,7 +459,7 @@ public class SecretManagerImpl implements SecretManager {
     try (HIterator<EncryptedData> query = new HIterator<>(
              wingsPersistence.createQuery(EncryptedData.class)
                  .filter(ACCOUNT_ID_KEY, accountId)
-                 .field(TYPE_KEY)
+                 .field(EncryptedDataKeys.type)
                  .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
                  .fetch())) {
       while (query.hasNext()) {
@@ -714,10 +710,10 @@ public class SecretManagerImpl implements SecretManager {
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(ACCOUNT_ID_KEY, accountId)
-                                     .filter(KMS_ID_KEY, fromSecretId);
+                                     .filter(EncryptedDataKeys.kmsId, fromSecretId);
 
     if (toEncryptionType == EncryptionType.VAULT) {
-      query = query.field(TYPE_KEY).notEqual(SettingVariableTypes.VAULT);
+      query = query.field(EncryptedDataKeys.type).notEqual(SettingVariableTypes.VAULT);
     }
 
     try (HIterator<EncryptedData> iterator = new HIterator<>(query.fetch())) {
@@ -865,16 +861,18 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptedData getSecretMappedToAccountByName(String accountId, String name) {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(ACCOUNT_ID_KEY, accountId)
-                                     .filter(NAME_KEY, name)
-                                     .field(USAGE_RESTRICTIONS_KEY)
+                                     .filter(EncryptedDataKeys.name, name)
+                                     .field(EncryptedDataKeys.usageRestrictions)
                                      .doesNotExist();
     return query.get();
   }
 
   @Override
   public EncryptedData getSecretMappedToAppByName(String accountId, String appId, String envId, String name) {
-    PageRequest<EncryptedData> pageRequest =
-        aPageRequest().addFilter(NAME_KEY, Operator.EQ, name).addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId).build();
+    PageRequest<EncryptedData> pageRequest = aPageRequest()
+                                                 .addFilter(EncryptedDataKeys.name, Operator.EQ, name)
+                                                 .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                                 .build();
     try {
       PageResponse<EncryptedData> response = listSecrets(accountId, pageRequest, appId, envId, false);
       List<EncryptedData> secrets = response.getResponse();
@@ -1561,7 +1559,7 @@ public class SecretManagerImpl implements SecretManager {
       return aPageResponse().withResponse(Collections.emptyList()).build();
     }
 
-    pageRequest.addFilter(USAGE_RESTRICTIONS_KEY, Operator.NOT_EXISTS);
+    pageRequest.addFilter(EncryptedDataKeys.usageRestrictions, Operator.NOT_EXISTS);
 
     PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
 

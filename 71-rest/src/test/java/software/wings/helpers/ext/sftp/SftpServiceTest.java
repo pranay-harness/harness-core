@@ -60,13 +60,13 @@ public class SftpServiceTest extends WingsBaseTest {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt"));
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     Map<String, String> buildParams = new HashMap<>();
-    buildParams.put(ArtifactMetadataKeys.ARTIFACT_PATH, "a.txt");
+    buildParams.put(ArtifactMetadataKeys.artifactPath, "a.txt");
     buildParams.put("fileName", "a.txt");
     buildParams.put("allocationSize", "100");
 
     buildDetailsList.add(aBuildDetails()
                              .withNumber(buildParams.get("filename"))
-                             .withArtifactPath(buildParams.get(ArtifactMetadataKeys.ARTIFACT_PATH))
+                             .withArtifactPath(buildParams.get(ArtifactMetadataKeys.artifactPath))
                              .withBuildParameters(buildParams)
                              .build());
 

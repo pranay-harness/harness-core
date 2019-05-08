@@ -7,9 +7,10 @@ import java.util.Map;
 import java.util.Objects;
 
 public class BuildDetails {
-  public static final String METADATA_IMAGE_KEY = "image";
-  public static final String METADATA_TAG_KEY = "tag";
-
+  public static final class BuildDetailsMetadataKeys {
+    public static final String image = "image";
+    public static final String tag = "tag";
+  }
   private String number;
   private String revision;
   private String description;

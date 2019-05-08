@@ -11,7 +11,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.util.List;
 
 @Singleton
-public class EmailHelperUtil {
+public class EmailHelperUtils {
   @Inject private SettingsService settingsService;
 
   public SmtpConfig getSmtpConfig(String accountId) {

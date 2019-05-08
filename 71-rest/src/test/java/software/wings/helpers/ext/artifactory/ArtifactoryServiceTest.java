@@ -170,8 +170,8 @@ public class ArtifactoryServiceTest {
   public void shouldDownloadRpmArtifacts() {
     ListNotifyResponseData listNotifyResponseData =
         artifactoryService.downloadArtifacts(artifactoryConfig, null, "harness-rpm",
-            ImmutableMap.of(ArtifactMetadataKeys.ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm",
-                ArtifactMetadataKeys.ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"),
+            ImmutableMap.of(ArtifactMetadataKeys.artifactPath, "harness-rpm/todolist-1.0-2.x86_64.rpm",
+                ArtifactMetadataKeys.artifactFileName, "todolist-1.0-2.x86_64.rpm"),
             "delegateId", "taskId", "ACCOUNT_ID");
     assertThat(listNotifyResponseData).isNotNull();
   }
@@ -216,8 +216,8 @@ public class ArtifactoryServiceTest {
   @Category(UnitTests.class)
   public void shouldDownloadRpmArtifact() {
     Pair<String, InputStream> pair = artifactoryService.downloadArtifact(artifactoryConfig, null, "harness-rpm",
-        ImmutableMap.of(ArtifactMetadataKeys.ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm",
-            ArtifactMetadataKeys.ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"));
+        ImmutableMap.of(ArtifactMetadataKeys.artifactPath, "harness-rpm/todolist-1.0-2.x86_64.rpm",
+            ArtifactMetadataKeys.artifactFileName, "todolist-1.0-2.x86_64.rpm"));
     assertThat(pair).isNotNull();
   }
 
@@ -225,7 +225,7 @@ public class ArtifactoryServiceTest {
   @Category(UnitTests.class)
   public void shouldGetFileSize() {
     Map<String, String> metadata = new HashMap<>();
-    metadata.put(ArtifactMetadataKeys.ARTIFACT_PATH, "harness-maven/io/harness/todolist/todolist/1.1/todolist-1.1.war");
+    metadata.put(ArtifactMetadataKeys.artifactPath, "harness-maven/io/harness/todolist/todolist/1.1/todolist-1.1.war");
     Long size = artifactoryService.getFileSize(artifactoryConfig, null, metadata);
     assertThat(size).isEqualTo(1776799L);
   }

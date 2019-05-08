@@ -99,8 +99,8 @@ public class GcrServiceImpl implements GcrService {
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap();
-            metadata.put(ArtifactMetadataKeys.IMAGE, imageName + ":" + tag);
-            metadata.put(ArtifactMetadataKeys.TAG, tag);
+            metadata.put(ArtifactMetadataKeys.image, imageName + ":" + tag);
+            metadata.put(ArtifactMetadataKeys.tag, tag);
             return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
           })
           .collect(toList());
