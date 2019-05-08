@@ -60,10 +60,13 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(commandRequest);
       if (helmCommandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
         validated = containerValidationHelper.validateContainerServiceParams(params);
+        logger.info("Helm containerServiceParams validation result. Validated: " + validated);
       }
     } catch (Exception e) {
       logger.error("Helm validation failed", e);
     }
+
+    logger.info("HelmCommandValidation result. Validated: " + validated);
 
     return singletonList(DelegateConnectionResult.builder().criteria(getCriteria(params)).validated(validated).build());
   }

@@ -507,7 +507,7 @@ public class HelmDeployState extends State {
     } else {
       HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
       if (contextElement == null || isBlank(contextElement.getReleaseName())) {
-        throw new InvalidRequestException("Helm rollback is not possible without deployment");
+        throw new InvalidRequestException("Helm rollback is not possible without deployment", USER);
       }
       return contextElement.getReleaseName();
     }

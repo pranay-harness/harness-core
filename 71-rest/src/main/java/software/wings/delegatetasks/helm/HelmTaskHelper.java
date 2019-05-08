@@ -3,6 +3,7 @@ package software.wings.delegatetasks.helm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
@@ -131,7 +132,9 @@ public class HelmTaskHelper {
 
     ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory);
     if (processResult.getExitValue() != 0) {
-      throw new WingsException("Failed to add helm repo. " + processResult.getOutput().getUTF8());
+      throw new WingsException(
+          "Failed to add helm repo. Executed command " + repoAddCommand + ". " + processResult.getOutput().getUTF8(),
+          USER);
     }
   }
 
@@ -148,9 +151,12 @@ public class HelmTaskHelper {
       if (isNotBlank(helmChartConfigParams.getRepoDisplayName())) {
         builder.append(" from repo ").append(helmChartConfigParams.getRepoDisplayName());
       }
-      builder.append(". Error:").append(processResult.getOutput().getUTF8());
+      builder.append("Executed command ")
+          .append(helmFetchCommand)
+          .append(". ")
+          .append(processResult.getOutput().getUTF8());
 
-      throw new WingsException(builder.toString());
+      throw new WingsException(builder.toString(), USER);
     }
   }
 
@@ -278,28 +284,25 @@ public class HelmTaskHelper {
     return isEmpty(password) ? StringUtils.EMPTY : "--password " + new String(password);
   }
 
-  private String getHttpRepoAddCommand(
-      String repoName, String repoDisplayName, String chartRepoUrl, String username, char[] password) {
-    String addRepoCommand =
-        HELM_REPO_ADD_COMMAND_FOR_HTTP
-            .replace("${HELM_PATH}", encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath()))
-            .replace("${REPO_NAME}", repoName)
-            .replace("${REPO_URL}", chartRepoUrl);
+  private String getHttpRepoAddCommand(String repoName, String chartRepoUrl, String username, char[] password) {
+    String addRepoCommand = getHttpRepoAddCommandWithoutPassword(repoName, chartRepoUrl, username);
 
-    String evaluatedUserName = getUsername(username);
-    String evaluatedPassword = getPassword(password);
-
-    printRepoAddCommand(addRepoCommand, evaluatedUserName, evaluatedPassword, repoDisplayName);
-    return addRepoCommand.replace("${USERNAME}", evaluatedUserName).replace("${PASSWORD}", evaluatedPassword);
+    return addRepoCommand.replace("${PASSWORD}", getPassword(password));
   }
 
   public void addRepo(String repoName, String repoDisplayName, String chartRepoUrl, String username, char[] password,
       String chartDirectory) throws Exception {
-    String repoAddCommand = getHttpRepoAddCommand(repoName, repoDisplayName, chartRepoUrl, username, password);
+    String repoAddCommand = getHttpRepoAddCommand(repoName, chartRepoUrl, username, password);
+
+    String repoAddCommandForLogging = getHttpRepoAddCommandForLogging(repoName, chartRepoUrl, username, password);
+    logger.info(repoAddCommandForLogging);
+    logger.info("helm repo add command for repository " + repoDisplayName);
 
     ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory);
     if (processResult.getExitValue() != 0) {
-      throw new WingsException("Failed to add helm repo. " + processResult.getOutput().getUTF8());
+      throw new WingsException("Failed to add helm repo. Executed command " + repoAddCommandForLogging + ". "
+              + processResult.getOutput().getUTF8(),
+          USER);
     }
   }
 
@@ -313,18 +316,20 @@ public class HelmTaskHelper {
     fetchChartFromRepo(helmChartConfigParams, chartDirectory);
   }
 
-  private void printRepoAddCommand(String repoAddCommand, String username, String password, String repoDisplayName) {
-    StringBuilder output = new StringBuilder(repoAddCommand.replace("${USERNAME}", "").replace("${PASSWORD}", ""));
+  private String getHttpRepoAddCommandForLogging(
+      String repoName, String chartRepoUrl, String username, char[] password) {
+    String repoAddCommand = getHttpRepoAddCommandWithoutPassword(repoName, chartRepoUrl, username);
+    String evaluatedPassword = isEmpty(password) ? StringUtils.EMPTY : "--password *******";
 
-    if (isNotBlank(username)) {
-      output.append(" --username *******");
-    }
-    if (isNotBlank(password)) {
-      output.append(" --password *******");
-    }
+    return repoAddCommand.replace("${PASSWORD}", evaluatedPassword);
+  }
 
-    logger.info(output.toString());
-    logger.info("helm repo add command for repository " + repoDisplayName);
+  private String getHttpRepoAddCommandWithoutPassword(String repoName, String chartRepoUrl, String username) {
+    return HELM_REPO_ADD_COMMAND_FOR_HTTP
+        .replace("${HELM_PATH}", encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath()))
+        .replace("${REPO_NAME}", repoName)
+        .replace("${REPO_URL}", chartRepoUrl)
+        .replace("${USERNAME}", getUsername(username));
   }
 
   public void addHelmRepo(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String repoName,

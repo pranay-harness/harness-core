@@ -496,6 +496,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
                 clusterName, kubernetesSteadyStateCheckExecutionSummary.getNamespace(), labels);
           }
 
+          if (deploymentInfo == null) {
+            return Optional.empty();
+          }
+
           return Optional.of(singletonList(deploymentInfo));
         }
       }
@@ -545,6 +549,11 @@ public class ContainerInstanceHandler extends InstanceHandler {
       String clusterName, String namespace, List<Label> labels, HelmSetupExecutionSummary executionSummary) {
     Integer version = executionSummary.getRollbackVersion() == null ? executionSummary.getNewVersion()
                                                                     : executionSummary.getRollbackVersion();
+
+    if (version == null) {
+      return null;
+    }
+
     return ContainerDeploymentInfoWithLabels.builder()
         .clusterName(clusterName)
         .namespace(namespace)
