@@ -24,7 +24,7 @@ public class CloudWatchSetupTestNodeData extends SetupTestNodeData {
   private String hostName;
   private Map<String, List<CloudWatchMetric>> loadBalancerMetricsByLBName;
   private Map<String, List<CloudWatchMetric>> ecsMetrics;
-  private Map<String, List<CloudWatchMetric>> lambdaFunctionMetrics;
+  private Map<String, List<CloudWatchMetric>> lambdaFunctionsMetrics;
   private List<CloudWatchMetric> ec2Metrics;
 
   @Builder
@@ -32,7 +32,7 @@ public class CloudWatchSetupTestNodeData extends SetupTestNodeData {
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       String region, String hostName, Map<String, List<CloudWatchMetric>> loadBalancerMetricsByLBName,
       List<CloudWatchMetric> ec2Metrics, String guid, Map<String, List<CloudWatchMetric>> ecsMetrics,
-      Map<String, List<CloudWatchMetric>> lambdaFunctionMetrics) {
+      Map<String, List<CloudWatchMetric>> lambdaFunctionsMetrics) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.CLOUD_WATCH, fromTime, toTime);
     this.region = region;
@@ -40,6 +40,6 @@ public class CloudWatchSetupTestNodeData extends SetupTestNodeData {
     this.loadBalancerMetricsByLBName = loadBalancerMetricsByLBName;
     this.ec2Metrics = ec2Metrics;
     this.ecsMetrics = ecsMetrics;
-    this.lambdaFunctionMetrics = lambdaFunctionMetrics;
+    this.lambdaFunctionsMetrics = lambdaFunctionsMetrics;
   }
 }

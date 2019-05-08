@@ -130,8 +130,8 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     }
 
     // Fetch Lambda Metrics
-    if (!isEmpty(setupTestNodeData.getLambdaFunctionMetrics())) {
-      setupTestNodeData.getLambdaFunctionMetrics().forEach(
+    if (!isEmpty(setupTestNodeData.getLambdaFunctionsMetrics())) {
+      setupTestNodeData.getLambdaFunctionsMetrics().forEach(
           (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
             callables.add(()
                               -> getMetricDataRecords(AwsNameSpace.LAMBDA, cloudWatchClient, cloudWatchMetric,
