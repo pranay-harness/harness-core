@@ -15,6 +15,9 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLWorkflowQueryParameters;
 import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -22,6 +25,7 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkf
   @Inject HPersistence persistence;
 
   @Override
+  @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
   public QLWorkflow fetch(QLWorkflowQueryParameters qlQuery) {
     Workflow workflow = null;
 

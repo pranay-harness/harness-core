@@ -18,6 +18,8 @@ import software.wings.graphql.schema.type.QLInstance;
 import software.wings.graphql.schema.type.QLInstance.QLInstanceBuilder;
 import software.wings.graphql.schema.type.QLInstanceConnection;
 import software.wings.graphql.schema.type.QLInstanceConnection.QLInstanceConnectionBuilder;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class InstanceConnectionDataFetcher
@@ -25,8 +27,9 @@ public class InstanceConnectionDataFetcher
   @Inject private InstanceController instanceController;
 
   @Override
-  protected QLInstanceConnection fetch(QLInstanceConnectionQueryParameters qlQuery) {
-    final Query<Instance> query = persistence.createQuery(Instance.class)
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  protected QLInstanceConnection fetchConnection(QLInstanceConnectionQueryParameters qlQuery) {
+    final Query<Instance> query = persistence.createAuthorizedQuery(Instance.class)
                                       .filter(InstanceKeys.isDeleted, false)
                                       .order(Sort.descending(InstanceKeys.lastDeployedAt));
 

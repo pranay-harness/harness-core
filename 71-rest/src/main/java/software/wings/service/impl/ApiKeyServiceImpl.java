@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.UnauthorizedException;
@@ -39,6 +40,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -125,18 +127,18 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     });
   }
 
-  private List<UserGroup> getUserGroupsForApiKey(List<String> userGroupIds, String accountId) {
+  private List<UserGroup> getUserGroupsForApiKey(List<String> userGroupIds, String accountId, boolean details) {
     if (isEmpty(userGroupIds)) {
-      return null;
+      return Collections.emptyList();
     }
 
-    PageRequest<UserGroup> req = aPageRequest()
-                                     .addFilter("accountId", Operator.EQ, accountId)
-                                     .addFilter("_id", IN, userGroupIds.toArray())
-                                     .addFieldsIncluded("_id", "name")
-                                     .build();
-    PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
-    return res.getResponse();
+    PageRequestBuilder pageRequestBuilder =
+        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("_id", IN, userGroupIds.toArray());
+    if (!details) {
+      pageRequestBuilder.addFieldsIncluded("_id", "name");
+    }
+
+    return userGroupService.list(accountId, pageRequestBuilder.build(), false).getResponse();
   }
 
   @Override
@@ -152,8 +154,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                             .filter(ApiKeyEntry.ACCOUNT_ID_KEY, accountId)
                             .filter(ID_KEY, uuid)
                             .get();
+    return buildApiKeyEntry(uuid, entry, false);
+  }
+
+  private ApiKeyEntry buildApiKeyEntry(String uuid, ApiKeyEntry entry, boolean details) {
     Validator.notNullCheck("apiKeyEntry is null for id: " + uuid, entry);
-    String decryptedKey = new String(getSimpleEncryption(accountId).decryptChars(entry.getEncryptedKey()));
+    String decryptedKey = new String(getSimpleEncryption(entry.getAccountId()).decryptChars(entry.getEncryptedKey()));
 
     return ApiKeyEntry.builder()
         .uuid(entry.getUuid())
@@ -161,9 +167,17 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         .name(entry.getName())
         .accountId(entry.getAccountId())
         .decryptedKey(decryptedKey)
-        .userGroups(getUserGroupsForApiKey(
-            entry.getUserGroupIds() != null ? entry.getUserGroupIds() : Collections.emptyList(), accountId))
+        .userGroups(
+            getUserGroupsForApiKey(entry.getUserGroupIds() != null ? entry.getUserGroupIds() : Collections.emptyList(),
+                entry.getAccountId(), details))
         .build();
+  }
+
+  @Override
+  public String getAccountIdFromApiKey(String apiKey) {
+    String decodedApiKey = new String(Base64.getDecoder().decode(apiKey), Charsets.UTF_8);
+    String[] split = decodedApiKey.split(DELIMITER);
+    return split[0];
   }
 
   @Override
@@ -185,11 +199,25 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
              .getResponse()
              .stream()
-             .map(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))
-             .collect(Collectors.toSet())
-             .contains(true)) {
+             .anyMatch(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))) {
       throw new UnauthorizedException("Invalid Api Key", USER);
     }
+  }
+
+  @Override
+  public ApiKeyEntry getByKey(String key, String accountId, boolean details) {
+    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId).build();
+    Optional<ApiKeyEntry> apiKeyEntryOptional = wingsPersistence.query(ApiKeyEntry.class, pageRequest)
+                                                    .getResponse()
+                                                    .stream()
+                                                    .filter(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))
+                                                    .findFirst();
+    ApiKeyEntry apiKeyEntry = apiKeyEntryOptional.orElse(null);
+    if (apiKeyEntry == null) {
+      return null;
+    }
+
+    return buildApiKeyEntry(apiKeyEntry.getUuid(), apiKeyEntry, details);
   }
 
   @Override

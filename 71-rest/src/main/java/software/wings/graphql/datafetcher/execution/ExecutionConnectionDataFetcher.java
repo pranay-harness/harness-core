@@ -14,6 +14,8 @@ import software.wings.graphql.schema.query.QLExecutionsQueryParameters;
 import software.wings.graphql.schema.type.QLExecution;
 import software.wings.graphql.schema.type.QLExecutionConnection;
 import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionBuilder;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class ExecutionConnectionDataFetcher
@@ -21,19 +23,23 @@ public class ExecutionConnectionDataFetcher
   @Inject private ExecutionController executionController;
 
   @Override
-  public QLExecutionConnection fetch(QLExecutionsQueryParameters qlQuery) {
-    final Query<WorkflowExecution> query =
-        persistence.createQuery(WorkflowExecution.class).order(Sort.descending(WorkflowExecutionKeys.createdAt));
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public QLExecutionConnection fetchConnection(QLExecutionsQueryParameters qlQuery) {
+    final Query<WorkflowExecution> query = persistence.createAuthorizedQuery(WorkflowExecution.class)
+                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt));
 
     if (qlQuery.getApplicationId() != null) {
       query.filter(WorkflowExecutionKeys.appId, qlQuery.getApplicationId());
     }
+
     if (qlQuery.getWorkflowId() != null) {
       query.filter(WorkflowExecutionKeys.workflowId, qlQuery.getWorkflowId());
     }
+
     if (qlQuery.getPipelineId() != null) {
       query.filter(WorkflowExecutionKeys.workflowId, qlQuery.getPipelineId());
     }
+
     if (qlQuery.getServiceId() != null) {
       query.filter(WorkflowExecutionKeys.serviceIds, qlQuery.getServiceId());
     }

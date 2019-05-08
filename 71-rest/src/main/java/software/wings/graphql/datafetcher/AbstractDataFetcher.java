@@ -1,9 +1,11 @@
 package software.wings.graphql.datafetcher;
 
-import static java.lang.String.format;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
+import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
@@ -21,17 +23,21 @@ import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
+import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
+
+  @Inject AuthRuleGraphQL authRuleInstrumentation;
 
   final Map<String, Map<String, String>> parentToContextFieldArgsMap;
 
@@ -50,11 +56,19 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     Class<P> parametersClass =
         (Class<P>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
     final P parameters = fetchParameters(parametersClass, dataFetchingEnvironment);
+    Class<T> returnClass =
+        (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+
+    authRuleInstrumentation.instrumentDataFetcher(this, dataFetchingEnvironment, parameters, returnClass);
     return fetch(parameters);
   }
 
   protected WingsException batchFetchException(Throwable cause) {
     return new WingsException("", cause);
+  }
+
+  public PermissionAttribute getPermissionAttribute(P parameters) {
+    return null;
   }
 
   /**
@@ -105,11 +119,49 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     return parameters;
   }
 
+  public Object getArgumentValue(DataFetchingEnvironment dataFetchingEnvironment, String argumentName) {
+    Object argumentValue = dataFetchingEnvironment.getArgument(argumentName);
+    if (argumentValue == null && parentToContextFieldArgsMap != null) {
+      Optional<String> parentFieldNameOptional = parentToContextFieldArgsMap.values()
+                                                     .stream()
+                                                     .filter(contextFieldArgsMap -> {
+                                                       if (contextFieldArgsMap == null) {
+                                                         return false;
+                                                       }
+                                                       String fieldName = contextFieldArgsMap.get(argumentName);
+                                                       if (fieldName == null) {
+                                                         return false;
+                                                       }
+
+                                                       return true;
+                                                     })
+                                                     .map(contextFieldArgsMap -> contextFieldArgsMap.get(argumentName))
+                                                     .findFirst();
+      if (!parentFieldNameOptional.isPresent()) {
+        return null;
+      }
+      String parentFieldName = parentFieldNameOptional.get();
+      argumentValue = getFieldValue(dataFetchingEnvironment.getSource(), parentFieldName);
+    }
+    return argumentValue;
+  }
+
   private Object getFieldValue(Object obj, String fieldName) {
     try {
       return PropertyUtils.getProperty(obj, fieldName);
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
-      throw new InvalidRequestException(format("Failed to obtain the value for field %s", fieldName), exception);
+      throw new InvalidRequestException(String.format("Failed to obtain the value for field %s", fieldName), exception);
     }
+  }
+
+  protected String getAccountId(DataFetchingEnvironment environment) {
+    GraphQLContext context = environment.getContext();
+    String accountId = context.get("accountId");
+
+    if (isEmpty(accountId)) {
+      throw new WingsException("accountId is null in the environment");
+    }
+
+    return accountId;
   }
 }

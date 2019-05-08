@@ -74,6 +74,28 @@ public class PermissionAttribute {
   }
 
   /**
+   *
+   * @param resourceType
+   * @param permissionType
+   * @param action
+   */
+  public PermissionAttribute(ResourceType resourceType, PermissionType permissionType, Action action,
+      String parameterName, String dbFieldName) {
+    this(resourceType, permissionType, action, null, parameterName, dbFieldName, null, false);
+  }
+
+  /**
+   *
+   * @param resourceType
+   * @param permissionType
+   * @param action
+   */
+  public PermissionAttribute(ResourceType resourceType, PermissionType permissionType, Action action,
+      String parameterName, String dbFieldName, String dbCollectionName) {
+    this(resourceType, permissionType, action, null, parameterName, dbFieldName, dbCollectionName, false);
+  }
+
+  /**
    * Instantiates a new Permission attribute.
    *
    * @param resourceType the resource type

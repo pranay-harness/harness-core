@@ -11,13 +11,17 @@ import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
 import software.wings.graphql.schema.type.QLWorkflowConnection;
 import software.wings.graphql.schema.type.QLWorkflowConnection.QLWorkflowConnectionBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class WorkflowConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLWorkflowConnection, QLWorkflowsQueryParameters> {
   @Override
-  public QLWorkflowConnection fetch(QLWorkflowsQueryParameters qlQuery) {
-    final Query<Workflow> query = persistence.createQuery(Workflow.class)
+  @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
+  public QLWorkflowConnection fetchConnection(QLWorkflowsQueryParameters qlQuery) {
+    final Query<Workflow> query = persistence.createAuthorizedQuery(Workflow.class)
                                       .filter(WorkflowKeys.appId, qlQuery.getApplicationId())
                                       .order(Sort.descending(WorkflowKeys.createdAt));
 

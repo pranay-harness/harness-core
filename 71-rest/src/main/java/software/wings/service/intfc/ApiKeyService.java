@@ -14,4 +14,6 @@ public interface ApiKeyService extends OwnedByAccount {
   boolean deleteAll(String accountId);
   ApiKeyEntry get(@NotEmpty String uuid, @NotEmpty String accountId);
   void validate(@NotEmpty String key, @NotEmpty String accountId);
+  String getAccountIdFromApiKey(String apiKey);
+  ApiKeyEntry getByKey(String key, String accountId, boolean details);
 }

@@ -13,12 +13,15 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLApplicationQueryParameters;
 import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication, QLApplicationQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public QLApplication fetch(QLApplicationQueryParameters qlQuery) {
     Application application = null;
     if (qlQuery.getApplicationId() != null) {

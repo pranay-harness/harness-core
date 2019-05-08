@@ -11,16 +11,18 @@ import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
 import software.wings.graphql.schema.type.QLApplicationConnection;
 import software.wings.graphql.schema.type.QLApplicationConnection.QLApplicationConnectionBuilder;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class ApplicationConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLApplicationConnection, QLApplicationsQueryParameters> {
   @Override
-  public QLApplicationConnection fetch(QLApplicationsQueryParameters qlQuery) {
-    final Query<Application> query = persistence.createQuery(Application.class)
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public QLApplicationConnection fetchConnection(QLApplicationsQueryParameters qlQuery) {
+    final Query<Application> query = persistence.createAuthorizedQuery(Application.class)
                                          .filter(ApplicationKeys.accountId, qlQuery.getAccountId())
                                          .order(Sort.descending(ApplicationKeys.createdAt));
-
     QLApplicationConnectionBuilder connectionBuilder = QLApplicationConnection.builder();
     connectionBuilder.pageInfo(populate(qlQuery, query, application -> {
       QLApplicationBuilder builder = QLApplication.builder();

@@ -71,7 +71,6 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
         (k, v) -> builder.type(k, typeWiring -> typeWiring.typeResolver(v)));
 
     builder.scalar(GraphQLDateTimeScalar.type).directive("dataFetcher", dataFetcherDirective);
-
     return builder.build();
   }
 

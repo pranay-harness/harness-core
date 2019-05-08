@@ -2,18 +2,22 @@ package software.wings.graphql.datafetcher;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
 
 import java.time.ZonedDateTime;
 
+@Slf4j
 public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFetcher<T, P> {
-  @Inject protected HPersistence persistence;
+  @Inject protected WingsPersistence persistence;
 
   public interface Controller<T> { void populate(T entity); }
 
@@ -57,6 +61,21 @@ public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFe
     }
     if (to != null) {
       query.field(fieldName).lessThan(to.toOffsetDateTime().toInstant().toEpochMilli());
+    }
+  }
+
+  protected abstract T fetchConnection(P parameters);
+
+  @Override
+  protected final T fetch(P parameters) {
+    try {
+      return fetchConnection(parameters);
+    } catch (WingsException ex) {
+      if (ErrorCode.ACCESS_DENIED.equals(ex.getCode())) {
+        logger.warn("User doesn't have access to resource or no entities exist in that app");
+        return null;
+      }
+      throw ex;
     }
   }
 }

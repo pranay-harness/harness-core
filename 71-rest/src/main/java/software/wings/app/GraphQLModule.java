@@ -69,7 +69,10 @@ public class GraphQLModule extends AbstractModule {
     bind(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}).to(GraphQLProvider.class).asEagerSingleton();
     bind(DataFetcherDirective.class).asEagerSingleton();
     bind(DataLoaderRegistryHelper.class).asEagerSingleton();
+    bind(DataFetcherDirective.class).in(Scopes.SINGLETON);
+    bind(DataLoaderRegistryHelper.class).in(Scopes.SINGLETON);
 
+    // DATA FETCHERS ARE NOT SINGLETON AS THEY CAN HAVE DIFFERENT CONTEXT MAP
     bindDataFetchers();
 
     bindInstanceInfoControllers();
