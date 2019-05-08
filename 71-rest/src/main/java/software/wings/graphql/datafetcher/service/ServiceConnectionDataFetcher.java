@@ -11,13 +11,17 @@ import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLService.QLServiceBuilder;
 import software.wings.graphql.schema.type.QLServiceConnection;
 import software.wings.graphql.schema.type.QLServiceConnection.QLServiceConnectionBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class ServiceConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLServiceConnection, QLServicesQueryParameters> {
   @Override
-  protected QLServiceConnection fetch(QLServicesQueryParameters qlQuery) {
-    final Query<Service> query = persistence.createQuery(Service.class)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
+  protected QLServiceConnection fetchConnection(QLServicesQueryParameters qlQuery) {
+    final Query<Service> query = persistence.createAuthorizedQuery(Service.class)
                                      .filter(ServiceKeys.appId, qlQuery.getApplicationId())
                                      .order(Sort.descending(ServiceKeys.createdAt));
 

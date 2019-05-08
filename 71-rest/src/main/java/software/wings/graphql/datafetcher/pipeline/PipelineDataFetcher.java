@@ -13,12 +13,16 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLPipelineQueryParameters;
 import software.wings.graphql.schema.type.QLPipeline;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipelineQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override
+  @AuthRule(permissionType = PermissionType.PIPELINE, action = Action.READ)
   public QLPipeline fetch(QLPipelineQueryParameters qlQuery) {
     Pipeline pipeline = null;
     if (qlQuery.getPipelineId() != null) {

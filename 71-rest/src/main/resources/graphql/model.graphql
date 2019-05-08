@@ -23,6 +23,12 @@ extend type Query {
 
   # Get list of workflows for an applicationId. It will return paginated data
   workflows(applicationId: String!, limit: Int!, offset: Int): WorkflowConnection @dataFetcher(name: workflowConnection)
+
+  # Get details about a service
+  service(serviceId: String!): Service @dataFetcher(name: service)
+
+  # Get list of services for applicationId. It will return paginated data
+  services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: serviceConnection)
 }
 
 type Application {
@@ -50,6 +56,10 @@ type ApplicationConnection {
 enum EnvironmentType {
   PROD
   NON_PROD
+}
+
+type AppScopedEntity {
+  appId: String
 }
 
 type Environment {

@@ -420,7 +420,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       allowedOrigins = configuration.getPortal().getAllowedOrigins();
     }
     cors.setInitParameters(of("allowedOrigins", allowedOrigins, "allowedHeaders",
-        "X-Requested-With,Content-Type,Accept,Origin,Authorization", "allowedMethods",
+        "X-Requested-With,Content-Type,Accept,Origin,Authorization,X-api-key", "allowedMethods",
         "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }

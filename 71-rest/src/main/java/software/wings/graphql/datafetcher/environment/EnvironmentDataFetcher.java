@@ -11,12 +11,16 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLEnvironmentQueryParameters;
 import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment, QLEnvironmentQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
   public QLEnvironment fetch(QLEnvironmentQueryParameters qlQuery) {
     Environment environment = persistence.get(Environment.class, qlQuery.getEnvironmentId());
     if (environment == null) {

@@ -11,13 +11,17 @@ import software.wings.graphql.schema.type.QLPipeline;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
 import software.wings.graphql.schema.type.QLPipelineConnection;
 import software.wings.graphql.schema.type.QLPipelineConnection.QLPipelineConnectionBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class PipelineConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLPipelineConnection, QLPipelinesQueryParameters> {
   @Override
-  public QLPipelineConnection fetch(QLPipelinesQueryParameters qlQuery) {
-    final Query<Pipeline> query = persistence.createQuery(Pipeline.class)
+  @AuthRule(permissionType = PermissionType.PIPELINE, action = Action.READ)
+  public QLPipelineConnection fetchConnection(QLPipelinesQueryParameters qlQuery) {
+    final Query<Pipeline> query = persistence.createAuthorizedQuery(Pipeline.class)
                                       .filter(PipelineKeys.appId, qlQuery.getApplicationId())
                                       .order(Sort.descending(PipelineKeys.createdAt));
 

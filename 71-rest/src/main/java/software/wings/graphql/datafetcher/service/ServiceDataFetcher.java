@@ -11,12 +11,16 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLServiceQueryParameters;
 import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLService.QLServiceBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class ServiceDataFetcher extends AbstractDataFetcher<QLService, QLServiceQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   protected QLService fetch(QLServiceQueryParameters qlQuery) {
     Service service = persistence.get(Service.class, qlQuery.getServiceId());
     if (service == null) {

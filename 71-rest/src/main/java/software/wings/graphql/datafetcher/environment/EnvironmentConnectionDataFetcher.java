@@ -11,13 +11,17 @@ import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
 import software.wings.graphql.schema.type.QLEnvironmentConnection.QLEnvironmentConnectionBuilder;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class EnvironmentConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLEnvironmentConnection, QLEnvironmentsQueryParameters> {
   @Override
-  public QLEnvironmentConnection fetch(QLEnvironmentsQueryParameters qlQuery) {
-    final Query<Environment> query = persistence.createQuery(Environment.class)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public QLEnvironmentConnection fetchConnection(QLEnvironmentsQueryParameters qlQuery) {
+    final Query<Environment> query = persistence.createAuthorizedQuery(Environment.class)
                                          .filter(EnvironmentKeys.appId, qlQuery.getApplicationId())
                                          .order(Sort.descending(EnvironmentKeys.createdAt));
 

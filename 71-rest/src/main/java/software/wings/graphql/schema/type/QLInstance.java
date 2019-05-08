@@ -8,9 +8,12 @@ import software.wings.graphql.schema.type.instance.info.QLInstanceType;
 import software.wings.graphql.schema.type.instance.info.QLK8SPodInfo;
 import software.wings.graphql.schema.type.instance.info.QLPcfInstanceInfo;
 import software.wings.graphql.schema.type.instance.info.QLPhysicalHostInstanceInfo;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.Scope;
 
 @Value
 @Builder
+@Scope(ResourceType.APPLICATION)
 public class QLInstance {
   private String id;
   private QLInstanceType type;

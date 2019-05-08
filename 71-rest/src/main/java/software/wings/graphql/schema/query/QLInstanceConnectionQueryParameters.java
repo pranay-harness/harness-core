@@ -16,4 +16,5 @@ public class QLInstanceConnectionQueryParameters implements QLPageQueryParameter
   EnvironmentType envType;
   String accountId;
   DataFetchingFieldSelectionSet selectionSet;
+  String applicationId;
 }

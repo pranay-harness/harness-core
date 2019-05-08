@@ -25,6 +25,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.encryption.Encrypted;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.PageController;
@@ -358,6 +359,8 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     if (userRequestContext.isAppIdFilterRequired()) {
       if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
         query.field("appId").in(userRequestContext.getAppIds());
+      } else {
+        return false;
       }
     }
 
@@ -386,7 +389,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     if (authFilters(query, collectionClass)) {
       return query;
     }
-    throw new WingsException(getExceptionMsgWithUserContext(), USER);
+    throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
   }
 
   @Override

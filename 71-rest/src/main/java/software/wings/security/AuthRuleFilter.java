@@ -201,10 +201,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
-    if (allLoggedInScope(requiredPermissionAttributes)) {
-      return;
-    }
-
     if (accountId == null) {
       if (emptyAppIdsInReq) {
         throw new InvalidRequestException("appId not specified", USER);
@@ -221,26 +217,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (!skipAuth) {
       if (accountLevelPermissions) {
-        UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
-        if (userPermissionInfo == null) {
-          throw new InvalidRequestException("User not authorized", USER);
-        }
-
-        AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
-        if (accountPermissionSummary == null) {
-          throw new InvalidRequestException("User not authorized", USER);
-        }
-
-        Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
-        if (accountPermissions == null) {
-          throw new InvalidRequestException("User not authorized", USER);
-        }
-
-        if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
-          return;
-        } else {
-          throw new InvalidRequestException("User not authorized", USER);
-        }
+        authorizeAccountPermission(userRequestContext, requiredPermissionAttributes);
       } else {
         // Handle delete and update methods
         String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
@@ -258,12 +235,36 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
   }
 
+  public void authorizeAccountPermission(
+      UserRequestContext userRequestContext, List<PermissionAttribute> requiredPermissionAttributes) {
+    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+    if (userPermissionInfo == null) {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+
+    AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
+    if (accountPermissionSummary == null) {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+
+    Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
+    if (accountPermissions == null) {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+
+    if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
+      return;
+    } else {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+  }
+
   private boolean isAuthorized(List<PermissionAttribute> permissionAttributes, Set<PermissionType> accountPermissions) {
     return permissionAttributes.stream().anyMatch(
         permissionAttribute -> accountPermissions.contains(permissionAttribute.getPermissionType()));
   }
 
-  private boolean isAccountLevelPermissions(List<PermissionAttribute> permissionAttributes) {
+  public boolean isAccountLevelPermissions(List<PermissionAttribute> permissionAttributes) {
     return permissionAttributes.stream().anyMatch(
         permissionAttribute -> isAccountLevelPermissions(permissionAttribute.getPermissionType()));
   }
@@ -284,7 +285,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return null;
   }
 
-  private String getParameterName(List<PermissionAttribute> permissionAttributes) {
+  public String getParameterName(List<PermissionAttribute> permissionAttributes) {
     Optional<String> entityFieldNameOptional =
         permissionAttributes.stream()
             .map(permissionAttribute -> {
@@ -329,7 +330,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return entityId;
   }
 
-  private Set<String> getAllowedAppIds(UserPermissionInfo userPermissionInfo) {
+  public Set<String> getAllowedAppIds(UserPermissionInfo userPermissionInfo) {
     Set<String> allowedAppIds;
 
     Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
@@ -378,7 +379,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return requiredPermissionAttributes.stream().anyMatch(permissionAttribute -> permissionAttribute.isSkipAuth());
   }
 
-  private boolean setAppIdFilterInUserRequestContext(
+  public boolean setAppIdFilterInUserRequestContext(
       UserRequestContextBuilder userRequestContextBuilder, boolean emptyAppIdsInReq, Set<String> allowedAppIds) {
     if (!emptyAppIdsInReq) {
       return false;
@@ -490,6 +491,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return resourceMethod.getAnnotation(ListAPI.class) != null || resourceClass.getAnnotation(ListAPI.class) != null;
   }
 
+  public PermissionAttribute buildPermissionAttribute(AuthRule authRule, String httpMethod, ResourceType resourceType) {
+    return new PermissionAttribute(resourceType, authRule.permissionType(), getAction(authRule, httpMethod), httpMethod,
+        authRule.parameterName(), authRule.dbFieldName(), authRule.dbCollectionName(), authRule.skipAuth());
+  }
+
   private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {
     List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
     List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
@@ -497,10 +503,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
     if (null != methodAnnotations) {
-      methodPermissionAttributes.add(new PermissionAttribute(null, methodAnnotations.permissionType(),
-          getAction(methodAnnotations, requestContext.getMethod()), requestContext.getMethod(),
-          methodAnnotations.parameterName(), methodAnnotations.dbFieldName(), methodAnnotations.dbCollectionName(),
-          methodAnnotations.skipAuth()));
+      methodPermissionAttributes.add(buildPermissionAttribute(methodAnnotations, requestContext.getMethod(), null));
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();

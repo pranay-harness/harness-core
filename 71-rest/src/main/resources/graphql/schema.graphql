@@ -19,12 +19,6 @@ type Query {
     limit: Int!
     offset: Int
   ): InstanceConnection @dataFetcher(name: instanceConnection)
-
-  # Get details about a service
-  service(serviceId: String!): Service @dataFetcher(name: service)
-
-  # Get list of services for applicationId. It will return paginated data
-  services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: serviceConnection)
 }
 
 enum InstanceType {
