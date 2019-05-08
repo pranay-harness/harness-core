@@ -304,7 +304,7 @@ public class InstallUtils {
     logger.info("Init helm client only");
 
     String helmDirectory = helmBaseDir + helmVersion;
-    String script = "./helm init -c \n";
+    String script = "./helm init -c --skip-refresh \n";
 
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(10, TimeUnit.MINUTES)
@@ -352,7 +352,7 @@ public class InstallUtils {
       String script = "curl $PROXY_CURL -LO " + downloadUrl + " \n"
           + "chmod +x ./helm \n"
           + "./helm version -c \n"
-          + "./helm init -c \n";
+          + "./helm init -c --skip-refresh \n";
 
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .timeout(10, TimeUnit.MINUTES)
