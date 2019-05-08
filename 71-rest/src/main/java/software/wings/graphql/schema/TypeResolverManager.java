@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import graphql.schema.TypeResolver;
+import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedBy;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
@@ -18,12 +19,14 @@ public class TypeResolverManager {
   public static final class TypeResolverManagerUnifaces {
     public static final String Cause = "Cause";
     public static final String Execution = "Execution";
+    public static final String Outcome = "Outcome";
   }
 
   public static final class TypeResolverManagerTypes {
     public static final String ExecutedBy = "ExecutedBy";
     public static final String PipelineExecution = "PipelineExecution";
     public static final String WorkflowExecution = "WorkflowExecution";
+    public static final String DeploymentOutcome = "DeploymentOutcome";
   }
 
   /**
@@ -42,6 +45,10 @@ public class TypeResolverManager {
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLExecutedBy.class, TypeResolverManagerTypes.ExecutedBy)
                                       .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
+                                      .build()))
+        .put(TypeResolverManagerUnifaces.Outcome,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLDeploymentOutcome.class, TypeResolverManagerTypes.DeploymentOutcome)
                                       .build()))
         .build();
   }

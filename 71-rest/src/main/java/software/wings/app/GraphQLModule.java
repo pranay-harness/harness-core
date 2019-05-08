@@ -37,6 +37,7 @@ import software.wings.graphql.datafetcher.instance.instanceInfo.K8sPodInfoContro
 import software.wings.graphql.datafetcher.instance.instanceInfo.KubernetesContainerInfoController;
 import software.wings.graphql.datafetcher.instance.instanceInfo.PcfInstanceInfoController;
 import software.wings.graphql.datafetcher.instance.instanceInfo.PhysicalHostInstanceInfoController;
+import software.wings.graphql.datafetcher.outcome.OutcomeConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceConnectionDataFetcher;
@@ -103,6 +104,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(OutcomeConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
