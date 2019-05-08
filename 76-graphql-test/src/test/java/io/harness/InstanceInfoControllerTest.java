@@ -157,7 +157,8 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
     assertThat(qlInstance.getEcsContainerInfo()).isNotNull();
     assertThat(qlInstance.getEcsContainerInfo().getClusterName()).isEqualTo("TESTCLUSTER");
     assertThat(qlInstance.getEcsContainerInfo().getServiceName()).isEqualTo("TESTSERVICE");
-    assertThat(qlInstance.getEcsContainerInfo().getStartedAt()).isEqualTo(GraphQLDateTimeScalar.convert(100));
+    assertThat(qlInstance.getEcsContainerInfo().getStartedAt())
+        .isEqualTo(GraphQLDateTimeScalar.convert(Long.valueOf(100)));
     assertThat(qlInstance.getEcsContainerInfo().getStartedBy()).isEqualTo("TESTUSER");
     assertThat(qlInstance.getEcsContainerInfo().getTaskArn()).isEqualTo("TESTTASK");
     assertThat(qlInstance.getEcsContainerInfo().getTaskDefinitionArn()).isEqualTo("TESTTASKDEF");
