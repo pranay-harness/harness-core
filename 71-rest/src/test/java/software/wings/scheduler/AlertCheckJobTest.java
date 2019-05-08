@@ -29,7 +29,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.utils.EmailHelperUtil;
+import software.wings.utils.EmailHelperUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -37,7 +37,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   @Mock private AlertService alertService;
   @Mock private DelegateService delegateService;
-  @Mock private EmailHelperUtil emailHelperUtil;
+  @Mock private EmailHelperUtils emailHelperUtils;
   @Mock private MainConfiguration mainConfiguration;
   @InjectMocks @Inject AlertCheckJob alertCheckJob;
   @Inject private WingsPersistence wingsPersistence;
@@ -46,7 +46,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     when(mainConfiguration.getSmtpConfig()).thenReturn(mock(SmtpConfig.class));
-    when(emailHelperUtil.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(true);
+    when(emailHelperUtils.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(true);
     wingsPersistence.save(aManagerConfiguration().withPrimaryVersion("*").build());
   }
 
@@ -118,7 +118,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSMTPAlert() {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);
-    when(emailHelperUtil.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(false);
+    when(emailHelperUtils.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(false);
 
     alertCheckJob.checkForInvalidValidSMTP(ACCOUNT_ID);
     verify(alertService, times(1)).openAlert(any(), any(), any(), any());

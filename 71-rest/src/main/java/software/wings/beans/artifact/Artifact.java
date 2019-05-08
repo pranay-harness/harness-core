@@ -33,21 +33,21 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 public class Artifact extends Base {
   public static final class ArtifactMetadataKeys {
-    public static final String ARTIFACT_FILE_NAME = "artifactFileName";
-    public static final String ARTIFACT_FILE_SIZE = "artifactFileSize";
-    public static final String ARTIFACT_PATH = "artifactPath";
-    public static final String BUCKET_NAME = "bucketName";
-    public static final String BUILD_FULL_DISPLAY_NAME = "buildFullDisplayName";
-    public static final String BUILD_NO = "buildNo";
-    public static final String KEY = "key";
-    public static final String URL = "url";
-    public static final String IMAGE = "image";
-    public static final String TAG = "tag";
+    public static final String artifactFileName = "artifactFileName";
+    public static final String artifactFileSize = "artifactFileSize";
+    public static final String artifactPath = "artifactPath";
+    public static final String bucketName = "bucketName";
+    public static final String buildFullDisplayName = "buildFullDisplayName";
+    public static final String buildNo = "buildNo";
+    public static final String key = "key";
+    public static final String url = "url";
+    public static final String image = "image";
+    public static final String tag = "tag";
   }
 
   public static final class ArtifactKeys {
-    public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.IMAGE;
-    public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.TAG;
+    public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.image;
+    public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.tag;
   }
 
   private String artifactStreamId;
@@ -75,7 +75,7 @@ public class Artifact extends Base {
    */
   public String getBuildNo() {
     if (getMetadata() != null) {
-      return getMetadata().get(ArtifactMetadataKeys.BUILD_NO);
+      return getMetadata().get(ArtifactMetadataKeys.buildNo);
     }
     return null;
   }
@@ -87,7 +87,7 @@ public class Artifact extends Base {
    */
   public String getArtifactPath() {
     if (getMetadata() != null) {
-      return getMetadata().get(ArtifactMetadataKeys.ARTIFACT_PATH);
+      return getMetadata().get(ArtifactMetadataKeys.artifactPath);
     }
     return null;
   }
@@ -99,7 +99,7 @@ public class Artifact extends Base {
    */
   public String getBucketName() {
     if (getMetadata() != null) {
-      return getMetadata().get(ArtifactMetadataKeys.BUCKET_NAME);
+      return getMetadata().get(ArtifactMetadataKeys.bucketName);
     }
     return null;
   }
@@ -111,7 +111,7 @@ public class Artifact extends Base {
    */
   public String getKey() {
     if (getMetadata() != null) {
-      return getMetadata().get(ArtifactMetadataKeys.KEY);
+      return getMetadata().get(ArtifactMetadataKeys.key);
     }
     return null;
   }
@@ -123,7 +123,7 @@ public class Artifact extends Base {
    */
   public String getUrl() {
     if (getMetadata() != null) {
-      return getMetadata().get(ArtifactMetadataKeys.URL);
+      return getMetadata().get(ArtifactMetadataKeys.url);
     }
     return null;
   }
@@ -134,7 +134,7 @@ public class Artifact extends Base {
    */
   public String getFileName() {
     if (getMetadata() != null) {
-      return getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
+      return getMetadata().get(ArtifactMetadataKeys.artifactFileName);
     }
     return null;
   }
@@ -145,7 +145,7 @@ public class Artifact extends Base {
    */
   public String getBuildFullDisplayName() {
     if (getMetadata() != null) {
-      return getMetadata().get(ArtifactMetadataKeys.BUILD_FULL_DISPLAY_NAME);
+      return getMetadata().get(ArtifactMetadataKeys.buildFullDisplayName);
     }
     return null;
   }
@@ -156,8 +156,8 @@ public class Artifact extends Base {
    * @return
    */
   public Long getArtifactFileSize() {
-    if (getMetadata() != null && getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE) != null) {
-      return Long.valueOf(getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE));
+    if (getMetadata() != null && getMetadata().get(ArtifactMetadataKeys.artifactFileSize) != null) {
+      return Long.valueOf(getMetadata().get(ArtifactMetadataKeys.artifactFileSize));
     }
     return null;
   }

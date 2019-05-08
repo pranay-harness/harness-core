@@ -54,11 +54,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
-  public static final String NAME_KEY = "name";
-  public static final String USAGE_RESTRICTIONS_KEY = "usageRestrictions";
-  public static final String TYPE_KEY = "type";
-  public static final String KMS_ID_KEY = "kmsId";
-
   @NotEmpty @Indexed private String name;
 
   @NotEmpty @Indexed private String encryptionKey;

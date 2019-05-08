@@ -59,7 +59,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetSftpPaths() throws IOException {
     List<String> artifactPaths = new ArrayList<>();
-    artifactPaths.add(ArtifactMetadataKeys.ARTIFACT_PATH);
+    artifactPaths.add(ArtifactMetadataKeys.artifactPath);
 
     // Create SFTP client
     doReturn(sftpClient).when(sshClient).newSFTPClient();
@@ -107,15 +107,15 @@ public class SftpHelperServiceTest extends WingsBaseTest {
 
     List<BuildDetails> buildDetailsListForArtifactPath = Lists.newArrayList();
     Map<String, String> map = new HashMap<>();
-    map.put(ArtifactMetadataKeys.ARTIFACT_PATH, ArtifactMetadataKeys.ARTIFACT_PATH);
-    map.put(ArtifactMetadataKeys.URL, SFTP_WIN_URL);
-    map.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME, remoteResourceInfoList.get(0).getName());
+    map.put(ArtifactMetadataKeys.artifactPath, ArtifactMetadataKeys.artifactPath);
+    map.put(ArtifactMetadataKeys.url, SFTP_WIN_URL);
+    map.put(ArtifactMetadataKeys.artifactFileName, remoteResourceInfoList.get(0).getName());
     map.put(PATH, remoteResourceInfoList.get(0).getPath());
     map.put(PARENT, remoteResourceInfoList.get(0).getParent());
 
     buildDetailsListForArtifactPath.add(aBuildDetails()
                                             .withNumber(remoteResourceInfoList.get(0).getName())
-                                            .withArtifactPath(ArtifactMetadataKeys.ARTIFACT_PATH)
+                                            .withArtifactPath(ArtifactMetadataKeys.artifactPath)
                                             .withBuildUrl(SFTP_WIN_URL)
                                             .withBuildParameters(map)
                                             .build());

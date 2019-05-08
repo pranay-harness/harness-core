@@ -170,9 +170,9 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
         artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
     BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(appId, artifactStream, artifactStream.getUuid());
     Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(artifactStream);
-    int buildNo = (lastCollectedArtifact != null
-                      && lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.BUILD_NO) != null)
-        ? parseInt(lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.BUILD_NO))
+    int buildNo =
+        (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.buildNo) != null)
+        ? parseInt(lastCollectedArtifact.getMetadata().get(ArtifactMetadataKeys.buildNo))
         : 0;
     if (lastSuccessfulBuild != null && parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
       logger.info("Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",

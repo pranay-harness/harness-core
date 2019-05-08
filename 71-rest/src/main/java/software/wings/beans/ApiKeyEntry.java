@@ -7,6 +7,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -20,9 +21,8 @@ import java.util.List;
 @Builder
 @Entity(value = "apiKeys", noClassnameStored = true)
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "ApiKeyEntryKeys")
 public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAccess {
-  public static final String ACCOUNT_ID_KEY = "accountId";
-
   @Id private String uuid;
   private String name;
   private List<String> userGroupIds;

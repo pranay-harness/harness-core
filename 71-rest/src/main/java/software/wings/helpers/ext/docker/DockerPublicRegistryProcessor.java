@@ -110,8 +110,8 @@ public class DockerPublicRegistryProcessor {
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap();
-            metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag.getName());
-            metadata.put(ArtifactMetadataKeys.TAG, tag.getName());
+            metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag.getName());
+            metadata.put(ArtifactMetadataKeys.tag, tag.getName());
             return aBuildDetails()
                 .withNumber(tag.getName())
                 .withBuildUrl(tagUrl + tag.getName())

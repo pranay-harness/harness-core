@@ -38,8 +38,8 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.EmailHelperUtil;
-import software.wings.utils.EmailUtil;
+import software.wings.utils.EmailHelperUtils;
+import software.wings.utils.EmailUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -101,9 +101,9 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
 
   @Mock private AlertService alertService;
 
-  @Inject EmailUtil emailUtil;
+  @Inject EmailUtils emailUtils;
 
-  @InjectMocks @Inject private EmailHelperUtil emailHelperUtil;
+  @InjectMocks @Inject private EmailHelperUtils emailHelperUtils;
   /**
    * The Verify.
    */
@@ -218,7 +218,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
         .when(mailer)
         .send(any(SmtpConfig.class), any(List.class), any(EmailData.class));
     emailDataNotificationService.send(systemEmailTemplateData);
-    String errorMessage = emailUtil.getErrorString(systemEmailTemplateData);
+    String errorMessage = emailUtils.getErrorString(systemEmailTemplateData);
     verify(alertService)
         .openAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
             EmailSendingFailedAlert.builder().emailAlertData(errorMessage).build());
@@ -243,7 +243,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
         .thenReturn(newArrayList());
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);
     emailDataNotificationService.send(nonSystemEmailBodyData);
-    String errorMessage = emailUtil.getErrorString(nonSystemEmailBodyData);
+    String errorMessage = emailUtils.getErrorString(nonSystemEmailBodyData);
     verify(alertService)
         .openAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
             EmailSendingFailedAlert.builder().emailAlertData(errorMessage).build());

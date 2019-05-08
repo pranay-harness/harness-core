@@ -57,7 +57,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   @Nullable
   public ConfiguredLimit get(String accountId, ActionType actionType) {
     return dao.createQuery(ConfiguredLimit.class)
-        .filter(ConfiguredLimit.ACCOUNT_ID_KEY, accountId)
+        .filter(ConfiguredLimitKeys.accountId, accountId)
         .filter(ConfiguredLimitKeys.key, actionType.toString())
         .get();
   }
@@ -140,6 +140,6 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
 
   @Override
   public void deleteByAccountId(String accountId) {
-    dao.delete(dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimit.ACCOUNT_ID_KEY, accountId));
+    dao.delete(dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, accountId));
   }
 }

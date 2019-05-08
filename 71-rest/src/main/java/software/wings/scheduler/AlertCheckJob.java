@@ -34,7 +34,7 @@ import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
-import software.wings.utils.EmailHelperUtil;
+import software.wings.utils.EmailHelperUtils;
 
 import java.time.Clock;
 import java.util.Date;
@@ -56,7 +56,7 @@ public class AlertCheckJob implements Job {
 
   @Inject private AlertService alertService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private EmailHelperUtil emailHelperUtil;
+  @Inject private EmailHelperUtils emailHelperUtils;
   @Inject private MainConfiguration mainConfiguration;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private Clock clock;
@@ -129,8 +129,8 @@ public class AlertCheckJob implements Job {
 
   @VisibleForTesting
   void checkForInvalidValidSMTP(String accountId) {
-    if (!emailHelperUtil.isSmtpConfigValid(mainConfiguration.getSmtpConfig())
-        && !emailHelperUtil.isSmtpConfigValid(emailHelperUtil.getSmtpConfig(accountId))) {
+    if (!emailHelperUtils.isSmtpConfigValid(mainConfiguration.getSmtpConfig())
+        && !emailHelperUtils.isSmtpConfigValid(emailHelperUtils.getSmtpConfig(accountId))) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.INVALID_SMTP_CONFIGURATION,
           InvalidSMTPConfigAlert.builder().accountId(accountId).build());
     } else {

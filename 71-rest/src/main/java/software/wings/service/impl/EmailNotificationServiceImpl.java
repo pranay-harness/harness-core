@@ -26,8 +26,8 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.EmailHelperUtil;
-import software.wings.utils.EmailUtil;
+import software.wings.utils.EmailHelperUtils;
+import software.wings.utils.EmailUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -51,9 +51,9 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
-  @Inject private EmailHelperUtil emailHelperUtil;
+  @Inject private EmailHelperUtils emailHelperUtils;
 
-  @Inject private EmailUtil emailUtil;
+  @Inject private EmailUtils emailUtils;
 
   @Inject private AlertService alertService;
 
@@ -63,13 +63,13 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
   @Override
   public boolean send(EmailData emailData) {
     SmtpConfig config = emailData.isSystem() ? mainConfiguration.getSmtpConfig()
-                                             : emailHelperUtil.getSmtpConfig(emailData.getAccountId());
+                                             : emailHelperUtils.getSmtpConfig(emailData.getAccountId());
 
-    if (!emailHelperUtil.isSmtpConfigValid(config)) {
+    if (!emailHelperUtils.isSmtpConfigValid(config)) {
       config = mainConfiguration.getSmtpConfig();
     }
 
-    if (!emailHelperUtil.isSmtpConfigValid(config)) {
+    if (!emailHelperUtils.isSmtpConfigValid(config)) {
       sendEmailNotSentAlert(emailData);
       return false;
     }
@@ -84,7 +84,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         closeEmailNotSentAlert(emailData);
         return true;
       } catch (WingsException e) {
-        String errorString = emailUtil.getErrorString(emailData);
+        String errorString = emailUtils.getErrorString(emailData);
         logger.warn(errorString, e);
         sendEmailNotSentAlert(emailData);
         return false;
@@ -95,7 +95,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
   }
 
   private void sendEmailNotSentAlert(EmailData emailData) {
-    String errorString = emailUtil.getErrorString(emailData);
+    String errorString = emailUtils.getErrorString(emailData);
     alertService.openAlert(emailData.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
         EmailSendingFailedAlert.builder().emailAlertData(errorString).build());
   }
@@ -125,7 +125,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
       delegateService.queueTask(delegateTask);
       return true;
     } catch (Exception e) {
-      String errorString = emailUtil.getErrorString(emailData);
+      String errorString = emailUtils.getErrorString(emailData);
       logger.warn(errorString, e);
       sendEmailNotSentAlert(emailData);
       return false;

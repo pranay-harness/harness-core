@@ -14,6 +14,7 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ApiKeyEntry;
+import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -70,7 +71,7 @@ public class ApiKeyResource {
   @ExceptionMetered
   public RestResponse<PageResponse<ApiKeyEntry>> list(
       @NotEmpty @QueryParam("accountId") String accountId, @BeanParam PageRequest<ApiKeyEntry> pageRequest) {
-    pageRequest.addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId);
+    pageRequest.addFilter(ApiKeyEntryKeys.accountId, EQ, accountId);
     return new RestResponse<>(apiKeyService.list(pageRequest, accountId));
   }
 

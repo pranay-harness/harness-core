@@ -33,16 +33,16 @@ public class ArtifactComparatorTest {
   @Category(UnitTests.class)
   public void shouldSortArtifactDescendingOrder() {
     List<Artifact> artifacts =
-        asList(artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-1.x86_64.rpm"))
+        asList(artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "todolist-1.0-1.x86_64.rpm"))
                    .but()
                    .build(),
-            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-10.x86_64.rpm"))
+            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "todolist-1.0-10.x86_64.rpm"))
                 .but()
                 .build(),
-            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-5.x86_64.rpm"))
+            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "todolist-1.0-5.x86_64.rpm"))
                 .but()
                 .build(),
-            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.BUILD_NO, "todolist-1.0-15.x86_64.rpm"))
+            artifactBuilder.withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "todolist-1.0-15.x86_64.rpm"))
                 .but()
                 .build());
     assertThat(artifacts.stream().sorted(new ArtifactComparator()).collect(toList()))

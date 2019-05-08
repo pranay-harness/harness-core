@@ -216,11 +216,11 @@ public class GcsServiceImpl implements GcsService {
       }
 
       Map<String, String> map = new HashMap<>();
-      map.put(ArtifactMetadataKeys.URL, "https://storage.cloud.google.com/" + bucketName + "/" + objName);
-      map.put(ArtifactMetadataKeys.BUILD_NO, versionId);
-      map.put(ArtifactMetadataKeys.BUCKET_NAME, bucketName);
-      map.put(ArtifactMetadataKeys.ARTIFACT_PATH, objName);
-      map.put(ArtifactMetadataKeys.KEY, objName);
+      map.put(ArtifactMetadataKeys.url, "https://storage.cloud.google.com/" + bucketName + "/" + objName);
+      map.put(ArtifactMetadataKeys.buildNo, versionId);
+      map.put(ArtifactMetadataKeys.bucketName, bucketName);
+      map.put(ArtifactMetadataKeys.artifactPath, objName);
+      map.put(ArtifactMetadataKeys.key, objName);
       map.put(LAST_UPDATED_AT, lastUpdatedAt);
 
       return aBuildDetails()

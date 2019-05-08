@@ -4,8 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.helpers.ext.jenkins.BuildDetails.METADATA_IMAGE_KEY;
-import static software.wings.helpers.ext.jenkins.BuildDetails.METADATA_TAG_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,6 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.BuildDetails.BuildDetailsMetadataKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
@@ -54,8 +53,8 @@ public class EcrServiceImpl implements EcrService {
             .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
             .forEach(imageIdentifier -> {
               Map<String, String> metadata = new HashMap();
-              metadata.put(METADATA_IMAGE_KEY, imageUrl + ":" + imageIdentifier.getImageTag());
-              metadata.put(METADATA_TAG_KEY, imageIdentifier.getImageTag());
+              metadata.put(BuildDetailsMetadataKeys.image, imageUrl + ":" + imageIdentifier.getImageTag());
+              metadata.put(BuildDetailsMetadataKeys.tag, imageIdentifier.getImageTag());
               buildDetails.add(aBuildDetails()
                                    .withNumber(imageIdentifier.getImageTag())
                                    .withMetadata(metadata)

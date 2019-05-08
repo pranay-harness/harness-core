@@ -159,51 +159,50 @@ public class ArtifactCollectionUtils {
     Map<String, String> metadata = buildDetails.getMetadata() == null ? new HashMap<>() : buildDetails.getMetadata();
     if (artifactStreamType.equals(ARTIFACTORY.name())) {
       if (buildDetails.getArtifactPath() != null) {
-        metadata.put(ArtifactMetadataKeys.ARTIFACT_PATH, buildDetails.getArtifactPath());
-        metadata.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME,
+        metadata.put(ArtifactMetadataKeys.artifactPath, buildDetails.getArtifactPath());
+        metadata.put(ArtifactMetadataKeys.artifactFileName,
             buildDetails.getNumber().substring(buildDetails.getNumber().lastIndexOf('/') + 1));
         if (buildDetails.getArtifactFileSize() != null) {
-          metadata.put(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, buildDetails.getArtifactFileSize());
+          metadata.put(ArtifactMetadataKeys.artifactFileSize, buildDetails.getArtifactFileSize());
         }
       }
       if (isNotEmpty(buildDetails.getBuildUrl())) {
-        metadata.put(ArtifactMetadataKeys.URL, buildDetails.getBuildUrl());
+        metadata.put(ArtifactMetadataKeys.url, buildDetails.getBuildUrl());
       }
-      metadata.put(ArtifactMetadataKeys.BUILD_NO, buildDetails.getNumber());
+      metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
       return metadata;
     } else if (artifactStreamType.equals(AMAZON_S3.name()) || artifactStreamType.equals(GCS.name())) {
       Map<String, String> buildParameters = buildDetails.getBuildParameters();
-      metadata.put(ArtifactMetadataKeys.ARTIFACT_PATH, buildParameters.get(ArtifactMetadataKeys.ARTIFACT_PATH));
-      metadata.put(ArtifactMetadataKeys.ARTIFACT_FILE_NAME, buildParameters.get(ArtifactMetadataKeys.ARTIFACT_PATH));
-      metadata.put(ArtifactMetadataKeys.BUILD_NO, buildParameters.get(ArtifactMetadataKeys.BUILD_NO));
-      metadata.put(ArtifactMetadataKeys.BUCKET_NAME, buildParameters.get(ArtifactMetadataKeys.BUCKET_NAME));
-      metadata.put(ArtifactMetadataKeys.KEY, buildParameters.get(ArtifactMetadataKeys.KEY));
-      metadata.put(ArtifactMetadataKeys.URL, buildParameters.get(ArtifactMetadataKeys.URL));
-      metadata.put(
-          ArtifactMetadataKeys.ARTIFACT_FILE_SIZE, buildParameters.get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE));
+      metadata.put(ArtifactMetadataKeys.artifactPath, buildParameters.get(ArtifactMetadataKeys.artifactPath));
+      metadata.put(ArtifactMetadataKeys.artifactFileName, buildParameters.get(ArtifactMetadataKeys.artifactPath));
+      metadata.put(ArtifactMetadataKeys.buildNo, buildParameters.get(ArtifactMetadataKeys.buildNo));
+      metadata.put(ArtifactMetadataKeys.bucketName, buildParameters.get(ArtifactMetadataKeys.bucketName));
+      metadata.put(ArtifactMetadataKeys.key, buildParameters.get(ArtifactMetadataKeys.key));
+      metadata.put(ArtifactMetadataKeys.url, buildParameters.get(ArtifactMetadataKeys.url));
+      metadata.put(ArtifactMetadataKeys.artifactFileSize, buildParameters.get(ArtifactMetadataKeys.artifactFileSize));
       return metadata;
     } else if (artifactStreamType.equals(JENKINS.name()) || artifactStreamType.equals(BAMBOO.name())) {
       metadata.putAll(buildDetails.getBuildParameters());
-      metadata.put(ArtifactMetadataKeys.BUILD_NO, buildDetails.getNumber());
-      metadata.put(ArtifactMetadataKeys.BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
-      metadata.put(ArtifactMetadataKeys.URL, buildDetails.getBuildUrl());
+      metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
+      metadata.put(ArtifactMetadataKeys.buildFullDisplayName, buildDetails.getBuildFullDisplayName());
+      metadata.put(ArtifactMetadataKeys.url, buildDetails.getBuildUrl());
       return metadata;
     } else if (artifactStreamType.equals(SMB.name()) || artifactStreamType.equals(SFTP.name())) {
       metadata.putAll(buildDetails.getBuildParameters());
-      metadata.put(ArtifactMetadataKeys.BUILD_NO, buildDetails.getNumber());
-      metadata.put(ArtifactMetadataKeys.ARTIFACT_PATH, metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH));
-      metadata.put(ArtifactMetadataKeys.BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
-      metadata.put(ArtifactMetadataKeys.URL, buildDetails.getBuildUrl());
+      metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
+      metadata.put(ArtifactMetadataKeys.artifactPath, metadata.get(ArtifactMetadataKeys.artifactPath));
+      metadata.put(ArtifactMetadataKeys.buildFullDisplayName, buildDetails.getBuildFullDisplayName());
+      metadata.put(ArtifactMetadataKeys.url, buildDetails.getBuildUrl());
       return metadata;
     } else if (artifactStreamType.equals(NEXUS.name())) {
-      metadata.put(ArtifactMetadataKeys.BUILD_NO, buildDetails.getNumber());
+      metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
       if (isNotEmpty(buildDetails.getBuildUrl())) {
-        metadata.put(ArtifactMetadataKeys.URL, buildDetails.getBuildUrl());
+        metadata.put(ArtifactMetadataKeys.url, buildDetails.getBuildUrl());
       }
       return metadata;
     }
 
-    metadata.put(ArtifactMetadataKeys.BUILD_NO, buildDetails.getNumber());
+    metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
     return metadata;
   }
 
@@ -461,8 +460,8 @@ public class ArtifactCollectionUtils {
 
     String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
     Map<String, String> metadata = new HashMap();
-    metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag);
-    metadata.put(ArtifactMetadataKeys.TAG, tag);
+    metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag);
+    metadata.put(ArtifactMetadataKeys.tag, tag);
     return aBuildDetails().withNumber(tag).withMetadata(metadata).withBuildUrl(tagUrl + tag).build();
   }
 

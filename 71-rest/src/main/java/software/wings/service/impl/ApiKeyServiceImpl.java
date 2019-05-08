@@ -26,6 +26,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
+import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.SimpleEncryption;
@@ -151,7 +152,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   public ApiKeyEntry get(String uuid, String accountId) {
     ApiKeyEntry entry = wingsPersistence.createQuery(ApiKeyEntry.class)
-                            .filter(ApiKeyEntry.ACCOUNT_ID_KEY, accountId)
+                            .filter(ApiKeyEntryKeys.accountId, accountId)
                             .filter(ID_KEY, uuid)
                             .get();
     return buildApiKeyEntry(uuid, entry, false);
@@ -188,14 +189,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   public boolean deleteAll(String accountId) {
     Query<ApiKeyEntry> query =
-        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntry.ACCOUNT_ID_KEY, accountId);
+        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntryKeys.accountId, accountId);
 
     return wingsPersistence.delete(query);
   }
 
   @Override
   public void validate(String key, String accountId) {
-    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId).build();
+    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntryKeys.accountId, EQ, accountId).build();
     if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
              .getResponse()
              .stream()
@@ -206,7 +207,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public ApiKeyEntry getByKey(String key, String accountId, boolean details) {
-    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntry.ACCOUNT_ID_KEY, EQ, accountId).build();
+    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntryKeys.accountId, EQ, accountId).build();
     Optional<ApiKeyEntry> apiKeyEntryOptional = wingsPersistence.query(ApiKeyEntry.class, pageRequest)
                                                     .getResponse()
                                                     .stream()
@@ -223,6 +224,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntry.ACCOUNT_ID_KEY, accountId));
+        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntryKeys.accountId, accountId));
   }
 }

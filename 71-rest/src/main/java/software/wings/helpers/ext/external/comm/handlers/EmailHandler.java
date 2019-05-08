@@ -19,7 +19,7 @@ import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.EmailUtil;
+import software.wings.utils.EmailUtils;
 
 import java.util.List;
 import java.util.Properties;
@@ -33,7 +33,7 @@ import javax.mail.Transport;
 @Slf4j
 public class EmailHandler implements CollaborationHandler {
   @Inject private Mailer mailer;
-  @Inject private EmailUtil emailHelperUtil;
+  @Inject private EmailUtils emailHelperUtil;
 
   @Inject @Transient private transient EncryptionService encryptionService;
   private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();

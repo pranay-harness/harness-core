@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
@@ -33,7 +34,7 @@ public class NexusDockerArtifactStreamMigration implements Migration {
     logger.info("Migrating Nexus Docker Artifact Streams");
     try (HIterator<ArtifactStream> nexusArtifactStreams =
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class)
-                                 .filter(ArtifactStream.ARTIFACT_STREAM_TYPE_KEY, ArtifactStreamType.NEXUS.name())
+                                 .filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.NEXUS.name())
                                  .fetch())) {
       while (nexusArtifactStreams.hasNext()) {
         NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) nexusArtifactStreams.next();

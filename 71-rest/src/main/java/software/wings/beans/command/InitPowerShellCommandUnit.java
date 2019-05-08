@@ -55,7 +55,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
         envVariables.put("ARTIFACT_FILE_NAME", name);
       }
     } else if (context.getMetadata() != null) {
-      String value = context.getMetadata().get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
+      String value = context.getMetadata().get(ArtifactMetadataKeys.artifactFileName);
       if (isNotEmpty(value)) {
         envVariables.put("ARTIFACT_FILE_NAME", value);
       }

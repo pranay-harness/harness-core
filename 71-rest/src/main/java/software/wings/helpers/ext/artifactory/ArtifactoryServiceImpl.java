@@ -229,8 +229,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         buildDetails = tags.stream()
                            .map(tag -> {
                              Map<String, String> metadata = new HashMap();
-                             metadata.put(ArtifactMetadataKeys.IMAGE, repoName + ":" + tag);
-                             metadata.put(ArtifactMetadataKeys.TAG, tag);
+                             metadata.put(ArtifactMetadataKeys.image, repoName + ":" + tag);
+                             metadata.put(ArtifactMetadataKeys.tag, tag);
                              return aBuildDetails()
                                  .withNumber(tag)
                                  .withBuildUrl(tagUrl + tag)
@@ -481,9 +481,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       List<EncryptedDataDetail> encryptionDetails, String repositoryName, Map<String, String> metadata,
       String delegateId, String taskId, String accountId) {
     ListNotifyResponseData res = new ListNotifyResponseData();
-    String artifactPath =
-        metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH).replaceFirst(repositoryName, "").substring(1);
-    String artifactName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath).replaceFirst(repositoryName, "").substring(1);
+    String artifactName = metadata.get(ArtifactMetadataKeys.artifactFileName);
     try {
       logger.info("Downloading the file for generic repo");
       InputStream inputStream = downloadArtifacts(artifactoryConfig, encryptionDetails, repositoryName, metadata);
@@ -502,9 +501,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   public Pair<String, InputStream> downloadArtifact(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, String repositoryName, Map<String, String> metadata) {
     Pair<String, InputStream> pair = null;
-    String artifactPath =
-        metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH).replaceFirst(repositoryName, "").substring(1);
-    String artifactName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath).replaceFirst(repositoryName, "").substring(1);
+    String artifactName = metadata.get(ArtifactMetadataKeys.artifactFileName);
     try {
       logger.info("Downloading the file for generic repo");
       InputStream inputStream = downloadArtifacts(artifactoryConfig, encryptionDetails, repositoryName, metadata);
@@ -543,13 +541,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       List<EncryptedDataDetail> encryptionDetails, String repoKey, Map<String, String> metadata) {
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     Set<String> artifactNames = new HashSet<>();
-    String artifactPath = metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH).replaceFirst(repoKey, "").substring(1);
-    String artifactName = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_NAME);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath).replaceFirst(repoKey, "").substring(1);
+    String artifactName = metadata.get(ArtifactMetadataKeys.artifactFileName);
 
     try {
       logger.info("Artifact name {}", artifactName);
       if (artifactNames.add(artifactName)) {
-        if (metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH) != null) {
+        if (metadata.get(ArtifactMetadataKeys.artifactPath) != null) {
           logger.info("Downloading the file for generic repo");
           logger.info("Downloading file {} ", artifactPath);
           InputStream inputStream = artifactory.repository(repoKey).download(artifactPath).doDownload();
@@ -661,7 +659,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   public Long getFileSize(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
-    String artifactPath = metadata.get(ArtifactMetadataKeys.ARTIFACT_PATH);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
     logger.info("Retrieving file paths for artifactPath {}", artifactPath);
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     try {

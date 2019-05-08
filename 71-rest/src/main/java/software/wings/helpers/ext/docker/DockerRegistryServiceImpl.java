@@ -154,8 +154,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         .stream()
         .map(tag -> {
           Map<String, String> metadata = new HashMap();
-          metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag);
-          metadata.put(ArtifactMetadataKeys.TAG, tag);
+          metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag);
+          metadata.put(ArtifactMetadataKeys.tag, tag);
           return aBuildDetails()
               .withNumber(tag)
               .withBuildUrl(tagUrl + tag)

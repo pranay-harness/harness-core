@@ -57,8 +57,8 @@ public class AcrServiceImpl implements AcrService {
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap();
-            metadata.put(ArtifactMetadataKeys.IMAGE, repository + ":" + tag);
-            metadata.put(ArtifactMetadataKeys.TAG, tag);
+            metadata.put(ArtifactMetadataKeys.image, repository + ":" + tag);
+            metadata.put(ArtifactMetadataKeys.tag, tag);
             return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
           })
           .collect(toList());

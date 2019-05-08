@@ -52,7 +52,7 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask {
     try {
       for (String artifactPath : artifactPaths) {
         Pair<String, InputStream> fileInfo = bambooService.downloadArtifact(
-            bambooConfig, encryptionDetails, planKey, arguments.get(ArtifactMetadataKeys.BUILD_NO), artifactPath);
+            bambooConfig, encryptionDetails, planKey, arguments.get(ArtifactMetadataKeys.buildNo), artifactPath);
         artifactCollectionTaskHelper.addDataToResponse(
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }

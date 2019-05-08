@@ -114,11 +114,11 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   public InputStream downloadArtifactAtRuntime(ArtifactStreamAttributes artifactStreamAttributes, String accountId,
       String appId, String activityId, String commandUnitName, String hostName) throws IOException, ExecutionException {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
-    String artifactFileSize = metadata.get(ArtifactMetadataKeys.ARTIFACT_FILE_SIZE);
+    String artifactFileSize = metadata.get(ArtifactMetadataKeys.artifactFileSize);
     if (Long.parseLong(artifactFileSize) > Constants.ARTIFACT_FILE_SIZE_LIMIT) {
       throw new InvalidRequestException("Artifact file size exceeds 4GB. Not downloading file.");
     }
-    String buildNo = metadata.get(ArtifactMetadataKeys.BUILD_NO);
+    String buildNo = metadata.get(ArtifactMetadataKeys.buildNo);
     String key = "_" + artifactStreamAttributes.getArtifactStreamId() + "-" + buildNo;
     synchronized (fileIdLocks.get(key)) {
       File file = new File(ARTIFACT_REPO_BASE_DIR, key);

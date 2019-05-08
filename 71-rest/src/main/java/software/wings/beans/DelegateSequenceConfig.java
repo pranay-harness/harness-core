@@ -26,11 +26,6 @@ import org.mongodb.morphia.annotations.Indexes;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 public class DelegateSequenceConfig extends Base {
-  public static final String ACCOUNT_ID_KEY = "accountId";
-  public static final String HOST_NAME_KEY = "hostName";
-  public static final String SEQUENCE_NUM = "sequenceNum";
-  public static final String DELEGATE_TOKEN = "delegateToken";
-
   @NotEmpty private String accountId;
   @NotEmpty private String hostName;
   @NotEmpty private Integer sequenceNum;
