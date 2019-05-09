@@ -275,4 +275,11 @@ public class SettingAttribute extends Base implements NameAccess {
       this.value = value;
     }
   }
+
+  public static final class SettingAttributeKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+  }
 }

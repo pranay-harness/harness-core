@@ -20,7 +20,6 @@ import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.TypeResolverManager;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
@@ -35,7 +34,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   @Inject private DataFetcherDirective dataFetcherDirective;
 
   @Inject
-  public void init() throws URISyntaxException, IOException {
+  public void init() {
     if (graphQL != null) {
       return;
     }

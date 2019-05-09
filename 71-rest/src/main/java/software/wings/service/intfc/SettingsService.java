@@ -31,6 +31,9 @@ public interface SettingsService extends OwnedByAccount {
   PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest);
 
+  List<SettingAttribute> getFilteredSettingAttributes(
+      List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest);
+
   @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute settingAttribute);
 
   @ValidationGroups(Create.class) SettingAttribute forceSave(@Valid SettingAttribute settingAttribute);
