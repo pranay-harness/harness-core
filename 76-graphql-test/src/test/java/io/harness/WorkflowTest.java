@@ -72,7 +72,7 @@ public class WorkflowTest extends GraphQLTest {
   public void testQueryMissingPipeline() {
     String query = "{ workflow(workflowId: \"blah\") { id name description } }";
 
-    final ExecutionResult result = getGraphQL().execute(getExecutionInput(query));
+    final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     // TODO: this message is wrong

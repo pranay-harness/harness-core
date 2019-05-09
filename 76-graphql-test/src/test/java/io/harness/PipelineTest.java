@@ -56,7 +56,7 @@ public class PipelineTest extends GraphQLTest {
   public void testQueryMissingPipeline() {
     String query = "{ pipeline(pipelineId: \"blah\") { id name description } }";
 
-    final ExecutionResult result = getGraphQL().execute(query);
+    final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     // TODO: this message is wrong

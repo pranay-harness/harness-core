@@ -63,7 +63,7 @@ public class EnvironmentTest extends GraphQLTest {
   public void testQueryMissingEnvironment() {
     String query = "{ environment(environmentId: \"blah\") { id name description type } }";
 
-    final ExecutionResult result = getGraphQL().execute(query);
+    final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     // TODO: this message is wrong

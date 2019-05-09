@@ -179,7 +179,7 @@ public class ConnectionTest extends GraphQLTest {
       String query = "{ pipelines(applicationId: \"" + application.getUuid()
           + "\", limit: -5, offset: 5) { nodes { id } pageInfo { limit offset total } } }";
 
-      final ExecutionResult result = getGraphQL().execute(query);
+      final ExecutionResult result = qlResult(query);
       assertThat(result.getErrors().size()).isEqualTo(1);
 
       // TODO: this message is wrong
@@ -191,7 +191,7 @@ public class ConnectionTest extends GraphQLTest {
       String query = "{ pipelines(applicationId: \"" + application.getUuid()
           + "\", limit: 5, offset: -5) { nodes { id } pageInfo { limit offset total } } }";
 
-      final ExecutionResult result = getGraphQL().execute(query);
+      final ExecutionResult result = qlResult(query);
       assertThat(result.getErrors().size()).isEqualTo(1);
 
       // TODO: this message is wrong
