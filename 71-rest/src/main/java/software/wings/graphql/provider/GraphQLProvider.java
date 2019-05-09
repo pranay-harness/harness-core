@@ -59,7 +59,7 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
     graphQL = GraphQL.newGraphQL(graphQLSchema)
                   .instrumentation(dispatcherInstrumentation)
-                  .instrumentation(new QueryDepthInstrumentation(QueryDepthInstrumentation.MAX_QUERY_DEPTH))
+                  .instrumentation(new QueryDepthInstrumentation())
                   .build();
   }
 

@@ -62,7 +62,8 @@ type WorkflowExecution implements Execution {
   # Workflow Execution Id
   id: String
 
-  application: Application @dataFetcher(name: application, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
+  application: Application
+    @dataFetcher(name: application, useBatch: true, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   # DateTime when execution started
   createdAt: DateTime

@@ -8,6 +8,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * Application Service.
@@ -118,4 +119,6 @@ public interface AppService extends OwnedByAccount, Exterminator {
   String getAccountIdByAppId(String appId);
 
   void delete(String appId, boolean syncFromGit);
+
+  List<Application> getAppsByIds(@NotNull Set<String> appIds);
 }

@@ -20,6 +20,7 @@ import io.restassured.RestAssured;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
+import org.dataloader.DataLoaderRegistry;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -28,6 +29,7 @@ import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.io.IOException;
@@ -41,6 +43,12 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   protected static String bearerToken;
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
+  @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
+
+  @Override
+  public DataLoaderRegistry getDataLoaderRegistry() {
+    return dataLoaderRegistryHelper.getDataLoaderRegistry();
+  }
 
   @Override
   public GraphQL getGraphQL() {

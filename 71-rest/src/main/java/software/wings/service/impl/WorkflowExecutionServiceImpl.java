@@ -2815,4 +2815,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     return wingsPersistence.query(WorkflowExecution.class, pageRequest);
   }
+
+  public String getApplicationIdByExecutionId(String executionId) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .filter(WorkflowExecutionKeys.uuid, executionId)
+        .project(WorkflowExecutionKeys.appId, true)
+        .get()
+        .getAppId();
+  }
 }
