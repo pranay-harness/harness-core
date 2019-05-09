@@ -114,6 +114,10 @@ public class EntityHelper {
       "Setup/Application/%s/Services/%s/Deloyment Specifications/%s.yaml";
   private static final String COMMANDS_YAML_PATH_FORMAT = "Setup/Application/%s/Services/%s/Commands/%s.yaml";
 
+  // Some Setting Attributes defined that do not have Yaml
+  static final String SSH_KEYS_ENTITY_TYPE = "Host Connection Attributes";
+  static final String WIN_RM_CONNECTION_ENTITY_TYPE = "Win Rm Connection Attributes";
+
   public <T extends UuidAccess> void loadMetaDataForEntity(T entity, EntityAuditRecordBuilder builder, Type type) {
     String entityId = entity.getUuid();
     String entityType = EMPTY;
@@ -578,7 +582,7 @@ public class EntityHelper {
     } else if (settingValue instanceof GcpConfig) {
       return "Gcp Config";
     } else if (settingValue instanceof HostConnectionAttributes) {
-      return "Host Connection Attributes";
+      return SSH_KEYS_ENTITY_TYPE;
     } else if (settingValue instanceof HttpHelmRepoConfig) {
       return "Http Helm Repo Config";
     } else if (settingValue instanceof JenkinsConfig) {
@@ -616,7 +620,7 @@ public class EntityHelper {
     } else if (settingValue instanceof SumoConfig) {
       return "Sumo Config";
     } else if (settingValue instanceof WinRmConnectionAttributes) {
-      return "Win Rm Connection Attributes";
+      return WIN_RM_CONNECTION_ENTITY_TYPE;
     } else if (settingValue instanceof StringValue) {
       return "String Value";
     } else {
