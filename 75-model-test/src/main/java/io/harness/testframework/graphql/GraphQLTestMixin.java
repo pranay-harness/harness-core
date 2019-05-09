@@ -42,8 +42,12 @@ public interface GraphQLTestMixin {
     return modelMapper;
   }
 
+  default ExecutionResult qlResult(String query) {
+    return getGraphQL().execute(getExecutionInput(query));
+  }
+
   default QLTestObject qlExecute(String query) {
-    final ExecutionResult result = getGraphQL().execute(getExecutionInput(query));
+    final ExecutionResult result = qlResult(query);
     if (isNotEmpty(result.getErrors())) {
       throw new RuntimeException(result.getErrors().toString());
     }
