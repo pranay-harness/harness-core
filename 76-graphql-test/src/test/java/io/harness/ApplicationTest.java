@@ -43,16 +43,14 @@ public class ApplicationTest extends GraphQLTest {
 
     final Application application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
 
-    String query = $ML(/*
+    String query = $GQL(/*
 {
-  application(applicationId: "%s")
-  {
+  application(applicationId: "%s") {
     id
     name
     description
     createdAt
-    createdBy
-    {
+    createdBy {
      id
     }
   }
@@ -72,10 +70,9 @@ public class ApplicationTest extends GraphQLTest {
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingApplication() {
-    String query = $ML(/*
+    String query = $GQL(/*
 {
-  application(applicationId: "blah")
-  {
+  application(applicationId: "blah") {
     id
     name
     description
@@ -108,12 +105,10 @@ public class ApplicationTest extends GraphQLTest {
         seed, owners, anApplication().name("Application - " + generateUuid()).build());
 
     {
-      String query = $ML(/*
+      String query = $GQL(/*
 {
-  applications(accountId: "%s", limit: 2)
-  {
-    nodes
-    {
+  applications(accountId: "%s", limit: 2) {
+    nodes {
       id
       name
       description
@@ -130,12 +125,10 @@ public class ApplicationTest extends GraphQLTest {
     }
 
     {
-      String query = $ML(/*
+      String query = $GQL(/*
 {
-  applications(accountId: "%s", limit: 2, offset: 1)
-  {
-    nodes
-    {
+  applications(accountId: "%s", limit: 2, offset: 1) {
+    nodes {
       id
       name
       description

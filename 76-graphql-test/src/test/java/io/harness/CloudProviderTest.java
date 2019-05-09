@@ -27,6 +27,18 @@ public class CloudProviderTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;
   @Inject private SettingGenerator settingGenerator;
 
+  private static String cloudProviderQueryPattern = $.GQL(/*
+{
+  cloudProvider(cloudProviderId: "%s") {
+    id
+    name
+    createdAt
+    createdBy {
+      id
+    }
+  }
+}*/ CloudProviderTest.class);
+
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryCloudProvider() {
@@ -37,8 +49,7 @@ public class CloudProviderTest extends GraphQLTest {
       final SettingAttribute settingAttribute = settingGenerator.ensureAwsTest(seed, owners);
       assertThat(settingAttribute).isNotNull();
 
-      String query = "{cloudProvider(cloudProviderId: \"" + settingAttribute.getUuid()
-          + "\") { id name createdAt createdBy { id }}}";
+      String query = String.format(cloudProviderQueryPattern, settingAttribute.getUuid());
 
       QLTestObject qlAwsCP = qlExecute(query);
       assertThat(qlAwsCP.get(QLCloudProviderKeys.id)).isEqualTo(settingAttribute.getUuid());
@@ -53,8 +64,7 @@ public class CloudProviderTest extends GraphQLTest {
       final SettingAttribute settingAttribute = settingGenerator.ensurePhysicalDataCenter(seed, owners);
       assertThat(settingAttribute).isNotNull();
 
-      String query = "{cloudProvider(cloudProviderId: \"" + settingAttribute.getUuid()
-          + "\") { id name createdAt createdBy { id }}}";
+      String query = String.format(cloudProviderQueryPattern, settingAttribute.getUuid());
 
       QLTestObject qlAwsCP = qlExecute(query);
       assertThat(qlAwsCP.get(QLCloudProviderKeys.id)).isEqualTo(settingAttribute.getUuid());
@@ -69,8 +79,7 @@ public class CloudProviderTest extends GraphQLTest {
       final SettingAttribute settingAttribute = settingGenerator.ensureAzureTestCloudProvider(seed, owners);
       assertThat(settingAttribute).isNotNull();
 
-      String query = "{cloudProvider(cloudProviderId: \"" + settingAttribute.getUuid()
-          + "\") { id name createdAt createdBy { id }}}";
+      String query = String.format(cloudProviderQueryPattern, settingAttribute.getUuid());
 
       QLTestObject qlAwsCP = qlExecute(query);
       assertThat(qlAwsCP.get(QLCloudProviderKeys.id)).isEqualTo(settingAttribute.getUuid());
@@ -97,7 +106,15 @@ public class CloudProviderTest extends GraphQLTest {
     assertThat(azure).isNotNull();
 
     {
-      String query = "{ cloudProviders(accountId: \"" + aws.getAccountId() + "\") { nodes { id name} } }";
+      String query = $GQL(/*
+{
+  cloudProviders(accountId: "%s") {
+    nodes {
+      id
+      name
+    }
+  }
+}*/ aws.getAccountId());
 
       QLTestObject qlAwsCP = qlExecute(query);
       assertThat(qlAwsCP.sub(QLCloudProviderConnectionKeys.nodes).size()).isNotEqualTo(0);
