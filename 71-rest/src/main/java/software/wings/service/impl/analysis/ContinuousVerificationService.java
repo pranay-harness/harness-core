@@ -34,7 +34,7 @@ public interface ContinuousVerificationService {
   List<WorkflowExecution> getDeploymentsForService(
       String accountId, long startTime, long endTime, User user, String serviceId);
 
-  void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status);
+  void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status, boolean noData);
   PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
       long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 
@@ -60,4 +60,7 @@ public interface ContinuousVerificationService {
   boolean collectCVDataForWorkflow(String contextId, long collectionMinute);
 
   boolean openAlert(String cvConfigId, ContinuousVerificationAlertData alertData);
+
+  List<ContinuousVerificationExecutionMetaData> getCVDeploymentData(
+      PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 }

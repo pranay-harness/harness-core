@@ -47,6 +47,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -79,6 +81,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   @Mock private UserService userService;
   @Mock private WhitelistService whitelistService;
   @Inject private EventTestHelper eventTestHelper;
+  @Mock private ContinuousVerificationService continuousVerificationService;
 
   private User user;
   private Account account;
@@ -300,12 +303,16 @@ public class EventPublishHelperTest extends WingsBaseTest {
       when(userService.getUserFromCacheOrDB(user.getUuid())).thenReturn(user);
       when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
       when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Arrays.asList(APP_ID));
+
       WorkflowExecution workflowExecution =
           WorkflowExecution.builder()
               .uuid(WORKFLOW_EXECUTION_ID)
               .createdBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())
               .appId(APP_ID)
               .build();
+      when(stateExecutionService.list(any(PageRequest.class))).thenReturn(PageResponseBuilder.aPageResponse().build());
+      when(continuousVerificationService.getCVDeploymentData(any(PageRequest.class)))
+          .thenReturn(PageResponseBuilder.aPageResponse().build());
       when(executionService.listExecutions(any(PageRequest.class), anyBoolean()))
           .thenReturn(
               PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflowExecution)).withTotal(1).build());
@@ -334,6 +341,11 @@ public class EventPublishHelperTest extends WingsBaseTest {
       when(executionService.listExecutions(any(PageRequest.class), anyBoolean()))
           .thenReturn(
               PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflowExecution)).withTotal(1).build());
+      when(stateExecutionService.list(any(PageRequest.class)))
+          .thenReturn(
+              PageResponseBuilder.aPageResponse().withResponse(PageResponseBuilder.aPageResponse().build()).build());
+      when(continuousVerificationService.getCVDeploymentData(any(PageRequest.class)))
+          .thenReturn(PageResponseBuilder.aPageResponse().build());
       StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                           .uuid(STATE_EXECUTION_ID)
                                                           .executionUuid(WORKFLOW_EXECUTION_ID)
@@ -344,7 +356,49 @@ public class EventPublishHelperTest extends WingsBaseTest {
                           .withTotal(1)
                           .build());
       eventPublishHelper.handleDeploymentCompleted(workflowExecution);
-      verify(eventPublisher, times(3)).publishEvent(any(Event.class));
+      verify(eventPublisher, times(2)).publishEvent(any(Event.class));
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFirstVerifiedEvent() {
+    UserThreadLocal.set(user);
+    try {
+      when(userService.getUserFromCacheOrDB(user.getUuid())).thenReturn(user);
+      when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+      when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Arrays.asList(APP_ID));
+      WorkflowExecution workflowExecution =
+          WorkflowExecution.builder()
+              .uuid(WORKFLOW_EXECUTION_ID)
+              .appId(APP_ID)
+              .createdBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())
+              .build();
+      when(executionService.getExecutionWithoutSummary(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
+      when(executionService.listExecutions(any(PageRequest.class), anyBoolean()))
+          .thenReturn(
+              PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflowExecution)).withTotal(1).build());
+      when(stateExecutionService.list(any(PageRequest.class)))
+          .thenReturn(
+              PageResponseBuilder.aPageResponse().withResponse(PageResponseBuilder.aPageResponse().build()).build());
+      when(continuousVerificationService.getCVDeploymentData(any(PageRequest.class)))
+          .thenReturn(PageResponseBuilder.aPageResponse()
+                          .withResponse(Arrays.asList(ContinuousVerificationExecutionMetaData.builder().build()))
+                          .withTotal(1)
+                          .build());
+      StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                                          .uuid(STATE_EXECUTION_ID)
+                                                          .executionUuid(WORKFLOW_EXECUTION_ID)
+                                                          .build();
+      when(stateExecutionService.list(any(PageRequest.class)))
+          .thenReturn(PageResponseBuilder.aPageResponse()
+                          .withResponse(Arrays.asList(stateExecutionInstance))
+                          .withTotal(1)
+                          .build());
+      eventPublishHelper.handleDeploymentCompleted(workflowExecution);
+      verify(eventPublisher, times(4)).publishEvent(any(Event.class));
     } finally {
       UserThreadLocal.unset();
     }

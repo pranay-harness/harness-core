@@ -17,7 +17,9 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.model.Event;
@@ -39,6 +41,8 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.common.VerificationConstants;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -83,6 +87,7 @@ public class EventPublishHelper {
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private MarketoConfig marketoConfig;
   @Inject private StateExecutionService stateExecutionService;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
   private List<StateType> analysisStates = VerificationConstants.getAnalysisStates();
 
@@ -551,24 +556,70 @@ public class EventPublishHelper {
     return marketoConfig.isEnabled();
   }
 
-  public void handleDeploymentCompleted(WorkflowExecution workflowExecution) {
-    if (!checkIfMarketoIsEnabled()) {
-      return;
+  public boolean isWorkflowRolledBack(String workflowExecutionId, List<String> appIds) {
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .addFilter("appId", SearchFilter.Operator.IN, appIds.toArray())
+            .addFilter("executionUuid", SearchFilter.Operator.EQ, workflowExecutionId)
+            .addFilter("rollback", SearchFilter.Operator.EQ, true)
+            .addFieldsIncluded("_id")
+            .addOrder("createdAt", SortOrder.OrderType.ASC)
+            .withLimit("1")
+            .build();
+    PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
+    return isNotEmpty(pageResponse.getResponse());
+  }
+
+  public boolean publishVerificationWorkflowMetrics(
+      String workflowExecutionId, List<String> appIds, String accountId, boolean isVerificationRolledBack) {
+    logger.info("is this a workflow with verification....");
+    PageRequest<ContinuousVerificationExecutionMetaData> cvPageRequest =
+        aPageRequest()
+            .addFilter("appId", Operator.IN, appIds.toArray())
+            .addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId)
+            .addFieldsIncluded("_id")
+            .withLimit("1")
+            .build();
+    List<ContinuousVerificationExecutionMetaData> cvExecutionMetaDataList =
+        continuousVerificationService.getCVDeploymentData(cvPageRequest);
+
+    if (!isEmpty(cvExecutionMetaDataList)) {
+      Map<String, String> properties = new HashMap<>();
+      properties.put("accountId", accountId);
+      properties.put("workflowExecutionId", workflowExecutionId);
+      properties.put("rollback", String.valueOf(isVerificationRolledBack));
+      publishEvent(EventType.DEPLOYMENT_VERIFIED, properties);
+      logger.info("yes this is a workflow with verification.... {}", properties);
+      return true;
     }
 
+    return false;
+  }
+
+  public void handleDeploymentCompleted(WorkflowExecution workflowExecution) {
     if (workflowExecution == null) {
       return;
     }
-    String appId = workflowExecution.getAppId();
-    String workflowExecutionId = workflowExecution.getUuid();
 
     executorService.submit(() -> {
+      String appId = workflowExecution.getAppId();
+      String workflowExecutionId = workflowExecution.getUuid();
+
       String accountId = appService.getAccountIdByAppId(appId);
+
+      List<String> appIds = appService.getAppIdsByAccountId(accountId);
+
+      boolean workflowRolledBack = isWorkflowRolledBack(workflowExecutionId, appIds);
+      boolean workflowWithVerification =
+          publishVerificationWorkflowMetrics(workflowExecutionId, appIds, accountId, workflowRolledBack);
+
+      if (!checkIfMarketoIsEnabled()) {
+        return;
+      }
 
       if (!shouldPublishEventForAccount(accountId)) {
         return;
       }
-      List<String> appIds = appService.getAppIdsByAccountId(accountId);
 
       EmbeddedUser createdBy = workflowExecution.getCreatedBy();
 
@@ -600,19 +651,19 @@ public class EventPublishHelper {
         publishIfFirstDeployment(workflowExecutionId, appIds, accountId, userEmail);
       }
 
-      if (!isCampaignAlreadyReportedForUser(user, EventType.FIRST_ROLLED_BACK_DEPLOYMENT)) {
-        publishIfExecutionHasRollbackState(workflowExecutionId, appIds, accountId, userEmail);
+      if (!isCampaignAlreadyReportedForUser(user, EventType.FIRST_ROLLED_BACK_DEPLOYMENT) && workflowRolledBack) {
+        publishEvent(EventType.FIRST_ROLLED_BACK_DEPLOYMENT, getProperties(accountId, userEmail));
       }
 
-      if (!isCampaignAlreadyReportedForUser(user, EventType.FIRST_VERIFIED_DEPLOYMENT)) {
-        publishIfExecutionHasVerificationState(workflowExecutionId, appIds, accountId, userEmail);
+      if (!isCampaignAlreadyReportedForUser(user, EventType.FIRST_VERIFIED_DEPLOYMENT) && workflowWithVerification) {
+        publishEvent(EventType.FIRST_VERIFIED_DEPLOYMENT, getProperties(accountId, userEmail));
       }
     });
   }
 
   private void publishIfFirstDeployment(
       String workflowExecutionId, List<String> appIds, String accountId, String userEmail) {
-    PageRequest<WorkflowExecution> executionPageRequest = PageRequestBuilder.aPageRequest()
+    PageRequest<WorkflowExecution> executionPageRequest = aPageRequest()
                                                               .addFilter("appId", Operator.IN, appIds.toArray())
                                                               .addFilter("createdBy.email", Operator.EQ, userEmail)
                                                               .addOrder(WorkflowExecutionKeys.createdAt, OrderType.ASC)

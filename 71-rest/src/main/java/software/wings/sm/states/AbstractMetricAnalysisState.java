@@ -199,7 +199,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     } catch (Exception ex) {
       // set the CV Metadata status to ERROR as well.
       continuousVerificationService.setMetaDataExecutionStatus(
-          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR);
+          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
       if (ex instanceof WingsException) {
         ExceptionLogger.logProcessedMessages((WingsException) ex, MANAGER, getLogger());
       } else {
@@ -247,7 +247,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info(
           "for {} got failed execution response {}", context.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
-          context.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
+          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -262,7 +262,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       if (isEmpty(metricAnalysisRecords)) {
         getLogger().info("for {} No analysis summary.", context.getStateExecutionInstanceId());
         continuousVerificationService.setMetaDataExecutionStatus(
-            context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
+            context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true);
         return isQAVerificationPath(this.appService.get(context.getAppId()).getAccountId(), context.getAppId())
             ? generateAnalysisResponse(context, ExecutionStatus.FAILED, "No Analysis result found")
             : generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
@@ -294,7 +294,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         }
         if (!isResultPresent) {
           continuousVerificationService.setMetaDataExecutionStatus(
-              executionResponse.getStateExecutionData().getStateExecutionInstanceId(), ExecutionStatus.FAILED);
+              executionResponse.getStateExecutionData().getStateExecutionInstanceId(), ExecutionStatus.FAILED, true);
           return anExecutionResponse()
               .withExecutionStatus(ExecutionStatus.FAILED)
               .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -310,7 +310,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       }
       executionResponse.getStateExecutionData().setStatus(executionStatus);
       getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
-      continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), executionStatus);
+      continuousVerificationService.setMetaDataExecutionStatus(
+          context.getStateExecutionInstanceId(), executionStatus, false);
       return anExecutionResponse()
           .withExecutionStatus(
               isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())
@@ -331,7 +332,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     continuousVerificationService.setMetaDataExecutionStatus(
-        context.getStateExecutionInstanceId(), ExecutionStatus.ABORTED);
+        context.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true);
   }
 
   protected ExecutionResponse generateAnalysisResponse(
@@ -351,8 +352,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                             .stateExecutionId(context.getStateExecutionInstanceId())
                                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                                             .build();
+
     wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(metricAnalysisRecord));
-    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status);
+    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status, true);
 
     return anExecutionResponse()
         .withAsync(false)

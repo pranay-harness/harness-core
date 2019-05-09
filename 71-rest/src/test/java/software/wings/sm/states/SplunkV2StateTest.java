@@ -267,7 +267,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
                                                    .next()
                                                    .get("BASIC")
                                                    .get(0);
-    assertEquals(ExecutionStatus.FAILED, continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertEquals(ExecutionStatus.ERROR, continuousVerificationExecutionMetaData1.getExecutionStatus());
   }
 
   @Test

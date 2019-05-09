@@ -10,6 +10,8 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
+import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
+import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
 import static software.wings.utils.CacheHelper.USER_CACHE;
 
 import com.google.common.collect.ImmutableSet;
@@ -55,6 +57,7 @@ import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistenceIterator;
@@ -175,6 +178,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                                       .build();
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
+  private HarnessMetricRegistry harnessMetricRegistry;
 
   /**
    * The entry point of application.
@@ -342,6 +346,12 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
+    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+
+    initMetrics();
+
+    initializeFeatureFlags(injector);
+
     initializeServiceSecretKeys(injector);
 
     runMigrations(injector);
@@ -378,6 +388,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     MaintenanceController.resetForceMaintenance();
 
     logger.info("Starting app done");
+  }
+
+  private void initMetrics() {
+    harnessMetricRegistry.registerCounterMetric(
+        VERIFICATION_DEPLOYMENTS, VERIFICATION_METRIC_LABELS.toArray(new String[0]), " ");
   }
 
   private void initializeFeatureFlags(Injector injector) {
