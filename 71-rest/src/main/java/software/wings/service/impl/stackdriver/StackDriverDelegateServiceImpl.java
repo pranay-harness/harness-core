@@ -2,6 +2,7 @@ package software.wings.service.impl.stackdriver;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.POD_NAME;
 
@@ -12,6 +13,7 @@ import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -99,26 +102,40 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   public List<String> listRegions(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
-    List<Region> regions = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
-                               .regions()
-                               .list(projectId)
-                               .execute()
-                               .getItems();
-    return regions.stream().map(Region::getName).collect(Collectors.toList());
+    try {
+      List<Region> regions = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
+                                 .regions()
+                                 .list(projectId)
+                                 .execute()
+                                 .getItems();
+      if (isNotEmpty(regions)) {
+        return regions.stream().map(Region::getName).collect(Collectors.toList());
+      }
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.STACKDRIVER_ERROR).addParam("reason", getMessage(e));
+    }
+    return Collections.emptyList();
   }
 
   public Map<String, String> listForwardingRules(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String region) throws IOException {
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
-    List<ForwardingRule> forwardingRulesByRegion =
-        gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
-            .forwardingRules()
-            .list(projectId, region)
-            .execute()
-            .getItems();
-    return forwardingRulesByRegion.stream().collect(
-        Collectors.toMap(ForwardingRule::getIPAddress, ForwardingRule::getName));
+    try {
+      List<ForwardingRule> forwardingRulesByRegion =
+          gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
+              .forwardingRules()
+              .list(projectId, region)
+              .execute()
+              .getItems();
+      if (isNotEmpty(forwardingRulesByRegion)) {
+        return forwardingRulesByRegion.stream().collect(
+            Collectors.toMap(ForwardingRule::getIPAddress, ForwardingRule::getName));
+      }
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.STACKDRIVER_ERROR).addParam("reason", getMessage(e));
+    }
+    return Collections.emptyMap();
   }
 
   public String createFilter(StackDriverNameSpace nameSpace, String metric, String dimensionValue) {
@@ -170,7 +187,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
       delegateLogService.save(config.getAccountId(), apiCallLog);
       throw new WingsException(
-          "Unsuccessful response while fetching data from StackDriver. Error message: " + e.getMessage());
+          "Unsuccessful response while fetching data from StackDriver. Error message: " + getMessage(e));
     }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToResponse(HttpStatus.SC_OK, response, FieldType.JSON);
