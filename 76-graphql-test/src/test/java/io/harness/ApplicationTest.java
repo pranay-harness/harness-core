@@ -43,8 +43,21 @@ public class ApplicationTest extends GraphQLTest {
 
     final Application application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
 
-    String query = "{ application(applicationId: \"" + application.getUuid()
-        + "\") { id name description createdAt createdBy { id } } }";
+    String query = $ML(/*
+{
+  application(applicationId: "%s")
+  {
+    id
+    name
+    description
+    createdAt
+    createdBy
+    {
+     id
+    }
+  }
+}*/
+        application.getUuid());
 
     final QLTestObject qlTestObject = qlExecute(query);
     assertThat(qlTestObject.get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
@@ -59,7 +72,15 @@ public class ApplicationTest extends GraphQLTest {
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingApplication() {
-    String query = "{ application(applicationId: \"blah\") { id name description } }";
+    String query = $ML(/*
+{
+  application(applicationId: "blah")
+  {
+    id
+    name
+    description
+  }
+}*/);
 
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
@@ -87,8 +108,19 @@ public class ApplicationTest extends GraphQLTest {
         seed, owners, anApplication().name("Application - " + generateUuid()).build());
 
     {
-      String query =
-          "{ applications(accountId: \"" + account.getUuid() + "\", limit: 2) { nodes { id name description } } }";
+      String query = $ML(/*
+{
+  applications(accountId: "%s", limit: 2)
+  {
+    nodes
+    {
+      id
+      name
+      description
+    }
+  }
+}*/
+          account.getUuid());
 
       QLApplicationConnection applicationConnection = qlExecute(QLApplicationConnection.class, query);
       assertThat(applicationConnection.getNodes().size()).isEqualTo(2);
@@ -98,8 +130,18 @@ public class ApplicationTest extends GraphQLTest {
     }
 
     {
-      String query = "{ applications(accountId: \"" + account.getUuid()
-          + "\", limit: 2, offset: 1) { nodes { id name description } } }";
+      String query = $ML(/*
+{
+  applications(accountId: "%s", limit: 2, offset: 1)
+  {
+    nodes
+    {
+      id
+      name
+      description
+    }
+  }
+}*/ account.getUuid());
 
       QLApplicationConnection applicationConnection = qlExecute(QLApplicationConnection.class, query);
       assertThat(applicationConnection.getNodes().size()).isEqualTo(2);
