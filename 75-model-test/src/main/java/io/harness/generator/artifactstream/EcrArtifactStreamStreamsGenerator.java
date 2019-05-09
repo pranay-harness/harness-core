@@ -19,7 +19,7 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
 
   @Override
-  public ArtifactStream ensureArtifact(Seed seed, Owners owners) {
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     Service service = owners.obtainService();
     String serviceId = service.getUuid();
 

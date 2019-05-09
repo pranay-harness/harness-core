@@ -29,6 +29,9 @@ extend type Query {
 
   # Get list of services for applicationId. It will return paginated data
   services(applicationId: String!, limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: serviceConnection)
+
+  # Get details about am artifact
+  artifact(artifactId: String!): Artifact @dataFetcher(name: artifact)
 }
 
 type Application {
@@ -150,4 +153,15 @@ type Service {
 type ServiceConnection {
   pageInfo: PageInfo
   nodes: [Service]
+}
+
+type Artifact {
+  # Artifact ID
+  id: String
+
+  # Build No
+  buildNo: String
+
+  # Collected At
+  collectedAt: DateTime
 }

@@ -21,7 +21,7 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
 
   @Override
-  public ArtifactStream ensureArtifact(Seed seed, Owners owners) {
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
 

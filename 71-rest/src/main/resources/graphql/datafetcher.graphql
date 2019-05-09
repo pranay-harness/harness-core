@@ -16,4 +16,5 @@ enum DataFetcherEnum {
   workflowConnection
   cloudProvider
   cloudProviderConnection
+  artifact
 }
