@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
@@ -342,7 +343,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
       String hostKey = fetchHostKey(optionsBiMap);
       List<Callable<APMResponseParser.APMResponseData>> callabels = new ArrayList<>();
-      if (!isEmpty(hostKey) || initialUrl.contains("${host}")) {
+      if (!isEmpty(hostKey) || initialUrl.contains("${host}") || (isNotEmpty(body) && body.contains("${host}"))) {
         if (initialUrl.contains(BATCH_TEXT)) {
           List<String> urlList = resolveBatchHosts(initialUrl);
           for (String url : urlList) {
@@ -383,14 +384,28 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
       } else {
         List<String> curUrls = resolveDollarReferences(initialUrl, TEST_HOST_NAME, strategy);
-        IntStream.range(0, curUrls.size())
-            .forEach(index
+        List<String> resolvedBodies = resolveDollarReferences(body, TEST_HOST_NAME, strategy);
+        if (isEmpty(body)) {
+          IntStream.range(0, curUrls.size())
+              .forEach(index
+                  -> callabels.add(
+                      ()
+                          -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
+                              collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap),
+                                  baseUrl + curUrls.get(index)),
+                              metricInfos)));
+        } else {
+          IntStream.range(0, curUrls.size()).forEach(index -> {
+            resolvedBodies.forEach(resolvedBody
                 -> callabels.add(
                     ()
                         -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
-                            collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap),
+                            collect(getAPMRestClient(baseUrl).postCollect(curUrls.get(index), headersBiMap,
+                                        optionsBiMap, new JSONObject(resolvedBody).toMap()),
                                 baseUrl + curUrls.get(index)),
                             metricInfos)));
+          });
+        }
       }
 
       executeParrallel(callabels)
