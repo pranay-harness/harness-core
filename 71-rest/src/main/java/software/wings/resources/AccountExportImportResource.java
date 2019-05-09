@@ -117,6 +117,7 @@ public class AccountExportImportResource {
   private static final String ZIP_FILE_SUFFIX = ".zip";
 
   private WingsMongoPersistence wingsPersistence;
+  private Morphia morphia;
   private WingsMongoExportImport mongoExportImport;
   private PersistentScheduler scheduler;
   private AppService appService;
@@ -141,10 +142,12 @@ public class AccountExportImportResource {
   }
 
   @Inject
-  public AccountExportImportResource(WingsMongoPersistence wingsPersistence, WingsMongoExportImport mongoExportImport,
-      AppService appService, UsageRestrictionsService usageRestrictionsService, UserService userService,
+  public AccountExportImportResource(WingsMongoPersistence wingsPersistence, Morphia morphia,
+      WingsMongoExportImport mongoExportImport, AppService appService,
+      UsageRestrictionsService usageRestrictionsService, UserService userService,
       AccountPermissionUtils accountPermissionUtils, @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
     this.wingsPersistence = wingsPersistence;
+    this.morphia = morphia;
     this.mongoExportImport = mongoExportImport;
     this.scheduler = scheduler;
     this.appService = appService;
@@ -687,10 +690,6 @@ public class AccountExportImportResource {
 
   @SuppressWarnings("unchecked")
   private void findExportableEntityTypes() {
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.mapPackage("software.wings");
-
     morphia.getMapper().getMappedClasses().forEach(mc -> {
       Class<? extends Base> clazz = (Class<? extends Base>) mc.getClazz();
       if (mc.getEntityAnnotation() != null && clazz.isAnnotationPresent(HarnessExportableEntity.class)) {

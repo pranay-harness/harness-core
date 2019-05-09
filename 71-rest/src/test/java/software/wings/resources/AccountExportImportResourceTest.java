@@ -3,6 +3,7 @@ package software.wings.resources;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +20,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.mapping.MapperOptions;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsMongoPersistence;
@@ -36,6 +40,7 @@ import java.util.Map;
 @Slf4j
 public class AccountExportImportResourceTest {
   @Mock private WingsMongoPersistence wingsMongoPersistence;
+  @Mock private Morphia morphia;
   @Mock private WingsMongoExportImport wingsMongoExportImport;
   @Mock private AppService appService;
   @Mock private UsageRestrictionsService usageRestrictionsService;
@@ -54,8 +59,15 @@ public class AccountExportImportResourceTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    accountExportImportResource = new AccountExportImportResource(wingsMongoPersistence, wingsMongoExportImport,
-        appService, usageRestrictionsService, userService, accountPermissionUtils, persistentScheduler);
+
+    Mapper mapper = mock(Mapper.class);
+    MapperOptions mapperOptions = mock(MapperOptions.class);
+    when(mapper.getOptions()).thenReturn(mapperOptions);
+    when(morphia.getMapper()).thenReturn(mapper);
+
+    accountExportImportResource =
+        new AccountExportImportResource(wingsMongoPersistence, morphia, wingsMongoExportImport, appService,
+            usageRestrictionsService, userService, accountPermissionUtils, persistentScheduler);
 
     accountId = UUIDGenerator.generateUuid();
     userId = UUIDGenerator.generateUuid();
