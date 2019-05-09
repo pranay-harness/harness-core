@@ -1531,16 +1531,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // This log is used to derive deployment metrics in logDNA, so if you change it, update the logDNA dashboard.
     logger.info("Execution Triggered. {}", context.toString());
 
-    try {
-      preDeploymentChecker.checkDeploymentRateLimit(accountId, appId);
-      alertService.closeAlertsOfType(accountId, GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT);
-    } catch (LimitApproachingException e) {
-      String errMsg = e.getPercent()
-          + "% of Deployment Rate Limit reached. Some deployments may not be allowed beyond 100% usage. Please contact Harness support.";
-      logger.error(e.getMessage());
-      AlertData alertData = new DeploymentRateApproachingLimitAlert(e.getLimit(), accountId, e.getPercent(), errMsg);
-      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT, alertData);
-    }
+    checkDeploymentRateLimit(accountId, appId);
 
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
@@ -1563,6 +1554,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       default:
         throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "workflowType");
+    }
+  }
+
+  private void checkDeploymentRateLimit(String accountId, String appId) {
+    try {
+      preDeploymentChecker.checkDeploymentRateLimit(accountId, appId);
+      alertService.closeAlertsOfType(accountId, GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT);
+    } catch (LimitApproachingException e) {
+      String errMsg = e.getPercent()
+          + "% of Deployment Rate Limit reached. Some deployments may not be allowed beyond 100% usage. Please contact Harness support.";
+      logger.error(e.getMessage());
+      AlertData alertData = new DeploymentRateApproachingLimitAlert(e.getLimit(), accountId, e.getPercent(), errMsg);
+      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT, alertData);
+    } catch (UsageLimitExceededException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.error("Error checking deployment rate limit. accountId={}", accountId, e);
     }
   }
 
