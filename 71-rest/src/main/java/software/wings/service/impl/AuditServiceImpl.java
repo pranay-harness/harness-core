@@ -16,6 +16,8 @@ import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
+import static software.wings.service.impl.EntityHelper.SSH_KEYS_ENTITY_TYPE;
+import static software.wings.service.impl.EntityHelper.WIN_RM_CONNECTION_ENTITY_TYPE;
 import static software.wings.service.intfc.FileService.FileBucket;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -92,9 +94,9 @@ public class AuditServiceImpl implements AuditService {
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities =
-      newHashSet(EntityType.TRIGGER.name(), EntityType.ROLE.name(), EntityType.TEMPLATE.name(),
-          EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name());
+  private static Set<String> nonYamlEntities = newHashSet(EntityType.TRIGGER.name(), EntityType.ROLE.name(),
+      EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(),
+      EntityType.USER_GROUP.name(), SSH_KEYS_ENTITY_TYPE, WIN_RM_CONNECTION_ENTITY_TYPE);
 
   /**
    * Instantiates a new audit service impl.
@@ -398,9 +400,21 @@ public class AuditServiceImpl implements AuditService {
 
   @VisibleForTesting
   void loadLatestYamlDetailsForEntity(EntityAuditRecord record) {
+    if (nonYamlEntities.contains(record.getEntityType())) {
+      return;
+    }
+    String entityId;
+    String entityType;
+    if (EntityType.SERVICE_VARIABLE.name().equals(record.getEntityType())) {
+      entityType = EntityType.SERVICE.name();
+      entityId = record.getAffectedResourceId();
+    } else {
+      entityType = record.getEntityType();
+      entityId = record.getEntityId();
+    }
     EntityYamlRecord entityYamlRecord = wingsPersistence.createQuery(EntityYamlRecord.class)
-                                            .filter(EntityYamlRecordKeys.entityId, record.getEntityId())
-                                            .filter(EntityYamlRecordKeys.entityType, record.getEntityType())
+                                            .filter(EntityYamlRecordKeys.entityId, entityId)
+                                            .filter(EntityYamlRecordKeys.entityType, entityType)
                                             .project(EntityYamlRecordKeys.uuid, true)
                                             .project(EntityYamlRecordKeys.yamlPath, true)
                                             .order(descending(EntityYamlRecordKeys.createdAt))
@@ -449,11 +463,20 @@ public class AuditServiceImpl implements AuditService {
       yamlPath = EMPTY;
       logger.error(yamlContent, ex);
     }
+    String entityId;
+    String entityType;
+    if (EntityType.SERVICE_VARIABLE.name().equals(record.getEntityType())) {
+      entityType = EntityType.SERVICE.name();
+      entityId = record.getAffectedResourceId();
+    } else {
+      entityType = record.getEntityType();
+      entityId = record.getEntityId();
+    }
     EntityYamlRecord yamlRecord = EntityYamlRecord.builder()
                                       .uuid(generateUuid())
                                       .createdAt(currentTimeMillis())
-                                      .entityId(record.getEntityId())
-                                      .entityType(record.getEntityType())
+                                      .entityId(entityId)
+                                      .entityType(entityType)
                                       .yamlPath(yamlPath)
                                       .yamlSha(sha1Hex(yamlContent))
                                       .yamlContent(yamlContent)
