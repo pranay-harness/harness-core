@@ -25,7 +25,6 @@ import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.service.impl.ArtifactSourceProvider;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -34,7 +33,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,12 +40,7 @@ import java.util.Map;
 
 @Slf4j
 public class ArtifactCollectionState extends State {
-  @EnumData(enumDataProvider = ArtifactSourceProvider.class)
-  @Attributes(title = "Artifact Source")
-  @NotEmpty
-  @Getter
-  @Setter
-  private String artifactStreamId;
+  @Attributes(title = "Artifact Source") @NotEmpty @Getter @Setter private String artifactStreamId;
 
   @Attributes(title = "Regex") @Getter @Setter private boolean regex;
   @Attributes(title = "Build / Tag") @Getter @Setter private String buildNo;
