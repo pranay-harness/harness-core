@@ -1,0 +1,68 @@
+extend type Query {
+  # Get details about cloud provider
+  cloudProvider(cloudProviderId: String!): CloudProvider @dataFetcher(name: cloudProvider)
+
+  # Will remove it once authentication is available
+  cloudProviders(accountId: String!): CloudProviderConnection @dataFetcher(name: cloudProviderConnection)
+}
+
+interface CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type CloudProviderConnection {
+  pageInfo: PageInfo
+  nodes: [CloudProvider]
+}
+
+type AwsCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type PhysicalDataCenterCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type AzureCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type GcpCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type KubernetesCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type PcfCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}

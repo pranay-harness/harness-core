@@ -167,7 +167,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   public SettingAttribute ensureAzureTestCloudProvider(Randomizer.Seed seed, Owners owners) {
@@ -187,7 +187,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   public SettingAttribute ensureWinRmTestConnector(Randomizer.Seed seed, Owners owners) {
@@ -209,7 +209,7 @@ public class SettingGenerator {
                                                            .build())
                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   public SettingAttribute ensurePhysicalDataCenter(Randomizer.Seed seed, Owners owners) {
@@ -225,7 +225,7 @@ public class SettingGenerator {
                                                            .build())
                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   public SettingAttribute ensureAwsTest(Randomizer.Seed seed, Owners owners) {
@@ -246,7 +246,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureDevTest(Randomizer.Seed seed, Owners owners) {
@@ -268,7 +268,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureGithubTest(Seed seed, Owners owners) {
@@ -290,7 +290,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureTerraformCityGitRepo(Randomizer.Seed seed, Owners owners) {
@@ -312,7 +312,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessJenkins(Randomizer.Seed seed, Owners owners) {
@@ -332,7 +332,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessJira(Randomizer.Seed seed, Owners owners) {
@@ -351,7 +351,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessBamboo(Randomizer.Seed seed, Owners owners) {
@@ -369,7 +369,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, bambooSettingAttribute);
+    return ensureSettingAttribute(seed, bambooSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessNexus(Randomizer.Seed seed, Owners owners) {
@@ -387,7 +387,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, nexusSettingAttribute);
+    return ensureSettingAttribute(seed, nexusSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessNexus3(Randomizer.Seed seed, Owners owners) {
@@ -406,7 +406,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, nexus3SettingAttribute);
+    return ensureSettingAttribute(seed, nexus3SettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessArtifactory(Randomizer.Seed seed, Owners owners) {
@@ -424,7 +424,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, artifactorySettingAttribute);
+    return ensureSettingAttribute(seed, artifactorySettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessDocker(Randomizer.Seed seed, Owners owners) {
@@ -440,7 +440,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, dockerSettingAttribute);
+    return ensureSettingAttribute(seed, dockerSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessGcpExploration(Randomizer.Seed seed, Owners owners) {
@@ -457,7 +457,7 @@ public class SettingGenerator {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, gcpSettingAttribute);
+    return ensureSettingAttribute(seed, gcpSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessExplorationGcs(Randomizer.Seed seed, Owners owners) {
@@ -474,7 +474,7 @@ public class SettingGenerator {
                     .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
-    return ensureSettingAttribute(seed, gcpSettingAttribute);
+    return ensureSettingAttribute(seed, gcpSettingAttribute, owners);
   }
 
   private SettingAttribute ensurePaidSMTPSettings(Randomizer.Seed seed, Owners owners) {
@@ -496,7 +496,7 @@ public class SettingGenerator {
                                                  .withAccountId(account.getUuid())
                                                  .withValue(smtpConfig)
                                                  .build();
-    return ensureSettingAttribute(seed, emailSettingAttribute);
+    return ensureSettingAttribute(seed, emailSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHelmChartRepoSetting(Randomizer.Seed seed, Owners owners) {
@@ -513,7 +513,7 @@ public class SettingGenerator {
                                                     .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                                     .build();
 
-    return ensureSettingAttribute(seed, helmRepoSettingAttribute);
+    return ensureSettingAttribute(seed, helmRepoSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHelmSourceRepoSetting(Seed seed, Owners owners) {
@@ -529,7 +529,7 @@ public class SettingGenerator {
                                             .withValue(gitConfig)
                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
-    return ensureSettingAttribute(seed, settingAttribute);
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   public SettingAttribute exists(SettingAttribute settingAttribute) {
@@ -542,7 +542,7 @@ public class SettingGenerator {
         .get();
   }
 
-  public SettingAttribute ensureSettingAttribute(Randomizer.Seed seed, SettingAttribute settingAttribute) {
+  public SettingAttribute ensureSettingAttribute(Seed seed, SettingAttribute settingAttribute, Owners owners) {
     SettingAttribute.Builder builder = aSettingAttribute();
 
     if (settingAttribute != null && settingAttribute.getAccountId() != null) {
@@ -560,6 +560,12 @@ public class SettingGenerator {
     builder.withName(settingAttribute.getName());
 
     builder.withUsageRestrictions(settingAttribute.getUsageRestrictions());
+
+    if (settingAttribute.getCreatedBy() != null) {
+      builder.withCreatedBy(settingAttribute.getCreatedBy());
+    } else {
+      builder.withCreatedBy(owners.obtainUser());
+    }
 
     SettingAttribute existing = exists(builder.build());
     if (existing != null) {

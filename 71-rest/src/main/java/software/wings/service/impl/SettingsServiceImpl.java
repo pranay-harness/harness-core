@@ -145,7 +145,8 @@ public class SettingsServiceImpl implements SettingsService {
     }
   }
 
-  private List<SettingAttribute> getFilteredSettingAttributes(
+  @Override
+  public List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
     if (inputSettingAttributes == null) {
       return Collections.emptyList();

@@ -8,6 +8,12 @@ import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedBy;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
+import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLAzureCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,6 +26,7 @@ public class TypeResolverManager {
     public static final String Cause = "Cause";
     public static final String Execution = "Execution";
     public static final String Outcome = "Outcome";
+    public static final String CloudProvider = "CloudProvider";
   }
 
   public static final class TypeResolverManagerTypes {
@@ -27,6 +34,12 @@ public class TypeResolverManager {
     public static final String PipelineExecution = "PipelineExecution";
     public static final String WorkflowExecution = "WorkflowExecution";
     public static final String DeploymentOutcome = "DeploymentOutcome";
+    public static final String AwsCloudProvider = "AwsCloudProvider";
+    public static final String PhysicalDataCenterCloudProvider = "PhysicalDataCenterCloudProvider";
+    public static final String AzureCloudProvider = "AzureCloudProvider";
+    public static final String GcpCloudProvider = "GcpCloudProvider";
+    public static final String KubernetesCloudProvider = "KubernetesCloudProvider";
+    public static final String PcfCloudProvider = "PcfCloudProvider";
   }
 
   /**
@@ -50,6 +63,17 @@ public class TypeResolverManager {
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLDeploymentOutcome.class, TypeResolverManagerTypes.DeploymentOutcome)
                                       .build()))
+        .put(TypeResolverManagerUnifaces.CloudProvider,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLAwsCloudProvider.class, TypeResolverManagerTypes.AwsCloudProvider)
+                    .put(QLPhysicalDataCenterCloudProvider.class,
+                        TypeResolverManagerTypes.PhysicalDataCenterCloudProvider)
+                    .put(QLAzureCloudProvider.class, TypeResolverManagerTypes.AzureCloudProvider)
+                    .put(QLGcpCloudProvider.class, TypeResolverManagerTypes.GcpCloudProvider)
+                    .put(QLKubernetesClusterCloudProvider.class, TypeResolverManagerTypes.KubernetesCloudProvider)
+                    .put(QLPcfCloudProvider.class, TypeResolverManagerTypes.PcfCloudProvider)
+                    .build()))
         .build();
   }
 
