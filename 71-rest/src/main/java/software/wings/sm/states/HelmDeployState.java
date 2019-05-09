@@ -55,6 +55,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -328,10 +329,20 @@ public class HelmDeployState extends State {
     if (notifyResponseData instanceof HelmCommandExecutionResponse) {
       helmCommandExecutionResponse = (HelmCommandExecutionResponse) notifyResponseData;
     } else {
-      String msg =
-          " Failed to find the previous helm release version. Make sure that the helm client and tiller is installed.";
-      logger.error(msg);
-      throw new InvalidRequestException(msg, WingsException.USER);
+      StringBuilder builder = new StringBuilder(256).append(
+          "Failed to find the previous helm release version. Make sure that the helm client and tiller is installed");
+
+      if (gitConfig != null) {
+        builder.append(" and delegate has git connectivity");
+      }
+
+      SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+      if (value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
+        builder.append(" and correct delegate name is selected in the cloud provider");
+      }
+
+      logger.info(builder.toString());
+      throw new InvalidRequestException(builder.toString(), WingsException.USER);
     }
 
     if (helmCommandExecutionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
