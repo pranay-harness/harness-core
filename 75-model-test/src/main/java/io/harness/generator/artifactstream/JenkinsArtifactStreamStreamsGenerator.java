@@ -23,7 +23,7 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
 
   @Override
-  public ArtifactStream ensureArtifact(Seed seed, Owners owners) {
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     Service service = owners.obtainService();
 
     Application application = owners.obtainApplication();
@@ -34,7 +34,7 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()
             .appId(application.getUuid())
-            .serviceId(service.getUuid())
+            .serviceId(service != null ? service.getUuid() : null)
             .autoPopulate(false)
             .name("harness-samples")
             .sourceName(settingAttribute.getName())

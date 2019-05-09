@@ -35,7 +35,7 @@ public class ArtifactStreamManager {
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined) {
     ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
     if (streamsGenerator != null) {
-      return streamsGenerator.ensureArtifact(seed, owners);
+      return streamsGenerator.ensureArtifactStream(seed, owners);
     }
     return null;
   }
@@ -54,7 +54,7 @@ public class ArtifactStreamManager {
 
     ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
     if (streamsGenerator != null) {
-      return streamsGenerator.ensureArtifact(seed, owners);
+      return streamsGenerator.ensureArtifactStream(seed, owners);
     }
     return null;
   }

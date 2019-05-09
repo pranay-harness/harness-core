@@ -23,7 +23,7 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
 
   @Override
-  public ArtifactStream ensureArtifact(Seed seed, Owners owners) {
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
 
