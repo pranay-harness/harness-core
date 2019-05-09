@@ -103,7 +103,7 @@ public class HarnessMetricRegistry {
     namesToCollectors.put(name, metric);
   }
 
-  public void recordCounterInc(String metricName, String[] labelValues) {
+  public void recordCounterInc(String metricName, String... labelValues) {
     Counter metric = (Counter) namesToCollectors.get(getAbsoluteMetricName(metricName));
     if (metric != null) {
       if (labelValues != null) {

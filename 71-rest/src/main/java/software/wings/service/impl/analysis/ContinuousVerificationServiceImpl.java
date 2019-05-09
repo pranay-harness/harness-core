@@ -201,14 +201,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   @Override
-  public void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status) {
+  public void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status, boolean noData) {
     Query<ContinuousVerificationExecutionMetaData> query =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
             .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId);
 
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class)
-            .set("executionStatus", status));
+            .set("executionStatus", status)
+            .set("noData", noData));
   }
 
   @Override
@@ -356,6 +357,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     pageRequest.addOrder("stateStartTs", OrderType.DESC);
 
     return wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, pageRequest, excludeAuthority);
+  }
+
+  @Override
+  public List<ContinuousVerificationExecutionMetaData> getCVDeploymentData(
+      PageRequest<ContinuousVerificationExecutionMetaData> pageRequest) {
+    PageResponse<ContinuousVerificationExecutionMetaData> response =
+        wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, pageRequest);
+    List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData = new ArrayList<>();
+    int previousOffset = 0;
+    while (!response.isEmpty()) {
+      continuousVerificationExecutionMetaData.addAll(response.getResponse());
+      previousOffset += response.size();
+      pageRequest.setOffset(String.valueOf(previousOffset));
+      response = wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, pageRequest);
+    }
+    return continuousVerificationExecutionMetaData;
   }
 
   @Override

@@ -1,5 +1,7 @@
 package software.wings.common;
 
+import static java.util.Collections.unmodifiableList;
+
 import io.harness.event.model.EventConstants;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -120,6 +122,8 @@ public class VerificationConstants {
         }
       });
 
+  public static final String VERIFICATION_DEPLOYMENTS = "verification_deployments";
+
   private VerificationConstants() {}
 
   public static List<StateType> getMetricAnalysisStates() {
@@ -142,6 +146,14 @@ public class VerificationConstants {
   public static String getNewRelicMetricsYamlUrl() {
     return NEWRELIC_METRICS_YAML_URL;
   }
+
+  public static final String[] DATA_COLLECTION_METRIC_LABELS = new String[] {
+      EventConstants.ACCOUNT_ID, EventConstants.VERIFICATION_TYPE, EventConstants.VERIFICATION_247_CONFIGURED};
+
+  public static final List<String> VERIFICATION_METRIC_LABELS =
+      unmodifiableList(Arrays.asList(EventConstants.ACCOUNT_ID, EventConstants.SERVICE_ID,
+          EventConstants.VERIFICATION_TYPE, EventConstants.VERIFICATION_STATUS, EventConstants.VERIFICATION_HAS_DATA,
+          EventConstants.VERIFICATION_247_CONFIGURED, EventConstants.IS_ROLLED_BACK));
 
   public static final String[] IGNORED_ERRORS_METRIC_LABELS = new String[] {EventConstants.LOG_ML_FEEDBACKTYPE,
       EventConstants.VERIFICATION_STATE_TYPE, EventConstants.APPLICATION_ID, EventConstants.WORKFLOW_ID};
