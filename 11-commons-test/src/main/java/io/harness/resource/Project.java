@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 
 @Slf4j
 public class Project {
-  public static String rootDirectory(Class clazz) {
+  public static String moduleDirectory(Class clazz) {
     try {
       File someFile = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI())
                           .resolve(Paths.get("someFile"))
@@ -19,11 +19,15 @@ public class Project {
         someFile = someFile.getParentFile();
       }
 
-      return someFile.getParentFile().getParentFile().getParentFile().getParentFile().getAbsolutePath();
+      return someFile.getParentFile().getParentFile().getParentFile().getAbsolutePath();
     } catch (URISyntaxException e) {
       logger.error("This should never happen", e);
     }
 
     return null;
+  }
+
+  public static String rootDirectory(Class clazz) {
+    return new File(moduleDirectory(clazz)).getParentFile().toString();
   }
 }
