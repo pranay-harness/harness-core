@@ -9,6 +9,7 @@ import com.google.inject.name.Names;
 
 import graphql.GraphQL;
 import org.dataloader.MappedBatchLoader;
+import org.hibernate.validator.constraints.NotBlank;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.CodeDeployInstanceInfo;
@@ -22,6 +23,8 @@ import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
+import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
+import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderConnectionDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
@@ -62,6 +65,9 @@ public class GraphQLModule extends AbstractModule {
    * I was not getting a handle to Annotation Name at runtime hence I am taking this approach.
    */
   private static final Set<String> BATCH_DATA_LOADER_NAMES = Sets.newHashSet();
+  private static final String DATA_FETCHER_SUFFIX = "DataFetcher";
+  public static final String BATCH_SUFFIX = "Batch";
+  private static final String BATCH_DATA_LOADER_SUFFIX = BATCH_SUFFIX.concat("DataLoader");
 
   public static Set<String> getBatchDataLoaderNames() {
     return Collections.unmodifiableSet(BATCH_DATA_LOADER_NAMES);
@@ -78,7 +84,13 @@ public class GraphQLModule extends AbstractModule {
     // DATA FETCHERS ARE NOT SINGLETON AS THEY CAN HAVE DIFFERENT CONTEXT MAP
     bindDataFetchers();
 
+    bindBatchedDataLoaderWithAnnotation();
+
     bindInstanceInfoControllers();
+  }
+
+  private void bindBatchedDataLoaderWithAnnotation() {
+    bindBatchedDataLoaderWithAnnotation(ApplicationBatchDataLoader.class);
   }
 
   private void bindInstanceInfoControllers() {
@@ -113,12 +125,13 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApplicationBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderConnectionDataFetcher.class);
   }
 
   @NotNull
-  private String calculateAnnotationName(Class clazz, String suffixToRemove) {
+  public static String calculateAnnotationName(final Class clazz, String suffixToRemove) {
     String className = clazz.getName();
     char c[] = className.substring(className.lastIndexOf('.') + 1, clazz.getName().length() - suffixToRemove.length())
                    .toCharArray();
@@ -128,18 +141,21 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz, String suffix) {
-    String annotationName = calculateAnnotationName(clazz, "DataFetcher");
+    String annotationName = calculateAnnotationName(clazz, suffix);
     bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
   }
 
   private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {
-    bindDataFetcherWithAnnotation(clazz, "");
+    bindDataFetcherWithAnnotation(clazz, DATA_FETCHER_SUFFIX);
   }
 
   private void bindBatchedDataLoaderWithAnnotation(Class<? extends MappedBatchLoader> clazz) {
-    String annotationName = calculateAnnotationName(clazz, "BatchDataLoader");
-
+    String annotationName = calculateAnnotationName(clazz, BATCH_DATA_LOADER_SUFFIX);
     BATCH_DATA_LOADER_NAMES.add(annotationName);
     bind(MappedBatchLoader.class).annotatedWith(Names.named(annotationName)).to(clazz).in(Scopes.SINGLETON);
+  }
+
+  public static String getBatchDataLoaderAnnotationName(@NotBlank String dataFetcherName) {
+    return dataFetcherName.concat(BATCH_SUFFIX);
   }
 }

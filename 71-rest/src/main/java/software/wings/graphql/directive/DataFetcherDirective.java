@@ -13,13 +13,17 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.idl.SchemaDirectiveWiring;
 import graphql.schema.idl.SchemaDirectiveWiringEnvironment;
+import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.app.GraphQLModule;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -31,6 +35,7 @@ import javax.validation.constraints.NotNull;
 public class DataFetcherDirective implements SchemaDirectiveWiring {
   public static final String DATA_FETCHER_NAME = "name";
   public static final String CONTEXT_FIELD_ARGS_MAP = "contextFieldArgsMap";
+  public static final String USE_BATCH_ATTRIBUTE = "useBatch";
 
   private Injector injector;
 
@@ -42,14 +47,18 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
   @Override
   public GraphQLFieldDefinition onField(SchemaDirectiveWiringEnvironment<GraphQLFieldDefinition> environment) {
     String dataFetcherName = (String) getArgumentValue(DATA_FETCHER_NAME, environment);
+    Boolean useBatch = (Boolean) getArgumentValue(USE_BATCH_ATTRIBUTE, environment);
+
     Map<String, String> contextFieldArgsMap = getContextFieldArgsMap(environment);
-
-    AbstractDataFetcher dataFetcher =
-        injector.getInstance(Key.get(AbstractDataFetcher.class, Names.named(dataFetcherName)));
-
     GraphQLFieldDefinition field = environment.getElement();
-    dataFetcher.addParentContextFieldArgMapFor(
-        environment.getElementParentTree().getParentInfo().get().getElement().getName(), contextFieldArgsMap);
+    AbstractDataFetcher dataFetcher = getDataFetcherForField(dataFetcherName, useBatch);
+    dataFetcher.addDataFetcherDirectiveAttributesForParent(
+        environment.getElementParentTree().getParentInfo().get().getElement().getName(),
+        DataFetcherDirectiveAttributes.builder()
+            .dataFetcherName(dataFetcherName)
+            .contextFieldArgsMap(contextFieldArgsMap)
+            .useBatch(useBatch)
+            .build());
 
     GraphQLFieldsContainer parentType = environment.getFieldsContainer();
     environment.getCodeRegistry().dataFetcher(parentType, field, dataFetcher);
@@ -80,5 +89,25 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
       argumentValue = graphQLArgument.getValue();
     }
     return argumentValue;
+  }
+
+  private AbstractDataFetcher getDataFetcherForField(String dataFetcherName, Boolean useBatch) {
+    AbstractDataFetcher dataFetcher = null;
+    if (useBatch) {
+      dataFetcher = getDataFetcherByName(GraphQLModule.getBatchDataLoaderAnnotationName(dataFetcherName));
+    }
+    return Objects.isNull(dataFetcher) ? getDataFetcherByName(dataFetcherName) : dataFetcher;
+  }
+
+  private AbstractDataFetcher getDataFetcherByName(String dataFetcherName) {
+    return injector.getInstance(Key.get(AbstractDataFetcher.class, Names.named(dataFetcherName)));
+  }
+
+  @Value
+  @Builder
+  public static class DataFetcherDirectiveAttributes {
+    String dataFetcherName;
+    Boolean useBatch;
+    Map<String, String> contextFieldArgsMap;
   }
 }

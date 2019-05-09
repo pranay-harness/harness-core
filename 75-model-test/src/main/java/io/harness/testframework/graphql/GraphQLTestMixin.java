@@ -2,8 +2,10 @@ package io.harness.testframework.graphql;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import org.dataloader.DataLoaderRegistry;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.Provider;
 import org.modelmapper.config.Configuration.AccessLevel;
@@ -41,7 +43,7 @@ public interface GraphQLTestMixin {
   }
 
   default QLTestObject qlExecute(String query) {
-    final ExecutionResult result = getGraphQL().execute(query);
+    final ExecutionResult result = getGraphQL().execute(getExecutionInput(query));
     if (isNotEmpty(result.getErrors())) {
       throw new RuntimeException(result.getErrors().toString());
     }
@@ -57,5 +59,13 @@ public interface GraphQLTestMixin {
     final T t = objenesis.newInstance(clazz);
     modelMapper().map(testObject.getMap(), t);
     return t;
+  }
+
+  default ExecutionInput getExecutionInput(String query) {
+    return ExecutionInput.newExecutionInput().query(query).dataLoaderRegistry(getDataLoaderRegistry()).build();
+  }
+
+  default DataLoaderRegistry getDataLoaderRegistry() {
+    return null;
   }
 }

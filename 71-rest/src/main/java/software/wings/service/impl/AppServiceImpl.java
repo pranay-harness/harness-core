@@ -511,4 +511,9 @@ public class AppServiceImpl implements AppService {
     yamlGitConfig.setAppId(appId);
     yamlGitConfig.setEntityType(EntityType.APPLICATION);
   }
+
+  @Override
+  public List<Application> getAppsByIds(Set<String> appIds) {
+    return wingsPersistence.createQuery(Application.class).field(ApplicationKeys.appId).hasAnyOf(appIds).asList();
+  }
 }

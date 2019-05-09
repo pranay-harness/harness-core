@@ -19,7 +19,6 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.PipelineGenerator;
@@ -58,7 +57,6 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private PipelineGenerator pipelineGenerator;
-  @Inject private EnvironmentGenerator environmentGenerator;
 
   public Workflow buildWorkflow(Seed seed, Owners owners) {
     // Test  creating a workflow

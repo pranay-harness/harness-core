@@ -1,4 +1,8 @@
-directive @dataFetcher(name: DataFetcherEnum!, contextFieldArgsMap: String) on FIELD_DEFINITION
+directive @dataFetcher(
+  name: DataFetcherEnum!
+  useBatch: Boolean = false
+  contextFieldArgsMap: String
+) on FIELD_DEFINITION
 
 schema {
   query: Query
