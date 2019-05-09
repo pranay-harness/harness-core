@@ -2,6 +2,7 @@ package io.harness;
 
 import static graphql.Assert.assertTrue;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -31,6 +32,35 @@ public class ConnectionTest extends GraphQLTest {
   @Inject ApplicationGenerator applicationGenerator;
   @Inject PipelineGenerator pipelineGenerator;
 
+  private static final String pattern = $.GQL(/*
+{
+  pipelines(applicationId: "%s" limit: %d offset: %d) {
+    nodes {
+      id
+    }
+    pageInfo {
+      limit
+      offset
+      hasMore
+      total
+    }
+  }
+}*/ CloudProviderTest.class);
+
+  private static final String patternNoHasMore = $.GQL(/*
+{
+  pipelines(applicationId: "%s" limit: %d offset: %d) {
+    nodes {
+      id
+    }
+    pageInfo {
+      limit
+      offset
+      total
+    }
+  }
+}*/ CloudProviderTest.class);
+
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testConnectionPaging() {
@@ -47,8 +77,7 @@ public class ConnectionTest extends GraphQLTest {
     final Pipeline pipeline3 = pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).build());
 
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 2) { nodes { id } pageInfo { limit offset hasMore total } } }";
+      String query = format(pattern, application.getUuid(), 2, 0);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
@@ -58,9 +87,9 @@ public class ConnectionTest extends GraphQLTest {
       assertTrue(pipelineConnection.getPageInfo().getHasMore());
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
+
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 2, offset: 1) { nodes { id } pageInfo { limit offset hasMore total } } }";
+      String query = format(pattern, application.getUuid(), 2, 1);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
@@ -71,8 +100,7 @@ public class ConnectionTest extends GraphQLTest {
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 5, offset: 0) { nodes { id } pageInfo { limit offset hasMore total } } }";
+      String query = format(pattern, application.getUuid(), 5, 0);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(3);
@@ -83,8 +111,7 @@ public class ConnectionTest extends GraphQLTest {
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 5, offset: 4) { nodes { id } pageInfo { limit offset hasMore total } } }";
+      String query = format(pattern, application.getUuid(), 5, 4);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
@@ -95,8 +122,7 @@ public class ConnectionTest extends GraphQLTest {
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 0, offset: 0) { nodes { id } pageInfo { limit offset hasMore total } } }";
+      String query = format(pattern, application.getUuid(), 0, 0);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
@@ -107,8 +133,7 @@ public class ConnectionTest extends GraphQLTest {
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 2, offset: 0) { nodes { id } pageInfo { limit offset total } } }";
+      String query = format(pattern, application.getUuid(), 2, 0);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
@@ -118,8 +143,7 @@ public class ConnectionTest extends GraphQLTest {
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 5, offset: 0) { nodes { id } pageInfo { limit offset total } } }";
+      String query = format(pattern, application.getUuid(), 5, 0);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(3);
@@ -130,8 +154,7 @@ public class ConnectionTest extends GraphQLTest {
     }
 
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 5, offset: 2) { nodes { id } pageInfo { limit offset total } } }";
+      String query = format(patternNoHasMore, application.getUuid(), 5, 2);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(1);
@@ -142,8 +165,7 @@ public class ConnectionTest extends GraphQLTest {
     }
 
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 5, offset: 3) { nodes { id } pageInfo { limit offset total } } }";
+      String query = format(patternNoHasMore, application.getUuid(), 5, 3);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
@@ -154,8 +176,7 @@ public class ConnectionTest extends GraphQLTest {
     }
 
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 5, offset: 5) { nodes { id } pageInfo { limit offset total } } }";
+      String query = format(patternNoHasMore, application.getUuid(), 5, 5);
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
@@ -176,8 +197,7 @@ public class ConnectionTest extends GraphQLTest {
         applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Pipelines").build());
 
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: -5, offset: 5) { nodes { id } pageInfo { limit offset total } } }";
+      String query = format(patternNoHasMore, application.getUuid(), -5, 5);
 
       final ExecutionResult result = qlResult(query);
       assertThat(result.getErrors().size()).isEqualTo(1);
@@ -188,8 +208,7 @@ public class ConnectionTest extends GraphQLTest {
     }
 
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 5, offset: -5) { nodes { id } pageInfo { limit offset total } } }";
+      String query = format(patternNoHasMore, application.getUuid(), 5, -5);
 
       final ExecutionResult result = qlResult(query);
       assertThat(result.getErrors().size()).isEqualTo(1);
