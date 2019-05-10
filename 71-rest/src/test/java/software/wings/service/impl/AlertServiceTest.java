@@ -11,13 +11,17 @@ import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.alerts.AlertStatus.Pending;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.alert.AlertType.ARTIFACT_COLLECTION_FAILED;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
@@ -35,17 +39,23 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.ApprovalNeededAlert;
+import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +63,9 @@ import java.util.concurrent.ExecutorService;
 public class AlertServiceTest extends WingsBaseTest {
   @Mock private ExecutorService executorService;
   @Mock private AssignDelegateService assignDelegateService;
+  @Mock private AppService appService;
+  @Mock private SettingsService settingsService;
+  @Mock private ArtifactStreamService artifactStreamService;
 
   @Inject @InjectMocks private AlertService alertService;
 
@@ -245,5 +258,49 @@ public class AlertServiceTest extends WingsBaseTest {
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getTitle()).isEqualTo("No delegates can execute Container (LIST_CLUSTERS) tasks ");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldPruneByArtifactStream() {
+    AlertData alertData = ArtifactCollectionFailedAlert.builder()
+                              .appId(APP_ID)
+                              .serviceId(SERVICE_ID)
+                              .artifactStreamId(ARTIFACT_STREAM_ID)
+                              .build();
+
+    alertService.openAlert(ACCOUNT_ID, APP_ID, ARTIFACT_COLLECTION_FAILED, alertData);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    List<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(1);
+
+    alertService.pruneByArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
+
+    alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(0);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldPruneByArtifactStreamAtConnectorLevel() {
+    AlertData alertData =
+        ArtifactCollectionFailedAlert.builder().appId(GLOBAL_APP_ID).artifactStreamId(ARTIFACT_STREAM_ID).build();
+
+    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, ARTIFACT_COLLECTION_FAILED, alertData);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID))
+        .thenReturn(DockerArtifactStream.builder().settingId(SETTING_ID).build());
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build());
+
+    List<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(1);
+
+    alertService.pruneByArtifactStream(GLOBAL_APP_ID, ARTIFACT_STREAM_ID);
+
+    alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(0);
   }
 }
