@@ -627,8 +627,6 @@ public interface Constants {
   String OLD_LICENSE = "OLD_LICENSE";
   String NEW_LICENSE = "NEW_LICENSE";
 
-  String VALUES_YAML_KEY = "values.yaml";
-
   // ECS BG
   String BG_VERSION = "BG_VERSION";
   String BG_GREEN = "GREEN";

@@ -3,6 +3,7 @@ package software.wings.yaml.handler.connectors.configyamlhandlers;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -46,7 +47,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
                                             .withAccountId(ACCOUNT_ID)
                                             .withUuid(CLOUD_PROVIDER_ID)
                                             .withCategory(SettingCategory.CLOUD_PROVIDER)
-                                            .withAppId(null)
+                                            .withAppId(GLOBAL_APP_ID)
                                             .withValue(AwsConfig.builder()
                                                            .accountId(ACCOUNT_ID)
                                                            .accessKey("accessKey")

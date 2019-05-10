@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -30,6 +31,8 @@ import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTED_FIELD_MASK;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.equalCheck;
@@ -67,6 +70,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
@@ -91,6 +95,8 @@ import software.wings.utils.CryptoUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -169,22 +175,106 @@ public class SettingsServiceImpl implements SettingsService {
     Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = envService.getAppIdEnvMap(appsByAccountId);
 
-    inputSettingAttributes.forEach(settingAttribute -> {
-      UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
+    Set<SettingAttribute> helmRepoSettingAttributes = new HashSet<>();
 
-      if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
-              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions,
-              appIdEnvMap)) {
-        // HAR-7726: Mask the encrypted field values when listing all settings.
-        SettingValue settingValue = settingAttribute.getValue();
-        if (settingValue instanceof EncryptableSetting) {
-          secretManager.maskEncryptedFields((EncryptableSetting) settingValue);
+    inputSettingAttributes.forEach(settingAttribute -> {
+      if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
+        helmRepoSettingAttributes.add(settingAttribute);
+      } else {
+        UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
+
+        if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
+                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
+                usageRestrictionsFromEntity)) {
+          filteredSettingAttributes.add(settingAttribute);
         }
-        filteredSettingAttributes.add(settingAttribute);
       }
     });
 
+    getFilteredHelmRepoSettingAttributes(appIdFromRequest, envIdFromRequest, accountId, filteredSettingAttributes,
+        appEnvMapFromUserPermissions, restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap,
+        helmRepoSettingAttributes);
+
     return filteredSettingAttributes;
+  }
+
+  private void getFilteredHelmRepoSettingAttributes(String appIdFromRequest, String envIdFromRequest, String accountId,
+      List<SettingAttribute> filteredSettingAttributes, Map<String, Set<String>> appEnvMapFromUserPermissions,
+      UsageRestrictions restrictionsFromUserPermissions, boolean isAccountAdmin, Map<String, List<Base>> appIdEnvMap,
+      Set<SettingAttribute> helmRepoSettingAttributes) {
+    if (isNotEmpty(helmRepoSettingAttributes)) {
+      Set<String> cloudProviderIds = new HashSet<>();
+
+      helmRepoSettingAttributes.forEach(settingAttribute -> {
+        HelmRepoConfig helmRepoConfig = (HelmRepoConfig) settingAttribute.getValue();
+        if (isNotBlank(helmRepoConfig.getConnectorId())) {
+          cloudProviderIds.add(helmRepoConfig.getConnectorId());
+        }
+      });
+
+      Map<String, SettingAttribute> cloudProvidersMap = new HashMap<>();
+
+      wingsPersistence.createQuery(SettingAttribute.class)
+          .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
+          .filter(APP_ID_KEY, GLOBAL_APP_ID)
+          .field(ID_KEY)
+          .in(cloudProviderIds)
+          .forEach(settingAttribute -> { cloudProvidersMap.put(settingAttribute.getUuid(), settingAttribute); });
+
+      helmRepoSettingAttributes.forEach(settingAttribute -> {
+        String cloudProviderId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
+
+        if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)) {
+          UsageRestrictions usageRestrictionsFromEntity = cloudProvidersMap.get(cloudProviderId).getUsageRestrictions();
+
+          if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
+                  restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
+                  usageRestrictionsFromEntity)) {
+            filteredSettingAttributes.add(settingAttribute);
+          }
+        }
+      });
+    }
+  }
+
+  private boolean isFilteredSettingAttribute(String appIdFromRequest, String envIdFromRequest, String accountId,
+      Map<String, Set<String>> appEnvMapFromUserPermissions, UsageRestrictions restrictionsFromUserPermissions,
+      boolean isAccountAdmin, Map<String, List<Base>> appIdEnvMap, SettingAttribute settingAttribute,
+      UsageRestrictions usageRestrictionsFromEntity) {
+    if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
+            usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions, appIdEnvMap)) {
+      // HAR-7726: Mask the encrypted field values when listing all settings.
+      SettingValue settingValue = settingAttribute.getValue();
+      if (settingValue instanceof EncryptableSetting) {
+        secretManager.maskEncryptedFields((EncryptableSetting) settingValue);
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean isSettingAttributeReferencingCloudProvider(SettingAttribute settingAttribute) {
+    return SettingCategory.HELM_REPO.equals(settingAttribute.getCategory())
+        && (AMAZON_S3_HELM_REPO.name().equals(settingAttribute.getValue().getType())
+               || GCS_HELM_REPO.name().equals(settingAttribute.getValue().getType()));
+  }
+
+  private UsageRestrictions getUsageRestriction(SettingAttribute settingAttribute) {
+    SettingValue settingValue = settingAttribute.getValue();
+
+    if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
+      String cloudProviderId = ((HelmRepoConfig) settingValue).getConnectorId();
+
+      SettingAttribute cloudProvider = get(settingAttribute.getAppId(), cloudProviderId);
+      if (cloudProvider == null) {
+        throw new InvalidRequestException("Cloud provider doesn't exist", USER);
+      }
+
+      return cloudProvider.getUsageRestrictions();
+    } else {
+      return settingAttribute.getUsageRestrictions();
+    }
   }
 
   @Override
@@ -197,7 +287,7 @@ public class SettingsServiceImpl implements SettingsService {
   @ValidationGroups(Create.class)
   public SettingAttribute forceSave(SettingAttribute settingAttribute) {
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
-        settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions());
+        settingAttribute.getAccountId(), getUsageRestriction(settingAttribute));
 
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof EncryptableSetting) {
@@ -377,8 +467,8 @@ public class SettingsServiceImpl implements SettingsService {
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
 
-    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(settingAttribute.getAccountId(),
-        existingSetting.getUsageRestrictions(), settingAttribute.getUsageRestrictions());
+    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+        settingAttribute.getAccountId(), existingSetting.getUsageRestrictions(), getUsageRestriction(settingAttribute));
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
