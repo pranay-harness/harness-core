@@ -116,7 +116,6 @@ public class BambooServiceImpl implements BambooService {
         if (next.get("link") != null) {
           buildUrl = next.get("link").get("href").asText();
         }
-        next.get("link").get("href").asText();
         return aBuildDetails()
             .withNumber(next.get("buildNumber").asText())
             .withRevision(next.get("vcsRevisionKey") != null ? next.get("vcsRevisionKey").asText() : null)
