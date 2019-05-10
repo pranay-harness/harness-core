@@ -25,7 +25,7 @@ public interface LearningEngineService {
   LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
       ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task, Optional<List<MLAnalysisType>> taskTypes);
   LearningEngineExperimentalAnalysisTask getNextLearningEngineExperimentalAnalysisTask(
-      String experimentName, ServiceApiVersion serviceApiVersion);
+      ServiceApiVersion serviceApiVersion, String experimentName, Optional<List<MLAnalysisType>> taskTypes);
 
   boolean hasAnalysisTimedOut(String appId, String workflowExecutionId, String stateExecutionId);
   List<MLExperiments> getExperiments(MLAnalysisType ml_analysis_type);

@@ -213,13 +213,18 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public LearningEngineExperimentalAnalysisTask getNextLearningEngineExperimentalAnalysisTask(
-      String experimentName, ServiceApiVersion serviceApiVersion) {
+      ServiceApiVersion serviceApiVersion, String experimentName, Optional<List<MLAnalysisType>> taskTypes) {
     Query<LearningEngineExperimentalAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
             .filter(LearningEngineExperimentalAnalysisTaskKeys.version, serviceApiVersion)
             .filter("experiment_name", experimentName)
             .field("retry")
             .lessThan(LearningEngineExperimentalAnalysisTask.RETRIES);
+
+    if (taskTypes.isPresent() && isNotEmpty(taskTypes.get())) {
+      query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
+    }
+
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY)
