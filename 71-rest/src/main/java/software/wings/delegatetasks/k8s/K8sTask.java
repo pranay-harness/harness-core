@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
@@ -64,11 +65,10 @@ public class K8sTask extends AbstractDelegateRunnableTask {
             .build();
       }
     } else {
-      String workingDirectory =
-          Paths.get(WORKING_DIR_BASE, convertBase64UuidToCanonicalForm(k8sTaskParameters.getWorkflowExecutionId()))
-              .normalize()
-              .toAbsolutePath()
-              .toString();
+      String workingDirectory = Paths.get(WORKING_DIR_BASE, convertBase64UuidToCanonicalForm(generateUuid()))
+                                    .normalize()
+                                    .toAbsolutePath()
+                                    .toString();
 
       try {
         String kubeconfigFileContent =

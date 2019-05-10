@@ -126,6 +126,9 @@ public class K8sStateHelper {
   @Inject ApplicationManifestUtils applicationManifestUtils;
   @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
 
+  private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
+  private static final long MAX_TASK_TIMEOUT_IN_MINUTES = 120L;
+
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
@@ -365,10 +368,19 @@ public class K8sStateHelper {
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
 
-    long taskTimeout = DEFAULT_ASYNC_CALL_TIMEOUT;
+    long taskTimeoutInMillis = DEFAULT_ASYNC_CALL_TIMEOUT;
 
     if (k8sTaskParameters.getTimeoutIntervalInMin() != null) {
-      taskTimeout = k8sTaskParameters.getTimeoutIntervalInMin() * 60L * 1000L;
+      long taskTimeoutInMinutes;
+      if (k8sTaskParameters.getTimeoutIntervalInMin() < MIN_TASK_TIMEOUT_IN_MINUTES) {
+        taskTimeoutInMinutes = MIN_TASK_TIMEOUT_IN_MINUTES;
+      } else if (k8sTaskParameters.getTimeoutIntervalInMin() > MAX_TASK_TIMEOUT_IN_MINUTES) {
+        taskTimeoutInMinutes = MAX_TASK_TIMEOUT_IN_MINUTES;
+      } else {
+        taskTimeoutInMinutes = k8sTaskParameters.getTimeoutIntervalInMin();
+      }
+
+      taskTimeoutInMillis = taskTimeoutInMinutes * 60L * 1000L;
     }
 
     String waitId = generateUuid();
@@ -381,7 +393,7 @@ public class K8sStateHelper {
                                     .data(TaskData.builder()
                                               .taskType(TaskType.K8S_COMMAND_TASK.name())
                                               .parameters(new Object[] {k8sTaskParameters})
-                                              .timeout(taskTimeout)
+                                              .timeout(taskTimeoutInMillis)
                                               .build())
                                     .envId(env.getUuid())
                                     .infrastructureMappingId(infraMapping.getUuid())
