@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.type.instance.info;
+package software.wings.graphql.schema.type.instance;
 
 import io.fabric8.utils.Lists;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
@@ -15,8 +15,9 @@ import java.util.List;
 
 public enum QLInstanceType {
   PHYSICAL_HOST_INSTANCE(Lists.newArrayList(PhysicalHostInstanceInfo.class)),
-  EC2_CLOUD_INSTANCE(
-      Lists.newArrayList(AutoScalingGroupInstanceInfo.class, Ec2InstanceInfo.class, CodeDeployInstanceInfo.class)),
+  EC2_INSTANCE(Lists.newArrayList(Ec2InstanceInfo.class)),
+  AUTOSCALING_GROUP_INSTANCE(Lists.newArrayList(AutoScalingGroupInstanceInfo.class)),
+  CODE_DEPLOY_INSTANCE(Lists.newArrayList(CodeDeployInstanceInfo.class)),
   ECS_CONTAINER_INSTANCE(Lists.newArrayList(EcsContainerInfo.class)),
   KUBERNETES_CONTAINER_INSTANCE(Lists.newArrayList(KubernetesContainerInfo.class, K8sPodInfo.class)),
   PCF_INSTANCE(Lists.newArrayList(PcfInstanceInfo.class));

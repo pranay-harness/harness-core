@@ -15,19 +15,21 @@ type Query {
   instanceCount(accountId: String!, instanceCountType: InstanceCountType = TOTAL): InstanceCount
     @dataFetcher(name: instanceCount)
 
-  instances(
-    serviceId: String
-    environmentId: String
-    envType: String
-    accountId: String
-    limit: Int!
-    offset: Int
-  ): InstanceConnection @dataFetcher(name: instanceConnection)
+  instances(serviceId: String, environmentId: String, envType: EnvType, limit: Int!, offset: Int): InstanceConnection
+    @dataFetcher(name: instanceConnection)
+}
+
+enum EnvType {
+  PROD
+  NON_PROD
+  ALL
 }
 
 enum InstanceType {
   PHYSICAL_HOST_INSTANCE
-  EC2_CLOUD_INSTANCE
+  EC2_INSTANCE
+  AUTOSCALING_GROUP_INSTANCE
+  CODE_DEPLOY_INSTANCE
   ECS_CONTAINER_INSTANCE
   KUBERNETES_CONTAINER_INSTANCE
   PCF_INSTANCE
@@ -36,22 +38,6 @@ enum InstanceType {
 type InstanceCount {
   count: Int
   instanceCountType: InstanceCountType
-}
-
-type Instance {
-  id: String!
-  type: InstanceType
-  pcfInstanceInfo: PcfInstanceInfo!
-  codeDeployInstanceInfo: CodeDeployInstanceInfo!
-  ec2InstanceInfo: Ec2InstanceInfo!
-  k8sPodInfo: K8sPodInfo!
-  physicalHostInstanceInfo: PhysicalHostInstanceInfo!
-}
-
-type PhysicalHostInstanceInfo {
-  hostId: String!
-  hostName: String!
-  hostPublicDns: String!
 }
 
 type InstanceConnection {
@@ -64,47 +50,137 @@ enum InstanceCountType {
   NINETY_FIVE_PERCENTILE
 }
 
-type K8sPodInfo {
-  releaseName: String!
-  podName: String!
-  ip: String!
-  namespace: String!
-  containers: [K8sContainerInfo]!
+interface Instance {
+  id: String
+  type: InstanceType
+  environment: Environment
+  application: Application
+  service: Service
+  artifact: Artifact
+}
+
+interface PhysicalInstance {
+  hostId: String
+  hostName: String
+  hostPublicDns: String
+}
+
+type PhysicalHostInstance implements Instance, PhysicalInstance {
+  id: String
+  type: InstanceType
+  environment: Environment
+    @dataFetcher(name: environment, contextFieldArgsMap: "{ \"environmentId\": \"environmentId\"}")
+  application: Application
+    @dataFetcher(name: application, contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}")
+  service: Service @dataFetcher(name: service, contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  artifact: Artifact
+  hostId: String
+  hostName: String
+  hostPublicDns: String
+}
+
+type K8sPodInstance implements Instance {
+  id: String
+  type: InstanceType
+  environment: Environment
+    @dataFetcher(name: environment, contextFieldArgsMap: "{ \"environmentId\": \"environmentId\"}")
+  application: Application
+    @dataFetcher(name: application, contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}")
+  service: Service @dataFetcher(name: service, contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  artifact: Artifact
+
+  releaseName: String
+  podName: String
+  ip: String
+  namespace: String
+  containers: [K8sContainerInfo]
 }
 
 type K8sContainerInfo {
-  containerId: String!
-  name: String!
-  image: String!
+  containerId: String
+  name: String
+  image: String
 }
 
-type Ec2InstanceInfo {
-  hostId: String!
-  hostName: String!
-  hostPublicDns: String!
+type Ec2Instance implements Instance, PhysicalInstance {
+  id: String
+  type: InstanceType
+  environment: Environment
+    @dataFetcher(name: environment, contextFieldArgsMap: "{ \"environmentId\": \"environmentId\"}")
+  application: Application
+    @dataFetcher(name: application, contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}")
+  service: Service @dataFetcher(name: service, contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  artifact: Artifact
+
+  hostId: String
+  hostName: String
+  hostPublicDns: String
 }
 
-type PcfInstanceInfo {
-  id: String!
-  organization: String!
+type PcfInstance implements Instance {
+  id: String
+  type: InstanceType
+  environment: Environment
+    @dataFetcher(name: environment, contextFieldArgsMap: "{ \"environmentId\": \"environmentId\"}")
+  application: Application
+    @dataFetcher(name: application, contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}")
+  service: Service @dataFetcher(name: service, contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  artifact: Artifact
+
+  pcfId: String
+  organization: String
   space: String
-  pcfApplicationName: String!
+  pcfApplicationName: String
   pcfApplicationGuid: String
   instanceIndex: String
 }
 
-type CodeDeployInstanceInfo {
-  hostId: String!
-  hostName: String!
-  hostPublicDns: String!
-  deploymentId: String!
+type CodeDeployInstance implements Instance, PhysicalInstance {
+  id: String
+  type: InstanceType
+  environment: Environment
+    @dataFetcher(name: environment, contextFieldArgsMap: "{ \"environmentId\": \"environmentId\"}")
+  application: Application
+    @dataFetcher(name: application, contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}")
+  service: Service @dataFetcher(name: service, contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  artifact: Artifact
+
+  hostId: String
+  hostName: String
+  hostPublicDns: String
+  deploymentId: String
 }
 
-type EcsContainerInfo {
-  clusterName: String!
-  taskArn: String!
-  taskDefinitionArn: String!
-  serviceName: String!
-  version: String!
+type AutoScalingGroupInstance implements Instance, PhysicalInstance {
+  id: String
+  type: InstanceType
+  environment: Environment
+    @dataFetcher(name: environment, contextFieldArgsMap: "{ \"environmentId\": \"environmentId\"}")
+  application: Application
+    @dataFetcher(name: application, contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}")
+  service: Service @dataFetcher(name: service, contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  artifact: Artifact
+
+  hostId: String
+  hostName: String
+  hostPublicDns: String
+  autoScalingGroupName: String
+}
+
+type EcsContainerInstance implements Instance {
+  id: String
+  type: InstanceType
+  environment: Environment
+    @dataFetcher(name: environment, contextFieldArgsMap: "{ \"environmentId\": \"environmentId\"}")
+  application: Application
+    @dataFetcher(name: application, contextFieldArgsMap: "{ \"applicationId\": \"applicationId\"}")
+  service: Service @dataFetcher(name: service, contextFieldArgsMap: "{ \"serviceId\": \"serviceId\"}")
+  artifact: Artifact
+
+  clusterName: String
+  taskArn: String
+  taskDefinitionArn: String
+  serviceName: String
+  version: String
   startedAt: DateTime
 }

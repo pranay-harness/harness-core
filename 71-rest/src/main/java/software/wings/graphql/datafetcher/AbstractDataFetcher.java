@@ -20,12 +20,9 @@ import org.modelmapper.config.Configuration;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.internal.objenesis.Objenesis;
 import org.modelmapper.internal.objenesis.ObjenesisStd;
-import software.wings.beans.Account;
-import software.wings.beans.User;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.UserThreadLocal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -77,15 +74,6 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
 
   public PermissionAttribute getPermissionAttribute(P parameters) {
     return null;
-  }
-
-  /**
-   * TODO This method implementation has to be changed later on
-   * @return
-   */
-  protected Account getAccount() {
-    User currentUser = UserThreadLocal.get();
-    return currentUser.getAccounts().get(0);
   }
 
   private static final Objenesis objenesis = new ObjenesisStd(true);

@@ -34,15 +34,15 @@ import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetch
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
-import software.wings.graphql.datafetcher.instance.instanceInfo.AutoScalingGroupInstanceInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.CodeDeployInstanceInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.Ec2InstanceInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.EcsContainerInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.K8sPodInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.KubernetesContainerInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.PcfInstanceInfoController;
-import software.wings.graphql.datafetcher.instance.instanceInfo.PhysicalHostInstanceInfoController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.AutoScalingGroupInstanceController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.CodeDeployInstanceController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.Ec2InstanceController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.EcsContainerController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.K8SPodController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.KubernetesContainerController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.PcfInstanceController;
+import software.wings.graphql.datafetcher.instance.instanceInfo.PhysicalHostInstanceController;
 import software.wings.graphql.datafetcher.outcome.OutcomeConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
@@ -95,19 +95,17 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindInstanceInfoControllers() {
-    MapBinder<Class, InstanceInfoController> instanceInfoControllerMapBinder =
-        MapBinder.newMapBinder(binder(), Class.class, InstanceInfoController.class);
-    instanceInfoControllerMapBinder.addBinding(PhysicalHostInstanceInfo.class)
-        .to(PhysicalHostInstanceInfoController.class);
+    MapBinder<Class, InstanceController> instanceInfoControllerMapBinder =
+        MapBinder.newMapBinder(binder(), Class.class, InstanceController.class);
+    instanceInfoControllerMapBinder.addBinding(PhysicalHostInstanceInfo.class).to(PhysicalHostInstanceController.class);
     instanceInfoControllerMapBinder.addBinding(AutoScalingGroupInstanceInfo.class)
-        .to(AutoScalingGroupInstanceInfoController.class);
-    instanceInfoControllerMapBinder.addBinding(Ec2InstanceInfo.class).to(Ec2InstanceInfoController.class);
-    instanceInfoControllerMapBinder.addBinding(CodeDeployInstanceInfo.class).to(CodeDeployInstanceInfoController.class);
-    instanceInfoControllerMapBinder.addBinding(EcsContainerInfo.class).to(EcsContainerInfoController.class);
-    instanceInfoControllerMapBinder.addBinding(K8sPodInfo.class).to(K8sPodInfoController.class);
-    instanceInfoControllerMapBinder.addBinding(KubernetesContainerInfo.class)
-        .to(KubernetesContainerInfoController.class);
-    instanceInfoControllerMapBinder.addBinding(PcfInstanceInfo.class).to(PcfInstanceInfoController.class);
+        .to(AutoScalingGroupInstanceController.class);
+    instanceInfoControllerMapBinder.addBinding(Ec2InstanceInfo.class).to(Ec2InstanceController.class);
+    instanceInfoControllerMapBinder.addBinding(CodeDeployInstanceInfo.class).to(CodeDeployInstanceController.class);
+    instanceInfoControllerMapBinder.addBinding(EcsContainerInfo.class).to(EcsContainerController.class);
+    instanceInfoControllerMapBinder.addBinding(K8sPodInfo.class).to(K8SPodController.class);
+    instanceInfoControllerMapBinder.addBinding(KubernetesContainerInfo.class).to(KubernetesContainerController.class);
+    instanceInfoControllerMapBinder.addBinding(PcfInstanceInfo.class).to(PcfInstanceController.class);
   }
 
   private void bindDataFetchers() {
