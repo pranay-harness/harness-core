@@ -1,0 +1,17 @@
+package software.wings.helpers.ext.artifactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+
+import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+public class ResponseMsg {
+  private List<Error> errors;
+  @Data
+  public static class Error {
+    String status;
+    String message;
+  }
+}
