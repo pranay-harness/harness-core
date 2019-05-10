@@ -85,9 +85,10 @@ public class LearningEngineResource {
   @LearningEngineAuth
   @Produces({"application/json", "application/v1+json"})
   public RestResponse<LearningEngineExperimentalAnalysisTask> getNextExperimentalTask(
-      @QueryParam("experimentName") String experimentName, @HeaderParam("Accept") String acceptHeaders) {
+      @HeaderParam("Accept") String acceptHeaders, @QueryParam("experimentName") String experimentName,
+      @QueryParam("taskTypes") List<MLAnalysisType> taskTypes) {
     return new RestResponse<>(learningEngineService.getNextLearningEngineExperimentalAnalysisTask(
-        experimentName, parseApisVersion(acceptHeaders)));
+        parseApisVersion(acceptHeaders), experimentName, Optional.of(taskTypes)));
   }
 
   @POST
