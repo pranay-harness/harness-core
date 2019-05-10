@@ -7,12 +7,13 @@ import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.util.List;
 import java.util.concurrent.Future;
 import javax.ws.rs.QueryParam;
 
-public interface AlertService extends OwnedByAccount, OwnedByApplication {
+public interface AlertService extends OwnedByAccount, OwnedByApplication, OwnedByArtifactStream {
   PageResponse<Alert> list(PageRequest<Alert> pageRequest);
 
   List<AlertType> listCategoriesAndTypes(@QueryParam("accountId") String accountId);

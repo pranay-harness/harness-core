@@ -41,18 +41,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.alerts.AlertStatus;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
+import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
 import java.time.OffsetDateTime;
@@ -80,6 +86,9 @@ public class AlertServiceImpl implements AlertService {
   @Inject private Injector injector;
   @Inject private EventPublisher eventPublisher;
   @Inject private NotificationRulesStatusService notificationStatusService;
+  @Inject private AppService appService;
+  @Inject private SettingsService settingsService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
@@ -278,5 +287,34 @@ public class AlertServiceImpl implements AlertService {
   public void pruneByApplication(String appId) {
     List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
+  }
+
+  @Override
+  public void pruneByArtifactStream(String appId, String artifactStreamId) {
+    // NOTE: this pruning is done only for ArtifactCollectionFailedAlert
+    List<Alert> alerts;
+    if (GLOBAL_APP_ID.equals(appId)) {
+      ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+      if (artifactStream == null || artifactStream.getSettingId() == null) {
+        return;
+      }
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute == null) {
+        return;
+      }
+
+      // NOTE: appId not known at this point, hence set to null - appId will be removed from this alert type later
+      alerts = findExistingAlertsOfType(settingAttribute.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED);
+    } else {
+      alerts =
+          findExistingAlertsOfType(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED);
+    }
+
+    alerts.stream()
+        .filter(alert -> {
+          ArtifactCollectionFailedAlert data = (ArtifactCollectionFailedAlert) alert.getAlertData();
+          return data.getArtifactStreamId().equals(artifactStreamId);
+        })
+        .forEach(alert -> wingsPersistence.delete(alert));
   }
 }

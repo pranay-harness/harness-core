@@ -65,6 +65,7 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -105,12 +106,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private AppService appService;
   @Inject private TriggerService triggerService;
   @Inject private SettingsService settingsService;
-  @Inject private ArtifactService artifactService; // Do not delete it is being used by Prune
   @Inject private YamlPushService yamlPushService;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
   @Inject private AuditServiceHelper auditServiceHelper;
+
+  // Do not delete as they are being used by Prune
+  @Inject private ArtifactService artifactService;
+  @Inject private AlertService alertService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
