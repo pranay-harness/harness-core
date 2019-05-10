@@ -497,6 +497,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return;
     }
 
+    if (isEmpty(elementNotifyResponseData.getContextElements())) {
+      return;
+    }
+
     if (deploymentType.equals(DeploymentType.AWS_LAMBDA.name()) && phaseStepType == PhaseStepType.DEPLOY_AWS_LAMBDA) {
       AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) notifiedElement(
           elementNotifyResponseData, AwsLambdaContextElement.class, "Missing AwsLambdaContextElement");
@@ -505,27 +509,21 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         && phaseStepType == PhaseStepType.INFRASTRUCTURE_NODE) {
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
           elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
-      if (serviceInstanceIdsParam != null) {
-        executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
-      }
+      executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
     } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
       ClusterElement clusterElement =
           (ClusterElement) notifiedElement(elementNotifyResponseData, ClusterElement.class, "Missing ClusterElement");
       executionResponse.setContextElements(singletonList(clusterElement));
       executionResponse.setNotifyElements(singletonList(clusterElement));
     } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      if (!isEmpty(elementNotifyResponseData.getContextElements())) {
-        ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
-            elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
-        executionResponse.setContextElements(singletonList(containerServiceElement));
-        executionResponse.setNotifyElements(singletonList(containerServiceElement));
-      }
+      ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
+          elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
+      executionResponse.setContextElements(singletonList(containerServiceElement));
+      executionResponse.setNotifyElements(singletonList(containerServiceElement));
     } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
-      if (!isEmpty(elementNotifyResponseData.getContextElements())) {
-        InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-            elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-        executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
-      }
+      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
+      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
     } else if (phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
@@ -553,11 +551,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
       executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
     } else if (phaseStepType == PhaseStepType.K8S_PHASE_STEP) {
-      if (!isEmpty(elementNotifyResponseData.getContextElements())) {
-        InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-            elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-        executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
-      }
+      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
+      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
     }
   }
 
