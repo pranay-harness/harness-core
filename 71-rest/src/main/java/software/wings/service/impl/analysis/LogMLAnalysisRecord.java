@@ -1,14 +1,17 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import lombok.Builder;
@@ -28,11 +31,20 @@ import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
+import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisCluster;
+import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisClusterList;
+import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisClusterMap;
+import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogAnalysisMessageFrequency;
+import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogMLAnalysisRecordDetails;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +85,7 @@ public class LogMLAnalysisRecord extends Base {
   private double score;
   private LogMLClusterScores cluster_scores;
   private byte[] analysisDetailsCompressedJson;
+  private byte[] protoSerializedAnalyisDetails;
 
   private List<List<SplunkAnalysisCluster>> unknown_events;
   private Map<String, List<SplunkAnalysisCluster>> test_events;
@@ -125,6 +138,91 @@ public class LogMLAnalysisRecord extends Base {
   }
 
   public void decompressLogAnalysisRecord() {
+    if (isNotEmpty(protoSerializedAnalyisDetails)) {
+      try {
+        LogMLAnalysisRecordDetails analysisRecordDetails =
+            LogMLAnalysisRecordDetails.parseFrom(EncodingUtils.deCompressBytes(protoSerializedAnalyisDetails));
+        if (analysisRecordDetails.getUnknownEventsCount() > 0) {
+          this.unknown_events = new ArrayList<>();
+          analysisRecordDetails.getUnknownEventsList().forEach(logAnalysisClusterList -> {
+            List<SplunkAnalysisCluster> splunkAnalysisClusters = new ArrayList<>();
+            logAnalysisClusterList.getAnalysisClustersList().forEach(
+                logAnalysisCluster -> splunkAnalysisClusters.add(convertToSplunkAnalysisCluster(logAnalysisCluster)));
+            this.unknown_events.add(splunkAnalysisClusters);
+          });
+        }
+
+        if (analysisRecordDetails.getTestEventsCount() > 0) {
+          this.test_events = new HashMap<>();
+          analysisRecordDetails.getTestEventsMap().forEach((key, logAnalysisClusterList) -> {
+            List<SplunkAnalysisCluster> splunkAnalysisClusters = new ArrayList<>();
+            logAnalysisClusterList.getAnalysisClustersList().forEach(
+                logAnalysisCluster -> splunkAnalysisClusters.add(convertToSplunkAnalysisCluster(logAnalysisCluster)));
+            this.test_events.put(key, splunkAnalysisClusters);
+          });
+        }
+
+        if (analysisRecordDetails.getControlEventsCount() > 0) {
+          this.control_events = new HashMap<>();
+          analysisRecordDetails.getControlEventsMap().forEach((key, logAnalysisClusterList) -> {
+            List<SplunkAnalysisCluster> splunkAnalysisClusters = new ArrayList<>();
+            logAnalysisClusterList.getAnalysisClustersList().forEach(
+                logAnalysisCluster -> splunkAnalysisClusters.add(convertToSplunkAnalysisCluster(logAnalysisCluster)));
+            this.control_events.put(key, splunkAnalysisClusters);
+          });
+        }
+
+        if (analysisRecordDetails.getControlClustersCount() > 0) {
+          this.control_clusters = new HashMap<>();
+          analysisRecordDetails.getControlClustersMap().forEach((key, logAnalysisClusterMap) -> {
+            Map<String, SplunkAnalysisCluster> splunkAnalysisClusterMap = new HashMap<>();
+            logAnalysisClusterMap.getAnalysisClustersMapMap().forEach(
+                (s, logAnalysisCluster)
+                    -> splunkAnalysisClusterMap.put(s, convertToSplunkAnalysisCluster(logAnalysisCluster)));
+            this.control_clusters.put(key, splunkAnalysisClusterMap);
+          });
+        }
+
+        if (analysisRecordDetails.getUnknownClustersCount() > 0) {
+          this.unknown_clusters = new HashMap<>();
+          analysisRecordDetails.getUnknownClustersMap().forEach((key, logAnalysisClusterMap) -> {
+            Map<String, SplunkAnalysisCluster> splunkAnalysisClusterMap = new HashMap<>();
+            logAnalysisClusterMap.getAnalysisClustersMapMap().forEach(
+                (s, logAnalysisCluster)
+                    -> splunkAnalysisClusterMap.put(s, convertToSplunkAnalysisCluster(logAnalysisCluster)));
+            this.unknown_clusters.put(key, splunkAnalysisClusterMap);
+          });
+        }
+
+        if (analysisRecordDetails.getTestClustersCount() > 0) {
+          this.test_clusters = new HashMap<>();
+          analysisRecordDetails.getTestClustersMap().forEach((key, logAnalysisClusterMap) -> {
+            Map<String, SplunkAnalysisCluster> splunkAnalysisClusterMap = new HashMap<>();
+            logAnalysisClusterMap.getAnalysisClustersMapMap().forEach(
+                (s, logAnalysisCluster)
+                    -> splunkAnalysisClusterMap.put(s, convertToSplunkAnalysisCluster(logAnalysisCluster)));
+            this.test_clusters.put(key, splunkAnalysisClusterMap);
+          });
+        }
+
+        if (analysisRecordDetails.getIgnoreClustersCount() > 0) {
+          this.ignore_clusters = new HashMap<>();
+          analysisRecordDetails.getIgnoreClustersMap().forEach((key, logAnalysisClusterMap) -> {
+            Map<String, SplunkAnalysisCluster> splunkAnalysisClusterMap = new HashMap<>();
+            logAnalysisClusterMap.getAnalysisClustersMapMap().forEach(
+                (s, logAnalysisCluster)
+                    -> splunkAnalysisClusterMap.put(s, convertToSplunkAnalysisCluster(logAnalysisCluster)));
+            this.ignore_clusters.put(key, splunkAnalysisClusterMap);
+          });
+        }
+
+        this.setProtoSerializedAnalyisDetails(null);
+      } catch (InvalidProtocolBufferException e) {
+        throw new WingsException(e);
+      }
+      return;
+    }
+
     if (isNotEmpty(this.getAnalysisDetailsCompressedJson())) {
       try {
         String decompressedAnalysisDetailsJson = deCompressString(this.getAnalysisDetailsCompressedJson());
@@ -137,7 +235,6 @@ public class LogMLAnalysisRecord extends Base {
         this.setUnknown_clusters(logAnalysisDetails.getUnknown_clusters());
         this.setTest_clusters(logAnalysisDetails.getTest_clusters());
         this.setIgnore_clusters(logAnalysisDetails.getIgnore_clusters());
-
       } catch (IOException e) {
         throw new WingsException(e);
       }
@@ -145,22 +242,75 @@ public class LogMLAnalysisRecord extends Base {
   }
 
   public void compressLogAnalysisRecord() {
-    LogMLAnalysisRecord logAnalysisDetails = LogMLAnalysisRecord.builder()
-                                                 .unknown_events(this.getUnknown_events())
-                                                 .test_events(this.getTest_events())
-                                                 .control_events(this.getControl_events())
-                                                 .control_clusters(this.getControl_clusters())
-                                                 .unknown_clusters(this.getUnknown_clusters())
-                                                 .test_clusters(this.getTest_clusters())
-                                                 .ignore_clusters(this.getIgnore_clusters())
-                                                 .build();
-
-    try {
-      this.setAnalysisDetailsCompressedJson(compressString(JsonUtils.asJson(logAnalysisDetails)));
-    } catch (IOException e) {
-      throw new WingsException("failed to compress analysis details", e);
+    LogMLAnalysisRecordDetails.Builder detailsBuilder = LogMLAnalysisRecordDetails.newBuilder();
+    if (isNotEmpty(unknown_events)) {
+      unknown_events.forEach(splunkAnalysisClusters -> {
+        final LogAnalysisClusterList.Builder clusterListBuilder = LogAnalysisClusterList.newBuilder();
+        splunkAnalysisClusters.forEach(splunkAnalysisCluster
+            -> clusterListBuilder.addAnalysisClusters(convertToLogAnalysisCluster(splunkAnalysisCluster)));
+        detailsBuilder.addUnknownEvents(clusterListBuilder.build());
+      });
     }
 
+    if (isNotEmpty(test_events)) {
+      test_events.forEach((key, splunkAnalysisClusters) -> {
+        final LogAnalysisClusterList.Builder clusterListBuilder = LogAnalysisClusterList.newBuilder();
+        splunkAnalysisClusters.forEach(splunkAnalysisCluster
+            -> clusterListBuilder.addAnalysisClusters(convertToLogAnalysisCluster(splunkAnalysisCluster)));
+        detailsBuilder.putTestEvents(key, clusterListBuilder.build());
+      });
+    }
+
+    if (isNotEmpty(control_events)) {
+      control_events.forEach((key, splunkAnalysisClusters) -> {
+        final LogAnalysisClusterList.Builder clusterListBuilder = LogAnalysisClusterList.newBuilder();
+        splunkAnalysisClusters.forEach(splunkAnalysisCluster
+            -> clusterListBuilder.addAnalysisClusters(convertToLogAnalysisCluster(splunkAnalysisCluster)));
+        detailsBuilder.putControlEvents(key, clusterListBuilder.build());
+      });
+    }
+
+    if (isNotEmpty(control_clusters)) {
+      control_clusters.forEach((key, analysisClusterMap) -> {
+        LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
+        analysisClusterMap.forEach(
+            (s, splunkAnalysisCluster)
+                -> clusterMapBuilder.putAnalysisClustersMap(s, convertToLogAnalysisCluster(splunkAnalysisCluster)));
+        detailsBuilder.putControlClusters(key, clusterMapBuilder.build());
+      });
+    }
+
+    if (isNotEmpty(unknown_clusters)) {
+      unknown_clusters.forEach((key, analysisClusterMap) -> {
+        LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
+        analysisClusterMap.forEach(
+            (s, splunkAnalysisCluster)
+                -> clusterMapBuilder.putAnalysisClustersMap(s, convertToLogAnalysisCluster(splunkAnalysisCluster)));
+        detailsBuilder.putUnknownClusters(key, clusterMapBuilder.build());
+      });
+    }
+
+    if (isNotEmpty(test_clusters)) {
+      test_clusters.forEach((key, analysisClusterMap) -> {
+        LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
+        analysisClusterMap.forEach(
+            (s, splunkAnalysisCluster)
+                -> clusterMapBuilder.putAnalysisClustersMap(s, convertToLogAnalysisCluster(splunkAnalysisCluster)));
+        detailsBuilder.putTestClusters(key, clusterMapBuilder.build());
+      });
+    }
+
+    if (isNotEmpty(ignore_clusters)) {
+      ignore_clusters.forEach((key, analysisClusterMap) -> {
+        LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
+        analysisClusterMap.forEach(
+            (s, splunkAnalysisCluster)
+                -> clusterMapBuilder.putAnalysisClustersMap(s, convertToLogAnalysisCluster(splunkAnalysisCluster)));
+        detailsBuilder.putIgnoreClusters(key, clusterMapBuilder.build());
+      });
+    }
+
+    this.setProtoSerializedAnalyisDetails(EncodingUtils.compressBytes(detailsBuilder.build().toByteArray()));
     this.setUnknown_events(null);
     this.setTest_events(null);
     this.setControl_events(null);
@@ -168,5 +318,75 @@ public class LogMLAnalysisRecord extends Base {
     this.setUnknown_clusters(null);
     this.setTest_clusters(null);
     this.setIgnore_clusters(null);
+  }
+
+  private LogAnalysisCluster convertToLogAnalysisCluster(SplunkAnalysisCluster splunkAnalysisCluster) {
+    List<LogAnalysisMessageFrequency> messageFrequenciesList = new ArrayList<>();
+    if (isNotEmpty(splunkAnalysisCluster.getMessage_frequencies())) {
+      splunkAnalysisCluster.getMessage_frequencies().forEach(messageFrequency
+          -> messageFrequenciesList.add(
+              LogAnalysisMessageFrequency.newBuilder()
+                  .setCount(messageFrequency.getCount())
+                  .setOldLabel(messageFrequency.getOldLabel() == null ? "" : messageFrequency.getOldLabel())
+                  .setHost(messageFrequency.getHost() == null ? "" : messageFrequency.getHost())
+                  .setTime(messageFrequency.getTime())
+                  .build()));
+    }
+    return LogAnalysisCluster.newBuilder()
+        .setClusterLabel(splunkAnalysisCluster.getCluster_label())
+        .setUnexpectedFreq(splunkAnalysisCluster.isUnexpected_freq())
+        .setText(splunkAnalysisCluster.getText())
+        .setX(splunkAnalysisCluster.getX())
+        .setY(splunkAnalysisCluster.getY())
+        .setFeedbackId(splunkAnalysisCluster.getFeedback_id() == null ? "" : splunkAnalysisCluster.getFeedback_id())
+        .setAlertScore(splunkAnalysisCluster.getAlert_score())
+        .setTestScore(splunkAnalysisCluster.getTest_score())
+        .setControlScore(splunkAnalysisCluster.getControl_score())
+        .setFreqScore(splunkAnalysisCluster.getFreq_score())
+        .setControlLabel(splunkAnalysisCluster.getControl_label())
+        .setRiskLevel(splunkAnalysisCluster.getRisk_level())
+        .addAllTags(splunkAnalysisCluster.getTags() == null ? Collections.emptyList() : splunkAnalysisCluster.getTags())
+        .addAllAnomalousCounts(splunkAnalysisCluster.getAnomalous_counts() == null
+                ? Collections.emptyList()
+                : splunkAnalysisCluster.getAnomalous_counts())
+        .addAllDiffTags(splunkAnalysisCluster.getDiff_tags() == null ? Collections.emptyList()
+                                                                     : splunkAnalysisCluster.getDiff_tags())
+        .addAllMessageFrequencies(messageFrequenciesList)
+        .build();
+  }
+
+  private SplunkAnalysisCluster convertToSplunkAnalysisCluster(LogAnalysisCluster logAnalysisCluster) {
+    List<MessageFrequency> messageFrequencies = new ArrayList<>();
+    if (isNotEmpty(logAnalysisCluster.getMessageFrequenciesList())) {
+      logAnalysisCluster.getMessageFrequenciesList().forEach(logAnalysisMessageFrequency
+          -> messageFrequencies.add(
+              MessageFrequency.builder()
+                  .count(logAnalysisMessageFrequency.getCount())
+                  .oldLabel(logAnalysisMessageFrequency.getOldLabel().isEmpty()
+                          ? null
+                          : logAnalysisMessageFrequency.getOldLabel())
+                  .host(logAnalysisMessageFrequency.getHost().isEmpty() ? null : logAnalysisMessageFrequency.getHost())
+                  .time(logAnalysisMessageFrequency.getTime())
+                  .build()));
+    }
+    SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setMessage_frequencies(messageFrequencies);
+    splunkAnalysisCluster.setCluster_label(logAnalysisCluster.getClusterLabel());
+    splunkAnalysisCluster.setTags(logAnalysisCluster.getTagsList());
+    splunkAnalysisCluster.setAnomalous_counts(logAnalysisCluster.getAnomalousCountsList());
+    splunkAnalysisCluster.setUnexpected_freq(logAnalysisCluster.getUnexpectedFreq());
+    splunkAnalysisCluster.setText(logAnalysisCluster.getText());
+    splunkAnalysisCluster.setX(logAnalysisCluster.getX());
+    splunkAnalysisCluster.setY(logAnalysisCluster.getY());
+    splunkAnalysisCluster.setFeedback_id(
+        isEmpty(logAnalysisCluster.getFeedbackId()) ? null : logAnalysisCluster.getFeedbackId());
+    splunkAnalysisCluster.setDiff_tags(logAnalysisCluster.getDiffTagsList());
+    splunkAnalysisCluster.setAlert_score(logAnalysisCluster.getAlertScore());
+    splunkAnalysisCluster.setTest_score(logAnalysisCluster.getTestScore());
+    splunkAnalysisCluster.setControl_score(logAnalysisCluster.getControlScore());
+    splunkAnalysisCluster.setFreq_score(logAnalysisCluster.getFreqScore());
+    splunkAnalysisCluster.setControl_label(logAnalysisCluster.getControlLabel());
+    splunkAnalysisCluster.setRisk_level(logAnalysisCluster.getRiskLevel());
+    return splunkAnalysisCluster;
   }
 }

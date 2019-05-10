@@ -457,6 +457,11 @@
                 <version>4.0</version>
             </dependency>
             <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>3.7.1</version>
+            </dependency>
+            <dependency>
                 <groupId>com.graphql-java</groupId>
                 <artifactId>graphql-java</artifactId>
                 <version>12.0</version>
@@ -1335,6 +1340,7 @@
                         <failsOnError>true</failsOnError>
                         <configLocation>${checkStyleFile}</configLocation>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        <excludes>**/generated/**/*</excludes>
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -1468,6 +1474,7 @@
                         <rulesets>harness_pmd_ruleset.xml</rulesets>
                         <analysisCache>true</analysisCache>
                         <analysisCacheLocation>${project.build.directory}/pmd/pmd.cache</analysisCacheLocation>
+                        <excludes>**/generated/**/*</excludes>
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -1588,6 +1595,22 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <configuration>
+                    <protocExecutable>protoc</protocExecutable>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -1603,6 +1626,7 @@
                     <failsOnError>true</failsOnError>
                     <configLocation>${basedir}/codeStyle/google_checks.xml</configLocation>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <excludes>**/generated/**/*</excludes>
                 </configuration>
                 <reportSets>
                     <reportSet>

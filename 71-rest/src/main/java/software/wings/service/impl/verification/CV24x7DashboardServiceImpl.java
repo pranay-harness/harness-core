@@ -225,11 +225,12 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     Query<LogMLAnalysisRecord> analysisRecordQuery =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeCount)
             .filter("appId", appId)
-            .filter("cvConfigId", cvConfiguration.getUuid())
-            .field("logCollectionMinute")
+            .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
+            .field(LogMLAnalysisRecordKeys.logCollectionMinute)
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-            .project("analysisDetailsCompressedJson", readDetails)
-            .project("cluster_scores", readDetails);
+            .project(LogMLAnalysisRecordKeys.analysisDetailsCompressedJson, readDetails)
+            .project(LogMLAnalysisRecordKeys.protoSerializedAnalyisDetails, readDetails)
+            .project(LogMLAnalysisRecordKeys.cluster_scores, readDetails);
 
     if (readDetails) {
       analysisRecordQuery =

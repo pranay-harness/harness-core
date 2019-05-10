@@ -5,6 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
+import io.harness.exception.WingsException;
+import org.apache.commons.io.IOUtils;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,6 +46,28 @@ public class EncodingUtils {
       }
       return sb.toString();
     }
+  }
+
+  public static byte[] compressBytes(byte[] toCompress) {
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    try {
+      GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
+      gzipOutputStream.write(toCompress);
+      gzipOutputStream.close();
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+    return byteArrayOutputStream.toByteArray();
+  }
+
+  public static byte[] deCompressBytes(byte[] toDecompress) {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try {
+      IOUtils.copy(new GZIPInputStream(new ByteArrayInputStream(toDecompress)), out);
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+    return out.toByteArray();
   }
 
   public static String encodeBase64(byte[] toEncode) {

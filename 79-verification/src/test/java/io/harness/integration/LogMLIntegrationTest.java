@@ -67,6 +67,7 @@ import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -155,11 +156,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     analysisCluster.setX(r.nextDouble());
     analysisCluster.setY(r.nextDouble());
     analysisCluster.setUnexpected_freq(r.nextBoolean());
-    List<Map> frequencyMapList = new ArrayList<>();
+    List<MessageFrequency> frequencyMapList = new ArrayList<>();
     for (int i = 0; i < 1 + r.nextInt(10); i++) {
-      Map<String, Integer> frequencyMap = new HashMap<>();
-      frequencyMap.put("count", r.nextInt(100));
-      frequencyMapList.add(frequencyMap);
+      frequencyMapList.add(MessageFrequency.builder().count(r.nextInt(100)).build());
     }
 
     analysisCluster.setMessage_frequencies(frequencyMapList);
