@@ -24,6 +24,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -44,6 +45,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
+import software.wings.helpers.ext.artifactory.ResponseMsg.Error;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -613,16 +615,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   private void handleAndRethrow(Exception e, EnumSet<ReportTarget> reportTargets) throws WingsException {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
-      if (httpResponseException.getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
-            .addParam("message", "Invalid Artifactory credentials");
-      } else if (httpResponseException.getStatusCode() == 403) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
-            .addParam("message", "User not authorized to access artifactory");
-      } else if (httpResponseException.getStatusCode() == 400) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
-            .addParam("message", prepareActualResponse(httpResponseException));
-      }
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
+          .addParam("message", prepareActualResponse(httpResponseException));
     }
     if (e instanceof SocketTimeoutException) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
@@ -650,6 +644,24 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         msg.append(buff);
       }
       msg = msg.append(buff);
+      try {
+        final ResponseMsg errorResponse = JsonUtils.asObject(msg.toString(), ResponseMsg.class);
+        StringBuilder errorMsg = new StringBuilder("");
+        if (errorResponse != null && errorResponse.getErrors() != null) {
+          List<Error> errors = errorResponse.getErrors();
+          for (int i = 0; i < errors.size(); i++) {
+            Error error = errors.get(i);
+            errorMsg.append(error.getMessage());
+            if (i != errors.size() - 1) {
+              errorMsg.append(',');
+            }
+          }
+          return errorMsg.toString();
+        }
+        return msg.toString();
+      } catch (Exception e) {
+        logger.warn("Exception occurred while parsing the response message");
+      }
       return msg.toString();
     } catch (IOException iex) {
       logger.info("Exception occurred while preparing response. Message {}", iex.getMessage());
