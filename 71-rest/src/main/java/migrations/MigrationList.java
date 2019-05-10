@@ -76,6 +76,7 @@ import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServiceHelmValuesToManifestFileMigration;
 import migrations.all.ServiceNameMigrationIfEmpty;
 import migrations.all.SetIsDeletedFlagForInstances;
+import migrations.all.SetNamespaceInContainerInstanceInfo;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SweepingPhaseMigration;
@@ -217,6 +218,7 @@ public class MigrationList {
         .add(Pair.of(241, BaseMigration.class))
         .add(Pair.of(242, BaseMigration.class))
         .add(Pair.of(243, ServiceHelmValuesToManifestFileMigration.class))
+        .add(Pair.of(244, SetNamespaceInContainerInstanceInfo.class))
         .build();
   }
 }

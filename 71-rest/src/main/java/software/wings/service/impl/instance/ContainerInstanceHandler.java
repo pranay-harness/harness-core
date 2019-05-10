@@ -8,6 +8,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.container.Label.Builder.aLabel;
 
 import com.google.common.base.Preconditions;
@@ -163,21 +164,26 @@ public class ContainerInstanceHandler extends InstanceHandler {
           logger.info("Found {} instances from remote server for app {} , infraMapping {} and containerSvcName {}",
               latestContainerInfoList.size(), appId, infraMappingId, containerMetadata.getContainerServiceName());
 
-          // Key - containerId(taskId in ECS / podId in Kubernetes), Value - ContainerInfo
-          Map<String, ContainerInfo> latestContainerInfoMap =
-              latestContainerInfoList.stream().collect(toMap(containerInfo
-                  -> containerInfo instanceof KubernetesContainerInfo
-                      ? ((KubernetesContainerInfo) containerInfo).getPodName()
-                      : ((EcsContainerInfo) containerInfo).getTaskArn(),
-                  containerInfo -> containerInfo));
+          // Key - containerId(taskId in ECS / podId+namespace in Kubernetes), Value - ContainerInfo
+          Map<String, ContainerInfo> latestContainerInfoMap = new HashMap<>();
+          for (ContainerInfo info : latestContainerInfoList) {
+            if (info instanceof KubernetesContainerInfo) {
+              KubernetesContainerInfo k8sInfo = (KubernetesContainerInfo) info;
+              String namespace = isNotBlank(k8sInfo.getNamespace()) ? k8sInfo.getNamespace() : "";
+              latestContainerInfoMap.put(k8sInfo.getPodName() + namespace, info);
+            } else {
+              latestContainerInfoMap.put(((EcsContainerInfo) info).getTaskArn(), info);
+            }
+          }
 
           // Key - containerId (taskId in ECS / podId in Kubernetes), Value - Instance
           Map<String, Instance> instancesInDBMap = Maps.newHashMap();
 
           // If there are prior instances in db already
           for (Instance instance : instancesInDB) {
-            ContainerInstanceKey containerInstanceKey = instance.getContainerInstanceKey();
-            instancesInDBMap.put(containerInstanceKey.getContainerId(), instance);
+            ContainerInstanceKey key = instance.getContainerInstanceKey();
+            String namespace = isNotBlank(key.getNamespace()) ? key.getNamespace() : "";
+            instancesInDBMap.put(key.getContainerId() + namespace, instance);
           }
 
           // Find the instances that were yet to be added to db
@@ -606,7 +612,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   private Instance buildInstanceFromPodInfo(
       InfrastructureMapping infraMapping, K8sPod pod, DeploymentSummary deploymentSummary) {
     InstanceBuilder builder = buildInstanceBase(null, infraMapping, deploymentSummary);
-    builder.podInstanceKey(PodInstanceKey.builder().podName(pod.getName()).build());
+    builder.podInstanceKey(PodInstanceKey.builder().podName(pod.getName()).namespace(pod.getNamespace()).build());
     builder.instanceInfo(K8sPodInfo.builder()
                              .releaseName(pod.getReleaseName())
                              .podName(pod.getName())
@@ -650,7 +656,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
     if (containerInfo instanceof KubernetesContainerInfo) {
       KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) containerInfo;
-      containerInstanceKey = ContainerInstanceKey.builder().containerId(kubernetesContainerInfo.getPodName()).build();
+      containerInstanceKey = ContainerInstanceKey.builder()
+                                 .containerId(kubernetesContainerInfo.getPodName())
+                                 .namespace(((KubernetesContainerInfo) containerInfo).getNamespace())
+                                 .build();
     } else if (containerInfo instanceof EcsContainerInfo) {
       EcsContainerInfo ecsContainerInfo = (EcsContainerInfo) containerInfo;
       containerInstanceKey = ContainerInstanceKey.builder().containerId(ecsContainerInfo.getTaskArn()).build();
