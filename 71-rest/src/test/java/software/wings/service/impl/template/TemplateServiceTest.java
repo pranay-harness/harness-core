@@ -13,6 +13,8 @@ import static software.wings.beans.CommandCategory.Type.COMMANDS;
 import static software.wings.beans.CommandCategory.Type.COPY;
 import static software.wings.beans.CommandCategory.Type.SCRIPTS;
 import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.command.CommandType.START;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
@@ -41,6 +43,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -859,5 +862,52 @@ public class TemplateServiceTest extends TemplateBaseTest {
             .addFilter(TemplateVersion.TEMPLATE_UUID_KEY, EQ, savedTemplate.getUuid())
             .build();
     assertThat(templateVersionService.listTemplateVersions(templateVersionPageRequest).getResponse()).isEmpty();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotSaveTemplateWithDuplicateVariables() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    HttpTemplate httpTemplate =
+        HttpTemplate.builder().url("{Url}").method("GET").header("Authorization:${Header}").assertion("200 ok").build();
+    Template template = Template.builder()
+                            .templateObject(httpTemplate)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .name("Enable Instance")
+                            .variables(asList(aVariable().type(TEXT).name("Url").mandatory(true).build(),
+                                aVariable().type(TEXT).name("Url").mandatory(true).build()))
+                            .build();
+    templateService.save(template);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateTemplateWithDuplicateVariables() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    HttpTemplate httpTemplate =
+        HttpTemplate.builder().url("{Url}").method("GET").header("Authorization:${Header}").assertion("200 ok").build();
+    Template template = Template.builder()
+                            .templateObject(httpTemplate)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .name("Enable Instance")
+                            .variables(asList(aVariable().type(TEXT).name("Url").mandatory(true).build(),
+                                aVariable().type(TEXT).name("Method").mandatory(true).build()))
+                            .build();
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getVariables()).isNotEmpty();
+    assertThat(savedTemplate.getVariables().size()).isEqualTo(2);
+    List<Variable> variables = savedTemplate.getVariables();
+    for (Variable var : variables) {
+      if (var.getName().equals("Method")) {
+        var.setName("Url");
+      }
+    }
+    savedTemplate.setVariables(variables);
+    templateService.update(savedTemplate);
   }
 }

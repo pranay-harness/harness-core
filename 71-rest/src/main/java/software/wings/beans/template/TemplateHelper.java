@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -190,9 +189,15 @@ public class TemplateHelper {
     if (isEmpty(variables)) {
       return new HashMap<>();
     }
-    return variables.stream()
-        .filter(variable -> variable.getName() != null && variable.getValue() != null)
-        .collect(Collectors.toMap(Variable::getName, Function.identity()));
+    Map<String, Variable> map = new HashMap<>();
+    for (Variable variable : variables) {
+      if (variable.getName() != null && variable.getValue() != null) {
+        if (!map.containsKey(variable.getName())) {
+          map.put(variable.getName(), variable);
+        }
+      }
+    }
+    return map;
   }
 
   public static List<NameValuePair> convertToTemplateVariables(List<Variable> entityTemplateVariables) {
