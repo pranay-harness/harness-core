@@ -1,18 +1,20 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HOLDER;
 
+import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.metrics.MetricType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
@@ -23,9 +25,13 @@ import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
 import javax.validation.Valid;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -56,9 +62,10 @@ public class PrometheusResource implements LogAnalysisResource {
       return invalidFields;
     }
     Map<String, String> metricNameToType = new HashMap<>();
+    final TreeBasedTable<String, MetricType, Set<String>> txnToMetricType = TreeBasedTable.create();
     timeSeriesToAnalyze.forEach(timeSeries -> {
       List<String> missingPlaceHolders = new ArrayList<>();
-
+      MetricType metricType = MetricType.valueOf(timeSeries.getMetricType());
       if (!serviceLevel && (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(HOST_NAME_PLACE_HOLDER))) {
         missingPlaceHolders.add(HOST_NAME_PLACE_HOLDER);
       }
@@ -71,7 +78,7 @@ public class PrometheusResource implements LogAnalysisResource {
         missingPlaceHolders.add(END_TIME_PLACE_HOLDER);
       }
 
-      if (EmptyPredicate.isNotEmpty(missingPlaceHolders)) {
+      if (isNotEmpty(missingPlaceHolders)) {
         invalidFields.put(
             "Invalid url for txn: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
             missingPlaceHolders + " are not present in the url.");
@@ -84,6 +91,36 @@ public class PrometheusResource implements LogAnalysisResource {
             "Invalid metric type for txn: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
             timeSeries.getMetricName() + " has been configured as " + metricNameToType.get(timeSeries.getMetricName())
                 + " in previous transactions. Same metric name can not have different metric types.");
+      }
+
+      if (!txnToMetricType.contains(timeSeries.getTxnName(), metricType)) {
+        txnToMetricType.put(timeSeries.getTxnName(), metricType, new HashSet<>());
+      }
+
+      txnToMetricType.get(timeSeries.getTxnName(), metricType).add(timeSeries.getMetricName());
+    });
+
+    txnToMetricType.rowKeySet().forEach(txnName -> {
+      final SortedMap<MetricType, Set<String>> txnRow = txnToMetricType.row(txnName);
+      if (txnRow.containsKey(MetricType.ERROR) || txnRow.containsKey(MetricType.RESP_TIME)) {
+        if (!txnRow.containsKey(MetricType.THROUGHPUT)) {
+          invalidFields.put("Invalid metrics for txn: " + txnName,
+              txnName + " has error metrics "
+                  + (txnRow.get(MetricType.ERROR) == null ? Collections.emptySet() : txnRow.get(MetricType.ERROR))
+                  + " and/or response time metrics "
+                  + (txnRow.get(MetricType.RESP_TIME) == null ? Collections.emptySet()
+                                                              : txnRow.get(MetricType.RESP_TIME))
+                  + " but no throughput metrics.");
+        } else if (txnRow.get(MetricType.THROUGHPUT).size() > 1) {
+          invalidFields.put("Invalid metrics for txn: " + txnName,
+              txnName + " has more than one throughput metrics " + txnRow.get(MetricType.THROUGHPUT) + " defined.");
+        }
+      }
+
+      if (txnRow.containsKey(MetricType.THROUGHPUT) && txnRow.size() == 1) {
+        invalidFields.put("Invalid metrics for txn: " + txnName,
+            txnName + " has only throughput metrics " + txnRow.get(MetricType.THROUGHPUT)
+                + ". Throughput metrics is used to analyze other metrics and is not analyzed.");
       }
     });
     return invalidFields;
