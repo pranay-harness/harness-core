@@ -20,6 +20,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
@@ -149,8 +150,12 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     List<TimeSeries> timeSeriesList = new ArrayList<>();
     String url = "http://35.247.2.110:8080?hostname=$hostName&startTime=$startTime&endTime=$endTime";
-    timeSeriesList.add(
-        TimeSeries.builder().metricName("Metric1").metricType("Error").txnName("Test1").url(url).build());
+    timeSeriesList.add(TimeSeries.builder()
+                           .metricName("Metric1")
+                           .metricType(MetricType.INFRA.name())
+                           .txnName("Test1")
+                           .url(url)
+                           .build());
 
     ChangeContext<PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestPrometheusConfig.yaml").build();
