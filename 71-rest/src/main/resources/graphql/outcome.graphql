@@ -10,4 +10,5 @@ type OutcomeConnection {
 type DeploymentOutcome implements Outcome {
   execution: Execution
   service: Service
+  environment: Environment
 }

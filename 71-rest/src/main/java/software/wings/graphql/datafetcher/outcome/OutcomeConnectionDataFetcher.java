@@ -7,15 +7,19 @@ import com.google.inject.Inject;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.AbstractConnectionDataFetcher;
+import software.wings.graphql.datafetcher.environment.EnvironmentController;
 import software.wings.graphql.datafetcher.execution.ExecutionController;
 import software.wings.graphql.datafetcher.execution.WorkflowExecutionController;
 import software.wings.graphql.datafetcher.service.ServiceController;
 import software.wings.graphql.schema.query.QLOutcomesQueryParameters;
 import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLDeploymentOutcome.QLDeploymentOutcomeBuilder;
+import software.wings.graphql.schema.type.QLEnvironment;
+import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLOutcomeConnection;
 import software.wings.graphql.schema.type.QLOutcomeConnection.QLOutcomeConnectionBuilder;
 import software.wings.graphql.schema.type.QLPageInfo;
@@ -47,16 +51,30 @@ public class OutcomeConnectionDataFetcher
       pageInfoBuilder.total(execution.getServiceExecutionSummaries().size())
           .limit(execution.getServiceExecutionSummaries().size());
 
+      final Environment environment = persistence.get(Environment.class, execution.getEnvId());
+      QLEnvironmentBuilder environmentBuilder = QLEnvironment.builder();
+      EnvironmentController.populateEnvironment(environment, environmentBuilder);
+
       for (ElementExecutionSummary summary : execution.getServiceExecutionSummaries()) {
         QLWorkflowExecutionBuilder workflowExecutionBuilder = QLWorkflowExecution.builder();
         workflowExecutionController.populateWorkflowExecution(execution, workflowExecutionBuilder);
 
-        final Service service = persistence.get(Service.class, summary.getContextElement().getUuid());
-        QLServiceBuilder serviceBuilder = QLService.builder();
-        ServiceController.populateService(service, serviceBuilder);
-
         QLDeploymentOutcomeBuilder deployment =
-            QLDeploymentOutcome.builder().execution(workflowExecutionBuilder.build()).service(serviceBuilder.build());
+            QLDeploymentOutcome.builder().execution(workflowExecutionBuilder.build());
+
+        if (qlQuery.isServiceRequested()) {
+          // TODO: RBAC this
+          final Service service = persistence.get(Service.class, summary.getContextElement().getUuid());
+          QLServiceBuilder serviceBuilder = QLService.builder();
+          ServiceController.populateService(service, serviceBuilder);
+
+          deployment.service(serviceBuilder.build());
+        }
+
+        if (qlQuery.isEnvironmentRequested()) {
+          // TODO: RBAC this
+          deployment.environment(environmentBuilder.build());
+        }
 
         connectionBuilder.node(deployment.build());
       }

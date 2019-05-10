@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import graphql.GraphQL;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
@@ -37,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
 
 @Slf4j
-public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin {
+public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
   protected static final String ADMIN_USER = "admin@harness.io";
 
   protected static String bearerToken;

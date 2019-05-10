@@ -45,8 +45,19 @@ public class EnvironmentTest extends GraphQLTest {
 
     final Environment environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
 
-    String query = "{ environment(environmentId: \"" + environment.getUuid()
-        + "\") { id name description type createdAt createdBy { id }}}";
+    String query = $GQL(/*
+{
+  environment(environmentId: "%s") {
+    id
+    name
+    description
+    type
+    createdAt
+    createdBy {
+      id
+    }
+  }
+}*/ environment.getUuid());
 
     QLTestObject qlEnvironment = qlExecute(query);
     assertThat(qlEnvironment.get(QLEnvironmentKeys.id)).isEqualTo(environment.getUuid());
@@ -61,7 +72,12 @@ public class EnvironmentTest extends GraphQLTest {
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingEnvironment() {
-    String query = "{ environment(environmentId: \"blah\") { id name description type } }";
+    String query = $GQL(/*
+{
+  environment(environmentId: "blah") {
+    id
+  }
+}*/);
 
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
@@ -90,8 +106,14 @@ public class EnvironmentTest extends GraphQLTest {
         seed, owners, builder.uuid(generateUuid()).name("Environment - " + generateUuid()).build());
 
     {
-      String query = "{ environments(applicationId: \"" + application.getUuid()
-          + "\", limit: 2) { nodes { id name description } } }";
+      String query = $GQL(/*
+{
+  environments(applicationId: "%s" limit: 2) {
+    nodes {
+      id
+    }
+  }
+}*/ application.getUuid());
 
       QLEnvironmentConnection environmentConnection = qlExecute(QLEnvironmentConnection.class, query);
       assertThat(environmentConnection.getNodes().size()).isEqualTo(2);
@@ -101,8 +123,14 @@ public class EnvironmentTest extends GraphQLTest {
     }
 
     {
-      String query = "{ environments(applicationId: \"" + application.getUuid()
-          + "\", limit: 2, offset: 1) { nodes { id name description } } }";
+      String query = $GQL(/*
+{
+  environments(applicationId: "%s" limit: 2 offset: 1) {
+    nodes {
+      id
+    }
+  }
+}*/ application.getUuid());
 
       QLEnvironmentConnection environmentConnection = qlExecute(QLEnvironmentConnection.class, query);
       assertThat(environmentConnection.getNodes().size()).isEqualTo(2);

@@ -2,7 +2,6 @@ package io.harness.functional.graphql;
 
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -104,12 +103,19 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution2 = executeWorkflow(workflow, application, environment);
 
     {
-      String query = format("{ executions(workflowId: \"%s\", limit: 5, from: %s, to: %s) "
-              + "{ pageInfo { total } nodes { id } } }",
-          workflow.getUuid(), workflowExecution1.getCreatedAt(), workflowExecution2.getCreatedAt());
+      String query = $GQL(/*
+{
+  executions(workflowId: "%s", limit: 5, from: %s, to: %s) {
+     pageInfo {
+       total
+     }
+     nodes {
+       id
+     }
+  }
+}*/ workflow.getUuid(), workflowExecution1.getCreatedAt(), workflowExecution2.getCreatedAt());
 
       final QLTestObject qlTestObject = qlExecute(query);
-
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
     }
   }
@@ -129,10 +135,45 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution = executeWorkflow(workflow, application, environment);
 
     {
-      String query = "{ execution(executionId: \"" + workflowExecution.getUuid()
-          + "\") { id application { id } createdAt startedAt endedAt status "
-          + "cause { __typename ... on ExecutedBy { user { id } using } } "
-          + "... on WorkflowExecution { workflow { id } } } }";
+      String query = $GQL(/*
+{
+  execution(executionId: "%s") {
+    id
+    application {
+      id
+    }
+    createdAt
+    startedAt
+    endedAt
+    status
+    cause {
+      __typename
+      ... on ExecutedBy {
+        user {
+          id
+        }
+        using
+      }
+    }
+    ... on WorkflowExecution {
+      workflow {
+        id
+      }
+      outcomes {
+        nodes {
+          ... on DeploymentOutcome {
+            service {
+              id
+            }
+            environment {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}*/ workflowExecution.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
 
@@ -150,8 +191,17 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     }
 
     {
-      String query =
-          "{ executions(workflowId: \"" + workflow.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query = $GQL(/*
+{
+  executions(workflowId: "%s", limit: 5) {
+    pageInfo {
+      total
+    }
+    nodes {
+      id
+    }
+  }
+}*/ workflow.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
@@ -160,16 +210,33 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     executeWorkflow(workflow, application, environment);
 
     {
-      String query =
-          "{ executions(workflowId: \"" + workflow.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query = $GQL(/*
+{
+  executions(workflowId: "%s", limit: 5) {
+    pageInfo {
+      total
+    }
+    nodes {
+      id
+    }
+  }
+}*/ workflow.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
     }
 
     {
-      String query =
-          "{ workflow(workflowId: \"" + workflow.getUuid() + "\") { executions(limit: 2) { nodes { id } } } }";
+      String query = $GQL(/*
+{
+  workflow(workflowId: "%s") {
+    executions(limit: 2) {
+      nodes {
+        id
+      }
+    }
+  }
+}*/ workflow.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
 
@@ -224,10 +291,33 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     assertThat(pipelineExecution).isNotNull();
 
     {
-      String query = "{ execution(executionId: \"" + pipelineExecution.getUuid()
-          + "\") { id application { id } createdAt startedAt endedAt status "
-          + "cause { __typename ... on ExecutedBy { user { id } using } } "
-          + "... on PipelineExecution { pipeline { id } } } }";
+      String query = $GQL(/*
+{
+  execution(executionId: "%s") {
+    id
+    application {
+      id
+    }
+    createdAt
+    startedAt
+    endedAt
+    status
+    cause {
+      __typename
+      ... on ExecutedBy {
+        user {
+          id
+        }
+        using
+      }
+    }
+    ... on PipelineExecution {
+      pipeline {
+        id
+      }
+    }
+  }
+}*/ pipelineExecution.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.id)).isEqualTo(pipelineExecution.getUuid());
@@ -244,8 +334,17 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     }
 
     {
-      String query =
-          "{ executions(pipelineId: \"" + pipeline.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query = $GQL(/*
+{
+  executions(pipelineId: "%s", limit: 5) {
+    pageInfo {
+      total
+    }
+    nodes {
+      id
+    }
+  }
+}*/ pipeline.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
@@ -254,16 +353,33 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
 
     {
-      String query =
-          "{ executions(pipelineId: \"" + pipeline.getUuid() + "\", limit: 5) { pageInfo { total } nodes { id } } }";
+      String query = $GQL(/*
+{
+  executions(pipelineId: "%s", limit: 5) {
+    pageInfo {
+      total
+    }
+    nodes {
+      id
+    }
+  }
+}*/ pipeline.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
     }
 
     {
-      String query =
-          "{ pipeline(pipelineId: \"" + pipeline.getUuid() + "\") { executions(limit: 2) { nodes { id } } } }";
+      String query = $GQL(/*
+{
+  pipeline(pipelineId: "%s") {
+    executions(limit: 2) {
+      nodes {
+        id
+      }
+    }
+  }
+}*/ pipeline.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
 
@@ -277,10 +393,30 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
               .get()
               .getUuid();
 
-      String query = "{ execution(executionId: \"" + workflowExecutionId
-          + "\") { id application { id } createdAt startedAt endedAt status "
-          + "cause { __typename ... on PipelineExecution { id } } "
-          + "... on WorkflowExecution { workflow { id } } } }";
+      String query = $GQL(/*
+{
+  execution(executionId: "%s") {
+    id
+    application {
+      id
+    }
+    createdAt
+    startedAt
+    endedAt
+    status
+    cause {
+      __typename
+      ... on PipelineExecution {
+        id
+      }
+    }
+    ... on WorkflowExecution {
+      workflow {
+        id
+      }
+    }
+  }
+}*/ workflowExecutionId);
 
       final QLTestObject qlTestObject = qlExecute(query);
 
