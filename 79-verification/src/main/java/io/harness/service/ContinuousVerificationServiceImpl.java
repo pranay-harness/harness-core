@@ -1093,7 +1093,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return;
     }
     if (isEmpty(mlAnalysisResponse.getUnknown_clusters())) {
-      logger.info("No unknown clusters for {} for min {}. No alerts will be triggerer");
+      logger.info("No unknown clusters for {} for min {}. No alerts will be triggered");
       return;
     }
 

@@ -14,6 +14,8 @@ import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PR
 import static software.wings.sm.StateType.ELK;
 
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
@@ -65,6 +67,7 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.intfc.DataStoreService;
@@ -78,8 +81,12 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -576,7 +583,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testAnalysisSummaryCompression() throws Exception {
-    ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(r.nextInt(10)).values());
+    ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(1 + r.nextInt(10)).values());
     Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(1 + r.nextInt(10));
     Map<String, List<SplunkAnalysisCluster>> controlEvents = getEvents(1 + r.nextInt(10));
 
@@ -612,7 +619,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getUnknown_clusters());
     assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getTest_clusters());
     assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getIgnore_clusters());
-    assertTrue(isNotEmpty(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()));
+    assertTrue(isNotEmpty(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()));
+    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
 
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         appId, stateExecutionId, record.getQuery(), record.getStateType(), record.getLogCollectionMinute());
@@ -945,11 +953,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisCluster.setX(r.nextDouble());
     analysisCluster.setY(r.nextDouble());
     analysisCluster.setUnexpected_freq(r.nextBoolean());
-    List<Map> frequencyMapList = new ArrayList<>();
+    List<MessageFrequency> frequencyMapList = new ArrayList<>();
     for (int i = 0; i < 1 + r.nextInt(10); i++) {
-      Map<String, Integer> frequencyMap = new HashMap<>();
-      frequencyMap.put("count", r.nextInt(100));
-      frequencyMapList.add(frequencyMap);
+      frequencyMapList.add(MessageFrequency.builder().count(r.nextInt(100)).build());
     }
 
     analysisCluster.setMessage_frequencies(frequencyMapList);
@@ -1252,5 +1258,62 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logsCVConfiguration.setBaselineEndMinute(200);
 
     logsCVConfiguration.setQuery("query1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCompressionLogMlAnalysisRecord() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertNotNull(logMLAnalysisRecord);
+    assertFalse(logMLAnalysisRecord.getUnknown_events().isEmpty());
+    assertFalse(logMLAnalysisRecord.getTest_events().isEmpty());
+    assertFalse(logMLAnalysisRecord.getControl_events().isEmpty());
+    assertFalse(logMLAnalysisRecord.getControl_clusters().isEmpty());
+    assertFalse(logMLAnalysisRecord.getUnknown_clusters().isEmpty());
+    assertFalse(logMLAnalysisRecord.getTest_clusters().isEmpty());
+    assertFalse(logMLAnalysisRecord.getIgnore_clusters().isEmpty());
+
+    LogMLAnalysisRecord compressedLogMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      compressedLogMLAnalysisRecord = gson.fromJson(br, type);
+    }
+    assertNotNull(compressedLogMLAnalysisRecord);
+
+    compressedLogMLAnalysisRecord.compressLogAnalysisRecord();
+    assertNotNull(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertNull(compressedLogMLAnalysisRecord.getUnknown_events());
+    assertNull(compressedLogMLAnalysisRecord.getTest_events());
+    assertNull(compressedLogMLAnalysisRecord.getControl_events());
+    assertNull(compressedLogMLAnalysisRecord.getControl_clusters());
+    assertNull(compressedLogMLAnalysisRecord.getTest_clusters());
+    assertNull(compressedLogMLAnalysisRecord.getUnknown_clusters());
+    assertNull(compressedLogMLAnalysisRecord.getIgnore_clusters());
+
+    compressedLogMLAnalysisRecord.decompressLogAnalysisRecord();
+    assertNull(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertNotNull(compressedLogMLAnalysisRecord.getUnknown_events());
+    assertNotNull(compressedLogMLAnalysisRecord.getTest_events());
+    assertNotNull(compressedLogMLAnalysisRecord.getControl_events());
+    assertNotNull(compressedLogMLAnalysisRecord.getControl_clusters());
+    assertNotNull(compressedLogMLAnalysisRecord.getTest_clusters());
+    assertNotNull(compressedLogMLAnalysisRecord.getUnknown_clusters());
+    assertNotNull(compressedLogMLAnalysisRecord.getIgnore_clusters());
+
+    assertEquals(logMLAnalysisRecord.getUnknown_events(), compressedLogMLAnalysisRecord.getUnknown_events());
+    assertEquals(logMLAnalysisRecord.getTest_events(), compressedLogMLAnalysisRecord.getTest_events());
+    assertEquals(logMLAnalysisRecord.getControl_events(), compressedLogMLAnalysisRecord.getControl_events());
+    assertEquals(logMLAnalysisRecord.getTest_clusters(), compressedLogMLAnalysisRecord.getTest_clusters());
+    assertEquals(logMLAnalysisRecord.getControl_clusters(), compressedLogMLAnalysisRecord.getControl_clusters());
+    assertEquals(logMLAnalysisRecord.getUnknown_clusters(), compressedLogMLAnalysisRecord.getUnknown_clusters());
+    assertEquals(logMLAnalysisRecord.getIgnore_clusters(), compressedLogMLAnalysisRecord.getIgnore_clusters());
   }
 }

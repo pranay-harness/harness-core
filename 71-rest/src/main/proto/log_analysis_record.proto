@@ -1,0 +1,51 @@
+syntax = "proto2";
+
+package log.verification;
+
+option java_package = "software.wings.service.impl.verification.generated";
+option java_outer_classname = "LogMLAnalysisRecordProto";
+
+message LogAnalysisMessageFrequency {
+  required int32 count = 1;
+  optional string old_label = 2;
+  required string host = 3;
+  required int64 time = 4;
+}
+
+message LogAnalysisCluster {
+  required int32 cluster_label = 1;
+  required bool unexpected_freq = 2;
+  required string text = 3;
+  required double x = 4;
+  required double y = 5;
+  optional string feedback_id = 6;
+  required double alert_score = 7;
+  required double test_score = 8;
+  required double control_score = 9;
+  required double freq_score = 10;
+  required int32 control_label = 11;
+  required double risk_level = 12 [default = -1];
+
+  repeated string tags = 20;
+  repeated int32 anomalous_counts = 21;
+  repeated string diff_tags = 22;
+  repeated LogAnalysisMessageFrequency message_frequencies = 23;
+}
+
+message LogAnalysisClusterList {
+  repeated LogAnalysisCluster analysis_clusters = 1;
+}
+
+message LogAnalysisClusterMap {
+  map<string, LogAnalysisCluster> analysis_clusters_map = 1;
+}
+
+message LogMLAnalysisRecordDetails {
+  repeated LogAnalysisClusterList unknown_events = 1;
+  map<string, LogAnalysisClusterList> test_events = 2;
+  map<string, LogAnalysisClusterList> control_events = 3;
+  map<string, LogAnalysisClusterMap> control_clusters = 4;
+  map<string, LogAnalysisClusterMap> unknown_clusters = 5;
+  map<string, LogAnalysisClusterMap> test_clusters = 6;
+  map<string, LogAnalysisClusterMap> ignore_clusters = 7;
+}

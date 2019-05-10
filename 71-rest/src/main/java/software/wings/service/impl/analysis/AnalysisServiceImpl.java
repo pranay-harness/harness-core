@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -34,7 +33,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
-import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
@@ -74,6 +72,7 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.SettingsService;
@@ -94,7 +93,6 @@ import software.wings.utils.Misc;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -410,26 +408,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     return null;
   }
 
-  private void decompressLogAnalysisRecord(LogMLAnalysisRecord logMLAnalysisRecord) {
-    if (isNotEmpty(logMLAnalysisRecord.getAnalysisDetailsCompressedJson())) {
-      try {
-        String decompressedAnalysisDetailsJson =
-            deCompressString(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
-        LogMLAnalysisRecord logAnalysisDetails =
-            JsonUtils.asObject(decompressedAnalysisDetailsJson, LogMLAnalysisRecord.class);
-        logMLAnalysisRecord.setUnknown_events(logAnalysisDetails.getUnknown_events());
-        logMLAnalysisRecord.setTest_events(logAnalysisDetails.getTest_events());
-        logMLAnalysisRecord.setControl_events(logAnalysisDetails.getControl_events());
-        logMLAnalysisRecord.setControl_clusters(logAnalysisDetails.getControl_clusters());
-        logMLAnalysisRecord.setUnknown_clusters(logAnalysisDetails.getUnknown_clusters());
-        logMLAnalysisRecord.setTest_clusters(logAnalysisDetails.getTest_clusters());
-        logMLAnalysisRecord.setIgnore_clusters(logAnalysisDetails.getIgnore_clusters());
-      } catch (IOException e) {
-        throw new WingsException(e);
-      }
-    }
-  }
-
   private Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> get24x7MLUserFeedbacks(String cvConfigId, String appId) {
     Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> userFeedbackMap = new HashMap<>();
     userFeedbackMap.put(CLUSTER_TYPE.CONTROL, new HashMap<>());
@@ -520,7 +498,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       return null;
     }
 
-    decompressLogAnalysisRecord(analysisRecord);
+    analysisRecord.decompressLogAnalysisRecord();
     Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks = getMLUserFeedbacks(stateExecutionId, appId);
 
     LogMLClusterScores logMLClusterScores =
@@ -903,11 +881,8 @@ public class AnalysisServiceImpl implements AnalysisService {
       return frequencyMap;
     }
     int count;
-    for (Map frequency : analysisCluster.getMessage_frequencies()) {
-      if (!frequency.containsKey("count")) {
-        continue;
-      }
-      count = (Integer) frequency.get("count");
+    for (MessageFrequency frequency : analysisCluster.getMessage_frequencies()) {
+      count = frequency.getCount();
       if (!frequencyMap.containsKey(count)) {
         frequencyMap.put(count, 0);
       }
@@ -921,12 +896,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (isEmpty(analysisCluster.getMessage_frequencies())) {
       return count;
     }
-    for (Map frequency : analysisCluster.getMessage_frequencies()) {
-      if (!frequency.containsKey("count")) {
-        continue;
-      }
-
-      count += (Integer) frequency.get("count");
+    for (MessageFrequency frequency : analysisCluster.getMessage_frequencies()) {
+      count += frequency.getCount();
     }
 
     return count;
@@ -937,12 +908,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (isEmpty(analysisCluster.getMessage_frequencies())) {
       return counts;
     }
-    for (Map frequency : analysisCluster.getMessage_frequencies()) {
-      if (!frequency.containsKey("count")) {
-        continue;
-      }
-
-      counts.add((Integer) frequency.get("count"));
+    for (MessageFrequency frequency : analysisCluster.getMessage_frequencies()) {
+      counts.add(frequency.getCount());
     }
 
     return counts;
