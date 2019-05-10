@@ -3,6 +3,7 @@ package software.wings.graphql.schema.type;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
+import software.wings.graphql.schema.type.instance.QLInstance;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 

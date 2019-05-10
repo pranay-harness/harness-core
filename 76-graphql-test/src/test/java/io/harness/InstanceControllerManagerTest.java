@@ -18,14 +18,19 @@ import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
-import software.wings.graphql.datafetcher.instance.InstanceController;
+import software.wings.graphql.datafetcher.instance.InstanceControllerManager;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
-import software.wings.graphql.schema.type.QLInstance;
-import software.wings.graphql.schema.type.QLInstance.QLInstanceBuilder;
-import software.wings.graphql.schema.type.instance.info.QLInstanceType;
+import software.wings.graphql.schema.type.instance.QLAutoScalingGroupInstance;
+import software.wings.graphql.schema.type.instance.QLCodeDeployInstance;
+import software.wings.graphql.schema.type.instance.QLEcsContainerInstance;
+import software.wings.graphql.schema.type.instance.QLInstance;
+import software.wings.graphql.schema.type.instance.QLInstanceType;
+import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
+import software.wings.graphql.schema.type.instance.QLPcfInstance;
+import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
 
-public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
-  @Inject InstanceController instanceController;
+public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
+  @Inject InstanceControllerManager instanceControllerManager;
 
   private static final String TEST_ACCOUNT_ID = "TESTACCOUNTID";
   private static final String TEST_APPLICATION_ID = "TESTAPPID";
@@ -51,17 +56,15 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
                                               .build())
                             .build();
 
-    QLInstanceBuilder builder = QLInstance.builder();
-    instanceController.populateInstance(instance, builder);
-
-    QLInstance qlInstance = builder.build();
-    assertThat(qlInstance.getType().equals(QLInstanceType.PHYSICAL_HOST_INSTANCE));
-    assertThat(qlInstance.getPhysicalHostInstanceInfo()).isNotNull();
-    assertThat(qlInstance.getPhysicalHostInstanceInfo().getHostId()).isEqualTo(TESTHOSTID);
-    assertThat(qlInstance.getPhysicalHostInstanceInfo().getHostName()).isEqualTo(TESTHOSTNAME);
-    assertThat(qlInstance.getPhysicalHostInstanceInfo().getHostPublicDns()).isEqualTo(TESTDNS);
-    assertThat(qlInstance.getEnvId()).isEqualTo(TESTENVID);
-    assertThat(qlInstance.getServiceId()).isEqualTo(TESTSERVICEID);
+    QLInstance qlInstance = instanceControllerManager.getQLInstance(instance);
+    assertThat(qlInstance).isExactlyInstanceOf(QLPhysicalHostInstance.class);
+    QLPhysicalHostInstance qlPhysicalHostInstance = (QLPhysicalHostInstance) qlInstance;
+    assertThat(qlPhysicalHostInstance.getType()).isEqualTo(QLInstanceType.PHYSICAL_HOST_INSTANCE);
+    assertThat(qlPhysicalHostInstance.getHostId()).isEqualTo(TESTHOSTID);
+    assertThat(qlPhysicalHostInstance.getHostName()).isEqualTo(TESTHOSTNAME);
+    assertThat(qlPhysicalHostInstance.getHostPublicDns()).isEqualTo(TESTDNS);
+    assertThat(qlPhysicalHostInstance.getEnvironmentId()).isEqualTo(TESTENVID);
+    assertThat(qlPhysicalHostInstance.getServiceId()).isEqualTo(TESTSERVICEID);
   }
 
   @Test
@@ -82,19 +85,16 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
                                               .build())
                             .build();
 
-    QLInstanceBuilder builder = QLInstance.builder();
-    instanceController.populateInstance(instance, builder);
-
-    QLInstance qlInstance = builder.build();
-    assertThat(qlInstance.getType().equals(QLInstanceType.EC2_CLOUD_INSTANCE));
-    assertThat(qlInstance.getEc2InstanceInfo()).isNotNull();
-    assertThat(qlInstance.getEc2InstanceInfo().getHostId()).isEqualTo(TESTHOSTID);
-    assertThat(qlInstance.getEc2InstanceInfo().getHostName()).isEqualTo(TESTHOSTNAME);
-    assertThat(qlInstance.getEc2InstanceInfo().getHostPublicDns()).isEqualTo(TESTDNS);
-    assertThat(qlInstance.getEc2InstanceInfo().getAutoScalingGroupName()).isEqualTo(TESTAUTOSCALINGGROUP);
-    assertThat(qlInstance.getEc2InstanceInfo().getDeploymentId()).isNull();
-    assertThat(qlInstance.getEnvId()).isEqualTo(TESTENVID);
-    assertThat(qlInstance.getServiceId()).isEqualTo(TESTSERVICEID);
+    QLInstance qlInstance = instanceControllerManager.getQLInstance(instance);
+    assertThat(qlInstance).isExactlyInstanceOf(QLAutoScalingGroupInstance.class);
+    QLAutoScalingGroupInstance qlAutoScalingGroupInstance = (QLAutoScalingGroupInstance) qlInstance;
+    assertThat(qlAutoScalingGroupInstance.getType()).isEqualTo(QLInstanceType.AUTOSCALING_GROUP_INSTANCE);
+    assertThat(qlAutoScalingGroupInstance.getHostId()).isEqualTo(TESTHOSTID);
+    assertThat(qlAutoScalingGroupInstance.getHostName()).isEqualTo(TESTHOSTNAME);
+    assertThat(qlAutoScalingGroupInstance.getHostPublicDns()).isEqualTo(TESTDNS);
+    assertThat(qlAutoScalingGroupInstance.getAutoScalingGroupName()).isEqualTo(TESTAUTOSCALINGGROUP);
+    assertThat(qlAutoScalingGroupInstance.getEnvironmentId()).isEqualTo(TESTENVID);
+    assertThat(qlAutoScalingGroupInstance.getServiceId()).isEqualTo(TESTSERVICEID);
   }
 
   @Test
@@ -115,19 +115,17 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
                                               .build())
                             .build();
 
-    QLInstanceBuilder builder = QLInstance.builder();
-    instanceController.populateInstance(instance, builder);
+    QLInstance qlInstance = instanceControllerManager.getQLInstance(instance);
+    assertThat(qlInstance).isExactlyInstanceOf(QLCodeDeployInstance.class);
+    QLCodeDeployInstance qlCodeDeployInstance = (QLCodeDeployInstance) qlInstance;
 
-    QLInstance qlInstance = builder.build();
-    assertThat(qlInstance.getType().equals(QLInstanceType.EC2_CLOUD_INSTANCE));
-    assertThat(qlInstance.getEc2InstanceInfo()).isNotNull();
-    assertThat(qlInstance.getEc2InstanceInfo().getHostId()).isEqualTo(TESTHOSTID);
-    assertThat(qlInstance.getEc2InstanceInfo().getHostName()).isEqualTo(TESTHOSTNAME);
-    assertThat(qlInstance.getEc2InstanceInfo().getHostPublicDns()).isEqualTo(TESTDNS);
-    assertThat(qlInstance.getEc2InstanceInfo().getAutoScalingGroupName()).isNull();
-    assertThat(qlInstance.getEc2InstanceInfo().getDeploymentId()).isEqualTo(TESTDEPLOYMENTID);
-    assertThat(qlInstance.getEnvId()).isEqualTo(TESTENVID);
-    assertThat(qlInstance.getServiceId()).isEqualTo(TESTSERVICEID);
+    assertThat(qlCodeDeployInstance.getType()).isEqualTo(QLInstanceType.CODE_DEPLOY_INSTANCE);
+    assertThat(qlCodeDeployInstance.getHostId()).isEqualTo(TESTHOSTID);
+    assertThat(qlCodeDeployInstance.getHostName()).isEqualTo(TESTHOSTNAME);
+    assertThat(qlCodeDeployInstance.getHostPublicDns()).isEqualTo(TESTDNS);
+    assertThat(qlCodeDeployInstance.getDeploymentId()).isEqualTo(TESTDEPLOYMENTID);
+    assertThat(qlCodeDeployInstance.getEnvironmentId()).isEqualTo(TESTENVID);
+    assertThat(qlCodeDeployInstance.getServiceId()).isEqualTo(TESTSERVICEID);
   }
 
   @Test
@@ -149,21 +147,19 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
                                               .build())
                             .build();
 
-    QLInstanceBuilder builder = QLInstance.builder();
-    instanceController.populateInstance(instance, builder);
+    QLInstance qlInstance = instanceControllerManager.getQLInstance(instance);
+    assertThat(qlInstance).isExactlyInstanceOf(QLEcsContainerInstance.class);
+    QLEcsContainerInstance qlEcsContainerInstance = (QLEcsContainerInstance) qlInstance;
 
-    QLInstance qlInstance = builder.build();
-    assertThat(qlInstance.getType().equals(QLInstanceType.ECS_CONTAINER_INSTANCE));
-    assertThat(qlInstance.getEcsContainerInfo()).isNotNull();
-    assertThat(qlInstance.getEcsContainerInfo().getClusterName()).isEqualTo("TESTCLUSTER");
-    assertThat(qlInstance.getEcsContainerInfo().getServiceName()).isEqualTo("TESTSERVICE");
-    assertThat(qlInstance.getEcsContainerInfo().getStartedAt())
-        .isEqualTo(GraphQLDateTimeScalar.convert(Long.valueOf(100)));
-    assertThat(qlInstance.getEcsContainerInfo().getStartedBy()).isEqualTo("TESTUSER");
-    assertThat(qlInstance.getEcsContainerInfo().getTaskArn()).isEqualTo("TESTTASK");
-    assertThat(qlInstance.getEcsContainerInfo().getTaskDefinitionArn()).isEqualTo("TESTTASKDEF");
-    assertThat(qlInstance.getEnvId()).isEqualTo(TESTENVID);
-    assertThat(qlInstance.getServiceId()).isEqualTo(TESTSERVICEID);
+    assertThat(qlEcsContainerInstance.getType()).isEqualTo(QLInstanceType.ECS_CONTAINER_INSTANCE);
+    assertThat(qlEcsContainerInstance.getClusterName()).isEqualTo("TESTCLUSTER");
+    assertThat(qlEcsContainerInstance.getServiceName()).isEqualTo("TESTSERVICE");
+    assertThat(qlEcsContainerInstance.getStartedAt()).isEqualTo(GraphQLDateTimeScalar.convert(Long.valueOf(100)));
+    assertThat(qlEcsContainerInstance.getStartedBy()).isEqualTo("TESTUSER");
+    assertThat(qlEcsContainerInstance.getTaskArn()).isEqualTo("TESTTASK");
+    assertThat(qlEcsContainerInstance.getTaskDefinitionArn()).isEqualTo("TESTTASKDEF");
+    assertThat(qlEcsContainerInstance.getEnvironmentId()).isEqualTo(TESTENVID);
+    assertThat(qlEcsContainerInstance.getServiceId()).isEqualTo(TESTSERVICEID);
   }
 
   @Test
@@ -189,23 +185,22 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
                                               .build())
                             .build();
 
-    QLInstanceBuilder builder = QLInstance.builder();
-    instanceController.populateInstance(instance, builder);
+    QLInstance qlInstance = instanceControllerManager.getQLInstance(instance);
+    assertThat(qlInstance).isExactlyInstanceOf(QLK8SPodInstance.class);
+    QLK8SPodInstance qlk8SPodInstance = (QLK8SPodInstance) qlInstance;
 
-    QLInstance qlInstance = builder.build();
-    assertThat(qlInstance.getType().equals(QLInstanceType.KUBERNETES_CONTAINER_INSTANCE));
-    assertThat(qlInstance.getK8sPodInfo()).isNotNull();
-    assertThat(qlInstance.getK8sPodInfo().getClusterName()).isEqualTo("TESTCLUSTER");
-    assertThat(qlInstance.getK8sPodInfo().getIp()).isEqualTo("TESTIP");
-    assertThat(qlInstance.getK8sPodInfo().getNamespace()).isEqualTo("TESTNAMESPACE");
-    assertThat(qlInstance.getK8sPodInfo().getPodName()).isEqualTo("TESTPOD");
-    assertThat(qlInstance.getK8sPodInfo().getReleaseName()).isEqualTo("TESTRELEASE");
-    assertThat(qlInstance.getK8sPodInfo().getClusterName()).isEqualTo("TESTCLUSTER");
-    assertThat(qlInstance.getK8sPodInfo().getContainers().get(0).getContainerId()).isEqualTo("TESTCONTAINER");
-    assertThat(qlInstance.getK8sPodInfo().getContainers().get(0).getImage()).isEqualTo("TESTIMAGE");
-    assertThat(qlInstance.getK8sPodInfo().getContainers().get(0).getName()).isEqualTo("TESTNAME");
-    assertThat(qlInstance.getEnvId()).isEqualTo(TESTENVID);
-    assertThat(qlInstance.getServiceId()).isEqualTo(TESTSERVICEID);
+    assertThat(qlk8SPodInstance.getType()).isEqualTo(QLInstanceType.KUBERNETES_CONTAINER_INSTANCE);
+    assertThat(qlk8SPodInstance.getClusterName()).isEqualTo("TESTCLUSTER");
+    assertThat(qlk8SPodInstance.getIp()).isEqualTo("TESTIP");
+    assertThat(qlk8SPodInstance.getNamespace()).isEqualTo("TESTNAMESPACE");
+    assertThat(qlk8SPodInstance.getPodName()).isEqualTo("TESTPOD");
+    assertThat(qlk8SPodInstance.getReleaseName()).isEqualTo("TESTRELEASE");
+    assertThat(qlk8SPodInstance.getClusterName()).isEqualTo("TESTCLUSTER");
+    assertThat(qlk8SPodInstance.getContainers().get(0).getContainerId()).isEqualTo("TESTCONTAINER");
+    assertThat(qlk8SPodInstance.getContainers().get(0).getImage()).isEqualTo("TESTIMAGE");
+    assertThat(qlk8SPodInstance.getContainers().get(0).getName()).isEqualTo("TESTNAME");
+    assertThat(qlk8SPodInstance.getEnvironmentId()).isEqualTo(TESTENVID);
+    assertThat(qlk8SPodInstance.getServiceId()).isEqualTo(TESTSERVICEID);
   }
 
   @Test
@@ -225,20 +220,19 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
                                               .build())
                             .build();
 
-    QLInstanceBuilder builder = QLInstance.builder();
-    instanceController.populateInstance(instance, builder);
+    QLInstance qlInstance = instanceControllerManager.getQLInstance(instance);
+    assertThat(qlInstance).isExactlyInstanceOf(QLK8SPodInstance.class);
+    QLK8SPodInstance qlk8SPodInstance = (QLK8SPodInstance) qlInstance;
 
-    QLInstance qlInstance = builder.build();
-    assertThat(qlInstance.getType().equals(QLInstanceType.KUBERNETES_CONTAINER_INSTANCE));
-    assertThat(qlInstance.getK8sPodInfo()).isNotNull();
-    assertThat(qlInstance.getK8sPodInfo().getClusterName()).isEqualTo("TESTCLUSTER");
-    assertThat(qlInstance.getK8sPodInfo().getIp()).isEqualTo("TESTIP");
-    assertThat(qlInstance.getK8sPodInfo().getNamespace()).isEqualTo("TESTNAMESPACE");
-    assertThat(qlInstance.getK8sPodInfo().getPodName()).isEqualTo("TESTPOD");
-    assertThat(qlInstance.getK8sPodInfo().getReleaseName()).isNull();
-    assertThat(qlInstance.getK8sPodInfo().getContainers()).isNull();
-    assertThat(qlInstance.getEnvId()).isEqualTo(TESTENVID);
-    assertThat(qlInstance.getServiceId()).isEqualTo(TESTSERVICEID);
+    assertThat(qlk8SPodInstance.getType()).isEqualTo(QLInstanceType.KUBERNETES_CONTAINER_INSTANCE);
+    assertThat(qlk8SPodInstance.getClusterName()).isEqualTo("TESTCLUSTER");
+    assertThat(qlk8SPodInstance.getIp()).isEqualTo("TESTIP");
+    assertThat(qlk8SPodInstance.getNamespace()).isEqualTo("TESTNAMESPACE");
+    assertThat(qlk8SPodInstance.getPodName()).isEqualTo("TESTPOD");
+    assertThat(qlk8SPodInstance.getReleaseName()).isNull();
+    assertThat(qlk8SPodInstance.getContainers()).isNull();
+    assertThat(qlk8SPodInstance.getEnvironmentId()).isEqualTo(TESTENVID);
+    assertThat(qlk8SPodInstance.getServiceId()).isEqualTo(TESTSERVICEID);
   }
 
   @Test
@@ -258,21 +252,20 @@ public class InstanceInfoControllerTest extends GraphQLMockBaseTest {
                                               .pcfApplicationGuid("PCFAPPLICATIONGUID")
                                               .instanceIndex("INSTANCEINDEX")
                                               .build())
+
                             .build();
+    QLInstance qlInstance = instanceControllerManager.getQLInstance(instance);
+    assertThat(qlInstance).isExactlyInstanceOf(QLPcfInstance.class);
+    QLPcfInstance qlPcfInstance = (QLPcfInstance) qlInstance;
 
-    QLInstanceBuilder builder = QLInstance.builder();
-    instanceController.populateInstance(instance, builder);
-
-    QLInstance qlInstance = builder.build();
-    assertThat(qlInstance.getType().equals(QLInstanceType.PCF_INSTANCE));
-    assertThat(qlInstance.getPcfInstanceInfo()).isNotNull();
-    assertThat(qlInstance.getPcfInstanceInfo().getId()).isEqualTo("TESTID");
-    assertThat(qlInstance.getPcfInstanceInfo().getOrganization()).isEqualTo("TESTORG");
-    assertThat(qlInstance.getPcfInstanceInfo().getSpace()).isEqualTo("TESTSPACE");
-    assertThat(qlInstance.getPcfInstanceInfo().getPcfApplicationName()).isEqualTo("PCFAPPLICATIONNAME");
-    assertThat(qlInstance.getPcfInstanceInfo().getPcfApplicationGuid()).isEqualTo("PCFAPPLICATIONGUID");
-    assertThat(qlInstance.getPcfInstanceInfo().getInstanceIndex()).isEqualTo("INSTANCEINDEX");
-    assertThat(qlInstance.getEnvId()).isEqualTo(TESTENVID);
-    assertThat(qlInstance.getServiceId()).isEqualTo(TESTSERVICEID);
+    assertThat(qlPcfInstance.getType()).isEqualTo(QLInstanceType.PCF_INSTANCE);
+    assertThat(qlPcfInstance.getPcfId()).isEqualTo("TESTID");
+    assertThat(qlPcfInstance.getOrganization()).isEqualTo("TESTORG");
+    assertThat(qlPcfInstance.getSpace()).isEqualTo("TESTSPACE");
+    assertThat(qlPcfInstance.getPcfApplicationName()).isEqualTo("PCFAPPLICATIONNAME");
+    assertThat(qlPcfInstance.getPcfApplicationGuid()).isEqualTo("PCFAPPLICATIONGUID");
+    assertThat(qlPcfInstance.getInstanceIndex()).isEqualTo("INSTANCEINDEX");
+    assertThat(qlPcfInstance.getEnvironmentId()).isEqualTo(TESTENVID);
+    assertThat(qlPcfInstance.getServiceId()).isEqualTo(TESTSERVICEID);
   }
 }

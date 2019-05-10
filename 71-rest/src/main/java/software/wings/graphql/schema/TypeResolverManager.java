@@ -14,6 +14,13 @@ import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
+import software.wings.graphql.schema.type.instance.QLAutoScalingGroupInstance;
+import software.wings.graphql.schema.type.instance.QLCodeDeployInstance;
+import software.wings.graphql.schema.type.instance.QLEc2Instance;
+import software.wings.graphql.schema.type.instance.QLEcsContainerInstance;
+import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
+import software.wings.graphql.schema.type.instance.QLPcfInstance;
+import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,6 +33,8 @@ public class TypeResolverManager {
     public static final String Cause = "Cause";
     public static final String Execution = "Execution";
     public static final String Outcome = "Outcome";
+    public static final String Instance = "Instance";
+    public static final String PhysicalInstance = "PhysicalInstance";
     public static final String CloudProvider = "CloudProvider";
   }
 
@@ -34,6 +43,13 @@ public class TypeResolverManager {
     public static final String PipelineExecution = "PipelineExecution";
     public static final String WorkflowExecution = "WorkflowExecution";
     public static final String DeploymentOutcome = "DeploymentOutcome";
+    public static final String PhysicalHostInstance = "PhysicalHostInstance";
+    public static final String K8sPodInstance = "K8sPodInstance";
+    public static final String Ec2Instance = "Ec2Instance";
+    public static final String PcfInstance = "PcfInstance";
+    public static final String CodeDeployInstance = "CodeDeployInstance";
+    public static final String EcsContainerInstance = "EcsContainerInstance";
+    public static final String AutoScalingGroupInstance = "AutoScalingGroupInstance";
     public static final String AwsCloudProvider = "AwsCloudProvider";
     public static final String PhysicalDataCenterCloudProvider = "PhysicalDataCenterCloudProvider";
     public static final String AzureCloudProvider = "AzureCloudProvider";
@@ -63,6 +79,25 @@ public class TypeResolverManager {
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLDeploymentOutcome.class, TypeResolverManagerTypes.DeploymentOutcome)
                                       .build()))
+        .put(TypeResolverManagerUnifaces.Instance,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLPhysicalHostInstance.class, TypeResolverManagerTypes.PhysicalHostInstance)
+                    .put(QLK8SPodInstance.class, TypeResolverManagerTypes.K8sPodInstance)
+                    .put(QLEc2Instance.class, TypeResolverManagerTypes.Ec2Instance)
+                    .put(QLPcfInstance.class, TypeResolverManagerTypes.PcfInstance)
+                    .put(QLCodeDeployInstance.class, TypeResolverManagerTypes.CodeDeployInstance)
+                    .put(QLEcsContainerInstance.class, TypeResolverManagerTypes.EcsContainerInstance)
+                    .put(QLAutoScalingGroupInstance.class, TypeResolverManagerTypes.AutoScalingGroupInstance)
+                    .build()))
+        .put(TypeResolverManagerUnifaces.PhysicalInstance,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLPhysicalHostInstance.class, TypeResolverManagerTypes.PhysicalHostInstance)
+                    .put(QLEc2Instance.class, TypeResolverManagerTypes.Ec2Instance)
+                    .put(QLCodeDeployInstance.class, TypeResolverManagerTypes.CodeDeployInstance)
+                    .put(QLAutoScalingGroupInstance.class, TypeResolverManagerTypes.AutoScalingGroupInstance)
+                    .build()))
         .put(TypeResolverManagerUnifaces.CloudProvider,
             getResultTypeResolver(
                 ImmutableMap.<Class, String>builder()
