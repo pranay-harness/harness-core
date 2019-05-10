@@ -10,4 +10,5 @@ import lombok.experimental.FieldNameConstants;
 public class QLDeploymentOutcome implements QLOutcome {
   private QLExecution execution;
   private QLService service;
+  private QLEnvironment environment;
 }

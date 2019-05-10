@@ -42,8 +42,18 @@ public class PipelineTest extends GraphQLTest {
 
     final Pipeline pipeline = pipelineGenerator.ensurePredefined(seed, owners, BARRIER);
 
-    String query =
-        "{ pipeline(pipelineId: \"" + pipeline.getUuid() + "\") { id name description createdAt createdBy { id } } }";
+    String query = $GQL(/*
+{
+  pipeline(pipelineId: "%s") {
+    id
+    name
+    description
+    createdAt
+    createdBy {
+      id
+    }
+  }
+}*/ pipeline.getUuid());
 
     QLTestObject qlPipeline = qlExecute(query);
     assertThat(qlPipeline.get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
@@ -54,7 +64,12 @@ public class PipelineTest extends GraphQLTest {
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingPipeline() {
-    String query = "{ pipeline(pipelineId: \"blah\") { id name description } }";
+    String query = $GQL(/*
+{
+  pipeline(pipelineId: "blah") {
+    id
+  }
+}*/);
 
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
@@ -80,8 +95,16 @@ public class PipelineTest extends GraphQLTest {
     final Pipeline pipeline3 = pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).build());
 
     {
-      String query =
-          "{ pipelines(applicationId: \"" + application.getUuid() + "\", limit: 2) { nodes { id name description } } }";
+      String query = $GQL(/*
+{
+  pipelines(applicationId: "%s" limit: 2) {
+    nodes {
+      id
+      name
+      description
+    }
+  }
+}*/ application.getUuid());
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
@@ -91,8 +114,16 @@ public class PipelineTest extends GraphQLTest {
     }
 
     {
-      String query = "{ pipelines(applicationId: \"" + application.getUuid()
-          + "\", limit: 2, offset: 1) { nodes { id name description } } }";
+      String query = $GQL(/*
+{
+  pipelines(applicationId: "%s" limit: 2 offset: 1) {
+    nodes {
+      id
+      name
+      description
+    }
+  }
+}*/ application.getUuid());
 
       QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
@@ -102,8 +133,16 @@ public class PipelineTest extends GraphQLTest {
     }
 
     {
-      String query = "{ application(applicationId: \"" + application.getUuid()
-          + "\") { pipelines(limit: 2, offset: 1) { nodes { id } } } }";
+      String query = $GQL(/*
+{
+  application(applicationId: "%s") {
+    pipelines(limit: 2 offset: 1) {
+      nodes {
+        id
+      }
+    }
+  }
+}*/ application.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
