@@ -53,6 +53,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
+import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -78,8 +79,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -113,6 +116,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Create.class)
   public Template save(Template template) {
+    validateTemplateVariables(template.getVariables());
     saveOrUpdate(template);
     // create initial version
     processTemplate(template);
@@ -194,7 +198,7 @@ public class TemplateServiceImpl implements TemplateService {
     generatedKeywords.remove(oldTemplate.getType().toLowerCase());
     template.setKeywords(trimList(Arrays.asList(generatedKeywords.toArray())));
     VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
-
+    validateTemplateVariables(newVersionedTemplate.getVariables());
     boolean templateObjectChanged = checkTemplateDetailsChanged(
         template, oldTemplate.getTemplateObject(), newVersionedTemplate.getTemplateObject());
 
@@ -219,6 +223,19 @@ public class TemplateServiceImpl implements TemplateService {
     auditServiceHelper.reportForAuditingUsingAccountId(
         savedTemplate.getAccountId(), oldTemplate, savedTemplate, Type.UPDATE);
     return savedTemplate;
+  }
+
+  private void validateTemplateVariables(List<Variable> templateVariables) {
+    if (isNotEmpty(templateVariables)) {
+      Set<String> variableNames = new HashSet<>();
+      for (Variable variable : templateVariables) {
+        if (!variableNames.contains(variable.getName())) {
+          variableNames.add(variable.getName());
+        } else {
+          throw new InvalidRequestException("Template contains duplicate variables", USER);
+        }
+      }
+    }
   }
 
   private void validateScope(Template template, Template oldTemplate) {
