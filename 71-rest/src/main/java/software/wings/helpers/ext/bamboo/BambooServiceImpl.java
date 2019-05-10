@@ -112,10 +112,15 @@ public class BambooServiceImpl implements BambooService {
       JsonNode resultNode = response.body().at("/results/result");
       if (resultNode != null && resultNode.elements().hasNext()) {
         JsonNode next = resultNode.elements().next();
+        String buildUrl = null;
+        if (next.get("link") != null) {
+          buildUrl = next.get("link").get("href").asText();
+        }
+        next.get("link").get("href").asText();
         return aBuildDetails()
             .withNumber(next.get("buildNumber").asText())
-            .withRevision(next.get("vcsRevisionKey").asText())
-            .withBuildUrl(next.get("link").get("href").asText())
+            .withRevision(next.get("vcsRevisionKey") != null ? next.get("vcsRevisionKey").asText() : null)
+            .withBuildUrl(buildUrl)
             .withUiDisplayName("Build# " + next.get("buildNumber").asText())
             .build();
       }
