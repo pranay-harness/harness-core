@@ -1608,17 +1608,6 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User updateName(String userId, String name) {
-    ensureUserExists(userId);
-    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
-    Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
-    updateOperations.set("name", name);
-    wingsPersistence.update(updateQuery, updateOperations);
-    evictUserFromCache(userId);
-    return wingsPersistence.get(User.class, userId);
-  }
-
-  @Override
   public User updateUserGroupsOfUser(
       String userId, List<UserGroup> userGroups, String accountId, boolean sendNotification) {
     User userFromDB = get(accountId, userId);
@@ -1640,13 +1629,6 @@ public class UserServiceImpl implements UserService {
 
     authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, Arrays.asList(userId));
     return get(accountId, userId);
-  }
-
-  @Override
-  public User updateUserGroupsAndNameOfUser(
-      String userId, List<UserGroup> userGroups, String name, String accountId, boolean sendNotification) {
-    updateName(userId, name);
-    return updateUserGroupsOfUser(userId, userGroups, accountId, sendNotification);
   }
 
   /* (non-Javadoc)

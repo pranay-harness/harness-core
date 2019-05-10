@@ -102,15 +102,6 @@ public interface UserService extends OwnedByAccount {
   @ValidationGroups(Update.class) User update(@Valid User user);
 
   /**
-   * Update name of an user
-   *
-   * @param userId the user id
-   * @param name new name
-   * @return the user
-   */
-  @ValidationGroups(Update.class) User updateName(@NotBlank String userId, @NotBlank String name);
-
-  /**
    * Update the user and the associated user groups.
    *
    * @param userId the user id
@@ -121,19 +112,6 @@ public interface UserService extends OwnedByAccount {
    */
   @ValidationGroups(Update.class)
   User updateUserGroupsOfUser(String userId, List<UserGroup> userGroups, String accountId, boolean sendNotification);
-
-  /**
-   * Update the user fullname and the associated user groups.
-   *
-   * @param userId       user
-   * @param userGroups updated user groups
-   * @param name       user's name
-   * @param accountId the account id
-   * @return the user
-   */
-  @ValidationGroups(Update.class)
-  User updateUserGroupsAndNameOfUser(@NotBlank String userId, List<UserGroup> userGroups, @NotBlank String name,
-      @NotBlank String accountId, boolean sendNotification);
 
   /**
    * List.
