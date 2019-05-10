@@ -59,7 +59,9 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.WingsPersistence;
@@ -248,6 +250,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new InvalidRequestException("Artifact Stream type cannot be updated", USER);
     }
 
+    validateRepositoryType(artifactStream, existingArtifactStream);
+
     boolean versionChanged = false;
     List<Variable> oldTemplateVariables = existingArtifactStream.getTemplateVariables();
     if (artifactStream.getTemplateVersion() != null && existingArtifactStream.getTemplateVersion() != null
@@ -310,6 +314,24 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     // TODO: handle yaml updates for connector level
     return finalArtifactStream;
+  }
+
+  private void validateRepositoryType(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
+    if (artifactStream != null && existingArtifactStream != null) {
+      if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+        if (!((NexusArtifactStream) artifactStream)
+                 .getRepositoryType()
+                 .equals(((NexusArtifactStream) existingArtifactStream).getRepositoryType())) {
+          throw new InvalidRequestException("Repository Type cannot be updated", USER);
+        }
+      } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
+        if (!((ArtifactoryArtifactStream) artifactStream)
+                 .getRepositoryType()
+                 .equals(((ArtifactoryArtifactStream) existingArtifactStream).getRepositoryType())) {
+          throw new InvalidRequestException("Repository Type cannot be updated", USER);
+        }
+      }
+    }
   }
 
   private boolean shouldDeleteArtifactsOnSourceChanged(

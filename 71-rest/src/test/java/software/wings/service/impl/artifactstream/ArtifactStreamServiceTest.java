@@ -36,6 +36,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -459,6 +460,18 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, GLOBAL_APP_ID);
   }
 
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateNexusArtifactStreamWithDifferentRepositoryType() {
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) createNexusArtifactStreamAtConnectorLevel();
+    assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
+    assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
+
+    savedNexusArtifactStream.setRepositoryType(RepositoryType.docker.name());
+    artifactStreamService.update(savedNexusArtifactStream);
+  }
+
   private void updateNexusArtifactStreamAndValidate(NexusArtifactStream savedArtifactSteam, String appId) {
     NexusArtifactStream savedNexusArtifactStream = savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
@@ -724,6 +737,25 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .autoPopulate(true)
                                                               .build();
     updateArtifactoryArtifactStreamAndValidate(artifactoryArtifactStream, GLOBAL_APP_ID, RepositoryType.any.name());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateArtifactoryArtifactStreamAtConnectorLevelWithDifferentRepositoryType() {
+    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
+                                                              .appId(GLOBAL_APP_ID)
+                                                              .repositoryType(RepositoryType.any.name())
+                                                              .settingId(SETTING_ID)
+                                                              .jobname("generic-repo")
+                                                              .artifactPattern("io/harness/todolist/todolist*")
+                                                              .autoPopulate(true)
+                                                              .build();
+    ArtifactoryArtifactStream savedArtifactSteam =
+        (ArtifactoryArtifactStream) artifactStreamService.create(artifactoryArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(savedArtifactSteam.getRepositoryType()).isEqualTo(RepositoryType.any.name());
+    savedArtifactSteam.setRepositoryType(RepositoryType.docker.name());
+    artifactStreamService.update(savedArtifactSteam);
   }
 
   private void updateArtifactoryArtifactStreamAndValidate(
