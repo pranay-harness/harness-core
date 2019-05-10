@@ -27,10 +27,10 @@ import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.VALUES_YAML_KEY;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXPRESSION;
-import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.utils.Util.generatePath;
 
 import software.wings.beans.Application;

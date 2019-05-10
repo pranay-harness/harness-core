@@ -130,7 +130,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
   }
 
   protected String getYamlContentString(SettingAttribute settingAttribute, BaseYamlHandler yamlHandler) {
-    BaseYaml yaml = yamlHandler.toYaml(settingAttribute, null);
+    BaseYaml yaml = yamlHandler.toYaml(settingAttribute, settingAttribute.getAppId());
 
     if (yaml != null) {
       String yamlContent = getYamlContent(yaml);
