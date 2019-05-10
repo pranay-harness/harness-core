@@ -246,10 +246,9 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
-  public RestResponse<User> updateUserGroupsAndNameOfUser(
+  public RestResponse<User> updateUserGroupsOfUser(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, User user) {
-    return getPublicUser(
-        userService.updateUserGroupsAndNameOfUser(userId, user.getUserGroups(), user.getName(), accountId, true));
+    return getPublicUser(userService.updateUserGroupsOfUser(userId, user.getUserGroups(), accountId, true));
   }
 
   /**
