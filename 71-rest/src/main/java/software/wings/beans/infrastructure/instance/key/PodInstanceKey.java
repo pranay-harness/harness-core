@@ -13,4 +13,5 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class PodInstanceKey extends InstanceKey {
   private String podName;
+  private String namespace;
 }

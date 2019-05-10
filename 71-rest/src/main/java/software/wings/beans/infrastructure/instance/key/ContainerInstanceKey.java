@@ -13,4 +13,5 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class ContainerInstanceKey extends InstanceKey {
   private String containerId;
+  private String namespace;
 }
