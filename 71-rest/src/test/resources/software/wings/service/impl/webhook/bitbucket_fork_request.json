@@ -1,0 +1,165 @@
+{
+  "actor": {
+    "username": "srinivas",
+    "displayName": "srinivas gurubelli"
+  },
+  "fork": {
+    "scm": "git",
+    "website": null,
+    "has_wiki": false,
+    "name": "HarshRepotrt",
+    "links": {
+      "watchers": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/watchers"
+      },
+      "branches": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/refs/branches"
+      },
+      "tags": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/refs/tags"
+      },
+      "commits": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/commits"
+      },
+      "downloads": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/downloads"
+      },
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt"
+      },
+      "source": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/src"
+      },
+      "html": {
+        "href": "https://bitbucket.org/harshjain12/harshrepotrt"
+      },
+      "avatar": {
+        "href": "https://bytebucket.org/ravatar/%7B2edbe319-62c8-4488-a90e-ec01bb193cf7%7D?ts=default"
+      },
+      "forks": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/forks"
+      },
+      "clone": [
+        {
+          "href": "https://bitbucket.org/harshjain12/harshrepotrt.git",
+          "name": "https"
+        },
+        {
+          "href": "git@bitbucket.org:harshjain12/harshrepotrt.git",
+          "name": "ssh"
+        }
+      ],
+      "pullrequests": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepotrt/pullrequests"
+      }
+    },
+    "fork_policy": "no_public_forks",
+    "uuid": "{2edbe319-62c8-4488-a90e-ec01bb193cf7}",
+    "properties": {},
+    "language": "",
+    "created_on": "2019-04-29T12:07:54.444549+00:00",
+    "parent": {
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo"
+        },
+        "html": {
+          "href": "https://bitbucket.org/harshjain12/harshrepo"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Bf9b329ed-32d9-4cf1-988c-ff4afdbc9d27%7D?ts=default"
+        }
+      },
+      "type": "repository",
+      "name": "HarshRepo",
+      "full_name": "harshjain12/harshrepo",
+      "uuid": "{f9b329ed-32d9-4cf1-988c-ff4afdbc9d27}"
+    },
+    "mainbranch": {},
+    "full_name": "harshjain12/harshrepotrt",
+    "has_issues": false,
+    "owner": {
+      "username": "harshjain12",
+      "display_name": "Harsh Jain",
+      "uuid": "{e693cd40-0dbc-4fc3-832d-bebebfaff68f}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/harshjain12"
+        },
+        "html": {
+          "href": "https://bitbucket.org/harshjain12/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/harshjain12/avatar/"
+        }
+      },
+      "nickname": "harshjain12",
+      "type": "user",
+      "account_id": "5cb5280e9eec1011988bb9d1"
+    },
+    "updated_on": "2019-04-29T12:07:54.565953+00:00",
+    "size": 0,
+    "type": "repository",
+    "slug": "harshrepotrt",
+    "is_private": true,
+    "description": ""
+  },
+  "repository": {
+    "scm": "git",
+    "website": "",
+    "name": "HarshRepo",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo"
+      },
+      "html": {
+        "href": "https://bitbucket.org/harshjain12/harshrepo"
+      },
+      "avatar": {
+        "href": "https://bytebucket.org/ravatar/%7Bf9b329ed-32d9-4cf1-988c-ff4afdbc9d27%7D?ts=default"
+      }
+    },
+    "full_name": "harshjain12/harshrepo",
+    "owner": {
+      "username": "harshjain12",
+      "display_name": "Harsh Jain",
+      "uuid": "{e693cd40-0dbc-4fc3-832d-bebebfaff68f}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/harshjain12"
+        },
+        "html": {
+          "href": "https://bitbucket.org/harshjain12/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/harshjain12/avatar/"
+        }
+      },
+      "nickname": "harshjain12",
+      "type": "user",
+      "account_id": "5cb5280e9eec1011988bb9d1"
+    },
+    "type": "repository",
+    "is_private": true,
+    "uuid": "{f9b329ed-32d9-4cf1-988c-ff4afdbc9d27}"
+  },
+  "actor": {
+    "username": "harshjain12",
+    "display_name": "Harsh Jain",
+    "uuid": "{e693cd40-0dbc-4fc3-832d-bebebfaff68f}",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/harshjain12"
+      },
+      "html": {
+        "href": "https://bitbucket.org/harshjain12/"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/account/harshjain12/avatar/"
+      }
+    },
+    "nickname": "harshjain12",
+    "type": "user",
+    "account_id": "5cb5280e9eec1011988bb9d1"
+  }
+}

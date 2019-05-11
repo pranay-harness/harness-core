@@ -3,6 +3,7 @@ package software.wings.beans.trigger;
 import lombok.Getter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public enum WebhookSource {
@@ -35,9 +36,29 @@ public enum WebhookSource {
   }
 
   public enum BitBucketEventType {
-    PULL_REQUEST("Pull Request", "pull_request"),
+    PING("Ping", "ping"),
+    ALL("All", "all"),
+
+    FORK("Fork", "repo:fork"),
+    UPDATED("Updated", "repo:updated"),
+    COMMIT_COMMENT_CREATED("Commit Comment Created", "repo:commit_comment_created"),
+    COMMIT_STATUS_CREATED("Commit Status Created", "repo:commit_status_created"),
+    COMMIT_STATUS_UPDATED("Commit Status Updated", "repo:commit_status_updated"),
     PUSH("Push", "repo:push"),
-    PING("Ping", "ping");
+
+    ISSUE_CREATED("Issue Created", "issue:created"),
+    ISSUE_UPDATED("Issue Updated", "issue:updated"),
+    ISSUE_COMMENT_CREATED("Issue Comment Created", "issue:comment_created"),
+
+    PULL_REQUEST_CREATED("Pull Request Created", "pullrequest:created"),
+    PULL_REQUEST_UPDATED("Pull Request Updated", "pullrequest:updated"),
+    PULL_REQUEST_APPROVED("Pull Request Approved", "pullrequest:approved"),
+    PULL_REQUEST_APPROVAL_REMOVED("Pull Request Approval Removed", "pullrequest:unapproved"),
+    PULL_REQUEST_MERGED("Pull Request Merged", "pullrequest:fulfilled"),
+    PULL_REQUEST_DECLINED("Pull Request Declined", "pullrequest:rejected"),
+    PULL_REQUEST_COMMENT_CREATED("Pull Request Comment Created", "pullrequest:comment_created"),
+    PULL_REQUEST_COMMENT_UPDATED("Pull Request Comment Updated", "pullrequest:comment_updated"),
+    PULL_REQUEST_COMMENT_DELETED("Pull Request Comment Deleted", "pullrequest:comment_deleted");
 
     @Getter private String displayName;
     @Getter private String value;
@@ -52,6 +73,14 @@ public enum WebhookSource {
 
     public static BitBucketEventType find(String val) {
       return BitBucketEventType.BitBucketEventHolder.map.get(val);
+    }
+
+    public static boolean containsAllEvent(List<BitBucketEventType> bitBucketEventType) {
+      if (bitBucketEventType.contains(ALL)) {
+        return true;
+      } else {
+        return false;
+      }
     }
   }
 

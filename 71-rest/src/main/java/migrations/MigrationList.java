@@ -86,6 +86,7 @@ import migrations.all.TimeSeriesMLAnalysisCompressionSaveMigration;
 import migrations.all.TimeSeriesMLAnalysisDeleteUncompressedMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.UnregisteredUserNameMigration;
+import migrations.all.UpdateBitBucketTriggers;
 import migrations.all.UpdateGitSyncErrorMigration;
 import migrations.all.UsageRestrictionsMigration;
 import migrations.all.VerificationMetricJobMigration;
@@ -219,6 +220,7 @@ public class MigrationList {
         .add(Pair.of(242, BaseMigration.class))
         .add(Pair.of(243, ServiceHelmValuesToManifestFileMigration.class))
         .add(Pair.of(244, SetNamespaceInContainerInstanceInfo.class))
+        .add(Pair.of(245, UpdateBitBucketTriggers.class))
         .build();
   }
 }

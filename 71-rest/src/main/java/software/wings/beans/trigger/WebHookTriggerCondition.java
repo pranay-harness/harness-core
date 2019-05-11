@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.WebHookToken;
+import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
   private WebhookSource webhookSource;
   private List<WebhookEventType> eventTypes;
   private List<PrAction> actions;
+  private List<BitBucketEventType> bitBucketEvents;
   private List<String> filePaths;
   private String gitConnectorId;
   private String branchName;
@@ -37,8 +39,9 @@ public class WebHookTriggerCondition extends TriggerCondition {
   }
 
   public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters,
-      WebhookSource webhookSource, List<WebhookEventType> eventTypes, List<PrAction> actions, List<String> filePaths,
-      String gitConnectorId, String branchName, boolean checkFileContentChanged) {
+      WebhookSource webhookSource, List<WebhookEventType> eventTypes, List<PrAction> actions,
+      List<BitBucketEventType> bitBucketEvents, List<String> filePaths, String gitConnectorId, String branchName,
+      boolean checkFileContentChanged) {
     this();
     this.webHookToken = webHookToken;
     this.artifactStreamId = artifactStreamId;
@@ -46,6 +49,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
     this.webhookSource = webhookSource;
     this.eventTypes = eventTypes;
     this.actions = actions;
+    this.bitBucketEvents = bitBucketEvents;
     this.filePaths = filePaths;
     this.gitConnectorId = gitConnectorId;
     this.branchName = branchName;

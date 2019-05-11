@@ -9,6 +9,8 @@ import java.util.Map;
 public enum WebhookEventType {
   PULL_REQUEST("Pull Request", "pull_request"),
   PUSH("Push", "push"),
+  REPO("Repo", "repo"),
+  ISSUE("Issue", "issue"),
   PING("Ping", "ping"),
   DELETE("Delete", "delete");
 

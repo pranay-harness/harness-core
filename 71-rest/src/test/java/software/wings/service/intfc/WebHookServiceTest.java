@@ -50,6 +50,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.utils.CryptoUtil;
@@ -57,6 +58,7 @@ import software.wings.utils.CryptoUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +69,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @Mock HttpHeaders httpHeaders;
+  @Mock private FeatureFlagService featureFlagService;
   @Inject ManagerExpressionEvaluator expressionEvaluator;
 
   @Inject @InjectMocks private WebHookService webHookService;
@@ -89,6 +92,8 @@ public class WebHookServiceTest extends WingsBaseTest {
                                        .webHookToken(WebHookToken.builder().webHookToken(token).build())
                                        .build())
                         .build();
+
+  WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
 
   @Before
   public void setUp() {
@@ -146,6 +151,8 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldExecuteByEventTriggerBitBucket() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_APPROVED));
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
@@ -153,7 +160,7 @@ public class WebHookServiceTest extends WingsBaseTest {
         new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request.json").getFile());
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
-    doReturn("pull_request").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn("pullrequest:approved").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
     WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
@@ -216,6 +223,88 @@ public class WebHookServiceTest extends WingsBaseTest {
     }); // mapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
     final String value = expressionEvaluator.substitute("${push.changes[0].'new'.name}", map);
     assertThat(value).isNotEmpty().isEqualTo("master");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketPull() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_APPROVED));
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pullrequest:approved").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketFork() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.FORK));
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_fork_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("repo:fork").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketForkWithPullRequest() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.ALL));
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_fork_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("repo:fork").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowErrorJsonBitBucketFork() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.COMMIT_COMMENT_CREATED));
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_fork_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("repo:fork").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getError()).isNotEmpty();
   }
 
   @Test
