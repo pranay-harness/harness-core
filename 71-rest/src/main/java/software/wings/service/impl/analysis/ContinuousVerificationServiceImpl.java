@@ -1264,8 +1264,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromtime()));
           apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
 
-          Map<String, List<APMMetricInfo>> metricInfoByQuery =
-              metricEndpointsInfo(config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(",")), null);
+          Map<String, List<APMMetricInfo>> metricInfoByQuery = metricEndpointsInfo(
+              config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(",")), null, null);
           List<Object> loadResponse = new ArrayList<>();
 
           // loop for each metric
@@ -1636,7 +1636,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .cvConfigId(config.getUuid())
             .dataCollectionMinute(0)
             .metricEndpoints(DatadogState.metricEndpointsInfo(
-                config.getDatadogServiceName(), ddMetricNames, config.getApplicationFilter()))
+                config.getDatadogServiceName(), ddMetricNames, config.getApplicationFilter(), null))
             .accountId(config.getAccountId())
             .strategy(AnalysisComparisonStrategy.PREDICTIVE)
             .dataCollectionFrequency(1)

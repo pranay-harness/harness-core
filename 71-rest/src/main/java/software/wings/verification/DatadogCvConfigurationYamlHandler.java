@@ -77,7 +77,7 @@ public class DatadogCvConfigurationYamlHandler
     }
     // validate if the metrics in yaml are actually supported by Harness.
     List<String> metricList = Arrays.asList(yaml.getMetrics().split(","));
-    Map<String, Metric> metrics = DatadogState.metrics(metricList, "");
+    Map<String, Metric> metrics = DatadogState.metrics(metricList, "", null);
     if (metrics.size() != metricList.size()) {
       throw new WingsException("Invalid/Unsupported metrics found in the yaml: " + yaml.getMetrics());
     }

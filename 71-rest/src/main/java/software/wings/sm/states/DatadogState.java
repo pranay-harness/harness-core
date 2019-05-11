@@ -80,6 +80,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   @Attributes(required = true, title = "Metrics") private String metrics;
 
+  private List<Metric> customMetrics;
+
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
@@ -118,7 +120,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
     List<String> metricNames = Arrays.asList(metrics.split(","));
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
         context.getStateExecutionInstanceId(), null,
-        metricDefinitions(metrics(metricNames, datadogServiceName).values()));
+        metricDefinitions(metrics(metricNames, datadogServiceName, customMetrics).values()));
+
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;
@@ -163,7 +166,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .dataCollectionMinute(0)
-            .metricEndpoints(metricEndpointsInfo(serviceName, metricNames, null))
+            .metricEndpoints(metricEndpointsInfo(serviceName, metricNames, null, customMetrics))
             .accountId(accountId)
             .strategy(getComparisonStrategy())
             .dataCollectionFrequency(DATA_COLLECTION_RATE_MINS)
@@ -240,7 +243,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   }
 
   public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(
-      String datadogServiceName, List<String> metricNames, String applicationFilter) {
+      String datadogServiceName, List<String> metricNames, String applicationFilter, List<Metric> customMetrics) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog.yml");
     try {
@@ -249,13 +252,16 @@ public class DatadogState extends AbstractMetricAnalysisState {
       if (isNotEmpty(datadogServiceName) && metricNames == null) {
         metricNames = new ArrayList<>();
       }
-      Map<String, Metric> metricMap = metrics(metricNames, datadogServiceName);
+      Map<String, Metric> metricMap = metrics(metricNames, datadogServiceName, customMetrics);
       List<Metric> metrics = new ArrayList<>();
       for (String metricName : metricNames) {
         if (!metricMap.containsKey(metricName)) {
           throw new WingsException("metric name not found" + metricName);
         }
         metrics.add(metricMap.get(metricName));
+      }
+      if (isNotEmpty(customMetrics)) {
+        metrics.addAll(customMetrics);
       }
       Map<String, List<APMMetricInfo>> result = new HashMap<>();
       for (Metric metric : metrics) {
@@ -301,10 +307,24 @@ public class DatadogState extends AbstractMetricAnalysisState {
             result.put(metricUrl, new ArrayList<>());
           }
           result.get(metricUrl).add(newMetricInfoBuilder.build());
+        } else if (metric.getDatadogMetricType().equals("Custom")) {
+          metricUrl = metricUrl.replace("${query}", metric.getMetricName())
+                          .replace("${tag}", metric.getTags().iterator().next());
+
+          if (applicationFilter == null) {
+            applicationFilter = "";
+          }
+          metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+
+          if (!result.containsKey(metricUrl)) {
+            result.put(metricUrl, new ArrayList<>());
+          }
+          result.get(metricUrl).add(newMetricInfoBuilder.build());
         } else {
           throw new WingsException("Unsupported template type for" + metric);
         }
       }
+
       return result;
     } catch (RuntimeException | IOException ex) {
       throw new WingsException("Unable to get metric info", ex);
@@ -324,7 +344,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
     return metricTypeMap;
   }
 
-  public static Map<String, Metric> metrics(List<String> metricNames, String datadogServiceName) {
+  public static Map<String, Metric> metrics(
+      List<String> metricNames, String datadogServiceName, List<Metric> customMetrics) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
     try {
@@ -352,6 +373,12 @@ public class DatadogState extends AbstractMetricAnalysisState {
           }
         });
       }
+      if (isNotEmpty(customMetrics)) {
+        for (Metric metric : customMetrics) {
+          metricMap.put(metric.getMetricName(), metric);
+        }
+      }
+
       return metricMap;
     } catch (Exception ex) {
       throw new WingsException("Unable to load datadog metrics", ex);

@@ -582,7 +582,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             ? Arrays.asList(datadogCVServiceConfiguration.getMetrics().split(","))
             : new ArrayList<>();
         metricTemplates = DatadogState.metricDefinitions(
-            DatadogState.metrics(metricNames, datadogCVServiceConfiguration.getDatadogServiceName()).values());
+            DatadogState.metrics(metricNames, datadogCVServiceConfiguration.getDatadogServiceName(), null).values());
         metricTemplate = TimeSeriesMetricTemplates.builder()
                              .stateType(stateType)
                              .metricTemplates(metricTemplates)
