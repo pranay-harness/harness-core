@@ -580,7 +580,15 @@ public abstract class AbstractAnalysisState extends State {
         instances.getPcfInstanceElements().forEach(pcfInstanceElement -> {
           String pcfHostName = getPcfHostName(pcfInstanceElement, includePrevious);
           if (isNotEmpty(pcfHostName)) {
-            rv.put(pcfHostName, DEFAULT_GROUP_NAME);
+            if (isEmpty(hostnameTemplate)) {
+              rv.put(pcfHostName, DEFAULT_GROUP_NAME);
+            } else {
+              rv.put(context.renderExpression(hostnameTemplate,
+                         StateExecutionContext.builder()
+                             .contextElements(Lists.newArrayList(aHostElement().withHostName(pcfHostName).build()))
+                             .build()),
+                  DEFAULT_GROUP_NAME);
+            }
           }
         });
       }
