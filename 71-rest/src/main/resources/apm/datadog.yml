@@ -75,3 +75,25 @@ Docker:
             jsonPath: series[*].scope
             regexs:
               - ((?<=pod_name:)([^,]*))
+
+Custom:
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${tag}:${host}}by{${tag}}.rollup(avg,60)
+  url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${applicationFilter}}.rollup(avg,60)
+  responseMappers:
+        -
+            fieldName: txnName
+            jsonPath: series[*].metric
+            regexs:
+              - ((?<=[(]|^)[^(]([^ /|+|-|*]*))
+        -
+            fieldName: timestamp
+            jsonPath: series[*].pointlist[*].[0]
+        -
+            fieldName: value
+            jsonPath: series[*].pointlist[*].[1]
+        -
+            fieldName: host
+            jsonPath: series[*].scope
+            regexs:
+              - ((?<=${tag}:)([^,]*))
+

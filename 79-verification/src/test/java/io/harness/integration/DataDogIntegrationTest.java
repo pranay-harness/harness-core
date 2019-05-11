@@ -230,7 +230,8 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
 
     timeSeriesAnalysisService.saveMetricTemplates(appId, StateType.DATA_DOG, stateExecutionId,
         DatadogState.metricDefinitions(
-            DatadogState.metrics(Lists.newArrayList("trace.servlet.request.duration", "trace.servlet.request.hits"), "")
+            DatadogState
+                .metrics(Lists.newArrayList("trace.servlet.request.duration", "trace.servlet.request.hits"), "", null)
                 .values()));
 
     String lastSuccessfulWorkflowExecutionIdWithData =
