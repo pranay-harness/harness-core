@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
+import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
 import com.google.inject.Inject;
@@ -17,6 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -33,11 +35,13 @@ import software.wings.beans.trigger.TriggerExecution.WebhookEventDetails;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.trigger.WebhookTriggerProcessor;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
@@ -69,6 +73,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
   @Inject private TriggerExecutionService triggerExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Transient @Inject protected FeatureFlagService featureFlagService;
 
   private String getBaseUrl() {
     String baseUrl = configuration.getPortal().getUrl().trim();
@@ -276,9 +281,7 @@ public class WebHookServiceImpl implements WebHookService {
 
     Map<String, Object> payLoadMap = JsonUtils.asObject(payload, new TypeReference<Map<String, Object>>() {});
 
-    if (WebhookSource.GITHUB.equals(webhookSource)) {
-      validateGitHubWebhook(trigger, webhookTriggerCondition, payLoadMap, httpHeaders);
-    }
+    validateWebHook(webhookSource, trigger, webhookTriggerCondition, payLoadMap, httpHeaders);
     webhookEventDetails.setPayload(payload);
     webhookEventDetails.setBranchName(webhookEventUtils.obtainBranchName(webhookSource, httpHeaders, payLoadMap));
     webhookEventDetails.setCommitId(webhookEventUtils.obtainCommitId(webhookSource, httpHeaders, payLoadMap));
@@ -308,6 +311,40 @@ public class WebHookServiceImpl implements WebHookService {
     return resolvedParameters;
   }
 
+  private void validateWebHook(WebhookSource webhookSource, Trigger trigger, WebHookTriggerCondition triggerCondition,
+      Map<String, Object> payLoadMap, HttpHeaders httpHeaders) {
+    if (WebhookSource.GITHUB.equals(webhookSource)) {
+      validateGitHubWebhook(trigger, triggerCondition, payLoadMap, httpHeaders);
+    } else if (WebhookSource.BITBUCKET.equals(webhookSource)) {
+      validateBitBucketWebhook(trigger, triggerCondition, payLoadMap, httpHeaders);
+    }
+  }
+
+  private void validateBitBucketWebhook(
+      Trigger trigger, WebHookTriggerCondition triggerCondition, Map<String, Object> content, HttpHeaders headers) {
+    WebhookSource webhookSource = triggerCondition.getWebhookSource();
+    if (BITBUCKET.equals(webhookSource)) {
+      logger.info("Trigger is set for BitBucket. Checking the http headers for the request type");
+      String bitBucketEvent = headers == null ? null : headers.getHeaderString(X_BIT_BUCKET_EVENT);
+      logger.info("X-Event-Key is {} ", bitBucketEvent);
+      if (bitBucketEvent == null) {
+        throw new WingsException("Header [X-Event-Key] is missing", USER);
+      }
+
+      BitBucketEventType bitBucketEventType = BitBucketEventType.find(bitBucketEvent);
+      String errorMsg = "Trigger [" + trigger.getName() + "] is not associated with the received BitBucket event ["
+          + bitBucketEvent + "]";
+
+      if (triggerCondition.getBitBucketEvents() != null
+          && ((triggerCondition.getBitBucketEvents().contains(bitBucketEventType)
+                 || (BitBucketEventType.containsAllEvent(triggerCondition.getBitBucketEvents()))))) {
+        return;
+      } else {
+        throw new WingsException(errorMsg, USER);
+      }
+    }
+  }
+
   private void validateGitHubWebhook(
       Trigger trigger, WebHookTriggerCondition triggerCondition, Map<String, Object> content, HttpHeaders headers) {
     WebhookSource webhookSource = triggerCondition.getWebhookSource();
@@ -319,11 +356,11 @@ public class WebHookServiceImpl implements WebHookService {
         throw new WingsException("Header [X-GitHub-Event] is missing", USER);
       }
       WebhookEventType webhookEventType = WebhookEventType.find(gitHubEvent);
-      if (triggerCondition.getEventTypes() != null && !triggerCondition.getEventTypes().contains(webhookEventType)) {
-        String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event ["
-            + gitHubEvent + "]";
-        throw new WingsException(msg, USER);
-      }
+
+      String errorMsg =
+          "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event [" + gitHubEvent + "]";
+
+      validateEventType(triggerCondition, content, errorMsg, webhookEventType);
       if (PULL_REQUEST.equals(webhookEventType)) {
         Object prAction = content.get("action");
         if (prAction != null && triggerCondition.getActions() != null
@@ -333,6 +370,13 @@ public class WebHookServiceImpl implements WebHookService {
           throw new WingsException(msg, USER);
         }
       }
+    }
+  }
+
+  private void validateEventType(WebHookTriggerCondition triggerCondition, Map<String, Object> content,
+      String errorMessage, WebhookEventType webhookEventType) {
+    if (triggerCondition.getEventTypes() != null && !triggerCondition.getEventTypes().contains(webhookEventType)) {
+      throw new WingsException(errorMessage, USER);
     }
   }
 
