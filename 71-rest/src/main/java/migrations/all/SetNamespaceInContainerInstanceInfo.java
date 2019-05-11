@@ -19,6 +19,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
+import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
@@ -75,32 +76,44 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
                     continue;
                   }
 
-                  if (!(instanceInfo instanceof KubernetesContainerInfo)) {
-                    logger.error("instanceInfo is not of type kubernetes for instance {}", instance.getUuid());
+                  if (!(instanceInfo instanceof KubernetesContainerInfo) && !(instanceInfo instanceof K8sPodInfo)) {
+                    logger.error("instanceInfo is not of type KubernetesContainerInfo or K8sPodInfo for instance {}",
+                        instance.getUuid());
                     continue;
                   }
 
-                  KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) instanceInfo;
-                  String namespace = kubernetesContainerInfo.getNamespace();
+                  if (instanceInfo instanceof KubernetesContainerInfo) {
+                    KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) instanceInfo;
 
-                  if (isBlank(namespace)) {
-                    logger.error("namespace is blank in container info for {}", instance.getUuid());
-                    continue;
-                  }
+                    if (isBlank(kubernetesContainerInfo.getNamespace())) {
+                      logger.error("namespace is blank in container info for {}", instance.getUuid());
+                      continue;
+                    }
 
-                  if (instance.getContainerInstanceKey() == null && instance.getPodInstanceKey() == null) {
-                    logger.error("container or pod key not found for {}", instance.getUuid());
-                    continue;
-                  }
+                    if (instance.getContainerInstanceKey() == null) {
+                      logger.error("container key not found for {}", instance.getUuid());
+                      continue;
+                    }
 
-                  ContainerInstanceKey containerInstanceKey = instance.getContainerInstanceKey();
-                  if (containerInstanceKey != null) {
+                    ContainerInstanceKey containerInstanceKey = instance.getContainerInstanceKey();
                     containerInstanceKey.setNamespace(kubernetesContainerInfo.getNamespace());
                     wingsPersistence.updateField(
                         Instance.class, instance.getUuid(), InstanceKeys.containerInstanceKey, containerInstanceKey);
                   } else {
+                    K8sPodInfo podInfo = (K8sPodInfo) instanceInfo;
+
+                    if (isBlank(podInfo.getNamespace())) {
+                      logger.error("namespace is blank in container info for {}", instance.getUuid());
+                      continue;
+                    }
+
+                    if (instance.getPodInstanceKey() == null) {
+                      logger.error("pod key not found for {}", instance.getUuid());
+                      continue;
+                    }
+
                     PodInstanceKey podInstanceKey = instance.getPodInstanceKey();
-                    podInstanceKey.setNamespace(kubernetesContainerInfo.getNamespace());
+                    podInstanceKey.setNamespace(podInfo.getNamespace());
                     wingsPersistence.updateField(
                         Instance.class, instance.getUuid(), InstanceKeys.podInstanceKey, podInstanceKey);
                   }
