@@ -1970,6 +1970,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 "Default value [" + defaultValue + " is not in Allowed Values" + variable.getAllowedList());
           }
         }
+      } else {
+        variable.setAllowedList(null);
       }
     }
   }
