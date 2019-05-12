@@ -73,7 +73,7 @@ public class AuditServiceImplTest extends WingsBaseTest {
     EntityYamlRecord entityYamlRecord = EntityYamlRecord.builder().yamlPath(yamlPath).uuid(id).build();
     doReturn(entityYamlRecord).when(mockQuery).get();
     EntityAuditRecord entityAuditRecord = EntityAuditRecord.builder().build();
-    auditServiceImpl.loadLatestYamlDetailsForEntity(entityAuditRecord);
+    auditServiceImpl.loadLatestYamlDetailsForEntity(entityAuditRecord, ACCOUNT_ID);
     assertThat(entityAuditRecord.getEntityOldYamlRecordId()).isEqualTo(id);
     assertThat(entityAuditRecord.getYamlPath()).isEqualTo(yamlPath);
   }

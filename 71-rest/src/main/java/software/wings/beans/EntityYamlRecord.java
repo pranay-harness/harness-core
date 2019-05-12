@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
 public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess {
   @Id private String uuid;
+  private String accountId;
   private long createdAt;
   private String entityId;
   private String entityType;

@@ -102,6 +102,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.verification.CVConfiguration;
 
 import java.util.List;
 
@@ -452,6 +453,16 @@ public class EntityHelper {
       affectedResourceName = encryptedData.getName();
       affectedResourceType = EntityType.ENCRYPTED_RECORDS.name();
       affectedResourceOperation = type.name();
+    } else if (entity instanceof CVConfiguration) {
+      CVConfiguration cvConfiguration = (CVConfiguration) entity;
+      entityType = EntityType.CV_CONFIGURATION.name();
+      entityName = cvConfiguration.getName();
+      appId = cvConfiguration.getAppId();
+      affectedResourceId = cvConfiguration.getEnvId();
+      affectedResourceName = getEnvironmentName(cvConfiguration.getEnvId(), appId);
+      affectedResourceType = EntityType.ENVIRONMENT.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));
       entityType = format("Object of class: [%s]", entity.getClass().getSimpleName());
@@ -723,6 +734,9 @@ public class EntityHelper {
       } else if (entity instanceof ManifestFile) {
         ManifestFile manifestFile = (ManifestFile) entity;
         finalYaml = format("%s/%s", yamlPrefix, manifestFile.getFileName());
+      } else if (entity instanceof CVConfiguration) {
+        CVConfiguration cvConfiguration = (CVConfiguration) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, cvConfiguration.getName(), YAML_EXTENSION);
       } else {
         finalYaml = yamlPrefix;
       }

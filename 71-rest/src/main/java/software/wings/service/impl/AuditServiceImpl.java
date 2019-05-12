@@ -355,12 +355,12 @@ public class AuditServiceImpl implements AuditService {
           break;
         }
         case UPDATE: {
-          loadLatestYamlDetailsForEntity(record);
+          loadLatestYamlDetailsForEntity(record, accountId);
           saveEntityYamlForAudit(newEntity, record, accountId);
           break;
         }
         case DELETE: {
-          loadLatestYamlDetailsForEntity(record);
+          loadLatestYamlDetailsForEntity(record, accountId);
           break;
         }
         default: {
@@ -399,14 +399,21 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @VisibleForTesting
-  void loadLatestYamlDetailsForEntity(EntityAuditRecord record) {
+  void loadLatestYamlDetailsForEntity(EntityAuditRecord record, String accountId) {
     if (nonYamlEntities.contains(record.getEntityType())) {
       return;
     }
     String entityId;
     String entityType;
     if (EntityType.SERVICE_VARIABLE.name().equals(record.getEntityType())) {
-      entityType = EntityType.SERVICE.name();
+      if (EntityType.SERVICE.name().equals(record.getAffectedResourceType())) {
+        entityType = EntityType.SERVICE.name();
+      } else if (EntityType.ENVIRONMENT.name().equals(record.getAffectedResourceType())) {
+        entityType = EntityType.ENVIRONMENT.name();
+      } else {
+        // Should ideally never happen
+        return;
+      }
       entityId = record.getAffectedResourceId();
     } else {
       entityType = record.getEntityType();
@@ -414,6 +421,7 @@ public class AuditServiceImpl implements AuditService {
     }
     EntityYamlRecord entityYamlRecord = wingsPersistence.createQuery(EntityYamlRecord.class)
                                             .filter(EntityYamlRecordKeys.entityId, entityId)
+                                            .filter(EntityYamlRecordKeys.accountId, accountId)
                                             .filter(EntityYamlRecordKeys.entityType, entityType)
                                             .project(EntityYamlRecordKeys.uuid, true)
                                             .project(EntityYamlRecordKeys.yamlPath, true)
@@ -466,7 +474,14 @@ public class AuditServiceImpl implements AuditService {
     String entityId;
     String entityType;
     if (EntityType.SERVICE_VARIABLE.name().equals(record.getEntityType())) {
-      entityType = EntityType.SERVICE.name();
+      if (EntityType.SERVICE.name().equals(record.getAffectedResourceType())) {
+        entityType = EntityType.SERVICE.name();
+      } else if (EntityType.ENVIRONMENT.name().equals(record.getAffectedResourceType())) {
+        entityType = EntityType.ENVIRONMENT.name();
+      } else {
+        // Should ideally never happen
+        return;
+      }
       entityId = record.getAffectedResourceId();
     } else {
       entityType = record.getEntityType();
@@ -474,6 +489,7 @@ public class AuditServiceImpl implements AuditService {
     }
     EntityYamlRecord yamlRecord = EntityYamlRecord.builder()
                                       .uuid(generateUuid())
+                                      .accountId(accountId)
                                       .createdAt(currentTimeMillis())
                                       .entityId(entityId)
                                       .entityType(entityType)
