@@ -2,6 +2,9 @@ package software.wings.delegatetasks;
 
 import static com.google.common.base.Joiner.on;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
+import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -23,6 +26,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -43,9 +47,12 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFile;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -59,8 +66,10 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -82,12 +91,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
   private static final String REMOTE_STATE_FILE_PATH = ".terraform/terraform.tfstate";
   private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
+  private static final String WORKING_DIR_BASE = "./repository/terraform/";
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager delegateFileManager;
+  @Inject private GitService gitService;
 
   public TerraformProvisionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
@@ -137,10 +148,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       saveExecutionLog(parameters, format("Inheriting git state at commit id: [%s]", gitConfig.getReference()),
           CommandExecutionStatus.RUNNING);
     }
+    GitFetchFilesResult gitFetchFilesResult;
 
     try {
       encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails());
-      gitClient.ensureRepoLocallyClonedAndUpdated(gitConfig);
+      gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, parameters.getSourceRepoSettingId(),
+          gitConfig.getReference(), gitConfig.getBranch(), Collections.singletonList(parameters.getScriptPath()), true);
     } catch (RuntimeException ex) {
       logger.error("Exception in processing git operation", ex);
       return TerraformExecutionData.builder()
@@ -148,22 +161,27 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-    String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
-    logger.info("Script Directory: " + scriptDirectory);
 
-    String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
-
-    File tfVariablesFile =
-        Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
-    File tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
-
-    ensureLocalCleanup(scriptDirectory);
-
-    boolean usingRemoteState = isRemoteStateConfigured(scriptDirectory);
-
+    String workingDir = null;
     try {
+      workingDir = createDirectory(parameters.getActivityId());
+      logger.info("Working Directory: " + workingDir);
+      writeFilesToWorkingDirectory(workingDir, gitFetchFilesResult.getFiles());
+
+      String scriptDir = Paths.get(workingDir, parameters.getScriptPath()).toString();
+
+      String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
+
+      File tfVariablesFile =
+          Paths.get(scriptDir, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
+      File tfBackendConfigsFile = Paths.get(scriptDir, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
+
+      ensureLocalCleanup(scriptDir);
+
+      boolean usingRemoteState = isRemoteStateConfigured(scriptDir);
+
       if (!usingRemoteState) {
-        File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
+        File tfStateFile = Paths.get(scriptDir, TERRAFORM_STATE_FILE_NAME).toFile();
 
         if (parameters.getCurrentStateFileId() != null) {
           try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
@@ -215,7 +233,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
 
       File tfOutputsFile =
-          Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
+          Paths.get(scriptDir, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
       String targetArgs = getTargetArgs(parameters.getTargets());
       String tfVarFiles = getAllTfVarFilesArgument(
           System.getProperty(USER_DIR_KEY), gitClientHelper.getRepoDirectory(gitConfig), parameters.getTfVarFiles());
@@ -237,26 +255,26 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               format("echo \"yes\" | terraform init -force-copy %s && echo \"Terraform init... done\"",
                   tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
                                                 : ""),
-              scriptDirectory, parameters, activityLogOutputStream);
+              scriptDir, parameters, activityLogOutputStream);
           if (code == 0) {
             code = executeShellCommand(
                 format("terraform refresh -input=false %s %s && echo \"Terraform refresh ... done\"", targetArgs,
                     tfVarFiles),
-                scriptDirectory, parameters, activityLogOutputStream);
+                scriptDir, parameters, activityLogOutputStream);
           }
           if (code == 0) {
             code = executeShellCommand(
                 format("terraform plan -out=tfplan -input=false %s %s && echo \"Terraform plan ... done\"", targetArgs,
                     tfVarFiles),
-                scriptDirectory, parameters, planLogOutputStream);
+                scriptDir, parameters, planLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             code = executeShellCommand("terraform apply -input=false tfplan && echo \"Terraform apply... done\"",
-                scriptDirectory, parameters, activityLogOutputStream);
+                scriptDir, parameters, activityLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
-            code = executeShellCommand(format("terraform output --json > %s", tfOutputsFile.toString()),
-                scriptDirectory, parameters, activityLogOutputStream);
+            code = executeShellCommand(format("terraform output --json > %s", tfOutputsFile.toString()), scriptDir,
+                parameters, activityLogOutputStream);
           }
           break;
         }
@@ -265,17 +283,17 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               format("terraform init -input=false %s && echo \"Terraform init... done\"",
                   tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
                                                 : ""),
-              scriptDirectory, parameters, activityLogOutputStream);
+              scriptDir, parameters, activityLogOutputStream);
           if (code == 0) {
             code =
                 executeShellCommand(format("terraform refresh -input=false %s %s && echo \"Terraform refresh... done\"",
                                         targetArgs, tfVarFiles),
-                    scriptDirectory, parameters, activityLogOutputStream);
+                    scriptDir, parameters, activityLogOutputStream);
           }
           if (code == 0) {
             code = executeShellCommand(
                 format("terraform destroy -force %s %s && echo \"Terraform destroy... done\"", targetArgs, tfVarFiles),
-                scriptDirectory, parameters, activityLogOutputStream);
+                scriptDir, parameters, activityLogOutputStream);
           }
           break;
         }
@@ -306,7 +324,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             .withFileName(TERRAFORM_STATE_FILE_NAME)
                                             .build();
 
-      File tfStateFile = getTerraformStateFile(scriptDirectory);
+      File tfStateFile = getTerraformStateFile(scriptDir);
       if (tfStateFile != null) {
         try (InputStream initialStream = new FileInputStream(tfStateFile)) {
           delegateFileManager.upload(delegateFile, initialStream);
@@ -376,7 +394,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       return terraformExecutionDataBuilder.build();
 
-    } catch (RuntimeException | IOException | InterruptedException | TimeoutException ex) {
+    } catch (Exception ex) {
       if (ex instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
@@ -387,8 +405,16 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     } finally {
-      FileUtils.deleteQuietly(tfVariablesFile);
-      FileUtils.deleteQuietly(tfBackendConfigsFile);
+      cleanup(workingDir);
+    }
+  }
+
+  private void cleanup(String workingDirectory) {
+    try {
+      logger.info("Cleaning up directory " + workingDirectory);
+      deleteDirectoryAndItsContentIfExists(workingDirectory);
+    } catch (Exception ex) {
+      logger.warn("Exception in directory cleanup.", ex);
     }
   }
 
@@ -491,13 +517,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private String resolveScriptDirectory(GitConfig gitConfig, String scriptPath) {
-    return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), gitClientHelper.getRepoDirectory(gitConfig),
-            scriptPath == null ? "" : scriptPath)
-        .toString();
-  }
-
   private void saveExecutionLog(
       TerraformProvisionParameters parameters, String line, CommandExecutionStatus commandExecutionStatus) {
     logService.save(parameters.getAccountId(),
@@ -542,6 +561,30 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         return on("\n").join(logs);
       }
       return "";
+    }
+  }
+
+  public String createDirectory(String activityId) throws Exception {
+    String workingDirectory = Paths.get(WORKING_DIR_BASE, activityId).normalize().toAbsolutePath().toString();
+
+    createDirectoryIfDoesNotExist(workingDirectory);
+    waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
+
+    return workingDirectory;
+  }
+
+  private void writeFilesToWorkingDirectory(String directory, List<GitFile> files) throws IOException {
+    FileIo.createDirectoryIfDoesNotExist(directory);
+    FileIo.waitForDirectoryToBeAccessibleOutOfProcess(directory, 10);
+    for (GitFile file : files) {
+      Path filePath = Paths.get(directory, file.getFilePath());
+      Path parentPath = filePath.getParent();
+      if (parentPath == null) {
+        throw new WingsException("Parent path not found for file: " + file.getFilePath());
+      }
+      FileIo.createDirectoryIfDoesNotExist(parentPath.toString());
+      FileIo.waitForDirectoryToBeAccessibleOutOfProcess(directory, 10);
+      FileIo.writeUtf8StringToFile(filePath.toString(), file.getFileContent());
     }
   }
 }

@@ -64,6 +64,8 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner);
 
+  String normalizeScriptPath(String terraformDirectory);
+
   StreamingOutput downloadTerraformState(String provisionerId, String envId);
 
   ShellScriptInfrastructureProvisioner getShellScriptProvisioner(String appId, String provisionerId);

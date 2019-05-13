@@ -1,23 +1,18 @@
 package software.wings.sm.states.provision;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.beans.TaskData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
@@ -35,7 +30,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -156,27 +150,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .targets(targets)
             .runPlanOnly(false)
             .tfVarFiles(configParameter.getTfVarFiles())
+            .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(executionContext.getApp().getAccountId())
-                                    .waitId(activityId)
-                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .taskType(TERRAFORM_PROVISION_TASK.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                              .build())
-                                    .build();
-    String delegateTaskId = delegateService.queueTask(delegateTask);
-
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
-        .build();
+    return createAndRunTask(activityId, executionContext, parameters);
   }
 
   @Override
