@@ -52,7 +52,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
 
     mapper.toResponse(exception);
     verify(mockLogger, times(2))
-        .info("Insufficient parameter from [] in message \"Invalid Artifact Source:${name}.${reason}\"");
+        .info("Insufficient parameter from [] in message \"Invalid Artifact Source: ${name}.${reason}\"");
   }
 
   @Test
