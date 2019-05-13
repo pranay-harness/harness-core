@@ -100,6 +100,7 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.BambooConfig;
@@ -1239,5 +1240,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(MLAnalysisType.class, 7175);
     kryo.register(GCSHelmRepoConfig.class, 7176);
     kryo.register(JiraCustomFieldValue.class, 7177);
+    kryo.register(AwsSecretsManagerConfig.class, 7178);
   }
 }

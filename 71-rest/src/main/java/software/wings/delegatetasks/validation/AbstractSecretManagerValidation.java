@@ -10,6 +10,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -66,21 +67,30 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     Preconditions.checkNotNull(encryptionConfig);
     if (encryptionConfig instanceof KmsConfig) {
       KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
-      Regions regions = Regions.US_EAST_1;
-      if (kmsConfig.getRegion() != null) {
-        regions = Regions.fromName(kmsConfig.getRegion());
-      }
-      // If it's an unknown region, will default to US_EAST_1's URL.
-      String kmsUrl = AWS_REGION_URL_MAP.containsKey(regions) ? AWS_REGION_URL_MAP.get(regions)
-                                                              : AWS_REGION_URL_MAP.get(Regions.US_EAST_1);
+      String kmsUrl = getAwsUrlFromRegion(kmsConfig.getRegion());
       return validateSecretManagerUrl(kmsUrl, kmsConfig.getName(), kmsConfig.getValidationCriteria());
     } else if (encryptionConfig instanceof VaultConfig) {
       VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
       return validateSecretManagerUrl(
           vaultConfig.getVaultUrl(), vaultConfig.getName(), vaultConfig.getValidationCriteria());
+    } else if (encryptionConfig instanceof AwsSecretsManagerConfig) {
+      AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
+      String asmUrl = getAwsUrlFromRegion(secretsManagerConfig.getRegion());
+      return validateSecretManagerUrl(
+          asmUrl, secretsManagerConfig.getName(), secretsManagerConfig.getValidationCriteria());
     } else {
       throw new IllegalStateException("Invalid encryptionConfig " + encryptionConfig);
     }
+  }
+
+  private String getAwsUrlFromRegion(String region) {
+    Regions regions = Regions.US_EAST_1;
+    if (region != null) {
+      regions = Regions.fromName(region);
+    }
+    // If it's an unknown region, will default to US_EAST_1's URL.
+    return AWS_REGION_URL_MAP.containsKey(regions) ? AWS_REGION_URL_MAP.get(regions)
+                                                   : AWS_REGION_URL_MAP.get(Regions.US_EAST_1);
   }
 
   @Override
@@ -99,6 +109,8 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
         return (KmsConfig) parameter;
       } else if (parameter instanceof VaultConfig) {
         return (VaultConfig) parameter;
+      } else if (parameter instanceof AwsSecretsManagerConfig) {
+        return (AwsSecretsManagerConfig) parameter;
       } else if (parameter instanceof EncryptedDataDetail) {
         return ((EncryptedDataDetail) parameter).getEncryptionConfig();
       } else if (parameter instanceof List) {
@@ -122,6 +134,9 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     } else if (encryptionConfig instanceof VaultConfig) {
       VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
       return singletonList(vaultConfig.getValidationCriteria());
+    } else if (encryptionConfig instanceof AwsSecretsManagerConfig) {
+      AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
+      return singletonList(secretsManagerConfig.getValidationCriteria());
     } else {
       throw new IllegalStateException("Unsupported encryption config: " + encryptionConfig);
     }

@@ -273,6 +273,8 @@ public abstract class SettingValue {
 
     VAULT,
 
+    AWS_SECRETS_MANAGER,
+
     WINRM_CONNECTION_ATTRIBUTES("WinRm Connection Attributes"),
 
     WINRM_SESSION_CONFIG,

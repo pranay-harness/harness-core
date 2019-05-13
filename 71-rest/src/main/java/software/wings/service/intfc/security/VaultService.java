@@ -20,9 +20,6 @@ public interface VaultService {
   String PATH_SEPARATOR = "/";
   String KEY_SPEARATOR = "#";
 
-  String IS_DEFAULT_KEY = "isDefault";
-  String ID_KEY = "_id";
-
   EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData encryptedData);
 

@@ -183,7 +183,7 @@ public class ManagerMorphiaClasses {
       HarnessApiKey.class, ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class,
       Personalization.class, EntityYamlRecord.class, ProvisionerWithOnlyAuditNeededData.class,
       ArtifactStreamWithOnlyAuditNeededData.class, InfraMappingWithOnlyAuditNeededData.class,
-      NotificationRulesStatus.class);
+      NotificationRulesStatus.class, AwsSecretsManagerConfig.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);
