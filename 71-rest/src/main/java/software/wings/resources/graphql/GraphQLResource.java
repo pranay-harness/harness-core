@@ -1,6 +1,5 @@
 package software.wings.resources.graphql;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import com.google.common.collect.Maps;
@@ -25,6 +24,7 @@ import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.FeatureFlagService;
 
@@ -46,22 +46,24 @@ import javax.ws.rs.core.MediaType;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLResource {
   GraphQL graphQL;
-
   FeatureFlagService featureFlagService;
   ApiKeyService apiKeyService;
   AuthHandler authHandler;
+  AccountService accountService;
 
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
 
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
       @NotNull FeatureFlagService featureFlagService, @NotNull ApiKeyService apiKeyService,
-      @NotNull AuthHandler authHandler, DataLoaderRegistryHelper dataLoaderRegistryHelper) {
+      @NotNull AuthHandler authHandler, DataLoaderRegistryHelper dataLoaderRegistryHelper,
+      @NotNull AccountService accountService) {
     this.graphQL = queryLanguageProvider.getQL();
     this.featureFlagService = featureFlagService;
     this.apiKeyService = apiKeyService;
     this.authHandler = authHandler;
     this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
+    this.accountService = accountService;
   }
 
   @POST
@@ -76,6 +78,7 @@ public class GraphQLResource {
    * GraphQL graphQLQuery can be sent as plain text
    * or as JSON hence I have added overloaded methods
    * to handle both cases.
+   *
    * @param graphQLQuery
    * @return
    */
@@ -86,51 +89,32 @@ public class GraphQLResource {
   }
 
   private Map<String, Object> executeInternal(String apiKey, GraphQLQuery graphQLQuery) {
-    ExecutionResult executionResult;
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, null)) {
+    String accountId;
+    if (apiKey == null || (accountId = apiKeyService.getAccountIdFromApiKey(apiKey)) == null) {
+      logger.info(GraphQLConstants.INVALID_API_KEY);
+      return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
+    }
+
+    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, null) || accountService.isCommunityAccount(accountId)) {
       logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
-      executionResult =
-          ExecutionResultImpl.newExecutionResult()
-              .addError(GraphqlErrorBuilder.newError().message(GraphQLConstants.FEATURE_NOT_ENABLED).build())
-              .build();
-      return executionResult.toSpecification();
+      return getExecutionResultWithError(GraphQLConstants.FEATURE_NOT_ENABLED).toSpecification();
     }
 
-    if (apiKey == null) {
-      executionResult = ExecutionResultImpl.newExecutionResult()
-                            .addError(GraphqlErrorBuilder.newError().message(GraphQLConstants.INVALID_API_KEY).build())
-                            .build();
-      return executionResult.toSpecification();
-    }
-
+    ExecutionResult executionResult;
     try {
-      String accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
-      if (isEmpty(accountId)) {
-        executionResult =
-            ExecutionResultImpl.newExecutionResult()
-                .addError(GraphqlErrorBuilder.newError().message(GraphQLConstants.INVALID_API_KEY).build())
-                .build();
-        return executionResult.toSpecification();
-      }
-
       ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
       if (apiKeyEntry == null) {
-        executionResult =
-            ExecutionResultImpl.newExecutionResult()
-                .addError(GraphqlErrorBuilder.newError().message(GraphQLConstants.INVALID_API_KEY).build())
-                .build();
-        return executionResult.toSpecification();
+        executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
+      } else {
+        UserPermissionInfo userPermissionInfo =
+            authHandler.getUserPermissionInfo(accountId, apiKeyEntry.getUserGroups());
+        executionResult = graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery));
       }
-
-      UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(accountId, apiKeyEntry.getUserGroups());
-      executionResult = graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery));
-
     } catch (Exception ex) {
-      executionResult = ExecutionResultImpl.newExecutionResult()
-                            .addError(GraphqlErrorBuilder.newError()
-                                          .message("Error while handling api request : {}", ex.getMessage())
-                                          .build())
-                            .build();
+      String errorMsg = String.format(
+          "Error while handling api request for Graphql api for accountId %s : %s", accountId, ex.getMessage());
+      logger.warn(errorMsg);
+      executionResult = getExecutionResultWithError(errorMsg);
     }
 
     return executionResult.toSpecification();
@@ -144,6 +128,12 @@ public class GraphQLResource {
         .operationName(graphQLQuery.getOperationName())
         .dataLoaderRegistry(dataLoaderRegistryHelper.getDataLoaderRegistry())
         .context(GraphQLContext.newContext().of("auth", userPermissionInfo, "accountId", accountId))
+        .build();
+  }
+
+  private ExecutionResultImpl getExecutionResultWithError(String message) {
+    return ExecutionResultImpl.newExecutionResult()
+        .addError(GraphqlErrorBuilder.newError().message(message).build())
         .build();
   }
 }
