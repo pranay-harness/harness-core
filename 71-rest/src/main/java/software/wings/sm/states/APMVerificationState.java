@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
@@ -168,7 +169,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       } else {
         ResponseMapping mapping = metricCollectionInfo.getResponseMapping();
 
-        if (isEmpty(mapping.getMetricValueJsonPath()) || isEmpty(mapping.getTimestampJsonPath())) {
+        if (isEmpty(mapping.getMetricValueJsonPath())) {
           invalidFields.put("metricValueJsonPath/timestampJsonPath",
               "Metric value path is empty for " + metricCollectionInfo.metricName);
         }
@@ -353,12 +354,14 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       responseMappers.put("host", hostResponseMapper);
     }
     responseMappers.put("txnName", txnNameResponseMapper);
-    responseMappers.put("timestamp",
-        ResponseMapper.builder()
-            .fieldName("timestamp")
-            .jsonPath(responseMapping.getTimestampJsonPath())
-            .timestampFormat(responseMapping.getTimestampFormat())
-            .build());
+    if (isNotEmpty(responseMapping.getTimestampJsonPath().trim())) {
+      responseMappers.put("timestamp",
+          ResponseMapper.builder()
+              .fieldName("timestamp")
+              .jsonPath(responseMapping.getTimestampJsonPath())
+              .timestampFormat(responseMapping.getTimestampFormat())
+              .build());
+    }
 
     responseMappers.put("value",
         ResponseMapper.builder().fieldName("value").jsonPath(responseMapping.getMetricValueJsonPath()).build());

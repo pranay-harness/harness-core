@@ -65,12 +65,13 @@ public class APMResponseParser {
       throw new WingsException(errorMsg);
     }
     for (Multimap<String, Object> record : response) {
-      Iterator<Object> timestamps = record.get("timestamp").iterator();
+      Iterator<Object> timestamps = record.containsKey("timestamp") ? record.get("timestamp").iterator() : null;
       Iterator<Object> values = record.get("value").iterator();
-      while (timestamps.hasNext()) {
-        long timestamp = (long) VerificationResponseParser.cast(timestamps.next(), "timestamp");
+      while (values.hasNext()) {
+        long timestamp =
+            timestamps != null ? (long) VerificationResponseParser.cast(timestamps.next(), "timestamp") : 0;
         long now = Timestamp.currentMinuteBoundary();
-        if (String.valueOf(timestamp).length() < String.valueOf(now).length()) {
+        if (timestamp != 0 && String.valueOf(timestamp).length() < String.valueOf(now).length()) {
           // Timestamp is in seconds. Convert to millis
           timestamp = timestamp * 1000;
         }
