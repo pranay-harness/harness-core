@@ -381,6 +381,7 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     String path = context.renderExpression(terraformProvisioner.getPath());
+    path = infrastructureProvisionerService.normalizeScriptPath(path);
 
     String entityId = generateEntityId(context);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
@@ -436,13 +437,19 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
             .runPlanOnly(false)
+            .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .build();
 
+    return createAndRunTask(activityId, executionContext, parameters);
+  }
+
+  protected ExecutionResponse createAndRunTask(
+      String activityId, ExecutionContextImpl executionContext, TerraformProvisionParameters parameters) {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
-                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .appId(executionContext.getApp().getAppId())
                                     .data(TaskData.builder()
                                               .taskType(TERRAFORM_PROVISION_TASK.name())
                                               .parameters(new Object[] {parameters})
@@ -468,6 +475,7 @@ public abstract class TerraformProvisionState extends State {
       gitConfig.setBranch(branch);
     }
     String path = context.renderExpression(terraformProvisioner.getPath());
+    path = infrastructureProvisionerService.normalizeScriptPath(path);
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     final String entityId = generateEntityId(context);
@@ -588,27 +596,10 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .runPlanOnly(runPlanOnly)
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
+            .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(executionContext.getApp().getAccountId())
-                                    .waitId(activityId)
-                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .taskType(TERRAFORM_PROVISION_TASK.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                              .build())
-                                    .build();
-    String delegateTaskId = delegateService.queueTask(delegateTask);
-
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
-        .build();
+    return createAndRunTask(activityId, executionContext, parameters);
   }
 
   private List<String> getRenderedTfVarFiles(List<String> tfVarFiles, ExecutionContext context) {

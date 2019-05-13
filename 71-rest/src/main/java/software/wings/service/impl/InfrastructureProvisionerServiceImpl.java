@@ -596,7 +596,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
   }
 
-  private String normalizeScriptPath(String terraformDirectory) {
+  @Override
+  public String normalizeScriptPath(String terraformDirectory) {
     return terraformDirectory.equals(".") ? "" : terraformDirectory;
   }
 
