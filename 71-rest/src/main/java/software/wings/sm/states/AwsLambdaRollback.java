@@ -14,6 +14,7 @@ import io.harness.beans.PageResponse;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Activity;
 import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.Tag;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.sm.StateType;
@@ -55,5 +56,11 @@ public class AwsLambdaRollback extends AwsLambdaState {
   @Override
   public String getCommandName() {
     return super.getCommandName();
+  }
+
+  @Override
+  @SchemaIgnore
+  public List<Tag> getTags() {
+    return super.getTags();
   }
 }

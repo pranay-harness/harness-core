@@ -2,6 +2,7 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -33,6 +34,8 @@ import com.amazonaws.services.lambda.model.LogType;
 import com.amazonaws.services.lambda.model.PublishVersionRequest;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
+import com.amazonaws.services.lambda.model.TagResourceRequest;
+import com.amazonaws.services.lambda.model.UntagResourceRequest;
 import com.amazonaws.services.lambda.model.UpdateAliasRequest;
 import com.amazonaws.services.lambda.model.UpdateAliasResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
@@ -68,6 +71,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 @Singleton
 @Slf4j
@@ -112,7 +116,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       }
       responseBuilder.payload(StandardCharsets.UTF_8.decode(invokeResult.getPayload()).toString());
       responseBuilder.awsLambdaExecutionData(request.getAwsLambdaExecutionData())
-          .lambdaTestEvent(request.getLambdaTestEvent());
+          .lambdaTestEvent(request.getLambdaTestEvent())
+          .executionStatus(SUCCESS);
       return responseBuilder.build();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -271,6 +276,7 @@ public class AwsLambdaHelperServiceDelegateImpl
               .withRole(roleArn)
               .withCode(new FunctionCode().withS3Bucket(functionParams.getBucket()).withS3Key(functionParams.getKey()))
               .withPublish(true)
+              .withTags(functionParams.getFunctionTags())
               .withTimeout(functionParams.getTimeout())
               .withMemorySize(functionParams.getMemory())
               .withVpcConfig(vpcConfig);
@@ -364,6 +370,7 @@ public class AwsLambdaHelperServiceDelegateImpl
         updateFunctionAlias(lambdaClient, functionParams.getFunctionName(), publishVersionResult.getVersion(),
             updateAlias, logCallback);
       }
+      tagExistingFunction(functionResult, functionParams.getFunctionTags(), logCallback, lambdaClient);
 
       functionMeta = FunctionMeta.newBuilder()
                          .withFunctionArn(publishVersionResult.getFunctionArn())
@@ -375,5 +382,25 @@ public class AwsLambdaHelperServiceDelegateImpl
         format("Successfully deployed lambda function: [%s]", functionParams.getFunctionName()));
     logCallback.saveExecutionLog("=================");
     return AwsLambdaFunctionResult.builder().success(true).functionMeta(functionMeta).build();
+  }
+
+  @VisibleForTesting
+  void tagExistingFunction(GetFunctionResult functionResult, Map<String, String> functionTags,
+      ExecutionLogCallback logCallback, AWSLambdaClient lambdaClient) {
+    String functionArn = functionResult.getConfiguration().getFunctionArn();
+    Map<String, String> existingTags = functionResult.getTags();
+    if (isNotEmpty(existingTags)) {
+      logCallback.saveExecutionLog(format("Untagging existing tags from the function: [%s]", functionArn));
+      lambdaClient.untagResource(
+          new UntagResourceRequest()
+              .withResource(functionArn)
+              .withTagKeys(existingTags.entrySet().stream().map(Entry::getKey).collect(toList())));
+    }
+    if (isEmpty(functionTags)) {
+      logCallback.saveExecutionLog("No new tags to be put.");
+      return;
+    }
+    logCallback.saveExecutionLog(format("Executing tagging for function: [%s]", functionArn));
+    lambdaClient.tagResource(new TagResourceRequest().withResource(functionArn).withTags(functionTags));
   }
 }
