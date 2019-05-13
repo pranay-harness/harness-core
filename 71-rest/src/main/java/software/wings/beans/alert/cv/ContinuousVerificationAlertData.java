@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Set;
 
 @Data
 @Builder
@@ -24,6 +25,7 @@ public class ContinuousVerificationAlertData implements AlertData {
   private CVConfiguration cvConfiguration;
   private MLAnalysisType mlAnalysisType;
   private String logAnomaly;
+  private Set<String> hosts;
   private String portalUrl;
   private String accountId;
 
@@ -62,6 +64,7 @@ public class ContinuousVerificationAlertData implements AlertData {
         sb.append("\nRisk Score: ").append(riskScore).append(", Alert Threshold: ").append(alertThreshold);
         break;
       case LOG_ML:
+        sb.append("\nHosts: ").append(hosts);
         sb.append("\nLog Message: ").append(logAnomaly);
         break;
       default:
