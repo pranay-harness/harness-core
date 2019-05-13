@@ -27,6 +27,8 @@ public class PipelineExecutionController {
         .startedAt(GraphQLDateTimeScalar.convert(workflowExecution.getStartTs()))
         .endedAt(GraphQLDateTimeScalar.convert(workflowExecution.getEndTs()))
         .status(ExecutionController.convertStatus(workflowExecution.getStatus()))
-        .cause(cause);
+        .cause(cause)
+        .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
+        .build();
   }
 }

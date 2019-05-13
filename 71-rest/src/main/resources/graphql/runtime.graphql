@@ -50,6 +50,7 @@ interface Execution {
   endedAt: DateTime
   status: ExecutionStatus
   cause: Cause
+  notes: String
 }
 
 type ExecutionConnection {
@@ -82,6 +83,8 @@ type WorkflowExecution implements Execution {
   workflow: Workflow @dataFetcher(name: workflow, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   cause: Cause
+
+  notes: String
 }
 
 # Type for pipeline execution
@@ -106,4 +109,6 @@ type PipelineExecution implements Execution {
   pipeline: Pipeline @dataFetcher(name: pipeline, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   cause: Cause
+
+  notes: String
 }

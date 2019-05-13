@@ -19,4 +19,5 @@ public class QLPipelineExecution implements QLExecution, QLCause {
   private ZonedDateTime endedAt;
   private QLExecutionStatus status;
   private QLCause cause;
+  private String notes;
 }

@@ -52,6 +52,7 @@ import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowKeys;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionKeys;
 
 public class GraphQLExecutionTest extends AbstractFunctionalTest {
+  public static final String NOTES = "execution test";
   @Inject private HPersistence persistence;
   @Inject private OwnerManager ownerManager;
   @Inject private WorkflowGenerator workflowGenerator;
@@ -77,6 +78,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   public WorkflowExecution executeWorkflow(Workflow workflow, Application application, Environment environment) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(workflow.getWorkflowType());
+    executionArgs.setNotes(NOTES);
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(workflow.getUuid());
@@ -155,6 +157,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
         using
       }
     }
+    notes
     ... on WorkflowExecution {
       workflow {
         id
@@ -187,6 +190,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
           .isEqualTo(workflowExecution.getTriggeredBy().getUuid());
       assertThat(qlTestObject.sub(QLWorkflowExecutionKeys.cause).get(QLExecutedByKeys.using))
           .isEqualTo(QLExecuteOptions.WEB_UI.name());
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.notes)).isEqualTo(NOTES);
       assertThat(qlTestObject.sub("workflow").get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
     }
 
@@ -280,6 +284,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     // Test running the workflow
 
     ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setNotes(NOTES);
     executionArgs.setWorkflowType(PIPELINE);
     executionArgs.setPipelineId(pipeline.getUuid());
 
@@ -311,6 +316,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
         using
       }
     }
+    notes
     ... on PipelineExecution {
       pipeline {
         id
@@ -330,6 +336,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
           .isEqualTo(pipelineExecution.getTriggeredBy().getUuid());
       assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).get(QLExecutedByKeys.using))
           .isEqualTo(QLExecuteOptions.WEB_UI.name());
+      assertThat(qlTestObject.get(QLWorkflowExecutionKeys.notes)).isEqualTo(NOTES);
       assertThat(qlTestObject.sub("pipeline").get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
     }
 
