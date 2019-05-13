@@ -784,15 +784,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     splunkAnalysisCluster.setText("msg1");
     Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
     unknownClusters.put("1", new HashMap<>());
-    unknownClusters.get("1").put("1", splunkAnalysisCluster);
+    unknownClusters.get("1").put("host1", splunkAnalysisCluster);
     unknownClusters.put("2", new HashMap<>());
     splunkAnalysisCluster = new SplunkAnalysisCluster();
     splunkAnalysisCluster.setText("msg2");
-    unknownClusters.get("2").put("1", splunkAnalysisCluster);
+    unknownClusters.get("2").put("host1", splunkAnalysisCluster);
     splunkAnalysisCluster = new SplunkAnalysisCluster();
-    splunkAnalysisCluster.setText("msg3");
-    unknownClusters.get("2").put("2", splunkAnalysisCluster);
-    unknownClusters.get("2").put("3", splunkAnalysisCluster);
+    splunkAnalysisCluster.setText("msg2");
+    unknownClusters.get("2").put("host2", splunkAnalysisCluster);
+    unknownClusters.get("2").put("host3", splunkAnalysisCluster);
 
     LogMLAnalysisRecord logMLAnalysisRecord = new LogMLAnalysisRecord();
     logMLAnalysisRecord.setUnknown_clusters(unknownClusters);
@@ -811,9 +811,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
       tryCount++;
       sleep(ofMillis(500));
-    } while (alerts.size() < 3 && tryCount < 10);
+    } while (alerts.size() < 2 && tryCount < 10);
 
-    assertEquals(3, alerts.size());
+    assertEquals(2, alerts.size());
     Set<String> alertAnomalies = new HashSet<>();
     alerts.forEach(alert -> {
       assertEquals(appId, alert.getAppId());
@@ -827,15 +827,23 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       assertEquals(MLAnalysisType.LOG_ML, alertData.getMlAnalysisType());
       assertEquals(configId, alertData.getCvConfiguration().getUuid());
       assertNotNull(alertData.getLogAnomaly());
+
+      if (alertData.getLogAnomaly().equals("msg1")) {
+        assertEquals(Sets.newHashSet("host1"), alertData.getHosts());
+      }
+
+      if (alertData.getLogAnomaly().equals("msg2")) {
+        assertEquals(Sets.newHashSet("host1", "host2", "host3"), alertData.getHosts());
+      }
       alertAnomalies.add(alertData.getLogAnomaly());
     });
 
-    assertEquals(Sets.newHashSet("msg1", "msg2", "msg3"), alertAnomalies);
+    assertEquals(Sets.newHashSet("msg1", "msg2"), alertAnomalies);
     // same minute should not throw another alert
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
     sleep(ofMillis(2000));
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-    assertEquals(3, alerts.size());
+    assertEquals(2, alerts.size());
 
     // diff minute should throw another alert
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 30);
@@ -843,9 +851,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
       tryCount++;
       sleep(ofMillis(500));
-    } while (alerts.size() < 6 && tryCount < 1000);
+    } while (alerts.size() < 4 && tryCount < 1000);
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-    assertEquals(6, alerts.size());
+    assertEquals(4, alerts.size());
   }
 }
