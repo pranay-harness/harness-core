@@ -1,6 +1,7 @@
 package software.wings.service.intfc.security;
 
 import io.harness.security.encryption.EncryptedRecord;
+import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
@@ -27,7 +28,7 @@ public interface SecretManagementDelegateService {
   @DelegateTaskType(TaskType.KMS_DECRYPT) char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig);
 
   /**
-   * Encrypt the name-value setting of the specified account against using KMS. The {@link EncryptedRecord} will be
+   * Encrypt the name-value setting in the specified account using Hashicorp Vault. The {@link EncryptedRecord} will be
    * returned.
    */
   @DelegateTaskType(TaskType.VAULT_ENCRYPT)
@@ -56,4 +57,25 @@ public interface SecretManagementDelegateService {
    * Renew the Hashicorp Vault authentication token.
    */
   @DelegateTaskType(TaskType.VAULT_RENEW_TOKEN) boolean renewVaultToken(VaultConfig vaultConfig);
+
+  /**
+   * Encrypt the name-value setting in the specified account using AWS Secrets Manager. A {@link EncryptedRecord}
+   * instance will be returned.
+   */
+  @DelegateTaskType(TaskType.ASM_ENCRYPT)
+  EncryptedRecord encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
+      AwsSecretsManagerConfig secretsManagerConfig, EncryptedRecord savedEncryptedData);
+
+  /**
+   * Decrypt the previously encrypted data using AWS Secrets Manager. The decrypted value will be returned.
+   */
+  @DelegateTaskType(TaskType.ASM_DECRYPT)
+  char[] decrypt(EncryptedRecord data, AwsSecretsManagerConfig secretsManagerConfig);
+
+  /**
+   * Delete the previously saved secret from AWS Secrets Manager. Return true if the deltion is successful; Return false
+   * if the deletion failed (e.g. The specified path is non-existent)
+   */
+  @DelegateTaskType(TaskType.ASM_DELETE_SECRET)
+  boolean deleteSecret(String secretName, AwsSecretsManagerConfig secretsManagerConfig);
 }

@@ -43,7 +43,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Account;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
@@ -81,7 +80,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
-  private static final String REASON_KEY = "reason";
   private static final String TOKEN_SECRET_NAME_SUFFIX = "_token";
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
 
@@ -264,7 +262,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       validateVaultConfig(accountId, vaultConfig);
     } else {
       // When setting this vault config as default, set current default secret manager to non-default first.
-      updateCurrentEncryptionConfigToNonDefaultIfNeeded(accountId, vaultConfig);
+      if (vaultConfig.isDefault()) {
+        updateCurrentEncryptionConfigsToNonDefault(accountId);
+      }
 
       // update without token or url changes
       savedVaultConfig.setName(vaultConfig.getName());
@@ -286,14 +286,15 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     vaultConfig.setSecretId(null);
     String vaultConfigId;
     try {
+      // When setting this vault config as default, set current default secret manager to non-default first.
+      if (vaultConfig.isDefault()) {
+        updateCurrentEncryptionConfigsToNonDefault(accountId);
+      }
       vaultConfigId = wingsPersistence.save(vaultConfig);
     } catch (DuplicateKeyException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
           .addParam(REASON_KEY, "Another vault configuration with the same name or URL exists");
     }
-
-    // When setting this vault config as default, set current default secret manager to non-default first.
-    updateCurrentEncryptionConfigToNonDefaultIfNeeded(accountId, vaultConfig);
 
     // Create a LOCAL encrypted record for Vault authToken
     String authTokenEncryptedDataId =
@@ -546,33 +547,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           "Was not able to reach vault using given credentials. Please check your credentials and try again";
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
     }
-  }
-
-  private boolean updateCurrentEncryptionConfigToNonDefaultIfNeeded(String accountId, VaultConfig currentVaultConfig) {
-    boolean updated = false;
-    if (currentVaultConfig.isDefault()) {
-      Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter(ACCOUNT_ID_KEY, accountId);
-      List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
-      for (KmsConfig kmsConfig : kmsConfigs) {
-        if (kmsConfig.isDefault()) {
-          kmsConfig.setDefault(false);
-          wingsPersistence.save(kmsConfig);
-          updated = true;
-        }
-      }
-      Query<VaultConfig> vaultConfigQuery =
-          wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId);
-      List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
-      for (VaultConfig vaultConfig : vaultConfigs) {
-        if (vaultConfig.isDefault()) {
-          vaultConfig.setDefault(false);
-          wingsPersistence.save(vaultConfig);
-          updated = true;
-        }
-      }
-    }
-
-    return updated;
   }
 
   public VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig) throws IOException {

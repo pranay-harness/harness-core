@@ -6,7 +6,9 @@ package io.harness.security.encryption;
 public enum EncryptionType {
   LOCAL("safeharness"),
   KMS("amazonkms"),
+  AWS_SECRETS_MANAGER("awssecretsmanager"),
   VAULT("hashicorpvault");
+
   private final String yamlName;
 
   EncryptionType(String yamlName) {

@@ -28,6 +28,19 @@ import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.kms.model.KMSInternalException;
 import com.amazonaws.services.kms.model.KeyUnavailableException;
+import com.amazonaws.services.secretsmanager.AWSSecretsManager;
+import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
+import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
+import com.amazonaws.services.secretsmanager.model.CreateSecretRequest;
+import com.amazonaws.services.secretsmanager.model.CreateSecretResult;
+import com.amazonaws.services.secretsmanager.model.DeleteSecretRequest;
+import com.amazonaws.services.secretsmanager.model.DeleteSecretResult;
+import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
+import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
+import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
+import com.amazonaws.services.secretsmanager.model.Tag;
+import com.amazonaws.services.secretsmanager.model.UpdateSecretRequest;
+import com.amazonaws.services.secretsmanager.model.UpdateSecretResult;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.beans.EmbeddedUser;
@@ -42,6 +55,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
@@ -93,7 +107,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     // TimeLimiter.callWithTimer will throw a new exception wrapping around the AwsKMS exceptions. Unwrap it.
     Throwable t = e.getCause() == null ? e : e.getCause();
 
-    if (t instanceof AWSKMSException) {
+    if (t instanceof AWSSecretsManagerException) {
+      logger.info("Got AWSSecretsManagerException {}: {}", t.getClass().getName(), t.getMessage());
+      return !(t instanceof ResourceNotFoundException);
+    } else if (t instanceof AWSKMSException) {
       logger.info("Got AWSKMSEception {}: {}", t.getClass().getName(), t.getMessage());
       return t instanceof KMSInternalException || t instanceof DependencyTimeoutException
           || t instanceof KeyUnavailableException;
@@ -296,6 +313,148 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         sleep(ofMillis(1000));
       }
     }
+  }
+
+  @Override
+  public EncryptedRecord encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
+      AwsSecretsManagerConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        return timeLimiter.callWithTimeout(
+            ()
+                -> encryptInternal(name, value, accountId, settingType, secretsManagerConfig, savedEncryptedData),
+            5, TimeUnit.SECONDS, true);
+      } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
+        if (isRetryable(e)) {
+          if (failedAttempts == NUM_OF_RETRIES) {
+            throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
+                .addParam("reason", "encryption failed after " + NUM_OF_RETRIES + " retries");
+          }
+          sleep(ofMillis(1000));
+        }
+      }
+    }
+  }
+
+  @Override
+  public char[] decrypt(EncryptedRecord data, AwsSecretsManagerConfig secretsManagerConfig) {
+    if (data.getEncryptedValue() == null) {
+      return null;
+    }
+
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        return timeLimiter.callWithTimeout(
+            () -> decryptInternal(data, secretsManagerConfig), 5, TimeUnit.SECONDS, true);
+      } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
+        if (isRetryable(e)) {
+          if (failedAttempts == NUM_OF_RETRIES) {
+            throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
+                .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
+          }
+          sleep(ofMillis(1000));
+        }
+      }
+    }
+  }
+
+  @Override
+  public boolean deleteSecret(String secretName, AwsSecretsManagerConfig secretsManagerConfig) {
+    long startTime = System.currentTimeMillis();
+
+    AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
+    DeleteSecretRequest request =
+        new DeleteSecretRequest().withSecretId(secretName).withForceDeleteWithoutRecovery(true);
+    DeleteSecretResult result = client.deleteSecret(request);
+
+    logger.info("Done deleting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
+    return result != null;
+  }
+
+  private EncryptedRecord encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
+      AwsSecretsManagerConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
+    String fullSecretName = getFullPath(secretsManagerConfig.getSecretNamePrefix(), name);
+
+    long startTime = System.currentTimeMillis();
+    logger.info("Saving secret '{}' into AWS Secrets Manager: {}", name, secretsManagerConfig.getName());
+
+    EncryptedRecord encryptedData = savedEncryptedData;
+    if (savedEncryptedData == null) {
+      encryptedData = EncryptedData.builder()
+                          .encryptionKey(fullSecretName)
+                          .encryptionType(EncryptionType.VAULT)
+                          .enabled(true)
+                          .accountId(accountId)
+                          .parentIds(new HashSet<>())
+                          .kmsId(secretsManagerConfig.getUuid())
+                          .build();
+    }
+
+    if (isEmpty(value)) {
+      return encryptedData;
+    }
+
+    AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
+
+    // Get the secret value to see if it exists already.
+    boolean secretExists = false;
+    try {
+      GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest().withSecretId(fullSecretName);
+      GetSecretValueResult result = client.getSecretValue(getSecretValueRequest);
+      secretExists = isNotEmpty(result.getARN());
+    } catch (ResourceNotFoundException e) {
+      // If reaching here, it means the resource doesn't exist.
+    }
+
+    if (!secretExists) {
+      // Create the secret with proper tags.
+      CreateSecretRequest request = new CreateSecretRequest()
+                                        .withName(fullSecretName)
+                                        .withSecretString(value)
+                                        .withTags(new Tag().withKey("createdBy").withValue("Harness"),
+                                            new Tag().withKey("type").withValue(settingType.name()));
+      CreateSecretResult createSecretResult = client.createSecret(request);
+      encryptedData.setEncryptionKey(fullSecretName);
+      encryptedData.setEncryptedValue(createSecretResult.getARN().toCharArray());
+    } else {
+      // Update the existing secret with new secret value.
+      UpdateSecretRequest request = new UpdateSecretRequest().withSecretId(fullSecretName).withSecretString(value);
+      UpdateSecretResult updateSecretResult = client.updateSecret(request);
+      encryptedData.setEncryptionKey(fullSecretName);
+      encryptedData.setEncryptedValue(updateSecretResult.getARN().toCharArray());
+    }
+
+    logger.info("Done saving secret {} into AWS Secrets Manager for {} in {}ms", fullSecretName,
+        encryptedData.getUuid(), System.currentTimeMillis() - startTime);
+    return encryptedData;
+  }
+
+  private char[] decryptInternal(EncryptedRecord data, AwsSecretsManagerConfig secretsManagerConfig) {
+    long startTime = System.currentTimeMillis();
+
+    AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
+
+    String secretName = data.getEncryptionKey();
+    GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(secretName);
+    GetSecretValueResult result = client.getSecretValue(request);
+
+    logger.info("Done decrypting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
+    return result.getSecretString().toCharArray();
+  }
+
+  private AWSSecretsManager getAwsSecretsManagerClient(AwsSecretsManagerConfig secretsManagerConfig) {
+    return AWSSecretsManagerClientBuilder.standard()
+        .withCredentials(new AWSStaticCredentialsProvider(
+            new BasicAWSCredentials(secretsManagerConfig.getAccessKey(), secretsManagerConfig.getSecretKey())))
+        .withRegion(secretsManagerConfig.getRegion() == null ? Regions.US_EAST_1
+                                                             : Regions.fromName(secretsManagerConfig.getRegion()))
+        .build();
   }
 
   private EncryptedRecord encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {

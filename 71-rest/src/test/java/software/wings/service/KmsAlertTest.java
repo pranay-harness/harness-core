@@ -62,11 +62,13 @@ public class KmsAlertTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     initMocks(this);
-    when(mockDelegateServiceOK.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
+    when(mockDelegateServiceOK.encrypt(
+             anyString(), anyString(), anyString(), anyObject(), any(VaultConfig.class), anyObject()))
         .thenReturn(null);
     when(mockDelegateServiceOK.encrypt(anyString(), anyObject(), anyObject())).thenReturn(null);
     when(mockDelegateServiceOK.renewVaultToken(any(VaultConfig.class))).thenReturn(true);
-    when(mockDelegateServiceEx.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
+    when(mockDelegateServiceEx.encrypt(
+             anyString(), anyString(), anyString(), anyObject(), any(VaultConfig.class), anyObject()))
         .thenThrow(new KmsOperationException("reason"));
     when(mockDelegateServiceEx.encrypt(anyString(), anyObject(), anyObject()))
         .thenThrow(new KmsOperationException("reason"));

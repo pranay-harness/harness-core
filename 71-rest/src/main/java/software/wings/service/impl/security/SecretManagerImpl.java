@@ -66,6 +66,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
+import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ConfigFile;
@@ -102,6 +103,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -144,6 +146,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
+  @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
@@ -165,6 +168,8 @@ public class SecretManagerImpl implements SecretManager {
       encryptionType = EncryptionType.VAULT;
     } else if (kmsService.getSecretConfig(accountId) != null) {
       encryptionType = EncryptionType.KMS;
+    } else if (secretsManagerService.getSecretConfig(accountId) != null) {
+      encryptionType = EncryptionType.AWS_SECRETS_MANAGER;
     } else {
       encryptionType = LOCAL;
     }
@@ -183,17 +188,28 @@ public class SecretManagerImpl implements SecretManager {
 
     Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    Collection<AwsSecretsManagerConfig> secretsManagerConfigs =
+        secretsManagerService.listAwsSecretsManagerConfigs(accountId, true);
 
-    boolean defaultVaultSet = false;
+    boolean defaultSet = false;
     for (VaultConfig vaultConfig : vaultConfigs) {
       if (vaultConfig.isDefault()) {
-        defaultVaultSet = true;
+        defaultSet = true;
       }
       rv.add(vaultConfig);
     }
 
+    for (AwsSecretsManagerConfig secretsManagerConfig : secretsManagerConfigs) {
+      if (defaultSet) {
+        secretsManagerConfig.setDefault(false);
+      } else if (secretsManagerConfig.isDefault()) {
+        defaultSet = true;
+      }
+      rv.add(secretsManagerConfig);
+    }
+
     for (KmsConfig kmsConfig : kmsConfigs) {
-      if (defaultVaultSet && kmsConfig.isDefault()) {
+      if (defaultSet && kmsConfig.isDefault()) {
         Preconditions.checkState(
             kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID), "found both kms and vault configs to be default");
         kmsConfig.setDefault(false);
@@ -208,6 +224,7 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
       char[] secret, String path, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     EncryptedData rv;
+    String toEncrypt;
     switch (encryptionType) {
       case LOCAL:
         char[] encryptedChars = secret == null ? null : new SimpleEncryption(accountId).encryptChars(secret);
@@ -230,7 +247,7 @@ public class SecretManagerImpl implements SecretManager {
 
       case VAULT:
         final VaultConfig vaultConfig = vaultService.getSecretConfig(accountId);
-        String toEncrypt = secret == null ? null : String.valueOf(secret);
+        toEncrypt = secret == null ? null : String.valueOf(secret);
         // Need to initialize an EncrytpedData instance to carry the 'path' value for delegate to validate against.
         if (encryptedData == null) {
           encryptedData = EncryptedData.builder()
@@ -246,6 +263,26 @@ public class SecretManagerImpl implements SecretManager {
         }
         rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
         rv.setKmsId(vaultConfig.getUuid());
+        break;
+      case AWS_SECRETS_MANAGER:
+        final AwsSecretsManagerConfig secretsManagerConfig = secretsManagerService.getSecretConfig(accountId);
+        toEncrypt = secret == null ? null : String.valueOf(secret);
+        // Need to initialize an EncrytpedData instance to carry the 'path' value for delegate to validate against.
+        if (encryptedData == null) {
+          encryptedData = EncryptedData.builder()
+                              .name(secretName)
+                              .path(path)
+                              .encryptionType(encryptionType)
+                              .accountId(accountId)
+                              .type(settingType)
+                              .enabled(true)
+                              .parentIds(new HashSet<>())
+                              .kmsId(secretsManagerConfig.getUuid())
+                              .build();
+        }
+        rv = secretsManagerService.encrypt(
+            secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
+        rv.setKmsId(secretsManagerConfig.getUuid());
         break;
 
       default:
@@ -770,23 +807,32 @@ public class SecretManagerImpl implements SecretManager {
       case VAULT:
         decrypted = vaultService.decrypt(encryptedData, accountId, (VaultConfig) fromConfig);
         break;
-
+      case AWS_SECRETS_MANAGER:
+        decrypted = secretsManagerService.decrypt(encryptedData, accountId, (AwsSecretsManagerConfig) fromConfig);
+        break;
       default:
         throw new IllegalStateException("Invalid type : " + fromEncryptionType);
     }
 
     EncryptedData encrypted;
+    String encryptionKey;
+    String secretValue;
     switch (toEncryptionType) {
       case KMS:
         encrypted = kmsService.encrypt(decrypted, accountId, (KmsConfig) toConfig);
         break;
       case VAULT:
-        String encryptionKey = encryptedData.getEncryptionKey();
-
-        SettingVariableTypes settingVariableType = encryptedData.getType();
-        String keyName = encryptedData.getName();
-        encrypted = vaultService.encrypt(keyName, decrypted == null ? null : String.valueOf(decrypted), accountId,
-            settingVariableType, (VaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
+        encryptionKey = encryptedData.getEncryptionKey();
+        secretValue = decrypted == null ? null : String.valueOf(decrypted);
+        encrypted = vaultService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
+            (VaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
+        break;
+      case AWS_SECRETS_MANAGER:
+        encryptionKey = encryptedData.getEncryptionKey();
+        secretValue = decrypted == null ? null : String.valueOf(decrypted);
+        encrypted =
+            secretsManagerService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
+                (AwsSecretsManagerConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
       default:
         throw new IllegalStateException("Invalid type : " + toEncryptionType);
@@ -817,6 +863,11 @@ public class SecretManagerImpl implements SecretManager {
       case VAULT:
         encryptedFileData = vaultService.encryptFile(
             accountId, (VaultConfig) toConfig, encryptedData.getName(), decryptedFileContent, encryptedData);
+        break;
+
+      case AWS_SECRETS_MANAGER:
+        encryptedFileData = secretsManagerService.encryptFile(accountId, (AwsSecretsManagerConfig) toConfig,
+            encryptedData.getName(), decryptedFileContent, encryptedData);
         break;
 
       default:
@@ -1156,6 +1207,9 @@ public class SecretManagerImpl implements SecretManager {
       case VAULT:
         return vaultService.decryptFile(readInto, accountId, encryptedData);
 
+      case AWS_SECRETS_MANAGER:
+        return secretsManagerService.decryptFile(readInto, accountId, encryptedData);
+
       default:
         throw new IllegalArgumentException("Invalid type " + encryptionType);
     }
@@ -1190,6 +1244,10 @@ public class SecretManagerImpl implements SecretManager {
 
         case VAULT:
           vaultService.decryptToStream(accountId, encryptedData, output);
+          break;
+
+        case AWS_SECRETS_MANAGER:
+          secretsManagerService.decryptToStream(accountId, encryptedData, output);
           break;
 
         default:
@@ -1313,6 +1371,15 @@ public class SecretManagerImpl implements SecretManager {
                                            : vaultService.getSecretConfig(accountId);
           newEncryptedFile = vaultService.encryptFile(accountId, vaultConfig, name, inputBytes, encryptedData);
           newEncryptedFile.setKmsId(vaultConfig.getUuid());
+          break;
+
+        case AWS_SECRETS_MANAGER:
+          AwsSecretsManagerConfig secretsManagerConfig = update
+              ? secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId())
+              : secretsManagerService.getSecretConfig(accountId);
+          newEncryptedFile =
+              secretsManagerService.encryptFile(accountId, secretsManagerConfig, name, inputBytes, encryptedData);
+          newEncryptedFile.setKmsId(secretsManagerConfig.getUuid());
           break;
 
         default:
@@ -1439,6 +1506,10 @@ public class SecretManagerImpl implements SecretManager {
       case VAULT:
         vaultService.deleteSecret(accountId, encryptedData.getEncryptionKey(),
             vaultService.getVaultConfig(accountId, encryptedData.getKmsId()));
+        break;
+      case AWS_SECRETS_MANAGER:
+        secretsManagerService.deleteSecret(accountId, encryptedData.getEncryptionKey(),
+            secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId()));
         break;
       default:
         throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
@@ -1621,6 +1692,8 @@ public class SecretManagerImpl implements SecretManager {
         return kmsService.getKmsConfig(accountId, entityId);
       case VAULT:
         return vaultService.getVaultConfig(accountId, entityId);
+      case AWS_SECRETS_MANAGER:
+        return secretsManagerService.getAwsSecretsManagerConfig(accountId, entityId);
       default:
         throw new IllegalStateException("invalid type: " + encryptionType);
     }
@@ -1737,6 +1810,21 @@ public class SecretManagerImpl implements SecretManager {
           rv.addAll(vaultConfigs);
           break;
 
+        case AWS_SECRETS_MANAGER:
+          List<AwsSecretsManagerConfig> secretsManagerConfigs =
+              wingsPersistence.createQuery(AwsSecretsManagerConfig.class)
+                  .field(ID_KEY)
+                  .in(parentIds)
+                  .field(ACCOUNT_ID_KEY)
+                  .equal(accountId)
+                  .asList();
+          secretsManagerConfigs.forEach(secretsManagerConfig -> {
+            secretsManagerConfig.setEncryptionType(cell.getColumnKey().getEncryptionType());
+            secretsManagerConfig.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
+          });
+          rv.addAll(secretsManagerConfigs);
+          break;
+
         default:
           List<SettingAttribute> settingAttributes = settingsService
                                                          .list(aPageRequest()
@@ -1774,6 +1862,11 @@ public class SecretManagerImpl implements SecretManager {
         Preconditions.checkNotNull(vaultConfig,
             "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
         return vaultConfig.getName();
+      case AWS_SECRETS_MANAGER:
+        AwsSecretsManagerConfig secretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, kmsId);
+        Preconditions.checkNotNull(secretsManagerConfig,
+            "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
+        return secretsManagerConfig.getName();
       default:
         throw new IllegalArgumentException("Invalid type: " + encryptionType);
     }
