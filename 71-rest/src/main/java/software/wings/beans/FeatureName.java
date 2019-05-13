@@ -39,7 +39,8 @@ public enum FeatureName {
   GIT_HTTPS_KERBEROS,
   AUDIT_TRAIL,
   TRIGGER_FOR_ALL_ARTIFACTS,
-  USE_PCF_CLI;
+  USE_PCF_CLI,
+  AUDIT_TRAIL_UI;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
