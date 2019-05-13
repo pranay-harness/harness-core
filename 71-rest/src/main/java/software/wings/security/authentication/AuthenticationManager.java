@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
-import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
@@ -31,7 +30,6 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
 import software.wings.security.authentication.oauth.OauthOptions;
-import software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
@@ -134,7 +132,7 @@ public class AuthenticationManager {
       User user = authenticationUtils.getUser(userName, USER);
       AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
 
-      SSORequest SSORequest;
+      SSORequest ssoRequest;
       switch (authenticationMechanism) {
         case USER_PASSWORD:
           if (!user.isEmailVerified()) {
@@ -143,12 +141,12 @@ public class AuthenticationManager {
           }
           break;
         case SAML:
-          SSORequest = samlClientService.generateSamlRequest(user);
-          builder.SSORequest(SSORequest);
+          ssoRequest = samlClientService.generateSamlRequest(user);
+          builder.SSORequest(ssoRequest);
           break;
         case OAUTH:
-          SSORequest = oauthOptions.oauthProviderRedirectionUrl(user);
-          builder.SSORequest(SSORequest);
+          ssoRequest = oauthOptions.oauthProviderRedirectionUrl(user);
+          builder.SSORequest(ssoRequest);
           break;
         case LDAP: // No need to build anything extra for the response.
         default:
@@ -162,9 +160,6 @@ public class AuthenticationManager {
       } else {
         throw we;
       }
-    } catch (URISyntaxException e) {
-      logger.error("Get response type failed", e);
-      throw new WingsException(UNKNOWN_ERROR, USER);
     }
   }
 
@@ -363,7 +358,7 @@ public class AuthenticationManager {
   }
 
   public Response oauth2Redirect(final String provider) {
-    SupportedOauthProviders oauthProvider = SupportedOauthProviders.valueOf(provider);
+    OauthProviderType oauthProvider = OauthProviderType.valueOf(provider.toUpperCase());
     oauthOptions.getRedirectURI(oauthProvider);
     String returnURI = oauthOptions.getRedirectURI(oauthProvider);
     try {

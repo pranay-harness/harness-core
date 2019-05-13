@@ -33,9 +33,9 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.authentication.oauth.OauthOptions;
-import software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
@@ -86,7 +86,7 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public SSOConfig uploadOauthConfiguration(String accountId, String displayName, String filter) {
     try {
-      SupportedOauthProviders oauthProvider = SupportedOauthProviders.valueOf(displayName);
+      OauthProviderType oauthProvider = OauthProviderType.valueOf(displayName.toUpperCase());
       buildAndUploadOauthSettings(accountId, displayName, oauthOptions.getRedirectURI(oauthProvider), filter);
       return getAccountAccessManagementSettings(accountId);
     } catch (Exception e) {
