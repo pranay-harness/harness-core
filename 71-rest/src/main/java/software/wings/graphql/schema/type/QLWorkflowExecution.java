@@ -19,4 +19,5 @@ public class QLWorkflowExecution implements QLExecution {
   private ZonedDateTime endedAt;
   private QLExecutionStatus status;
   private QLCause cause;
+  private String notes;
 }
