@@ -18,6 +18,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.dataloader.DataLoader;
 import software.wings.beans.Environment;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.InfrastructureProvisioner;
@@ -44,6 +45,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author rktummala
@@ -63,6 +65,33 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     this.authHandler = authHandler;
     this.authService = authService;
     this.persistence = persistence;
+  }
+
+  private AuthRule getAuthRuleAnnotationOfDataFetcher(@NotNull DataFetcher dataFetcher) {
+    AuthRule authRule = null;
+    Class<? extends DataFetcher> dataFetcherClass = dataFetcher.getClass();
+    String fetchMethod;
+    Class<?>[] parameterTypes;
+
+    if (dataFetcher instanceof AbstractConnectionDataFetcher) {
+      fetchMethod = "fetchConnection";
+      parameterTypes = new Class[] {java.lang.Object.class};
+    } else if (dataFetcher instanceof AbstractBatchDataFetcher) {
+      fetchMethod = "load";
+      parameterTypes = new Class[] {java.lang.Object.class, DataLoader.class};
+    } else {
+      fetchMethod = "fetch";
+      parameterTypes = new Class[] {java.lang.Object.class};
+    }
+
+    try {
+      authRule = dataFetcherClass.getDeclaredMethod(fetchMethod, parameterTypes).getAnnotation(AuthRule.class);
+    } catch (NoSuchMethodException e) {
+      logger.error("No fetch() method found in class: " + dataFetcherClass.getSimpleName());
+      throw new WingsException(ErrorCode.ACCESS_DENIED);
+    }
+
+    return authRule;
   }
 
   public DataFetcher<?> instrumentDataFetcher(
@@ -90,18 +119,9 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     ResourceType resourceType;
     PermissionAttribute permissionAttribute = dataFetcher.getPermissionAttribute(parameters);
     if (permissionAttribute == null) {
-      AuthRule authRule;
-      Class<? extends DataFetcher> dataFetcherClass = dataFetcher.getClass();
-      String fetchMethod = dataFetcher instanceof AbstractConnectionDataFetcher ? "fetchConnection" : "fetch";
-      try {
-        authRule =
-            dataFetcherClass.getDeclaredMethod(fetchMethod, java.lang.Object.class).getAnnotation(AuthRule.class);
-        if (authRule == null) {
-          logger.error("Missing authRule for the request in class: " + dataFetcherClass.getSimpleName());
-          throw new WingsException(ErrorCode.ACCESS_DENIED);
-        }
-      } catch (NoSuchMethodException e) {
-        logger.error("No fetch() method found in class: " + dataFetcherClass.getSimpleName());
+      AuthRule authRule = getAuthRuleAnnotationOfDataFetcher(dataFetcher);
+      if (authRule == null) {
+        logger.error("Missing authRule for the request in class: " + dataFetcher.getClass().getSimpleName());
         throw new WingsException(ErrorCode.ACCESS_DENIED);
       }
 

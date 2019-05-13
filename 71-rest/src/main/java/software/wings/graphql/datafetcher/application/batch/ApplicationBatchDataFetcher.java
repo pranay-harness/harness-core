@@ -12,6 +12,8 @@ import org.dataloader.DataLoader;
 import software.wings.graphql.datafetcher.AbstractBatchDataFetcher;
 import software.wings.graphql.schema.query.QLApplicationQueryParameters;
 import software.wings.graphql.schema.type.QLApplication;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.concurrent.CompletionStage;
@@ -29,7 +31,8 @@ public class ApplicationBatchDataFetcher
   }
 
   @Override
-  protected CompletionStage<QLApplication> load(
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public CompletionStage<QLApplication> load(
       QLApplicationQueryParameters qlQuery, @NotNull DataLoader<String, QLApplication> dataLoader) {
     final String applicationId;
     if (StringUtils.isNotBlank(qlQuery.getApplicationId())) {

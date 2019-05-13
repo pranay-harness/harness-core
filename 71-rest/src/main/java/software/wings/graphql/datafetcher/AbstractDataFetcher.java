@@ -15,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.dataloader.DataLoader;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.config.Configuration;
 import org.modelmapper.convention.MatchingStrategies;
@@ -30,6 +31,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import javax.validation.constraints.NotNull;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -52,20 +54,24 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
 
   protected abstract T fetch(P parameters);
 
-  protected P getParameters(DataFetchingEnvironment dataFetchingEnvironment) {
-    Class<P> parametersClass =
-        (Class<P>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
-    return fetchParameters(parametersClass, dataFetchingEnvironment);
+  protected CompletionStage<T> fetchWithBatching(P parameters, DataLoader dataLoader) {
+    return null;
   }
 
   @Override
-  public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+  public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
     Type[] typeArguments = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
     Class<T> returnClass = (Class<T>) typeArguments[0];
     Class<P> parametersClass = (Class<P>) typeArguments[1];
     final P parameters = fetchParameters(parametersClass, dataFetchingEnvironment);
     authRuleInstrumentation.instrumentDataFetcher(this, dataFetchingEnvironment, parameters, returnClass);
-    return fetch(parameters);
+    String parentTypeName = dataFetchingEnvironment.getParentType().getName();
+    if (isBatchingRequired(parentTypeName)) {
+      String dataFetcherName = getDataFetcherName(parentTypeName);
+      return fetchWithBatching(parameters, dataFetchingEnvironment.getDataLoader(dataFetcherName));
+    } else {
+      return fetch(parameters);
+    }
   }
 
   protected WingsException batchFetchException(Throwable cause) {
@@ -78,7 +84,7 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
 
   private static final Objenesis objenesis = new ObjenesisStd(true);
 
-  protected P fetchParameters(Class<P> clazz, DataFetchingEnvironment dataFetchingEnvironment) {
+  private P fetchParameters(Class<P> clazz, DataFetchingEnvironment dataFetchingEnvironment) {
     ModelMapper modelMapper = new ModelMapper();
     modelMapper.getConfiguration()
         .setMatchingStrategy(MatchingStrategies.STANDARD)
@@ -178,7 +184,11 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     return contextFieldArgsMap;
   }
 
-  protected String getDataFetcherName(@NotNull String parentTypeName) {
+  private String getDataFetcherName(@NotNull String parentTypeName) {
     return parentToContextFieldArgsMap.get(parentTypeName).getDataFetcherName();
+  }
+
+  private boolean isBatchingRequired(@NotNull String parentTypeName) {
+    return parentToContextFieldArgsMap.get(parentTypeName).getUseBatch();
   }
 }
