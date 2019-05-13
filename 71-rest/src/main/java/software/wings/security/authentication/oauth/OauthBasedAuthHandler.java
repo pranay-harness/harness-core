@@ -1,7 +1,5 @@
 package software.wings.security.authentication.oauth;
 
-import static software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders.valueOf;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -22,6 +20,7 @@ import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationResponse;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.OauthAuthenticationResponse;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.UserService;
@@ -158,6 +157,6 @@ public class OauthBasedAuthHandler implements AuthHandler {
   }
 
   private OauthClient getOauthProvider(final String domain) {
-    return oauthOptions.getOauthProvider(valueOf(domain));
+    return oauthOptions.getOauthProvider(OauthProviderType.valueOf(domain.toUpperCase()));
   }
 }

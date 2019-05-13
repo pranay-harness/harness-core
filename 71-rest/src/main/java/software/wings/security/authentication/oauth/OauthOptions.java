@@ -7,10 +7,9 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationUtils;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.saml.SSORequest;
 import software.wings.service.impl.SSOSettingServiceImpl;
-
-import java.net.URISyntaxException;
 
 public class OauthOptions {
   @Inject GithubClientImpl githubClient;
@@ -22,38 +21,38 @@ public class OauthOptions {
   @Inject BitbucketClient bitbucketClient;
   @Inject GitlabClient gitlabClient;
 
-  public enum SupportedOauthProviders { github, linkedin, google, azure, bitbucket, gitlab }
-
-  public String getRedirectURI(SupportedOauthProviders oauthProvider) {
+  public String getRedirectURI(OauthProviderType oauthProvider) {
     return getOauthProvider(oauthProvider).getRedirectUrl().toString();
   }
 
-  public OauthClient getOauthProvider(SupportedOauthProviders oauthProvider) {
+  public OauthClient getOauthProvider(OauthProviderType oauthProvider) {
     switch (oauthProvider) {
-      case github:
+      case GITHUB:
         return githubClient;
-      case linkedin:
+      case LINKEDIN:
         return linkedinClient;
-      case google:
+      case GOOGLE:
         return googleClient;
-      case azure:
+      case AZURE:
         return azureClient;
-      case bitbucket:
+      case BITBUCKET:
         return bitbucketClient;
-      case gitlab:
+      case GITLAB:
         return gitlabClient;
       default:
         throw new InvalidRequestException(String.format("Oauth provider %s not supported.", oauthProvider));
     }
   }
 
-  public SSORequest oauthProviderRedirectionUrl(User user) throws URISyntaxException {
+  public SSORequest oauthProviderRedirectionUrl(User user) {
     Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(primaryAccount.getUuid());
     String displayName = oauthSettings.getPublicSSOSettings().getDisplayName();
-    OauthClient oauthProvider = getOauthProvider(SupportedOauthProviders.valueOf(displayName));
-    SSORequest SSORequest = new SSORequest();
-    SSORequest.setIdpRedirectUrl(oauthProvider.getRedirectUrl().toString());
-    return SSORequest;
+    OauthProviderType oauthProviderType = OauthProviderType.valueOf(displayName.toUpperCase());
+    OauthClient oauthProvider = getOauthProvider(oauthProviderType);
+    SSORequest ssoRequest = new SSORequest();
+    ssoRequest.setIdpRedirectUrl(oauthProvider.getRedirectUrl().toString());
+    ssoRequest.setOauthProviderType(oauthProviderType);
+    return ssoRequest;
   }
 }

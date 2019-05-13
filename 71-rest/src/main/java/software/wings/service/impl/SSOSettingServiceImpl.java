@@ -36,8 +36,8 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.oauth.OauthOptions;
-import software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
@@ -134,7 +134,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     }
     oldSettings.setFilter(filter);
     oldSettings.setDisplayName(displayName);
-    SupportedOauthProviders oauthProvider = SupportedOauthProviders.valueOf(displayName);
+    OauthProviderType oauthProvider = OauthProviderType.valueOf(displayName.toUpperCase());
     oldSettings.setUrl(oauthOptions.getRedirectURI(oauthProvider));
     return wingsPersistence.saveAndGet(OauthSettings.class, oldSettings);
   }
