@@ -171,17 +171,21 @@ public class AwsLambdaVerification extends State {
       }
 
       boolean assertionStatus = true;
-      ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+      ExecutionStatus executionStatus = functionResponse.getExecutionStatus();
       String logResult = functionResponse.getLogResult();
       if (logResult != null) {
         awsLambdaExecutionData.setLogResult(logResult);
       }
       awsLambdaExecutionData.setPayload(functionResponse.getPayload());
-      awsLambdaExecutionData.setAssertionStatement(functionResponse.getLambdaTestEvent().getAssertion());
 
-      if (isNotBlank(functionResponse.getLambdaTestEvent().getAssertion())) {
-        assertionStatus = (boolean) context.evaluateExpression(functionResponse.getLambdaTestEvent().getAssertion(),
-            StateExecutionContext.builder().stateExecutionData(awsLambdaExecutionData).build());
+      // The assertion could be null
+      LambdaTestEvent lambdaTestEvent = functionResponse.getLambdaTestEvent();
+      if (lambdaTestEvent != null) {
+        awsLambdaExecutionData.setAssertionStatement(lambdaTestEvent.getAssertion());
+        if (isNotBlank(lambdaTestEvent.getAssertion())) {
+          assertionStatus = (boolean) context.evaluateExpression(lambdaTestEvent.getAssertion(),
+              StateExecutionContext.builder().stateExecutionData(awsLambdaExecutionData).build());
+        }
       }
 
       if (!assertionStatus || awsLambdaExecutionData.getStatusCode() < 200

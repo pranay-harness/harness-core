@@ -40,6 +40,7 @@ import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
@@ -145,5 +146,23 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     verify(mockClient).updateFunctionConfiguration(any());
     verify(mockClient).publishVersion(any());
     verify(mockClient).createAlias(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testTagExistingFunction() {
+    AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
+    String functionArn = "functionArn";
+    Map<String, String> initialTags = ImmutableMap.of("k1", "v1");
+    GetFunctionResult getFunctionResult =
+        new GetFunctionResult()
+            .withConfiguration(new FunctionConfiguration().withFunctionArn(functionArn))
+            .withTags(initialTags);
+    Map<String, String> finalTags = ImmutableMap.of("k2", "v2");
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallBack).saveExecutionLog(anyString());
+    awsLambdaHelperServiceDelegate.tagExistingFunction(getFunctionResult, finalTags, mockCallBack, mockClient);
+    verify(mockClient).untagResource(any());
+    verify(mockClient).tagResource(any());
   }
 }

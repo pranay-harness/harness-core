@@ -15,6 +15,7 @@ import static software.wings.service.intfc.ServiceTemplateService.EncryptedField
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -29,6 +30,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.Getter;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -49,6 +52,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Tag;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
@@ -136,6 +140,8 @@ public class AwsLambdaState extends State {
   @DefaultValue("${env.name}")
   @SchemaIgnore
   private List<String> aliases = new ArrayList<>();
+
+  @Getter @Setter private List<Tag> tags;
 
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
 
@@ -362,21 +368,33 @@ public class AwsLambdaState extends State {
     wfRequestBuilder.lambdaVpcConfig(getLambdaVpcConfig(infrastructureMapping));
 
     List<AwsLambdaFunctionParams> functionParams = new ArrayList<>();
-    for (FunctionSpecification functionSpecification : specification.getFunctions()) {
-      AwsLambdaFunctionParamsBuilder functionParamsBuilder = AwsLambdaFunctionParams.builder();
-      functionParamsBuilder.key(context.renderExpression(artifact.getMetadata().get("key")));
-      functionParamsBuilder.bucket(context.renderExpression(artifact.getMetadata().get("bucketName")));
-      String functionName = context.renderExpression(functionSpecification.getFunctionName());
-      functionName = LambdaConvention.normalizeFunctionName(functionName);
-      functionParamsBuilder.functionName(functionName);
-      functionParamsBuilder.handler(context.renderExpression(functionSpecification.getHandler()));
-      functionParamsBuilder.runtime(context.renderExpression(functionSpecification.getRuntime()));
-      functionParamsBuilder.memory(functionSpecification.getMemorySize());
-      functionParamsBuilder.timeout(functionSpecification.getTimeout());
-      functionParams.add(functionParamsBuilder.build());
+    List<FunctionSpecification> functions = specification.getFunctions();
+    if (isNotEmpty(functions)) {
+      functions.forEach(functionSpecification -> {
+        AwsLambdaFunctionParamsBuilder functionParamsBuilder = AwsLambdaFunctionParams.builder();
+        functionParamsBuilder.key(context.renderExpression(artifact.getMetadata().get("key")));
+        functionParamsBuilder.bucket(context.renderExpression(artifact.getMetadata().get("bucketName")));
+        String functionName = context.renderExpression(functionSpecification.getFunctionName());
+        functionName = LambdaConvention.normalizeFunctionName(functionName);
+        functionParamsBuilder.functionName(functionName);
+        functionParamsBuilder.handler(context.renderExpression(functionSpecification.getHandler()));
+        functionParamsBuilder.runtime(context.renderExpression(functionSpecification.getRuntime()));
+        functionParamsBuilder.memory(functionSpecification.getMemorySize());
+        functionParamsBuilder.timeout(functionSpecification.getTimeout());
+        functionParamsBuilder.functionTags(getFunctionTags(context));
+        functionParams.add(functionParamsBuilder.build());
+      });
     }
     wfRequestBuilder.functionParams(functionParams);
     return wfRequestBuilder.build();
+  }
+
+  private Map<String, String> getFunctionTags(ExecutionContext context) {
+    Map<String, String> functionTags = Maps.newHashMap();
+    if (isNotEmpty(tags)) {
+      tags.forEach(tag -> { functionTags.put(tag.getKey(), context.renderExpression(tag.getValue())); });
+    }
+    return functionTags;
   }
 
   private AwsLambdaVpcConfig getLambdaVpcConfig(AwsLambdaInfraStructureMapping infrastructureMapping) {
