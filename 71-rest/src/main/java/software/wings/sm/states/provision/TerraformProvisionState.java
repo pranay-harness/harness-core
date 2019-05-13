@@ -445,17 +445,19 @@ public abstract class TerraformProvisionState extends State {
 
   protected ExecutionResponse createAndRunTask(
       String activityId, ExecutionContextImpl executionContext, TerraformProvisionParameters parameters) {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(executionContext.getApp().getAccountId())
-                                    .waitId(activityId)
-                                    .appId(executionContext.getApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .taskType(TERRAFORM_PROVISION_TASK.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(executionContext.getApp().getAccountId())
+            .waitId(activityId)
+            .appId(executionContext.getApp().getAppId())
+            .envId(executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
+            .data(TaskData.builder()
+                      .taskType(TERRAFORM_PROVISION_TASK.name())
+                      .parameters(new Object[] {parameters})
+                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .build())
+            .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
