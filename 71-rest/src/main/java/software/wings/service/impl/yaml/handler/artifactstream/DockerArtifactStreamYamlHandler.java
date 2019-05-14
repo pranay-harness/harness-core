@@ -42,8 +42,8 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
       return (DockerArtifactStream) artifactStreamService.update(
           dockerArtifactStream, !dockerArtifactStream.isSyncFromGit());
     } else {
-      return (DockerArtifactStream) artifactStreamService.create(
-          dockerArtifactStream, !dockerArtifactStream.isSyncFromGit());
+      return (DockerArtifactStream) artifactStreamService.createWithBinding(
+          appId, dockerArtifactStream, !dockerArtifactStream.isSyncFromGit());
     }
   }
 

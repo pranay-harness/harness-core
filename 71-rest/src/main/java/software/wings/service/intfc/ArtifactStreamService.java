@@ -125,8 +125,6 @@ public interface ArtifactStreamService extends OwnedByService {
 
   List<String> fetchArtifactStreamIdsForService(String appId, String serviceId);
 
-  boolean deleteByYamlGit(String appId, String artifactStreamId, boolean syncFromGit);
-
   boolean updateFailedCronAttempts(String appId, String artifactStreamId, int counter);
 
   boolean updateFailedCronAttempts(String artifactStreamId, int counter);
@@ -138,4 +136,8 @@ public interface ArtifactStreamService extends OwnedByService {
   List<ArtifactStream> listByServiceId(String appId, String serviceId);
 
   List<ArtifactStreamSummary> listArtifactStreamSummary(String appId);
+
+  ArtifactStream createWithBinding(String appId, ArtifactStream artifactStream, boolean validate);
+
+  boolean deleteWithBinding(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit);
 }
