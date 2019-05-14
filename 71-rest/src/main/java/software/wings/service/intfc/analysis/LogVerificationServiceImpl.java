@@ -16,7 +16,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
@@ -65,17 +64,6 @@ public class LogVerificationServiceImpl implements LogVerificationService {
 
       default:
         throw new WingsException("Unknown state type in getOrgProjectListBugsnag");
-    }
-  }
-
-  @Override
-  public boolean sendNotifyForLogAnalysis(String correlationId, LogAnalysisResponse response) {
-    try {
-      waitNotifyEngine.notify(correlationId, response);
-      return true;
-    } catch (Exception ex) {
-      logger.error("Exception while notifying correlationId {}", correlationId, ex);
-      return false;
     }
   }
 

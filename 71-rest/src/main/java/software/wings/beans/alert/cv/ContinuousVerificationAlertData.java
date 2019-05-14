@@ -77,7 +77,7 @@ public class ContinuousVerificationAlertData implements AlertData {
         .append(accountId)
         .append("/24-7-service-guard/")
         .append(cvConfiguration.getServiceId())
-        .append("/details?cvConfigId")
+        .append("/details?cvConfigId=")
         .append(cvConfiguration.getUuid())
         .append("&analysisStartTime=")
         .append(analysisStartTime)

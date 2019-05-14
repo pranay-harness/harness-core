@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -48,8 +47,6 @@ public interface ContinuousVerificationService {
 
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       String accountId, String serverConfigId, Object fetchConfig, StateType type);
-
-  boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response);
 
   boolean notifyVerificationState(String correlationId, VerificationDataAnalysisResponse response);
 

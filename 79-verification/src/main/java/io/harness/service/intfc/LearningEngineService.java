@@ -48,8 +48,7 @@ public interface LearningEngineService {
 
   boolean isStateValid(String appId, String stateExecutionId);
 
-  boolean notifyFailure(
-      boolean is24x7, String stateExecutionId, String cvConfigId, LearningEngineError learningEngineError);
+  boolean notifyFailure(String taskId, LearningEngineError learningEngineError);
   int getNextServiceGuardBackoffCount(
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType);
 }

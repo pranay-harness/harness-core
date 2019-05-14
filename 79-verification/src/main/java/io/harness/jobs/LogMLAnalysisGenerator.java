@@ -189,8 +189,7 @@ public class LogMLAnalysisGenerator implements Runnable {
         featureName = null;
       }
       String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-          + VerificationConstants.NOTIFY_LEARNING_FAILURE
-          + "?is24x7=false&stateExecutionId=" + context.getStateExecutionId();
+          + VerificationConstants.NOTIFY_LEARNING_FAILURE + "taskId=" + uuid;
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder;
       analysisTaskBuilder = LearningEngineAnalysisTask.builder()
                                 .query(Lists.newArrayList(query.split(" ")))

@@ -256,7 +256,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(cvConfiguration, endMin, learningTaskId, tag);
     String historicalAnalysisUrl = getHistoricalAnalysisUrl(cvConfiguration, endMin, tag);
     String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-        + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
+        + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + learningTaskId;
 
     String metricTemplateUrl = getMetricTemplateUrl(accountId, cvConfiguration.getAppId(),
         cvConfiguration.getStateType(), cvConfiguration.getServiceId(), cvConfiguration.getUuid());
@@ -567,6 +567,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   ClusterLevel.L1, (int) logRecordMinute, null, Lists.newArrayList());
               continue;
             }
+            final String taskId = generateUuid();
             String inputLogsUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
                 + LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId=" + cvConfiguration.getUuid()
                 + "&appId=" + cvConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L0
@@ -576,8 +577,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + "?cvConfigId=" + cvConfiguration.getUuid() + "&appId=" + cvConfiguration.getAppId()
                 + "&clusterLevel=" + ClusterLevel.L1 + "&logCollectionMinute=" + logRecordMinute;
             String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-                + VerificationConstants.NOTIFY_LEARNING_FAILURE
-                + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
+                + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
 
             String stateExecutionIdForLETask = "LOGS_CLUSTER_L1_" + cvConfiguration.getUuid() + "_" + logRecordMinute;
             learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) logRecordMinute);
@@ -603,6 +603,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .cvConfigId(cvConfiguration.getUuid())
                       .build();
               analysisTask.setAppId(cvConfiguration.getAppId());
+              analysisTask.setUuid(taskId);
 
               final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
               if (taskQueued) {
@@ -708,6 +709,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             logger.info("for {} for minute from {} to {} everything is in place, proceeding for L2 Clustering",
                 cvConfiguration.getUuid(), minLogRecordL1Minute, maxLogRecordL1Minute);
 
+            final String taskId = generateUuid();
             String inputLogsUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
                 + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId=" + cvConfiguration.getUuid()
                 + "&appId=" + cvConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L1
@@ -718,8 +720,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + "&clusterLevel=" + ClusterLevel.L2 + "&logCollectionMinute=" + maxLogRecordL1Minute;
 
             String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-                + VerificationConstants.NOTIFY_LEARNING_FAILURE
-                + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
+                + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
             String stateExecutionIdForLETask =
                 "LOGS_CLUSTER_L2_" + cvConfiguration.getUuid() + "_" + maxLogRecordL1Minute;
             learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) maxLogRecordL1Minute);
@@ -745,6 +746,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .cvConfigId(cvConfiguration.getUuid())
                       .build();
               analysisTask.setAppId(cvConfiguration.getAppId());
+              analysisTask.setUuid(taskId);
 
               final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
               if (taskQueued) {
@@ -897,8 +899,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()
                 + "&analysisMinute=" + ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute();
             String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-                + VerificationConstants.NOTIFY_LEARNING_FAILURE
-                + "?is24x7=true&cvConfigId=" + cvConfiguration.getUuid();
+                + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
 
             String stateExecutionIdForLETask =
                 "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin;

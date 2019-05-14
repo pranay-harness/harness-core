@@ -53,7 +53,6 @@ import org.json.JSONObject;
 import org.mongodb.morphia.query.Query;
 import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
@@ -1318,17 +1317,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
-    }
-  }
-
-  @Override
-  public boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response) {
-    try {
-      waitNotifyEngine.notify(correlationId, response);
-      return true;
-    } catch (Exception ex) {
-      logger.error("Exception while notifying correlationId {}", correlationId, ex);
-      return false;
     }
   }
 
