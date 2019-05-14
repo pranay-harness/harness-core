@@ -1,6 +1,9 @@
 package io.harness.event.handler.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
+import static io.harness.event.handler.impl.Constants.EMAIL_ID;
+import static io.harness.event.handler.impl.Constants.USER_NAME;
 import static io.harness.event.model.EventType.COMMUNITY_TO_PAID;
 import static io.harness.event.model.EventType.COMPLETE_USER_REGISTRATION;
 import static io.harness.event.model.EventType.FIRST_DELEGATE_REGISTERED;
@@ -19,8 +22,6 @@ import static io.harness.event.model.EventType.TRIAL_TO_COMMUNITY;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.common.Constants.ACCOUNT_ID;
-import static software.wings.common.Constants.EMAIL_ID;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -177,7 +178,7 @@ public class MarketoHandler implements EventHandler {
           return;
         }
 
-        long marketoLeadId = reportLead(email, accessToken, true);
+        long marketoLeadId = reportLead(properties.get(USER_NAME), email, accessToken, true);
         if (marketoLeadId > 0) {
           reportCampaignEvent(eventType, accessToken, Arrays.asList(Id.builder().id(marketoLeadId).build()));
         }
@@ -308,8 +309,9 @@ public class MarketoHandler implements EventHandler {
     return marketoLeadId;
   }
 
-  public long reportLead(String email, String accessToken, boolean wait) throws IOException, URISyntaxException {
-    long marketoLeadId = marketoHelper.createOrUpdateLead(null, null, email, accessToken, null, retrofit);
+  public long reportLead(String userName, String email, String accessToken, boolean wait)
+      throws IOException, URISyntaxException {
+    long marketoLeadId = marketoHelper.createOrUpdateLead(null, userName, email, accessToken, null, retrofit);
 
     // Sleeping for 10 secs as a work around for marketo issue.
     // Marketo can't process trigger campaign with a lead just created.

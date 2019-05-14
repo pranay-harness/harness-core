@@ -290,7 +290,7 @@ public class UserServiceImpl implements UserService {
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
       sendVerificationEmail(userInvite, url, params);
-      eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
+      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, userInvite.getName(), inviteId);
     } else if (userInviteInDB.isCompleted()) {
       if (isTrialRegistrationSpam(userInviteInDB)) {
         return false;
@@ -334,7 +334,7 @@ public class UserServiceImpl implements UserService {
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
       sendVerificationEmail(userInvite, url);
-      eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
+      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, null, inviteId);
     } else if (userInvite.isCompleted()) {
       if (isTrialRegistrationSpam(userInvite)) {
         return false;
