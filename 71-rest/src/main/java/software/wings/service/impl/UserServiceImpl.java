@@ -72,6 +72,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.model.EventType;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -131,6 +132,7 @@ import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthClient;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.security.saml.SamlClientService;
@@ -170,6 +172,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -1557,6 +1560,61 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
+  @Override
+  public User updateUserProfile(@NotNull User user) {
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    if (user.getName() != null) {
+      updateOperations.set(UserKeys.name, user.getName());
+    } else {
+      updateOperations.unset(UserKeys.name);
+    }
+    return applyUpdateOperations(user, updateOperations);
+  }
+
+  @Override
+  public User addEventToUserMarketoCampaigns(String userId, EventType eventType) {
+    User user = this.getUserFromCacheOrDB(userId);
+    Set<String> consolidatedReportedMarketoCampaigns = Sets.newHashSet();
+    Set<String> reportedMarketoCampaigns = user.getReportedMarketoCampaigns();
+    if (isNotEmpty(reportedMarketoCampaigns)) {
+      consolidatedReportedMarketoCampaigns.addAll(reportedMarketoCampaigns);
+    }
+
+    consolidatedReportedMarketoCampaigns.add(eventType.name());
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set(UserKeys.reportedMarketoCampaigns, consolidatedReportedMarketoCampaigns);
+
+    return applyUpdateOperations(user, updateOperations);
+  }
+
+  @Override
+  public User updateTwoFactorAuthenticationSettings(User user, TwoFactorAuthenticationSettings settings) {
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set(UserKeys.twoFactorAuthenticationEnabled, settings.isTwoFactorAuthenticationEnabled());
+    addTwoFactorAuthenticationOperation(settings.getMechanism(), updateOperations);
+    addTotpSecretKeyOperation(settings.getTotpSecretKey(), updateOperations);
+    return this.applyUpdateOperations(user, updateOperations);
+  }
+
+  private void addTwoFactorAuthenticationOperation(
+      @NotNull TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism,
+      @NotNull UpdateOperations<User> updateOperations) {
+    if (twoFactorAuthenticationMechanism != null) {
+      updateOperations.set(UserKeys.twoFactorAuthenticationMechanism, twoFactorAuthenticationMechanism);
+    } else {
+      updateOperations.unset(UserKeys.twoFactorAuthenticationMechanism);
+    }
+  }
+
+  private void addTotpSecretKeyOperation(
+      @NotNull String totpSecretKey, @NotNull UpdateOperations<User> updateOperations) {
+    if (totpSecretKey != null) {
+      updateOperations.set(UserKeys.totpSecretKey, totpSecretKey);
+    } else {
+      updateOperations.unset(UserKeys.totpSecretKey);
+    }
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#update(software.wings.beans.User)
    */
@@ -1579,16 +1637,8 @@ public class UserServiceImpl implements UserService {
     }
 
     updateOperations.set("twoFactorAuthenticationEnabled", user.isTwoFactorAuthenticationEnabled());
-    if (user.getTwoFactorAuthenticationMechanism() != null) {
-      updateOperations.set("twoFactorAuthenticationMechanism", user.getTwoFactorAuthenticationMechanism());
-    } else {
-      updateOperations.unset("twoFactorAuthenticationMechanism");
-    }
-    if (user.getTotpSecretKey() != null) {
-      updateOperations.set("totpSecretKey", user.getTotpSecretKey());
-    } else {
-      updateOperations.unset("totpSecretKey");
-    }
+    addTwoFactorAuthenticationOperation(user.getTwoFactorAuthenticationMechanism(), updateOperations);
+    addTotpSecretKeyOperation(user.getTotpSecretKey(), updateOperations);
 
     if (user.getMarketoLeadId() > 0) {
       updateOperations.set("marketoLeadId", user.getMarketoLeadId());
@@ -1602,6 +1652,10 @@ public class UserServiceImpl implements UserService {
       updateOperations.set("lastLogin", user.getLastLogin());
     }
 
+    return applyUpdateOperations(user, updateOperations);
+  }
+
+  private User applyUpdateOperations(User user, UpdateOperations<User> updateOperations) {
     wingsPersistence.update(user, updateOperations);
     evictUserFromCache(user.getUuid());
     return wingsPersistence.getWithAppId(User.class, user.getAppId(), user.getUuid());

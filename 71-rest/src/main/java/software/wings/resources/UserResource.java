@@ -272,7 +272,7 @@ public class UserResource {
     if (isEmpty(user.getAppId())) {
       user.setAppId(GLOBAL_APP_ID);
     }
-    return new RestResponse<>(userService.update(user));
+    return new RestResponse<>(userService.updateUserProfile(user));
   }
 
   /**

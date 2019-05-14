@@ -77,10 +77,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
 
   @Override
   public User applyTwoFactorAuthenticationSettings(User user, TwoFactorAuthenticationSettings settings) {
-    user.setTwoFactorAuthenticationEnabled(settings.isTwoFactorAuthenticationEnabled());
-    user.setTwoFactorAuthenticationMechanism(settings.getMechanism());
-    user.setTotpSecretKey(settings.getTotpSecretKey());
-    return userService.update(user);
+    return userService.updateTwoFactorAuthenticationSettings(user, settings);
   }
 
   @Override
