@@ -11,6 +11,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
@@ -731,7 +732,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(accountId, appId, serviceId);
     List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(accountId, appId, serviceId);
     Service service = serviceResourceService.get(appId, serviceId);
-    Validator.notNullCheck("Service not found", service);
+    Validator.notNullCheck("Service not found", service, USER);
     EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
     return ServiceInstanceDashboard.builder()
         .serviceSummary(serviceSummary)
@@ -778,17 +779,17 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       long count = aggregationInfo.getCount();
 
       EntitySummary infraMappingInfo = aggregationInfo.getInfraMappingInfo();
-      Validator.notNullCheck("InfraMappingInfo", infraMappingInfo);
+      Validator.notNullCheck("InfraMappingInfo", infraMappingInfo, USER);
       EntitySummary serviceInfraSummary = getEntitySummary(
           infraMappingInfo.getName(), infraMappingInfo.getId(), EntityType.INFRASTRUCTURE_MAPPING.name());
 
       EnvInfo envInfo = aggregationInfo.getEnvInfo();
-      Validator.notNullCheck("EnvInfo", envInfo);
+      Validator.notNullCheck("EnvInfo", envInfo, USER);
       EntitySummary environmentSummary =
           getEntitySummary(envInfo.getName(), envInfo.getId(), EntityType.ENVIRONMENT.name());
 
       ArtifactInfo artifactInfo = aggregationInfo.getArtifactInfo();
-      Validator.notNullCheck("QLArtifact", artifactInfo);
+      Validator.notNullCheck("QLArtifact", artifactInfo, USER);
       ArtifactSummary artifactSummary = getArtifactSummary(
           artifactInfo.getName(), artifactInfo.getId(), artifactInfo.getBuildNo(), artifactInfo.getSourceName());
 
