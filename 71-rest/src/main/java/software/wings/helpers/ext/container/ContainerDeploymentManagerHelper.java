@@ -88,6 +88,7 @@ public class ContainerDeploymentManagerHelper {
                                               .withDisplayName(containerInfo.getContainerId())
                                               .withPodName(containerInfo.getPodName())
                                               .withWorkloadName(containerInfo.getWorkloadName())
+                                              .withEcsContainerDetails(containerInfo.getEcsContainerDetails())
                                               .build();
         ExecutionStatus status =
             containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;

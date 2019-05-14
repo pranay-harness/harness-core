@@ -10,6 +10,7 @@ import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import software.wings.cloudprovider.aws.EcsContainerDetails;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
@@ -31,6 +32,7 @@ public class InstanceElement implements ContextElement {
   private ServiceTemplateElement serviceTemplateElement;
   private String podName;
   private String workloadName;
+  private EcsContainerDetails ecsContainerDetails;
 
   @Override
   public String getName() {
@@ -53,6 +55,14 @@ public class InstanceElement implements ContextElement {
       map.putAll(serviceTemplateElement.paramMap(context));
     }
     return map;
+  }
+
+  public EcsContainerDetails getEcsContainerDetails() {
+    return ecsContainerDetails;
+  }
+
+  public void setEcsContainerDetails(EcsContainerDetails ecsContainerDetails) {
+    this.ecsContainerDetails = ecsContainerDetails;
   }
 
   public String getUuid() {
@@ -205,11 +215,17 @@ public class InstanceElement implements ContextElement {
     private ServiceTemplateElement serviceTemplateElement;
     private String podName;
     private String workloadName;
+    private EcsContainerDetails ecsContainerDetails;
 
     private Builder() {}
 
     public static Builder anInstanceElement() {
       return new Builder();
+    }
+
+    public Builder withEcsContainerDetails(EcsContainerDetails ecsContainerDetails) {
+      this.ecsContainerDetails = ecsContainerDetails;
+      return this;
     }
 
     public Builder withUuid(String uuid) {
@@ -261,7 +277,8 @@ public class InstanceElement implements ContextElement {
           .withHost(host)
           .withServiceTemplateElement(serviceTemplateElement)
           .withPodName(podName)
-          .withWorkloadName(workloadName);
+          .withWorkloadName(workloadName)
+          .withEcsContainerDetails(ecsContainerDetails);
     }
 
     public InstanceElement build() {
@@ -274,6 +291,7 @@ public class InstanceElement implements ContextElement {
       instanceElement.setServiceTemplateElement(serviceTemplateElement);
       instanceElement.setPodName(podName);
       instanceElement.setWorkloadName(workloadName);
+      instanceElement.setEcsContainerDetails(ecsContainerDetails);
       return instanceElement;
     }
   }

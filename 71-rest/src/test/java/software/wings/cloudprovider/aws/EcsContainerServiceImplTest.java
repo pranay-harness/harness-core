@@ -180,6 +180,15 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testGetIdFromArn() {
+    EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
+    assertEquals("b506302e5cf6448ca67e1896b679c92e",
+        ecsContainerServiceImpl.getIdFromArn(
+            "arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/b506302e5cf6448ca67e1896b679c92e"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testHasServiceReachedSteadyState() throws Exception {
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
 

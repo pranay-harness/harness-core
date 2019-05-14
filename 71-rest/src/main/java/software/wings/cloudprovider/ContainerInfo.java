@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.cloudprovider.aws.EcsContainerDetails;
 
 /**
  * Created by brett on 4/6/17
@@ -24,4 +25,5 @@ public class ContainerInfo {
   private String podName;
   private String workloadName;
   private boolean newContainer;
+  private EcsContainerDetails ecsContainerDetails;
 }
