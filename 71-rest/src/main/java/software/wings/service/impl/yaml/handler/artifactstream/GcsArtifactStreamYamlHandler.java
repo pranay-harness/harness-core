@@ -14,6 +14,7 @@ public class GcsArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     yaml.setBucketName(bean.getJobname());
+    yaml.setProjectId(bean.getProjectId());
     return yaml;
   }
 
@@ -32,5 +33,6 @@ public class GcsArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     Yaml yaml = changeContext.getYaml();
     bean.setArtifactPaths(yaml.getArtifactPaths());
     bean.setJobname(yaml.getBucketName());
+    bean.setProjectId(yaml.getProjectId());
   }
 }

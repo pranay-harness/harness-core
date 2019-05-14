@@ -122,6 +122,22 @@ public class YamlHelper {
     return rr;
   }
 
+  public static RestResponse<YamlPayload> getYamlRestResponse(BaseYaml theYaml, String payloadName) {
+    RestResponse rr = new RestResponse<>();
+
+    String dumpedYaml = toYamlString(theYaml);
+    YamlPayload yp = new YamlPayload(dumpedYaml);
+    yp.setName(payloadName);
+
+    rr.setResponseMessages(yp.getResponseMessages());
+
+    if (isNotEmpty(yp.getYaml())) {
+      rr.setResource(yp);
+    }
+
+    return rr;
+  }
+
   public static RestResponse<YamlPayload> getYamlRestResponseForActualFile(String content, String payloadName) {
     RestResponse rr = new RestResponse<>();
 

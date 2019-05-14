@@ -2,6 +2,11 @@ package software.wings.service.impl.yaml.service;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
+import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
+import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
+import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER_OVERRIDE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,6 +16,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.DeploymentSpecification;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
@@ -30,6 +36,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
@@ -64,13 +71,22 @@ public class YamlHelper {
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EntityUpdateService entityUpdateService;
   @Inject ConfigService configService;
+  @Inject FeatureFlagService featureFlagService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
   }
 
+  public SettingAttribute getCloudProviderAtConnector(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, yamlFilePath);
+  }
+
   public SettingAttribute getArtifactServer(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.ARTIFACT_SERVER, yamlFilePath);
+  }
+
+  public SettingAttribute getArtifactServerAtConnector(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, yamlFilePath);
   }
 
   public SettingAttribute getCollaborationProvider(String accountId, String yamlFilePath) {
@@ -90,6 +106,18 @@ public class YamlHelper {
         extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
     return settingsService.getSettingAttributeByName(accountId, settingAttributeName);
+  }
+
+  public SettingAttribute getSettingAttribute(String accountId, String yamlFilePath) {
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      YamlType yamlType = getSettingAttributeType(yamlFilePath);
+      String settingAttributeName =
+          extractParentEntityName(yamlType.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+      Validator.notNullCheck(
+          "Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
+      return settingsService.getSettingAttributeByName(accountId, settingAttributeName);
+    }
+    return null;
   }
 
   public String getAppId(String accountId, String yamlFilePath) {
@@ -228,14 +256,91 @@ public class YamlHelper {
   }
 
   public ArtifactStream getArtifactStream(String accountId, String yamlFilePath) {
-    String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
-    String serviceId = getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
-    String artifactStreamName =
-        extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
-    return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      String appId = getAppId(accountId, yamlFilePath);
+      Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+      String serviceId = getServiceId(appId, yamlFilePath);
+      Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+      String artifactStreamName =
+          extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+      Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+      return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
+    } else {
+      YamlType entityType = getEntityType(yamlFilePath);
+      if (entityType.equals(ARTIFACT_STREAM)) {
+        String appId = getAppId(accountId, yamlFilePath);
+        Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+        String serviceId = getServiceId(appId, yamlFilePath);
+        Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+        String artifactStreamName =
+            extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+        Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+        return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
+      } else {
+        String artifactStreamName =
+            extractEntityNameFromYamlPath(entityType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+        Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+        SettingAttribute settingAttribute = getSettingAttribute(accountId, yamlFilePath);
+        return artifactStreamService.getArtifactStreamByName(settingAttribute.getUuid(), artifactStreamName);
+      }
+    }
+  }
+
+  private YamlType getEntityType(String yamlFilePath) {
+    if (matchWithRegex(ARTIFACT_STREAM.getPathExpression(), yamlFilePath)) {
+      return ARTIFACT_STREAM;
+    }
+    if (matchWithRegex(YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE;
+    }
+    if (matchWithRegex(YamlType.CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return YamlType.CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE;
+    }
+    return null;
+  }
+
+  private YamlType getSettingAttributeType(String yamlFilePath) {
+    if (matchWithRegex(YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)
+        || matchWithRegex(YamlType.ARTIFACT_SERVER_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return YamlType.ARTIFACT_SERVER_OVERRIDE;
+    }
+
+    if (matchWithRegex(YamlType.CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)
+        || matchWithRegex(CLOUD_PROVIDER_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return YamlType.CLOUD_PROVIDER_OVERRIDE;
+    }
+    return null;
+  }
+
+  private boolean matchWithRegex(String prefixRegex, String yamlFilePath) {
+    Pattern pattern = Pattern.compile(prefixRegex);
+    Matcher matcher = pattern.matcher(yamlFilePath);
+
+    // Lets use this example, i want to extract service name from the path
+    // regex - Setup/Applications/*/Services/*/
+    // yamlFilePath - Setup/Applications/App1/Services/service1/Commands/command1
+    if (matcher.find()) {
+      return true;
+    }
+    return false;
+  }
+
+  public YamlType getYamlTypeFromSettingAttributePath(String yamlFilePath) {
+    if (matchWithRegex(ARTIFACT_SERVER.getPathExpression(), yamlFilePath)) {
+      return ARTIFACT_SERVER;
+    }
+
+    if (matchWithRegex(ARTIFACT_SERVER_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return ARTIFACT_SERVER_OVERRIDE;
+    }
+    if (matchWithRegex(CLOUD_PROVIDER.getPathExpression(), yamlFilePath)) {
+      return CLOUD_PROVIDER;
+    }
+
+    if (matchWithRegex(CLOUD_PROVIDER_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return CLOUD_PROVIDER_OVERRIDE;
+    }
+    return null;
   }
 
   public ServiceCommand getServiceCommand(String accountId, String yamlFilePath) {

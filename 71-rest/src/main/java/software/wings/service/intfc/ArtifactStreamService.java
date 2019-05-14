@@ -47,6 +47,8 @@ public interface ArtifactStreamService extends OwnedByService {
 
   ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName);
 
+  ArtifactStream getArtifactStreamByName(String settingId, String artifactStreamName);
+
   /**
    * Create artifact stream.
    *
@@ -140,4 +142,6 @@ public interface ArtifactStreamService extends OwnedByService {
   ArtifactStream createWithBinding(String appId, ArtifactStream artifactStream, boolean validate);
 
   boolean deleteWithBinding(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit);
+
+  List<ArtifactStream> listBySettingId(String appId, String settingId);
 }

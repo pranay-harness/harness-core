@@ -6,6 +6,7 @@ import static software.wings.beans.yaml.YamlConstants.ANY_EXCEPT_YAML;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SERVERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.ARTIFACT_STREAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
@@ -78,8 +79,14 @@ public enum YamlType {
   CLOUD_PROVIDER(SettingCategory.CLOUD_PROVIDER.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
+  CLOUD_PROVIDER_OVERRIDE(SettingCategory.CLOUD_PROVIDER.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, ANY, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
   ARTIFACT_SERVER(YamlConstants.ARTIFACT_SERVER,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, ANY), SettingAttribute.class),
+  ARTIFACT_SERVER_OVERRIDE(YamlConstants.ARTIFACT_SERVER,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, ANY), SettingAttribute.class),
   COLLABORATION_PROVIDER(YamlConstants.COLLABORATION_PROVIDER,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, COLLABORATION_PROVIDERS_FOLDER, YAML_EXPRESSION),
@@ -150,6 +157,16 @@ public enum YamlType {
           ARTIFACT_SOURCES_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
           ARTIFACT_SOURCES_FOLDER, ANY),
+      ArtifactStream.class),
+  ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE(EntityType.ARTIFACT_STREAM.name(),
+      generatePath(
+          PATH_DELIMITER, false, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, ANY, ARTIFACT_STREAMS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ARTIFACT_SERVERS_FOLDER, ANY, ARTIFACT_STREAMS_FOLDER, ANY),
+      ArtifactStream.class),
+  CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE(EntityType.ARTIFACT_STREAM.name(),
+      generatePath(
+          PATH_DELIMITER, false, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, ANY, ARTIFACT_STREAMS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, ANY, ARTIFACT_STREAMS_FOLDER, ANY),
       ArtifactStream.class),
   DEPLOYMENT_SPECIFICATION(YamlConstants.DEPLOYMENT_SPECIFICATION,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,

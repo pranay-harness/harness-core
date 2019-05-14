@@ -72,6 +72,7 @@ import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfigurationYamlHandler;
 
@@ -88,8 +89,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class YamlHandlerFactory {
   private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
+  private static final Set<String> nonLeafEntitiesWithFeatureFlag = new HashSet(obtainNonLeafEntitiesWithFeatureFlag());
   private static final Set<String> entitiesWithActualFiles = new HashSet(obtainUseRealFileEntities());
   private static final Set<String> leafEntities = new HashSet<>(obtainLeafEntities());
+  private static final Set<String> leafEntitiesWithFeatureFlag = new HashSet<>(obtainLeafEntitiesWithFeatureFlag());
 
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
@@ -133,6 +136,7 @@ public class YamlHandlerFactory {
   @Inject private ApplicationManifestYamlHandler applicationManifestYamlHandler;
   @Inject private ManifestFileYamlHandler manifestFileYamlHandler;
   @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;
+  @Inject private FeatureFlagService featureFlagService;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -142,6 +146,7 @@ public class YamlHandlerFactory {
     Object yamlHandler = null;
     switch (yamlType) {
       case CLOUD_PROVIDER:
+      case CLOUD_PROVIDER_OVERRIDE:
         yamlHandler = cloudProviderYamlHelperMap.get(subType);
         break;
       case ARTIFACT_SERVER:
@@ -154,6 +159,9 @@ public class YamlHandlerFactory {
         } else {
           yamlHandler = artifactServerYamlHelperMap.get(subType);
         }
+        break;
+      case ARTIFACT_SERVER_OVERRIDE:
+        yamlHandler = artifactServerYamlHelperMap.get(subType);
         break;
       case COLLABORATION_PROVIDER:
         yamlHandler = collaborationProviderYamlHelperMap.get(subType);
@@ -171,6 +179,8 @@ public class YamlHandlerFactory {
         yamlHandler = serviceYamlHandler;
         break;
       case ARTIFACT_STREAM:
+      case ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE:
+      case CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE:
         yamlHandler = artifactStreamHelperMap.get(subType);
         break;
       case COMMAND:
@@ -386,12 +396,38 @@ public class YamlHandlerFactory {
         "Unhandled entity while getting yaml file name " + entity.getClass().getSimpleName());
   }
 
+  public <T> String obtainYamlFileNameWithFeatureFlag(T entity) {
+    String entityName = entity.getClass().getSimpleName();
+
+    if (nonLeafEntitiesWithFeatureFlag.contains(entityName)) {
+      return YamlConstants.INDEX;
+    } else if (leafEntitiesWithFeatureFlag.contains(entityName)) {
+      return obtainEntityName(entity);
+    }
+
+    throw new InvalidRequestException(
+        "Unhandled entity while getting yaml file name " + entity.getClass().getSimpleName());
+  }
+
   public <T> boolean isNonLeafEntity(T entity) {
     String entityName = entity.getClass().getSimpleName();
 
     if (nonLeafEntities.contains(entityName)) {
       return true;
     } else if (leafEntities.contains(entityName)) {
+      return false;
+    }
+
+    throw new InvalidRequestException("Unhandled case while verifying if its a leaf or non leaf entity for entity type"
+        + entity.getClass().getSimpleName());
+  }
+
+  public <T> boolean isNonLeafEntityWithFeatureFlag(T entity) {
+    String entityName = entity.getClass().getSimpleName();
+
+    if (nonLeafEntitiesWithFeatureFlag.contains(entityName)) {
+      return true;
+    } else if (leafEntitiesWithFeatureFlag.contains(entityName)) {
       return false;
     }
 
@@ -441,6 +477,10 @@ public class YamlHandlerFactory {
     return Lists.newArrayList("Environment", "Application", "Service");
   }
 
+  private static List<String> obtainNonLeafEntitiesWithFeatureFlag() {
+    return Lists.newArrayList("Environment", "Application", "Service", "SettingAttribute");
+  }
+
   private static List<String> obtainUseRealFileEntities() {
     return Lists.newArrayList("ManifestFile");
   }
@@ -458,6 +498,23 @@ public class YamlHandlerFactory {
         "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
         "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
+        "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
+        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration");
+  }
+
+  private static List<String> obtainLeafEntitiesWithFeatureFlag() {
+    return Lists.newArrayList("NotificationGroup", "Pipeline", "InfrastructureMapping", "PhysicalInfrastructureMapping",
+        "PhysicalInfrastructureMappingWinRm", "", "Workflow", "PcfInfrastructureMapping",
+        "GcpKubernetesInfrastructureMapping", "EcsInfrastructureMapping", "DirectKubernetesInfrastructureMapping",
+        "CodeDeployInfrastructureMapping", "AzureKubernetesInfrastructureMapping", "AwsLambdaInfraStructureMapping",
+        "AwsInfrastructureMapping", "AwsAmiInfrastructureMapping", "ArtifactStream", "InfrastructureProvisioner",
+        "TerraformInfrastructureProvisioner", "CloudFormationInfrastructureProvisioner", "JenkinsArtifactStream",
+        "NexusArtifactStream", "GcsArtifactStream", "SmbArtifactStream", "SftpArtifactStream", "GcrArtifactStream",
+        "EcrArtifactStream", "DockerArtifactStream", "BambooArtifactStream", "ArtifactoryArtifactStream",
+        "AmiArtifactStream", "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification",
+        "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
+        "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "ServiceCommand", "ManifestFile",
+        "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration");
   }

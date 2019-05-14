@@ -36,6 +36,7 @@ public interface YamlConstants {
   String NOTIFICATION_GROUPS_FOLDER = "Notification Groups";
 
   String ARTIFACT_SOURCES_FOLDER = "Artifact Servers";
+  String ARTIFACT_STREAMS_FOLDER = "Artifact Streams";
   String DEPLOYMENT_SPECIFICATION_FOLDER = "Deployment Specifications";
 
   String LOAD_BALANCERS_FOLDER = "Load Balancers";

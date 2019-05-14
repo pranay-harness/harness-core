@@ -135,6 +135,8 @@ import software.wings.service.impl.yaml.handler.setting.artifactserver.HelmRepoY
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HttpHelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.JenkinsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.SftpConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.SmbConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AwsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
@@ -266,6 +268,8 @@ public class YamlModule extends AbstractModule {
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.JENKINS.name())
         .to(JenkinsConfigYamlHandler.class);
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.NEXUS.name()).to(NexusConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.SMB.name()).to(SmbConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.SFTP.name()).to(SftpConfigYamlHandler.class);
 
     MapBinder<String, HelmRepoYamlHandler> helmRepoYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, HelmRepoYamlHandler.class);

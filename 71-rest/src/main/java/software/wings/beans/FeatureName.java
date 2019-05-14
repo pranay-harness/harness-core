@@ -40,7 +40,8 @@ public enum FeatureName {
   AUDIT_TRAIL,
   TRIGGER_FOR_ALL_ARTIFACTS,
   USE_PCF_CLI,
-  AUDIT_TRAIL_UI;
+  AUDIT_TRAIL_UI,
+  ARTIFACT_STREAM_REFACTOR;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

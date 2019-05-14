@@ -64,9 +64,8 @@ public class SftpArtifactStream extends ArtifactStream {
     private List<String> artifactPaths;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String bucketName,
-        List<String> artifactPaths) {
-      super(SFTP.name(), harnessApiVersion, serverName, metadataOnly);
+    public Yaml(String harnessApiVersion, String serverName, List<String> artifactPaths) {
+      super(SFTP.name(), harnessApiVersion, serverName);
       this.artifactPaths = artifactPaths;
     }
   }

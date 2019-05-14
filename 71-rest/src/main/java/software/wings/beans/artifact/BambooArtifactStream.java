@@ -64,13 +64,14 @@ public class BambooArtifactStream extends ArtifactStream {
   public static class Yaml extends ArtifactStream.Yaml {
     private String planName;
     private List<String> artifactPaths;
+    private boolean metadataOnly;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String planName,
-        List<String> artifactPaths) {
-      super(BAMBOO.name(), harnessApiVersion, serverName, metadataOnly);
+    public Yaml(String harnessApiVersion, String serverName, String planName, List<String> artifactPaths) {
+      super(BAMBOO.name(), harnessApiVersion, serverName);
       this.planName = planName;
       this.artifactPaths = artifactPaths;
+      this.metadataOnly = metadataOnly;
     }
   }
 }
