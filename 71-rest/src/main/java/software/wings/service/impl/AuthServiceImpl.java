@@ -59,6 +59,7 @@ import software.wings.beans.Role;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
+import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
@@ -720,8 +721,13 @@ public class AuthServiceImpl implements AuthService {
                                       .actions(actions)
                                       .build();
 
-    UserGroup userGroup =
-        UserGroup.builder().accountId(accountId).appPermissions(Sets.newHashSet(appPermission)).build();
+    AccountPermissions accountPermissions =
+        AccountPermissions.builder().permissions(Sets.newHashSet(PermissionType.USER_PERMISSION_READ)).build();
+    UserGroup userGroup = UserGroup.builder()
+                              .accountId(accountId)
+                              .accountPermissions(accountPermissions)
+                              .appPermissions(Sets.newHashSet(appPermission))
+                              .build();
     return Optional.of(userGroup);
   }
 

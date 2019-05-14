@@ -82,7 +82,7 @@ public class UserGroupResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_READ)
   public RestResponse<PageResponse<UserGroup>> list(@BeanParam PageRequest<UserGroup> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("details") @DefaultValue("true") boolean loadUsers) {
@@ -100,6 +100,7 @@ public class UserGroupResource {
   @GET
   @Path("{userGroupId}")
   @Timed
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_READ)
   @ExceptionMetered
   public RestResponse<UserGroup> get(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {

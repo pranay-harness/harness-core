@@ -272,7 +272,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private boolean isAccountLevelPermissions(PermissionType permissionType) {
     return PermissionType.APPLICATION_CREATE_DELETE == permissionType
         || PermissionType.USER_PERMISSION_MANAGEMENT == permissionType
-        || PermissionType.ACCOUNT_MANAGEMENT == permissionType || PermissionType.TEMPLATE_MANAGEMENT == permissionType;
+        || PermissionType.ACCOUNT_MANAGEMENT == permissionType || PermissionType.TEMPLATE_MANAGEMENT == permissionType
+        || PermissionType.USER_PERMISSION_READ == permissionType;
   }
 
   private String getEntityIdFromRequest(List<PermissionAttribute> permissionAttributes,

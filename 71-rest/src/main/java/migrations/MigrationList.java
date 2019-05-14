@@ -90,6 +90,7 @@ import migrations.all.UnregisteredUserNameMigration;
 import migrations.all.UpdateBitBucketTriggers;
 import migrations.all.UpdateGitSyncErrorMigration;
 import migrations.all.UsageRestrictionsMigration;
+import migrations.all.UserPermissionReadMigration;
 import migrations.all.VerificationMetricJobMigration;
 import migrations.all.YamlGitConfigAppMigration;
 import migrations.all.YamlGitConfigMigration;
@@ -223,6 +224,7 @@ public class MigrationList {
         .add(Pair.of(244, SetNamespaceInContainerInstanceInfo.class))
         .add(Pair.of(245, UpdateBitBucketTriggers.class))
         .add(Pair.of(246, ServiceAddArtifactStreamIdsMigration.class))
+        .add(Pair.of(247, UserPermissionReadMigration.class))
         .build();
   }
 }
