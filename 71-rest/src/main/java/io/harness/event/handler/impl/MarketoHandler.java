@@ -55,10 +55,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -328,14 +326,7 @@ public class MarketoHandler implements EventHandler {
   private User updateUser(User user, EventType eventType) {
     try (AcquiredLock lock =
              persistentLocker.waitToAcquireLock(user.getEmail(), Duration.ofMinutes(2), Duration.ofMinutes(4))) {
-      User latestUser = userService.getUserFromCacheOrDB(user.getUuid());
-      Set<String> reportedMarketoCampaigns = latestUser.getReportedMarketoCampaigns();
-      if (reportedMarketoCampaigns == null) {
-        reportedMarketoCampaigns = new HashSet<>();
-      }
-      reportedMarketoCampaigns.add(eventType.name());
-      latestUser.setReportedMarketoCampaigns(reportedMarketoCampaigns);
-      return userService.update(latestUser);
+      return userService.addEventToUserMarketoCampaigns(user.getUuid(), eventType);
     }
   }
 

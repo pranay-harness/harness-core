@@ -16,6 +16,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -56,6 +57,7 @@ import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.auth0.jwt.JWT;
@@ -66,6 +68,7 @@ import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.model.EventType;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -98,6 +101,7 @@ import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.marketplace.MarketPlaceType;
@@ -129,6 +133,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.cache.Cache;
 
 /**
@@ -477,14 +482,61 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateUserProfile() {
-    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName("test").build();
+    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).withName(USER_NAME).build();
+    userService.updateUserProfile(user);
+    verify(updateOperations).set(UserKeys.name, USER_NAME);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
-    updateOperations.set("name", "test");
-
-    userService.update(user);
+    updateOperations.set(UserKeys.name, USER_NAME);
     verify(wingsPersistence).update(user, updateOperations);
     verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
-    assertThat(user.getName()).isEqualTo("test");
+    verify(cache).remove(USER_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateUserProfileWithoutName() {
+    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).build();
+    userService.updateUserProfile(user);
+    verify(updateOperations).unset(UserKeys.name);
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.unset(UserKeys.name);
+    verify(wingsPersistence).update(user, updateOperations);
+    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    verify(cache).remove(USER_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void addEventToUserMarketoCampaigns() {
+    EventType eventType = EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
+    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).build();
+    doReturn(user).when(cache).get(any(String.class));
+    userService.addEventToUserMarketoCampaigns(user.getUuid(), eventType);
+    verify(updateOperations).set(UserKeys.reportedMarketoCampaigns, Sets.newHashSet(eventType.name()));
+
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set(UserKeys.reportedMarketoCampaigns, Sets.newHashSet(eventType.name()));
+    verify(wingsPersistence).update(user, updateOperations);
+    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    verify(cache).remove(USER_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void updateEventToUserMarketoCampaigns() {
+    EventType eventType = EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
+    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).build();
+    Set<String> existingEventCampaigns = Sets.newHashSet(EventType.USERS_LOGGED_IN.name());
+    user.setReportedMarketoCampaigns(existingEventCampaigns);
+    doReturn(user).when(cache).get(any(String.class));
+    userService.addEventToUserMarketoCampaigns(user.getUuid(), eventType);
+    Set<String> allEventCampaigns = Sets.newHashSet(eventType.name(), EventType.USERS_LOGGED_IN.name());
+    verify(updateOperations).set(UserKeys.reportedMarketoCampaigns, allEventCampaigns);
+
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set(UserKeys.reportedMarketoCampaigns, allEventCampaigns);
+    verify(wingsPersistence).update(user, updateOperations);
+    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
     verify(cache).remove(USER_ID);
   }
 

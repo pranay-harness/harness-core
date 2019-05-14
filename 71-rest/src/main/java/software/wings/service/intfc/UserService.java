@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.event.model.EventType;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
@@ -16,6 +17,7 @@ import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthClient;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -454,4 +456,12 @@ public interface UserService extends OwnedByAccount {
    * Disable or Enable an user administratively. Once disabled, the user can no longer login.
    */
   boolean enableUser(String accountId, String userId, boolean enabled);
+
+  @ValidationGroups(Update.class) User updateUserProfile(@NotNull User user);
+
+  @ValidationGroups(Update.class)
+  User addEventToUserMarketoCampaigns(@NotNull String userId, @NotNull EventType eventType);
+
+  @ValidationGroups(Update.class)
+  User updateTwoFactorAuthenticationSettings(@NotNull User user, @NotNull TwoFactorAuthenticationSettings settings);
 }
