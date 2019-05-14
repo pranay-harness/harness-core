@@ -140,17 +140,7 @@ public class ArtifactStreamResource {
     }
 
     artifactStream.setAppId(appId);
-    // NOTE: artifactStream and binding must be created atomically
-    ArtifactStream savedArtifactStream = artifactStreamService.create(artifactStream);
-    try {
-      artifactStreamServiceBindingService.create(
-          appId, savedArtifactStream.getServiceId(), savedArtifactStream.getUuid());
-    } catch (Exception e) {
-      artifactStreamService.delete(appId, savedArtifactStream.getUuid());
-      throw e;
-    }
-
-    return new RestResponse<>(savedArtifactStream);
+    return new RestResponse<>(artifactStreamService.createWithBinding(appId, artifactStream, true));
   }
 
   /**
@@ -185,20 +175,7 @@ public class ArtifactStreamResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, id);
-    if (artifactStream == null) {
-      return new RestResponse<>();
-    }
-
-    // NOTE: artifactStream and binding must be deleted atomically
-    artifactStreamService.delete(appId, id);
-    try {
-      artifactStreamServiceBindingService.delete(appId, artifactStream.getServiceId(), id);
-    } catch (Exception e) {
-      artifactStreamService.create(artifactStream);
-      throw e;
-    }
-
+    artifactStreamService.deleteWithBinding(appId, id, false, false);
     return new RestResponse<>();
   }
 

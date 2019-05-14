@@ -153,7 +153,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   @ValidationGroups(Create.class)
-  public ArtifactStream create(ArtifactStream artifactStream, boolean validate) { // todo: error if svc_id is null
+  public ArtifactStream create(ArtifactStream artifactStream, boolean validate) {
     artifactStream.validateRequiredFields();
     if (validate && artifactStream.getTemplateUuid() == null) {
       validateArtifactSourceData(artifactStream);
@@ -410,11 +410,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return pruneArtifactStream(artifactStream.getAppId(), artifactStreamId);
   }
 
-  @Override
-  public boolean deleteByYamlGit(String appId, String artifactStreamId, boolean syncFromGit) {
-    return delete(appId, artifactStreamId, false, syncFromGit);
-  }
-
   private boolean delete(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit) {
     ArtifactStream artifactStream = get(appId, artifactStreamId);
     if (artifactStream == null) {
@@ -655,5 +650,48 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     return artifactStreamSummaries;
+  }
+
+  @Override
+  @ValidationGroups(Create.class)
+  public ArtifactStream createWithBinding(String appId, ArtifactStream artifactStream, boolean validate) {
+    // NOTE: artifactStream and binding must be created atomically
+    ArtifactStream savedArtifactStream = create(artifactStream, validate);
+    if (savedArtifactStream.getServiceId() == null) {
+      return savedArtifactStream;
+    }
+
+    try {
+      artifactStreamServiceBindingService.create(appId, artifactStream.getServiceId(), savedArtifactStream.getUuid());
+    } catch (Exception e) {
+      delete(appId, savedArtifactStream.getUuid());
+      throw e;
+    }
+
+    return savedArtifactStream;
+  }
+
+  @Override
+  @ValidationGroups(Create.class)
+  public boolean deleteWithBinding(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit) {
+    ArtifactStream artifactStream = get(artifactStreamId);
+    if (artifactStream == null) {
+      return false;
+    }
+
+    // NOTE: artifactStream and binding must be deleted atomically
+    boolean retVal = delete(appId, artifactStreamId, forceDelete, syncFromGit);
+    if (artifactStream.getServiceId() == null) {
+      return retVal;
+    }
+
+    try {
+      artifactStreamServiceBindingService.delete(appId, artifactStream.getServiceId(), artifactStreamId);
+    } catch (Exception e) {
+      create(artifactStream, false);
+      throw e;
+    }
+
+    return retVal;
   }
 }

@@ -22,15 +22,15 @@ public class ArtifactStreamSampleDataProvider {
   @Inject public BuildSourceService buildSourceService;
 
   public ArtifactStream createDockerArtifactStream(String appId, String serviceId, SettingAttribute settingAttribute) {
-    ArtifactStream savedArtifactStream =
-        artifactStreamService.create(DockerArtifactStream.builder()
-                                         .appId(appId)
-                                         .settingId(settingAttribute.getUuid())
-                                         .imageName(DOCKER_TODO_LIST_IMAGE_NAME)
-                                         .name(SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
-                                         .serviceId(serviceId)
-                                         .build(),
-            false);
+    ArtifactStream savedArtifactStream = artifactStreamService.createWithBinding(appId,
+        DockerArtifactStream.builder()
+            .appId(appId)
+            .settingId(settingAttribute.getUuid())
+            .imageName(DOCKER_TODO_LIST_IMAGE_NAME)
+            .name(SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
+            .serviceId(serviceId)
+            .build(),
+        false);
 
     try {
       // Adding some artifacts to get ready with deployment.
