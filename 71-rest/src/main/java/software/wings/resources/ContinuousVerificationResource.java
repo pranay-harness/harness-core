@@ -12,7 +12,6 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.APMFetchConfig;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.common.VerificationConstants;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -53,15 +52,6 @@ public class ContinuousVerificationResource {
       APMFetchConfig fetchConfig) {
     return new RestResponse<>(
         cvManagerService.getMetricsWithDataForNode(accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
-  }
-
-  @POST
-  @Path(VerificationConstants.NOTIFY_METRIC_STATE)
-  @Timed
-  @LearningEngineAuth
-  public RestResponse<Boolean> sendNotifyForMetricAnalysis(
-      @QueryParam("correlationId") String correlationId, MetricDataAnalysisResponse response) {
-    return new RestResponse<>(cvManagerService.sendNotifyForMetricAnalysis(correlationId, response));
   }
 
   @POST

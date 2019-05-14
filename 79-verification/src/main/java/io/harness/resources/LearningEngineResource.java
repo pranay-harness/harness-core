@@ -98,9 +98,7 @@ public class LearningEngineResource {
   @LearningEngineAuth
   @Produces({"application/json", "application/v1+json"})
   public RestResponse<Boolean> notifyFailure(@HeaderParam("Accept") String acceptHeaders,
-      @QueryParam("is24x7") boolean is24x7, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("cvConfigId") String cvConfigId, @Valid LearningEngineError learningEngineError) {
-    return new RestResponse<>(
-        learningEngineService.notifyFailure(is24x7, stateExecutionId, cvConfigId, learningEngineError));
+      @QueryParam("taskId") String taskId, @Valid LearningEngineError learningEngineError) {
+    return new RestResponse<>(learningEngineService.notifyFailure(taskId, learningEngineError));
   }
 }

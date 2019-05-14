@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
@@ -48,7 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -115,22 +113,22 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter("workflow_execution_id", analysisTask.getWorkflow_execution_id())
-            .filter("state_execution_id", analysisTask.getState_execution_id())
-            .field("analysis_minute")
+            .filter(LearningEngineAnalysisTaskKeys.workflow_execution_id, analysisTask.getWorkflow_execution_id())
+            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, analysisTask.getState_execution_id())
+            .field(LearningEngineAnalysisTaskKeys.analysis_minute)
             .lessThanOrEq(analysisTask.getAnalysis_minute())
             .filter(LearningEngineAnalysisTaskKeys.version, learningEngineApiVersion)
-            .field("executionStatus")
+            .field(LearningEngineAnalysisTaskKeys.executionStatus)
             .in(Lists.newArrayList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS))
-            .filter("cluster_level", analysisTask.getCluster_level())
-            .filter("ml_analysis_type", analysisTask.getMl_analysis_type())
-            .filter("group_name", analysisTask.getGroup_name())
+            .filter(LearningEngineAnalysisTaskKeys.cluster_level, analysisTask.getCluster_level())
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, analysisTask.getMl_analysis_type())
+            .filter(LearningEngineAnalysisTaskKeys.group_name, analysisTask.getGroup_name())
             .order("-createdAt");
     if (!analysisTask.is24x7Task()) {
-      query = query.filter("control_nodes", analysisTask.getControl_nodes());
+      query = query.filter(LearningEngineAnalysisTaskKeys.control_nodes, analysisTask.getControl_nodes());
     }
     if (isNotEmpty(analysisTask.getTag())) {
-      query = query.filter("tag", analysisTask.getTag());
+      query = query.filter(LearningEngineAnalysisTaskKeys.tag, analysisTask.getTag());
     }
     LearningEngineAnalysisTask learningEngineAnalysisTask = query.get();
 
@@ -158,7 +156,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask) {
     LearningEngineExperimentalAnalysisTask experimentalAnalysisTask =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
-            .filter("state_execution_id", analysisTask.getState_execution_id())
+            .filter(LearningEngineExperimentalAnalysisTaskKeys.state_execution_id, analysisTask.getState_execution_id())
             .get();
     if (experimentalAnalysisTask != null) {
       logger.info("task already queued for experiment {}", analysisTask.getState_execution_id());
@@ -176,7 +174,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task, Optional<List<MLAnalysisType>> taskTypes) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter(LearningEngineAnalysisTaskKeys.version, serviceApiVersion)
-                                                  .field("retry")
+                                                  .field(LearningEngineAnalysisTaskKeys.retry)
                                                   .lessThanOrEq(LearningEngineAnalysisTask.RETRIES);
     if (is24x7Task.isPresent()) {
       query.filter(LearningEngineAnalysisTaskKeys.is24x7Task, is24x7Task.get());
@@ -186,18 +184,18 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
     }
 
-    query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
-        query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
+    query.or(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.QUEUED),
+        query.and(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
                 .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
-            .set("executionStatus", ExecutionStatus.RUNNING)
-            .inc("retry")
+            .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+            .inc(LearningEngineAnalysisTaskKeys.retry)
             .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
     LearningEngineAnalysisTask task =
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
-    if (task != null && task.getRetry() >= LearningEngineAnalysisTask.RETRIES) {
+    if (task != null && task.getRetry() > LearningEngineAnalysisTask.RETRIES) {
       // If some task has failed for more than 3 times, mark status as failed.
       logger.info("LearningEngine task {} has failed 3 or more times. Setting the status to FAILED", task.getUuid());
       try {
@@ -242,10 +240,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter("appId", appId)
-            .filter("workflow_execution_id", workflowExecutionId)
-            .filter("state_execution_id", stateExecutionId)
+            .filter(LearningEngineAnalysisTaskKeys.workflow_execution_id, workflowExecutionId)
+            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
-            .field("retry")
+            .field(LearningEngineAnalysisTaskKeys.retry)
             .greaterThanOrEq(LearningEngineAnalysisTask.RETRIES);
     return !query.asList().isEmpty();
   }
@@ -255,15 +253,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       MLAnalysisType type, ClusterLevel level) {
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter("workflow_execution_id", workflowExecutionId)
-            .filter("state_execution_id", stateExecutionId)
+            .filter(LearningEngineAnalysisTaskKeys.workflow_execution_id, workflowExecutionId)
+            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
-            .filter("analysis_minute", analysisMinute)
-            .filter("ml_analysis_type", type)
-            .filter("cluster_level", level.getLevel());
+            .filter(LearningEngineAnalysisTaskKeys.analysis_minute, analysisMinute)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, type)
+            .filter(LearningEngineAnalysisTaskKeys.cluster_level, level.getLevel());
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
-            .set("executionStatus", ExecutionStatus.SUCCESS);
+            .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
 
     wingsPersistence.update(query, updateOperations);
   }
@@ -274,7 +272,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       logger.warn("taskId is null");
       return;
     }
-    wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId, "executionStatus", ExecutionStatus.SUCCESS);
+    wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
+        LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
   }
 
   @Override
@@ -292,15 +291,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       String workflowExecutionId, String stateExecutionId, long analysisMinute, ExecutionStatus executionStatus) {
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter("workflow_execution_id", workflowExecutionId)
-            .filter("state_execution_id", stateExecutionId)
+            .filter(LearningEngineAnalysisTaskKeys.workflow_execution_id, workflowExecutionId)
+            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
-            .filter("cluster_level", getDefaultClusterLevel())
-            .field("analysis_minute")
+            .filter(LearningEngineAnalysisTaskKeys.cluster_level, getDefaultClusterLevel())
+            .field(LearningEngineAnalysisTaskKeys.analysis_minute)
             .lessThanOrEq(analysisMinute);
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
-            .set("executionStatus", executionStatus);
+            .set(LearningEngineAnalysisTaskKeys.executionStatus, executionStatus);
 
     wingsPersistence.update(query, updateOperations);
   }
@@ -373,41 +372,48 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public void checkAndUpdateFailedLETask(String stateExecutionId, int analysisMinute) {
-    Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                                  .filter("state_execution_id", stateExecutionId)
-                                                  .filter("analysis_minute", analysisMinute);
-    query.or(query.criteria("executionStatus").equal(ExecutionStatus.FAILED),
-        query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria("retry").greaterThanOrEq(1),
+    Query<LearningEngineAnalysisTask> query =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
+            .filter(LearningEngineAnalysisTaskKeys.analysis_minute, analysisMinute);
+    query.or(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.FAILED),
+        query.and(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
+            query.criteria(LearningEngineAnalysisTaskKeys.retry).greaterThanOrEq(1),
             query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
                 .greaterThanOrEq(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
 
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
-            .set("state_execution_id",
+            .set(LearningEngineAnalysisTaskKeys.state_execution_id,
                 stateExecutionId + "-retry-" + TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
-            .set("executionStatus", ExecutionStatus.FAILED);
+            .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.FAILED);
     wingsPersistence.update(query, updateOperations);
   }
 
   @Override
-  public boolean notifyFailure(
-      boolean is24x7, String stateExecutionId, String cvConfigId, LearningEngineError learningEngineError) {
+  public boolean notifyFailure(String taskId, LearningEngineError learningEngineError) {
     logger.info("error payload {}", learningEngineError);
-    if (is24x7) {
-      Preconditions.checkState(isNotEmpty(cvConfigId));
+    final LearningEngineAnalysisTask analysisTask = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
+    if (analysisTask == null) {
+      logger.error("No task found with id {}", taskId);
+      return false;
+    }
+
+    if (analysisTask.is24x7Task()) {
+      Preconditions.checkState(isNotEmpty(analysisTask.getCvConfigId()));
       // TODO figure out and implement what to do for service guard tasks
       return false;
     } else {
-      Preconditions.checkState(isNotEmpty(stateExecutionId));
+      Preconditions.checkState(isNotEmpty(analysisTask.getState_execution_id()));
     }
 
-    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
-                                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                                .get();
+    final AnalysisContext analysisContext =
+        wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+            .filter(AnalysisContextKeys.stateExecutionId, analysisTask.getState_execution_id())
+            .get();
 
     if (analysisContext == null) {
-      throw new WingsException("No context found for {}" + stateExecutionId);
+      throw new WingsException("No context found for " + analysisTask.getState_execution_id());
     }
 
     if (!isStateValid(analysisContext.getAppId(), analysisContext.getStateExecutionId())) {
@@ -415,40 +421,39 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       return false;
     }
 
-    final VerificationStateAnalysisExecutionData executionData =
-        VerificationStateAnalysisExecutionData.builder()
-            .appId(analysisContext.getAppId())
-            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
-            .stateExecutionInstanceId(analysisContext.getStateExecutionId())
-            .serverConfigId(analysisContext.getAnalysisServerConfigId())
-            .timeDuration(analysisContext.getTimeDuration())
-            .canaryNewHostNames(analysisContext.getTestNodes().keySet())
-            .lastExecutionNodes(analysisContext.getControlNodes() == null ? new HashSet<>()
-                                                                          : analysisContext.getControlNodes().keySet())
-            .correlationId(analysisContext.getCorrelationId())
-            .mlAnalysisType(analysisContext.getAnalysisType())
-            .build();
-    executionData.setStatus(ExecutionStatus.ERROR);
-    executionData.setErrorMsg(learningEngineError.getErrorMsg());
-    final VerificationDataAnalysisResponse response =
-        VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-    response.setExecutionStatus(ExecutionStatus.ERROR);
-    logger.info("Notifying state id: {} , corr id: {}", analysisContext.getStateExecutionId(),
-        analysisContext.getCorrelationId());
+    if (analysisTask.getRetry() >= LearningEngineAnalysisTask.RETRIES) {
+      wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
+          LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.FAILED);
 
-    managerClientHelper.notifyManagerForVerificationAnalysis(analysisContext, response);
-    markTasksFailed(stateExecutionId);
+      final VerificationStateAnalysisExecutionData executionData =
+          VerificationStateAnalysisExecutionData.builder()
+              .appId(analysisContext.getAppId())
+              .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+              .stateExecutionInstanceId(analysisContext.getStateExecutionId())
+              .serverConfigId(analysisContext.getAnalysisServerConfigId())
+              .timeDuration(analysisContext.getTimeDuration())
+              .canaryNewHostNames(analysisContext.getTestNodes() == null ? Collections.emptySet()
+                                                                         : analysisContext.getTestNodes().keySet())
+              .lastExecutionNodes(analysisContext.getControlNodes() == null
+                      ? Collections.emptySet()
+                      : analysisContext.getControlNodes().keySet())
+              .correlationId(analysisContext.getCorrelationId())
+              .mlAnalysisType(analysisContext.getAnalysisType())
+              .build();
+      executionData.setStatus(ExecutionStatus.ERROR);
+      executionData.setErrorMsg(learningEngineError.getErrorMsg());
+      final VerificationDataAnalysisResponse response =
+          VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+      response.setExecutionStatus(ExecutionStatus.ERROR);
+      logger.info("Notifying state id: {} , corr id: {}", analysisContext.getStateExecutionId(),
+          analysisContext.getCorrelationId());
+
+      managerClientHelper.notifyManagerForVerificationAnalysis(analysisContext, response);
+    } else {
+      wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
+          LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED);
+    }
     return true;
-  }
-
-  private void markTasksFailed(String stateExecutionId) {
-    final UpdateResults updateResults =
-        wingsPersistence.update(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-                                    .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
-                                    .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING),
-            wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
-                .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.FAILED));
-    logger.info("marked {} tasks failed for {}", updateResults.getUpdatedCount(), stateExecutionId);
   }
 
   @Override

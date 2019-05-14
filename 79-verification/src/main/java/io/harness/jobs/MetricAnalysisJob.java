@@ -255,8 +255,7 @@ public class MetricAnalysisJob implements Job {
           + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
           + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName;
       String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-          + VerificationConstants.NOTIFY_LEARNING_FAILURE
-          + "?is24x7=false&stateExecutionId=" + context.getStateExecutionId();
+          + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + uuid;
       metricTemplateUrl = metricTemplateUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()

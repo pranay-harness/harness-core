@@ -1,5 +1,7 @@
 package io.harness.jobs;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import com.google.common.collect.Lists;
 
 import io.harness.service.intfc.LearningEngineService;
@@ -37,6 +39,7 @@ public class LogMLClusterGenerator implements Runnable {
 
   @Override
   public void run() {
+    final String taskId = generateUuid();
     final String inputLogsUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + context.getAccountId()
         + "&workflowExecutionId=" + context.getWorkflowExecutionId()
@@ -47,8 +50,7 @@ public class LogMLClusterGenerator implements Runnable {
         + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&serviceId=" + context.getServiceId()
         + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name() + "&stateType=" + context.getStateType();
     String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
-        + VerificationConstants.NOTIFY_LEARNING_FAILURE
-        + "?is24x7=false&stateExecutionId=" + context.getStateExecutionId();
+        + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
     logger.info("Creating Learning Engine Analysis Task for Log ML clustering with context {}", context);
 
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
@@ -69,6 +71,7 @@ public class LogMLClusterGenerator implements Runnable {
                                                   .query(Lists.newArrayList(logRequest.getQuery().split(" ")))
                                                   .build();
     analysisTask.setAppId(context.getAppId());
+    analysisTask.setUuid(taskId);
 
     final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
     if (taskQueued) {

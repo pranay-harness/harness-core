@@ -1,6 +1,5 @@
 package software.wings.service.intfc.analysis;
 
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
 import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
@@ -12,7 +11,5 @@ import javax.validation.constraints.NotNull;
 public interface LogVerificationService {
   Set<BugsnagApplication> getOrgProjectListBugsnag(
       @NotNull String settingId, @NotNull String orgId, @NotNull StateType stateType, boolean shouldGetProjects);
-  boolean sendNotifyForLogAnalysis(String correlationId, LogAnalysisResponse response);
-
   VerificationNodeDataSetupResponse getTestLogData(String accountId, BugsnagSetupTestData bugsnagSetupTestData);
 }

@@ -11,6 +11,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -51,6 +52,7 @@ import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtil;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -61,6 +63,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
+import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.nio.charset.Charset;
@@ -89,9 +92,13 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
-    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(true).build());
+    doNothing()
+        .when(managerClientHelper)
+        .notifyManagerForVerificationAnalysis(any(AnalysisContext.class), any(VerificationDataAnalysisResponse.class));
     FieldUtils.writeField(timeSeriesAnalysisService, "managerClientHelper", managerClientHelper, true);
     FieldUtils.writeField(continuousVerificationService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
+    FieldUtils.writeField(learningEngineService, "managerClientHelper", managerClientHelper, true);
     Account account = anAccount().withAccountName(generateUUID()).build();
     account.setEncryptedLicenseInfo(
         EncryptionUtils.encrypt(LicenseUtil.convertToString(LicenseInfo.builder().accountType(AccountType.PAID).build())
@@ -553,5 +560,84 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     continuousVerificationService.cleanupStuckLocks();
     assertEquals(1, collection.find().size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNotifyFailure() {
+    workflowExecutionId = UUID.randomUUID().toString();
+    stateExecutionId = UUID.randomUUID().toString();
+    LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                .state_execution_id(stateExecutionId)
+                                                                .workflow_execution_id(workflowExecutionId)
+                                                                .executionStatus(ExecutionStatus.QUEUED)
+                                                                .build();
+    learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).build());
+
+    assertEquals(1,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+            .count());
+
+    for (int i = 0; i < LearningEngineAnalysisTask.RETRIES - 1; i++) {
+      LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
+          ServiceApiVersion.V1, Optional.of(false), Optional.empty());
+      assertEquals(ExecutionStatus.RUNNING, leTask.getExecutionStatus());
+
+      assertEquals(0,
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+              .count());
+
+      assertEquals(1,
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+              .count());
+
+      learningEngineService.notifyFailure(leTask.getUuid(), LearningEngineError.builder().build());
+      assertEquals(1,
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+              .count());
+
+      assertEquals(0,
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+              .count());
+    }
+
+    LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of(false), Optional.empty());
+    assertEquals(ExecutionStatus.RUNNING, leTask.getExecutionStatus());
+
+    assertEquals(0,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+            .count());
+
+    assertEquals(1,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+            .count());
+
+    learningEngineService.notifyFailure(leTask.getUuid(), LearningEngineError.builder().build());
+    assertEquals(0,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+            .count());
+
+    assertEquals(0,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+            .count());
+
+    assertEquals(1,
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.FAILED)
+            .count());
+
+    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.of(false), Optional.empty()));
   }
 }
