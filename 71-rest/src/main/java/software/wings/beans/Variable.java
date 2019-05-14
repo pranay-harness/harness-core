@@ -47,6 +47,7 @@ public class Variable {
         .fixed(fixed)
         .metadata(metadata)
         .allowedValues(allowedValues)
+        .allowedList(allowedList)
         .build();
   }
 
@@ -109,6 +110,7 @@ public class Variable {
     private VariableType type = VariableType.TEXT;
     private Map<String, Object> metadata = Maps.newHashMap();
     private String allowedValues;
+    private List<String> allowedList;
 
     private VariableBuilder() {}
 
@@ -190,6 +192,11 @@ public class Variable {
       return this;
     }
 
+    public VariableBuilder allowedList(List<String> allowedList) {
+      this.allowedList = allowedList;
+      return this;
+    }
+
     public Variable build() {
       Variable variable = new Variable();
       variable.setName(name);
@@ -200,6 +207,7 @@ public class Variable {
       variable.setType(type);
       variable.setMetadata(metadata);
       variable.setAllowedValues(allowedValues);
+      variable.setAllowedList(allowedList);
       return variable;
     }
   }
