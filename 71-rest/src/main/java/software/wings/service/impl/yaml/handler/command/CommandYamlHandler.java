@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.command;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -28,6 +29,7 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -52,6 +54,7 @@ import java.util.Optional;
 @Singleton
 @Slf4j
 public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceCommand> {
+  private static final String APP_PREFIX = "App/";
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
@@ -122,18 +125,25 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     ServiceCommand serviceCommand;
     ServiceCommand.Builder builder = ServiceCommand.Builder.aServiceCommand();
+    String templateUri = commandYaml.getTemplateUri();
     if (!isCreate) {
       ServiceCommand existingSvcCommand = serviceResourceService.getCommandByName(appId, serviceId, name);
       notNullCheck("Service command with the given name doesn't exist: " + name, existingSvcCommand, USER);
       builder.withUuid(existingSvcCommand.getUuid());
       builder.withTemplateUuid(existingSvcCommand.getTemplateUuid());
       builder.withTemplateVersion(existingSvcCommand.getTemplateVersion());
-      if (isNotEmpty(commandYaml.getTemplateUri())) {
-        builder.withTemplateVersion(TemplateHelper.obtainTemplateVersion(commandYaml.getTemplateUri()));
+      if (isNotEmpty(templateUri)) {
+        builder.withTemplateVersion(TemplateHelper.obtainTemplateVersion(templateUri));
       }
     } else {
-      if (isNotEmpty(commandYaml.getTemplateUri())) {
-        builder.withTemplateUuid(templateService.fetchTemplateIdFromUri(accountId, commandYaml.getTemplateUri()));
+      if (isNotEmpty(templateUri)) {
+        if (templateUri.startsWith(APP_PREFIX)) {
+          templateUri = templateUri.substring(APP_PREFIX.length());
+          builder.withTemplateUuid(templateService.fetchTemplateIdFromUri(accountId, appId, templateUri));
+        } else {
+          builder.withTemplateUuid(templateService.fetchTemplateIdFromUri(accountId, templateUri));
+        }
+        builder.withTemplateVersion(TemplateHelper.obtainTemplateVersion(templateUri));
       }
     }
 
@@ -211,6 +221,12 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       }
       if (serviceCommand.getTemplateVersion() != null) {
         templateUri = templateUri + ":" + serviceCommand.getTemplateVersion();
+      }
+      Template template = templateService.get(templateUuid);
+      if (template != null) {
+        if (!template.getAppId().equals(GLOBAL_APP_ID)) {
+          templateUri = APP_PREFIX + templateUri;
+        }
       }
     }
 
