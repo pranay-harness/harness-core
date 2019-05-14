@@ -297,6 +297,7 @@ import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.YamlType;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.aws.EcsContainerDetails;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
@@ -1237,5 +1238,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GCSHelmRepoConfig.class, 7176);
     kryo.register(JiraCustomFieldValue.class, 7177);
     kryo.register(AwsSecretsManagerConfig.class, 7178);
+    kryo.register(EcsContainerDetails.class, 7179);
   }
 }
