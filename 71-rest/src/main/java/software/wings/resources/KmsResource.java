@@ -12,6 +12,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.utils.AccountPermissionUtils;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,6 +30,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
 public class KmsResource {
   @Inject private KmsService kmsService;
+  @Inject private AccountPermissionUtils accountPermissionUtils;
 
   @POST
   @Path("/save-global-kms")
@@ -36,7 +38,11 @@ public class KmsResource {
   @ExceptionMetered
   public RestResponse<String> saveGlobalKmsConfig(
       @QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
-    return new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
+    RestResponse<String> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to save global KMS");
+    if (response == null) {
+      response = new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
+    }
+    return response;
   }
 
   @POST
