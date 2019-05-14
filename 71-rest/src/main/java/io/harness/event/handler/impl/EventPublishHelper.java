@@ -3,12 +3,14 @@ package io.harness.event.handler.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
+import static io.harness.event.handler.impl.Constants.EMAIL_ID;
+import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
+import static io.harness.event.handler.impl.Constants.USER_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
-import static software.wings.common.Constants.ACCOUNT_ID;
-import static software.wings.common.Constants.EMAIL_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -482,12 +484,12 @@ public class EventPublishHelper {
     publishEvent(EventType.COMPLETE_USER_REGISTRATION, properties);
   }
 
-  public void publishTrialUserSignupEvent(String email) {
+  public void publishTrialUserSignupEvent(String email, String userName, String inviteId) {
     if (isEmpty(email)) {
       return;
     }
 
-    publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email));
+    publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email, userName, inviteId));
   }
 
   private String checkIfMarketoIsEnabledAndGetUserEmail(EventType eventType) {
@@ -722,6 +724,15 @@ public class EventPublishHelper {
     Map<String, String> properties = new HashMap<>();
     properties.put(ACCOUNT_ID, accountId);
     properties.put(EMAIL_ID, userEmail);
+    return properties;
+  }
+
+  private Map<String, String> getProperties(String accountId, String userEmail, String userName, String userInviteId) {
+    Map<String, String> properties = new HashMap<>();
+    properties.put(ACCOUNT_ID, accountId);
+    properties.put(EMAIL_ID, userEmail);
+    properties.put(USER_NAME, userName);
+    properties.put(USER_INVITE_ID, userInviteId);
     return properties;
   }
 }
