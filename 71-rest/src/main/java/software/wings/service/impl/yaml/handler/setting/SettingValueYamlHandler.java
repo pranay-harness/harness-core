@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.setting;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
 
@@ -12,6 +13,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -89,7 +91,13 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
 
   protected SettingAttribute buildSettingAttribute(
       String accountId, String yamlFilePath, String uuid, B config, SettingCategory category) {
-    String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    String name;
+    YamlType yamlType = yamlHelper.getYamlTypeFromSettingAttributePath(yamlFilePath);
+    if (yamlType == null || yamlType.equals(YamlType.ARTIFACT_SERVER) || yamlType.equals(YamlType.CLOUD_PROVIDER)) {
+      name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    } else {
+      name = yamlHelper.extractParentEntityName(yamlType.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    }
     return SettingAttribute.Builder.aSettingAttribute()
         .withAccountId(accountId)
         .withAppId(GLOBAL_APP_ID)

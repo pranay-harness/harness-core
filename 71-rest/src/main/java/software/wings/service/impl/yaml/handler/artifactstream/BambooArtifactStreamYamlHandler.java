@@ -16,6 +16,7 @@ public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     yaml.setPlanName(bean.getJobname());
+    yaml.setMetadataOnly(bean.isMetadataOnly());
     return yaml;
   }
 
@@ -24,6 +25,7 @@ public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
     Yaml yaml = changeContext.getYaml();
     bean.setArtifactPaths(yaml.getArtifactPaths());
     bean.setJobname(yaml.getPlanName());
+    bean.setMetadataOnly(yaml.isMetadataOnly());
   }
 
   @Override

@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.utils.RepositoryType;
 
 /**
  * @author rktummala on 10/09/17
@@ -27,6 +28,11 @@ public class NexusArtifactStreamYamlHandler
       yaml.setDockerRegistryUrl(bean.getDockerRegistryUrl());
     }
     yaml.setRepositoryType(bean.getRepositoryType());
+    if (!bean.getRepositoryType().equals(RepositoryType.docker.name())) {
+      yaml.setMetadataOnly(bean.isMetadataOnly());
+    } else {
+      yaml.setMetadataOnly(true);
+    }
     return yaml;
   }
 
@@ -42,6 +48,11 @@ public class NexusArtifactStreamYamlHandler
     }
     bean.setJobname(yaml.getRepositoryName());
     bean.setRepositoryType(yaml.getRepositoryType());
+    if (!yaml.getRepositoryType().equals(RepositoryType.docker.name())) {
+      bean.setMetadataOnly(yaml.isMetadataOnly());
+    } else {
+      bean.setMetadataOnly(true);
+    }
   }
 
   @Override

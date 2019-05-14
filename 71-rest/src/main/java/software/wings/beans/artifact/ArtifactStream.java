@@ -122,14 +122,12 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   @EqualsAndHashCode(callSuper = true)
   public abstract static class Yaml extends BaseEntityYaml {
     private String serverName;
-    private boolean metadataOnly;
     private String templateUri;
     private List<NameValuePair> templateVariables;
 
-    public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly) {
+    public Yaml(String type, String harnessApiVersion, String serverName) {
       super(type, harnessApiVersion);
       this.serverName = serverName;
-      this.metadataOnly = metadataOnly;
     }
 
     public Yaml(String type, String harnessApiVersion) {
@@ -140,7 +138,6 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
         List<NameValuePair> templateVariables) {
       super(type, harnessApiVersion);
       this.serverName = serverName;
-      this.metadataOnly = metadataOnly;
       this.templateUri = templateUri;
       this.templateVariables = templateVariables;
     }
@@ -150,5 +147,6 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
     // Temporary
     public static final String appId = "appId";
     public static final String uuid = "uuid";
+    public static final String settingId = "settingId";
   }
 }

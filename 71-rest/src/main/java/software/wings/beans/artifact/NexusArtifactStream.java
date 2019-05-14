@@ -134,17 +134,19 @@ public class NexusArtifactStream extends ArtifactStream {
     private String imageName;
     private String dockerRegistryUrl;
     private String repositoryType;
+    private boolean metadataOnly;
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
         String groupId, List<String> artifactPaths, String imageName, String dockerRegistryUrl, String repositoryType) {
-      super(NEXUS.name(), harnessApiVersion, serverName, metadataOnly);
+      super(NEXUS.name(), harnessApiVersion, serverName);
       this.repositoryName = repositoryName;
       this.groupId = groupId;
       this.artifactPaths = artifactPaths;
       this.imageName = imageName;
       this.dockerRegistryUrl = dockerRegistryUrl;
       this.repositoryType = repositoryType;
+      this.metadataOnly = metadataOnly;
     }
   }
 }

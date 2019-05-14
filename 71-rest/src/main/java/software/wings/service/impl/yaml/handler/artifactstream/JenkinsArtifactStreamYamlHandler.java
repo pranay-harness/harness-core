@@ -18,6 +18,7 @@ public class JenkinsArtifactStreamYamlHandler
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     yaml.setJobName(bean.getJobname());
+    yaml.setMetadataOnly(bean.isMetadataOnly());
     return yaml;
   }
 
@@ -31,6 +32,7 @@ public class JenkinsArtifactStreamYamlHandler
     Yaml yaml = changeContext.getYaml();
     bean.setArtifactPaths(yaml.getArtifactPaths());
     bean.setJobname(yaml.getJobName());
+    bean.setMetadataOnly(yaml.isMetadataOnly());
   }
 
   @Override

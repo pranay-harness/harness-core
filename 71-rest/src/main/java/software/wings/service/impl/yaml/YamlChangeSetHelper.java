@@ -5,12 +5,14 @@ import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -32,6 +34,7 @@ public class YamlChangeSetHelper {
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlGitService yamlGitService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
+  @Inject private FeatureFlagService featureFlagService;
 
   public List<GitFileChange> getConfigFileGitChangeSet(ConfigFile configFile, ChangeType changeType) {
     return entityUpdateService.obtainEntityGitSyncFileChangeSet(
@@ -84,10 +87,18 @@ public class YamlChangeSetHelper {
   }
 
   private <T> void entityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
-    if (yamlHandlerFactory.isNonLeafEntity(oldEntity)) {
-      nonLeafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      if (yamlHandlerFactory.isNonLeafEntity(oldEntity)) {
+        nonLeafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+      } else {
+        leafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+      }
     } else {
-      leafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+      if (yamlHandlerFactory.isNonLeafEntityWithFeatureFlag(oldEntity)) {
+        nonLeafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+      } else {
+        leafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+      }
     }
   }
 

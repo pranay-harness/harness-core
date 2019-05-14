@@ -130,16 +130,19 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private String artifactPattern;
     private String repositoryType;
     private String dockerRepositoryServer;
+    private boolean metadataOnly;
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
-        String groupId, String imageName, List<String> artifactPaths, String artifactPattern) {
-      super(ARTIFACTORY.name(), harnessApiVersion, serverName, metadataOnly);
+        String groupId, String imageName, List<String> artifactPaths, String artifactPattern, String repositoryType) {
+      super(ARTIFACTORY.name(), harnessApiVersion, serverName);
       this.repositoryName = repositoryName;
       this.groupId = groupId;
       this.imageName = imageName;
       this.artifactPaths = artifactPaths;
       this.artifactPattern = artifactPattern;
+      this.repositoryType = repositoryType;
+      this.metadataOnly = metadataOnly;
     }
   }
 }

@@ -146,6 +146,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
+  public ArtifactStream getArtifactStreamByName(String settingId, String artifactStreamName) {
+    return wingsPersistence.createQuery(ArtifactStream.class)
+        .filter(ArtifactStreamKeys.appId, GLOBAL_APP_ID)
+        .filter(ArtifactStreamKeys.settingId, settingId)
+        .filter(ArtifactStreamKeys.name, artifactStreamName)
+        .get();
+  }
+
+  @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
     return create(artifactStream, true);
@@ -314,8 +323,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
       yamlPushService.pushYamlChangeSet(accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE,
           artifactStream.isSyncFromGit(), isRename);
+    } else {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute != null) {
+        accountId = settingAttribute.getAccountId();
+        yamlPushService.pushYamlChangeSet(accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE,
+            artifactStream.isSyncFromGit(), isRename);
+      }
     }
-    // TODO: handle yaml updates for connector level
     return finalArtifactStream;
   }
 
@@ -411,7 +426,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private boolean delete(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit) {
-    ArtifactStream artifactStream = get(appId, artifactStreamId);
+    ArtifactStream artifactStream;
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      artifactStream = get(appId, artifactStreamId);
+    } else {
+      artifactStream = get(artifactStreamId);
+    }
     if (artifactStream == null) {
       return true;
     }
@@ -419,7 +439,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       ensureArtifactStreamSafeToDelete(appId, artifactStreamId);
     }
 
-    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    String accountId = null;
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    } else {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute != null) {
+        accountId = settingAttribute.getAccountId();
+      }
+    }
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
 
     return pruneArtifactStream(appId, artifactStreamId);
@@ -693,5 +721,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     return retVal;
+  }
+
+  public List<ArtifactStream> listBySettingId(String appId, String settingId) {
+    return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
+        .filter(ArtifactStreamKeys.appId, appId)
+        .filter(ArtifactStreamKeys.settingId, settingId)
+        .asList();
   }
 }

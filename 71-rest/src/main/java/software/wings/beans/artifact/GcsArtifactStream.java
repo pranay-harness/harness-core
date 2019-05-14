@@ -69,13 +69,15 @@ public class GcsArtifactStream extends ArtifactStream {
   public static final class Yaml extends ArtifactStream.Yaml {
     private String bucketName;
     private List<String> artifactPaths;
+    private String projectId;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String bucketName,
-        List<String> artifactPaths) {
-      super(GCS.name(), harnessApiVersion, serverName, metadataOnly);
+    public Yaml(
+        String harnessApiVersion, String serverName, String bucketName, List<String> artifactPaths, String projectId) {
+      super(GCS.name(), harnessApiVersion, serverName);
       this.bucketName = bucketName;
       this.artifactPaths = artifactPaths;
+      this.projectId = projectId;
     }
   }
 }

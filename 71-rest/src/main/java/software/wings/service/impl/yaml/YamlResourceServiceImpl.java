@@ -191,38 +191,53 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getTrigger(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
 
-    if (artifactStream == null) {
-      // handle missing artifactStream
-      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-          .addParam("message",
-              "The ArtifactStream with appId: '" + appId + "' and artifactStreamId: '" + artifactStreamId
-                  + "' was not found!");
-    }
-
-    ArtifactStream.Yaml artifactStreamYaml =
-        yamlArtifactStreamService.getArtifactStreamYamlObject(appId, artifactStreamId);
-
-    String serviceId = artifactStream.getServiceId();
-
-    String serviceName = "";
-
-    if (serviceId != null) {
-      Service service = serviceResourceService.get(appId, serviceId);
-
-      if (service != null) {
-        serviceName = service.getName();
-      } else {
+      if (artifactStream == null) {
+        // handle missing artifactStream
         throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-            .addParam(
-                "message", "The Service with appId: '" + appId + "' and serviceId: '" + serviceId + "' was not found!");
+            .addParam("message",
+                "The ArtifactStream with appId: '" + appId + "' and artifactStreamId: '" + artifactStreamId
+                    + "' was not found!");
       }
-    }
-    String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";
 
-    return YamlHelper.getYamlRestResponse(yamlGitSyncService, artifactStream.getUuid(),
-        appService.getAccountIdByAppId(appId), artifactStreamYaml, payLoadName + ".yaml");
+      ArtifactStream.Yaml artifactStreamYaml =
+          yamlArtifactStreamService.getArtifactStreamYamlObject(appId, artifactStreamId);
+
+      String serviceId = artifactStream.getServiceId();
+
+      String serviceName = "";
+
+      if (serviceId != null) {
+        Service service = serviceResourceService.get(appId, serviceId);
+
+        if (service != null) {
+          serviceName = service.getName();
+        } else {
+          throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+              .addParam("message",
+                  "The Service with appId: '" + appId + "' and serviceId: '" + serviceId + "' was not found!");
+        }
+      }
+      String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";
+
+      return YamlHelper.getYamlRestResponse(yamlGitSyncService, artifactStream.getUuid(),
+          appService.getAccountIdByAppId(appId), artifactStreamYaml, payLoadName + ".yaml");
+    } else {
+      ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+
+      if (artifactStream == null) {
+        // handle missing artifactStream
+        throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+            .addParam("message",
+                "The ArtifactStream artifactStreamId: '" + artifactStreamId + "' was not found at connector level!");
+      }
+      ArtifactStream.Yaml artifactStreamYaml = yamlArtifactStreamService.getArtifactStreamYamlObject(artifactStreamId);
+      String payLoadName = artifactStream.getSourceName();
+
+      return YamlHelper.getYamlRestResponse(artifactStreamYaml, payLoadName + ".yaml");
+    }
   }
 
   /**
@@ -488,6 +503,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case HTTP_HELM_REPO:
       case AMAZON_S3_HELM_REPO:
       case GCS_HELM_REPO:
+      case SMB:
+      case SFTP:
         return yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SERVER, settingVariableType.name());
 
       // collaboration providers

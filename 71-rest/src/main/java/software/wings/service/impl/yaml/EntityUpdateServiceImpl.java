@@ -19,6 +19,7 @@ import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -32,6 +33,7 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
@@ -61,6 +63,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private FileService fileService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private GitFileChange createGitFileChange(
       String accountId, String path, String name, String yamlContent, ChangeType changeType, boolean isDirectory) {
@@ -174,13 +177,23 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       return obtainServiceVariableChangeSet(accountId, (ServiceVariable) entity, changeType);
     }
 
-    boolean isNonLeafEntity = yamlHandlerFactory.isNonLeafEntity(entity);
+    boolean isNonLeafEntity;
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      isNonLeafEntity = yamlHandlerFactory.isNonLeafEntity(entity);
+    } else {
+      isNonLeafEntity = yamlHandlerFactory.isNonLeafEntityWithFeatureFlag(entity);
+    }
     boolean isEntityNeedsActualFile = yamlHandlerFactory.isEntityNeedsActualFile(entity);
     if (!changeType.equals(ChangeType.DELETE) && !isEntityNeedsActualFile) {
       yaml = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource().getYaml();
     }
 
-    String yamlFileName = yamlHandlerFactory.obtainYamlFileName(entity);
+    String yamlFileName;
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      yamlFileName = yamlHandlerFactory.obtainYamlFileName(entity);
+    } else {
+      yamlFileName = yamlHandlerFactory.obtainYamlFileNameWithFeatureFlag(entity);
+    }
 
     // For Manifest File "/" is allowed in name
     if (!(entity instanceof ManifestFile)) {

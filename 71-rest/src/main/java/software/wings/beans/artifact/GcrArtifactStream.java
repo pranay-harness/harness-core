@@ -79,9 +79,8 @@ public class GcrArtifactStream extends ArtifactStream {
     private String dockerImageName;
 
     @Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String registryHostName,
-        String dockerImageName) {
-      super(GCR.name(), harnessApiVersion, serverName, metadataOnly);
+    public Yaml(String harnessApiVersion, String serverName, String registryHostName, String dockerImageName) {
+      super(GCR.name(), harnessApiVersion, serverName);
       this.registryHostName = registryHostName;
       this.dockerImageName = dockerImageName;
     }

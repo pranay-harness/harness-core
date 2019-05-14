@@ -64,8 +64,8 @@ public class SmbArtifactStream extends ArtifactStream {
     private List<String> artifactPaths;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, List<String> artifactPaths) {
-      super(SMB.name(), harnessApiVersion, serverName, metadataOnly);
+    public Yaml(String harnessApiVersion, String serverName, List<String> artifactPaths) {
+      super(SMB.name(), harnessApiVersion, serverName);
       this.artifactPaths = artifactPaths;
     }
   }

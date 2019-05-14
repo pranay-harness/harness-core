@@ -58,13 +58,15 @@ public class JenkinsArtifactStream extends ArtifactStream {
   public static class Yaml extends ArtifactStream.Yaml {
     private String jobName;
     private List<String> artifactPaths;
+    private boolean metadataOnly;
 
     @lombok.Builder
     public Yaml(
         String harnessApiVersion, String serverName, boolean metadataOnly, String jobName, List<String> artifactPaths) {
-      super(JENKINS.name(), harnessApiVersion, serverName, metadataOnly);
+      super(JENKINS.name(), harnessApiVersion, serverName);
       this.jobName = jobName;
       this.artifactPaths = artifactPaths;
+      this.metadataOnly = metadataOnly;
     }
   }
 }

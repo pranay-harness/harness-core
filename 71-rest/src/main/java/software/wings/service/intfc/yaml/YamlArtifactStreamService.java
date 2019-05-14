@@ -16,9 +16,13 @@ public interface YamlArtifactStreamService {
 
   ArtifactStream.Yaml getArtifactStreamYamlObject(String appId, String artifactStreamId);
 
+  ArtifactStream.Yaml getArtifactStreamYamlObject(String artifactStreamId);
+
   String getArtifactStreamYamlString(ArtifactStream artifactStream);
 
   String getArtifactStreamYamlString(String appId, String artifactStreamId);
+
+  String getArtifactStreamYamlString(String artifactStreamId);
 
   RestResponse<Base> updateArtifactStream(
       String appId, String artifactStreamId, YamlPayload yamlPayload, boolean deleteEnabled);

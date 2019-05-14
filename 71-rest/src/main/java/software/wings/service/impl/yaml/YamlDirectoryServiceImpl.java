@@ -10,6 +10,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.ARTIFACT_STREAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
@@ -34,6 +35,7 @@ import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -54,6 +56,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -118,6 +121,7 @@ import software.wings.verification.CVConfiguration;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.directory.AccountLevelYamlNode;
 import software.wings.yaml.directory.AppLevelYamlNode;
+import software.wings.yaml.directory.ArtifactStreamYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.EnvLevelYamlNode;
@@ -242,8 +246,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             yaml = yamlResourceService.getServiceCommand(appId, entityId).getResource().getYaml();
             break;
           case "ArtifactStream":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlArtifactStreamService.getArtifactStreamYamlString(appId, entityId);
+            if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+              appId = ((AppLevelYamlNode) dn).getAppId();
+              yaml = yamlArtifactStreamService.getArtifactStreamYamlString(appId, entityId);
+            } else {
+              yaml = yamlArtifactStreamService.getArtifactStreamYamlString(entityId);
+            }
             break;
           case "Defaults":
             if (dn instanceof AppLevelYamlNode) {
@@ -1430,8 +1438,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.AZURE, directoryPath.clone());
     doCloudProviderType(
         accountId, cloudProvidersFolder, SettingVariableTypes.KUBERNETES_CLUSTER, directoryPath.clone());
-    doCloudProviderType(
-        accountId, cloudProvidersFolder, SettingVariableTypes.PHYSICAL_DATA_CENTER, directoryPath.clone());
+    doCloudProviderType(accountId, cloudProvidersFolder, PHYSICAL_DATA_CENTER, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.PCF, directoryPath.clone());
 
     return cloudProvidersFolder;
@@ -1439,22 +1446,62 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private void doCloudProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
-    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      List<SettingAttribute> settingAttributes =
+          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
 
-    if (settingAttributes != null) {
-      // iterate over providers
-      for (SettingAttribute settingAttribute : settingAttributes) {
-        DirectoryPath cpPath = directoryPath.clone();
-        String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-        parentFolder.addChild(
-            new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName), yamlGitSyncService));
+      if (settingAttributes != null) {
+        // iterate over providers
+        for (SettingAttribute settingAttribute : settingAttributes) {
+          DirectoryPath cpPath = directoryPath.clone();
+          String yamlFileName = getSettingAttributeYamlName(settingAttribute);
+          parentFolder.addChild(
+              new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+                  yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName), yamlGitSyncService));
+        }
+      }
+    } else {
+      List<SettingAttribute> settingAttributes =
+          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+      if (settingAttributes != null) {
+        for (SettingAttribute settingAttribute : settingAttributes) {
+          DirectoryPath cpPath = directoryPath.clone();
+          FolderNode cloudProvidersTypeFolder = new FolderNode(accountId, settingAttribute.getName(),
+              SettingAttribute.class, cpPath.add(settingAttribute.getName()), yamlGitSyncService);
+          parentFolder.addChild(cloudProvidersTypeFolder);
+
+          DirectoryPath indexYamlPath = cpPath.clone();
+          String yamlFileName = INDEX_YAML;
+          cloudProvidersTypeFolder.addChild(
+              new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+                  yamlFileName, SettingAttribute.class, indexYamlPath.add(yamlFileName), yamlGitSyncService));
+
+          if (!settingAttribute.getValue().getType().equals(PHYSICAL_DATA_CENTER.name())) {
+            DirectoryPath artifactStreamsFolderPath = cpPath.clone();
+            FolderNode artifactStreamsFolder = new FolderNode(accountId, ARTIFACT_STREAMS_FOLDER, ArtifactStream.class,
+                artifactStreamsFolderPath.add(ARTIFACT_STREAMS_FOLDER), yamlGitSyncService);
+            cloudProvidersTypeFolder.addChild(artifactStreamsFolder);
+
+            List<ArtifactStream> artifactStreams =
+                artifactStreamService.listBySettingId(GLOBAL_APP_ID, settingAttribute.getUuid());
+            for (ArtifactStream artifactStream : artifactStreams) {
+              yamlFileName = getArtifactStreamYamlName(artifactStream);
+              artifactStreamsFolder.addChild(new ArtifactStreamYamlNode(accountId, GLOBAL_APP_ID,
+                  artifactStream.getUuid(), yamlFileName, ArtifactStream.class,
+                  artifactStreamsFolderPath.clone().add(yamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
+            }
+          }
+        }
       }
     }
   }
 
   private String getSettingAttributeYamlName(SettingAttribute settingAttribute) {
     return settingAttribute.getName() + YAML_EXTENSION;
+  }
+
+  private String getArtifactStreamYamlName(ArtifactStream artifactStream) {
+    return artifactStream.getName() + YAML_EXTENSION;
   }
 
   private FolderNode doArtifactServers(String accountId, DirectoryPath directoryPath) {
@@ -1471,22 +1518,59 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doArtifactServerType(
         accountId, artifactServersFolder, SettingVariableTypes.AMAZON_S3_HELM_REPO, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.GCS_HELM_REPO, directoryPath.clone());
+    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.SMB, directoryPath.clone());
+    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.SFTP, directoryPath.clone());
 
     return artifactServersFolder;
   }
 
   private void doArtifactServerType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
-    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      List<SettingAttribute> settingAttributes =
+          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
 
-    if (settingAttributes != null) {
-      // iterate over providers
-      for (SettingAttribute settingAttribute : settingAttributes) {
-        DirectoryPath asPath = directoryPath.clone();
-        String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-        parentFolder.addChild(
-            new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                yamlFileName, SettingAttribute.class, asPath.add(yamlFileName), yamlGitSyncService));
+      if (settingAttributes != null) {
+        // iterate over providers
+        for (SettingAttribute settingAttribute : settingAttributes) {
+          DirectoryPath asPath = directoryPath.clone();
+          String yamlFileName = getSettingAttributeYamlName(settingAttribute);
+          parentFolder.addChild(
+              new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+                  yamlFileName, SettingAttribute.class, asPath.add(yamlFileName), yamlGitSyncService));
+        }
+      }
+    } else {
+      List<SettingAttribute> settingAttributes =
+          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+      if (settingAttributes != null) {
+        for (SettingAttribute settingAttribute : settingAttributes) {
+          DirectoryPath asPath = directoryPath.clone();
+          FolderNode artifactServersTypeFolder = new FolderNode(accountId, settingAttribute.getName(),
+              SettingAttribute.class, asPath.add(settingAttribute.getName()), yamlGitSyncService);
+          parentFolder.addChild(artifactServersTypeFolder);
+
+          DirectoryPath indexYamlPath = asPath.clone();
+          String yamlFileName = INDEX_YAML;
+          artifactServersTypeFolder.addChild(
+              new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+                  yamlFileName, SettingAttribute.class, indexYamlPath.add(yamlFileName), yamlGitSyncService));
+
+          DirectoryPath artifactStreamsFolderPath = asPath.clone();
+          FolderNode artifactStreamsFolder = new FolderNode(accountId, ARTIFACT_STREAMS_FOLDER, ArtifactStream.class,
+              artifactStreamsFolderPath.add(ARTIFACT_STREAMS_FOLDER), yamlGitSyncService);
+          artifactServersTypeFolder.addChild(artifactStreamsFolder);
+
+          List<ArtifactStream> artifactStreams =
+              artifactStreamService.listBySettingId(GLOBAL_APP_ID, settingAttribute.getUuid());
+          for (ArtifactStream artifactStream : artifactStreams) {
+            yamlFileName = getArtifactStreamYamlName(artifactStream);
+            artifactStreamsFolder.addChild(new ArtifactStreamYamlNode(accountId, GLOBAL_APP_ID,
+                artifactStream.getUuid(), yamlFileName, ArtifactStream.class,
+                artifactStreamsFolderPath.clone().add(yamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
+          }
+        }
       }
     }
   }
@@ -1787,8 +1871,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public String getRootPathByArtifactStream(ArtifactStream artifactStream) {
-    Service service = serviceResourceService.get(artifactStream.getAppId(), artifactStream.getServiceId());
-    return getRootPathByService(service) + PATH_DELIMITER + ARTIFACT_SOURCES_FOLDER;
+    if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      Service service = serviceResourceService.get(artifactStream.getAppId(), artifactStream.getServiceId());
+      return getRootPathByService(service) + PATH_DELIMITER + ARTIFACT_SOURCES_FOLDER;
+    } else {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      return getRootPathBySettingAttribute(settingAttribute) + PATH_DELIMITER + ARTIFACT_STREAMS_FOLDER;
+    }
   }
 
   @Override
@@ -1805,6 +1894,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case KUBERNETES_CLUSTER:
       case PHYSICAL_DATA_CENTER:
         sb.append(CLOUD_PROVIDERS_FOLDER);
+        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId())) {
+          sb.append(PATH_DELIMITER);
+          sb.append(settingAttribute.getName());
+        }
         break;
 
       // artifact servers - these don't have separate folders
@@ -1821,7 +1914,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case HTTP_HELM_REPO:
       case AMAZON_S3_HELM_REPO:
       case GCS_HELM_REPO:
+      case SMB:
+      case SFTP:
         sb.append(ARTIFACT_SOURCES_FOLDER);
+        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId())) {
+          sb.append(PATH_DELIMITER);
+          sb.append(settingAttribute.getName());
+        }
         break;
 
       // collaboration providers

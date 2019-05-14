@@ -81,7 +81,7 @@ public class AcrArtifactStream extends ArtifactStream {
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String subscriptionId,
         String registryName, String repositoryName) {
-      super(ACR.name(), harnessApiVersion, serverName, metadataOnly);
+      super(ACR.name(), harnessApiVersion, serverName);
       this.subscriptionId = subscriptionId;
       this.registryName = registryName;
       this.repositoryName = repositoryName;

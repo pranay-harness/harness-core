@@ -68,8 +68,8 @@ public class EcrArtifactStream extends ArtifactStream {
     private String region;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String imageName, String region) {
-      super(ECR.name(), harnessApiVersion, serverName, metadataOnly);
+    public Yaml(String harnessApiVersion, String serverName, String imageName, String region) {
+      super(ECR.name(), harnessApiVersion, serverName);
       this.imageName = imageName;
       this.region = region;
     }

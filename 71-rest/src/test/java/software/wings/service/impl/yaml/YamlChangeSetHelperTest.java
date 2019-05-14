@@ -20,12 +20,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Base;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -46,6 +48,7 @@ public class YamlChangeSetHelperTest {
   @Mock private YamlHandlerFactory yamlHandlerFactory;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private YamlGitService yamlGitService;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Before
@@ -76,6 +79,8 @@ public class YamlChangeSetHelperTest {
                                             .withFileContent(NEW)
                                             .build();
 
+    // TODO: remove when feature flag is cleaned up
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNTID)).thenReturn(false);
     // Validate for InfrastructureMapping
     when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any(), any()))
         .thenReturn(Lists.newArrayList(gitFileChangeForDelete))
@@ -158,6 +163,8 @@ public class YamlChangeSetHelperTest {
                                             .withFileContent(NEW)
                                             .build();
 
+    // TODO: remove when feature flag is cleaned up
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNTID)).thenReturn(false);
     // Validate for Artifact Stream
     when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any(), any()))
         .thenReturn(Lists.newArrayList(gitFileChangeForDelete))
