@@ -20,6 +20,7 @@ import software.wings.service.intfc.ServiceResourceService;
 @Data
 @Builder
 public class ArtifactCollectionFailedAlert implements AlertData {
+  // TODO: ASR: refactor this class for connector level artifact streams
   @Inject @Transient @SchemaIgnore private transient AppService appService;
   @Inject @Transient @SchemaIgnore private transient ArtifactStreamService artifactStreamService;
   @Inject @Transient @SchemaIgnore private transient ServiceResourceService serviceResourceService;

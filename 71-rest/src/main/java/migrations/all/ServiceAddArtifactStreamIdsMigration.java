@@ -13,25 +13,25 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 
-@Slf4j
-public class ServiceNameMigrationIfEmpty implements Migration {
-  public static final String HARNESS_SERVICE = "HARNESS_SERVICE";
+import java.util.List;
+import java.util.stream.Collectors;
 
+@Slf4j
+public class ServiceAddArtifactStreamIdsMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
   @SuppressWarnings("deprecation")
   public void migrate() {
-    logger.info("Changing Empty Service Name to Harness_Service");
+    logger.info("Add artifactStreamIds to Services");
     final DBCollection collection = wingsPersistence.getCollection(Service.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 1;
-    int count = 1;
-    logger.info("Migrating Services with No Name");
-    try (HIterator<Service> services =
-             new HIterator<>(wingsPersistence.createQuery(Service.class).project(ServiceKeys.name, true).fetch())) {
+    logger.info("Adding artifactServiceIds to Services");
+    try (HIterator<Service> services = new HIterator<>(wingsPersistence.createQuery(Service.class).fetch())) {
       while (services.hasNext()) {
         Service service = services.next();
         if (i % 50 == 0) {
@@ -39,15 +39,21 @@ public class ServiceNameMigrationIfEmpty implements Migration {
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           logger.info("Services: {} updated", i);
         }
-        if (isEmpty(service.getName()) || isEmpty(service.getName().trim())) {
+
+        List<String> artifactStreamIds = wingsPersistence.createQuery(ArtifactStream.class)
+                                             .filter("appId", service.getAppId())
+                                             .filter("serviceId", service.getUuid())
+                                             .asList()
+                                             .stream()
+                                             .map(ArtifactStream::getUuid)
+                                             .collect(Collectors.toList());
+        if (!isEmpty(artifactStreamIds)) {
           bulkWriteOperation
               .find(wingsPersistence.createQuery(Service.class)
                         .filter(Service.ID_KEY, service.getUuid())
                         .getQueryObject())
-              .updateOne(new BasicDBObject("$set",
-                  new BasicDBObject(ServiceKeys.name,
-                      new StringBuilder(128).append(HARNESS_SERVICE).append("_0").append(count).toString())));
-          ++count;
+              .updateOne(
+                  new BasicDBObject("$set", new BasicDBObject(ServiceKeys.artifactStreamIds, artifactStreamIds)));
           ++i;
         }
       }
@@ -56,6 +62,6 @@ public class ServiceNameMigrationIfEmpty implements Migration {
       bulkWriteOperation.execute();
       logger.info("Services: {} updated", i);
     }
-    logger.info("Migrating Empty Service Names completed");
+    logger.info("Adding artifactServiceIds to Services completed");
   }
 }

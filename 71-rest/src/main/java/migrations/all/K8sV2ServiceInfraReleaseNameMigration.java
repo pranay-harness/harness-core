@@ -7,7 +7,6 @@ import static software.wings.beans.InfrastructureMapping.SERVICE_ID_KEY;
 import static software.wings.beans.InfrastructureMappingType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
-import static software.wings.beans.Service.IS_K8S_V2_KEY;
 
 import com.google.inject.Inject;
 
@@ -22,6 +21,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ public class K8sV2ServiceInfraReleaseNameMigration implements Migration {
 
     logger.info("Fetching k8v2 services");
     try (HIterator<Service> services = new HIterator<>(
-             wingsPersistence.createQuery(Service.class, excludeAuthority).filter(IS_K8S_V2_KEY, true).fetch())) {
+             wingsPersistence.createQuery(Service.class, excludeAuthority).filter(ServiceKeys.isK8sV2, true).fetch())) {
       while (services.hasNext()) {
         servicesList.add(services.next());
       }

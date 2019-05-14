@@ -61,6 +61,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
         // TODO:: mark inactive maybe
         return;
       }
+
       accountId = settingAttribute.getAccountId();
       buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(appId, artifactStream, settingAttribute);
       delegateTaskBuilder.accountId(accountId);

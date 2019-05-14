@@ -73,6 +73,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextNameKeyWordsMigration;
+import migrations.all.ServiceAddArtifactStreamIdsMigration;
 import migrations.all.ServiceHelmValuesToManifestFileMigration;
 import migrations.all.ServiceNameMigrationIfEmpty;
 import migrations.all.SetIsDeletedFlagForInstances;
@@ -221,6 +222,7 @@ public class MigrationList {
         .add(Pair.of(243, ServiceHelmValuesToManifestFileMigration.class))
         .add(Pair.of(244, SetNamespaceInContainerInstanceInfo.class))
         .add(Pair.of(245, UpdateBitBucketTriggers.class))
+        .add(Pair.of(246, ServiceAddArtifactStreamIdsMigration.class))
         .build();
   }
 }

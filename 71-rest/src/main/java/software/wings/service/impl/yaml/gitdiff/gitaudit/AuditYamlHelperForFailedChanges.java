@@ -444,6 +444,7 @@ public class AuditYamlHelperForFailedChanges {
           YamlType.ARTIFACT_STREAM.getPathExpression(), auditRequestData.getYamlFilePath(), PATH_DELIMITER);
       String serviceId = getServiceId(auditRequestData);
 
+      // TODO: ASR: update when index added on setting_id + name
       // Here we don't care about actual details of ArtifactStream.
       // We just need Object of type ArtifactStream with appId, serviceId and Name set.
       stream = new ArtifactStreamWithOnlyAuditNeededData(StringUtils.EMPTY);

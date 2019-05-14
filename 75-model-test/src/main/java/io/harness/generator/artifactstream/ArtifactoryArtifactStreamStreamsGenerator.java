@@ -37,11 +37,11 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
                                         .artifactPattern("/io/harness/e2e/echo/*/*.war")
                                         .settingId(settingAttribute.getUuid())
                                         .build();
-    return ensureArtifactStream(seed, artifactStream);
+    return ensureArtifactStream(seed, artifactStream, owners);
   }
 
   @Override
-  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream) {
+  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream, Owners owners) {
     ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
     final ArtifactoryArtifactStreamBuilder artifactoryArtifactStreamBuilder = ArtifactoryArtifactStream.builder();
 
@@ -87,6 +87,6 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
     artifactoryArtifactStreamBuilder.autoPopulate(artifactoryArtifactStream.isAutoPopulate());
     artifactoryArtifactStreamBuilder.metadataOnly(artifactStream.isMetadataOnly());
 
-    return artifactStreamGeneratorHelper.saveArtifactStream(artifactoryArtifactStreamBuilder.build());
+    return artifactStreamGeneratorHelper.saveArtifactStream(artifactoryArtifactStreamBuilder.build(), owners);
   }
 }

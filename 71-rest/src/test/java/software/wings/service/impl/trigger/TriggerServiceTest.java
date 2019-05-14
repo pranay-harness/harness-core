@@ -114,6 +114,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.trigger.TriggerServiceImpl.TriggerIdempotentResult;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
@@ -137,6 +138,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public class TriggerServiceTest extends WingsBaseTest {
+  private static final String CATALOG_SERVICE_NAME = "Catalog";
+
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
   @Mock private WorkflowExecutionService workflowExecutionService;
@@ -150,6 +153,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Inject @InjectMocks private TriggerService triggerService;
 
@@ -183,7 +187,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(buildWorkflow());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(buildJenkinsArtifactStream());
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(Service.builder().uuid(SERVICE_ID).name("Catalog").build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build());
     when(idempotentRegistry.create(any(), any(), any(), any()))
         .thenReturn(IdempotentLock.<TriggerIdempotentResult>builder()
                         .registry(idempotentRegistry)
@@ -192,6 +196,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(artifactService.getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false)).thenReturn(artifact);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(artifactCollectionUtils.getService(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build());
   }
 
   @Test

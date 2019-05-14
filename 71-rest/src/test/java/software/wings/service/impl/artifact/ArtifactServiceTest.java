@@ -93,6 +93,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private HQuery<Application> appQuery;
   @Mock private Queue<CollectEvent> collectQueue;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
 
   @InjectMocks @Inject private ArtifactService artifactService;
   String BUILD_NO = "buildNo";
@@ -665,7 +666,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetArtifactStatusForNexusDockerStream() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+    when(artifactCollectionUtils.getService(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(NexusArtifactStream.builder()
@@ -681,7 +682,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetArtifactStatusForNexusStream() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+    when(artifactCollectionUtils.getService(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.WAR).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(NexusArtifactStream.builder()
@@ -697,7 +698,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetArtifactStatusForArtifactoryDockerStream() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+    when(artifactCollectionUtils.getService(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(ArtifactoryArtifactStream.builder()
@@ -713,8 +714,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetArtifactStatusForArtifactoryStream() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.RPM).build());
+    when(artifactCollectionUtils.getService(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.WAR).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(ArtifactoryArtifactStream.builder()
                         .uuid(ARTIFACT_STREAM_ID)

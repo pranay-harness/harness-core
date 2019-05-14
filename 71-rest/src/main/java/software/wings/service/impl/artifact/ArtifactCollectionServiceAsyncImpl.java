@@ -187,7 +187,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
       accountId = settingAttribute.getAccountId();
       buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(appId, artifactStream, settingAttribute);
-
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }

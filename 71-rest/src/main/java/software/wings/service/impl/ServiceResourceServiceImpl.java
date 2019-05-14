@@ -106,7 +106,6 @@ import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
@@ -609,12 +608,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     notNullCheck("Service", savedService);
 
+    List<String> artifactStreamIds = service.getArtifactStreamIds();
+    if (artifactStreamIds == null) {
+      artifactStreamIds = new ArrayList<>();
+    }
     List<String> keywords = trimStrings(service.generateKeywords());
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class)
-            .set("name", service.getName())
-            .set("description", Optional.ofNullable(service.getDescription()).orElse(""))
-            .set("keywords", keywords);
+            .set(ServiceKeys.name, service.getName())
+            .set(ServiceKeys.description, Optional.ofNullable(service.getDescription()).orElse(""))
+            .set(ServiceKeys.artifactStreamIds, artifactStreamIds)
+            .set(ServiceKeys.keywords, keywords);
 
     if (fromYaml) {
       if (isNotBlank(service.getConfigMapYaml())) {
@@ -874,7 +878,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public List<String> fetchServiceNamesByUuids(String appId, List<String> serviceUuids) {
     if (isNotEmpty(serviceUuids)) {
       List<Service> services = wingsPersistence.createQuery(Service.class)
-                                   .project(Service.NAME_KEY, true)
+                                   .project(ServiceKeys.name, true)
                                    .project(Service.APP_ID_KEY, true)
                                    .filter(ServiceKeys.appId, appId)
                                    .field("uuid")
@@ -1943,20 +1947,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   public void setArtifactStreams(List<Service> services) {
-    List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
-    ArrayListMultimap<String, ArtifactStream> serviceToArtifactStreamMap = ArrayListMultimap.create();
-
-    try (HIterator<ArtifactStream> iterator =
-             new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
-                                 .field("serviceId")
-                                 .in(serviceIds)
-                                 .fetch())) {
-      while (iterator.hasNext()) {
-        ArtifactStream artifactStream = iterator.next();
-        serviceToArtifactStreamMap.put(artifactStream.getServiceId(), artifactStream);
-      }
-    }
-    services.forEach(service -> service.setArtifactStreams(serviceToArtifactStreamMap.get(service.getUuid())));
+    services.forEach(
+        service -> service.setArtifactStreams(artifactStreamService.listByIds(service.getArtifactStreamIds())));
   }
 
   public void setServiceCommands(List<Service> services) {

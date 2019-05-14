@@ -39,11 +39,12 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
             .jobname("iis-app-example")
             .artifactPaths(asList("todolist-v2.0.zip"))
             .settingId(settingAttribute.getUuid())
-            .build());
+            .build(),
+        owners);
   }
 
   @Override
-  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream) {
+  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream, Owners owners) {
     AmazonS3ArtifactStream amazonS3ArtifactStream = (AmazonS3ArtifactStream) artifactStream;
     final AmazonS3ArtifactStreamBuilder s3ArtifactStreamBuilder = AmazonS3ArtifactStream.builder();
 
@@ -94,6 +95,6 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
       throw new UnsupportedOperationException();
     }
 
-    return artifactStreamGeneratorHelper.saveArtifactStream(s3ArtifactStreamBuilder.build());
+    return artifactStreamGeneratorHelper.saveArtifactStream(s3ArtifactStreamBuilder.build(), owners);
   }
 }

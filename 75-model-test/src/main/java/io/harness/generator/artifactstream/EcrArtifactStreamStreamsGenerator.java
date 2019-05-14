@@ -37,11 +37,11 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
                                         .autoPopulate(true)
                                         .settingId(settingAttribute.getUuid())
                                         .build();
-    return ensureArtifactStream(seed, artifactStream);
+    return ensureArtifactStream(seed, artifactStream, owners);
   }
 
   @Override
-  public ArtifactStream ensureArtifactStream(Seed seed, ArtifactStream artifactStream) {
+  public ArtifactStream ensureArtifactStream(Seed seed, ArtifactStream artifactStream, Owners owners) {
     EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
     ArtifactStream existing = artifactStreamGeneratorHelper.exists(ecrArtifactStream);
     if (existing != null) {
@@ -55,6 +55,7 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
                                                                 .imageName(ecrArtifactStream.getImageName())
                                                                 .autoPopulate(ecrArtifactStream.isAutoPopulate())
                                                                 .settingId(ecrArtifactStream.getSettingId())
-                                                                .build());
+                                                                .build(),
+        owners);
   }
 }
