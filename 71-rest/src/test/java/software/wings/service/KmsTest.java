@@ -31,6 +31,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -88,6 +89,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.security.HarnessUserGroup;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -113,6 +115,7 @@ import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -156,6 +159,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject @InjectMocks private KmsService kmsService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject private ConfigService configService;
   @Inject private EncryptionService encryptionService;
@@ -173,6 +177,7 @@ public class KmsTest extends WingsBaseTest {
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private String userId;
   private String accountId;
   private String appId;
   private String workflowExecutionId;
@@ -221,8 +226,16 @@ public class KmsTest extends WingsBaseTest {
     FieldUtils.writeField(infrastructureMappingService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsResource, "kmsService", kmsService, true);
     FieldUtils.writeField(secretManagementResource, "secretManager", secretManager, true);
-    wingsPersistence.save(user);
+    userId = wingsPersistence.save(user);
     UserThreadLocal.set(user);
+
+    // Add current user to harness user group so that save-global-kms operation can succeed
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
+                                            .applyToAllAccounts(true)
+                                            .memberIds(Sets.newHashSet(userId))
+                                            .actions(Sets.newHashSet(Action.READ))
+                                            .build();
+    harnessUserGroupService.save(harnessUserGroup);
   }
 
   @Test
