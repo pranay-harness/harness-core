@@ -75,12 +75,16 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
-import me.snowdrop.istio.api.model.DoneableIstioResource;
-import me.snowdrop.istio.api.model.IstioResource;
-import me.snowdrop.istio.api.model.IstioResourceBuilder;
-import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
-import me.snowdrop.istio.api.model.v1.networking.VirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
+import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
 import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -945,15 +949,35 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public IstioResource getIstioResource(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name) {
+  public VirtualService getIstioVirtualService(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     try {
+      VirtualService virtualService = new VirtualServiceBuilder().build();
+
       return kubernetesClient
-          .customResources(
-              getCustomResourceDefinition(kubernetesClient, new IstioResourceBuilder().withKind(kind).build()),
-              IstioResource.class, KubernetesResourceList.class, DoneableIstioResource.class)
+          .customResources(getCustomResourceDefinition(kubernetesClient, virtualService), VirtualService.class,
+              KubernetesResourceList.class, DoneableVirtualService.class)
+          .inNamespace(kubernetesConfig.getNamespace())
+          .withName(name)
+          .get();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  @Override
+  public DestinationRule getIstioDestinationRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    KubernetesClient kubernetesClient =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      DestinationRule destinationRule = new DestinationRuleBuilder().build();
+
+      return kubernetesClient
+          .customResources(getCustomResourceDefinition(kubernetesClient, destinationRule), DestinationRule.class,
+              KubernetesResourceList.class, DoneableDestinationRule.class)
           .inNamespace(kubernetesConfig.getNamespace())
           .withName(name)
           .get();
@@ -963,7 +987,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
-    final Optional<String> crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind());
+    final Optional<String> crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind().toLowerCase());
     final CustomResourceDefinition customResourceDefinition =
         client.customResourceDefinitions().withName(crdName.get()).get();
     if (customResourceDefinition == null) {
@@ -974,12 +998,27 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteIstioResource(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name) {
+  public void deleteIstioDestinationRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
     try {
-      istioClient.unregisterCustomResource(new IstioResourceBuilder()
-                                               .withKind(kind)
+      istioClient.unregisterCustomResource(new DestinationRuleBuilder()
+                                               .withNewMetadata()
+                                               .withName(name)
+                                               .withNamespace(kubernetesConfig.getNamespace())
+                                               .endMetadata()
+                                               .build());
+    } catch (Exception e) {
+      logger.info(e.getMessage());
+    }
+  }
+
+  @Override
+  public void deleteIstioVirtualService(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      istioClient.unregisterCustomResource(new VirtualServiceBuilder()
                                                .withNewMetadata()
                                                .withName(name)
                                                .withNamespace(kubernetesConfig.getNamespace())
@@ -994,16 +1033,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public int getTrafficPercent(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
     String serviceName = getServiceNameFromControllerName(controllerName);
-    IstioResource virtualService =
-        getIstioResource(kubernetesConfig, encryptedDataDetails, "VirtualService", serviceName);
+    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, encryptedDataDetails, serviceName);
     Optional<Integer> revision = getRevisionFromControllerName(controllerName);
     if (virtualService == null || !revision.isPresent()) {
       return 0;
     }
-    VirtualService virtualServiceSpec = (VirtualService) virtualService.getSpec();
+    VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
     if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
       return 0;
     }
+
     return virtualServiceSpec.getHttp()
         .get(0)
         .getRoute()
@@ -1019,12 +1058,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
     String serviceName = getServiceNameFromControllerName(controllerName);
     String controllerNamePrefix = getPrefixFromControllerName(controllerName);
-    IstioResource virtualService =
-        getIstioResource(kubernetesConfig, encryptedDataDetails, "VirtualService", serviceName);
+    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, encryptedDataDetails, serviceName);
     if (virtualService == null) {
       return new HashMap<>();
     }
-    VirtualService virtualServiceSpec = (VirtualService) virtualService.getSpec();
+
+    VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
     if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
       return new HashMap<>();
     }

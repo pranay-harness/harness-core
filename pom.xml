@@ -752,7 +752,7 @@
             <dependency>
                 <groupId>me.snowdrop</groupId>
                 <artifactId>istio-client-uberjar</artifactId>
-                <version>0.12</version>
+                <version>1.0.1</version>
             </dependency>
             <dependency>
                 <groupId>net.jodah</groupId>
