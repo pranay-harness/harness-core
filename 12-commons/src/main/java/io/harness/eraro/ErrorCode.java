@@ -331,6 +331,8 @@ public enum ErrorCode {
 
   SERVICENOW_ERROR,
 
+  INVALID_ACCOUNT_PERMISSION("Invalid account permission"),
+
   HEALTH_ERROR;
 
   private Status status = BAD_REQUEST;

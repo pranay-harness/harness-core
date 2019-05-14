@@ -46,6 +46,7 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.UserGroupUtils;
 import software.wings.service.intfc.AccountService;
@@ -355,12 +356,28 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
+    checkImplicitPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", userGroup.getAppPermissions());
     setUnset(operations, "accountPermissions", userGroup.getAccountPermissions());
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
     return updatedUserGroup;
+  }
+
+  private void checkImplicitPermissions(UserGroup userGroup) {
+    if (null == userGroup.getAccountPermissions()) {
+      return;
+    }
+
+    Set<PermissionType> permissions = userGroup.getAccountPermissions().getPermissions();
+    if (permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT)) {
+      if (!permissions.contains(PermissionType.USER_PERMISSION_READ)) {
+        logger.info("Received account permissions {} are not in proper format for account {}, userGroupName {}",
+            permissions, userGroup.getAccountId(), userGroup.getName());
+        throw new WingsException(ErrorCode.INVALID_ACCOUNT_PERMISSION, USER);
+      }
+    }
   }
 
   @Override

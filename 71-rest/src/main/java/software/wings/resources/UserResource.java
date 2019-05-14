@@ -152,7 +152,7 @@ public class UserResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_READ)
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {

@@ -7,6 +7,8 @@ import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.apache.commons.collections4.CollectionUtils;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
@@ -29,6 +31,7 @@ public class LdapSettingsMigration implements Migration {
   public void migrate() {
     logger.info("Starting LdapSettingsMigration for all eligible accountIds");
 
+    UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     try (HIterator<LdapSettings> ldapSettingsHIterator =
              new HIterator<>(wingsPersistence.createQuery(LdapSettings.class).filter("type", SSOType.LDAP).fetch())) {
       while (ldapSettingsHIterator.hasNext()) {

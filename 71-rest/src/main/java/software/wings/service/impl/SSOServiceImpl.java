@@ -4,6 +4,8 @@ import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION;
+import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
+import static java.util.Arrays.asList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -32,12 +34,16 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.saml.SamlClientService;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SSOService;
@@ -69,6 +75,7 @@ public class SSOServiceImpl implements SSOService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private software.wings.security.SecretManager jwtTokenHelper;
   @Inject OauthOptions oauthOptions;
+  @Inject private AuthHandler authHandler;
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
@@ -145,12 +152,36 @@ public class SSOServiceImpl implements SSOService {
 
   @Override
   public SSOConfig getAccountAccessManagementSettings(String accountId) {
+    // We are handling the check programmatically for now, since we don't have enough info in the query / path
+    // parameters
+    authorizeAccessManagementCall();
     Account account = accountService.get(accountId);
     return SSOConfig.builder()
         .accountId(accountId)
         .authenticationMechanism(account.getAuthenticationMechanism())
         .ssoSettings(getSSOSettings(account))
         .build();
+  }
+
+  private void authorizeAccessManagementCall() {
+    PermissionAttribute userReadPermissionAttribute =
+        new PermissionAttribute(PermissionType.USER_PERMISSION_READ, Action.READ);
+    PermissionAttribute accountManagementPermission =
+        new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ);
+    boolean isAuthorized = handleExceptionInAuthorization(asList(userReadPermissionAttribute))
+        || handleExceptionInAuthorization(asList(accountManagementPermission));
+    if (!isAuthorized) {
+      throw new WingsException(USER_NOT_AUTHORIZED, WingsException.USER);
+    }
+  }
+
+  private boolean handleExceptionInAuthorization(List<PermissionAttribute> userPermissionList) {
+    try {
+      authHandler.authorize(userPermissionList, null, null);
+      return true;
+    } catch (Exception ex) {
+      return false;
+    }
   }
 
   private List<SSOSettings> getSSOSettings(Account account) {
