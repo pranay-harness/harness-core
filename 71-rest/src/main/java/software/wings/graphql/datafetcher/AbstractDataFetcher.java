@@ -23,6 +23,7 @@ import org.modelmapper.internal.objenesis.Objenesis;
 import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
+import software.wings.graphql.schema.type.QLContextedObject;
 import software.wings.security.PermissionAttribute;
 
 import java.lang.reflect.InvocationTargetException;
@@ -93,6 +94,10 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
 
     P parameters = objenesis.newInstance(clazz);
     Map<String, Object> map = new HashMap<>(dataFetchingEnvironment.getArguments());
+    if (dataFetchingEnvironment.getSource() instanceof QLContextedObject) {
+      map.putAll(((QLContextedObject) dataFetchingEnvironment.getSource()).getContext());
+    }
+
     Map<String, String> contextFieldArgsMap = getContextFieldArgsMap(dataFetchingEnvironment.getParentType().getName());
     if (contextFieldArgsMap != null) {
       contextFieldArgsMap.forEach(

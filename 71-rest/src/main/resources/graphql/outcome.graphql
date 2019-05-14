@@ -8,7 +8,7 @@ type OutcomeConnection {
 }
 
 type DeploymentOutcome implements Outcome {
-  execution: Execution
-  service: Service
-  environment: Environment
+  execution: Execution @dataFetcher(name: execution)
+  service: Service @dataFetcher(name: service)
+  environment: Environment @dataFetcher(name: environment)
 }
