@@ -630,7 +630,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                  .asList();
 
     Map<String, String> artifactStreamIdToName =
-        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, ArtifactStream::getName));
+        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, ArtifactStream::getSourceName));
     List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
     for (Service service : services) {
       List<String> artifactStreamIds = service.getArtifactStreamIds();
