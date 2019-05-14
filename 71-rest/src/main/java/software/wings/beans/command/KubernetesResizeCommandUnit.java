@@ -23,14 +23,15 @@ import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import me.snowdrop.istio.api.model.IstioResource;
-import me.snowdrop.istio.api.model.IstioResourceBuilder;
-import me.snowdrop.istio.api.model.IstioResourceFluent.VirtualServiceSpecNested;
-import me.snowdrop.istio.api.model.v1.networking.Destination;
-import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
-import me.snowdrop.istio.api.model.v1.networking.HTTPRoute;
-import me.snowdrop.istio.api.model.v1.networking.VirtualService;
-import me.snowdrop.istio.api.model.v1.networking.VirtualServiceFluent.HttpNested;
+import me.snowdrop.istio.api.IstioResource;
+import me.snowdrop.istio.api.networking.v1alpha3.Destination;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceFluent.SpecNested;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpecFluent.HttpNested;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
@@ -146,8 +147,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       String controllerName = resizeParams.getContainerServiceName();
       String kubernetesServiceName = getServiceNameFromControllerName(controllerName);
       String controllerPrefix = getPrefixFromControllerName(controllerName);
-      IstioResource existingVirtualService = kubernetesContainerService.getIstioResource(
-          kubernetesConfig, encryptedDataDetails, "VirtualService", kubernetesServiceName);
+      IstioResource existingVirtualService = kubernetesContainerService.getIstioVirtualService(
+          kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
 
       IstioResource virtualServiceDefinition =
           createVirtualServiceDefinition(contextData, allData, existingVirtualService, kubernetesServiceName);
@@ -175,8 +176,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       return false;
     }
 
-    HTTPRoute virtualServiceHttpRoute = ((VirtualService) virtualService.getSpec()).getHttp().get(0);
-    HTTPRoute existingVirtualServiceHttpRoute = ((VirtualService) existingVirtualService.getSpec()).getHttp().get(0);
+    HTTPRoute virtualServiceHttpRoute = (((VirtualService) virtualService).getSpec()).getHttp().get(0);
+    HTTPRoute existingVirtualServiceHttpRoute = (((VirtualService) existingVirtualService).getSpec()).getHttp().get(0);
 
     if ((virtualServiceHttpRoute == null || existingVirtualServiceHttpRoute == null)
         && virtualServiceHttpRoute != existingVirtualServiceHttpRoute) {
@@ -294,10 +295,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
   private IstioResource createVirtualServiceDefinition(ContextData contextData, List<ContainerServiceData> allData,
       IstioResource existingVirtualService, String kubernetesServiceName) {
-    VirtualService existingVirtualServiceSpec = (VirtualService) existingVirtualService.getSpec();
+    VirtualServiceSpec existingVirtualServiceSpec = ((VirtualService) existingVirtualService).getSpec();
 
-    VirtualServiceSpecNested<IstioResourceBuilder> virtualServiceSpecNested =
-        new IstioResourceBuilder()
+    SpecNested<VirtualServiceBuilder> virtualServiceSpecNested =
+        new VirtualServiceBuilder()
             .withApiVersion(existingVirtualService.getApiVersion())
             .withKind(existingVirtualService.getKind())
             .withNewMetadata()
@@ -306,7 +307,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
             .withAnnotations(existingVirtualService.getMetadata().getAnnotations())
             .withLabels(existingVirtualService.getMetadata().getLabels())
             .endMetadata()
-            .withNewVirtualServiceSpec()
+            .withNewSpec()
             .withHosts(existingVirtualServiceSpec.getHosts())
             .withGateways(existingVirtualServiceSpec.getGateways());
 
@@ -329,7 +330,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       }
     }
     virtualServiceHttpNested.endHttp();
-    return virtualServiceSpecNested.endVirtualServiceSpec().build();
+    return virtualServiceSpecNested.endSpec().build();
   }
 
   @Data

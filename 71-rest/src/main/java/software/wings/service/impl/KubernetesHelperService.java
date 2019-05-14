@@ -46,11 +46,12 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
-import me.snowdrop.istio.api.model.IstioResource;
-import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
-import me.snowdrop.istio.api.model.v1.networking.VirtualService;
+import me.snowdrop.istio.api.IstioResource;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
+import me.snowdrop.istio.client.DefaultIstioClient;
 import me.snowdrop.istio.client.IstioClient;
-import me.snowdrop.istio.client.KubernetesAdapter;
 import okhttp3.Authenticator;
 import okhttp3.ConnectionSpec;
 import okhttp3.Credentials;
@@ -131,14 +132,28 @@ public class KubernetesHelperService {
    */
   public KubernetesClient getKubernetesClient(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
+    Config config = getConfig(kubernetesConfig, encryptedDataDetails, apiVersion);
+
+    String namespace = "default";
+    if (isNotBlank(config.getNamespace())) {
+      namespace = config.getNamespace();
+    }
+
+    OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
+    try (DefaultKubernetesClient client = new DefaultKubernetesClient(okHttpClient, config)) {
+      return client.inNamespace(namespace);
+    }
+  }
+
+  private Config getConfig(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
     if (!kubernetesConfig.isDecrypted()) {
       encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
     }
-    String namespace = "default";
+
     ConfigBuilder configBuilder = new ConfigBuilder().withTrustCerts(true);
     if (isNotBlank(kubernetesConfig.getNamespace())) {
-      namespace = kubernetesConfig.getNamespace().trim();
-      configBuilder.withNamespace(namespace);
+      configBuilder.withNamespace(kubernetesConfig.getNamespace().trim());
     }
     if (isNotBlank(kubernetesConfig.getMasterUrl())) {
       configBuilder.withMasterUrl(kubernetesConfig.getMasterUrl().trim());
@@ -172,21 +187,26 @@ public class KubernetesHelperService {
       configBuilder.withApiVersion(apiVersion);
     }
 
-    Config config = configBuilder.build();
+    return configBuilder.build();
+  }
+
+  public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+
+    String namespace = "default";
+    if (isNotBlank(config.getNamespace())) {
+      namespace = config.getNamespace();
+    }
 
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
-    try (DefaultKubernetesClient client = new DefaultKubernetesClient(okHttpClient, config)) {
+    try (DefaultIstioClient client = new DefaultIstioClient(okHttpClient, config)) {
       return client.inNamespace(namespace);
     }
   }
 
-  public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return new IstioClient(new KubernetesAdapter(getKubernetesClient(kubernetesConfig, encryptedDataDetails)));
-  }
-
   public static void printVirtualServiceRouteWeights(
       IstioResource virtualService, String controllerPrefix, ExecutionLogCallback executionLogCallback) {
-    VirtualService virtualServiceSpec = (VirtualService) virtualService.getSpec();
+    VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
     if (isNotEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
       List<DestinationWeight> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
       sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset())));

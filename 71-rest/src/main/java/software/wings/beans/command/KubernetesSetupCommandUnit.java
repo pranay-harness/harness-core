@@ -103,13 +103,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-import me.snowdrop.istio.api.model.IstioResource;
-import me.snowdrop.istio.api.model.IstioResourceBuilder;
-import me.snowdrop.istio.api.model.IstioResourceFluent.DestinationRuleSpecNested;
-import me.snowdrop.istio.api.model.IstioResourceFluent.VirtualServiceSpecNested;
-import me.snowdrop.istio.api.model.v1.networking.Destination;
-import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
-import me.snowdrop.istio.api.model.v1.networking.VirtualServiceFluent.HttpNested;
+import me.snowdrop.istio.api.IstioResource;
+import me.snowdrop.istio.api.networking.v1alpha3.Destination;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleFluent;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceFluent.SpecNested;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpecFluent.HttpNested;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
@@ -847,22 +850,22 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     } else {
       try {
-        IstioResource virtualService = kubernetesContainerService.getIstioResource(
-            kubernetesConfig, encryptedDataDetails, "VirtualService", virtualServiceName);
+        VirtualService virtualService = kubernetesContainerService.getIstioVirtualService(
+            kubernetesConfig, encryptedDataDetails, virtualServiceName);
         if (virtualService != null
             && virtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
           executionLogCallback.saveExecutionLog("Deleting Istio VirtualService" + virtualServiceName);
-          kubernetesContainerService.deleteIstioResource(
-              kubernetesConfig, encryptedDataDetails, "VirtualService", virtualServiceName);
+          kubernetesContainerService.deleteIstioVirtualService(
+              kubernetesConfig, encryptedDataDetails, virtualServiceName);
         }
 
-        IstioResource destinationRule = kubernetesContainerService.getIstioResource(
-            kubernetesConfig, encryptedDataDetails, "DestinationRule", virtualServiceName);
+        DestinationRule destinationRule = kubernetesContainerService.getIstioDestinationRule(
+            kubernetesConfig, encryptedDataDetails, virtualServiceName);
         if (destinationRule != null
             && destinationRule.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
           executionLogCallback.saveExecutionLog("Deleting Istio DestinationRule" + virtualServiceName);
-          kubernetesContainerService.deleteIstioResource(
-              kubernetesConfig, encryptedDataDetails, "DestinationRule", virtualServiceName);
+          kubernetesContainerService.deleteIstioDestinationRule(
+              kubernetesConfig, encryptedDataDetails, virtualServiceName);
         }
       } catch (Exception e) {
         logger.error("Error checking for previous istio route", e);
@@ -1163,17 +1166,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private List<IstioResource> createVirtualServiceAndDestinationRuleDefinition(KubernetesSetupParams setupParams,
       String kubernetesServiceName, Map<String, String> labels, Map<String, Integer> activeControllers,
       ExecutionLogCallback executionLogCallback) {
-    VirtualServiceSpecNested<IstioResourceBuilder> virtualServiceSpecNested =
-        new IstioResourceBuilder()
+    SpecNested<VirtualServiceBuilder> virtualServiceSpecNested =
+        new VirtualServiceBuilder()
             .withApiVersion("networking.istio.io/v1alpha3")
-            .withKind("VirtualService")
             .withNewMetadata()
             .withAnnotations(harnessAnnotations)
             .withName(kubernetesServiceName)
             .withNamespace(setupParams.getNamespace())
             .withLabels(labels)
             .endMetadata()
-            .withNewVirtualServiceSpec()
+            .withNewSpec()
             .withHosts(setupParams.getIstioConfig() != null && !isEmpty(setupParams.getIstioConfig().getHosts())
                     ? setupParams.getIstioConfig().getHosts()
                     : singletonList(kubernetesServiceName));
@@ -1182,17 +1184,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       virtualServiceSpecNested.addAllToGateways(setupParams.getIstioConfig().getGateways());
     }
 
-    DestinationRuleSpecNested<IstioResourceBuilder> destinationRuleSpecNested =
-        new IstioResourceBuilder()
+    DestinationRuleFluent.SpecNested<DestinationRuleBuilder> destinationRuleSpecNested =
+        new DestinationRuleBuilder()
             .withApiVersion("networking.istio.io/v1alpha3")
-            .withKind("DestinationRule")
             .withNewMetadata()
             .withAnnotations(harnessAnnotations)
             .withName(kubernetesServiceName)
             .withNamespace(setupParams.getNamespace())
             .withLabels(labels)
             .endMetadata()
-            .withNewDestinationRuleSpec()
+            .withNewSpec()
             .withHost(kubernetesServiceName);
 
     HttpNested virtualServiceHttpNested = virtualServiceSpecNested.addNewHttp();
@@ -1238,8 +1239,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     virtualServiceHttpNested.endHttp();
 
-    IstioResource virtualService = virtualServiceSpecNested.endVirtualServiceSpec().build();
-    IstioResource destinationRule = destinationRuleSpecNested.endDestinationRuleSpec().build();
+    IstioResource virtualService = virtualServiceSpecNested.endSpec().build();
+    IstioResource destinationRule = destinationRuleSpecNested.endSpec().build();
     executionLogCallback.saveExecutionLog("Creating istio VirtualService:\n\n" + toDisplayYaml(virtualService));
     executionLogCallback.saveExecutionLog("Creating istio DestinationRule:\n\n" + toDisplayYaml(destinationRule));
     return asList(virtualService, destinationRule);
