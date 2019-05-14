@@ -3,7 +3,6 @@ package software.wings.service.impl.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.Integer.parseInt;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
@@ -23,13 +22,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
@@ -39,7 +36,6 @@ import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
@@ -60,7 +56,6 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class ArtifactCollectionServiceImpl implements ArtifactCollectionService {
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private BuildSourceService buildSourceService;
   @Inject private ArtifactService artifactService;
@@ -184,7 +179,9 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     if (!appId.equals(GLOBAL_APP_ID)) {
-      if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
+      if (artifactCollectionUtils.getService(appId, artifactStream.getUuid())
+              .getArtifactType()
+              .equals(ArtifactType.DOCKER)) {
         collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
       } else if (artifactStream.fetchArtifactStreamAttributes().getRepositoryType() == null
           || artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals("any")) {
@@ -258,15 +255,5 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
       }
     }
     return buildArtifactPathDetails.keySet();
-  }
-
-  private Service getService(String appId, ArtifactStream artifactStream) {
-    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
-    if (service == null) {
-      artifactStreamService.delete(appId, artifactStream.getUuid());
-      throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
-          .addParam("message", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
-    }
-    return service;
   }
 }

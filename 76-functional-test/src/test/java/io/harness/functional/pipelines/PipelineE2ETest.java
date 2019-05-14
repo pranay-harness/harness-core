@@ -133,8 +133,6 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
-    //
-
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
         bearerToken, application.getUuid(), artifactStream.getUuid());
 

@@ -73,6 +73,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
@@ -102,6 +103,7 @@ public class ArtifactCollectionUtils {
   @Inject private AppService appService;
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
@@ -471,14 +473,16 @@ public class ArtifactCollectionUtils {
     return artifactStreamAttributes;
   }
 
-  public Service getService(String appId, ArtifactStream artifactStream) {
-    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
-    if (service == null) {
-      artifactStreamService.delete(appId, artifactStream.getUuid());
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
+  // TODO: ASR: remove this method after migration. Most invocations will use setting instead of service.
+  public Service getService(String appId, String artifactStreamId) {
+    List<Service> services = artifactStreamServiceBindingService.listServices(appId, artifactStreamId);
+    if (isEmpty(services)) {
+      artifactStreamService.delete(appId, artifactStreamId);
+      throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
+          .addParam("message", format("Artifact stream %s is a zombie.", artifactStreamId));
     }
-    return service;
+
+    return services.get(0);
   }
 
   private static boolean isArtifactoryDockerOrGenric(ArtifactStream artifactStream, ArtifactType artifactType) {
@@ -534,7 +538,7 @@ public class ArtifactCollectionUtils {
     ArtifactStreamAttributes artifactStreamAttributes;
     BuildSourceRequestType requestType;
     if (!appId.equals(GLOBAL_APP_ID)) {
-      Service service = getService(appId, artifactStream);
+      Service service = getService(appId, artifactStream.getUuid());
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
       requestType = getRequestType(artifactStream, service.getArtifactType());
     } else {

@@ -41,11 +41,12 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
             .jobname("harness-samples")
             .artifactPaths(asList("echo/target/echo.war"))
             .settingId(settingAttribute.getUuid())
-            .build());
+            .build(),
+        owners);
   }
 
   @Override
-  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream) {
+  public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream, Owners owners) {
     JenkinsArtifactStream jenkinsArtifactStream = (JenkinsArtifactStream) artifactStream;
     final JenkinsArtifactStreamBuilder builder = JenkinsArtifactStream.builder();
 
@@ -83,6 +84,6 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
       throw new UnsupportedOperationException();
     }
 
-    return artifactStreamGeneratorHelper.saveArtifactStream(builder.build());
+    return artifactStreamGeneratorHelper.saveArtifactStream(builder.build(), owners);
   }
 }

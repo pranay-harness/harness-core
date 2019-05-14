@@ -35,6 +35,7 @@ import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -77,6 +78,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private AppService appService;
   @Inject private GcsService gcsService;
   @Inject private CustomBuildSourceService customBuildSourceService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -198,7 +200,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     String artifactStreamType = artifactStream.getArtifactStreamType();
     ArtifactStreamAttributes artifactStreamAttributes;
     if (!appId.equals(GLOBAL_APP_ID)) {
-      Service service = getService(appId, artifactStream);
+      Service service = artifactCollectionUtils.getService(appId, artifactStream.getUuid());
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
       artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
@@ -251,7 +253,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
-    Service service = getService(appId, artifactStream);
+    Service service = artifactCollectionUtils.getService(appId, artifactStream.getUuid());
 
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
 
@@ -268,12 +270,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("Artifact Stream", artifactStream);
     return artifactStream;
-  }
-
-  private Service getService(String appId, ArtifactStream artifactStream) {
-    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
-    notNullCheck("Service might have been deleted", service, USER);
-    return service;
   }
 
   @Override

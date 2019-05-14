@@ -66,6 +66,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.Role;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -204,6 +205,7 @@ public class EntityHelper {
       entityType = EntityType.ARTIFACT_STREAM.name();
       entityName = artifactStream.getName();
       appId = artifactStream.getAppId();
+      // TODO: ASR: maybe change this to use setting_id
       affectedResourceId = artifactStream.getServiceId();
       affectedResourceName = getServiceName(artifactStream.getServiceId(), appId);
       affectedResourceType = EntityType.SERVICE.name();
@@ -536,7 +538,7 @@ public class EntityHelper {
     List<Service> services = wingsPersistence.createQuery(Service.class)
                                  .filter(ID_KEY, serviceId)
                                  .filter(APP_ID_KEY, appId)
-                                 .project(Service.NAME_KEY, true)
+                                 .project(ServiceKeys.name, true)
                                  .asList();
     if (isEmpty(services)) {
       return "";

@@ -18,6 +18,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -32,6 +34,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.Stencil;
 
@@ -61,6 +64,7 @@ import javax.ws.rs.QueryParam;
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
   @Inject ApplicationManifestService applicationManifestService;
+  @Inject ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   /**
    * Instantiates a new service resource.
@@ -719,5 +723,34 @@ public class ServiceResource {
   public RestResponse<List<ApplicationManifest>> listAppManifests(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(applicationManifestService.listAppManifests(appId, serviceId));
+  }
+
+  @GET
+  @Path("{serviceId}/artifact-streams")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<ArtifactStream>> listArtifactStreams(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(artifactStreamServiceBindingService.listArtifactStreams(appId, serviceId));
+  }
+
+  @POST
+  @Path("{serviceId}/artifact-streams")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ArtifactStream> createArtifactStreamBinding(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @NotNull ArtifactStreamBinding artifactStreamBinding) {
+    return new RestResponse<>(
+        artifactStreamServiceBindingService.create(appId, serviceId, artifactStreamBinding.getArtifactStreamId()));
+  }
+
+  @DELETE
+  @Path("{serviceId}/artifact-streams/{artifactStreamId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse deleteArtifactStreamBinding(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("artifactStreamId") String artifactStreamId) {
+    artifactStreamServiceBindingService.delete(appId, serviceId, artifactStreamId);
+    return new RestResponse();
   }
 }

@@ -43,7 +43,11 @@ import java.util.List;
         @Field("artifactStreamType"), @Field("nextCleanupIteration")
       })
 })
-// todo: add compound index with setting_id + name
+// TODO: ASR: add compound index with setting_id + name
+// TODO: ASR: change all apis to work with Service.artifactStreamIds instead of serviceId - including UI
+// TODO: ASR: migrate the index and name of existing artifact streams (name + service name + app name + setting name)
+// TODO: ASR: removing serviceId from ArtifactStream
+// TODO: ASR: add feature flag: should not have serviceId in ArtifactStream
 @HarnessExportableEntity
 @Data
 @AllArgsConstructor

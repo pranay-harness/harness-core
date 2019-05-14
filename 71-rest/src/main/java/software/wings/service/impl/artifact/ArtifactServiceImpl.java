@@ -73,6 +73,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
@@ -114,6 +115,8 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -175,21 +178,24 @@ public class ArtifactServiceImpl implements ArtifactService {
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
     ArtifactStream artifactStream;
+    List<String> serviceIds;
     if (artifact.getAppId() != null && !artifact.getAppId().equals(GLOBAL_APP_ID)) {
       if (!appService.exist(artifact.getAppId())) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
             .addParam("args", "App does not exist: " + artifact.getAppId());
       }
       artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+      notNullCheck("Artifact Stream", artifactStream, USER);
+      serviceIds = artifactStreamServiceBindingService.listServiceIds(artifact.getAppId(), artifactStream.getUuid());
     } else {
       artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+      notNullCheck("Artifact Stream", artifactStream, USER);
+      serviceIds = artifactStreamServiceBindingService.listServiceIds(artifactStream.getUuid());
     }
 
-    notNullCheck("Artifact Stream", artifactStream, USER);
-
     artifact.setArtifactSourceName(artifactStream.getSourceName());
-    if (artifactStream.getServiceId() != null) {
-      artifact.setServiceIds(asList(artifactStream.getServiceId()));
+    if (!isEmpty(serviceIds)) {
+      artifact.setServiceIds(serviceIds);
     }
 
     setArtifactStatus(artifact, artifactStream);
@@ -211,9 +217,12 @@ public class ArtifactServiceImpl implements ArtifactService {
       artifact.setStatus(APPROVED);
       return;
     }
+
     if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) { // TODO: if (isNotEmpty(artifactPaths) ||not
       if (!artifact.getAppId().equals(GLOBAL_APP_ID)) { // Null) ->not_downloaded
-        artifact.setContentStatus(getArtifactType(artifactStream).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
+        artifact.setContentStatus(getArtifactType(artifactStream.getAppId(), artifactStream.getUuid()).equals(DOCKER)
+                ? METADATA_ONLY
+                : NOT_DOWNLOADED);
         artifact.setStatus(APPROVED);
         return;
       } else {
@@ -228,7 +237,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
-        if (getArtifactType(artifactStream).equals(DOCKER)) {
+        if (getArtifactType(artifactStream.getAppId(), artifactStream.getUuid()).equals(DOCKER)) {
           artifact.setContentStatus(METADATA_ONLY);
           artifact.setStatus(APPROVED);
           return;
@@ -248,9 +257,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     artifact.setStatus(QUEUED);
   }
 
-  private ArtifactType getArtifactType(ArtifactStream artifactStream) {
-    return serviceResourceService.get(artifactStream.getAppId(), artifactStream.getServiceId(), false)
-        .getArtifactType();
+  // TODO: ASR: remove this method after migration
+  private ArtifactType getArtifactType(String appId, String artifactStreamId) {
+    return artifactCollectionUtils.getService(appId, artifactStreamId).getArtifactType();
   }
 
   /* (non-Javadoc)

@@ -95,6 +95,7 @@ import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededRespon
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
@@ -139,6 +140,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -1030,7 +1032,7 @@ public class TriggerServiceImpl implements TriggerService {
     ArtifactStream artifactStream =
         artifactStreamService.get(trigger.getAppId(), artifactTriggerCondition.getArtifactStreamId());
     notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
-    Service service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
+    Service service = artifactCollectionUtils.getService(trigger.getAppId(), artifactStream.getUuid());
     notNullCheck("Service does not exist", service, USER);
     artifactTriggerCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
   }
@@ -1101,7 +1103,7 @@ public class TriggerServiceImpl implements TriggerService {
       ArtifactStream artifactStream =
           artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
       notNullCheck("Artifact Source does not exist", artifactStream, USER);
-      Service service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
+      Service service = artifactCollectionUtils.getService(trigger.getAppId(), artifactStream.getUuid());
       notNullCheck("Service might have been deleted", service, USER);
       artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
     }

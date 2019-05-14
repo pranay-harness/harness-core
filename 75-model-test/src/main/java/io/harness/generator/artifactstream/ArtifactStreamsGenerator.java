@@ -7,5 +7,5 @@ import software.wings.beans.artifact.ArtifactStream;
 
 public interface ArtifactStreamsGenerator {
   ArtifactStream ensureArtifactStream(Seed seed, Owners owners);
-  ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream);
+  ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream, Owners owners);
 }

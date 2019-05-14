@@ -35,11 +35,11 @@ public class DockerArtifactStreamStreamsGenerator implements ArtifactStreamsGene
                                         .settingId(settingAttribute.getUuid())
                                         .imageName("library/nginx")
                                         .build();
-    return ensureArtifactStream(seed, artifactStream);
+    return ensureArtifactStream(seed, artifactStream, owners);
   }
 
   @Override
-  public ArtifactStream ensureArtifactStream(Seed seed, ArtifactStream artifactStream) {
+  public ArtifactStream ensureArtifactStream(Seed seed, ArtifactStream artifactStream, Owners owners) {
     DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
     ArtifactStream existing = artifactStreamGeneratorHelper.exists(dockerArtifactStream);
     if (existing != null) {
@@ -52,6 +52,7 @@ public class DockerArtifactStreamStreamsGenerator implements ArtifactStreamsGene
                                                                 .imageName(dockerArtifactStream.getImageName())
                                                                 .autoPopulate(dockerArtifactStream.isAutoPopulate())
                                                                 .settingId(dockerArtifactStream.getSettingId())
-                                                                .build());
+                                                                .build(),
+        owners);
   }
 }

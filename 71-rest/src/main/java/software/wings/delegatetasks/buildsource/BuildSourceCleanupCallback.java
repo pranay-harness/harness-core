@@ -13,6 +13,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Data
 @Slf4j
 public class BuildSourceCleanupCallback implements NotifyCallback {
   private String accountId;
@@ -120,37 +122,5 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
     artifactService.deleteArtifacts(appId, deletedArtifactsNew);
     deletedArtifacts.addAll(deletedArtifactsNew);
-  }
-
-  public String getAccountId() {
-    return accountId;
-  }
-
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  public String getArtifactStreamId() {
-    return artifactStreamId;
-  }
-
-  public void setArtifactStreamId(String artifactStreamId) {
-    this.artifactStreamId = artifactStreamId;
-  }
-
-  public List<BuildDetails> getBuilds() {
-    return builds;
-  }
-
-  public void setBuilds(List<BuildDetails> builds) {
-    this.builds = builds;
   }
 }

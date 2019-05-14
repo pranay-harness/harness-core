@@ -3,7 +3,6 @@ package io.harness.generator;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Service.APP_ID_KEY;
-import static software.wings.beans.Service.NAME_KEY;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 
@@ -18,6 +17,7 @@ import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
@@ -109,7 +109,7 @@ public class ServiceGenerator {
   public Service exists(Service service) {
     return wingsPersistence.createQuery(Service.class)
         .filter(APP_ID_KEY, service.getAppId())
-        .filter(NAME_KEY, service.getName())
+        .filter(ServiceKeys.name, service.getName())
         .get();
   }
 
@@ -134,6 +134,12 @@ public class ServiceGenerator {
     Service existing = exists(builder.build());
     if (existing != null) {
       return existing;
+    }
+
+    if (service != null && service.getDescription() != null) {
+      builder.description(service.getDescription());
+    } else {
+      builder.description(random.nextObject(String.class));
     }
 
     if (service != null && service.getArtifactType() != null) {

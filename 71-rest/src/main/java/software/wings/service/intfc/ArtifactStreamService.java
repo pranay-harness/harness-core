@@ -133,5 +133,9 @@ public interface ArtifactStreamService extends OwnedByService {
 
   List<ArtifactStream> listBySettingId(String settingId);
 
+  List<ArtifactStream> listByIds(List<String> artifactStreamIds);
+
+  List<ArtifactStream> listByServiceId(String appId, String serviceId);
+
   List<ArtifactStreamSummary> listArtifactStreamSummary(String appId);
 }

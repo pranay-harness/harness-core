@@ -48,10 +48,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "ServiceKeys")
 public class Service extends Base implements KeywordsAware, NameAccess {
-  public static final String NAME_KEY = "name";
-  public static final String ARTIFACT_TYPE = "artifactType";
-  public static final String IS_K8S_V2_KEY = "isK8sV2";
-
   @Trimmed @EntityName @NotEmpty private String name;
   private String description;
   private ArtifactType artifactType;
@@ -76,6 +72,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
 
   private boolean isK8sV2;
   @Indexed private String accountId;
+  private List<String> artifactStreamIds;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -83,7 +80,8 @@ public class Service extends Base implements KeywordsAware, NameAccess {
       ArtifactType artifactType, DeploymentType deploymentType, String configMapYaml, String helmValueYaml,
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
-      Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId) {
+      Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
+      List<String> artifactStreamIds) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -103,6 +101,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
     this.keywords = keywords;
     this.isK8sV2 = isK8sV2;
     this.accountId = accountId;
+    this.artifactStreamIds = artifactStreamIds;
   }
 
   public Service cloneInternal() {

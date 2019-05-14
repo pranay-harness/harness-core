@@ -19,6 +19,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
 
   @Override
   public void validateTriggerCondition(DeploymentTrigger trigger) {
+    // TODO: ASR: update when index added on setting_id + name
     ArtifactCondition artifactCondition = (ArtifactCondition) trigger.getCondition();
 
     ArtifactStream artifactStream =

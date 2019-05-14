@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static software.wings.beans.InfrastructureMapping.SERVICE_ID_KEY;
-import static software.wings.beans.Service.ARTIFACT_TYPE;
 
 import com.google.inject.Inject;
 
@@ -14,6 +13,7 @@ import migrations.Migration;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -45,7 +45,7 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
     logger.info("Migrating service helm values");
 
     List<Service> services = wingsPersistence.createQuery(Service.class, excludeAuthority)
-                                 .filter(ARTIFACT_TYPE, "DOCKER")
+                                 .filter(ServiceKeys.artifactType, "DOCKER")
                                  .field(HELM_VALUE_YAML_KEY)
                                  .exists()
                                  .asList();

@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.Integer.parseInt;
-import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -16,15 +15,14 @@ import static software.wings.service.impl.artifact.ArtifactCollectionServiceAsyn
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.ResponseData;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
-import software.wings.beans.Service;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
@@ -54,6 +52,7 @@ import java.util.stream.Collectors;
 /**
  * Created by anubhaw on 7/20/18.
  */
+@Data
 @Slf4j
 public class BuildSourceCallback implements NotifyCallback {
   private String accountId;
@@ -70,7 +69,7 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient TriggerService triggerService;
   @Inject private transient PermitService permitService;
   @Inject private transient AlertService alertService;
-  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
 
   public BuildSourceCallback(String accountId, String appId, String artifactStreamId, String permitId,
       String settingId) { // todo: new constr with settingId
@@ -194,7 +193,9 @@ public class BuildSourceCallback implements NotifyCallback {
 
   private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     if (!appId.equals(GLOBAL_APP_ID)) {
-      if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
+      if (artifactCollectionUtils.getService(appId, artifactStream.getUuid())
+              .getArtifactType()
+              .equals(ArtifactType.DOCKER)) {
         collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
       } else {
         collectGenericArtifacts(artifactStream, newArtifacts);
@@ -312,55 +313,5 @@ public class BuildSourceCallback implements NotifyCallback {
       }
     }
     return buildArtifactPathDetails.keySet();
-  }
-
-  private Service getService(String appId, ArtifactStream artifactStream) {
-    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
-    if (service == null) {
-      artifactStreamService.delete(appId, artifactStream.getUuid());
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
-    }
-    return service;
-  }
-
-  public String getAccountId() {
-    return accountId;
-  }
-
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  public String getArtifactStreamId() {
-    return artifactStreamId;
-  }
-
-  public void setArtifactStreamId(String artifactStreamId) {
-    this.artifactStreamId = artifactStreamId;
-  }
-
-  public List<BuildDetails> getBuilds() {
-    return builds;
-  }
-
-  public void setBuilds(List<BuildDetails> builds) {
-    this.builds = builds;
-  }
-
-  public String getPermitId() {
-    return permitId;
-  }
-
-  public void setPermitId(String permitId) {
-    this.permitId = permitId;
   }
 }

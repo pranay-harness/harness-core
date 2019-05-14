@@ -71,6 +71,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -85,6 +86,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +119,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   // Do not delete as they are being used by Prune
   @Inject private ArtifactService artifactService;
   @Inject private AlertService alertService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -213,7 +216,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
       // For the connector level also, check if the name exists
-      // TODO: uncomment when index added on setting_id + name
+      // TODO: ASR: uncomment when index added on setting_id + name
       //      pageRequest = aPageRequest()
       //                        .addFilter("settingId", EQ, artifactStream.getSettingId())
       //                        .addFilter("name", STARTS_WITH, escapedString)
@@ -479,21 +482,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public List<ArtifactStream> fetchArtifactStreamsForService(String appId, String serviceId) {
-    return wingsPersistence.createQuery(ArtifactStream.class)
-        .filter(ArtifactStream.APP_ID_KEY, appId)
-        .filter(ArtifactStreamKeys.serviceId, serviceId)
-        .asList();
+    return artifactStreamServiceBindingService.listArtifactStreams(appId, serviceId);
   }
 
   @Override
   public List<String> fetchArtifactStreamIdsForService(String appId, String serviceId) {
-    return wingsPersistence.createQuery(ArtifactStream.class)
-        .filter(ArtifactStream.APP_ID_KEY, appId)
-        .filter(ArtifactStreamKeys.serviceId, serviceId)
-        .asKeyList()
-        .stream()
-        .map(artifactStreamKey -> artifactStreamKey.getId().toString())
-        .collect(toList());
+    return artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId);
   }
 
   @Override
@@ -598,33 +592,68 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return update.getUpdatedCount() == 1;
   }
 
+  @Override
   public List<ArtifactStream> listBySettingId(String settingId) {
     return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
         .filter(SETTING_ID_KEY, settingId)
         .asList(new FindOptions().limit(REFERENCED_ENTITIES_TO_SHOW));
   }
 
-  // TODO: ASR: update method after refactoring
+  @Override
+  public List<ArtifactStream> listByIds(List<String> artifactStreamIds) {
+    if (isEmpty(artifactStreamIds)) {
+      return new ArrayList<>();
+    }
+
+    return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
+        .field("_id")
+        .in(artifactStreamIds)
+        .asList();
+  }
+
+  @Override
+  public List<ArtifactStream> listByServiceId(String appId, String serviceId) {
+    Service service = serviceResourceService.get(appId, serviceId, false);
+    if (service == null) {
+      return new ArrayList<>();
+    }
+
+    return listByIds(service.getArtifactStreamIds());
+  }
+
   @Override
   public List<ArtifactStreamSummary> listArtifactStreamSummary(String appId) {
-    List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
-                                               .filter(ArtifactStreamKeys.appId, appId)
+    List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
                                                .project(ArtifactStreamKeys.uuid, true)
                                                .project(ArtifactStreamKeys.name, true)
-                                               .project(ArtifactStreamKeys.serviceId, true)
                                                .asList();
     List<Service> services = wingsPersistence.createQuery(Service.class)
                                  .filter(ServiceKeys.appId, appId)
                                  .project(ServiceKeys.uuid, true)
                                  .project(ServiceKeys.name, true)
+                                 .project(ServiceKeys.artifactStreamIds, true)
                                  .asList();
-    Map<String, String> serviceIdToName = services.stream().collect(toMap(Service::getUuid, Service::getName));
-    return artifactStreams.stream()
-        .map(o
-            -> ArtifactStreamSummary.builder()
-                   .artifactStreamId(o.getUuid())
-                   .displayName(o.getName() + " (" + serviceIdToName.get(o.getServiceId()) + ")")
-                   .build())
-        .collect(toList());
+
+    Map<String, String> artifactStreamIdToName =
+        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, ArtifactStream::getName));
+    List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
+    for (Service service : services) {
+      List<String> artifactStreamIds = service.getArtifactStreamIds();
+      if (isEmpty(artifactStreamIds)) {
+        continue;
+      }
+
+      String serviceName = service.getName();
+      artifactStreamSummaries.addAll(
+          artifactStreamIds.stream()
+              .map(artifactStreamId
+                  -> ArtifactStreamSummary.builder()
+                         .artifactStreamId(artifactStreamId)
+                         .displayName(artifactStreamIdToName.get(artifactStreamId) + " (" + serviceName + ")")
+                         .build())
+              .collect(Collectors.toList()));
+    }
+
+    return artifactStreamSummaries;
   }
 }
