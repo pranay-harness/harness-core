@@ -29,15 +29,17 @@ public class ServiceAddArtifactStreamIdsMigration implements Migration {
     logger.info("Add artifactStreamIds to Services");
     final DBCollection collection = wingsPersistence.getCollection(Service.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-    int i = 1;
+    int i = 0;
+    int total = 0;
     logger.info("Adding artifactServiceIds to Services");
     try (HIterator<Service> services = new HIterator<>(wingsPersistence.createQuery(Service.class).fetch())) {
       while (services.hasNext()) {
         Service service = services.next();
-        if (i % 50 == 0) {
+        if (i >= 50) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Services: {} updated", i);
+          logger.info("Services: {} updated", total);
+          i = 0;
         }
 
         List<String> artifactStreamIds = wingsPersistence.createQuery(ArtifactStream.class)
@@ -55,12 +57,13 @@ public class ServiceAddArtifactStreamIdsMigration implements Migration {
               .updateOne(
                   new BasicDBObject("$set", new BasicDBObject(ServiceKeys.artifactStreamIds, artifactStreamIds)));
           ++i;
+          ++total;
         }
       }
     }
-    if (i % 50 != 1) {
+    if (i != 0) {
       bulkWriteOperation.execute();
-      logger.info("Services: {} updated", i);
+      logger.info("Services: {} updated", total);
     }
     logger.info("Adding artifactServiceIds to Services completed");
   }
