@@ -33,6 +33,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -69,6 +70,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
   @Test(expected = ConstraintViolationException.class)
   @Category(UnitTests.class)
+  @Ignore // TODO: Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)
   public void shouldNotSaveInvalidNameTemplateGallery() {
     TemplateGallery templateGallery = prepareTemplateGallery();
     templateGallery.setName(INVALID_NAME);
@@ -119,6 +121,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
   @Test(expected = ConstraintViolationException.class)
   @Category(UnitTests.class)
+  @Ignore // TODO: Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)
   public void shouldNotUpdateInvalidTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
 

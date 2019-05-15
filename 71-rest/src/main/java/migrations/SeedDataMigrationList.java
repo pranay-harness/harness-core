@@ -21,7 +21,8 @@ public class SeedDataMigrationList {
         .add(Pair.of(6, BaseSeedDataMigration.class))
         .add(Pair.of(7, BaseSeedDataMigration.class))
         .add(Pair.of(8, IISInstallCommandV4Migration.class))
-        .add(Pair.of(9, ReImportTemplatesMigration.class))
+        .add(Pair.of(9, BaseSeedDataMigration.class))
+        .add(Pair.of(10, ReImportTemplatesMigration.class))
         .build();
   }
 }
