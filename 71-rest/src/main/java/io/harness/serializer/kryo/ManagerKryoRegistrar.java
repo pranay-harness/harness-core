@@ -145,6 +145,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NotificationChannelType;
@@ -1239,5 +1240,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraCustomFieldValue.class, 7177);
     kryo.register(AwsSecretsManagerConfig.class, 7178);
     kryo.register(EcsContainerDetails.class, 7179);
+    kryo.register(LocalEncryptionConfig.class, 7180);
   }
 }

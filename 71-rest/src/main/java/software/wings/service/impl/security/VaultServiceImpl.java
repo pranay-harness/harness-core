@@ -534,7 +534,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
               vaultConfig.getAppRoleId(), vaultConfig.getSecretId());
         }
       }
-    } catch (IOException e) {
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
       String message =
           "Was not able to determine the vault server's secret engine version using given credentials. Please check your credentials and try again";
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
