@@ -49,7 +49,6 @@ public class TerraformProvisionParameters implements ExecutionCapabilityDemander
   private final List<String> targets;
   private final List<String> tfVarFiles;
   private final boolean runPlanOnly;
-  private final String sourceRepoSettingId;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
