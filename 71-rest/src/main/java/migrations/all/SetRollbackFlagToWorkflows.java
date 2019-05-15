@@ -64,6 +64,22 @@ public class SetRollbackFlagToWorkflows implements Migration {
     boolean modified = false;
 
     CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    if (coWorkflow.getPreDeploymentSteps() != null) {
+      modified = modified || coWorkflow.getPreDeploymentSteps().isRollback()
+          || coWorkflow.getPreDeploymentSteps().getSteps().stream().anyMatch(GraphNode::isRollback);
+
+      coWorkflow.getPreDeploymentSteps().setRollback(false);
+      coWorkflow.getPreDeploymentSteps().getSteps().forEach(step -> step.setRollback(false));
+    }
+
+    if (coWorkflow.getPostDeploymentSteps() != null) {
+      modified = modified || coWorkflow.getPostDeploymentSteps().isRollback()
+          || coWorkflow.getPostDeploymentSteps().getSteps().stream().anyMatch(GraphNode::isRollback);
+
+      coWorkflow.getPostDeploymentSteps().setRollback(false);
+      coWorkflow.getPostDeploymentSteps().getSteps().forEach(step -> step.setRollback(false));
+    }
+
     for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhaseIdMap().values()) {
       modified = modified || workflowPhase.isRollback()
           || workflowPhase.getPhaseSteps().stream().anyMatch(

@@ -226,6 +226,7 @@ public class MigrationList {
         .add(Pair.of(246, BaseMigration.class))
         .add(Pair.of(247, UserPermissionReadMigration.class))
         .add(Pair.of(248, ServiceAddArtifactStreamIdsMigration.class))
+        .add(Pair.of(249, SetRollbackFlagToWorkflows.class))
         .build();
   }
 }
