@@ -369,6 +369,19 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldUpdateOverview() {
+    String accountId = "some-account-id";
+    UserGroup ug = builder().accountId(accountId).name("some-name").build();
+    UserGroup saved = userGroupService.save(ug);
+
+    UserGroup fetchedGroup = userGroupService.get(accountId, saved.getUuid(), false);
+    fetchedGroup.setDescription("something-new");
+    userGroupService.updateOverview(fetchedGroup);
+    compare(fetchedGroup, userGroupService.get(accountId, saved.getUuid()));
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testUpdateMembers() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
       ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
