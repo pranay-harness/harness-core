@@ -18,7 +18,6 @@ import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.ConfigFile.ENCRYPTED_FILE_ID_KEY;
@@ -74,6 +73,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -93,7 +93,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
-import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -105,6 +104,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
@@ -157,6 +157,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private AppService appService;
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private LocalEncryptionService localEncryptionService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -209,10 +210,10 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     for (KmsConfig kmsConfig : kmsConfigs) {
-      if (defaultSet && kmsConfig.isDefault()) {
-        Preconditions.checkState(
-            kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID), "found both kms and vault configs to be default");
+      if (defaultSet) {
         kmsConfig.setDefault(false);
+      } else if (kmsConfig.isDefault()) {
+        defaultSet = true;
       }
       rv.add(kmsConfig);
     }
@@ -227,16 +228,9 @@ public class SecretManagerImpl implements SecretManager {
     String toEncrypt;
     switch (encryptionType) {
       case LOCAL:
-        char[] encryptedChars = secret == null ? null : new SimpleEncryption(accountId).encryptChars(secret);
-        rv = EncryptedData.builder()
-                 .encryptionKey(accountId)
-                 .encryptedValue(encryptedChars)
-                 .encryptionType(LOCAL)
-                 .accountId(accountId)
-                 .type(settingType)
-                 .enabled(true)
-                 .parentIds(new HashSet<>())
-                 .build();
+        final LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+        rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
+        rv.setType(settingType);
         break;
 
       case KMS:
@@ -737,17 +731,17 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
-      EncryptionType toEncryptionType, String toSecretId) {
+  public boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretManagerId,
+      EncryptionType toEncryptionType, String toSecretManagerId) {
     Preconditions.checkState(isNotEmpty(accountId), "accountId can't be blank");
     Preconditions.checkNotNull(fromEncryptionType, "fromEncryptionType can't be blank");
-    Preconditions.checkState(isNotEmpty(fromSecretId), "fromVaultId can't be blank");
+    Preconditions.checkState(isNotEmpty(fromSecretManagerId), "fromSecretManagerId can't be blank");
     Preconditions.checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
-    Preconditions.checkState(isNotEmpty(toSecretId), "toVaultId can't be blank");
+    Preconditions.checkState(isNotEmpty(toSecretManagerId), "toSecretManagerId can't be blank");
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(ACCOUNT_ID_KEY, accountId)
-                                     .filter(EncryptedDataKeys.kmsId, fromSecretId);
+                                     .filter(EncryptedDataKeys.kmsId, fromSecretManagerId);
 
     if (toEncryptionType == EncryptionType.VAULT) {
       query = query.field(EncryptedDataKeys.type).notEqual(SettingVariableTypes.VAULT);
@@ -760,9 +754,9 @@ public class SecretManagerImpl implements SecretManager {
                                     .accountId(accountId)
                                     .entityId(dataToTransition.getUuid())
                                     .fromEncryptionType(fromEncryptionType)
-                                    .fromKmsId(fromSecretId)
+                                    .fromKmsId(fromSecretManagerId)
                                     .toEncryptionType(toEncryptionType)
-                                    .toKmsId(toSecretId)
+                                    .toKmsId(toSecretManagerId)
                                     .build());
       }
     }
@@ -801,6 +795,9 @@ public class SecretManagerImpl implements SecretManager {
 
     char[] decrypted;
     switch (fromEncryptionType) {
+      case LOCAL:
+        decrypted = localEncryptionService.decrypt(encryptedData, accountId, (LocalEncryptionConfig) fromConfig);
+        break;
       case KMS:
         decrypted = kmsService.decrypt(encryptedData, accountId, (KmsConfig) fromConfig);
         break;
@@ -818,6 +815,9 @@ public class SecretManagerImpl implements SecretManager {
     String encryptionKey;
     String secretValue;
     switch (toEncryptionType) {
+      case LOCAL:
+        encrypted = localEncryptionService.encrypt(decrypted, accountId, (LocalEncryptionConfig) toConfig);
+        break;
       case KMS:
         encrypted = kmsService.encrypt(decrypted, accountId, (KmsConfig) toConfig);
         break;
@@ -971,6 +971,20 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public boolean switchToHarnessSecretManager(String accountId) {
+    // For now, the default/harness secret manager is the LOCAL secret manager, and it's HIDDEN from end-user
+    EncryptionConfig harnessSecretManager = localEncryptionService.getEncryptionConfig(accountId);
+    List<EncryptionConfig> allEncryptionConfigs = listEncryptionConfig(accountId);
+    for (EncryptionConfig encryptionConfig : allEncryptionConfigs) {
+      logger.info("Transitioning secret from secret manager {} of type {} into LOCAL secret manager for account {}",
+          encryptionConfig.getUuid(), encryptionConfig.getEncryptionType(), accountId);
+      transitionSecrets(accountId, encryptionConfig.getEncryptionType(), encryptionConfig.getUuid(),
+          harnessSecretManager.getEncryptionType(), harnessSecretManager.getUuid());
+    }
+    return true;
+  }
+
+  @Override
   public boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     String encryptedDataId =
@@ -1020,7 +1034,7 @@ public class SecretManagerImpl implements SecretManager {
         generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
       } catch (DuplicateKeyException e) {
         String reason = "Variable " + name + " already exists";
-        throw new KmsOperationException(reason);
+        throw new KmsOperationException(reason, USER);
       }
 
       auditMessage = "Created";
@@ -1687,7 +1701,7 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
-        return null;
+        return localEncryptionService.getEncryptionConfig(accountId);
       case KMS:
         return kmsService.getKmsConfig(accountId, entityId);
       case VAULT:
@@ -1848,9 +1862,6 @@ public class SecretManagerImpl implements SecretManager {
       SettingVariableTypes type, String parentId, String kmsId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
-        Preconditions.checkState(isEmpty(kmsId),
-            "kms id should be null for local type, "
-                + "kmsId: " + kmsId + " for " + type + " id: " + parentId);
         return HARNESS_DEFAULT_SECRET_MANAGER;
       case KMS:
         KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsId);
