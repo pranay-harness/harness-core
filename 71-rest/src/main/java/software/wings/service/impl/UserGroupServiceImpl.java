@@ -22,6 +22,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
@@ -55,6 +56,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.pagerduty.PagerDutyService;
 import software.wings.utils.Validator;
 
 import java.io.Serializable;
@@ -87,6 +89,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AuthService authService;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AlertService alertService;
+  @Inject private PagerDutyService pagerDutyService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -273,6 +276,10 @@ public class UserGroupServiceImpl implements UserGroupService {
       String accountId, String groupId, NotificationSettings newNotificationSettings) {
     if (null == newNotificationSettings) {
       return get(accountId, groupId);
+    }
+
+    if (EmptyPredicate.isNotEmpty(newNotificationSettings.getPagerDutyIntegrationKey())) {
+      pagerDutyService.validateKey(newNotificationSettings.getPagerDutyIntegrationKey());
     }
 
     UpdateOperations<UserGroup> update =

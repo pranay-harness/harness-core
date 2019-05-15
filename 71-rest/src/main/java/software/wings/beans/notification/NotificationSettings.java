@@ -17,6 +17,7 @@ public class NotificationSettings {
   private boolean sendMailToNewMembers;
   @NotNull private List<String> emailAddresses;
   @NotNull private SlackNotificationSetting slackConfig;
+  private String pagerDutyIntegrationKey;
 
   @Nonnull
   @JsonIgnore

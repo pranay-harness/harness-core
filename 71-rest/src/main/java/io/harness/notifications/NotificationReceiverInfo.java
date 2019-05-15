@@ -18,4 +18,6 @@ public interface NotificationReceiverInfo {
   @Nullable SlackNotificationSetting getSlackConfig();
 
   @NotNull List<String> getEmailAddresses();
+
+  @Nullable String getPagerDutyIntegrationKey();
 }

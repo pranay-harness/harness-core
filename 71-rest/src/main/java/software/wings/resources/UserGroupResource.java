@@ -136,7 +136,8 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> save(@QueryParam("accountId") String accountId, UserGroup userGroup) {
     userGroup.setAccountId(accountId);
-    NotificationSettings notificationSettings = new NotificationSettings(false, true, Collections.emptyList(), null);
+    NotificationSettings notificationSettings =
+        new NotificationSettings(false, true, Collections.emptyList(), null, "");
     userGroup.setNotificationSettings(notificationSettings);
     return getPublicUserGroup(userGroupService.save(userGroup));
   }

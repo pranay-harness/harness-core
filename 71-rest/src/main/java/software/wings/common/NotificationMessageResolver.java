@@ -17,6 +17,8 @@ import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.text.WordUtils;
@@ -124,6 +126,16 @@ public class NotificationMessageResolver {
   }
 
   /**
+   * Gets pagerDuty template.
+   *
+   * @param templateName the template name
+   * @return the pagerDuty template
+   */
+  public PagerDutyTemplate getPagerDutyTemplate(String templateName) {
+    return templateMap.getOrDefault(templateName, new ChannelTemplate()).getPagerDuty();
+  }
+
+  /**
    * Gets web template.
    *
    * @param templateName the template name
@@ -150,6 +162,7 @@ public class NotificationMessageResolver {
     private String web;
     private String slack;
     private EmailTemplate email;
+    private PagerDutyTemplate pagerDuty;
 
     /**
      * Gets web.
@@ -167,6 +180,24 @@ public class NotificationMessageResolver {
      */
     public void setWeb(String web) {
       this.web = web;
+    }
+
+    /**
+     * Gets pagerDuty.
+     *
+     * @return the pagerDuty
+     */
+    public PagerDutyTemplate getPagerDuty() {
+      return pagerDuty;
+    }
+
+    /**
+     * Sets pagerDuty.
+     *
+     * @param pagerDuty the pagerDuty
+     */
+    public void setPagerDuty(PagerDutyTemplate pagerDuty) {
+      this.pagerDuty = pagerDuty;
     }
 
     /**
@@ -248,6 +279,20 @@ public class NotificationMessageResolver {
         this.body = body;
       }
     }
+  }
+
+  @Getter
+  @Setter
+  public static class Link {
+    private String href;
+    private String text;
+  }
+
+  @Getter
+  @Setter
+  public static class PagerDutyTemplate {
+    private String summary;
+    private Link link;
   }
 
   private static String getStatusVerb(ExecutionStatus status) {

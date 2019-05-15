@@ -110,6 +110,13 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
     return null;
   }
 
+  @Nullable
+  @Override
+  @JsonIgnore
+  public String getPagerDutyIntegrationKey() {
+    return null;
+  }
+
   @Override
   @JsonIgnore
   public List<String> getEmailAddresses() {

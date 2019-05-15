@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private EmailDispatcher emailDispatcher;
   @Inject private SlackMessageDispatcher slackMessageDispatcher;
+  @Inject private PagerDutyEventDispatcher pagerDutyEventDispatcher;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
 
@@ -58,11 +60,23 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
     String accountId = notifications.get(0).getAccountId();
 
+    if (CollectionUtils.isNotEmpty(userGroup.getEmailAddresses())) {
+      try {
+        log.info("{} - Trying to send email. emails: {}", randLogId, userGroup.getEmailAddresses());
+        emailDispatcher.dispatch(notifications, userGroup.getEmailAddresses());
+      } catch (Exception e) {
+        log.error("{} - Error sending email. Email Addresses: {}", randLogId, userGroup.getEmailAddresses(), e);
+      }
+    }
+
     boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
     if (isCommunityAccount) {
-      log.info("{} - Slack Configuration will be ignored since it's a community account. accountId={}", randLogId,
-          accountId);
-    } else if (null != userGroup.getSlackConfig()) {
+      log.info("{} - Slack and Pager duty Configuration will be ignored since it's a community account. accountId={}",
+          randLogId, accountId);
+      return;
+    }
+
+    if (null != userGroup.getSlackConfig()) {
       try {
         log.info("{} - Trying to send slack message. slack configuration: {}", randLogId, userGroup.getSlackConfig());
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
@@ -71,12 +85,14 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       }
     }
 
-    if (CollectionUtils.isNotEmpty(userGroup.getEmailAddresses())) {
+    if (EmptyPredicate.isNotEmpty(userGroup.getPagerDutyIntegrationKey())) {
       try {
-        log.info("{} - Trying to send email. emails: {}", randLogId, userGroup.getEmailAddresses());
-        emailDispatcher.dispatch(notifications, userGroup.getEmailAddresses());
+        log.info("{} - Trying to send pager duty event. pagerDutyKey: {}", randLogId,
+            userGroup.getPagerDutyIntegrationKey());
+        pagerDutyEventDispatcher.dispatch(notifications, userGroup.getPagerDutyIntegrationKey());
       } catch (Exception e) {
-        log.error("{} - Error sending email. Email Addresses: {}", randLogId, userGroup.getEmailAddresses(), e);
+        log.error("{} - Error sending pager duty event. pagerDutyKey: {}", randLogId,
+            userGroup.getPagerDutyIntegrationKey(), e);
       }
     }
   }
