@@ -1,4 +1,4 @@
-package io.harness.functional.workflow;
+package io.harness.functional.Workflow;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;

@@ -156,6 +156,7 @@ import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.NotificationSetupServiceImpl;
+import software.wings.service.impl.PagerDutyServiceImpl;
 import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.impl.PluginServiceImpl;
@@ -391,6 +392,7 @@ import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.pagerduty.PagerDutyService;
 import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
@@ -699,6 +701,7 @@ public class WingsModule extends DependencyModule {
     bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
 
     bind(ServiceNowService.class).to(ServiceNowServiceImpl.class);
+    bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);

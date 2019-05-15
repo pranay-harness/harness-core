@@ -4,6 +4,8 @@ ENTITY_CREATE_NOTIFICATION:
       email:
           subject: ${ENTITY_TYPE} ${ENTITY_NAME} is created
           body: A new ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is created.
+      pagerDuty:
+        summary: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
 
 ENTITY_DELETE_NOTIFICATION:
       web: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is deleted.
@@ -11,6 +13,8 @@ ENTITY_DELETE_NOTIFICATION:
       email:
           subject: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted
           body: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is deleted.
+      pagerDuty:
+        summary: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
 
 ARTIFACT_APPROVAL_NOTIFICATION:
       web: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is waiting for <<a>>href="${ACTION_URL}" target="_blank">approval</a>
@@ -18,6 +22,8 @@ ARTIFACT_APPROVAL_NOTIFICATION:
       email:
           subject: Artifact approval required for ${ENTITY_TYPE} ${ENTITY_NAME}
           body: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is waiting for <<a>>href="${ACTION_URL}" target="_blank">approval</a>
+      pagerDuty:
+        summary: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for approval
 
 ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
       web: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is <<a>>href="${ACTION_URL}" target="_blank">${NOTIFICATION_STATUS}</a> by <b>${USER_NAME}</b>
@@ -25,6 +31,9 @@ ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
       email:
           subject: Artifact status changed for ${ENTITY_TYPE} ${ENTITY_NAME}
           body: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is <<a>>href="${ACTION_URL}" target="_blank">${NOTIFICATION_STATUS}</a> by <b>${USER_NAME}</b>
+      pagerDuty:
+        summary: ${ENTITY_TYPE} ${ENTITY_NAME} is ${NOTIFICATION_STATUS} by ${USER_NAME}
+
 
 WORKFLOW_NOTIFICATION:
       web: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
@@ -32,13 +41,19 @@ WORKFLOW_NOTIFICATION:
       email:
           subject: ${PHASE_NAME}${WORKFLOW_NAME} ${VERB}
           body: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
-
+      pagerDuty:
+          summary: ${PHASE_NAME} ${WORKFLOW_NAME} ${VERB} for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME}, in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
+          link:
+            href: ${WORKFLOW_URL}
+            text: ${WORKFLOW_NAME} - Started ${START_DATE}
 DELEGATE_STATE_NOTIFICATION:
       web: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} <b>${HOST_NAMES}</b>
       slack: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} ${HOST_NAMES}
       email:
           subject: ${COUNT} ${ENTITY_AFFECTED} down.
           body: ${COUNT} ${ENTITY_AFFECTED} down with ${DESCRIPTION_FIELD} ${HOST_NAMES_HTML}
+      pagerDuty:
+        summary: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} ${HOST_NAMES}
 
 ALL_DELEGATE_DOWN_NOTIFICATION:
       web: No Active Delegates for Account ${ACCOUNT_ID}
@@ -46,6 +61,8 @@ ALL_DELEGATE_DOWN_NOTIFICATION:
       email:
           subject: No Active Delegates
           body: All delegates are down. No Active Delegates for Account ${ACCOUNT_ID}
+      pagerDuty :
+        summary: No Active Delegates for Account ${ACCOUNT_ID}
 
 DELEGATE_DOWN_ALERT_NOTIFICATION:
     web: ${alert_message}
@@ -54,6 +71,8 @@ DELEGATE_DOWN_ALERT_NOTIFICATION:
     email:
         subject: One of your Harness Delegates went down
         body: ${alert_message}
+    pagerDuty:
+      summary: ${alert_message}
 
 GENERIC_ALERT_NOTIFICATION:
     web: ${alert_message}
@@ -62,6 +81,8 @@ GENERIC_ALERT_NOTIFICATION:
     email:
         subject: Harness Alert - ${alert_message}
         body: ${alert_message}
+    pagerDuty:
+      summary: ${alert_message}
 
 APPROVAL_NEEDED_NOTIFICATION:
       web: Approval Required - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.
@@ -69,13 +90,22 @@ APPROVAL_NEEDED_NOTIFICATION:
       email:
           subject: Approval Required for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> triggered by <b>${USER_NAME}</b> is waiting for approval in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>  ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE}</i></span></div></div>
-
+      pagerDuty:
+        summary: Approval Required - ${WORKFLOW_NAME}> triggered by ${USER_NAME} is waiting for approval in ${APP_NAME} application|| ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE}
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
 APPROVAL_STATE_CHANGE_NOTIFICATION:
       web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} is ${STATUS}
       slack: Approval ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _paused<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${STATUS} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
       email:
           subject: Approval ${STATUS_CAMELCASE} for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is ${STATUS} by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> ${APPROVAL_TYPE} paused ${START_DATE} and ${STATUS} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+      pagerDuty:
+        summary: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME}> is ${STATUS} by ${USER_NAME} in ${APP_NAME} application
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
 APPROVAL_EXPIRED_NOTIFICATION:
       web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} ${VERB}
@@ -83,6 +113,11 @@ APPROVAL_EXPIRED_NOTIFICATION:
       email:
           subject: Approval ${STATUS_CAMELCASE} for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>${TIMEOUT}</i>
+      pagerDuty:
+        summary: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME}> ${VERB} in ${APP_NAME} application timeout ${TIMEOUT}
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
 MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
       web: Manual Intervention Needed - ${WORKFLOW_NAME} in ${APP_NAME} requires manual intervention
@@ -90,13 +125,22 @@ MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
       email:
           subject: Manual Intervention Needed for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> requires manual intervention for <b>${ARTIFACT}</b> in <b>${ENV}</b>, triggered by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
-
+      pagerDuty:
+        summary: Manual Intervention Needed - ${WORKFLOW_NAME}> requires manual intervention for ${ARTIFACT} in ${ENV}, triggered by ${USER_NAME} in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
 RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION:
       web: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking ${WORKFLOW_NAME}> in ${APP_NAME}.
       slack: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* in ${APP_NAME}.
       email:
           subject: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is currently blocked
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is blocked because the resource constraint ${RESOURCE_CONSTRAINT_NAME} is currently in use. For example in <<a>>href="${BLOCKING_WORKFLOW_URL}" target="_blank">${BLOCKING_WORKFLOW_NAME}</a>.</span></div></div>
+      pagerDuty:
+        summary: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking ${WORKFLOW_NAME}> in ${APP_NAME} application.
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
 RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION:
       web: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is now unblocked
@@ -104,7 +148,11 @@ RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION:
       email:
           subject: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is now unblocked
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is now unblocked.</span></div></div>
-
+      pagerDuty:
+        summary: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is now unblocked
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
 SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
   web: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS}"
@@ -112,3 +160,5 @@ SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
   email:
     subject: "URGENT Action Required: SSO Provider is not reachable"
     body: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS_HTML}"
+  pagerDuty:
+    summary: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS}"

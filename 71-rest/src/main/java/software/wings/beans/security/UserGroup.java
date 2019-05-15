@@ -174,6 +174,13 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
     return null != notificationSettings ? notificationSettings.getSlackConfig() : null;
   }
 
+  @Nullable
+  @Override
+  @JsonIgnore
+  public String getPagerDutyIntegrationKey() {
+    return null != notificationSettings ? notificationSettings.getPagerDutyIntegrationKey() : null;
+  }
+
   @Override
   @JsonIgnore
   public List<String> getEmailAddresses() {

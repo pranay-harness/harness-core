@@ -125,6 +125,10 @@
             <artifactId>caffeine</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.dikhan</groupId>
+            <artifactId>pagerduty-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.dirkraft.dropwizard-file-assets</groupId>
             <artifactId>dropwizard-file-assets</artifactId>
         </dependency>

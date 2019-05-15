@@ -277,7 +277,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       AppPermission appPermission =
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
 
-      NotificationSettings notificationSettings = new NotificationSettings(false, true, Collections.emptyList(), null);
+      NotificationSettings notificationSettings =
+          new NotificationSettings(false, true, Collections.emptyList(), null, null);
       UserGroup userGroup1 = UserGroup.builder()
                                  .accountId(ACCOUNT_ID)
                                  .name("USER_GROUP1")
@@ -360,7 +361,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertNull(fetchedGroup.getNotificationSettings());
 
     NotificationSettings settings =
-        new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig());
+        new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), null);
     userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), settings);
     fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
     assertNotNull(fetchedGroup.getNotificationSettings());

@@ -333,6 +333,8 @@ public enum ErrorCode {
 
   INVALID_ACCOUNT_PERMISSION("Invalid account permission"),
 
+  PAGERDUTY_ERROR,
+
   HEALTH_ERROR;
 
   private Status status = BAD_REQUEST;
