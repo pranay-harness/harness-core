@@ -477,7 +477,7 @@ public class ArtifactCollectionUtils {
   public Service getService(String appId, String artifactStreamId) {
     List<Service> services = artifactStreamServiceBindingService.listServices(appId, artifactStreamId);
     if (isEmpty(services)) {
-      artifactStreamService.delete(appId, artifactStreamId);
+      // artifactStreamService.delete(appId, artifactStreamId);
       throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
           .addParam("message", format("Artifact stream %s is a zombie.", artifactStreamId));
     }
