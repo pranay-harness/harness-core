@@ -57,7 +57,14 @@ public class ArtifactTest extends GraphQLTest {
                             .build();
 
     assertThat(artifactService.create(artifact)).isNotNull();
-    String query = "{ artifact(artifactId: \"" + artifact.getUuid() + "\") { id buildNo collectedAt}}";
+    String query = $GQL(/*
+{
+  artifact(artifactId: "%s") {
+    id
+    buildNo
+    collectedAt
+  }
+}*/ artifact.getUuid());
 
     QLTestObject qlArtifact = qlExecute(query);
     assertThat(qlArtifact.get(QLArtifactKeys.id)).isEqualTo(artifact.getUuid());

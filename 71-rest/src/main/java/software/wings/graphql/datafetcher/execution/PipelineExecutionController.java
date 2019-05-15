@@ -3,8 +3,8 @@ package software.wings.graphql.datafetcher.execution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
-import software.wings.graphql.schema.type.QLExecutedBy;
-import software.wings.graphql.schema.type.QLExecutedBy.QLExecuteOptions;
+import software.wings.graphql.schema.type.QLExecutedByUser;
+import software.wings.graphql.schema.type.QLExecutedByUser.QLExecuteOptions;
 import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutionBuilder;
 
 import javax.validation.constraints.NotNull;
@@ -17,10 +17,10 @@ import javax.validation.constraints.NotNull;
 public class PipelineExecutionController {
   public static void populatePipelineExecution(
       @NotNull WorkflowExecution workflowExecution, QLPipelineExecutionBuilder builder) {
-    QLExecutedBy cause = QLExecutedBy.builder()
-                             .user(UserController.populateUser(workflowExecution.getTriggeredBy()))
-                             .using(QLExecuteOptions.WEB_UI)
-                             .build();
+    QLExecutedByUser cause = QLExecutedByUser.builder()
+                                 .user(UserController.populateUser(workflowExecution.getTriggeredBy()))
+                                 .using(QLExecuteOptions.WEB_UI)
+                                 .build();
 
     builder.id(workflowExecution.getUuid())
         .createdAt(GraphQLDateTimeScalar.convert(workflowExecution.getCreatedAt()))

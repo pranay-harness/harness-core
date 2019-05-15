@@ -31,16 +31,20 @@ enum ExecutionStatus {
   EXPIRED
 }
 
-union Cause = ExecutedBy | PipelineExecution
-
 enum ExecuteOptions {
   WEB_UI
 }
 
-type ExecutedBy {
+type ExecutedByUser {
   user: User
   using: ExecuteOptions
 }
+
+type ExecutedAlongPipeline {
+  execution: PipelineExecution @dataFetcher(name: execution)
+}
+
+union Cause = ExecutedByUser | ExecutedAlongPipeline
 
 interface Execution {
   id: String
